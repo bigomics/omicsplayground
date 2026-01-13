@@ -4,14 +4,15 @@
 ##
 
 enrichment_plot_freq_top_gsets_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   topEnrichedFreq.opts <- shiny::tagList(
@@ -50,7 +51,7 @@ enrichment_plot_freq_top_gsets_ui <- function(
     options = topEnrichedFreq.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "csv")
+    download.fmt = c("png", "pdf", "csv", "svg")
   )
 }
 
@@ -131,6 +132,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       sel.zero <- which(Matrix::rowSums(abs(F), na.rm = TRUE) < 1e-4)
       if (length(sel.zero)) F <- F[-sel.zero, , drop = FALSE]
+      rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
 
       if (return_csv) {
         return(F)

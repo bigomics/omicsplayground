@@ -3,7 +3,8 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
+EnrichmentBoard <- function(id, pgx,
+                            selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc))) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -30,9 +31,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong>
         panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of
         significant gene sets at different FDR thresholds for all contrasts.<br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=4'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-        allowfullscreen></iframe></center>"), js = FALSE)
+        <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=HqdPSxCPc-jHKh1k' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
@@ -51,8 +50,9 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     shiny::observe({
       shiny::req(pgx$X)
       meta <- pgx$gset.meta$meta
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(intersect(comparisons, names(meta)))
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- intersect(comparisons, names(meta))
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
       shiny::updateSelectInput(session, "gs_contrast", choices = comparisons)
 
       ## get the computed geneset methods
@@ -76,6 +76,24 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
       if (length(hmark) > 0) sel <- hmark[1]
       shiny::updateSelectInput(session, "gs_features", choices = gsets.groups, selected = sel)
+    })
+
+    shiny::observe({
+      if (isTRUE(input$show_pv)) {
+        shinyalert::shinyalert(
+          title = "",
+          text = "WARNING: Nominal p-values are NOT corrected for multiple testing. We do not advice their use.",
+          type = "warning"
+        )
+      }
+    })
+
+    shiny::observeEvent(input$show_pv, {
+      shiny::updateSelectInput(
+        session,
+        "gs_fdr",
+        label = if (input$show_pv) "P-value" else "FDR"
+      )
     })
 
     ## ================================================================================
@@ -139,11 +157,13 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (!(comp %in% names(pgx$gset.meta$meta))) {
         return(NULL)
       }
+
       mx <- pgx$gset.meta$meta[[comp]]
 
       outputs <- NULL
       gsmethod <- colnames(unclass(mx$fc))
       gsmethod <- input$gs_statmethod
+
       if (is.null(gsmethod) || length(gsmethod) == 0) {
         return(NULL)
       }
@@ -164,13 +184,12 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       rpt <- NULL
 
       if (is.null(outputs) || length(gsmethod) > 1) {
-        ## show meta-statistics table (multiple methods)
         pv <- unclass(mx$p)[, gsmethod, drop = FALSE]
         qv <- unclass(mx$q)[, gsmethod, drop = FALSE]
-        fx <- unclass(mx$fc)[, gsmethod, drop = FALSE]
+        scores <- unclass(mx$fc)[, gsmethod, drop = FALSE]
 
-        ## !!!! Because the methods have all very difference "fold-change" !!!!
-        ## estimators, we use the meta.fx (average of all genes in gset)
+        ## Methods have all very difference "fold-change" estimators.
+        ## We use the meta.fx (average of all genes in gset)
         fx <- do.call(cbind, rep(list(mx$meta.fx), length(gsmethod)))
         colnames(fx) <- gsmethod
 
@@ -195,59 +214,32 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
-        ##
         s1 <- names(which(pgx$model.parameters$exp.matrix[, comp] > 0))
         s0 <- names(which(pgx$model.parameters$exp.matrix[, comp] < 0))
-        jj <- rownames(mx)
-        jj <- intersect(jj, colnames(pgx$GMT))
+
+        jj <- intersect(rownames(mx), colnames(pgx$GMT))
         rnaX <- pgx$X
         rnaX <- playbase::rename_by(rnaX, pgx$genes, "symbol")
-        gsdiff.method <- "fc" ## OLD default
 
+        gsdiff.method <- "fc" ## OLD default
         if (gsdiff.method == "gs") {
           AveExpr1 <- rowMeans(pgx$gsetX[jj, s1], na.rm = TRUE)
           AveExpr0 <- rowMeans(pgx$gsetX[jj, s0], na.rm = TRUE)
           meta.fc <- AveExpr1 - AveExpr0
         } else {
-          ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(pgx$X)
-          ## and rownames(GMT)
-          fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-          names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
-          pp <- intersect(rownames(pgx$GMT), names(fc))
-
-          # if pp is null, use human ortholog.
-          # pp is null when collapse by gene is false, but we dont have a parameter for that.
-          if (length(pp) == 0 || is.null(pp)) {
-            names(fc) <- pgx$genes[names(fc), "symbol"]
-            pp <- intersect(pgx$genes$symbol, names(fc))
-            pp <- intersect(rownames(pgx$GMT), names(fc))
-
-            pp <- pp[!is.na(pp)]
-          }
-
-          ## check if multi-omics (TEMPORARILY FALSE)
-          is.multiomics <- FALSE # any(grepl("\\[gx\\]|\\[mrna\\]", names(fc)))
-          if (is.multiomics) {
-            ii <- grep("\\[gx\\]|\\[mrna\\]", names(fc))
-            fc <- fc[ii]
-            rnaX <- rnaX[names(fc), ]
-            names(fc) <- sub(".*:|.*\\]", "", names(fc))
-            rownames(rnaX) <- sub(".*:|.*\\]", "", rownames(rnaX))
-            pp <- intersect(rownames(pgx$GMT), names(fc))
-          }
-
+          ## WARNING!!! THIS SHOULD BE IN PGXCOMPUTE or
+          ## pgx.initialize. Here is just correction in case not done.
+          pp <- intersect(rownames(pgx$GMT), rownames(rnaX))
           G <- Matrix::t(pgx$GMT[pp, jj] != 0)
           ngenes <- Matrix::rowSums(G, na.rm = TRUE)
           meta.fc <- pgx$gset.meta$meta[[comp]]$meta.fx
           names(meta.fc) <- rownames(pgx$gset.meta$meta[[comp]])
-
-          # subset rnaX by pp
           AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp, s1], na.rm = TRUE) / ngenes
           AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp, s0], na.rm = TRUE) / ngenes
           remove(rnaX)
         }
 
-        ## TWIDDLE means to reflect foldchange...
+        ## hack to reflect foldchange...
         mean0 <- (AveExpr0 + AveExpr1) / 2
         AveExpr1 <- mean0 + meta.fc / 2
         AveExpr0 <- mean0 - meta.fc / 2
@@ -280,11 +272,18 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
           )
         }
 
-        ## add extra p/q value columns
+        ## add extra score, p/q value columns
+        colnames(pv) <- paste0("p.", colnames(pv))
+        colnames(scores) <- paste0("score.", colnames(scores))
         jj <- match(gs, rownames(mx))
-        rpt <- cbind(rpt, q = qv[jj, ])
+        rpt <- cbind(rpt,
+          q = qv[jj, , drop = FALSE],
+          pv[jj, , drop = FALSE], scores[jj, , drop = FALSE]
+        )
 
-        #
+        if (length(gsmethod) == 1) {
+          colnames(rpt)[colnames(rpt) == gsmethod] <- paste0("q.", gsmethod)
+        }
       } else {
         ## show original table (single method)
         rpt <- outputs[[gsmethod]]
@@ -306,6 +305,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
 
       res <- getFullGeneSetTable()
+
 
       ## just show significant genes
       if (!input$gs_showall && nrow(res) > 0) {
@@ -330,10 +330,17 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
         res <- res[order(-fx), , drop = FALSE]
       }
 
+      if (!input$show_pv) {
+        res <- res[, -grep("^p.", colnames(res)), drop = FALSE]
+      }
+
       res <- data.frame(res)
 
       if (nrow(res) == 0) {
-        shiny::validate(shiny::need(nrow(res) > 0, tspan("No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
+        shiny::validate(shiny::need(
+          nrow(res) > 0,
+          tspan("No genesets passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)
+        ))
         return(NULL)
       }
       return(res)
@@ -352,7 +359,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
     metaFC <- shiny::reactive({
       req(pgx$X)
-      #
       metaFC <- sapply(pgx$gset.meta$meta, function(m) m$meta.fx)
       rownames(metaFC) <- rownames(pgx$gset.meta$meta[[1]])
       metaFC
@@ -362,14 +368,21 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     ## Enrichment table
     ## ================================================================================
 
-    gset_selected <- shiny::reactive({
+    gset_selected.SAVE <- shiny::reactive({
       i <- as.integer(gseatable$rows_selected())
       if (is.null(i) || length(i) == 0) {
         return(NULL)
       }
       rpt <- getFilteredGeneSetTable()
       gs <- rownames(rpt)[i]
+      return(gs)
+    })
 
+    gset_selected <- shiny::reactive({
+      gs <- gseatable$rownames_selected()
+      if (is.null(gs) || length(gs) == 0) {
+        return(NULL)
+      }
       return(gs)
     })
 
@@ -385,12 +398,6 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       }
 
       mx <- pgx$gx.meta$meta[[comp]]
-      is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]", rownames(mx)))
-      if (is.multiomics) {
-        ii <- grep("\\[gx\\]|\\[mrna\\]", rownames(mx))
-        mx <- mx[ii, ]
-      }
-
       gxmethods <- selected_gxmethods() ## from module-expression
       shiny::req(gxmethods)
       limma1.fc <- mx$meta.fx
@@ -402,6 +409,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
 
       ## in multi-mode we select *common* genes
       ns <- length(gs)
+      shiny::req(gs)
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
       # check which columns are in pgx$genes
@@ -420,6 +428,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       if (nrow(genes) > 0) {
         genes <- genes[order(-abs(genes$fc)), , drop = FALSE]
       }
+
       return(genes)
     })
 
@@ -477,6 +486,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gset_selected = gset_selected,
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       subplot.MAR = subplot.MAR,
       geneDetails = geneDetails,
       watermark = WATERMARK
@@ -532,10 +542,12 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
     enrichment_plot_volcanoall_server(
       "volcanoAll",
       pgx = pgx,
+      gs_contrast = shiny::reactive(input$gs_contrast),
       gs_features = shiny::reactive(input$gs_features),
       gs_statmethod = shiny::reactive(input$gs_statmethod),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       calcGsetMeta = calcGsetMeta,
       gset_selected = gset_selected,
       watermark = WATERMARK
@@ -550,6 +562,7 @@ EnrichmentBoard <- function(id, pgx, selected_gxmethods = reactive(colnames(pgx$
       gs_contrast = shiny::reactive(input$gs_contrast),
       gs_fdr = shiny::reactive(input$gs_fdr),
       gs_lfc = shiny::reactive(input$gs_lfc),
+      show_pv = shiny::reactive(input$show_pv),
       gset_selected = gset_selected,
       watermark = WATERMARK
     )

@@ -1,175 +1,204 @@
-"Package"	"Version"	"License"
-"AnnotationDbi"	"1.64.1"	"Artistic-2.0"
-"AnnotationHub"	"3.10.1"	"Artistic-2.0"
-"ape"	"5.8"	"GPL-2 | GPL-3"
-"aws.s3"	"0.3.21"	"GPL (>= 2)"
-"Azimuth"	"0.5.0"	"GPL-3 | file LICENSE"
-"base"	"4.3.3"	"Part of R 4.3.3"
-"base64enc"	"0.1-3"	"GPL-2 | GPL-3"
-"batchelor"	"1.18.1"	"GPL-3"
-"beepr"	"2.0"	"GPL-3"
-"beeswarm"	"0.4.0"	"Artistic-2.0"
-"BiocParallel"	"1.36.0"	"GPL-2 | GPL-3"
-"blastula"	"0.3.5"	"MIT + file LICENSE"
-"Boruta"	"8.0.0"	"GPL (>= 2)"
-"bslib"	"0.8.0"	"MIT + file LICENSE"
-"bsutils"	"0.0.0.9000"	"MIT + file LICENSE"
-"caret"	"6.0-94"	"GPL (>= 2)"
-"circlize"	"0.4.16"	"MIT + file LICENSE"
-"cluster"	"2.1.6"	"GPL (>= 2)"
-"colorspace"	"2.1-1"	"BSD_3_clause + file LICENSE"
-"ComICS"	"1.0.4"	"GPL-2"
-"ComplexHeatmap"	"2.18.0"	"MIT + file LICENSE"
-"cookies"	"0.2.3"	"MIT + file LICENSE"
-"corpcor"	"1.6.10"	"GPL (>= 3)"
-"corpora"	"0.6"	"GPL-3"
-"corrplot"	"0.92"	"MIT + file LICENSE"
-"cowplot"	"1.1.3"	"GPL-2"
-"data.table"	"1.15.4"	"MPL-2.0 | file LICENSE"
-"DBI"	"1.2.3"	"LGPL (>= 2.1)"
-"DeconRNASeq"	"1.44.0"	"GPL-2"
-"DESeq2"	"1.42.1"	"LGPL (>= 3)"
-"doParallel"	"1.0.17"	"GPL-2"
-"dplyr"	"1.1.4"	"MIT + file LICENSE"
-"DT"	"0.33"	"GPL-3 | file LICENSE"
-"edgeR"	"4.0.16"	"GPL (>=2)"
-"EPIC"	"1.1.7"	"file LICENSE"
-"fastcluster"	"1.2.6"	"FreeBSD | GPL-2 | file LICENSE"
-"fgsea"	"1.29.1"	"MIT + file LICENCE"
-"firebase"	"1.0.2"	"AGPL-3"
-"FNN"	"1.1.4"	"GPL (>= 2)"
-"forcats"	"1.0.0"	"MIT + file LICENSE"
-"foreach"	"1.5.2"	"Apache License (== 2.0)"
-"future"	"1.34.0"	"LGPL (>= 2.1)"
-"GenomicRanges"	"1.54.1"	"Artistic-2.0"
-"GEOquery"	"2.70.0"	"MIT"
-"ggforce"	"0.4.2"	"MIT + file LICENSE"
-"ggplot2"	"3.5.1"	"MIT + file LICENSE"
-"ggrepel"	"0.9.5"	"GPL-3 | file LICENSE"
-"ggtext"	"0.1.2"	"GPL-2"
-"ggVennDiagram"	"1.5.2"	"GPL-3"
-"glasso"	"1.11"	"GPL-2"
-"glmnet"	"4.1-8"	"GPL-2"
-"glue"	"1.7.0"	"MIT + file LICENSE"
-"GO.db"	"3.18.0"	"Artistic-2.0"
-"gplots"	"3.1.3.1"	"GPL-2"
-"graphics"	"4.3.3"	"Part of R 4.3.3"
-"grDevices"	"4.3.3"	"Part of R 4.3.3"
-"grid"	"4.3.3"	"Part of R 4.3.3"
-"gridExtra"	"2.3"	"GPL (>= 2)"
-"GSVA"	"1.50.5"	"GPL (>= 2)"
-"harmony"	"1.2.0"	"GPL-3"
-"heatmaply"	"1.5.0"	"GPL-2 | GPL-3"
-"htmltools"	"0.5.8.9000"	"GPL (>= 2)"
-"htmlwidgets"	"1.6.4"	"MIT + file LICENSE"
-"httr"	"1.4.7"	"MIT + file LICENSE"
-"igraph"	"2.0.3"	"GPL (>= 2)"
-"iheatmapr"	"0.7.1"	"MIT + file LICENSE"
-"infercnv"	"1.21.0"	"BSD_3_clause + file LICENSE"
-"inspectdf"	"0.0.12"	"GPL-2"
-"irlba"	"2.3.5.1"	"GPL-3"
-"isva"	"1.9"	"GPL-2"
-"jpeg"	"0.1-10"	"GPL-2 | GPL-3"
-"jsonlite"	"1.8.8"	"MIT + file LICENSE"
-"KEGG.db"	"3.2.4"	"file LICENSE"
-"lazyeval"	"0.2.2"	"GPL-3"
-"limma"	"3.58.1"	"GPL (>=2)"
-"magrittr"	"2.0.3"	"MIT + file LICENSE"
-"markdown"	"1.13"	"MIT + file LICENSE"
-"Matrix"	"1.6-4"	"GPL (>= 2) | file LICENCE"
-"matrixStats"	"1.3.0"	"Artistic-2.0"
-"matrixTests"	"0.2.3"	"GPL-2"
-"methods"	"4.3.3"	"Part of R 4.3.3"
-"microbenchmark"	"1.4.10"	"BSD_2_clause + file LICENSE"
-"miniUI"	"0.1.1.1"	"GPL-3"
-"missForest"	"1.5"	"GPL (>= 2)"
-"mixOmics"	"6.26.0"	"GPL (>= 2)"
-"msa"	"1.34.0"	"GPL (>= 2)"
-"msImpute"	"1.12.0"	"GPL (>=2)"
-"MSnbase"	"2.28.1"	"Artistic-2.0"
-"MultiAssayExperiment"	"1.28.0"	"Artistic-2.0"
-"NNLM"	"0.4.4"	"BSD_2_clause + file LICENSE"
-"org.Hs.eg.db"	"3.19.1"	"Artistic-2.0"
-"org.Mm.eg.db"	"3.19.1"	"Artistic-2.0"
-"org.Pf.plasmo.db"	"3.14.0"	"Artistic-2.0"
-"org.Rn.eg.db"	"3.19.1"	"Artistic-2.0"
-"orthogene"	"1.8.0"	"GPL-3"
-"pairsD3"	"0.1.3"	"GPL (>= 3)"
-"pamr"	"1.57"	"GPL-2"
-"parallel"	"4.3.3"	"Part of R 4.3.3"
-"partykit"	"1.2-21"	"GPL-2 | GPL-3"
-"patchwork"	"1.2.0"	"MIT + file LICENSE"
-"pcaMethods"	"1.94.0"	"GPL (>= 3)"
-"PCSF"	"0.99.1"	"MIT + file LICENSE"
-"plotly"	"4.10.4"	"MIT + file LICENSE"
-"plsRcox"	"1.7.7"	"GPL-3"
-"png"	"0.1-8"	"GPL-2 | GPL-3"
-"ppcor"	"1.1"	"GPL-2"
-"processx"	"3.8.4"	"MIT + file LICENSE"
-"promises"	"1.3.0"	"MIT + file LICENSE"
-"psych"	"2.4.6.26"	"GPL (>= 2)"
-"purrr"	"1.0.2"	"MIT + file LICENSE"
-"qgraph"	"1.9.8"	"GPL-2"
-"qlcMatrix"	"0.9.8"	"GPL-3"
-"R6"	"2.5.1"	"MIT + file LICENSE"
-"randomForest"	"4.7-1.1"	"GPL (>= 2)"
-"randomForestSRC"	"3.3.1"	"GPL (>= 3)"
-"RColorBrewer"	"1.1-3"	"Apache License 2.0"
-"recount"	"1.28.0"	"Artistic-2.0"
-"reshape2"	"1.4.4"	"MIT + file LICENSE"
-"reticulate"	"1.38.0"	"Apache License 2.0"
-"rgeolocate"	"1.4.2"	"Apache License (== 2.0)"
-"rhdf5"	"2.46.1"	"Artistic-2.0"
-"rliger"	"2.0.1"	"GPL-3"
-"rpart"	"4.1.23"	"GPL-2 | GPL-3"
-"RSQLite"	"2.3.7"	"LGPL (>= 2.1)"
-"Rtsne"	"0.17"	"file LICENSE"
-"ruv"	"0.9.7.1"	"GPL"
-"RUVSeq"	"1.36.0"	"Artistic-2.0"
-"rworldmap"	"1.3-8"	"GPL (>= 2)"
-"SBGNview"	"1.16.0"	"AGPL-3"
-"scales"	"1.3.0"	"MIT + file LICENSE"
-"scatterD3"	"1.0.1"	"GPL (>= 3)"
-"scran"	"1.30.2"	"GPL-3"
-"Seurat"	"5.1.0"	"MIT + file LICENSE"
-"sever"	"0.0.7"	"MIT + file LICENSE"
-"shiny"	"1.9.1"	"GPL-3 | file LICENSE"
-"shiny.i18n"	"0.3.0"	"MIT + file LICENSE"
-"shinyalert"	"3.1.0"	"MIT + file LICENSE"
-"shinybrowser"	"1.0.0"	"MIT + file LICENSE"
-"shinyBS"	"0.61.1"	"GPL-3"
-"shinybusy"	"0.3.3"	"GPL-3"
-"shinycssloaders"	"1.1.0"	"MIT + file LICENSE"
-"shinydashboardPlus"	"2.0.4"	"GPL (>= 2) | file LICENSE"
-"shinyjqui"	"0.4.1"	"MIT + file LICENSE"
-"shinyjs"	"2.1.0"	"MIT + file LICENSE"
-"shinyvalidate"	"0.1.3"	"MIT + file LICENSE"
-"shinyWidgets"	"0.8.6"	"GPL-3"
-"SILGGM"	"1.0.0"	"GPL (>= 2)"
-"SingleR"	"2.4.1"	"GPL-3 + file LICENSE"
-"sodium"	"1.3.1"	"MIT + file LICENSE"
-"sortable"	"0.5.0"	"MIT + file LICENSE"
-"stats"	"4.3.3"	"Part of R 4.3.3"
-"stringr"	"1.5.1"	"MIT + file LICENSE"
-"SummarizedExperiment"	"1.32.0"	"Artistic-2.0"
-"SuperCell"	"1.0"	"file LICENSE"
-"survival"	"3.7-0"	"LGPL (>= 2)"
-"sva"	"3.50.0"	"Artistic-2.0"
-"svgPanZoom"	"0.3.4"	"MIT + file LICENSE"
-"tools"	"4.3.3"	"Part of R 4.3.3"
-"umap"	"0.2.10.0"	"MIT + file LICENSE"
-"utils"	"4.3.3"	"Part of R 4.3.3"
-"uwot"	"0.2.2"	"GPL (>= 3)"
-"vioplot"	"0.5.0"	"BSD_3_clause + file LICENSE"
-"viridis"	"0.6.5"	"MIT + file LICENSE"
-"visNetwork"	"2.1.3"	"MIT + file LICENSE"
-"waiter"	"0.2.5.9000"	"MIT + file LICENSE"
-"webshot2"	"0.1.1"	"GPL-2"
-"WGCNA"	"1.72-5"	"GPL (>= 2)"
-"withr"	"3.0.1"	"MIT + file LICENSE"
-"wordcloud"	"2.6"	"LGPL-2.1"
-"xfun"	"0.46"	"MIT + file LICENSE"
-"xgboost"	"1.7.8.1"	"Apache License (== 2.0) | file LICENSE"
-"xml2"	"1.3.6"	"MIT + file LICENSE"
-"yaml"	"2.3.10"	"BSD_3_clause + file LICENSE"
-"zip"	"2.3.1"	"MIT + file LICENSE"
+Package	Version	License
+AnnotationDbi	1.64.1	Artistic-2.0
+AnnotationHub	3.10.1	Artistic-2.0
+ape	5.8-1	GPL-2 | GPL-3
+aws.s3	0.3.21	GPL (>= 2)
+Azimuth	0.5.0	GPL-3 | file LICENSE
+base	4.3.3	Part of R 4.3.3
+base64enc	0.1-3	GPL-2 | GPL-3
+batchelor	1.18.1	GPL-3
+beepr	2.0	GPL-3
+beeswarm	0.4.0	Artistic-2.0
+BiocParallel	1.36.0	GPL-2 | GPL-3
+biomaRt	2.58.2	Artistic-2.0
+bit64	4.6.0-1	GPL-2 | GPL-3
+blastula	0.3.6	MIT + file LICENSE
+Boruta	8.0.0	GPL (>= 2)
+bslib	0.9.0	MIT + file LICENSE
+bsutils	0.0.0.9000	MIT + file LICENSE
+caret	7.0-1	GPL (>= 2)
+circlize	0.4.16	MIT + file LICENSE
+cluster	2.1.8.1	GPL (>= 2)
+colorspace	2.1-1	BSD_3_clause + file LICENSE
+colourpicker	1.3.0	MIT + file LICENSE
+ComICS	1.0.4	GPL-2
+ComplexHeatmap	2.18.0	MIT + file LICENSE
+cookies	0.2.3	MIT + file LICENSE
+corpcor	1.6.10	GPL (>= 3)
+corpora	0.7	GPL-3
+corrplot	0.95	MIT + file LICENSE
+cowplot	1.1.3	GPL-2
+curl	6.4.0	MIT + file LICENSE
+data.table	1.17.6	MPL-2.0 | file LICENSE
+DBI	1.2.3	LGPL (>= 2.1)
+DeconRNASeq	1.44.0	GPL-2
+DESeq2	1.42.1	LGPL (>= 3)
+dplyr	1.1.4	MIT + file LICENSE
+DT	0.33	GPL-3 | file LICENSE
+edgeR	4.0.16	GPL (>=2)
+ellmer	0.2.1	MIT + file LICENSE
+EPIC	1.1.7	file LICENSE
+fastcluster	1.3.0	FreeBSD | GPL-2 | file LICENSE
+fgsea	1.33.1	MIT + file LICENCE
+firebase	1.0.2	AGPL-3
+FNN	1.1.4.1	GPL (>= 2)
+forcats	1.0.0	MIT + file LICENSE
+future	1.58.0	LGPL (>= 2.1)
+GenomicRanges	1.54.1	Artistic-2.0
+GEOquery	2.70.0	MIT
+GGally	2.2.1	GPL (>= 2.0)
+ggforce	0.5.0	MIT + file LICENSE
+ggiraph	0.8.13	GPL-3
+ggplot2	3.5.2	MIT + file LICENSE
+ggpubr	0.6.1	GPL (>= 2)
+ggrepel	0.9.6	GPL-3 | file LICENSE
+ggtext	0.1.2	GPL-2
+ggVennDiagram	1.5.4	GPL-3
+glasso	1.11	GPL-2
+glmnet	4.1-9	GPL-2
+glue	1.8.0	MIT + file LICENSE
+GO.db	3.18.0	Artistic-2.0
+gplots	3.2.0	GPL-2
+gprofiler2	0.2.3	GPL (>= 2)
+graphics	4.3.3	Part of R 4.3.3
+grDevices	4.3.3	Part of R 4.3.3
+grid	4.3.3	Part of R 4.3.3
+gridExtra	2.3	GPL (>= 2)
+grimon	1.0.0	GPL (>= 3)
+GSEABase	1.64.0	Artistic-2.0
+GSVA	1.50.5	GPL (>= 2)
+harmony	1.2.3	GPL-3
+heatmaply	1.5.0	GPL-2 | GPL-3
+HiClimR	2.2.1	GPL-3
+htmltools	0.5.8.1	GPL (>= 2)
+htmlwidgets	1.6.4	MIT + file LICENSE
+httr	1.4.7	MIT + file LICENSE
+igraph	2.1.4	GPL (>= 2)
+iheatmapr	0.7.1	MIT + file LICENSE
+inspectdf	0.0.12.1	GPL-2
+IntNMF	1.3.0	GPL-2
+irlba	2.3.5.1	GPL-3
+isva	1.9	GPL-2
+jsonlite	2.0.0	MIT + file LICENSE
+KEGG.db	3.2.4	file LICENSE
+lazyeval	0.2.2	GPL-3
+limma	3.58.1	GPL (>=2)
+magrittr	2.0.3	MIT + file LICENSE
+markdown	2.0	MIT + file LICENSE
+Matrix	1.6-5	GPL (>= 2) | file LICENCE
+matrixStats	1.5.0	Artistic-2.0
+matrixTests	0.2.3	GPL-2
+metap	1.12	GPL-2
+methods	4.3.3	Part of R 4.3.3
+microbenchmark	1.5.0	BSD_2_clause + file LICENSE
+miniUI	0.1.2	GPL-3
+missForest	1.5	GPL (>= 2)
+mixOmics	6.26.0	GPL (>= 2)
+MOFA2	1.12.1	file LICENSE
+MOFAdata	1.18.0	LGPL-3
+msa	1.34.0	GPL (>= 2)
+msImpute	1.12.0	GPL (>=2)
+MSnbase	2.28.1	Artistic-2.0
+MultiAssayExperiment	1.28.0	Artistic-2.0
+nipalsMCIA	1.0.0	GPL-3
+NNLM	0.4.4	BSD_2_clause + file LICENSE
+openxlsx	4.2.8	MIT + file LICENSE
+org.Hs.eg.db	3.21.0	Artistic-2.0
+org.Mm.eg.db	3.21.0	Artistic-2.0
+org.Pf.plasmo.db	3.14.0	Artistic-2.0
+org.Rn.eg.db	3.21.0	Artistic-2.0
+orthogene	1.8.0	GPL-3
+pairsD3	0.1.3	GPL (>= 3)
+pamr	1.57	GPL-2
+parallel	4.3.3	Part of R 4.3.3
+partykit	1.2-24	GPL-2 | GPL-3
+patchwork	1.3.1	MIT + file LICENSE
+pcaMethods	1.94.0	GPL (>= 3)
+PCSF	0.99.1	MIT + file LICENSE
+plotly	4.11.0	MIT + file LICENSE
+plotrix	3.8-4	GPL (>= 2)
+plsRcox	1.7.7	GPL-3
+png	0.1-8	GPL-2 | GPL-3
+ppcor	1.1	GPL-2
+processx	3.8.6	MIT + file LICENSE
+promises	1.3.3	MIT + file LICENSE
+psych	2.5.6	GPL (>= 2)
+purrr	1.0.4	MIT + file LICENSE
+qgraph	1.9.8	GPL-2
+qlcMatrix	0.9.8	GPL-3
+R6	2.6.1	MIT + file LICENSE
+randomForest	4.7-1.2	GPL (>= 2)
+randomForestSRC	3.4.1	GPL (>= 3)
+RColorBrewer	1.1-3	Apache License 2.0
+RcppML	0.3.7	GPL (>= 2)
+recount	1.28.0	Artistic-2.0
+RefMet	1.0.0	MIT + file LICENSE
+reshape2	1.4.4	MIT + file LICENSE
+reticulate	1.42.0	Apache License 2.0
+Rfast	2.1.5.1	GPL (>= 2.0)
+RGCCA	3.0.3	GPL-3
+rgeolocate	1.4.2	Apache License (== 2.0)
+rhdf5	2.46.1	Artistic-2.0
+rlang	1.1.6	MIT + file LICENSE
+rliger	2.2.0	GPL-3
+rpart	4.1.24	GPL-2 | GPL-3
+rpart.plot	3.1.2	GPL-3
+RSQLite	2.4.1	LGPL (>= 2.1)
+Rtsne	0.17	file LICENSE
+ruv	0.9.7.1	GPL
+RUVSeq	1.36.0	Artistic-2.0
+rworldmap	1.3-8	GPL (>= 2)
+SBGNview	1.16.0	AGPL-3
+scales	1.4.0	MIT + file LICENSE
+scatterD3	1.0.1	GPL (>= 3)
+scran	1.30.2	GPL-3
+Seurat	5.3.0	MIT + file LICENSE
+sever	0.0.7	MIT + file LICENSE
+shiny	1.11.0	GPL-3 | file LICENSE
+shiny.i18n	0.3.0	MIT + file LICENSE
+shinyalert	3.1.0	MIT + file LICENSE
+shinybrowser	1.0.0	MIT + file LICENSE
+shinyBS	0.61.1	GPL-3
+shinybusy	0.3.3	GPL-3
+shinycssloaders	1.1.0	MIT + file LICENSE
+shinydashboardPlus	2.0.5	GPL (>= 2) | file LICENSE
+shinyjqui	0.4.1	MIT + file LICENSE
+shinyjs	2.1.0	MIT + file LICENSE
+shinyvalidate	0.1.3	MIT + file LICENSE
+shinyWidgets	0.9.0	GPL-3
+SILGGM	1.0.0	GPL (>= 2)
+SingleR	2.4.1	GPL-3 + file LICENSE
+singscore	1.22.0	GPL-3
+SNFtool	2.3.1	GPL
+sodium	1.4.0	MIT + file LICENSE
+sortable	0.5.0	MIT + file LICENSE
+sparseMatrixStats	1.14.0	MIT + file LICENSE
+splines	4.3.3	Part of R 4.3.3
+stats	4.3.3	Part of R 4.3.3
+stringr	1.5.1	MIT + file LICENSE
+SummarizedExperiment	1.32.0	Artistic-2.0
+SuperCell	1.0.1	GPL-3
+survival	3.8-3	LGPL (>= 2)
+sva	3.50.0	Artistic-2.0
+svglite	2.2.1	GPL (>= 2)
+svgPanZoom	0.3.4	MIT + file LICENSE
+tidyr	1.3.1	MIT + file LICENSE
+TileDBArray	1.12.0	MIT + file LICENSE
+tools	4.3.3	Part of R 4.3.3
+torch	0.15.0	MIT + file LICENSE
+umap	0.2.10.0	MIT + file LICENSE
+utils	4.3.3	Part of R 4.3.3
+uwot	0.2.3	GPL (>= 3)
+vioplot	0.5.1	BSD_3_clause + file LICENSE
+viridis	0.6.5	MIT + file LICENSE
+visNetwork	2.1.2	MIT + file LICENSE
+waiter	0.2.5	MIT + file LICENSE
+webshot2	0.1.2	MIT + file LICENSE
+WGCNA	1.73	GPL (>= 2)
+withr	3.0.2	MIT + file LICENSE
+wordcloud	2.6	LGPL-2.1
+xfun	0.52	MIT + file LICENSE
+xgboost	1.7.11.1	Apache License (== 2.0) | file LICENSE
+xml2	1.3.8	MIT + file LICENSE
+yaml	2.3.10	BSD_3_clause + file LICENSE
+zip	2.3.3	MIT + file LICENSE

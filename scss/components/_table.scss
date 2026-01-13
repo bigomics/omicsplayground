@@ -107,8 +107,11 @@ html {
     }
     
     table.dataTable>tbody>tr.selected>* {
-        --dt-row-selected: 204, 204, 204;
+        --dt-row-selected: 204, 204, 204, 0.5;
         --dt-row-selected-text: 0, 0, 0;
+    }
+    table.dataTable>tbody>tr.selected:hover>* {
+        background: rgba(204, 204, 204, 0.5);
     }
 
 }

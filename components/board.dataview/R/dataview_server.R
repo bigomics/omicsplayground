@@ -25,10 +25,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ----------------------------------------------------------------------
 
     data_infotext <- HTML('
-        <center><iframe width="1120" height="630" src="https://www.youtube.com/embed/S32SPINqO8E"
-        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
-
+        <center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=Rc7Rlmxa3GyyEtsd&amp;start=190" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>')
 
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {
@@ -42,7 +39,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## update filter choices upon change of data set
     shiny::observe({
       shiny::req(pgx$Y, pgx$samples)
-
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "data_samplefilter", choices = levels)
@@ -63,13 +59,13 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Overview" = list(disable = NULL),
       "Sample QC" = list(disable = c("search_gene")),
       "Data table" = list(disable = NULL),
-      "Sample information" = list(disable = c("search_gene", "data_groupby", "data_type")),
-      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type"))
+      "Samples" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
+      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
     )
+
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
 
     shiny::observeEvent(
       {
@@ -86,27 +82,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
         # X should be labelled as features, so rownames(counts) and rownames(x) shoud match (???)
         features <- rownames(pgx$X)
-        # if (input$data_type %in% c("counts", "abundance")) {
-        #   features <- rownames(pgx$counts)
-        # } else {
-        #   ## log2CPM
-        #   features <- rownames(pgx$X)
-        # }
-
-        ## gene filter.
         fc2 <- rowMeans(playbase::pgx.getMetaFoldChangeMatrix(pgx)$fc**2, na.rm = TRUE)
-        features <- intersect(names(sort(-fc2)), features) ## most var gene??
+        features <- intersect(names(sort(-fc2, na.last = TRUE)), features) ## most var gene??
         sel.feature <- features[1]
-        features <- sort(features)
-        p1 <- head(rownames(pgx$genes), 1000)
-        p2 <- head(pgx$genes$symbol, 1000)
-        by.symbol <- mean(p1 == p2, na.rm = TRUE) > 0.8
-        if (0 && !by.symbol) {
-          gene <- pgx$genes[match(features, rownames(pgx$genes)), "symbol"]
-          feature_gene <- paste0(gene, "_", features)
-          names(features) <- feature_gene
-          features <- features[order(names(features))]
-        }
         i <- match(sel.feature, features)
         features <- c(features[i], features[-i])
         if (length(features) > 1000) {
@@ -128,18 +106,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
     )
 
-    last_search_gene <- reactiveVal()
-
-    input_search_gene <- reactive({
-      if (input$search_gene == "" || grepl("type for more", input$search_gene)) {
-        gene1 <- last_search_gene()
-        return(gene1)
-      }
-      last_search_gene(input$search_gene)
-      return(input$search_gene)
-    })
-
-
     ## ================================================================================
     ## =========================== MODULES ============================================
     ## ================================================================================
@@ -149,8 +115,15 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       samples <- colnames(pgx$X)
 
       if (!is.null(input$data_samplefilter)) {
-        samples <- playbase::selectSamplesFromSelectedLevels(
-          pgx$Y, input$data_samplefilter
+        samples <- tryCatch(
+          {
+            playbase::selectSamplesFromSelectedLevels(
+              pgx$samples, input$data_samplefilter
+            )
+          },
+          error = function(w) {
+            NULL
+          }
         )
       }
       # validate samples
@@ -183,6 +156,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       r.gene = reactive(input$search_gene),
       r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
+      labeltype = labeltype,
       watermark = WATERMARK
     )
 
@@ -216,6 +190,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     dataview_plot_totalcounts_server(
       "counts_total",
       getCountStatistics,
+      r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -224,6 +199,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "counts_boxplot",
       input,
       getCountStatistics,
+      r.samples = selected_samples,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -231,18 +207,22 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     dataview_plot_histogram_server(
       "counts_histplot",
       getCountStatistics,
+      r.samples = selected_samples,
       watermark = WATERMARK
     )
 
     dataview_plot_abundance_server(
       "counts_abundance",
       getCountStatistics,
+      r.samples = selected_samples,
       watermark = WATERMARK
     )
 
-    dataview_plot_genetypes_server(
-      "counts_genetypes",
-      getCountStatistics,
+    dataview_plot_variationcoefficient_server(
+      "variationcoefficient",
+      pgx,
+      r.samples = selected_samples,
+      r.groupby = reactive(input$data_groupby),
       watermark = WATERMARK
     )
 
@@ -291,15 +271,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ========================= FUNCTIONS ============================================
     ## ================================================================================
 
-    ##    getCountStatistics <- reactiveVal()
-    ##    observeEvent(
     getCountStatistics <- eventReactive(
       {
-        list(
-          pgx$X,
-          input$data_groupby,
-          input$data_samplefilter
-        )
+        list(pgx$X, input$data_groupby, input$data_samplefilter)
       },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
@@ -310,6 +284,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         samples <- colnames(pgx$X)
         samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, input$data_samplefilter)
         nsamples <- length(samples)
+        if (nsamples == 0) {
+          return(NULL)
+        }
         counts <- pgx$counts[, samples, drop = FALSE]
 
         grpvar <- input$data_groupby
@@ -355,6 +332,10 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         summed.counts <- t(sapply(gset, function(f) {
           Matrix::colSums(counts[which(gg %in% f), , drop = FALSE], na.rm = TRUE)
         }))
+        if (length(total.counts) == 1) {
+          summed.counts <- t(summed.counts)
+          colnames(summed.counts) <- colnames(counts)
+        }
         prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
         ## N. of detected features per sample or group AZ
@@ -379,8 +360,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
         ## align
         ss <- names(total.counts)
-        prop.counts <- prop.counts[, ss, drop = FALSE]
-        counts <- counts[, ss, drop = FALSE]
+        ss2 <- match(ss, colnames(prop.counts))
+        prop.counts <- prop.counts[, ss2, drop = FALSE]
+        counts <- counts[, ss2, drop = FALSE]
         if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
           offset <- 1e-6
         } else {
@@ -407,7 +389,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
 
     ## ================================================================================
-    ## ================================= END ====================================
+    ## =================================== END ========================================
     ## ================================================================================
   })
 }

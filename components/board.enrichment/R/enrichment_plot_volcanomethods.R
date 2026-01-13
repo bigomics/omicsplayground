@@ -4,20 +4,21 @@
 ##
 
 enrichment_plot_volcanomethods_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", TRUE),
+    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "Scale per method", TRUE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     )
@@ -37,7 +38,7 @@ enrichment_plot_volcanomethods_ui <- function(
     width = width,
     cards = TRUE,
     card_names = c("dynamic", "static"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -47,6 +48,7 @@ enrichment_plot_volcanomethods_server <- function(id,
                                                   gs_contrast,
                                                   gs_fdr,
                                                   gs_lfc,
+                                                  show_pv,
                                                   gset_selected,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -56,9 +58,11 @@ enrichment_plot_volcanomethods_server <- function(id,
       cmp <- gs_contrast()
       mx <- pgx$gset.meta$meta[[cmp]]
       FC <- unclass(mx$fc)
+      P <- unclass(mx$p)
       Q <- unclass(mx$q)
-      rownames(Q) <- rownames(FC) <- rownames(mx)
+      rownames(P) <- rownames(Q) <- rownames(FC) <- rownames(mx)
       FC[which(is.infinite(FC))] <- NA
+      P[which(is.na(P))] <- 1
       Q[which(is.na(Q))] <- 1
 
       fdr <- as.numeric(gs_fdr())
@@ -69,12 +73,20 @@ enrichment_plot_volcanomethods_server <- function(id,
       sel.gsets <- gset_collections[[gs_features()]]
       nlq <- -log10(1e-99 + unlist(Q))
 
+      S <- Q
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+        S <- P
+        title_y <- "Significance (-log10p)"
+      }
+
       pd <- list(
         FC = FC,
-        Q = Q,
+        S = S,
         sel.gsets = sel.gsets,
         fdr = fdr,
         lfc = lfc,
+        title_y = title_y,
         gset_selected = gset_selected()
       )
       pd
@@ -90,21 +102,22 @@ enrichment_plot_volcanomethods_server <- function(id,
       lfc <- pd[["lfc"]]
       highlight <- pd[["gset_selected"]]
       label <- pd[["gset_selected"]]
+      title_y <- pd[["title_y"]]
       ## meta tables
       F <- pd$FC
-      Q <- pd$Q
+      S <- pd$S
       sel.gsets <- pd$sel.gsets
       rm(pd)
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = F,
-        Q = Q,
+        Q = S,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
         names = rownames(F),
-        title_y = "significance (-log10q)",
-        title_x = "effect size (log2FC)",
+        title_x = "Effect size (log2FC)",
+        title_y = title_y,
         share_axis = !input$scale_per_method,
         yrange = yrange,
         n_rows = n_rows,
@@ -140,7 +153,7 @@ enrichment_plot_volcanomethods_server <- function(id,
       shiny::req(pd)
 
       fc <- pd[["FC"]]
-      qv <- pd[["Q"]]
+      sig <- pd[["S"]] ## can be q or p value
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
       fc <- data.frame(fc) %>%
@@ -149,15 +162,15 @@ enrichment_plot_volcanomethods_server <- function(id,
           names_to = "facet", # Name of the new column for timepoints
           values_to = "fc"
         )
-      qv <- data.frame(qv) %>%
+      sig <- data.frame(sig) %>%
         tidyr::pivot_longer(
           cols = everything(), # Select all columns to pivot
           names_to = "facet", # Name of the new column for timepoints
-          values_to = "qv"
+          values_to = "sig"
         )
       facet <- fc$facet
       x <- fc$fc
-      y <- qv$qv
+      y <- sig$sig
       y <- -log10(y + 1e-12)
 
       playbase::ggVolcano(
@@ -171,7 +184,7 @@ enrichment_plot_volcanomethods_server <- function(id,
         lfc = pd[["lfc"]],
         psig = pd[["fdr"]],
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10p)",
+        ylab = pd[["title_y"]],
         marker.size = 1.2,
         showlegend = FALSE,
         title = NULL

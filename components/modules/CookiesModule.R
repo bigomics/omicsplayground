@@ -14,8 +14,12 @@ extract_cookie_value <- function(session, cookie_name) {
 }
 
 # Decrypt cookie
-decrypt_cookie <- function(cookie, nonce) {
-  key_base64 <- readLines(file.path(OPG, "etc/keys/cookie.txt"))[1]
+decrypt_cookie <- function(cookie, nonce, key_file = "cookie.txt") {
+  key_file_path <- file.path(OPG, "etc/keys", key_file)
+  if (!file.exists(key_file_path)) {
+    return(NULL)
+  }
+  key_base64 <- readLines(key_file_path)[1]
   email_nonce_raw <- tryCatch(
     {
       sodium::hex2bin(nonce)
@@ -54,7 +58,7 @@ get_and_decrypt_cookie <- function(session) {
   cookie <- extract_cookie_value(session, "persistentOPG")
   nonce <- extract_cookie_value(session, "persistentOPG_nonce")
   if (!is.null(cookie) & !is.null(nonce)) {
-    decrypted_cookie <- decrypt_cookie(cookie, nonce)
+    decrypted_cookie <- decrypt_cookie(cookie, nonce, key_file = "cookie2.txt")
     return(decrypted_cookie)
   } else {
     return(NULL)
@@ -63,7 +67,11 @@ get_and_decrypt_cookie <- function(session) {
 
 # Save encrypted session cookie
 save_session_cookie <- function(session, cred) {
-  key_base64 <- readLines(paste0(OPG, "/etc/keys/cookie.txt"))[1]
+  key_file_path <- paste0(OPG, "/etc/keys/cookie2.txt")
+  if (!file.exists(key_file_path)) {
+    return(NULL)
+  }
+  key_base64 <- readLines(key_file_path)[1]
   passkey <- sodium::sha256(charToRaw(key_base64))
   plaintext <- isolate(cred$email)
   plaintext.raw <- serialize(plaintext, NULL)

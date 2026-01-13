@@ -21,6 +21,10 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
+    ## ========================================================================
+    ## ============================ OBSERVERS =================================
+    ## ========================================================================
+
     observeEvent(input$tcga_info, {
       showModal(
         modalDialog(

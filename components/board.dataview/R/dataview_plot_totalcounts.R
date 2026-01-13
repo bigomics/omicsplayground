@@ -4,23 +4,21 @@
 ##
 
 dataview_plot_totalcounts_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    info.text,
-    caption,
-    title) {
+  id,
+  label = "",
+  height,
+  width,
+  info.text,
+  caption,
+  title
+) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList( ## AZ
+  options <- shiny::tagList(
     shiny::radioButtons(
       inputId = ns("sampleqc_plottype"),
       label = "Plot type",
-      choices = c(
-        "Total abundance",
-        "Number of detected features"
-      )
+      choices = c("Total abundance", "Number of detected features")
     )
   )
 
@@ -32,7 +30,7 @@ dataview_plot_totalcounts_ui <- function(
     info.text = info.text,
     caption = caption,
     options = options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -41,13 +39,14 @@ dataview_plot_totalcounts_ui <- function(
 dataview_plot_totalcounts_server <- function(id,
                                              getCountStatistics,
                                              r.data_type,
+                                             r.samples = reactive(""),
                                              r.data_groupby = reactive(""),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       data_groupby <- r.data_groupby()
       data_type <- r.data_type()
-
+      samples <- r.samples()
       tbl <- getCountStatistics()
       req(tbl)
 
@@ -63,11 +62,6 @@ dataview_plot_totalcounts_server <- function(id,
 
       sampleqc_plottype <- input$sampleqc_plottype
 
-      ## ylab <- paste0("total ", type, logtype)
-      ## if (data_groupby != "<ungrouped>") {
-      ##   ylab <- paste0("average total ", type, logtype)
-      ## }
-
       if (sampleqc_plottype == "Total abundance") {
         ylab <- paste0("Total ", type)
       } else if (sampleqc_plottype == "Number of detected features") {
@@ -77,7 +71,6 @@ dataview_plot_totalcounts_server <- function(id,
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          ## counts = log10(tbl$total.counts),
           counts = tbl$total.counts,
           ndetectedfeat = tbl$n.detected.features
         ),
@@ -87,45 +80,6 @@ dataview_plot_totalcounts_server <- function(id,
 
       return(res)
     })
-
-
-    ## plot.RENDER <- function() {
-    ##  res <- plot_data()
-    ##  shiny::req(res)
-    ##  df <- res[[1]]
-    ## ---- xlab ------ ###
-    ##  names.arg <- df$sample
-    ##  if (length(names.arg) > 20) { names.arg <- "" }
-    ##  cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
-    ##  par(mar = c(8, 4, 2, 0.5), mgp = c(2.2, 0.8, 0))
-    ## if (res$sampleqc_plottype == "Average total abundance") { ## AZ
-    ##    barplot(
-    ##        df$counts / 1e6,
-    ##        las = 3,
-    ##        border = NA,
-    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
-    ##        cex.names = cex.names,
-    ##        cex.lab = 1,
-    ##        ylab = paste(res$ylab, "(M)"),
-    ##        ylim = c(0, max(df$counts) / 1e6) * 1.1,
-    ##        names.arg = names.arg
-    ##    )
-    ## } else if (res$sampleqc_plottype == "Number of detected features") {
-    ##    barplot(
-    ##        df$ndetectedfeat,
-    ##        las = 3,
-    ##        border = NA,
-    ##        col = rgb(0.2, 0.5, 0.8, 0.8),
-    ##        cex.names = cex.names,
-    ##        cex.lab = 1,
-    ##        ylab = paste(res$ylab, "(M)"),
-    ##        ylim = c(0, max(df$ndetectedfeat) / 1e6) * 1.1,
-    ##        names.arg = names.arg
-    ##     )
-    ## }
-    ## }
-
-    ## modal_plot.RENDER <- function() { plot.RENDER() }
 
     plotly.RENDER <- function() {
       res <- plot_data()
@@ -146,7 +100,7 @@ dataview_plot_totalcounts_server <- function(id,
           plotly_default() %>%
           plotly::layout(
             xaxis = list(title = FALSE),
-            yaxis = list(title = res$ylab),
+            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
             margin = list(l = 30, r = 0, t = 0, b = 0)
           )
         fig
@@ -164,7 +118,7 @@ dataview_plot_totalcounts_server <- function(id,
           plotly_default() %>%
           plotly::layout(
             xaxis = list(title = FALSE),
-            yaxis = list(title = res$ylab),
+            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
             margin = list(l = 30, r = 0, t = 0, b = 0)
           )
         fig

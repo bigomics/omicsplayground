@@ -4,13 +4,14 @@
 ##
 
 foldchange_heatmap_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   FoldchangeHeatmap.opts <- shiny::tagList(
@@ -32,7 +33,7 @@ foldchange_heatmap_ui <- function(
     info.text = info.text,
     caption = caption,
     options = FoldchangeHeatmap.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
@@ -73,6 +74,7 @@ foldchange_heatmap_server <- function(id,
 
     FoldchangeHeatmap.PLOT <- function() {
       F1 <- plot_data()
+      shiny::req(F1)
       bh <- 5
       mh <- 6
       bm <- 4
@@ -84,6 +86,7 @@ foldchange_heatmap_server <- function(id,
       }
       bm <- 5 - mh ## bottom margin
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
+      rownames(F1) <- playbase::probe2symbol(rownames(F1), pgx$genes, "gene_name", fill_na = TRUE)
 
       plt <- grid::grid.grabExpr({
         frame()

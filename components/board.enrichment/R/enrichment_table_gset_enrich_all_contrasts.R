@@ -4,12 +4,13 @@
 ##
 
 enrichment_table_gset_enrich_all_contrasts_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   fctable_opts <- shiny::tagList(
@@ -65,17 +66,17 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
       if (show.q) {
         F1 <- do.call(cbind, lapply(1:ncol(F), function(i) cbind(F[, i], Q[, i])))
         colnames(F1) <- as.vector(rbind(paste0("ES.", colnames(F)), paste0("q.", colnames(Q))))
-        df <- data.frame(geneset = gs, rms.ES = fc.rms, F1, check.names = FALSE)
+        df <- data.frame(geneset = gs, rms.logFC = fc.rms, F1, check.names = FALSE)
       } else {
         F1 <- F
         colnames(F1) <- paste0("ES.", colnames(F))
-        df <- data.frame(geneset = gs, rms.ES = fc.rms, F1, check.names = FALSE)
+        df <- data.frame(geneset = gs, rms.logFC = fc.rms, F1, check.names = FALSE)
       }
 
       ## get current filtered geneset and extract names of gene sets
       res <- getFilteredGeneSetTable()
       df <- df[intersect(rownames(df), rownames(res)), ] ## take intersection of current comparison
-      df <- df[order(-df$rms.ES), ]
+      df <- df[order(-df$rms.logFC), ]
 
       colnames(df) <- gsub("_", " ", colnames(df)) ## so it allows wrap line
       colnames(F1) <- gsub("_", " ", colnames(F1)) ## so it allows wrap line
@@ -130,8 +131,8 @@ enrichment_table_gset_enrich_all_contrasts_server <- function(id,
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
         DT::formatSignif(columns = fc.cols, digits = 4) %>%
         DT::formatStyle(
-          "rms.ES",
-          background = color_from_middle(df$rms.ES, "lightblue", "#f5aeae"),
+          "rms.logFC",
+          background = color_from_middle(df$rms.logFC, "lightblue", "#f5aeae"),
           backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center"
         ) %>%

@@ -5,12 +5,13 @@
 
 
 dataview_plot_boxplot_ui <- function(
-    id,
-    label = "",
-    height,
-    title,
-    caption,
-    info.text) {
+  id,
+  label = "",
+  height,
+  title,
+  caption,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -20,22 +21,23 @@ dataview_plot_boxplot_ui <- function(
     label = label,
     caption = caption,
     info.text = info.text,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height
   )
 }
 
-dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.data_type, watermark = FALSE) {
+dataview_plot_boxplot_server <- function(id,
+                                         parent.input,
+                                         getCountsTable,
+                                         r.samples = reactive(""),
+                                         r.data_type,
+                                         watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
-      req(res)
-
-      list(
-        counts = res$log2counts,
-        sample = colnames(res$log2counts)
-      )
+      samples <- r.samples()
+      shiny::req(res)
+      list(counts = res$log2counts, sample = colnames(res$log2counts))
     })
 
     plot.RENDER <- function() {
@@ -80,10 +82,10 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
         ylab <- "Abundance (log2)"
       }
 
-      df <- res$counts[, ]
+      df <- res$counts[, , drop = FALSE]
       if (nrow(df) > 1000) {
         sel <- sample(nrow(df), 1000)
-        df <- df[sel, ]
+        df <- df[sel, , drop = FALSE]
       }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
@@ -115,8 +117,6 @@ dataview_plot_boxplot_server <- function(id, parent.input, getCountsTable, r.dat
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-
-
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark

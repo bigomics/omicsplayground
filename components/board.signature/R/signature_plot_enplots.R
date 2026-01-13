@@ -13,15 +13,16 @@
 #'
 #' @export
 signature_plot_enplots_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
   info_text <- "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
@@ -33,7 +34,7 @@ signature_plot_enplots_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )
@@ -125,6 +126,8 @@ signature_plot_enplots_server <- function(id,
           )
         }
         rownames(F)[is.na(rownames(F))] <- "NA"
+        rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
+        gset <- playbase::probe2symbol(gset, pgx$genes, "gene_name", fill_na = TRUE)
         p <- playbase::gsea.enplotly(
           F[, i],
           gset,
@@ -194,7 +197,6 @@ signature_plot_enplots_server <- function(id,
 
       return(fig)
     }
-
 
 
     PlotModuleServer(

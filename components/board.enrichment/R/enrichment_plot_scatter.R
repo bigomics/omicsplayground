@@ -20,14 +20,15 @@
 #' @return
 #' A Shiny Module UI definition
 enrichment_plot_scatter_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -41,7 +42,7 @@ enrichment_plot_scatter_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -142,6 +143,7 @@ enrichment_plot_scatter_server <- function(id,
       gset <- gset_selected()
       shiny::req(sel, gset)
       gene <- sel$gene
+      gene <- playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE)
       gset <- gset[1]
       gx <- pgx$X[sel$rn, ]
       sx <- pgx$gsetX[gset, ]

@@ -4,16 +4,17 @@
 ##
 
 clustering_plot_clusterannot_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   clustannot_plots.opts <- shiny::tagList(
@@ -23,14 +24,6 @@ clustering_plot_clusterannot_ui <- function(
       ),
       "Select the level of an anotation analysis.",
       placement = "left", options = list(container = "body")
-    ),
-    shiny::conditionalPanel(
-      "input.xann_level == 'geneset'",
-      ns = ns,
-      withTooltip(shiny::checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
-        "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
-        placement = "left", options = list(container = "body")
-      )
     ),
     withTooltip(shiny::selectInput(ns("xann_refset"), "Reference set:", choices = "", width = "80%"),
       "Specify a reference set to be used in the annotation.",
@@ -49,7 +42,7 @@ clustering_plot_clusterannot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = clustannot_plots.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )
@@ -92,11 +85,13 @@ clustering_plot_clusterannot_server <- function(id,
         }
         if (input$xann_level == "gene") {
           ann.types <- names(pgx$families)
-          cc <- sapply(pgx$families, function(g) length(intersect(g, rownames(pgx$X))))
+          genes <- playbase::probe2symbol(rownames(pgx$X), pgx$genes, "symbol", fill_na = TRUE)
+          cc <- sapply(pgx$families, function(g) length(intersect(toupper(g), toupper(genes))))
           ann.types <- ann.types[cc >= 3]
         }
         ann.types <- setdiff(ann.types, "<all>") ## avoid slow...
         ann.types <- grep("^<", ann.types, invert = TRUE, value = TRUE) ## remove special groups
+        if (length(ann.types) == 0) ann.types <- "<all>" # bring back <all> is ann.types is empty
         sel <- ann.types[1]
         if ("H" %in% ann.types) sel <- "H"
         j <- grep("^transcription", ann.types, ignore.case = TRUE)
@@ -136,7 +131,6 @@ clustering_plot_clusterannot_server <- function(id,
 
       klrpal <- omics_pal_d("muted_light")(ncol(rho))
 
-
       plot_list <- list()
       i <- 1
       for (i in 1:min(9, ncol(rho))) {
@@ -144,7 +138,7 @@ clustering_plot_clusterannot_server <- function(id,
         names(x) <- sub(".*:", "", names(x))
         names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
         y <- names(x)
-        y <- factor(y, levels = y)
+        y <- factor(y, levels = unique(y))
         anntitle <- function(tt) {
           list(
             x = 0.5, y = 1.0,
@@ -166,11 +160,10 @@ clustering_plot_clusterannot_server <- function(id,
             type = "bar",
             orientation = "h",
             hoverinfo = "text",
-            text = colnames(rho)[i],
+            text = NULL,
             hovertemplate = ~ paste0(
               "Annotation: <b>%{y}</b><br>",
-              "Cluster: <b>%{text}</b><br>",
-              "Correlation (R): <b>", sprintf("%1.2f", x), "</b>",
+              "Correlation (R): <b>%{x:1.2f}</b>",
               "<extra></extra>"
             ),
             ## NOTE: I suggest to not use a categorical palette for the different clusters;
@@ -263,7 +256,6 @@ clustering_plot_clusterannot_server <- function(id,
     return(
       list(
         xann_level = shiny::reactive(input$xann_level),
-        xann_odds_weighting = shiny::reactive(input$xann_odds_weighting),
         xann_refset = shiny::reactive(input$xann_refset)
       )
     )

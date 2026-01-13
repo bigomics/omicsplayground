@@ -13,12 +13,13 @@
 #'
 #' @export
 drugconnectivity_plot_cmap_dsea_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -55,7 +56,7 @@ drugconnectivity_plot_cmap_dsea_ui <- function(
     plotlib = "base",
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = c("auto", "100%")
   )

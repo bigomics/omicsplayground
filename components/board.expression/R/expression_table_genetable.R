@@ -12,17 +12,22 @@
 #'
 #' @export
 expression_table_genetable_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   genetable_opts <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("top 10 up/down genes"), FALSE),
+    withTooltip(shiny::checkboxInput(ns("gx_top10"), tspan("Top 10 up/down genes"), FALSE),
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
+      placement = "top", options = list(container = "body")
+    ),
+    withTooltip(shiny::checkboxInput(ns("show_pct_na"), tspan("Show percent missingness"), FALSE),
+      "Display a column reporting the percentage of missingness for each feature.",
       placement = "top", options = list(container = "body")
     )
   )
@@ -46,11 +51,14 @@ expression_table_genetable_ui <- function(
 #'
 #' @export
 expression_table_genetable_server <- function(id,
+                                              pgx,
+                                              comp,
                                               res,
                                               organism,
                                               show_pv,
                                               height,
                                               scrollY,
+                                              cont,
                                               watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -62,7 +70,9 @@ expression_table_genetable_server <- function(id,
       if ("gene_title" %in% colnames(res)) {
         res$gene_title <- playbase::shortstring(res$gene_title, 50)
       }
-      rownames(res) <- sub(".*:", "", rownames(res))
+
+      na.fc <- which(is.na(res$logFC))
+      if (any(na.fc)) res$logFC[na.fc] <- 999
 
       if (show_pv()) {
         res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
@@ -78,9 +88,7 @@ expression_table_genetable_server <- function(id,
         } else {
           pos <- any(res$logFC > 0)
           neg <- any(res$logFC < 0)
-          if (pos && neg) {
-            res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
-          }
+          if (pos && neg) res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
         }
       }
       res
@@ -90,15 +98,12 @@ expression_table_genetable_server <- function(id,
       df <- table_data()
       df$gene_name <- NULL
 
-      if (organism %in% c("Human", "human")) {
-        df$human_ortholog <- NULL
-      }
-      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
-        df$feature <- NULL
-      }
+      if (organism %in% c("Human", "human")) df$human_ortholog <- NULL
+
+      if (sum(df$feature %in% df$symbol) > nrow(df) * .8) df$feature <- NULL
 
       if (!showdetails) {
-        hide.cols <- grep("^AveExpr|p$|q$", colnames(df))
+        hide.cols <- grep("p$|q$|ortho", colnames(df))
         hide.cols <- setdiff(hide.cols, grep("^meta", colnames(df)))
         if (length(hide.cols)) df <- df[, -hide.cols]
       }
@@ -108,7 +113,19 @@ expression_table_genetable_server <- function(id,
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
       fx <- df[, fx.col]
 
-      DT::datatable(df,
+      if (input$show_pct_na) {
+        comp <- comp()
+        samples <- colnames(pgx$counts)
+        jj <- which(!is.na(pgx$contrasts[, comp]))
+        if (length(jj) > 0) samples <- rownames(pgx$contrasts)[jj]
+        counts <- pgx$counts[rownames(df), samples, drop = FALSE]
+        df$pct.NA <- unname(round(rowMeans(is.na(counts)) * 100, 1))
+      } else {
+        df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]
+      }
+
+      DT::datatable(
+        df,
         rownames = FALSE,
         class = "compact hover",
         extensions = c("Scroller"),
@@ -122,11 +139,8 @@ expression_table_genetable_server <- function(id,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE,
-          search = list(
-            regex = TRUE,
-            caseInsensitive = TRUE
-          )
-        ) ## end of options.list
+          search = list(regex = TRUE, caseInsensitive = TRUE)
+        )
       ) %>%
         DT::formatSignif(numeric.cols, 4) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
@@ -155,7 +169,8 @@ expression_table_genetable_server <- function(id,
       func = table.RENDER,
       func2 = table.RENDER_modal,
       csvFunc = table_csv,
-      selector = "single"
+      selector = "single",
+      download.contrast.name = cont
     )
 
     return(genetable)

@@ -4,15 +4,16 @@
 ##
 
 dataview_plot_phenoassociation_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption
+) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -32,7 +33,7 @@ dataview_plot_phenoassociation_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )

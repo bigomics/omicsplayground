@@ -14,13 +14,14 @@
 #'
 #' @export
 expression_plot_topgenes_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   topgenes_opts <- shiny::tagList(
@@ -45,7 +46,7 @@ expression_plot_topgenes_ui <- function(
     info.text = info.text,
     caption = caption,
     options = topgenes_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -132,7 +133,7 @@ expression_plot_topgenes_server <- function(id,
         annotations <- list(
           x = 0.5,
           y = annot.y,
-          text = gene,
+          text = playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE),
           font = list(size = 10 * title.cex),
           xref = "paper",
           yref = "paper",

@@ -13,16 +13,17 @@
 #'
 #' @export
 biomarker_plot_heatmap_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_options <- tagList(
@@ -45,7 +46,7 @@ biomarker_plot_heatmap_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -70,6 +71,7 @@ biomarker_plot_heatmap_server <- function(id,
       ## return data structure for plots
       plot_data <- shiny::reactive({
         shiny::req(pgx$X)
+        shiny::req(is_computed())
 
         res <- calcVariableImportance()
         if (is.null(res)) {
@@ -83,9 +85,8 @@ biomarker_plot_heatmap_server <- function(id,
         } else {
           kk <- colnames(res$X)
         }
-        X <- pgx$X[gg, kk]
-        X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
-
+        X <- pgx$X[gg, kk, drop = FALSE]
+        ## X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
         splitx <- NULL
         ct <- pdx_predicted()
         do.survival <- grepl("survival", ct, ignore.case = TRUE)
@@ -119,11 +120,12 @@ biomarker_plot_heatmap_server <- function(id,
         shiny::req(res)
 
         X <- res$X
+        rownames(X) <- playbase::probe2symbol(rownames(X), pgx$genes, "gene_name", fill_na = TRUE)
         splitx <- res$splitx
 
         playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
-          dist.method = "euclidean",
+          dist.method = "euclidean", col.dist.method = "euclidean",
           show_colnames = FALSE, ## save space, no sample names
           show_legend = ifelse(is.null(splitx), TRUE, FALSE),
           key.offset = c(0.05, 0.98),

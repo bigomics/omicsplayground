@@ -6,7 +6,6 @@
 ConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("contrast"), "Contrast:",
         choices = NULL, multiple = FALSE
@@ -18,39 +17,37 @@ ConnectivityInputs <- function(id) {
       "Select reference signature database.",
       placement = "right", options = list(container = "body")
     ),
-    shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Advanced options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "right", options = list(container = "body")
-    ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
-      shiny::br(),
-      withTooltip(
-        shiny::checkboxInput(ns("hideclustcontrasts"), "hide cluster contrasts", TRUE),
-        "Hide cluster contrasts.",
-        placement = "right", options = list(container = "body")
-      ),
-      withTooltip(
-        shiny::checkboxInput(ns("abs_score"), "abs.score", TRUE),
-        "Use absolute score value",
-        placement = "right", options = list(container = "body")
-      ),
-      shiny::hr(),
-      shiny::tags$head(shiny::tags$style("#cmap-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-      withTooltip(
-        shiny::textAreaInput(ns("genelist"), tspan("Select genes:"),
-          rows = 15
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        withTooltip(
+          shiny::checkboxInput(ns("hideclustcontrasts"), "hide cluster contrasts", TRUE),
+          "Hide cluster contrasts.",
+          placement = "right", options = list(container = "body")
         ),
-        "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
-      ),
-      shiny::radioButtons(
-        ns("genelist_ntop"),
-        tspan("ngenes:"),
-        choices = c(10, 50, 100),
-        sel = 50, inline = TRUE
+        withTooltip(
+          shiny::checkboxInput(ns("abs_score"), "abs.score", TRUE),
+          "Use absolute score value",
+          placement = "right", options = list(container = "body")
+        ),
+        shiny::hr(),
+        shiny::tags$head(shiny::tags$style("#cmap-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
+        withTooltip(
+          shiny::textAreaInput(ns("genelist"), tspan("Select genes:"),
+            rows = 15
+          ),
+          "Paste a list of genes that defines your signature. By default, the top50 most (absolute) differentially expressed genes (by logFC) are chosen for the selected comparison."
+        ),
+        shiny::radioButtons(
+          ns("genelist_ntop"),
+          tspan("ngenes:"),
+          choices = c(10, 50, 100),
+          sel = 50, inline = TRUE
+        )
       )
     )
   )
@@ -67,11 +64,11 @@ ConnectivityUI <- function(id) {
       "FC correlation",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           bslib::layout_columns(
             col_widths = 12,
             connectivity_plot_FCFCplots_ui(
@@ -112,10 +109,11 @@ ConnectivityUI <- function(id) {
       "FC Heatmap",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bs_alert("Compare the fold-change of similar signatures across different experiments."),
         bslib::layout_columns(
           col_widths = c(3, 9),
+          height = "calc(100vh - 180px)",
           connectivity_plot_connectivityMap_ui(
             ns("connectivityMap"),
             title = "Connectivity map",
@@ -153,7 +151,7 @@ ConnectivityUI <- function(id) {
       "Meta-network",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 180px)",
+        height = "calc(100vh - 181px)",
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = "35%",

@@ -18,9 +18,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     fullH <- 850 ## full height of page
 
     clust_infotext <-
-      '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/hyDEk_MCaTk"
-       title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-       encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
+      '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/phm1joeZTO4?si=GgUWBZNlxdU_TpPX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
 
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
@@ -34,13 +32,14 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ),
       "PCA/tSNE" = list(
         enable = NULL,
-        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk", "hm_scale", "cluster_bar", "spliby_bar")
+        disable = c("hm_features", "hm_splitby", "hm_level", "hm_filterXY", "hm_filterMitoRibo", "hm_topmode", "hm_ntop", "hm_clustk")
       ),
       "Parallel" = list(
         enable = NULL,
-        disable = c("selected_phenotypes", "hm_clustmethod", "pheno_bar")
+        disable = c("selected_phenotypes", "hm_clustmethod")
       )
     )
+
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
@@ -57,7 +56,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
-      var.types <- colnames(pgx$Y)
+      var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
       var.types <- var.types[grep("sample|patient", var.types, invert = TRUE)]
       vv <- c(var.types, rep("<none>", 10))
       var.types0 <- c("<none>", "<cluster>", var.types)
@@ -79,8 +78,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.colvar"), choices = var.types0, selected = sel)
       shiny::updateSelectInput(session, paste0("PCAplot-", "hmpca.shapevar"), choices = var.types1, selected = "<none>")
       shiny::updateSelectInput(session, "selected_phenotypes", choices = var.types, selected = head(var.types, 6))
-      choices <- c("none", "phenotype", "gene")
-      choices_names <- c("none", "phenotype", tspan("gene", js = FALSE))
+      choices <- c("none", "phenotype", "contrast", "gene")
+      choices_names <- c("none", "phenotype", "contrast", tspan("gene", js = FALSE))
       names(choices) <- choices_names
       shiny::updateRadioButtons(session, "hm_splitby", choices = choices)
       shiny::updateTextAreaInput(session, "hm_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
@@ -133,14 +132,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           subset_choices <- sapply(choices, function(x) any(x == input$hm_splitvar))
           choices <- names(subset_choices)
         }
-        choices <- c("<custom>", "<contrast>", choices)
+        choices <- c("<custom>", choices)
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices = choices)
       }
     )
 
     # reactive functions ##############
-
     shiny::observeEvent(
       {
         list(input$hm_splitby, pgx$X, pgx$samples)
@@ -151,7 +149,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           return()
         }
         if (input$hm_splitby == "gene") {
-          xgenes <- sort(rownames(pgx$X))
+          xgenes <- sort(rownames(getFilteredMatrix()$zx))
           shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
         }
         if (input$hm_splitby == "phenotype") {
@@ -164,6 +162,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           ), 1)
           shiny::updateSelectInput(session, "hm_splitvar", choices = cvar, selected = sel)
         }
+        if (input$hm_splitby == "contrast") {
+          cmp <- sort(playbase::pgx.getContrasts(pgx))
+          shiny::updateSelectInput(session, "hm_splitvar",
+            choices = cmp,
+            selected = cmp[1]
+          )
+        }
       }
     )
 
@@ -171,6 +176,14 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
+    })
+
+    shiny::observeEvent(pgx, {
+      shiny::req(pgx$datatype)
+      datatype <- pgx$datatype
+      if (datatype %in% c("scRNA-seq", "scRNAseq")) {
+        shiny::updateRadioButtons(session, "hm_splitby", selected = "phenotype")
+      }
     })
 
     ## ===================================================================================
@@ -187,15 +200,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredMatrix <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families, pgx$genes)
 
-      ## NEED RETHINK!!!!! THIS CREATED PROBLEMS.
-      if (!pgx$organism %in% c("Human", "human")) {
-        genes <- pgx$genes[rownames(pgx$X), c("gene_name", "human_ortholog")]
-        genes <- ifelse(genes$human_ortholog == "" | is.na(genes$human_ortholog),
-          rownames(genes), genes$human_ortholog
-        )
-      } else {
-        genes <- as.character(rownames(pgx$genes[rownames(pgx$X), ]))
-      }
+      ## all genes and genesets
+      genes <- unique(pgx$genes[, "symbol"])
       genesets <- rownames(pgx$gsetX)
 
       ft <- input$hm_features
@@ -203,13 +209,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       if (input$hm_level == "geneset") {
         ## Gene set level features #########
-
         gsets <- rownames(pgx$gsetX)
         gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
         gsets <- unique(gset_collections[[ft]])
         zx <- pgx$gsetX
         if (input$hm_customfeatures != "") {
-          gsets1 <- genesets[grep(input$hm_customfeatures, genesets, ignore.case = TRUE)]
+          customfeatures <- clean_custom_features(input$hm_customfeatures)
+          gsets1 <- genesets[grep(customfeatures, genesets, ignore.case = TRUE)]
           if (length(gsets1) > 2) gsets <- gsets1
         }
         zx <- zx[intersect(gsets, rownames(zx)), ]
@@ -218,77 +224,77 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       idx <- NULL
       if (input$hm_level == "gene") {
         ## Gene level features ###########
-        gg <- pgx$families[[1]]
-
+        pp <- NULL
         if (ft == "<all>") {
-          gg <- rownames(pgx$X)
-        } else if (ft == "<contrast>") {
-          ct <- input$hm_contrast
-          shiny::req(ct)
-          shiny::req(input$hm_ntop)
-          fc <- names(sort(playbase::pgx.getMetaMatrix(pgx)$fc[, ct]))
-          n1 <- floor(as.integer(input$hm_ntop) / 2)
-          gg <- unique(c(head(fc, n1), tail(fc, n1)))
-          if (input$hm_splitby == "gene") {
-            if (!(input$hm_splitvar %in% gg)) {
-              gg <- c(input$hm_splitvar, gg)
-            }
-          }
+          ## all features
+          pp <- rownames(pgx$X)
         } else if (ft %in% names(pgx$families)) {
-          gg <- pgx$families[[ft]]
+          pp <- playbase::map_probes(pgx$genes, pgx$families[[ft]])
         } else if (ft == "<custom>" && ft != "") {
-          message("[getFilteredMatrix] selecting for <custom> features")
-          customfeatures <- "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3"
-          customfeatures <- "CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR --- CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 --- TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
-          customfeatures <- input$hm_customfeatures
+          customfeatures <- clean_custom_features(input$hm_customfeatures)
           gg1 <- strsplit(customfeatures, split = "[, ;\n\t]")[[1]]
-
-          is.regx <- grepl("[*.?\\[]", gg1[1])
-          if (length(gg1) == 1 && is.regx) {
+          is.regex <- grepl("[*?\\[]", gg1[1])
+          if (length(gg1) == 1 && is.regex) {
             gg1 <- grep(gg1, genes, ignore.case = TRUE, value = TRUE)
           }
-          if (length(gg1) == 1 && !is.regx) {
-            gg1 <- c(gg1, gg1) ## heatmap does not like single gene
-          }
+          # heatmap does not like single gene
+          shiny::validate(shiny::need(
+            length(gg1) > 1 && !is.regex && sum(gg1 %in% genes) > 1,
+            tspan("Please input more than 1 valid gene.", js = FALSE)
+          ))
 
-          gg1 <- gg1[toupper(gg1) %in% toupper(genes) | grepl("---", gg1)]
+          ## build index idx that determines groups/cluster of genes.
           idx <- NULL
           if (any(grepl("^---", gg1))) {
-            message("[getFilteredMatrix] <custom> groups detected")
-            idx <- rep("F1", length(gg1))
-            names(idx) <- gg1
+            idx <- list()
             kk <- c(1, grep("^---", gg1), length(gg1) + 1)
+            i <- 1
             for (i in 1:(length(kk) - 1)) {
               ii <- kk[i]:(kk[i + 1] - 1)
-              idx[ii] <- paste0("F", i)
+              idx[[i]] <- playbase::map_probes(pgx$genes, gg1[ii])
             }
-            gg1 <- gg1[grep("---", gg1, invert = TRUE)]
-            idx <- idx[gg1]
+            pp <- unlist(idx)
+            names(idx) <- paste0("F", 1:length(idx))
+            idx <- unlist(mapply(rep, names(idx), sapply(idx, length)))
+            names(idx) <- pp
+          } else {
+            ## no grouping
+            pp <- playbase::map_probes(pgx$genes, gg1)
           }
-          gg <- gg1
         } else {
           warning("[getFilteredMatrix] ERROR!!:: switch error : ft= ", ft)
-          gg <- NULL
+          pp <- NULL
           return(NULL)
         }
 
-        gg <- gg[which(toupper(gg) %in% toupper(genes))]
-        if (length(gg) == 0) {
+        # Ensure that the genes are in X
+        pp <- intersect(pp, rownames(pgx$X))
+
+        if (length(pp) == 0) {
           warning("[getFilteredMatrix] warning: no genes overlap with filter")
           return(NULL)
         }
 
         if (input$hm_splitby == "gene") {
-          if (!(input$hm_splitvar %in% gg)) {
-            gg <- c(input$hm_splitvar, gg)
-          }
+          p1 <- playbase::map_probes(pgx$genes, input$hm_splitvar)
+          if (length(p1) && !(p1 %in% pp)) pp <- c(p1, pp)
         }
-        jj <- match(toupper(gg), toupper(genes))
-        pp <- rownames(pgx$X)[jj]
-        zx <- pgx$X[pp, , drop = FALSE]
+
+        if (any(is.na(pgx$X))) {
+          is.mox <- playbase::is.multiomics(rownames(pgx$X))
+          if (is.mox) {
+            zx <- playbase::imputeMissing.mox(pgx$X, method = "SVD2")
+          } else {
+            zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          }
+          zx <- zx[pp, , drop = FALSE]
+        } else {
+          zx <- pgx$X[pp, , drop = FALSE]
+        }
+
         if (!is.null(idx)) {
-          idx <- idx[gg]
-          names(idx) <- rownames(zx)
+          idx <- idx[pp]
+          names(idx) <- pp
         }
       }
 
@@ -318,6 +324,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         zx <- zx[which(!is.ribomito), , drop = FALSE]
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
+      shiny::validate(shiny::need(
+        ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
 
       flt <- list(
         zx = zx,
@@ -338,7 +347,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## input$hm_group,
       input$hm_ntop
     )
-
 
     ##' .. content for \description{} (no empty lines) ..
     ##'
@@ -375,29 +383,44 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (splitby == "phenotype" && !splitvar %in% colnames(pgx$samples)) {
         return(NULL)
       }
+      if (splitby == "contrast" && !splitvar %in% colnames(pgx$contrasts)) {
+        return(NULL)
+      }
 
       grp <- NULL
       ## split on a phenotype variable
       if (do.split && splitvar %in% colnames(pgx$samples)) {
         grp <- pgx$samples[colnames(zx), splitvar]
-        table(grp)
       }
+
+      ## split on a contrast
+      if (do.split && splitvar %in% colnames(pgx$contrasts)) {
+        grp <- pgx$contrasts[colnames(zx), splitvar]
+      }
+
+      shiny::validate(
+        shiny::need(is.null(grp) || any(!is.na(grp)), "Selected grouping and filter combination is not valid (no samples left).")
+      )
 
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
         gx <- pgx$X[1, ]
         gx <- pgx$X[splitvar, colnames(zx)]
 
+        ## TODO if this code is revived again, for some datasets
+        ## the number of unique values in gx can be equal or
+        ## lower than k, on those cases it will crash
+
         ## estimate best K
-        within.ssratio <- sapply(1:4, function(k) {
-          km <- kmeans(gx, k)
-          km$tot.withinss / km$totss
-        })
-        within.ssratio
-        k.est <- min(which(within.ssratio < 0.10))
-        k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
-        k.est
-        k.est <- pmax(pmin(k.est, 3), 2)
+        # within.ssratio <- sapply(1:4, function(k) {
+        #   km <- kmeans(gx, k)
+        #   km$tot.withinss / km$totss
+        # })
+        # within.ssratio
+        # k.est <- min(which(within.ssratio < 0.10))
+        # k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
+        # k.est
+        # k.est <- pmax(pmin(k.est, 3), 2)
         k.est <- 2 ## for now...
 
         if (k.est == 2) {
@@ -424,18 +447,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         return(NULL)
       }
 
-      ## Any BMC scaling?? ##########
-      if (do.split && input$hm_scale == "BMC") {
-        for (g in unique(grp)) {
-          jj <- which(grp == g)
-          zx1 <- zx[, jj, drop = FALSE]
-          zx[, jj] <- zx1 - rowMeans(zx1, na.rm = TRUE)
-        }
-      }
-
       ## Create reduced matrix according to topmode #######
-      topmode <- "marker"
-      topmode <- "sd"
       topmode <- input$hm_topmode
       if (topmode == "marker" && length(table(grp)) <= 1) {
         topmode <- "sd"
@@ -443,17 +455,28 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (!do.split && topmode == "marker") {
         topmode <- "sd"
       }
+      if (splitby == "contrast") {
+        # topmode <- "marker"  ## really?
+      }
 
       addsplitgene <- function(gg) {
         if (do.split && splitvar %in% rownames(pgx$X)) {
           gg <- unique(c(splitvar, gg))
         }
-        gg
+        return(gg)
       }
 
+      ## remove empty
+      if (!is.null(grp)) {
+        sel <- which(!is.na(grp))
+        zx <- zx[, sel]
+        grp <- grp[sel]
+      }
+
+      ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
-        NPCA <- 5
+        NPCA <- min(5, ncol(zx) - 1)
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
@@ -465,7 +488,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
         sv.top1 <- unlist(sv.top)
         zx <- zx[gg.top, , drop = FALSE]
-        dim(zx)
         idx <- sub(":.*", "", sv.top1)
         table(idx)
       } else if (topmode == "marker" && splitby != "none") {
@@ -492,7 +514,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         dim(zx)
       } else {
         ## Order by SD
-        gg <- rownames(zx)[order(-apply(zx, 1, sd, na.rm = TRUE))]
+        gg <- rownames(zx)[order(-matrixStats::rowSds(zx, na.rm = TRUE))]
         gg <- head(gg, nmax)
         gg <- addsplitgene(gg)
         zx <- zx[gg, , drop = FALSE] ## order
@@ -519,6 +541,21 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       annot <- annot[, kk, drop = FALSE] ## no group??
       samples <- colnames(zx) ## original sample list
 
+      if (do.split && splitvar %in% colnames(pgx$contrasts) && input$hm_show_others) {
+        jj <- which(!rownames(pgx$samples) %in% names(grp))
+        if (any(jj)) {
+          grp <- c(grp, rep("others", length(jj)))
+          names(grp)[which(grp == "others")] <- rownames(pgx$samples)[jj]
+          annot <- pgx$samples[names(grp), , drop = FALSE]
+          if (input$hm_level == "gene") {
+            zx <- cbind(zx, pgx$X[rownames(zx), jj])
+          } else if (input$hm_level == "geneset") {
+            zx <- cbind(zx, pgx$gsetX[rownames(zx), jj])
+          }
+          samples <- colnames(zx)
+        }
+      }
+
       ## ----------------------------------------------------
       ## ------------ calculate group summarized ------------
       ## ----------------------------------------------------
@@ -538,7 +575,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           w.null <- sapply(f, is.null)
           if (any(w.null)) f[which(w.null)] <- NA
           unlist(f)
-        })
+        }, simplify = FALSE)
         grp.annot <- data.frame(do.call(rbind, grp.annot))
         grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
         grp <- colnames(grp.zx)
@@ -599,7 +636,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         w.null <- sapply(f, is.null)
         if (any(w.null)) f[which(w.null)] <- NA
         unlist(f)
-      })
+      }, simplify = FALSE)
       grp.annot <- data.frame(do.call(rbind, grp.annot))
       grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
       grp <- colnames(grp.zx)
@@ -639,7 +676,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ref <- pgx$X[, , drop = FALSE]
       if (ann.level == "gene" && ann.refset %in% names(pgx$families)) {
         gg <- pgx$families[[ann.refset]]
-        jj <- match(toupper(gg), toupper(pgx$genes$gene_name))
+        jj <- match(toupper(gg), toupper(pgx$genes$symbol))
         jj <- setdiff(jj, NA)
         pp <- rownames(pgx$genes)[jj]
         ref <- pgx$X[intersect(pp, rownames(pgx$X)), , drop = FALSE]
@@ -675,9 +712,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
       colnames(rho) <- idxx
-      rownames(rho) <- rownames(ref)
+      rownames(rho) <- sub(".*:", "", rownames(ref))
 
-      i <- 1
       if (nrow(ref) > 0) {
         for (i in 1:length(idxx)) {
           gg <- rownames(zx)[which(idx == idxx[i])]
@@ -688,34 +724,9 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           rho[, i] <- colMeans(rr, na.rm = TRUE)
         }
       }
-
-      if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
-        table(idx)
-        grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-        gmt <- playdata::getGSETS(rownames(rho))
-        bg.genes <- toupper(rownames(X))
-        P <- c()
-        for (i in 1:ncol(rho)) {
-          k <- colnames(rho)[i]
-          res <- playbase::gset.fisher(
-            grp[[k]], gmt,
-            fdr = 1, min.genes = 0, max.genes = Inf,
-            background = bg.genes
-          )
-          res <- res[rownames(rho), ]
-          r <- res[, "odd.ratio"]
-          odd.prob <- r / (1 + r)
-          P <- cbind(P, odd.prob)
-        }
-        colnames(P) <- colnames(rho)
-        rownames(P) <- rownames(rho)
-        rho <- rho * (P / max(P))
-      }
-
-      dim(rho)
+      
       return(rho)
     })
-
 
     selected_samples <- reactive({
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
@@ -729,9 +740,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       hm_level = shiny::reactive(input$hm_level),
       hm_ntop = shiny::reactive(input$hm_ntop),
-      hm_scale = shiny::reactive(input$hm_scale),
+      ## hm_scale = shiny::reactive(input$hm_scale),
       hm_topmode = shiny::reactive(input$hm_topmode),
       hm_clustk = shiny::reactive(input$hm_clustk),
+      hm_average_group = shiny::reactive(input$hm_average_group),
       watermark = WATERMARK,
       labeltype = labeltype
     )
@@ -747,6 +759,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     clustering_plot_table_parcoord_server(
       id = "parcoord",
       getTopMatrix = getTopMatrixGrouped,
+      pgx = pgx,
       watermark = WATERMARK
     )
 

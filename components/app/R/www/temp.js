@@ -143,9 +143,9 @@ const logout = () => {
 
 const logoutInApp = () => {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "/cookie_remove", true);
+	xhr.open("GET", "cookie_remove", true);
 	xhr.onload = function() {
-		window.location = window.location.origin + '/';
+		window.location = window.location.href;
     };
 	xhr.send();
 };
@@ -164,7 +164,8 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 	$('.sidebar-content')
 		.children()
 		.each((index, el) => {
-			if($(el).hasClass('collapse')) {
+      if ($(el).hasClass('collapse')) { // && !$(el).hasClass('nodisp')) {
+			// if($(el).hasClass('collapse')) {
 				// if($(el).hasClass('show'))
 				// 	$(el).removeClass('show');
 				//$(el).hide();
@@ -173,11 +174,13 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
 				return;
 			}
 			if($(el).hasClass('w-100')) {
-				console.log($(el).children().children()[[1]]);
+				// console.log($(el).children().children()[[1]]);
 				$(el).children().children()[[1]].classList.remove('fa-angle-down');
 				$(el).children().children()[[1]].classList.add('fa-angle-right');
 			}
-			$(el).show();
+      if (!$(el).hasClass('nodisp')) {
+        $(el).show();
+      }
 		});
 
 	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
@@ -207,6 +210,22 @@ Shiny.addCustomMessageHandler('bigdash-show-tab', (msg) => {
     $(`.big-tab[data-name=${msg.value}]`).show();
 });
 
+Shiny.addCustomMessageHandler('bigdash-remove-tab', (msg) => {
+    $(`.big-tab[data-name=${msg.value}]`).remove();
+	$(`.tab-settings:has(a#${msg.value.slice(0, -4)}-options)`).remove();
+    // $(`[data-target=${msg.value}]`).addClass("nodisp");
+    $(`[data-target=${msg.value}]`).hide();
+});
+
+Shiny.addCustomMessageHandler('bigdash-hide-menu-element', (msg) => {
+    $(`span:contains(${msg.value})`).closest('p').hide();
+    $(`span:contains(${msg.value})`).closest('p').addClass("nodisp");
+});
+
+Shiny.addCustomMessageHandler('bigdash-show-menu-element', (msg) => {
+    $(`span:contains(${msg.value})`).closest('p').show();
+    $(`span:contains(${msg.value})`).closest('p').removeClass("nodisp");
+});
 
 /* ********************* HUBSPOT HANDLER **************************** */
 $(document).ready(function() {
@@ -232,7 +251,7 @@ $(document).ready(function() {
 
 Shiny.addCustomMessageHandler('redirect', function(message) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "/cookie", true);
+	xhr.open("GET", "cookie", true);
 	xhr.setRequestHeader("Header-User-Cookie", message);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && xhr.status == 200)
@@ -243,7 +262,7 @@ xhr.send();
 
 Shiny.addCustomMessageHandler('redirect_nonce', function(message) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "/cookie_nonce", true);
+	xhr.open("GET", "cookie_nonce", true);
 	xhr.setRequestHeader("Header-User-Cookie", message);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && xhr.status == 200)

@@ -5,15 +5,16 @@
 
 
 clustering_plot_phenoplot_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(
@@ -30,7 +31,7 @@ clustering_plot_phenoplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = phenoplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -48,6 +49,7 @@ clustering_plot_phenoplot_server <- function(id,
     plot_data <- reactive({
       pgx <- pgx
       shiny::req(pgx$Y)
+      Y <- pgx$Y
 
       ## get t-SNE positions
       clustmethod1 <- paste0(clustmethod(), "2d")
@@ -55,8 +57,13 @@ clustering_plot_phenoplot_server <- function(id,
       colnames(pos) <- c("x", "y")
       jj <- selected_samples()
       kk <- selected_phenotypes()
-      pos <- pos[jj, ]
-      Y <- pgx$Y[jj, kk, drop = FALSE]
+      kk <- kk[which(kk %in% colnames(Y))]
+      pos <- pos[jj, , drop = FALSE]
+      shiny::validate(shiny::need(
+        nrow(pos) > 1,
+        "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
+      Y <- Y[jj, kk, drop = FALSE]
       ## complete dataframe for downloading
       df <- data.frame(pos, Y, check.names = FALSE)
       return(df)
@@ -66,6 +73,16 @@ clustering_plot_phenoplot_server <- function(id,
       pd <- plot_data()
       showlabels <- input$showlabels
       pheno <- selected_phenotypes()
+      shiny::validate(shiny::need(
+        length(pheno) > 0,
+        "Please select at least one phenotype."
+      ))
+      pheno.ex <- setdiff(pheno, colnames(pd))
+      shiny::validate(shiny::need(
+        length(pheno.ex) == 0,
+        paste0(pheno.ex, " appear(s) not valid as phenotype(s). Please remove from selection on the menu on the right.")
+      ))
+      pheno <- pheno[which(pheno %in% colnames(pd))]
       Y <- pd[, pheno, drop = FALSE]
       pos <- pd[, c("x", "y")]
 

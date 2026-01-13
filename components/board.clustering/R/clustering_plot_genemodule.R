@@ -14,16 +14,17 @@
 #'
 #' @export
 clustering_plot_genemodule_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("pltmod"),
@@ -35,7 +36,7 @@ clustering_plot_genemodule_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -66,6 +67,10 @@ clustering_plot_genemodule_server <- function(id,
       mat <- res$mat
       idx <- res$idx
       modx <- sapply(1:ncol(mat), function(i) tapply(mat[, i], idx, mean))
+      if (is.null(dim(modx))) {
+        modx <- matrix(modx, nrow = 1)
+        rownames(modx) <- unique(idx)
+      }
       colnames(modx) <- colnames(mat)
 
       return(list(

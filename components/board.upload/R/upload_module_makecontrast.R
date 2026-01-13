@@ -5,7 +5,6 @@
 
 upload_module_makecontrast_ui <- function(id) {
   ns <- shiny::NS(id)
-
   bslib::layout_columns(
     col_widths = 12,
     height = "100%",
@@ -15,6 +14,7 @@ upload_module_makecontrast_ui <- function(id) {
       bslib::card_body(
         bslib::layout_columns(
           col_widths = c(3, 9),
+          ## left 3-column
           shiny::div(
             shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
@@ -25,7 +25,7 @@ upload_module_makecontrast_ui <- function(id) {
                 choices = "<samples>",
                 selected = "<samples>",
                 multiple = TRUE,
-                options = list(maxItems = 2)
+                options = list(maxItems = 3)
               ),
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
@@ -40,19 +40,18 @@ upload_module_makecontrast_ui <- function(id) {
                   width = "100%",
                   placeholder = "e.g. MAIN_vs_CONTROL"
                 ),
-                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups.",
-                placement = "left", options = list(container = "body")
+                "Give a name for your comparison as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."
               ),
               div(
                 style = "padding-top: -2px;",
                 shiny::checkboxInput(
                   ns("add_prefix"), "Add phenotype prefix",
-                  FALSE
+                  TRUE
                 )
-              ),
+              )
             ),
             shiny::div(
-              style = "padding-top: 2px;",
+              style = "padding-top: 3px;",
               shiny::HTML("<b>4. Add my comparison:</b>")
             ),
             shiny::div(
@@ -70,21 +69,23 @@ upload_module_makecontrast_ui <- function(id) {
               )
             )
           ),
+
+          ## right 9-column
           shiny::div(
             style = "overflow: auto; margin-left: 30px;",
             shiny::HTML("<b>2. Create comparison:</b>"),
             withTooltip(
               shiny::uiOutput(
                 ns("createcomparison"),
-                style = "font-size:13px; margin-top: 0px;"
+                style = "font-size:13px; margin-top: 2px;"
               ),
-              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table.",
-              placement = "top", options = list(container = "body")
+              "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add them to the table."
             )
           )
-        ) ## end of card-body
-      )
+        ) ## end of layout-columns c(3,9)
+      ) # end of card-body
     ),
+    #-----------------------------------------------------
     bslib::layout_columns(
       col_widths = c(8, 4),
       bslib::card(
@@ -106,13 +107,15 @@ upload_module_makecontrast_ui <- function(id) {
 }
 
 upload_module_makecontrast_server <- function(
-    id,
-    phenoRT,
-    contrRT,
-    countsRT,
-    upload_wizard,
-    show_comparison_builder,
-    autocontrast) {
+  id,
+  phenoRT,
+  contrRT,
+  countsRT,
+  upload_wizard,
+  show_comparison_builder,
+  autocontrast,
+  auth
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -194,17 +197,26 @@ upload_module_makecontrast_server <- function(
         ss <- colnames(countsRT())
         df1 <- df[ss, pp, drop = FALSE]
         cond <- apply(df1, 1, paste, collapse = ".")
+        names(cond) <- cond
 
-        ## get abbreviated phenotype
-        minlen <- ifelse(length(pp) >= 2, 4, 8)
-        minlen <- ifelse(length(pp) >= 3, 3, minlen)
-        abv.df <- playbase::abbreviate_pheno(
-          df,
-          minlength = minlen, abbrev.colnames = FALSE
-        )
-        abv.df <- abv.df[ss, pp, drop = FALSE]
-        abv.cond <- apply(abv.df, 1, paste, collapse = ".")
-        names(cond) <- abv.cond
+        if (max(sapply(cond, function(x) nchar(x))) > 15) {
+          shinyalert::shinyalert(
+            title = "Warning",
+            text = "Condition names are long (>15 characters). This may cause display issues.",
+            type = "warning"
+          )
+        }
+
+        ## get abbreviated phenotype, NOTE: commented out, some users complained.
+        # minlen <- ifelse(length(pp) >= 2, 4, 8)
+        # minlen <- ifelse(length(pp) >= 3, 3, minlen)
+        # abv.df <- playbase::abbreviate_pheno(
+        #   df,
+        #   minlength = minlen, abbrev.colnames = FALSE
+        # )
+        # abv.df <- abv.df[ss, pp, drop = FALSE]
+        # abv.cond <- apply(abv.df, 1, paste, collapse = ".")
+        # names(cond) <- abv.cond
 
         cond
       })
@@ -371,6 +383,12 @@ upload_module_makecontrast_server <- function(
           return(NULL)
         }
 
+        if (!is.null(rv_contr()) && ncol(rv_contr()) >= auth$options$MAX_COMPARISONS) {
+          shinyalert::shinyalert("ERROR", paste0("You have reached the maximum number of ", auth$options$MAX_COMPARISONS, " comparisons. Please delete some comparisons before adding a new one."))
+          shiny::updateTextInput(session, "newname", value = "")
+          return(NULL)
+        }
+
         ## update reactive value
         samples <- colnames(countsRT())
         ctx1 <- matrix(ctx, ncol = 1, dimnames = list(samples, ct.name))
@@ -403,6 +421,18 @@ upload_module_makecontrast_server <- function(
 
         ## update reactive value
         ctx2 <- playbase::contrastAsLabels(ctx)
+        max_comparisons <- auth$options$MAX_COMPARISONS
+        remaining_slots <- max_comparisons
+        if (!is.null(rv_contr())) {
+          remaining_slots <- max_comparisons - ncol(rv_contr())
+        }
+        if (ncol(ctx2) > remaining_slots) {
+          if (remaining_slots == 0) {
+            return(NULL)
+          }
+          dbg("[AUTOCONTRAST] Too many comparisons, truncating to ", remaining_slots, " remaining slots")
+          ctx2 <- ctx2[, 1:remaining_slots]
+        }
         if (!is.null(rv_contr())) {
           rv_contr(cbind(rv_contr(), ctx2))
         } else {

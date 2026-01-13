@@ -21,7 +21,7 @@ SignatureBoard <- function(id, pgx,
 <br><br>Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.
 
 <br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=7' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
+<center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=mzUYQUsN4ptQ4XNC&amp;start=58' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>
 ", js = FALSE)
 
     ## ================================================================================
@@ -60,6 +60,7 @@ SignatureBoard <- function(id, pgx,
         shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
       }
     })
+
     shiny::observeEvent(input$example2, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
@@ -67,6 +68,7 @@ SignatureBoard <- function(id, pgx,
         shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
       }
     })
+
     shiny::observeEvent(input$example3, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
@@ -74,6 +76,7 @@ SignatureBoard <- function(id, pgx,
         shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
       }
     })
+
     shiny::observeEvent(pgx$X, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
@@ -97,7 +100,9 @@ SignatureBoard <- function(id, pgx,
       if (is.null(type)) type <- "<custom>"
 
       if (type == "contrast") {
-        contr <- sort(names(pgx$gx.meta$meta))
+        # contr <- names(pgx$gx.meta$meta)
+        contr <- playbase::pgx.getContrasts(pgx)
+        contr <- sort(contr[!grepl("^IA:", contr)])
         shiny::updateSelectInput(session, "feature", choices = contr, selected = contr[1])
       } else if (type == "hallmark") {
         ## collection
@@ -112,19 +117,22 @@ SignatureBoard <- function(id, pgx,
       } else if (type == "geneset") {
         ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
         gsets <- sort(names(playdata::iGSETS))
-        shiny::updateSelectizeInput(session, "feature",
+        shiny::updateSelectizeInput(
+          session,
+          "feature",
           choices = gsets,
           selected = gsets[1], server = TRUE
         )
       } else {
         ## custom
-        shiny::updateSelectInput(session, "feature",
+        shiny::updateSelectInput(
+          session,
+          "feature",
           choices = "<custom>",
           selected = "<custom>"
         )
       }
     })
-
 
     ## ================================================================================
     ## ======================= REACTIVE FUNCTIONS =====================================
@@ -171,6 +179,11 @@ SignatureBoard <- function(id, pgx,
           }
           genes <- union(genes, rx.genes)
         }
+        genes <- intersect(toupper(genes), symbols)
+        shiny::validate(shiny::need(
+          length(genes) > 0,
+          "Custom feature selection not found in the data. Please check your custom feature list."
+        ))
         ## map to probes
         features1 <- playbase::map_probes(pgx$genes, genes,
           column = "human_ortholog", ignore.case = TRUE
@@ -186,7 +199,7 @@ SignatureBoard <- function(id, pgx,
         names(fx) <- rownames(pgx$gx.meta$meta[[contr]])
         ## take top 100 features
         top.genes <- fx[order(-abs(fx))]
-        top.genes <- head(top.genes, 100)
+        top.genes <- head(top.genes, min(100, length(fx) / 4))
         features <- names(top.genes)
       } else if (input$type %in% c("hallmark", "KEGG", "geneset") &&
         input$feature[1] %in% colnames(pgx$GMT)) {
@@ -229,7 +242,9 @@ SignatureBoard <- function(id, pgx,
       F <- F[, which(!duplicated(colnames(F))), drop = FALSE]
 
       ## convert to symbol
-      fsymbol <- pgx$genes[rownames(F), "symbol"]
+      fsymbol <- pgx$genes[rownames(F), "symbol"] ## !!!!!
+      fsymbol[is.na(fsymbol)] <- "_" ## fgsea does not like NA or empty
+      fsymbol[fsymbol == ""] <- "_" ## fgsea does not like NA or empty
       F <- playbase::rowmean(F, fsymbol)
       F[is.na(F)] <- 0
 
@@ -256,6 +271,7 @@ SignatureBoard <- function(id, pgx,
         shiny::withProgress(message = "Computing GSEA ...", value = 0.8, {
           res <- lapply(1:ncol(F), function(i) {
             set.seed(123)
+            shiny::validate(shiny::need(any(gmt$gset %in% names(F[, i])), "Signature features not found in the dataset."))
             suppressWarnings(suppressMessages(
               res <- fgsea::fgsea(gmt, stats = F[, i], nperm = 1000, nproc = 1)
             ))
@@ -267,6 +283,7 @@ SignatureBoard <- function(id, pgx,
         res1 <- data.frame(do.call(rbind, res))
         res1$ES <- NULL
       } else {
+        shiny::validate(shiny::need(any(gmt$gset %in% rownames(F)), "Signature features not found in the dataset."))
         i <- 1
         fx <- 1 * (rownames(F) %in% gmt[[1]])
         rho <- cor(apply(F, 2, rank, na.last = "keep"), fx, use = "pairwise")[, 1]
@@ -317,18 +334,43 @@ SignatureBoard <- function(id, pgx,
       ii <- setdiff(match(genes, colnames(G)), NA)
 
       N <- cbind(
-        k1 = Matrix::rowSums(G != 0), n1 = ncol(G),
-        k2 = Matrix::rowSums(G[, ii] != 0), n2 = length(ii)
+        k1 = Matrix::rowSums(G != 0),
+        n1 = ncol(G),
+        k2 = Matrix::rowSums(G[, ii, drop = FALSE] != 0),
+        n2 = length(ii)
       )
       rownames(N) <- rownames(G)
       N <- N[which(N[, 1] > 0 | N[, 3] > 0), ]
       odds.ratio <- (N[, 3] / N[, 4]) / (N[, 1] / N[, 2])
 
       ## WOW THIS IS FAST!!!!!!!
-      pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
-      names(pv) <- rownames(N)
-      pv <- pv[match(names(odds.ratio), names(pv))]
-      qv <- p.adjust(pv, method = "bonferroni")
+      ## pv <- corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE)
+      pv <- try(
+        corpora::fisher.pval(N[, 1], N[, 2], N[, 3], N[, 4], log.p = FALSE),
+        silent = TRUE
+      )
+      if (class(pv) != "try-error") {
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      } else {
+        message("[signature_server] corpora::fisher.pval failed. Using standard fisher.")
+        pv <- c(rep(NA, nrow(N)))
+        i <- 1
+        for (i in 1:nrow(N)) {
+          tt <- matrix(NA, nrow = 2, ncol = 2)
+          tt[1, 1] <- N[i, 1]
+          tt[1, 2] <- N[i, 2] - N[i, 1]
+          tt[2, 1] <- N[i, 3]
+          tt[2, 2] <- N[i, 4] - N[i, 3]
+          ## pv[i] <- stats::fisher.test(tt, alternative = "greater")$p.value ## ??
+          pv[i] <- stats::fisher.test(tt)$p.value
+        }
+        names(pv) <- rownames(N)
+        pv <- pv[match(names(odds.ratio), names(pv))]
+        qv <- p.adjust(pv, method = "bonferroni")
+      }
+
       A <- data.frame(odds.ratio = odds.ratio, p.fisher = pv, q.fisher = qv)
 
       ## get shared genes
@@ -348,8 +390,15 @@ SignatureBoard <- function(id, pgx,
       names(fx) <- gg
 
       gset <- names(y)[which(y != 0)]
-      G1 <- G[aa, which(y != 0)]
+      G1 <- G[aa, which(y != 0), drop = FALSE]
+
       commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x != 0)])
+
+      shiny::validate(shiny::need(
+        length(commongenes) > 0,
+        "No results. Perhaps you need to try on a bigger datasets with more features."
+      ))
+
       for (i in 1:length(commongenes)) {
         gg <- commongenes[[i]]
         gg <- gg[order(-abs(fx[gg]))]
@@ -404,6 +453,9 @@ SignatureBoard <- function(id, pgx,
       meta <- playbase::pgx.getMetaMatrix(pgx)
       fc <- meta$fc
       qv <- meta$qv
+
+      # Filter features
+      features <- features[features %in% rownames(fc)]
 
       # Get contrasts, FC, and gene info
       fc <- fc[features, contr]

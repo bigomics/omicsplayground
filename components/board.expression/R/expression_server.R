@@ -24,15 +24,14 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
      of the statistical tests. The <strong>Foldchange (all)</strong> panel reports the gene fold changes for all contrasts.
      <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods.
      The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
-     <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
-     frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>", js = FALSE)
+     <center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=H8OB2pGbAI6UB-ar' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>", js = FALSE)
 
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
-
-    # observe functions ##########
-
+    # ================================================================================
+    # =============================== observers ======================================
+    # ================================================================================
 
     shiny::observeEvent(input$gx_info,
       {
@@ -81,16 +80,13 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           shinyalert::shinyalert(
             title = "",
             text = "WARNING: Nominal p-values are NOT corrected for multiple testing. We do not advice their use.",
-            type = ""
+            type = "warning"
           )
         }
       }
     )
 
-
-
     # observe functions to project DT from invalidating equal row_select
-
     gsettable_rows_selected <- reactiveVal()
 
     observe({
@@ -103,7 +99,9 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       genetable_rows_selected(genetable$rows_selected())
     })
 
-    # reactives ########
+    ## =========================================================================
+    ## ============================= REACTIVES =================================
+    ## =========================================================================
 
 
     selected_gxmethods <- shiny::reactive({
@@ -121,10 +119,20 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       )
     })
 
-    # functions #########
-    comparison <- 1
-    testmethods <- c("trend.limma")
-    add.pq <- 0
+    pval_cap <- shiny::reactive({
+      pval_cap <- input$pval_cap
+      if (pval_cap == "Uncapped") {
+        pval_cap <- 1e-999
+      } else {
+        pval_cap <- as.numeric(input$pval_cap)
+      }
+      return(pval_cap)
+    })
+
+    #-----------------------------------------------------------------
+    # --------------------- FUNCTIONS --------------------------------
+    #-----------------------------------------------------------------
+
     getDEGtable <- function(pgx, testmethods, comparison, add.pq, lfc, fdr) {
       shiny::req(pgx$X)
 
@@ -178,20 +186,20 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       AveExpr1 <- rowMeans(pgx$X[rownames(mx), names(which(y0 > 0)), drop = FALSE], na.rm = TRUE)
       AveExpr0 <- rowMeans(pgx$X[rownames(mx), names(which(y0 < 0)), drop = FALSE], na.rm = TRUE)
 
+      ## !!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
+      ## [HACK] adjust averages to match logFC... This should be in pgx.computePGX.
       logFC <- mx$meta.fx
-      ## [hack] adjust averages to match logFC...
       mean0 <- (AveExpr0 + AveExpr1) / 2
       AveExpr1 <- mean0 + logFC / 2
       AveExpr0 <- mean0 - logFC / 2
 
-      if (all(c("map", "chr") %in% colnames(pgx$genes))) {
-        colnames(pgx$genes)[which(colnames(pgx$genes) == "chr")] <- "chr0"
-        colnames(pgx$genes)[which(colnames(pgx$genes) == "map")] <- "chr"
-      }
-      aa <- intersect(c("gene_name", "gene_title", "chr"), colnames(pgx$genes))
+      aa <- intersect(c("symbol", "gene_title"), colnames(pgx$genes))
+      chr.col <- head(intersect(c("map", "chr"), colnames(pgx$genes)), 1)
+      if (length(chr.col) > 0) aa <- c(aa, chr.col)
       gene.annot <- pgx$genes[rownames(mx), aa]
-      gene.annot$chr <- sub("_.*", "", gene.annot$chr) ## strip any alt postfix
-      res <- data.frame(gene.annot,
+
+      res <- data.frame(
+        gene.annot,
         logFC = logFC,
         AveExpr0,
         AveExpr1,
@@ -249,10 +257,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
 
       # TODO the annot could be moved to geDEGtable function!!!
-      annot <- pgx$genes[rownames(res),
-        c("feature", "symbol", "human_ortholog"),
-        drop = FALSE
-      ]
+      sel <- setdiff(c("feature", "symbol", "human_ortholog"), colnames(res))
+      annot <- pgx$genes[rownames(res), sel, drop = FALSE]
       # res$gene_name <- NULL, better remove before showing the plot
 
       res <- cbind(annot, res)
@@ -295,19 +301,6 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         res <- res[sel, , drop = FALSE]
       }
 
-      ## just show top 10
-      ## AZ: Disabled on Sept 1. useless?
-      ## if (length(input$gx_top10) && input$gx_top10) {
-      ##   fx <- as.numeric(res[, fx.col])
-      ##  names(fx) <- rownames(res)
-      ##  pp <- unique(c(
-      ##    head(names(sort(-fx[which(fx > 0)])), 10),
-      ##    head(names(sort(fx[which(fx < 0)])), 10)
-      ##  ))
-      ##  res <- res[pp, , drop = FALSE]
-      ##  res <- res[order(-res[, fx.col]), , drop = FALSE]
-      ## }
-
       if (nrow(res) == 0) {
         shiny::validate(shiny::need(nrow(res) > 0, tspan("No genes passed the statistical thresholds. Please update the thresholds on the settings sidebar.", js = FALSE)))
         return(NULL)
@@ -329,11 +322,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       # return sel_genes that are not zero
       sel_genes <- sel_genes[which(sel_genes > 0)]
 
-      # convert symbol to rownames (module is based on rownames)
-
-      ortholog_genes <- ifelse(is.na(pgx$genes$human_ortholog), pgx$genes$symbol, pgx$genes$human_ortholog)
-
-      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), ortholog_genes), ])
+      # selection based on symbol
+      matched_rownames <- rownames(pgx$genes[match(names(sel_genes), pgx$genes$symbol), ])
       return(matched_rownames)
     })
 
@@ -358,12 +348,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       features <- rownames(res)
 
       qval <- res[, grep("adj.P.Val|meta.q|qval|padj", colnames(res))[1]]
-      qval <- pmax(qval, 1e-20)
+      qval <- pmax(qval, pval_cap())
       pval <- res[, grep("pvalue|meta.p|pval|p_value", colnames(res))[1]]
-      pval <- pmax(pval, 1e-20)
+      pval <- pmax(pval, pval_cap())
 
       x <- res[, grep("logFC|meta.fx|fc", colnames(res))[1]]
-      y <- -log10(qval + 1e-12)
+      y <- -log10(qval + pval_cap())
       scaled.x <- scale(x, center = FALSE)
       scaled.y <- scale(y, center = FALSE)
 
@@ -388,7 +378,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       if (gene.selected && !gset.selected) {
         ## only gene selected: color all genes with same name, label selected
-        this.feature <- rownames(df1)[genetable_rows_selected()]
+        this.feature <- genetable$rownames_selected()
         this.symbol <- res[this.feature, "symbol"]
         sel.features <- rownames(res)[which(res$symbol == this.symbol)]
         ## lab.features <- this.feature
@@ -432,6 +422,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       genes_selected = genes_selected,
       labeltype = labeltype,
       watermark = WATERMARK,
+      pval_cap = pval_cap,
       pgx = pgx
     )
 
@@ -452,7 +443,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       id = "plots_barplot",
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
-      sel = genetable_rows_selected,
+      sel = genetable$rownames_selected,
       res = filteredDiffExprTable,
       watermark = WATERMARK
     )
@@ -461,7 +452,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       id = "plots_topfoldchange",
       comp = shiny::reactive(input$gx_contrast),
       pgx = pgx,
-      sel = genetable_rows_selected,
+      sel = genetable$rownames_selected,
       res = filteredDiffExprTable,
       watermark = WATERMARK
     )
@@ -536,6 +527,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
       labeltype = labeltype,
+      pval_cap = pval_cap,
       watermark = WATERMARK
     )
 
@@ -550,6 +542,14 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       show_pv = shiny::reactive(input$show_pv),
       genes_selected = genes_selected,
       labeltype = labeltype,
+      pval_cap = pval_cap,
+      watermark = WATERMARK
+    )
+
+    expression_plot_fc_fc_server(
+      id = "fc_fc",
+      pgx = pgx,
+      comp = shiny::reactive(input$gx_contrast),
       watermark = WATERMARK
     )
 
@@ -568,14 +568,19 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         return(NULL)
       }
       ## get table
-      sel.row <- genetable_rows_selected()
+      sel.row <- genetable$rownames_selected()
       if (is.null(sel.row)) {
         return(NULL)
       }
+
+      ## determine which column to match with pgx$GMT
       gene1 <- res[sel.row, ]
-
-      gmt_gene_mapping <- ifelse(is.na(gene1$human_ortholog), gene1$symbol, gene1$human_ortholog)
-
+      match.res <- apply(
+        res[, c("symbol", "human_ortholog")], 2,
+        function(x) sum(x %in% rownames(pgx$GMT))
+      )
+      match.col <- names(which.max(match.res))
+      gmt_gene_mapping <- gene1[, match.col]
       j <- which(rownames(pgx$GMT) == gmt_gene_mapping)
       if (length(j) == 0) {
         return(NULL)
@@ -606,11 +611,14 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     genetable <- expression_table_genetable_server(
       id = "genetable",
+      pgx = pgx,
+      comp = shiny::reactive(input$gx_contrast),
       res = filteredDiffExprTable,
       organism = pgx$organism,
       show_pv = shiny::reactive(input$show_pv),
       height = c(tabH - 10, 700),
-      scrollY = "200px"
+      scrollY = "200px",
+      cont = shiny::reactive(input$gx_contrast)
     )
 
     gsettable <- expression_table_gsettable_server(

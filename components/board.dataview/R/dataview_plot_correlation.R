@@ -4,15 +4,16 @@
 ##
 
 dataview_plot_correlation_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.extra_link) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.extra_link
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,13 +22,11 @@ dataview_plot_correlation_ui <- function(
     label = label,
     plotlib = "plotly",
     caption = caption,
-    #
-    #
     info.text = info.text,
     info.methods = info.methods,
     info.extra_link = info.extra_link,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -70,12 +69,12 @@ dataview_plot_correlation_server <- function(id,
       jj <- c(head(order(-rho), n / 2), tail(order(-rho), n / 2))
       top.rho <- rho[jj]
 
-      gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples]**2, na.rm = TRUE))
+      gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples, drop = FALSE]**2, na.rm = TRUE))
       gx1 <- (gx1 / max(gx1))
       klr1 <- omics_pal_c(palette = "brand_blue")(16)[1 + round(15 * gx1)]
       klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
 
-      names(top.rho) <- sub(".*:", "", names(top.rho))
+      ## names(top.rho) <- mofa.strip_prefix(names(top.rho)
 
       ## NOTE: currently some labels are pretty long; also the var names are cryptic
       ## TODO: check if names can be shortened and variable names can be formatted nicely
@@ -114,13 +113,12 @@ dataview_plot_correlation_server <- function(id,
       shiny::req(pd)
 
       df <- pd[[1]]
-      df$genes <- factor(df$genes, levels = df$genes)
+      gg <- unique(df$genes)
+      df <- df[match(gg, df$genes), , drop = FALSE]
+      df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
+      df$genes <- factor(df$genes, levels = unique(df$genes))
 
-      ay <- list(
-        overlaying = "y",
-        side = "right",
-        title = ""
-      )
+      ay <- list(overlaying = "y", side = "right", title = "")
 
       ## plot as regular bar plot
       plotly::plot_ly(

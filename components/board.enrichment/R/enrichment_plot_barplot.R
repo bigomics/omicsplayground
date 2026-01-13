@@ -4,15 +4,16 @@
 ##
 
 enrichment_plot_barplot_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -47,7 +48,7 @@ enrichment_plot_barplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

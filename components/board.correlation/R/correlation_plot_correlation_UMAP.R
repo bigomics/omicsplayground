@@ -13,15 +13,16 @@
 #'
 #' @export
 correlation_plot_correlation_UMAP_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   cor_umap.opts <- shiny::tagList(
@@ -38,7 +39,7 @@ correlation_plot_correlation_UMAP_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = cor_umap.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
@@ -123,6 +124,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
         cex.lab = cexlab,
         hilight = higenes,
         ntop = 20,
+        labeltype = "gene_name",
         plotlib = "plotly"
       )
 

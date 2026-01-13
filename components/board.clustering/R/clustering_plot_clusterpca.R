@@ -3,22 +3,19 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-
-## Annotate clusters ############
-
 clustering_plot_clustpca_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    parent) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  parent
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -63,7 +60,7 @@ clustering_plot_clustpca_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -78,7 +75,6 @@ clustering_plot_clustpca_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    ## Plot ############
     plot_data <- shiny::reactive({
       samples <- selected_samples()
       cluster.pos <- pgx$cluster$pos
@@ -87,30 +83,32 @@ clustering_plot_clustpca_server <- function(id,
       }
       all.pos <- do.call(cbind, cluster.pos)
       all.pos <- all.pos[samples, ]
-      pd <- list(
-        pos = all.pos
-      )
-
+      pd <- list(pos = all.pos)
       return(pd)
     })
 
 
-    create_plot <- function(pgx, pos, method, colvar, shapevar, label, cex) {
+    create_plot <- function(pgx, pos, pca2d.varexp, method, colvar, shapevar, label, cex) {
       do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
-      df <- cbind(pos, pgx$Y[sel, ])
+      df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
 
       textvar <- NULL
-      if (colvar %in% colnames(df)) colvar <- factor(df[, colvar])
-      if (shapevar %in% colnames(df)) shapevar <- factor(df[, shapevar])
+      if (colvar %in% colnames(df)) {
+        colvar <- factor(df[, colvar])
+      }
+
+      if (shapevar %in% colnames(df)) {
+        shapevar <- factor(df[, shapevar])
+      }
+
       ann.text <- rep(" ", nrow(df))
 
-      label.samples <- (label == "<b>Sample</b>")
+      label.samples <- (label == "sample")
 
       if (!do3d && label.samples) ann.text <- rownames(df)
-      if (!is.null(colvar)) {
-        textvar <- factor(colvar)
-      }
+      if (!is.null(colvar)) textvar <- factor(colvar)
+
       symbols <- c(
         "circle", "square", "star", "triangle-up", "triangle-down", "pentagon",
         "bowtie", "hexagon", "asterisk", "hash", "cross", "triangle-left",
@@ -123,9 +121,8 @@ clustering_plot_clustpca_server <- function(id,
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
       clrs.length <- length(unique(colvar))
       clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(clrs.length / 8))[1:clrs.length]
-      clrs <- clrs[colvar]
+
       if (do3d) {
-        ## 3D plot
         plt <- plotly::plot_ly(df, mode = "markers") %>%
           plotly::add_markers(
             x = df[, 1],
@@ -161,13 +158,11 @@ clustering_plot_clustpca_server <- function(id,
             showarrow = FALSE
           )
         }
-
         if (label == "<none>") {
           plt <- plt %>%
             plotly::layout(showlegend = FALSE)
         }
       } else {
-        ## 2D plot
         plt <- plotly::plot_ly(
           df,
           mode = "markers",
@@ -177,7 +172,7 @@ clustering_plot_clustpca_server <- function(id,
             x = df[, 1],
             y = df[, 2],
             type = "scattergl",
-            color = colvar, ## size = sizevar, sizes=c(80,140),
+            color = colvar,
             colors = clrs,
             marker = list(
               size = 16 * cex1 * cex,
@@ -191,13 +186,20 @@ clustering_plot_clustpca_server <- function(id,
             x = pos[, 1],
             y = pos[, 2],
             text = ann.text,
-            ## xref = "x", yref = "y",
             showarrow = FALSE
-          ) %>% # add x axis title
-          plotly::layout(
+          )
+
+        if (method == "pca") {
+          plt <- plt %>% plotly::layout(
+            xaxis = list(title = paste0(toupper(method), "1 (", pca2d.varexp[1], "%)")),
+            yaxis = list(title = paste0(toupper(method), "2 (", pca2d.varexp[2], "%)"))
+          )
+        } else {
+          plt <- plt %>% plotly::layout(
             xaxis = list(title = paste0(toupper(method), "1")),
             yaxis = list(title = paste0(toupper(method), "2"))
           )
+        }
 
         ## add group/cluster annotation labels
         if (label == "inside") {
@@ -241,6 +243,10 @@ clustering_plot_clustpca_server <- function(id,
       clustmethod <- clustmethod()
       label <- input$pca_label
 
+      shiny::validate(shiny::need(
+        length(samples) > 1,
+        "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
       shiny::req(samples, colvar, shapevar, clustmethod, legend)
 
       methods <- clustmethod()
@@ -258,9 +264,11 @@ clustering_plot_clustpca_server <- function(id,
         if (do3d) m1 <- paste0(m, "3d")
         pos <- pgx$cluster$pos[[m1]]
         pos <- pos[samples, ]
+        pca2d.varexp <- pgx$cluster$pos$pca2d.varexp
         plist[[i]] <- create_plot(
           pgx = pgx,
           pos = pos,
+          pca2d.varexp = pca2d.varexp,
           method = m,
           colvar = colvar,
           shapevar = shapevar,
@@ -278,11 +286,7 @@ clustering_plot_clustpca_server <- function(id,
       } else {
         plist <- create_plotlist()
         nc <- ceiling(sqrt(length(plist)))
-        plotly::subplot(
-          plist,
-          nrows = nc,
-          margin = 0.04
-        )
+        plotly::subplot(plist, nrows = nc, margin = 0.04)
       }
     })
 

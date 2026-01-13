@@ -14,13 +14,14 @@
 #'
 #' @export
 singlecell_plot_phenoplot_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   phenoplot.opts <- shiny::tagList(
@@ -38,7 +39,7 @@ singlecell_plot_phenoplot_ui <- function(
     title = title,
     caption = caption,
     options = phenoplot.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )
@@ -85,7 +86,7 @@ singlecell_plot_phenoplot_server <- function(id,
 
       sel <- pd[["sel"]]
       pheno <- pd[["pheno"]]
-      Y <- pd[["pgx"]]$Y
+      Y <- pd[["pgx"]]$samples
       pos <- pd[["pos"]]
 
       cex1 <- 1.2 * c(1.8, 1.3, 0.8, 0.5)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
@@ -160,16 +161,21 @@ singlecell_plot_phenoplot_server <- function(id,
       if (length(plt) > 4) nr <- 3
       if (length(plt) > 6) nr <- 4
       if (length(plt) > 12) nr <- 5
-      fig <- plotly::subplot(
-        plt,
-        nrows = nr,
-        #
-        margin = c(0.01, 0.01, 0.01, 0.045)
-      ) %>%
-        plotly_default() %>%
-        plotly::layout(
-          margin = list(l = 10, r = 10, b = 10, t = 20) # lrbt
-        )
+      if (length(plt) > 1) {
+        fig <- plotly::subplot(
+          plt,
+          nrows = nr,
+          #
+          margin = c(0.01, 0.01, 0.01, 0.045)
+        ) %>%
+          plotly_default() %>%
+          plotly::layout(
+            margin = list(l = 10, r = 10, b = 10, t = 20) # lrbt
+          )
+      } else {
+        fig <- plt[[1]] %>%
+          plotly_default()
+      }
       return(fig)
     }
 

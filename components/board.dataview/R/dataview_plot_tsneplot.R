@@ -4,16 +4,17 @@
 ##
 
 dataview_plot_tsne_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -23,7 +24,7 @@ dataview_plot_tsne_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height,
     label = label,
@@ -63,6 +64,8 @@ dataview_plot_tsne_server <- function(id,
       ## precompute
       pp <- rownames(pgx$genes)[1]
       sel <- match(gene, pgx$genes$gene_name)
+      if (is.na(sel)) sel <- match(gene, pgx$genes$feature)
+      if (is.na(sel)) sel <- match(gene, pgx$genes$symbol)
       pp <- rownames(pgx$genes)[ifelse(is.na(sel), 1, sel)]
 
       gx <- NULL
@@ -87,11 +90,10 @@ dataview_plot_tsne_server <- function(id,
         }
       }
 
-      pos <- pgx$tsne2d[samples, ]
+      pos <- pgx$tsne2d[samples, , drop = FALSE]
 
       fc1 <- tanh(0.99 * scale(gx)[, 1])
       fc1 <- tanh(0.99 * scale(gx, center = FALSE)[, 1])
-      #
       fc2 <- (fc1 - min(fc1))
 
       data <- data.frame(

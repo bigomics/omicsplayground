@@ -12,7 +12,8 @@ app_ui <- function(x) {
       http_only = TRUE,
       secure_only = TRUE,
       redirect = "/close",
-      same_site = "Strict"
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/cookie_nonce", x$PATH_INFO)) {
     value <- x$HTTP_HEADER_USER_COOKIE
@@ -22,7 +23,8 @@ app_ui <- function(x) {
       http_only = TRUE,
       secure_only = TRUE,
       redirect = "/close",
-      same_site = "Strict"
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/cookie_remove", x$PATH_INFO)) {
     return(cookies::set_cookie_response(
@@ -31,7 +33,9 @@ app_ui <- function(x) {
       expiration = -1,
       http_only = TRUE,
       secure_only = TRUE,
-      redirect = "/close"
+      redirect = "/close",
+      same_site = "Strict",
+      path = "/"
     ))
   } else if (identical("/close", x$PATH_INFO)) {} else if (identical("/", x$PATH_INFO)) {
     #-------------------------------------------------------
@@ -66,6 +70,7 @@ app_ui <- function(x) {
         ##    gtag2, ## Google Tag Manager???
         shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
         shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
+        shiny::tags$script(src = "custom/close-message.js"),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
@@ -86,7 +91,7 @@ app_ui <- function(x) {
 
       logout.tab <- bigdash::navbarDropdownItem(
         "Logout",
-        onClick = "logoutInApp()"
+        onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
       )
 
       if (opt$AUTHENTICATION == "shinyproxy") {
@@ -121,6 +126,7 @@ app_ui <- function(x) {
         ),
         "Expression" = c(
           diffexpr = "Differential expression",
+          timeseries = "TimeSeries", ## here???
           corr = "Correlation analysis",
           bio = "Find biomarkers"
         ),
@@ -139,16 +145,21 @@ app_ui <- function(x) {
           drug = "Drug connectivity",
           cell = "Cell profiling",
           pcsf = "PCSF",
-          wgcna = "WGCNA",
           tcga = "TCGA survival (beta)"
-        )
+        ),
+        "MultiOmics" = MODULE.multiomics$module_menu(),
+        "WGCNA" = MODULE.wgcna$module_menu()
       )
 
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
 
-      menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      dbg("names(menu_tree) = ", names(menu_tree))
+      dbg("names.ENABLED = ", names(ENABLED))
+      menu_tree <- menu_tree[MODULES_ENABLED]
+      ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
+      ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
       populateSidebar <- function(menu_tree) {
         sidebar_item <- function(title, name) {
@@ -174,8 +185,7 @@ app_ui <- function(x) {
           tab.names <- names(menu_tree[[i]])
           tab.titles <- menu_tree[[i]]
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {
-          } else if (length(tab.names) == 1) {
+          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
             menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
           } else {
             menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
@@ -196,27 +206,27 @@ app_ui <- function(x) {
         .where = "declarations"
       )
 
-      ## ## offcanvas chatbox
-      ## div.chirpbutton <- NULL
-      ## if (opt$ENABLE_CHIRP) {
-      ##   div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-      ##     width = "auto", class = "quick-button",
-      ##     onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-      ##   )
-      ## }
-
-      div.invitebutton <- InviteFriendUI("invite")
 
       div.copilotbutton <- NULL
       if(opt$DEVMODE) {
         div.copilotbutton <- uiOutput("copilot_button")
       }
-      
+      div.invitebutton <- InviteFriendUI("invite")
+      div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
+        UpgradeModuleUI("upgrade")
+      } else {
+        NULL
+      }
+
       ## ------------------------- bigPage ----------------------------------
+      bigdash.sidebarHelp2 <- function(...) {
+        do.call(bigdash::sidebarHelp, rlang::list2(...))
+      }
+
       bigdash::bigPage(
         shiny.i18n::usei18n(i18n),
         header,
-        title = "Omics Playground v3",
+        title = "Omics Playground 4",
         theme = big_theme2,
         sidebar = sidebar,
         navbar = bigdash::navbar(
@@ -251,21 +261,12 @@ app_ui <- function(x) {
                 )
               )
             )
-            ## div(style = "display: inline-block; ",
-            ## bigdash::navbarDropdown(
-            ##   "Actions",
-            ##   style = "display: inline-block; border: 1px; padding: 2px 6px;",
-            ##   tags$li(
-            ##     actionLink("menu_createreport", "Create report")
-            ##   ),
-            ##   tags$li(
-            ##     actionLink("menu_reanalyze", "Reanalyze")
-            ##   )
-            ## ))
           ),
+
+          
           div.copilotbutton,
-          div.invitebutton,          
-##        div.chirpbutton,
+          div.upgradebutton,
+          div.invitebutton,
           div(
             id = "mainmenu_help",
             bigdash::navbarDropdown(
@@ -277,7 +278,7 @@ app_ui <- function(x) {
               ),
               bigdash::navbarDropdownItem(
                 "Video tutorials",
-                link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                link = "https://bigomics.ch/tutorials/",
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
@@ -286,8 +287,8 @@ app_ui <- function(x) {
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
-                "Discuss on Reddit",
-                link = "https://www.reddit.com/r/omicsplayground",
+                "Submit a support ticket",
+                link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
                 target = "_blank"
               ),
               bigdash::navbarDropdownItem(
@@ -297,7 +298,7 @@ app_ui <- function(x) {
               ),
               bigdash::navbarDropdownItem(
                 "Case studies",
-                link = "https://bigomics.ch/blog/category/case-study/",
+                link = "https://bigomics.ch/case-studies/",
                 target = "_blank"
               )
             )
@@ -335,6 +336,17 @@ app_ui <- function(x) {
                   class = "card-footer-checked",
                   label = "show captions",
                   is.checked = FALSE
+                ),
+                bslib::input_switch("enable_llm", "Enable AI"),
+                shiny::conditionalPanel(
+                  "input.enable_llm",
+                  shiny::selectInput(
+                    inputId = "llm_model",
+                    label = NULL,
+                    choices = opt$LLM_MODELS,
+                    selected = 1,
+                    width = "100%"
+                  )
                 )
               ),
               bigdash::navbarDropdownItem(
@@ -343,10 +355,10 @@ app_ui <- function(x) {
                     inputId = "selected_labeltype",
                     label = "Label type:",
                     choices = c("feature", "symbol", "name"),
-                    selected = NULL,
+                    selected = "feature",
                     width = "100%"
                   ),
-                  "Choose a label type to be displayed in the heatmap.",
+                  "Choose a label type to be displayed in the plots",
                   placement = "right", options = list(container = "body")
                 )
               )
@@ -363,14 +375,15 @@ app_ui <- function(x) {
         settings = bigdash::settings(
           "Settings"
         ),
-        bigdash::sidebarHelp(
+        ## bigdash::sidebarHelp(
+        bigdash.sidebarHelp2(
           bigdash::sidebarTabHelp(
             "welcome-tab",
             "BigOmics Playground",
             "is your self-service bioinformatics platform for interactive analysis,
-                    visualization and interpretation of transcriptomics and proteomics data.
-                    Perform complex data analysis and visualization easily without coding,
-                    and significantly reduce the time-to-discovery."
+             visualization and interpretation of transcriptomics and proteomics data.
+             Perform complex data analysis and visualization easily without coding,
+             and significantly reduce the time-to-discovery."
           ),
           bigdash::sidebarTabHelp(
             "load-tab",
@@ -407,6 +420,22 @@ app_ui <- function(x) {
                     relationships between co-expression modules.")
           ),
           bigdash::sidebarTabHelp(
+            "mofa-tab",
+            "MOFA",
+            tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
+                  integration method based on multi-omcis factor analysis.")
+          ),
+          bigdash::sidebarTabHelp(
+            "mgsea-tab",
+            "multiGSEA",
+            tspan("multiGSEA perform multi-omics integration on gene set level.")
+          ),
+          bigdash::sidebarTabHelp(
+            "snf-tab",
+            "SNF",
+            tspan("SNF clustering")
+          ),
+          bigdash::sidebarTabHelp(
             "pcsf-tab",
             "PCSF Network Analysis",
             "PCSF performs fast and user-friendly network analysis using
@@ -434,8 +463,7 @@ app_ui <- function(x) {
           bigdash::sidebarTabHelp(
             "pathway-tab",
             "Pathway Analysis",
-            "Perform specialized functional analysis
-                    to understand biological pathways including GO, KEGG, and drug connectivity mapping."
+            "Perform functional analysis to understand biological pathways using WikiPathways, Reactome and Gene Ontology."
           ),
           bigdash::sidebarTabHelp(
             "wordcloud-tab",
@@ -496,7 +524,18 @@ app_ui <- function(x) {
             "Single-Cell Profiling",
             tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
-          )
+          ),
+          bigdash::sidebarTabHelp(
+            "consensus-tab",
+            "Consensus WGCNA",
+            tspan("Consensus analysis using the WGCNA framework")
+          ),
+          bigdash::sidebarTabHelp(
+            "preservation-tab",
+            "Preservation WGCNA",
+            tspan("Preservation analysis using the WGCNA framework")
+          ),
+          !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
         bigdash::bigTabs(
           bigdash::bigTabItem(

@@ -38,7 +38,7 @@ read_user_options <- function(user_dir) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -64,7 +64,7 @@ read_user_options_db <- function(email, user_database = NULL) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -76,13 +76,30 @@ read_user_options_db <- function(email, user_database = NULL) {
         ENABLE_PUBLIC_SHARE = as.logical(ENABLE_PUBLIC_SHARE),
         ENABLE_UPLOAD = as.logical(ENABLE_UPLOAD),
         ENABLE_USER_SHARE = as.logical(ENABLE_USER_SHARE),
-        WATERMARK = as.logical(WATERMARK)
+        WATERMARK = as.logical(WATERMARK),
+        ENABLE_MULTIOMICS = as.logical(ENABLE_MULTIOMICS)
       )
     for (opt_name in names(user_opt)) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
     }
   }
   new_opt
+}
+
+read_user_field_db <- function(email, user_database, field) {
+  connection <- connect_db(user_database)
+  user_config <- query_by_email(email, connection)
+  disconnect_db(connection)
+  if (!is.null(user_config)) {
+    ## restrict user options only to these options.
+    ALLOWED_USER_OPTS <- field
+    dbg("[read_user_field] 1 : user: ", email, " ; field: ", field)
+    user_config <- user_config[which(names(user_config) %in% ALLOWED_USER_OPTS)]
+  }
+  if (nrow(user_config) == 0) {
+    return("")
+  }
+  user_config |> as.character()
 }
 
 upgrade.dialog <- function(ns, current.plan) {

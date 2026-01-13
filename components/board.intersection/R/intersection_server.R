@@ -4,10 +4,11 @@
 ##
 
 IntersectionBoard <- function(
-    id,
-    pgx,
-    selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
-    selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))) {
+  id,
+  pgx,
+  selected_gxmethods = reactive(colnames(pgx$gx.meta$meta[[1]]$fc)),
+  selected_gsetmethods = reactive(colnames(pgx$gset.meta$meta[[1]]$fc))
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 800 # row height of panel
@@ -18,13 +19,17 @@ IntersectionBoard <- function(
 <br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes are also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the pairwise correlations of the contrasts under the <b>Contrast heatmap</b> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
 
 <br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
+<center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=NWdNUjQoJMvO6MPp' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>
 
 ", js = FALSE)
 
     ## delayed input
     input_comparisons <- shiny::reactive({
       input$comparisons
+    }) %>% shiny::debounce(500)
+
+    input_customlist <- shiny::reactive({
+      input$customlist
     }) %>% shiny::debounce(500)
 
     ## ================================================================================
@@ -44,9 +49,11 @@ IntersectionBoard <- function(
       if (is.null(pgx)) {
         return(NULL)
       }
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(comparisons)
-      shiny::updateSelectInput(session, "comparisons",
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
+      shiny::updateSelectInput(
+        session,
+        "comparisons",
         choices = comparisons,
         selected = head(comparisons, 3)
       )
@@ -75,6 +82,7 @@ IntersectionBoard <- function(
       } else {
         ## gene level
         ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+        ft <- c(ft, "<custom>")
       }
       ft <- sort(ft)
       names(ft) <- sub(".*:", "", ft)
@@ -90,7 +98,6 @@ IntersectionBoard <- function(
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
-
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
@@ -120,12 +127,7 @@ IntersectionBoard <- function(
 
         ## apply user selected filter
         gsets <- rownames(fc0)
-        if (input$filter == "<custom>") {
-          gsets <- strsplit(input$customlist, split = "[, ;]")[[1]]
-          if (length(gsets) > 0) {
-            gsets <- intersect(rownames(pgx$gsetX), gsets)
-          }
-        } else if (input$filter != "<all>") {
+        if (input$filter != "<all>") {
           gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
           gsets <- unique(unlist(gset_collections[input$filter]))
         }
@@ -154,7 +156,7 @@ IntersectionBoard <- function(
         ## filter with active filter
         sel.probes <- rownames(fc0) ## default to all probes
         if (input$filter == "<custom>") {
-          genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+          genes <- strsplit(input_customlist(), split = "[, ;]")[[1]]
           if (length(genes) > 0) {
             sel.probes <- playbase::filterProbes(pgx$genes, genes)
           }
@@ -289,7 +291,6 @@ IntersectionBoard <- function(
       }
       df
     })
-
 
 
     ## ================================================================================

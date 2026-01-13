@@ -14,13 +14,14 @@
 #'
 #' @export
 expression_plot_barplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plots_barplot_opts <- shiny::tagList(
@@ -45,7 +46,7 @@ expression_plot_barplot_ui <- function(
     plotlib = "plotly",
     caption = caption,
     options = plots_barplot_opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )
@@ -82,10 +83,11 @@ expression_plot_barplot_server <- function(id,
       sel <- sel()
       res <- res()
 
-      shiny::validate(shiny::need(!is.null(sel()), tspan("Please select gene in the table.", js = FALSE)))
-      psel <- rownames(res)[sel]
+      shiny::validate(shiny::need(!is.null(sel) && length(sel) > 0, tspan("Please select gene in the table.", js = FALSE)))
+      psel <- sel # rownames(res)[sel]
       gene <- psel
       srt <- ifelse(grouped, 0, 35)
+      main <- pgx$genes[psel, "gene_name"]
 
       return(list(
         pgx = pgx,
@@ -95,7 +97,8 @@ expression_plot_barplot_server <- function(id,
         grouped = grouped,
         logscale = logscale,
         showothers = showothers,
-        srt = srt
+        srt = srt,
+        main = main
       ))
     })
 
@@ -116,6 +119,7 @@ expression_plot_barplot_server <- function(id,
       fig <- playbase::pgx.plotExpression(
         pgx = pd[["pgx"]],
         probe = pd[["gene"]],
+        main = pd[["main"]],
         comp = pd[["comp"]],
         grouped = pd[["grouped"]],
         showothers = pd[["showothers"]],

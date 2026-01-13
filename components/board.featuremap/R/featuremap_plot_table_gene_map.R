@@ -4,23 +4,20 @@
 ##
 
 featuremap_plot_gene_map_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot.opts <- shiny::tagList(
-    shiny::radioButtons(ns("labeltype"), "label type:",
-      c("symbol", "probe"),
-      inline = TRUE
-    ),
     shiny::selectInput(ns("umap_nlabel"), "nr labels:",
       c(0, 10, 20, 50, 100, 1000),
       selected = 50
@@ -34,8 +31,7 @@ featuremap_plot_gene_map_ui <- function(
     ns("gene_map"),
     title = title,
     label = "a",
-    plotlib = "plotly",
-    plotlib2 = "plotly",
+    plotlib = c("plotly", "ggplot"),
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -44,18 +40,21 @@ featuremap_plot_gene_map_ui <- function(
     options = plot.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    cards = TRUE,
+    card_names = c("dynamic", "static")
   )
 }
 
 featuremap_table_gene_map_ui <- function(
-    id,
-    label = "",
-    title,
-    caption,
-    info.text,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  caption,
+  info.text,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -73,7 +72,7 @@ featuremap_plot_gene_map_server <- function(id,
                                             pgx,
                                             plotUMAP,
                                             sigvar,
-                                            filteredGenes,
+                                            filteredProbes,
                                             watermark = FALSE,
                                             labeltype) {
   moduleServer(id, function(input, output, session) {
@@ -87,7 +86,7 @@ featuremap_plot_gene_map_server <- function(id,
 
     plot_data <- shiny::reactive({
       pos <- getUMAP()
-      hilight <- filteredGenes()
+      hilight <- filteredProbes()
       nlabel <- as.integer(input$umap_nlabel)
 
       ## select on table filter
@@ -102,7 +101,8 @@ featuremap_plot_gene_map_server <- function(id,
       F <- F[gg, , drop = FALSE]
 
       hilight.probes <- playbase::map_probes(pgx$genes, hilight)
-      labels <- playbase::probe2symbol(rownames(pos), pgx$genes, labeltype(), fill_na = TRUE)
+      ## labels <- playbase::probe2symbol(rownames(pos), pgx$genes, labeltype(), fill_na = TRUE)
+      labels <- playbase::probe2symbol(rownames(pos), pgx$genes, "gene_name", fill_na = TRUE)
 
       pd <- list(
         df = data.frame(pos, fc = fc),
@@ -116,7 +116,7 @@ featuremap_plot_gene_map_server <- function(id,
       return(pd)
     })
 
-    render_geneUMAP <- function(cex = 1, cex.label = 1) {
+    render_geneUMAP <- function(cex = 1, cex.label = 1, plotlib = "plotly") {
       pd <- plot_data()
       pos <- pd$pos
       fc <- pd$fc
@@ -132,23 +132,45 @@ featuremap_plot_gene_map_server <- function(id,
         fc[!names(fc) %in% hilight] <- NA
       }
 
-      p <- plotUMAP(
-        pos,
-        fc,
-        hilight,
-        labels = labels,
-        nlabel = nlabel,
-        title = "rms(FC)",
-        cex = cex,
-        cex.label = cex.label,
-        plotlib = "plotly",
-        source = ns("gene_umap")
-      ) %>%
-        plotly::layout(
-          dragmode = "select",
-          margin = list(l = 5, r = 5, b = 5, t = 20)
+      if (plotlib == "plotly") {
+        p <- plotUMAP(
+          pos,
+          fc,
+          hilight,
+          labels = labels,
+          nlabel = nlabel,
+          title = "rms(FC)",
+          cex = cex,
+          cex.label = cex.label,
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
+          plotlib = "plotly",
+          source = ns("gene_umap")
+        ) %>%
+          plotly::layout(
+            dragmode = "select",
+            margin = list(l = 5, r = 5, b = 5, t = 20)
+          )
+        p
+      } else if (plotlib == "ggplot") {
+        p <- plotUMAP(
+          pos,
+          fc,
+          hilight,
+          labels = labels,
+          nlabel = nlabel,
+          xlab = "UMAP-x",
+          ylab = "UMAP-y",
+          theme = ggplot2::theme_minimal(),
+          cex = cex * 0.6,
+          cex.label = cex.label * 0.6,
+          cex.axis = cex.label * 0.6,
+          bgcolor = "white",
+          gridcolor = "grey90",
+          plotlib = "ggplot"
         )
-      p
+        p
+      }
     }
 
     geneUMAP.RENDER <- function() {
@@ -157,6 +179,16 @@ featuremap_plot_gene_map_server <- function(id,
           modeBarButtons = list(list("toImage", "zoom2d", "select2d", "resetScale2d"))
         ) %>%
         plotly_default()
+      p
+    }
+
+    geneUMAP.RENDER_ggplot <- function() {
+      p <- render_geneUMAP(cex = 1, cex.label = 1, plotlib = "ggplot")
+      p
+    }
+
+    geneUMAP.RENDER2_ggplot <- function() {
+      p <- render_geneUMAP(cex = 1.5, cex.label = 1.5, plotlib = "ggplot")
       p
     }
 
@@ -169,16 +201,36 @@ featuremap_plot_gene_map_server <- function(id,
       p
     }
 
-    PlotModuleServer(
-      "gene_map",
-      plotlib = "plotly",
-      plotlib2 = "plotly",
-      func = geneUMAP.RENDER,
-      func2 = geneUMAP.RENDER2,
-      csvFunc = plot_data,
-      pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+    plot_grid <- list(
+      list(plotlib = "plotly", func = geneUMAP.RENDER, func2 = geneUMAP.RENDER2, card = 1),
+      list(plotlib = "ggplot", func = geneUMAP.RENDER_ggplot, func2 = geneUMAP.RENDER2_ggplot, card = 2)
     )
+
+    lapply(plot_grid, function(x) {
+      PlotModuleServer(
+        "gene_map",
+        plotlib = x$plotlib,
+        func = x$func,
+        func2 = x$func2,
+        csvFunc = plot_data,
+        res = c(80, 95), # resolution of plots
+        pdf.width = 10,
+        pdf.height = 8,
+        add.watermark = watermark,
+        card = x$card
+      )
+    })
+
+    # PlotModuleServer(
+    #   "gene_map",
+    #   plotlib = "ggplot",
+    #   plotlib2 = "plotly",
+    #   func = geneUMAP.RENDER_ggplot,
+    #   func2 = geneUMAP.RENDER2,
+    #   csvFunc = plot_data,
+    #   pdf.width = 5, pdf.height = 5,
+    #   add.watermark = watermark
+    # )
 
     # ================================================================================
     # ============================= Table server module ==============================
@@ -210,7 +262,7 @@ featuremap_plot_gene_map_server <- function(id,
       if (mean(df$feature %in% df$symbol, na.rm = TRUE) > 0.9) {
         df$feature <- NULL
       }
-      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9) {
+      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9 || all(is.na(df$human_ortholog))) {
         df$human_ortholog <- NULL
       }
 

@@ -9,13 +9,10 @@
 ## https://github.com/bigomics/omicsplayground/pull/20/commits/bd943d84d316d76dca9140f2fd3610b3d1dfc950
 
 
-
 TcgaInputs <- function(id) {
   ns <- NS(id)
 
   bigdash::tabSettings(
-    hr(),
-    br(),
     withTooltip(
       radioButtons(
         ns("sigtype"),
@@ -81,7 +78,7 @@ TcgaUI <- function(id) {
         "TCGA survival",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "calc(100vh - 181px)",
           tcga_plot_survival_ui(
             ns("tcga_tcgasurv"),
             caption = paste(

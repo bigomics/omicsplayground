@@ -13,15 +13,16 @@
 #'
 #' @export
 signature_plot_volcano_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -53,7 +54,7 @@ signature_plot_volcano_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     plotlib = c("plotly", "ggplot"),
     options = plot_opts,
     height = height,
@@ -101,6 +102,7 @@ signature_plot_volcano_server <- function(id,
 
       features <- rownames(fc)
       symbols <- pgx$genes[rownames(fc), "symbol"]
+      symbols <- playbase::probe2symbol(features, pgx$genes, "gene_name", fill_na = TRUE)
 
       # Get gene selected labels
       if (length(ct) == 1) {
@@ -234,7 +236,7 @@ signature_plot_volcano_server <- function(id,
       if (showlabel == "no") label <- NULL
       if (showlabel == "top10") {
         ii <- match(label, pd[["features"]])
-        rr <- rowMeans(pd$fc[ii, ]**2) + rowMeans(log10(pd$qv[ii, ])**2)
+        rr <- Matrix::rowMeans(pd$fc[ii, , drop = FALSE]**2) + Matrix::rowMeans(log10(pd$qv[ii, , drop = FALSE])**2)
         label <- head(label[order(-rr)], 10)
       }
 
@@ -265,7 +267,6 @@ signature_plot_volcano_server <- function(id,
         highlight = pd[["gsea"]]$gset,
         label.names = label.names,
         label.cex = 5,
-        title = NULL,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10p)",
         marker.size = 1.2,

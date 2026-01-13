@@ -19,7 +19,8 @@
 
 .wizard .wizard-content {
     transition: none;
-    padding: 2.5rem 0 0rem 0; 
+    padding: 2rem 0 0rem 0 !important;
+    height: 80vh !important;
 }
 
 .wizard .html-fill-container {
@@ -29,4 +30,13 @@
 .form-check, .shiny-input-container .checkbox, .shiny-input-container .radio {
   min-height: 0rem;
   margin-bottom: 0rem;
+}
+
+.info-icon {
+  color: #198fd1 !important;
+  cursor: pointer;
+  font-size: 1.25em;
+}
+.info-icon:hover {
+  color: rgba(25,143,209,.8) !important;
 }

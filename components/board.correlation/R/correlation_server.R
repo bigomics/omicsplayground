@@ -21,9 +21,10 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
+
     shiny::observeEvent(input$data_info, {
       shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Expression: Correlation analysis board</strong>"),
+        title = shiny::HTML("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=mBmZNx4z19MoAucQ&amp;start=156' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>"),
         shiny::HTML(cor_infotext),
         easyClose = TRUE, size = "l"
       ))
@@ -60,6 +61,9 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## genes <- sort(pgx$genes[genes, ]$gene_name)
       sel <- genes[1] ## most var gene
       ## sel <- names(head(sort(-rowMeans(playbase::pgx.getMetaMatrix(pgx)$fc**2)), 1))
+
+      names(genes) <- playbase::probe2symbol(genes, pgx$genes, labeltype(), fill_na = TRUE)
+
       shiny::updateSelectizeInput(
         session, "gene",
         choices = genes, selected = sel, server = TRUE
@@ -79,6 +83,10 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::updateTextAreaInput(session, "cor_customfeatures", placeholder = tspan("Paste your custom gene list", js = FALSE))
     })
 
+    ## =========================================================================
+    ## ============================= FUNCTIONS =================================
+    ## =========================================================================
+
 
     filterExpression <- function(X, gene) {
       ## filter genes
@@ -96,6 +104,13 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           gg1 <- unique(c(gg1, unlist(gg2)))
         }
         gg1 <- gg1[which(toupper(gg1) %in% toupper(pgx$genes$symbol))]
+        shiny::validate(shiny::need(
+          length(gg1) > 1,
+          tspan(
+            "Custom filtering does not match any gene. Please make sure the genes on the <custom> filter are present on your data.",
+            js = FALSE
+          )
+        ))
         psel <- playbase::filterProbes(pgx$genes, c(gg1, gene))
         psel <- intersect(psel, rownames(X))
         X <- X[psel, , drop = FALSE]
@@ -123,8 +138,16 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
     getFilteredImpExpression <- shiny::reactive({
-      shiny::req(pgx$impX, input$gene)
-      X <- pgx$impX
+      shiny::req(pgx$X, input$gene)
+      X <- pgx$X
+      is.mox <- playbase::is.multiomics(rownames(X))
+      if (sum(is.na(X)) > 0) {
+        if (is.mox) {
+          X <- playbase::imputeMissing.mox(X, method = "SVD2")
+        } else {
+          X <- playbase::imputeMissing(X, method = "SVD2")
+        }
+      }
       gene <- input$gene
       filterExpression(X, gene)
     })
@@ -137,23 +160,16 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## filter gene expression matrix
       X <- getFilteredExpression()
-      nmissing <- sum(is.na(X))
-      if (nmissing > 0) {
-        X <- getFilteredImpExpression()
-      }
+      if (any(is.na(X))) X <- getFilteredImpExpression()
 
       NTOP <- 50
       NTOP <- as.integer(input$pcor_ntop)
-      res <- playbase::pgx.computeGlassoAroundGene(X, gene, nmax = NTOP)
+      res <- playbase::pgx.computeGlassoAroundGene(
+        X, gene,
+        lambda = 0.01,
+        nmax = NTOP
+      )
       res$meta.pcor <- res$pcor
-
-      j <- which(rownames(res$pcor) == gene)
-      P <- res$pcor
-      diag(P) <- 0
-      rho1 <- min(head(sort(P, decreasing = TRUE), 200))
-      max1 <- round(max(P), digits = 3)
-      shiny::updateSliderInput(session, "cor_graph-cor_graph_threshold", value = rho1, max = max1)
-      shiny::updateSliderInput(session, "dcga_graph_threshold", value = rho1, max = max1)
 
       res
     })
@@ -189,7 +205,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
       cm <- intersect(rownames(R), rownames(zx))
       R <- R[cm, , drop = FALSE]
-      zx <- zx[cm, ]
+      zx <- zx[cm, , drop = FALSE]
       zx <- zx - rowMeans(zx, na.rm = TRUE)
       sdx <- sqrt(rowMeans(zx**2, na.rm = TRUE))
       R <- cbind(R, cov = R[, "cor"] * sdx * sdx[gene])
@@ -275,6 +291,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "cor_graph",
       gene = reactive(input$gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
+      pgx = pgx,
       watermark = WATERMARK
     )
   })

@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: Build docker from branch
+name: Build docker update image
 
 on:
   workflow_dispatch:
@@ -9,19 +9,52 @@ on:
         description: 'Branch to build'
         required: true
         default: 'master'
+      update_playdata:
+        description: 'Update playdata package'
+        required: true
+        type: boolean
+        default: true
+      update_bigdash:
+        description: 'Update bigdash package'
+        required: true
+        type: boolean
+        default: true
+      update_playbase:
+        description: 'Update playbase package'
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches:
+      - master
+    paths:
+      - VERSION
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - VERSION
 
 jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest # free GH worker, not enough memory
+    runs-on: self-hosted # run on dev-bigomics-frankfurt self-hosted runner
 
     steps:
       -
         name: Checkout 
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: master
+      -
+        name: Get version
+        id: get_version
+        run: |
+          VERSION=$(cat VERSION | cut -d'+' -f1)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       -
         name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -36,9 +69,14 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./docker/Dockerfile.update
           push: true          
           no-cache: true
           build-args: |
-            BRANCH=${{ github.event.inputs.branch }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:${{ github.event.inputs.branch }} 
+            BRANCH=${{ github.event.inputs.branch || github.ref_name }}
+            update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
+            update_bigdash=${{ github.event.inputs.update_bigdash || 'true' }}
+            update_playbase=${{ github.event.inputs.update_playbase || 'true' }}
+          tags: |
+            ${{ (github.event.inputs.branch || github.ref_name) == 'master' && format('{0}/omicsplayground:{1}, {0}/omicsplayground:latest, {0}/omicsplayground:master', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
+            ${{ (github.event.inputs.branch || github.ref_name) != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch || github.ref_name) || '' }}

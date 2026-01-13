@@ -10,6 +10,8 @@ pgx.record_access <- function(user,
                               action,
                               comment = "",
                               comment2 = "",
+                              comment3 = "",
+                              comment4 = "",
                               session = session,
                               num_datasets = "",
                               time = Sys.time(),
@@ -55,6 +57,8 @@ pgx.record_access <- function(user,
     client.ip = remote_addr,
     comment = comment,
     comment2 = comment2,
+    comment3 = comment3,
+    comment4 = comment4,
     num_datasets = num_datasets,
     ip = ip
   )
@@ -75,6 +79,7 @@ FolderLock <- R6::R6Class("FolderLock",
   public = list(
     path = NULL,
     user = NULL,
+    user_id = NULL,
     #' Initialize the R6 Object
     #'
     #' @param rds_path The path to the rds file.
@@ -92,6 +97,7 @@ FolderLock <- R6::R6Class("FolderLock",
     set_user = function(user, session, path) {
       self$path <- path
       self$user <- paste0(user, "__", substring(session$token, 1, 16))
+      self$user_id <- user
     },
     remove_all_locks = function() {
       other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
@@ -115,7 +121,7 @@ FolderLock <- R6::R6Class("FolderLock",
       if (is.null(self$path)) {
         return(NULL)
       }
-      lock_file <- dir(self$path, "^LOCK__.*", full.name = FALSE)
+      lock_file <- dir(self$path, paste0("^LOCK__", self$user_id, ".*"), full.name = FALSE)
       if (length(lock_file) == 0) {
         message("UNLOCKED: no lock file")
         return(NULL)
@@ -164,7 +170,7 @@ FolderLock <- R6::R6Class("FolderLock",
       if (is.null(self$path)) {
         return(NULL)
       }
-      other_lock_files <- dir(self$path, "^LOCK__.*", full.names = TRUE)
+      other_lock_files <- dir(self$path, paste0("^LOCK__", self$user_id, ".*"), full.names = TRUE)
       if (length(other_lock_files) > 0) {
         lapply(other_lock_files, file.remove)
       }
@@ -317,10 +323,24 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
 
     if (auth$logged) {
       if (!dir.exists(online_dir)) dir.create(online_dir)
-      write(NULL, file = online_file)
+      tryCatch(
+        {
+          write(NULL, file = online_file)
+        },
+        error = function(e) {
+          dbg("[pgx.start_heartbeat] Failed to write online file. online_dir=", online_dir, " session=", session$token, " online_file=", online_file)
+        }
+      )
     } else {
       if (file.exists(online_file)) {
-        file.remove(online_file)
+        tryCatch(
+          {
+            file.remove(online_file)
+          },
+          error = function(e) {
+            dbg("[pgx.start_heartbeat] Failed to remove online file. online_file=", online_file)
+          }
+        )
       }
     }
 
@@ -333,7 +353,14 @@ pgx.start_heartbeat <- function(auth, session, online_dir, delta = 60) {
       lapsed <- round(as.numeric(lapsed, units = "secs"), digits = 2)
       is_stale <- which(lapsed > 3 * delta)
       if (length(is_stale) > 0) {
-        file.remove(files[is_stale])
+        tryCatch(
+          {
+            file.remove(files[is_stale])
+          },
+          error = function(e) {
+            dbg("[pgx.start_heartbeat] Failed to remove stale online file. files=", files[is_stale])
+          }
+        )
       }
     }
 

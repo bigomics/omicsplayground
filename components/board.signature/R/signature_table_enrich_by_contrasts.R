@@ -4,12 +4,13 @@
 ##
 
 signature_table_enrich_by_contrasts_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -35,6 +36,7 @@ signature_table_enrich_by_contrasts_server <- function(id,
       output <- as.matrix(gsea$output)
       output <- round(output, digits = 4)
       output <- data.frame(contrast = rownames(output), output)
+      output <- output[!grepl("^IA:", output$contrast), , drop = FALSE]
       output$q <- NULL
       output$rho <- NULL
 

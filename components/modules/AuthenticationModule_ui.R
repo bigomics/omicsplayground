@@ -254,6 +254,7 @@ splashLoginModal <- function(ns = NULL,
       tags$a(
         id = ns2("link_btn"),
         href = link,
+        target = "_blank",
         button.text,
         class = "btn btn-warning btn-xl",
         role = "button"

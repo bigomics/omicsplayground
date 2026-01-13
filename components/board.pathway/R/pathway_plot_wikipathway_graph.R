@@ -13,17 +13,18 @@
 #'
 #' @export
 functional_plot_wikipathway_graph_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    info.width,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  info.width,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -37,7 +38,7 @@ functional_plot_wikipathway_graph_ui <- function(
     info.extra_link = info.extra_link,
     info.width = info.width,
     options = NULL,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )
@@ -131,7 +132,16 @@ functional_plot_wikipathway_graph_server <- function(id,
         }
 
         # Get pathway image using WPID and fc values
-        svg <- wikipathview(wp = pathway.id, val = fc)
+        shiny::req(pathway.id)
+        attempts <- 1
+        svg <- NULL
+        while (attempts < 4 && is.null(svg)) {
+          svg <- playbase::wikipathview(wp = pathway.id, val = fc)
+          if (is.null(svg)) {
+            Sys.sleep(0.5 * attempts)
+            attempts <- attempts + 1
+          }
+        }
         if (is.null(svg)) {
           return(NULL)
         }

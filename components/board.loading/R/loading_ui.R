@@ -38,7 +38,7 @@ LoadingUI <- function(id) {
     "My Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_alert")),
       div(
         shiny::actionButton(
@@ -51,7 +51,7 @@ LoadingUI <- function(id) {
         DatasetReportUI(id = ns("generate_report"))
       ),
       bslib::layout_columns(
-        col_widths = c(7, 5),
+        col_widths = c(8, 4),
         loading_table_datasets_ui(
           ns("pgxtable"),
           title = "Available datasets",
@@ -81,20 +81,30 @@ LoadingUI <- function(id) {
   )
 
   public_tabpanel <- shiny::tabPanel(
-    "Public Datasets",
+    opt$PUBLIC_DATASETS_LABEL,
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
-      bs_alert("This panel shows all <b>Public datasets</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.", translate = FALSE, html = TRUE),
+      height = "calc(100vh - 181px)",
+      bs_alert(
+        if (opt$ENABLE_PUBLIC_LOAD) {
+          paste0("This panel shows all <b>", tolower(opt$PUBLIC_DATASETS_LABEL), "</b>. You can select a public dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")
+        } else {
+          paste0("This panel shows all <b>", tolower(opt$PUBLIC_DATASETS_LABEL), "</b>. You can select a public dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")
+        },
+        translate = FALSE, html = TRUE
+      ),
       bslib::layout_columns(
-        col_widths = c(7, 5),
+        col_widths = c(8, 4),
+        height = "calc(100vh - 181px)",
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
-          title = "Public datasets",
-          info.text = "This table shows available public datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
-          caption = "Table with public datasets available in the platform.",
-          height = c("calc(100vh - 330px)", 700),
-          width = c("100%", "100%")
+          title = opt$PUBLIC_DATASETS_LABEL,
+          info.text = paste0("This table shows available ", tolower(opt$PUBLIC_DATASETS_LABEL), " within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."),
+          caption = paste0("Table with ", tolower(opt$PUBLIC_DATASETS_LABEL), " available in the platform."),
+          ## height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
+          width = c("100%", "100%"),
+          load_button = opt$ENABLE_PUBLIC_LOAD
         ),
         loading_tsne_ui(
           ns("tsne_public"),
@@ -109,12 +119,66 @@ LoadingUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-          height = c("calc(100vh - 330px)", 700),
+          ## height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
     )
   ) ## end of Public tabPanel
+
+  archive_tabpanel <- shiny::tabPanel(
+    "Data archive",
+    value = "archive_tab",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 181px)",
+      bs_alert(
+        if (opt$ENABLE_PUBLIC_LOAD) {
+          "This panel shows all <b>Archived datasets</b>. You can select an archived dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."
+        } else {
+          "This panel shows all <b>Archived datasets</b>. You can select an archived dataset and click <b>Import Dataset</b> to copy that dataset to your library for further analysis. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."
+        },
+        translate = FALSE, html = TRUE
+      ),
+      bslib::layout_columns(
+        col_widths = c(8, 4),
+        height = "calc(100vh - 181px)",
+        loading_table_datasets_public_ui(
+          ns("pgxtable_archive"),
+          title = "Archived datasets",
+          info.text = "This table shows available datasets within the platform that have been archived. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date.",
+          caption = "Table with archived datasets available in the platform.",
+          ## height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
+          width = c("100%", "100%"),
+          delete_button = TRUE,
+          load_button = opt$ENABLE_PUBLIC_LOAD
+        ),
+        loading_tsne_ui(
+          ns("tsne_archive"),
+          title = "Signature t-SNE",
+          info.text = "Scatter plot displaying the t-SNE clustering of the available contrasts. Each dot corresponds to a specific comparison.",
+          info.methods = "t-SNE is a non-linear dimensionality reduction method that enables visualization of high-dimensional data in a low-dimensional space, typically 2D or 3D. Unlike linear dimensionality reduction techniques like PCA, t-SNE may separate data that is not linearly separable. Signatures/datasets that are clustered closer together, are more similar. Performed using the Rtsne R package [1].",
+          info.references = list(
+            list(
+              "Krijthe JH (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut Implementation. R package version 0.17",
+              "https://doi.org/10.32614/CRAN.package.Rtsne"
+            )
+          ),
+          info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
+          caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
+          ## height = c("calc(100vh - 330px)", 700),
+          height = c("100%", 700),
+          width = c("auto", "100%")
+        )
+      ) ## end of 7fr-5fr
+    ),
+    info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/data/#archived-datasets",
+    caption = "Table with archived datasets available in the platform.",
+    height = "calc(100vh - 181px)",
+    width = "100%"
+  )
 
   ## ------------------------------------------------------------------------
 
@@ -131,7 +195,8 @@ LoadingUI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
       user_tabpanel,
-      public_tabpanel
+      public_tabpanel,
+      archive_tabpanel
     )
   )
 }
@@ -146,11 +211,11 @@ SharedDatasetsUI <- function(id) {
 
   tab_content <- bslib::layout_columns(
     col_widths = 12,
-    height = "calc(100vh - 180px)",
+    height = "calc(100vh - 181px)",
     bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets."),
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 180px)",
+      height = "calc(100vh - 181px)",
       uiOutput(ns("sharing_panel_ui"))
       ##      sharing_tabpanel
     )

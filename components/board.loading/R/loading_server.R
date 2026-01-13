@@ -22,7 +22,6 @@ LoadingBoard <- function(id,
     ns <- session$ns ## NAMESPACE
 
 
-
     reload_pgxdir_public <- reactiveVal(0)
     refresh_shared <- reactiveVal(0)
     is_data_loaded <- reactiveVal(NULL)
@@ -187,7 +186,8 @@ LoadingBoard <- function(id,
         pgx_public_dir = pgx_public_dir,
         reload_pgxdir_public = reload_pgxdir_public,
         auth = auth,
-        reload_pgxdir = reload_pgxdir
+        reload_pgxdir = reload_pgxdir,
+        loadAndActivatePGX = loadAndActivatePGX
       )
 
       loading_tsne_server(
@@ -198,6 +198,34 @@ LoadingBoard <- function(id,
         watermark = WATERMARK
       )
     }
+
+    shiny::observeEvent(auth, {
+      pgx_archive_dir <- file.path(auth$user_dir, "data_archive")
+      enable_archive_tabpanel <- dir.exists(pgx_archive_dir)
+
+      ## Show/hide archive tab based on whether directory exists
+      if (enable_archive_tabpanel) {
+        shiny::showTab(inputId = "tabs", target = "archive_tab", session = session)
+        pgxtable_archive <- loading_table_datasets_public_server(
+          id = "pgxtable_archive",
+          pgx_public_dir = pgx_archive_dir,
+          reload_pgxdir_public = reload_pgxdir_public,
+          auth = auth,
+          reload_pgxdir = reload_pgxdir,
+          loadAndActivatePGX = loadAndActivatePGX
+        )
+
+        loading_tsne_server(
+          id = "tsne_archive",
+          pgx.dir = reactive(pgx_archive_dir),
+          info.table = reactive(pgxtable_archive$data()),
+          r_selected = reactive(pgxtable_archive$rows_all()),
+          watermark = WATERMARK
+        )
+      } else {
+        shiny::hideTab(inputId = "tabs", target = "archive_tab", session = session)
+      }
+    })
 
     ## -----------------------------------------------------------------------------
     ## Description
@@ -225,13 +253,20 @@ LoadingBoard <- function(id,
         gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
     ), js = FALSE)
     module_infotext <- paste0(
-      "<center><iframe width='1120' height='630'
-        src='https://www.youtube.com/embed/elwT6ztt3Fo'
-        title='YouTube video player' frameborder='0'
-        allow='accelerometer; autoplay; clipboard-write; encrypted-media;
-        gyroscope; picture-in-picture' allowfullscreen></iframe><center>"
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=LljECgKnb0TsgZDZ&amp;start=517' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
+    sharing_infotext <- tspan(paste0(
+      "<center><iframe width='560' height='315' src='https://www.youtube.com/embed/YTzLkio4M_4?si=oF52aFP_1knRilod&amp;start=551' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
+    ))
+
+    shiny::observeEvent(input$loading_sharing, {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML("<strong>Sharing a dataset from your library</strong>"),
+        shiny::HTML(sharing_infotext),
+        easyClose = TRUE, size = "xl"
+      ))
+    })
 
     ## =============================================================================
     ## ========================== OBSERVE/REACT ====================================
@@ -251,20 +286,25 @@ LoadingBoard <- function(id,
       ignoreNULL = FALSE
     )
 
-    loadPGX <- function(pgxfile) {
+    loadPGX <- function(pgxfile, pgxdir = NULL) {
       req(auth$logged)
       if (!auth$logged) {
         return(NULL)
       }
 
+      ## Use provided directory or default to user directory
+      if (is.null(pgxdir)) {
+        pgxdir <- auth$user_dir
+      }
+
       pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx") ## add/replace .pgx
-      pgxfile1 <- file.path(auth$user_dir, pgxfile)
+      pgxfile1 <- file.path(pgxdir, pgxfile)
 
       pgx <- NULL
       if (file.exists(pgxfile1)) {
         pgx <- playbase::pgx.load(pgxfile1)
       } else {
-        warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile)
+        warning("[LoadingBoard::loadPGX] ***ERROR*** file not found : ", pgxfile1)
         return(NULL)
       }
       if (!is.null(pgx)) {
@@ -293,11 +333,11 @@ LoadingBoard <- function(id,
       return(NULL)
     }
 
-    loadAndActivatePGX <- function(pgxfile) {
+    loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
       ## During loading show loading pop-up modal
       pgx.showCartoonModal()
 
-      loaded_pgx <- loadPGX(pgxfile)
+      loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
         warning("[LoadingBoard@load_react] ERROR loading PGX file ", pgxfile, "\n")
         beepr::beep(10)
@@ -320,9 +360,10 @@ LoadingBoard <- function(id,
         loaded_pgx$name <- sub("[.]pgx$", "", pgxfile) ## always use filename
 
         ## if PGX object has been updated with pgx.initialize, we save
-        ## the updated object.
+        ## the updated object (but only if loading from user directory)
         slots1 <- names(loaded_pgx)
-        if (length(slots1) != length(slots0)) {
+        is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
+        if (length(slots1) != length(slots0) && is_user_dir) {
           info("[loading_server.R] saving updated PGX")
           new_slots <- setdiff(slots1, slots0)
           savePGX(loaded_pgx, file = pgxfile)
@@ -383,11 +424,8 @@ LoadingBoard <- function(id,
       nsamples <- sum(as.integer(pgx_info$nsamples), na.rm = TRUE)
       FC.file <- file.path(auth$user_dir, "datasets-allFC.csv")
       if (file.exists(FC.file)) {
-        contrast_names <- read.csv(FC.file, nrows = 1, header = TRUE, check.names = FALSE) |> colnames()
-        data_names <- gsub("^\\[|\\].*", "", contrast_names[-1])
-        pgx.files <- pgxtable$data()$dataset
-        data_names <- data_names[data_names %in% pgx.files]
-        ncontrasts <- length(data_names)
+        contrasts <- get_contrasts_from_user(auth)
+        ncontrasts <- sum(contrasts, na.rm = TRUE)
         return(
           paste(ndatasets, "Data sets &nbsp;&nbsp;&nbsp;", nsamples, "Samples &nbsp;&nbsp;&nbsp;", ncontrasts, "Comparisons")
         )

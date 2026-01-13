@@ -4,15 +4,16 @@
 ##
 
 enrichment_plot_volcano_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -27,7 +28,7 @@ enrichment_plot_volcano_ui <- function(
     width = width,
     caption = caption,
     plotlib = c("plotly", "ggplot"),
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
     card_names = c("dynamic", "static")
   )
@@ -40,6 +41,7 @@ enrichment_plot_volcano_server <- function(id,
                                            gset_selected,
                                            gs_fdr,
                                            gs_lfc,
+                                           show_pv,
                                            subplot.MAR,
                                            geneDetails,
                                            watermark = FALSE) {
@@ -60,8 +62,9 @@ enrichment_plot_volcano_server <- function(id,
       shiny::req(gxmethods)
 
       gx.meta <- pgx$gx.meta$meta[[comp]]
+      meta.p <- apply(gx.meta$p[, gxmethods, drop = FALSE], 1, max) ## max p-value
       meta.q <- apply(gx.meta$q[, gxmethods, drop = FALSE], 1, max) ## max q-value
-      limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q)
+      limma1 <- data.frame(meta.fx = gx.meta$meta.fx, meta.q = meta.q, meta.p = meta.p)
       gx.annot <- pgx$genes[rownames(gx.meta), c("gene_name", "gene_title")]
       limma <- cbind(gx.annot, limma1)
 
@@ -77,32 +80,45 @@ enrichment_plot_volcano_server <- function(id,
       fc.genes <- as.character(limma[, grep("^gene$|gene_name", colnames(limma))])
       fx <- limma[, grep("logFC|meta.fx|fc", colnames(limma))[1]]
       qval <- limma[, grep("^q|adj.P.Val|meta.q|qval|padj", colnames(limma))[1]]
+      pval <- limma[, grep("^p|P.Val|Pvalue|meta.p|pval", colnames(limma))[1]]
 
       qval <- pmax(qval, 1e-12) ## prevent q=0
       qval[which(is.na(qval))] <- 1
-      xlim <- c(-1, 1) * max(abs(fx), na.rm = TRUE)
-      ylim <- c(0, 12)
-      ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
+      pval <- pmax(pval, 1e-12) ## prevent p=0
+      pval[which(is.na(pval))] <- 1
 
       lfc <- 0.20
       lfc <- as.numeric(gs_lfc())
 
+      xlim <- c(-1, 1) * max(abs(fx), na.rm = TRUE)
+      ylim <- c(0, 12)
+
+      y <- -log10(qval)
+      ylab <- "Significance (-log10q)"
+      ylim <- c(0, max(12, 1.1 * max(-log10(qval), na.rm = TRUE)))
+
+      if (show_pv()) {
+        y <- -log10(pval)
+        ylab <- "Significance (-log10p)"
+        ylim <- c(0, max(12, 1.1 * max(-log10(pval), na.rm = TRUE)))
+      }
+
       return(list(
         x = fx,
-        y = -log10(qval),
+        y = y,
         fc.genes = fc.genes,
         sel.genes = sel.genes,
         lab.cex = 1,
         fdr = fdr,
-        lfc = lfc
+        lfc = lfc,
+        ylab = ylab
       ))
     })
 
     plotly.RENDER <- function(marker.size = 3, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
-
-      playbase::plotlyVolcano(
+      playbase::plotlyVolcano( ## in use
         x = pd[["x"]],
         y = pd[["y"]],
         names = pd[["fc.genes"]],
@@ -115,24 +131,20 @@ enrichment_plot_volcano_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10q)",
+        ylab = pd[["ylab"]],
         marker.size = marker.size,
         displayModeBar = FALSE,
         showlegend = FALSE,
         color_up_down = TRUE
       ) %>%
-        plotly::layout(
-          margin = list(l = 0, r = 0, t = 0, b = 0)
-        )
+        plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
     }
 
     plotly.RENDER2 <- function() {
       plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
         plotly::layout(
           font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
+          legend = list(font = list(size = 18))
         )
     }
 
@@ -151,7 +163,7 @@ enrichment_plot_volcano_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10q)",
+        ylab = pd[["ylab"]],
         marker.size = 1,
         showlegend = FALSE
       )
@@ -171,7 +183,7 @@ enrichment_plot_volcano_server <- function(id,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
-        ylab = "Significance (-log10q)",
+        ylab = pd[["ylab"]],
         marker.size = 2,
         label.cex = 6,
         axis.text.size = 24,

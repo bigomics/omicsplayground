@@ -49,11 +49,12 @@ upload_module_initial_settings_ui <- function(id) {
 }
 
 upload_module_initial_settings_server <- function(
-    id,
-    upload_datatype,
-    upload_organism,
-    auth,
-    new_upload) {
+  id,
+  upload_datatype,
+  upload_organism,
+  auth,
+  new_upload
+) {
   shiny::moduleServer(
     id,
     function(input, output, session) {

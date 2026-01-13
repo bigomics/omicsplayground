@@ -4,14 +4,15 @@
 ##
 
 wordcloud_plot_enrichment_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -24,7 +25,7 @@ wordcloud_plot_enrichment_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     height = height,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

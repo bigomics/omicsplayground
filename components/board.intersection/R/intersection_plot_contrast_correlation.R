@@ -4,13 +4,14 @@
 ##
 
 contrast_correlation_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   ctcorrplot.opts <- shiny::tagList(
@@ -37,7 +38,7 @@ contrast_correlation_ui <- function(
     info.text = info.text,
     caption = caption,
     options = ctcorrplot.opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
@@ -54,6 +55,7 @@ contrast_correlation_server <- function(id,
       shiny::req(pgx$X)
 
       res <- getFoldChangeMatrix()
+      shiny::req(res$fc)
       if (is.null(res)) {
         return(NULL)
       }
@@ -83,6 +85,10 @@ contrast_correlation_server <- function(id,
 
       F[is.na(F)] <- 0
       jj <- head(order(-rowMeans(F**2, na.rm = TRUE)), ntop)
+      validate(need(
+        length(jj) >= 2,
+        "Need at least 2 features to compute correlation."
+      ))
       F <- apply(F[jj, , drop = FALSE], 2, rank, na.last = "keep")
       R <- cor(F, use = "pairwise")
       R <- round(R, digits = 2)

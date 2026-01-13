@@ -31,10 +31,7 @@ PathwayBoard <- function(id,
     the GO graph tab. Instead of pathway maps, an annotated graph structure
     provided by the GO database is potted for every selected gene set.
     <br><br><br><br>
-    <center><iframe width='500' height='333'
-    src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
-    frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-    gyroscope; picture-in-picture' allowfullscreen></iframe></center>"), js = FALSE)
+    <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=AB4FSqin7aqqYU_n&amp;start=100' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
@@ -50,8 +47,9 @@ PathwayBoard <- function(id,
 
     shiny::observe({
       shiny::req(pgx$X)
-      ct <- colnames(pgx$model.parameters$contr.matrix)
-      ct <- sort(ct)
+      # ct <- colnames(pgx$model.parameters$contr.matrix)
+      ct <- playbase::pgx.getContrasts(pgx)
+      ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
     })
 
@@ -66,16 +64,12 @@ PathwayBoard <- function(id,
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
     ## ================================================================================
 
 
-    ## =========================================================================
     ## Get Reactome table
-    ## =========================================================================
-
     getReactomeTable <- shiny::reactive({
       shiny::req(pgx$X, input$fa_contrast)
 
@@ -149,8 +143,7 @@ PathwayBoard <- function(id,
 
     functional_plot_reactome_actmap_server(
       "reactome_actmap",
-      reactive(pgx$gset.meta$meta),
-      getReactomeTable,
+      getFilteredReactomeTable,
       pgx = pgx,
       WATERMARK
     )
@@ -226,6 +219,10 @@ PathwayBoard <- function(id,
 
       ## select those with ID
       jj <- which(!is.na(wp.ids) & !duplicated(wp.ids))
+      # Remove ID not in meta matrix
+      jj <- jj[wp.gsets[jj] %in% rownames(pgx$gset.meta$meta[[comparison]])]
+      # Remove ID with no logFC on meta matrix
+      jj <- jj[!is.na(pgx$gset.meta$meta[[comparison]][wp.gsets[jj], ]$meta.fx)]
       wp.gsets <- wp.gsets[jj]
       wp.ids <- wp.ids[jj]
 
@@ -271,7 +268,7 @@ PathwayBoard <- function(id,
     functional_plot_wikipathway_actmap_server(
       "wikipathway_actmap",
       pgx,
-      getWikiPathwayTable,
+      getFilteredWikiPathwayTable,
       WATERMARK
     )
 

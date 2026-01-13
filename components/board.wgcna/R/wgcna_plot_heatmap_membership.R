@@ -4,13 +4,14 @@
 ##
 
 wgcna_plot_heatmap_membership_ui <- function(
-    id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   intraHeatmap_opts <- shiny::tagList(
@@ -26,7 +27,7 @@ wgcna_plot_heatmap_membership_ui <- function(
     options = intraHeatmap_opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 

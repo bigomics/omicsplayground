@@ -13,13 +13,16 @@
 #'
 #' @export
 drugconnectivity_plot_enplots_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList()
@@ -30,8 +33,10 @@ drugconnectivity_plot_enplots_ui <- function(
     caption = caption,
     plotlib = "base",
     info.text = info.text,
+    info.methods = info.methods,
+    info.references = info.references,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
   )

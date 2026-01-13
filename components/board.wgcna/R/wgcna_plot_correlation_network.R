@@ -4,13 +4,15 @@
 ##
 
 wgcna_plot_correlation_network_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label,
-    height,
-    width) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height,
+  width,
+  ...
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,60 +23,34 @@ wgcna_plot_correlation_network_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
   )
 }
 
 wgcna_plot_correlation_network_server <- function(id,
-                                                  wgcna.compute,
+                                                  wgcna,
+                                                  pgx,
                                                   selected_module,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    corGraph.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
-
+    RENDER <- function() {
+      out <- wgcna()
       k <- selected_module()
-      shiny::req(k)
-      genes <- out$me.genes[[k]]
-
-      dim(out$datExpr)
-      xx <- cbind(out$net$MEs[, k, drop = FALSE], out$datExpr[, genes])
-      ## rho1 <- cor(xx, out$net$MEs[, k])[, 1]
-      rho1 <- cor(xx, out$net$MEs[, k], use = "pairwise.complete.obs")[, 1]
-      ntop <- min(nrow(xx) - 1, 20)
-      topgg <- names(sort(rho1, decreasing = TRUE))
-
-      topgg <- head(topgg, ntop)
-
-      ## rho <- Matrix::nearPD(cor(xx[, topgg]))$mat
-      rho <- Matrix::nearPD(cor(xx[, topgg], use = "pairwise.complete.obs"))$mat
-      me.color <- out$me.colors[k]
-      color1 <- me.color
-      color1 <- c("white", me.color)[1 + 1 * (colnames(rho) == k)]
-      size1 <- c(7, 10)[1 + 1 * (colnames(rho) == k)]
-
-      qgraph::qgraph(rho,
-        graph = "glasso",
-        layout = "spring",
-        sampleSize = nrow(xx),
-        labels = rownames(rho),
-        color = color1,
-        tuning = 0, ## gamma for EBIClasso. 0.5=default, 0=BIC
-        vsize = size1,
-        cut = 0,
-        maximum = .45,
-        border.width = 1.5,
-        threshold = TRUE
+      shiny::req(k, out)
+      rownames(out$stats$moduleMembership) <- playbase::probe2symbol(rownames(out$stats$moduleMembership), pgx$genes, "gene_name", fill_na = TRUE)
+      colnames(out$datExpr) <- playbase::probe2symbol(colnames(out$datExpr), pgx$genes, "gene_name", fill_na = TRUE)
+      playbase::wgcna.plotModuleHubGenes(
+        out,
+        modules = k, alpha = 0.5, setpar = TRUE
       )
-      p <- grDevices::recordPlot()
-      p
-    })
+    }
 
     PlotModuleServer(
       "plot",
-      func = corGraph.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 80),
+      res = c(72, 120),
       add.watermark = watermark
     )
   })

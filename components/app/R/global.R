@@ -16,7 +16,6 @@ message("\n\n\n")
 shiny::addResourcePath("custom", "www")
 
 
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {
@@ -158,18 +157,22 @@ opt.default <- list(
   USE_CREDENTIALS = FALSE,
   DOMAIN = NULL,
   BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
-  ## ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE = TRUE,
   ENABLE_PGX_DOWNLOAD = TRUE,
   ENABLE_PUBLIC_SHARE = TRUE,
+  ENABLE_PUBLIC_LOAD = FALSE,
   ENABLE_UPLOAD = TRUE,
   ENABLE_USERDIR = TRUE,
   ENABLE_USER_SHARE = TRUE,
   ENABLE_USER_LOCK = TRUE,
   ENABLE_HEARTBEAT = TRUE,
   ENABLE_INACTIVITY = TRUE,
+  INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  ENABLE_UPGRADE = FALSE,
+  ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
+  MAX_PUBLIC_DATASETS = NULL,
   MAX_SAMPLES = 1000,
   MAX_COMPARISONS = 20,
   MAX_GENES = 20000,
@@ -179,7 +182,11 @@ opt.default <- list(
   TIMEOUT = 0,
   WATERMARK = TRUE,
   APACHE_COOKIE_PATH = OPG,
-  DEVMODE = FALSE
+  ALLOW_CUSTOM_FC = FALSE,
+  DEVMODE = FALSE,
+  ENABLE_MULTIOMICS = TRUE,
+  ENABLE_COOKIE_LOGIN = TRUE,
+  PUBLIC_DATASETS_LABEL = "Public Datasets"
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -191,8 +198,26 @@ message("************* SETTING DEFAULTS ***************")
 message("************************************************")
 
 defaults.file <- file.path(ETC, "DEFAULTS.yml")
-if (!file.exists(defaults.file)) stop("FATAL ERROR: cannot find DEFAULTS.yml file")
-DEFAULTS <<- yaml::read_yaml(defaults.file)
+if (file.exists(defaults.file)) {
+  DEFAULTS <<- yaml::read_yaml(defaults.file)
+} else {
+  message("[GLOBAL] DEFAULTS.yml not found, using default configuration")
+  DEFAULTS <<- list(
+    computation_options = list(
+      probe_filtering = list(
+        default = c(
+          "remove.notexpressed",
+          "remove.unknown",
+          "only.proteincoding"
+        ),
+        proteomics = list()
+      )
+    ),
+    qc = list(
+      impute = TRUE
+    )
+  )
+}
 
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
@@ -239,11 +264,24 @@ if (opt$HUBSPOT_CHECK) {
 BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
-  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf"
+  "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
+  "multiomics"
 )
-if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
-ENABLED <- array(rep(TRUE, length(BOARDS)), dimnames = list(BOARDS))
+## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
+opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
+
+MODULES <- c(
+  "Welcome", "Datasets", "DataView", "Clustering", "Expression",
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
+)
+if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
+if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
+if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
+MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
+MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
+MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
+MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
 ## ------------------------------------------------
 ## SESSION CONTROL
@@ -271,8 +309,22 @@ shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
+## Initialize report download logger
+REPORT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
+
+## Initialize upgrade button logger
+UPGRADE_LOGGER <<- reactiveValues(log = list(), str = "")
+
 ## Initialize translator
 library(shiny.i18n)
 DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
+
+## Filter LLM models with available models, add all local models(?)
+opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
+LOCAL_MODELS <- playbase::ai.get_ollama_models()
+# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+
+## Setup reticulate
+## reticulate::use_virtualenv("reticulate")

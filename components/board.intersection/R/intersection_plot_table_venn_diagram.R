@@ -41,7 +41,7 @@ intersection_plot_venn_diagram_ui <- function(id,
     info.text = info.text,
     options = venndiagram.opts,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
@@ -98,6 +98,7 @@ intersection_plot_venn_diagram_server <- function(id,
     venndiagram.RENDER <- function() {
       data <- plot_data()
       dt1 <- data[[1]]
+      shiny::req(dt1)
       plot_names <- data[[2]]
 
       label <- colnames(dt1)
@@ -150,14 +151,25 @@ intersection_plot_venn_diagram_server <- function(id,
           x_up <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x > 0)], x[which(x > 0)]))
           x_down <- apply(dt1, 2, function(x) paste(rownames(dt1)[which(x < 0)], x[which(x < 0)]))
 
-          count_up <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_up))$count
-          count_down <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_down))$count
+          if (length(x_up) != 0) {
+            count_up <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_up))$count
+          } else {
+            count_up <- 0
+          }
+
+          if (length(x_down) != 0) {
+            count_down <- ggVennDiagram::process_region_data(ggVennDiagram::Venn(x_down))$count
+          } else {
+            count_down <- 0
+          }
+
           count_both <- paste0(count_up, "\n", count_down)
 
           p <- ggVennDiagram::ggVennDiagram(
             x,
             label = "both",
-            edge_size = 0.4
+            edge_size = 0.4,
+            label_alpha = 0
           ) +
             ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
             ggplot2::theme(
@@ -171,7 +183,8 @@ intersection_plot_venn_diagram_server <- function(id,
           p <- ggVennDiagram::ggVennDiagram(
             x,
             label = "count",
-            edge_size = 0.4
+            edge_size = 0.4,
+            label_alpha = 0
           ) +
             ggplot2::scale_fill_gradient(low = "grey90", high = "red") +
             ggplot2::theme(

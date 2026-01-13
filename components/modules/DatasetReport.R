@@ -15,9 +15,10 @@ DatasetReportUI <- function(id) {
 }
 
 DatasetReportServer <- function(
-    id,
-    auth,
-    pgxtable) {
+  id,
+  auth,
+  pgxtable
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -126,6 +127,46 @@ DatasetReportServer <- function(
                 selected = "Getting comparisons...",
                 multiple = TRUE
               )
+            ),
+            shiny::br(),
+            shiny::h5("Select sections to include:"),
+            shiny::checkboxInput(
+              inputId = ns("section_clustering"),
+              label = "Clustering (PCA, Heatmap)",
+              value = TRUE
+            ),
+            shiny::conditionalPanel(
+              "input.report_type == 'dataset-summary'",
+              ns = ns,
+              shiny::checkboxInput(
+                inputId = ns("section_phenotype"),
+                label = "Phenotype Analysis",
+                value = TRUE
+              )
+            ),
+            shiny::checkboxInput(
+              inputId = ns("section_differential"),
+              label = "Differential Expression",
+              value = TRUE
+            ),
+            shiny::checkboxInput(
+              inputId = ns("section_enrichment"),
+              label = "Enrichment Analysis",
+              value = TRUE
+            ),
+            shiny::conditionalPanel(
+              "input.report_type == 'comparison-summary'",
+              ns = ns,
+              shiny::checkboxInput(
+                inputId = ns("section_functional"),
+                label = "Functional Analysis",
+                value = TRUE
+              ),
+              shiny::checkboxInput(
+                inputId = ns("section_drug"),
+                label = "Drug Connectivity",
+                value = TRUE
+              )
             )
           ),
           div(
@@ -203,6 +244,15 @@ DatasetReportServer <- function(
               qmd_file <- "visreport-bigpage.qmd"
             }
             all_ct <- paste(sel_contrasts, collapse = ",")
+
+            # Prepare section parameters for dataset reports
+            section_args <- c(
+              "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
+              "-P", paste0("sections_phenotype:", tolower(input$section_phenotype)),
+              "-P", paste0("sections_differential:", tolower(input$section_differential)),
+              "-P", paste0("sections_enrichment:", tolower(input$section_enrichment))
+            )
+
             system2(
               "quarto",
               args = c(
@@ -214,7 +264,8 @@ DatasetReportServer <- function(
                 "-P", paste0("comparisons:", all_ct),
                 "-P", paste0("dataset:", sel_dataset),
                 "-M", paste0("user:", user),
-                "-M", paste0("title:", sel_dataset)
+                "-M", paste0("title:", sel_dataset),
+                section_args
               ),
               stdout = file
             )
@@ -230,6 +281,16 @@ DatasetReportServer <- function(
                 detail = paste0("summarizing comparison ", i, "/", ncontrasts)
               )
               tmp <- tempfile()
+
+              # Prepare section parameters for comparison report
+              section_args <- c(
+                "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
+                "-P", paste0("sections_differential:", tolower(input$section_differential)),
+                "-P", paste0("sections_enrichment:", tolower(input$section_enrichment)),
+                "-P", paste0("sections_functional:", tolower(input$section_functional)),
+                "-P", paste0("sections_drug:", tolower(input$section_drug))
+              )
+
               system2(
                 "quarto",
                 args = c(
@@ -240,12 +301,20 @@ DatasetReportServer <- function(
                   "-P", paste0("pgxdir:", pgx_path),
                   "-P", paste0("comparison:", ct),
                   "-P", paste0("dataset:", sel_dataset),
+                  "-M", paste0("dataset:", sel_dataset),
                   "-M", paste0("user:", user),
-                  "-M", paste0("title:", ct)
+                  "-M", paste0("title:", ct),
+                  section_args
                 ),
                 stdout = tmp
               )
               files <- c(files, tmp)
+            }
+            ## remove any empty files
+            zero_size_files <- files[file.size(files) == 0]
+            if (length(zero_size_files) > 0) {
+              files <- files[file.size(files) > 0]
+              message("[DatasetReportServer:download_pdf] removed ", length(zero_size_files), " empty file(s)")
             }
 
             ## finally merge all pages
@@ -262,6 +331,7 @@ DatasetReportServer <- function(
           setwd(cur_wd)
           unlink(tmpdir)
 
+          record_report_download(input$report_type)
           shinyalert::shinyalert(
             title = "Yay! Your report is ready",
             text = "We finished your report. Please check your downloads folder.",

@@ -5,12 +5,13 @@
 
 
 dataview_table_samples_ui <- function(
-    id,
-    width,
-    height,
-    title,
-    info.text,
-    caption) {
+  id,
+  width,
+  height,
+  title,
+  info.text,
+  caption
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

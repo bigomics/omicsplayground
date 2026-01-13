@@ -6,41 +6,39 @@
 IntersectionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::br(),
     withTooltip(shiny::selectInput(ns("comparisons"), "Contrasts:", choices = NULL, multiple = TRUE),
       "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
       placement = "top"
     ),
-    shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
-      withTooltip(
-        shiny::radioButtons(ns("level"), "Level:",
-          choices = c("gene", "geneset"), inline = TRUE
-        ),
-        "Select feature level: gene or geneset",
-        placement = "top"
-      ),
-      withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = "<all>", multiple = FALSE),
-        "Filter features",
-        placement = "top"
-      ),
-      shiny::conditionalPanel(
-        "input.filter == '<custom>'",
-        ns = ns,
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(
-          shiny::textAreaInput(ns("customlist"), NULL,
-            value = NULL,
-            rows = 5
+          shiny::radioButtons(ns("level"), "Level:",
+            choices = c("gene", "geneset"), inline = TRUE
           ),
-          "Paste a custom list of genes to highlight.",
-          placement = "bottom"
+          "Select feature level: gene or geneset",
+          placement = "top"
+        ),
+        withTooltip(shiny::selectInput(ns("filter"), "Filter:", choices = "<all>", multiple = FALSE),
+          "Filter features",
+          placement = "top"
+        ),
+        shiny::conditionalPanel(
+          "input.filter == '<custom>'",
+          ns = ns,
+          withTooltip(
+            shiny::textAreaInput(ns("customlist"), NULL,
+              value = NULL,
+              rows = 5
+            ),
+            "Paste a custom list of genes to highlight.",
+            placement = "bottom"
+          )
         )
       )
     )
@@ -64,7 +62,17 @@ IntersectionUI <- function(id) {
         intersection_scatterplot_pairs_ui(
           id = ns("scatterplot"),
           title = "Scatterplot pairs",
-          info.text = "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as selection.",
+          info.text = paste0(
+            "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. ",
+            "The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. ",
+            "This module provides an interactive pairwise scatterplots for the differential expression profiles between the selected contrasts. ",
+            "All the possible comparisons between the selected contrasts are displayed.",
+            "<ul>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#5B9B5B; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in the two compared contrasts.</li>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#e3a45a; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in only one of the two compared contrasts.</li>",
+            "<li><span style='display:inline-block; width:12px; height:12px; background-color:#eeeeee; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value above 0.05 in both compared contrasts.</li>",
+            "</ul>"
+          ),
           caption = "Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("100%", "100%")

@@ -4,11 +4,12 @@
 ##
 
 compare_plot_expression_ui <- function(
-    id,
-    label = "",
-    height = c(600, 800),
-    title,
-    info.text) {
+  id,
+  label = "",
+  height = c(600, 800),
+  title,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -19,7 +20,7 @@ compare_plot_expression_ui <- function(
     info.text = info.text,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -70,7 +71,7 @@ compare_plot_expression_server <- function(id,
       xgenes <- intersect(rownames(X1), rownames(X2))
       sel.genes <- head(intersect(sel.genes, xgenes), 8)
       e1 <- playbase::pgx.getContrastMatrix(pgx1)[, ct1, drop = FALSE]
-      e2 <- playbase::pgx.getContrastMatrix(pgx1)[, ct2, drop = FALSE]
+      e2 <- playbase::pgx.getContrastMatrix(pgx2)[, ct2, drop = FALSE]
 
       # Build plots
       sub_plots <- vector("list", length(sel.genes))
@@ -115,7 +116,7 @@ compare_plot_expression_server <- function(id,
         }
 
         plt <- plotly::add_annotations(plt,
-          text = paste("<b>", gene_i, "</b>"),
+          text = paste("<b>", playbase::probe2symbol(gene_i, pgx$genes, "gene_name", fill_na = TRUE), "</b>"),
           font = list(size = 9),
           showarrow = FALSE,
           xanchor = "left",

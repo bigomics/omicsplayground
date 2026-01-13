@@ -4,13 +4,14 @@
 ##
 
 dataview_plot_histogram_ui <- function(
-    id,
-    label = "",
-    height,
-    width,
-    title,
-    caption,
-    info.text) {
+  id,
+  label = "",
+  height,
+  width,
+  title,
+  caption,
+  info.text
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,13 +22,16 @@ dataview_plot_histogram_ui <- function(
     info.text = info.text,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
 }
 
-dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE) {
+dataview_plot_histogram_server <- function(id,
+                                           getCountsTable,
+                                           r.samples = reactive(""),
+                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
@@ -57,12 +61,10 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
     ## extract data from pgx object
     plot_data <- shiny::reactive({
       res <- getCountsTable()
+      samples <- r.samples()
       shiny::req(res)
       hh <- .gx.histogram(gx = res$log2counts, n = 2000, plot = FALSE)
-      pdata <- list(
-        histogram = hh,
-        log2counts = res$log2counts
-      )
+      pdata <- list(histogram = hh, log2counts = res$log2counts)
       pdata
     })
 
@@ -85,7 +87,7 @@ dataview_plot_histogram_server <- function(id, getCountsTable, watermark = FALSE
       smoothen <- function(y) {
         loess(y ~ mid, data.frame(mid = hist$mid, y = y), span = 0.25)$fitted
       }
-      y.smooth <- apply(hist[, 3:ncol(hist)], 2, smoothen)
+      y.smooth <- apply(hist[, 3:ncol(hist), drop = FALSE], 2, smoothen)
 
       df <- data.frame(
         x = rep(hist$mids, ncol(hist) - 2),

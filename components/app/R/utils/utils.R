@@ -9,6 +9,14 @@
 ##                                                                     ##
 #########################################################################
 
+setUserOption <- function(session, var, value) {
+  session$userData[[var]] <- value
+}
+
+getUserOption <- function(session, var, value) {
+  return(session$userData[[var]])
+}
+
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
 
 getAppVersion <- function(add.auth = FALSE) {
@@ -108,8 +116,19 @@ tipifyB <- function(...) {
 ## }
 
 tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
-  has.slot <- (slot %in% names(pgx))
+  has.slot <- (slot %in% names(pgx)) && !is.null(pgx[[slot]])
   if (has.slot && enable) {
+    bigdash.showTab(session, tabname)
+  } else {
+    bigdash.hideTab(session, tabname)
+  }
+}
+
+tabRequireTS <- function(pgx, session, tabname, enable = TRUE) {
+  time.vars <- playbase::get_timevars()
+  found.time.var <- grep(time.vars, colnames(pgx$samples), ignore.case = TRUE)
+  valid.contrasts <- any(grepl("IA:*", colnames(pgx$contrasts)))
+  if (length(found.time.var) > 0 && enable && valid.contrasts) {
     bigdash.showTab(session, tabname)
   } else {
     bigdash.hideTab(session, tabname)
@@ -165,7 +184,7 @@ sever_disconnected <- function() {
   sever_crash(error = NULL)
 }
 
-sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_creds = "hubspot_creds") {
+sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, path_to_creds = "hubspot_creds") {
   if (!file.exists(path_to_creds)) {
     message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get credential =", path_to_creds)
     return(NULL)
@@ -182,6 +201,8 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, error, path_to_cr
         The user name is : {user_email}
 
         The ds name is: {pgx_name}
+
+        Upload folder is: {raw_dir}
 
           The error is:
 
@@ -367,6 +388,16 @@ sever_serverfull <- function(srv) {
     shiny::p("Our servers are at capacity. Please try again later.", style = "font-size:15px;"),
     shiny::br(),
     shiny::div(paste("server =", srv), style = "font-size:11px;text-align:center;"),
+    shiny::br(), shiny::br(),
+    sever::reload_button("Relaunch", class = "info")
+  )
+}
+
+sever_max_sessions <- function(srv) {
+  shiny::tagList(
+    shiny::tags$h1("There is a session already running for this account!", style = "color:white;font-family:lato;"),
+    shiny::p("Please close any other tabs or sessions before launching a new one. If you already did, please wait and try again.", style = "font-size:15px;"),
+    shiny::br(),
     shiny::br(), shiny::br(),
     sever::reload_button("Relaunch", class = "info")
   )

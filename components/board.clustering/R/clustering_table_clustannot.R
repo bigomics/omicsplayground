@@ -12,12 +12,13 @@
 #'
 #' @export
 clustering_table_clustannot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -38,11 +39,12 @@ clustering_table_clustannot_ui <- function(
 #'
 #' @export
 clustering_table_clustannot_server <- function(
-    id,
-    getClustAnnotCorrelation,
-    xann_level,
-    watermark,
-    scrollY) {
+  id,
+  getClustAnnotCorrelation,
+  xann_level,
+  watermark,
+  scrollY
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -50,7 +52,7 @@ clustering_table_clustannot_server <- function(
       rho <- getClustAnnotCorrelation()
       rho.name <- playbase::shortstring(sub(".*:", "", rownames(rho)), 60)
       df <- data.frame(feature = rho.name, round(as.matrix(rho), digits = 3))
-      rownames(df) <- rownames(rho)
+      rownames(df) <- make.unique(rownames(rho))
       return(df)
     })
 

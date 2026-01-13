@@ -18,16 +18,36 @@
 #'
 #' @return Shiny UI for top enriched plots.
 enrichment_plot_top_enrich_gsets_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
+
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::checkboxInput(
+        ns("label_features"),
+        "Display labels on the plot",
+        TRUE
+      ),
+      "Display labels on the plot."
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("full_yaxis"),
+        "Show full y-axis",
+        FALSE
+      ),
+      "Show full range on y-axis"
+    )
+  )
 
   PlotModuleUI(
     id = ns("plotmodule"),
@@ -41,7 +61,8 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    options = options,
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -75,12 +96,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       ## selected
-      sel <- as.integer(gseatable$rows_selected())
-      sel.gs <- NULL
-      if (!is.null(sel) && length(sel) > 0) sel.gs <- rownames(rpt)[sel]
-
-      ii <- gseatable$rows_selected()
-      jj <- gseatable$rows_current()
+      ii <- gseatable$rownames_selected()
+      jj <- gseatable$rownames_current()
       shiny::req(jj)
 
       if (nrow(rpt) == 0) {
@@ -161,6 +178,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
+        genes <- playbase::probe2symbol(genes, pgx$genes, "gene_name", fill_na = TRUE)
+        names(rnk0) <- playbase::probe2symbol(names(rnk0), pgx$genes, "gene_name", fill_na = TRUE)
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
@@ -169,7 +188,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
             xlab = "Rank in ordered dataset",
             ylab = "Rank metric",
             ticklen = 0.25,
-            yth = 1, ## threshold for which points get label
+            yth = ifelse(input$label_features, 0.1, 999), ## threshold for which points get label
+            yq = ifelse(input$full_yaxis, 0, 0.01), ## limits for y-range
             cbar.width = 32,
             tooltips = NULL,
             cex.text = cex.text,

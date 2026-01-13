@@ -14,14 +14,15 @@
 #'
 #' @export
 singlecell_plot_crosstabPlot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width,
-    parent) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent
+) {
   ns <- shiny::NS(id)
 
   crosstab.opts <- shiny::tagList(
@@ -45,7 +46,7 @@ singlecell_plot_crosstabPlot_ui <- function(
     title = title,
     caption = caption,
     options = crosstab.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )
@@ -75,6 +76,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
         shiny::validate(shiny::need(FALSE, "Proportions requires deconvolution"))
       }
       crosstabvar <- crosstabvar()
+      shiny::req(crosstabvar)
       gene <- gene()
       pheno <- pheno()
 
@@ -86,18 +88,18 @@ singlecell_plot_crosstabPlot_server <- function(id,
         }
         scores <- pmax(scores, 0) ## ??
       } else {
-        x <- as.character(pgx$Y[, 1])
-        x <- as.character(pgx$Y[, crosstabvar])
+        x <- as.character(pgx$samples[, 1])
+        x <- as.character(pgx$samples[, crosstabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix(~ 0 + x)
-        rownames(scores) <- rownames(pgx$Y)
+        rownames(scores) <- rownames(pgx$samples)
         colnames(scores) <- sub("^x", "", colnames(scores))
       }
 
       ## restrict to selected sample set
       kk <- head(1:nrow(scores), 1000)
       kk <- 1:nrow(scores)
-      kk <- playbase::selectSamplesFromSelectedLevels(pgx$Y, samplefilter())
+      kk <- playbase::selectSamplesFromSelectedLevels(pgx$samples, samplefilter())
       scores <- scores[kk, , drop = FALSE]
       scores <- scores[, which(colSums(scores) > 0), drop = FALSE]
       scores[which(is.na(scores))] <- 0
@@ -108,15 +110,20 @@ singlecell_plot_crosstabPlot_server <- function(id,
       scores <- scores[, topsel]
 
       ## expected counts per stat level
-      kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE]) ## approximate counts from log2X
+      kk.counts <- colSums(2**pgx$X[, kk, drop = FALSE], na.rm = TRUE) ## approximate counts from log2X
       grp.counts <- (t(scores / rowSums(scores)) %*% matrix(kk.counts, ncol = 1))[, 1]
 
       getProportionsTable <- function(pheno, is.gene = FALSE) {
         y <- NULL
         if (is.gene) {
-          xgene <- pgx$genes[rownames(pgx$X), ]$symbol
-          gx <- pgx$X[which(xgene == pheno), kk, drop = FALSE]
+          X <- pgx$X
+          gx <- X[which(rownames(X) == pheno), kk, drop = FALSE]
+          # Handle case where multiple genes have same symbol, happens easily on weird species
+          if (nrow(gx) > 1) {
+            gx <- colMeans(gx, na.rm = TRUE)
+          }
           gx.highTH <- mean(gx, na.rm = TRUE)
+          pheno <- playbase::probe2symbol(pheno, pgx$genes, "gene_name", fill_na = TRUE)
           y <- paste(pheno, c("low", "high"))[1 + 1 * (gx >= gx.highTH)]
           table(y)
         } else if (pheno %in% colnames(pgx$samples)) {
@@ -199,10 +206,6 @@ singlecell_plot_crosstabPlot_server <- function(id,
       head(pgx$samples)
 
 
-
-
-
-
       if (is.null(pheno)) {
         return(NULL)
       }
@@ -210,8 +213,7 @@ singlecell_plot_crosstabPlot_server <- function(id,
       grp.score1 <- getProportionsTable(pheno, is.gene = FALSE)
       grp.score2 <- NULL
 
-      gene <- gene
-      if (gene != "<none>") {
+      if (!(gene() %in% c("<none>", ""))) {
         grp.score2 <- getProportionsTable(pheno = gene, is.gene = TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1, ])]
         grp.score2 <- grp.score2[, match(kk, colnames(grp.score2)), drop = F]

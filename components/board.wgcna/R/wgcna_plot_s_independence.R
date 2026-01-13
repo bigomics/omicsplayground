@@ -4,13 +4,15 @@
 ##
 
 wgcna_plot_s_independence_ui <- function(
-    id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = info.text,
+  height,
+  width,
+  ...
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -21,7 +23,8 @@ wgcna_plot_s_independence_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
   )
 }
 
@@ -29,13 +32,22 @@ wgcna_plot_s_independence_server <- function(id,
                                              wgcna.compute,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    topologyPlots.RENDER <- shiny::reactive({
+    RENDER <- shiny::reactive({
       out <- wgcna.compute()
+      shiny::req(out)
+
+      networktype <- out$networktype
+      if (is.null(networktype)) networktype <- "signed"
 
       ## Choose a set of soft-thresholding powers
       powers <- c(c(1:10), seq(from = 12, to = 20, by = 2))
       ## Call the network topology analysis function
-      sft <- pickSoftThreshold(out$datExpr, powerVector = powers, verbose = 5)
+      sft <- WGCNA::pickSoftThreshold(
+        out$datExpr,
+        powerVector = powers,
+        networkType = networktype,
+        verbose = 0
+      )
 
       ## Plot the results:
       par(mfrow = c(1, 2), mar = c(3.3, 3, 1, 1), mgp = c(2, 0.8, 0))
@@ -68,9 +80,9 @@ wgcna_plot_s_independence_server <- function(id,
 
     PlotModuleServer(
       "plot",
-      func = topologyPlots.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 100),
+      res = c(80, 120),
       add.watermark = watermark
     )
   })

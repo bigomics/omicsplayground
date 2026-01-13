@@ -13,16 +13,17 @@
 #'
 #' @export
 biomarker_plot_importance_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(ns("plot"),
@@ -35,7 +36,7 @@ biomarker_plot_importance_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -50,6 +51,7 @@ biomarker_plot_importance_ui <- function(
 #' @return
 #' @export
 biomarker_plot_importance_server <- function(id,
+                                             pgx,
                                              calcVariableImportance,
                                              is_computed,
                                              watermark = FALSE) {
@@ -81,29 +83,24 @@ biomarker_plot_importance_server <- function(id,
       plot.RENDER <- function() {
         res <- plot_data()
 
-        ## if (is.null(res) || length(res) == 0) {
-        ##   frame()
-        ##   text(0.5, 0.5, "Please compute desired output on the right Settings tab", col = "grey50")
-        ##   return()
-        ## }
         shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(res)
 
         R <- res$R
         R <- R[order(-rowSums(R, na.rm = TRUE)), , drop = FALSE]
         R <- pmax(R, 0.05)
-
+        rownames(R) <- playbase::probe2symbol(rownames(R), pgx$genes, "gene_name", fill_na = TRUE)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
-        par(mar = c(5, 3, 0, 1))
-        R.top <- head(R, 40)
-        barplot(t(R.top),
+        par(mar = c(8, 4, 1, 0.2), mgp = c(2.5, 0.8, 0))
+        barplot(t(R),
           las = 3, horiz = FALSE,
-          cex.names = 0.85, ylab = "cumulative importance"
+          cex.names = 0.8, ylab = "cumulative rank"
         )
         klr <- grey.colors(ncol(R))
         legend("topright",
           legend = rev(colnames(R)), fill = rev(klr),
-          cex = 0.8, y.intersp = 0.8
+          cex = 0.75, y.intersp = 0.75,
+          inset = c(0.03, -0.03), xpd = TRUE
         )
       }
 

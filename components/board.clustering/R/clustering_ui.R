@@ -9,40 +9,20 @@ ClusteringInputs <- function(id) {
   topmodes <- c("sd", "pca", "marker")
 
   settings_items1 <- tagList(
-    withTooltip(shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:", choices = NULL, multiple = TRUE),
-      "Select phenotypes to show in heatmap and phenotype distribution plots.",
-      placement = "top"
-    ),
-    hr(id = ns("pheno_bar")),
-    withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
-      "Specify the criteria for selecting top features to be shown in the heatmap.",
-      placement = "right", options = list(container = "body")
-    ),
-    withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
-      "Select the number of top features in the heatmap.",
-      placement = "right", options = list(container = "body")
-    ),
-    withTooltip(shiny::selectInput(ns("hm_clustk"), "K modules:", 1:6, selected = 4),
-      "Select the number of gene clusters.",
-      placement = "right", options = list(container = "body")
-    ),
     withTooltip(
-      shiny::radioButtons(
-        ns("hm_scale"), "Scale:",
-        choices = c("relative", "absolute", "BMC"), inline = TRUE
+      shiny::selectInput(ns("hm_level"), "Level:",
+        choices = c("gene", "geneset")
       ),
-      "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
-      placement = "right", options = list(container = "body")
+      "Specify the level analysis: gene or geneset level."
     ),
-    hr(id = ns("cluster_bar")),
+    shiny::hr(),
     withTooltip(
       shiny::radioButtons(
-        ns("hm_splitby"), "Split samples by:",
+        ns("hm_splitby"), "Split heatmap by:",
         inline = TRUE,
-        choices = c("none", "phenotype", "gene")
+        choices = c("none", "phenotype", "contrast", "gene")
       ),
-      "Split the samples by phenotype or expression level of a gene.",
-      placement = "right", options = list(container = "body")
+      "Split the samples by phenotype, contrast or expression level of a gene."
     ),
     shiny::conditionalPanel(
       "input.hm_splitby != 'none'",
@@ -54,88 +34,107 @@ ClusteringInputs <- function(id) {
       withTooltip(
         shiny::checkboxInput(ns("hm_average_group"), "average by group", FALSE),
         "Average expression values by group."
-      )
+      ),
     ),
-    hr(id = ns("spliby_bar")),
+    shiny::conditionalPanel(
+      "input.hm_splitby == 'contrast'",
+      ns = ns,
+      withTooltip(
+        shiny::checkboxInput(ns("hm_show_others"), "show other samples", FALSE),
+        "Include all other samples in the heatmap."
+      ),
+    ),
+    ## ----- level ----
+    shiny::hr(),
     withTooltip(
-      shiny::selectInput(ns("hm_samplefilter"), "Filter samples:",
+      shiny::selectInput(ns("selected_phenotypes"), "Show phenotypes:",
         choices = NULL, multiple = TRUE
       ),
-      "Filter the relevant samples for the analysis.",
-      placement = "top", options = list(container = "body")
-    ),
-    withTooltip(
-      shiny::selectInput(ns("hm_features"), tspan("Gene family:"),
-        choices = NULL, multiple = FALSE
-      ),
-      "Select a gene family for filtering which genes to show in the heatmap."
-    ),
-    shiny::conditionalPanel(
-      "input.hm_features == '<custom>'",
-      ns = ns,
-      withTooltip(
-        shiny::textAreaInput(ns("hm_customfeatures"), NULL,
-          value = NULL,
-          height = "150px", width = "100%",
-          rows = 5
-        ),
-        "Paste a custom list of genes to be used as features.",
-        placement = "bottom"
-      )
-    ),
-    shiny::conditionalPanel(
-      "input.hm_features == '<contrast>'",
-      ns = ns,
-      withTooltip(
-        shiny::selectInput(ns("hm_contrast"), NULL, choices = NULL),
-        "Select contrast to be used as signature.",
-        placement = "right", options = list(container = "body")
-      )
-    )
-  )
-
-
-  bigdash::tabSettings(
-    settings_items1,
-    br(),
-    withTooltip(
-      shiny::actionLink(ns("hm_options"), "Advanced options",
-        icon = icon("cog", lib = "glyphicon")
-      ),
-      "Toggle advanced options.",
+      "Select phenotypes to show in heatmap and phenotype distribution plots.",
       placement = "top"
     ),
     shiny::br(),
-    shiny::conditionalPanel(
-      "input.hm_options % 2 == 1",
-      ns = ns,
-      shiny::tagList(
+    bslib::accordion(
+      id = ns("hm_filter_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Filter options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(
-          shiny::selectInput(ns("hm_clustmethod"), "Layout:",
-            choices = c("tsne", "pca", "umap", "pacmap")
+          shiny::selectInput(ns("hm_samplefilter"), "Filter samples:",
+            choices = NULL, multiple = TRUE
           ),
-          "Choose the layout method for clustering plots.",
-        ),
-        hr(),
-        withTooltip(shiny::selectInput(ns("hm_level"), "Level:", choices = c("gene", "geneset")),
-          "Specify the level analysis: gene or geneset level.",
+          "Filter the relevant samples for the analysis.",
           placement = "top", options = list(container = "body")
         ),
-        hr(),
-        withTooltip(shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
-          "Exclude genes on X/Y chromosomes.",
-          placement = "top", options = list(container = "body")
+        withTooltip(
+          shiny::selectInput(ns("hm_features"), tspan("Filter Genes:"),
+            choices = NULL, multiple = FALSE
+          ),
+          "Select a gene family for filtering which genes to show in the heatmap."
+        ),
+        shiny::conditionalPanel(
+          "input.hm_features == '<custom>'",
+          ns = ns,
+          withTooltip(
+            shiny::textAreaInput(ns("hm_customfeatures"), NULL,
+              value = NULL,
+              height = "150px", width = "100%",
+              rows = 5
+            ),
+            "Paste a custom list of genes to be used as features.",
+            placement = "bottom"
+          )
+        ),
+        ## ----- extra filters ----
+        withTooltip(
+          shiny::checkboxInput(ns("hm_filterXY"), tspan("exclude X/Y genes"), FALSE),
+          "Exclude genes on X/Y chromosomes."
         ),
         withTooltip(
           shiny::checkboxInput(
             ns("hm_filterMitoRibo"),
             tspan("exclude mito/ribo genes"), FALSE
           ),
-          "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.",
-          placement = "top", options = list(container = "body")
+          "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes."
+        )
+      )
+    ),
+    shiny::br(),
+    bslib::accordion(
+      id = ns("hm_options_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Advanced options",
+        icon = icon("cog", lib = "glyphicon"),
+        ## ------ heatmap options -------
+        withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
+          "Specify the criteria for selecting top features to be shown in the heatmap.",
+          placement = "right", options = list(container = "body")
+        ),
+        withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
+          "Select the number of top features in the heatmap.",
+          placement = "right", options = list(container = "body")
+        ),
+        withTooltip(shiny::selectInput(ns("hm_clustk"), "K modules:", 1:6, selected = 4),
+          "Select the number of gene clusters.",
+          placement = "right", options = list(container = "body")
+        ),
+        ## ------ pca/tsne options -------
+        shiny::hr(),
+        withTooltip(
+          shiny::selectInput(ns("hm_clustmethod"), "Layout:",
+            choices = c("tsne", "pca", "umap", "pacmap")
+          ),
+          "Choose the layout method for clustering plots."
         )
       )
     )
+  )
+
+
+  bigdash::tabSettings(
+    settings_items1
   )
 }
 
@@ -145,15 +144,15 @@ ClusteringUI <- function(id) {
 
   board_info <- "The Clustering Board performs unsupervised clustering analysis. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects."
 
-  heatmap_info <- HTML("The <b>Clustered Heatmap</b> is a powerful 2-way unsupervised hierarchical clustering technique that simultaneously clusters the expression matrix along rows and columns, clustering similar genes and similar samples together. The tree-like dendrogram shows the 'distance' between features and the approximate groups. The column annotations show the correlation with the phenotypes.")
+  heatmap_info <- HTML("The <b>Clustered Heatmap</b> is a 2-way unsupervised hierarchical clustering technique that simultaneously clusters the expression matrix along rows and columns, clustering similar genes and similar samples together. The tree-like dendrogram shows the 'distance' between features and the approximate groups. The column annotations show the correlation with the phenotypes.")
 
   pca_info <- HTML("<b>Dimensionality reduction</b> is an unsupervised clustering technique that projects the samples into a lower dimensional, here 2D, space. Samples that have similar expression profiles will cluster close together. By coloring the points by condition, we can see which phenotype best explains the clustering.")
 
-  parallel_info <- HTML("The <b>Parallel Coordinates</b> plot is great for visualizing time series or ordered experiments. By grouping samples by time points and showing them sequentially, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manally order the time points.")
+  parallel_info <- HTML("The <b>Parallel Coordinates</b> plot is great for visualizing time series or ordered experiments. By grouping samples by time points and showing them sequentially, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manually order the time points.")
 
   rowH <- 350
   rowH <- "40vh"
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
 
   div(
     boardHeader(title = "Cluster Samples", info_link = ns("board_info")),
@@ -172,9 +171,9 @@ ClusteringUI <- function(id) {
               id = ns("splitmap"),
               label = "a",
               title = "Clustered Heatmap",
-              caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering.",
+              caption = "Heatmap showing gene expression sorted by 2-way hierarchical clustering or similarities between samples.",
               info.text = "Using the {cexCol} and {cexRow} options it is possible to adjust the font size for the column and row labels. Also, it is possible to select whether to display or not the legend. Gene clusters are functionally annotated in the 'Annotate clusters' panel on the right.",
-              info.methods = "The heatmap is generated using the ComplexHeatmap R/Bioconductor package [1] on scaled log-expression values (z-score) using euclidean distance and Ward linkage using the fastcluster R package [2]. The available methods to select the top features are sd (standard deviation) - features with the highest standard deviation across all the samples, marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - principal component analysis (performed using the irlba R package [3]). In the heatmap, red corresponds to overexpression, blue to underexpression of the gene.",
+              info.methods = "The heatmap is generated using the ComplexHeatmap R/Bioconductor package [1] on scaled log-expression values (z-score) using euclidean distance and Ward linkage using the fastcluster R package [2]. The available methods to select the top features are sd (standard deviation) - features with the highest standard deviation across all the samples, marker - features that are overexpressed in each phenotype class compared to the rest, or by PCA - principal component analysis (performed using the irlba R package [3]). In the heatmap, red corresponds to overexpression, blue to underexpression of the gene. The option of showing sample-sample correlation is also available. Specifically, Pearson's correlation coefficient is computed between all sample pairs. Correlation coefficients are then converted to distances between samples such that higher correlation correspond to smaller distance and lower correlation to higher distance between samples. Sample clusters are then inferred based on Ward's minimum variance method. Clusters are then organized into a dendrogram with k groups optionally defined from the 'K modules' option.",
               info.references = list(
                 list(
                   "Gu Z (2016). “Complex heatmaps reveal patterns and correlations in multidimensional genomic data.” Bioinformatics.",
@@ -243,12 +242,12 @@ ClusteringUI <- function(id) {
           height = fullH,
           bs_alert(HTML(pca_info)),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(6, 6),
             height = fullH,
             clustering_plot_clustpca_ui(
               ns("PCAplot"),
               title = "Dimensionality reduction",
-              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions.",
+              info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the percentage of variance explained by the first two principal components is reported in the x- and y-axis.",
               info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
               info.references = list(
                 list(

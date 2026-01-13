@@ -4,11 +4,12 @@
 ##
 
 compare_plot_genecorr_ui <- function(
-    id,
-    title,
-    info.text,
-    label = "",
-    height = c(600, 800)) {
+  id,
+  title,
+  info.text,
+  label = "",
+  height = c(600, 800)
+) {
   ns <- shiny::NS(id)
 
   genecorr.opts <- shiny::tagList(
@@ -31,7 +32,7 @@ compare_plot_genecorr_ui <- function(
     options = genecorr.opts,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -206,7 +207,7 @@ compare_plot_genecorr_server <- function(id,
             showlegend = show_legend
           ) %>%
           plotly::add_annotations(
-            text = paste("<b>", gene_i, "</b>"),
+            text = paste("<b>", playbase::probe2symbol(gene_i, pgx$genes, "gene_name", fill_na = TRUE), "</b>"),
             font = list(size = 12),
             showarrow = FALSE,
             xanchor = "left",
@@ -232,7 +233,7 @@ compare_plot_genecorr_server <- function(id,
       # Assemble all subplot in to grid
       plt <- plotly::subplot(
         sub_plots,
-        nrows = 4,
+        nrows = min(4, length(sub_plots)),
         margin = 0.03,
         titleX = TRUE,
         titleY = TRUE

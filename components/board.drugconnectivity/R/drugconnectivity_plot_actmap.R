@@ -13,20 +13,22 @@
 #'
 #' @export
 drugconnectivity_plot_actmap_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
     withTooltip(
       shiny::checkboxInput(
         ns("dsea_normalize"),
-        "normalize activation matrix", FALSE
+        "normalize activation matrix",
+        FALSE
       ),
       "Normalize columns of the activation matrix."
     )
@@ -37,7 +39,7 @@ drugconnectivity_plot_actmap_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width
   )
@@ -60,12 +62,20 @@ drugconnectivity_plot_actmap_server <- function(id,
                                                 watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
-      dseaPlotActmap <- function(pgx, dmethod, contr, nterms, nfc, colorbar = FALSE) {
+      dseaPlotActmap <- function(pgx,
+                                 dmethod,
+                                 contr, nterms,
+                                 nfc, colorbar = FALSE) {
         if (is.null(pgx$drugs)) {
           return(NULL)
         }
         nes <- pgx$drugs[[dmethod]]$X
         qv <- pgx$drugs[[dmethod]]$Q
+
+        ctx <- colnames(nes)
+        ctx <- sort(ctx[!grepl("^IA:", ctx)])
+        nes <- nes[, ctx, drop = FALSE]
+        qv <- qv[, ctx, drop = FALSE]
 
         score <- nes * (1 - qv)**2
         score[is.na(score)] <- 0

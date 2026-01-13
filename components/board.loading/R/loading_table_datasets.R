@@ -4,12 +4,13 @@
 ##
 
 loading_table_datasets_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   ## not sure if this should be here or in settings (IK)
@@ -28,7 +29,7 @@ loading_table_datasets_ui <- function(
       options = options
     ),
     div(
-      id = "load-action-buttons",
+      class = "load-action-buttons",
       # this button is needed to trigger download but should be hidden
       shiny::downloadLink(
         ns("download_pgx_btn"),
@@ -108,6 +109,11 @@ loading_table_datasets_server <- function(id,
       return(info)
     })
 
+    pgx_archive_dir <- shiny::reactive({
+      shiny::req(auth$logged)
+      file.path(auth$user_dir, "data_archive")
+    })
+
     getFilteredPGXINFO <- shiny::reactive({
       ## get the filtered table of pgx datasets
       df <- getPGXINFO()
@@ -133,7 +139,7 @@ loading_table_datasets_server <- function(id,
 
       kk <- unique(c(
         "dataset", "description", "organism", "datatype", "nsamples",
-        "ngenes", "nsets", "conditions", "date",
+        "nfeatures", "nsets", "conditions", "date",
         "creator"
       ))
       kk <- intersect(kk, colnames(df))
@@ -165,7 +171,7 @@ loading_table_datasets_server <- function(id,
           title = paste("Share this dataset?"),
           paste(
             "Your dataset", pgx_name, "will be copied",
-            "to the public folder. Other users will be able import and explore",
+            "to the", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder. Other users will be able import and explore",
             "this dataset. Are you sure?"
           ),
           html = TRUE,
@@ -186,13 +192,32 @@ loading_table_datasets_server <- function(id,
         pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
         new_pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
 
+        ## Check if public directory is at capacity
+        if (!is.null(auth$options$MAX_PUBLIC_DATASETS)) {
+          pgxfiles <- dir(pgx_public_dir, pattern = "*.pgx$")
+          numpgx_public <- length(pgxfiles)
+          maxpgx_public <- as.integer(auth$options$MAX_PUBLIC_DATASETS)
+          if (numpgx_public >= maxpgx_public) {
+            shinyalert::shinyalert(
+              title = paste(auth$options$PUBLIC_DATASETS_LABEL, "storage full"),
+              text = paste(
+                "The", tolower(auth$options$PUBLIC_DATASETS_LABEL), "directory has reached its capacity with",
+                numpgx_public, "datasets (limit:", maxpgx_public, ").",
+                "Please contact your administrator to increase the limit or remove old datasets."
+              ),
+              type = "error"
+            )
+            return()
+          }
+        }
+
         ## abort if file exists
         if (file.exists(new_pgx_file)) {
           shinyalert::shinyalert(
             title = "Oops! File exists...",
             paste(
               "There is already a dataset called", pgx_name,
-              "in the Public folder. Sorry about that! Please rename your file",
+              "in the", auth$options$PUBLIC_DATASETS_LABEL, "folder. Sorry about that! Please rename your file",
               "if you still want to share it."
             )
           )
@@ -200,7 +225,7 @@ loading_table_datasets_server <- function(id,
         }
 
         ## file.copy(from = pgx_file, to = new_pgx_file)
-        shiny::withProgress(message = "Copying file to public folder...", value = 0.33, {
+        shiny::withProgress(message = paste("Copying file to", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder..."), value = 0.33, {
           pgx0 <- playbase::pgx.load(pgx_file)
           unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
           if ("creator" %in% names(pgx0) && !unknown.creator) {
@@ -218,7 +243,78 @@ loading_table_datasets_server <- function(id,
           title = "Successfully shared!",
           paste(
             "Your dataset", pgx_name, "has now been successfully",
-            "been publicly shared. Thank you!"
+            "shared to", tolower(auth$options$PUBLIC_DATASETS_LABEL), ". Thank you!"
+          )
+        )
+      }
+    })
+
+    observeEvent(input$import_archive_pgx,
+      {
+        selected_row <- as.numeric(stringr::str_split(input$import_archive_pgx, "_row_")[[1]][2])
+        pgx_name <- table_data()[selected_row, "dataset"]
+
+        alert_val <- shinyalert::shinyalert(
+          inputId = "import_archive_confirm",
+          title = paste("Archive this dataset?"),
+          paste(
+            "Your dataset", pgx_name, "will be archived. You will be able to use it in the future.",
+            "Are you sure?"
+          ),
+          html = TRUE,
+          showCancelButton = TRUE,
+          showConfirmButton = TRUE
+        )
+      },
+      ignoreNULL = TRUE,
+      ignoreInit = TRUE
+    )
+
+    observeEvent(input$import_archive_confirm, {
+      if (input$import_archive_confirm) {
+        if (get_pgxs_in_folder(pgx_archive_dir()) >= 100) { # Check if archive is full
+          shinyalert::shinyalert(
+            title = "Archive limit reached",
+            text = "You have reached the maximum number of archived datasets (100). Please delete some archived datasets before archiving new ones.",
+            type = "error"
+          )
+          return()
+        }
+        selected_row <- as.numeric(stringr::str_split(input$import_archive_pgx, "_row_")[[1]][2])
+        pgx_name <- table_data()[selected_row, "dataset"]
+        pgx_name <- sub("[.]pgx$", "", pgx_name)
+        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
+        new_pgx_file <- file.path(pgx_archive_dir(), paste0(pgx_name, ".pgx"))
+
+        ## just remove if exists
+        if (file.exists(new_pgx_file)) {
+          file.remove(pgx_file)
+          reload_pgxdir(reload_pgxdir() + 1)
+          return()
+        }
+
+        shiny::withProgress(message = "Archiving dataset...", value = 0.33, {
+          pgx0 <- playbase::pgx.load(pgx_file)
+          unknown.creator <- pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")
+          if ("creator" %in% names(pgx0) && !unknown.creator) {
+            file.copy(from = pgx_file, to = new_pgx_file)
+          } else {
+            pgx0$creator <- auth$email
+            if (pgx0$creator %in% c(NA, "", "user", "anonymous", "unknown")) pgx0$creator <- "unknown"
+            playbase::pgx.save(pgx0, file = new_pgx_file)
+          }
+        })
+
+        file.remove(pgx_file)
+
+        reload_pgxdir_public(reload_pgxdir_public() + 1)
+        reload_pgxdir(reload_pgxdir() + 1)
+
+        shinyalert::shinyalert(
+          title = "Successfully archived!",
+          paste(
+            "Your dataset", pgx_name, "has now been successfully",
+            "archived!"
           )
         )
       }
@@ -226,6 +322,10 @@ loading_table_datasets_server <- function(id,
 
     shiny::observeEvent(loadbutton(), {
       pgxfile <- table_selected_pgx()
+      # Make sure there is a row selected
+      if (is.null(pgxfile)) {
+        return(NULL)
+      }
       pgxfilename <- file.path(auth$user_dir, pgxfile)
       if (!file.exists(pgxfilename)) {
         message("[LoadingBoard@load_react] ERROR pgxfile not found : ", pgxfilename, "\n")
@@ -259,7 +359,7 @@ loading_table_datasets_server <- function(id,
           title = "Empty?",
           text = paste(
             "Your dataset library seems empty. Please upload new data or import",
-            "a dataset from the public datasets folder."
+            "a dataset from the", tolower(auth$options$PUBLIC_DATASETS_LABEL), "folder."
           )
         )
       }
@@ -277,6 +377,7 @@ loading_table_datasets_server <- function(id,
         download_pgx_menuitem <- NULL
         share_public_menuitem <- NULL
         share_dataset_menuitem <- NULL
+        import_archive_menuitem <- NULL
         delete_pgx_menuitem <- NULL
 
         if (auth$options$ENABLE_PGX_DOWNLOAD) {
@@ -293,12 +394,23 @@ loading_table_datasets_server <- function(id,
         if (auth$options$ENABLE_PUBLIC_SHARE && dir.exists(pgx_public_dir)) {
           share_public_menuitem <- shiny::actionButton(
             ns(paste0("share_public_row_", i)),
-            label = "Share public",
+            label = paste("Share to", tolower(auth$options$PUBLIC_DATASETS_LABEL)),
             icon = shiny::icon("share-nodes"),
             class = "btn btn-outline-info",
             style = "border: none;",
             width = "100%",
             onclick = paste0('Shiny.onInputChange(\"', ns("share_public_pgx"), '\",this.id,{priority: "event"})')
+          )
+        }
+        if (dir.exists(pgx_archive_dir())) {
+          import_archive_menuitem <- shiny::actionButton(
+            ns(paste0("import_archive_row_", i)),
+            label = "Archive dataset",
+            icon = shiny::icon("file-import"),
+            class = "btn btn-outline-info",
+            style = "border: none;",
+            width = "100%",
+            onclick = paste0('Shiny.onInputChange(\"', ns("import_archive_pgx"), '\",this.id,{priority: "event"})')
           )
         }
         if (auth$options$ENABLE_USER_SHARE && dir.exists(pgx_shared_dir)) {
@@ -332,6 +444,24 @@ loading_table_datasets_server <- function(id,
           width = "100%",
           onclick = paste0('Shiny.onInputChange(\"', ns("recompute_pgx"), '\",this.id,{priority: "event"});')
         )
+        changename_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("changename_pgx_row_", i)),
+          label = "Change name",
+          icon = shiny::icon("edit"),
+          class = "btn btn-outline-dark",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("changename_pgx"), '\",this.id,{priority: "event"});')
+        )
+        changedesc_pgx_menuitem <- shiny::actionButton(
+          ns(paste0("changedesc_pgx_row_", i)),
+          label = "Change description",
+          icon = shiny::icon("edit"),
+          class = "btn btn-outline-dark",
+          style = "border: none;",
+          width = "100%",
+          onclick = paste0('Shiny.onInputChange(\"', ns("changedesc_pgx"), '\",this.id,{priority: "event"});')
+        )
 
         new_menu <- DropdownMenu(
           div(
@@ -347,8 +477,11 @@ loading_table_datasets_server <- function(id,
                 width = "100%",
                 onclick = paste0('Shiny.onInputChange(\"', ns("download_zip"), '\",this.id,{priority: "event"})')
               ),
+              changename_pgx_menuitem,
+              changedesc_pgx_menuitem,
               recompute_pgx_menuitem,
               share_public_menuitem,
+              import_archive_menuitem,
               share_dataset_menuitem,
               delete_pgx_menuitem
             )
@@ -370,19 +503,43 @@ loading_table_datasets_server <- function(id,
         ignoreInit = TRUE
       )
 
+      if (nrow(df) > auth$options$MAX_DATASETS) {
+        df_cap <- auth$options$MAX_DATASETS
+      } else {
+        df_cap <- nrow(df)
+      }
+
+      # Detect out of limits datasets (downgraded user might have uploaded more datasets in the past, but now they are not allowed)
+      datasets_exceed_limits <- rep(FALSE, nrow(df))
+
+      # Get CRO emails
+      cro_emails <- get_cro_emails()
+
+      if (!is.null(auth$options$MAX_GENES)) {
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > auth$options$MAX_GENES)
+      }
+      if (!is.null(auth$options$MAX_SAMPLES)) {
+        datasets_exceed_limits <- datasets_exceed_limits | (
+          (df$datatype != "scRNAseq" & df$nsamples > auth$options$MAX_SAMPLES)
+        )
+      }
+      if (!is.null(cro_emails)) {
+        datasets_exceed_limits[df$creator %in% cro_emails] <- FALSE
+      }
+      if (!auth$options$ENABLE_MULTIOMICS) { # multi-omics disabled, grey them out
+        datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
+      }
+
+      # Add the exceed limits flag to the dataframe
+      df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
 
       DT::datatable(
         df,
         class = "compact hover",
         rownames = menus,
         escape = FALSE,
-        editable = list(
-          target = "cell",
-          disable = list(columns = c(1, 3:ncol(df)))
-        ),
         extensions = c("Scroller"),
         plugins = "scrollResize",
-        selection = list(mode = "single", target = "row", selected = 1),
         fillContainer = TRUE,
         options = list(
           dom = "ft",
@@ -392,9 +549,28 @@ loading_table_datasets_server <- function(id,
           scrollResize = TRUE,
           deferRender = TRUE,
           autoWidth = TRUE,
+          rowCallback = DT::JS(sprintf(
+            "function(row, data, displayNum, displayIndex) {
+              var colNames = %s;
+
+              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
+              if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
+
+              // Check if this row exceeds limits
+              var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
+
+              if(exceedsLimits) {
+                $(row).css('opacity', '0.5');
+                $(row).css('pointer-events', 'none');
+                $('button', row).prop('disabled', true);
+              }
+            }",
+            jsonlite::toJSON(colnames(df))
+          )),
           columnDefs = list(
             list(width = "60px", targets = target1),
-            ##            list(width = "30vw", targets = target2),
+            ## list(width = "30vw", targets = target2),
             list(
               targets = target2, ## with no rownames column 1 is column 2
               render = DT::JS(
@@ -404,7 +580,10 @@ loading_table_datasets_server <- function(id,
                 "}"
               )
             ),
-            list(sortable = FALSE, targets = ncol(df))
+            list(sortable = FALSE, targets = ncol(df)),
+            list(visible = FALSE, targets = c(
+              match("exceeds_limits", colnames(df))
+            )) # Hide helper columns
           )
         ) ## end of options.list
       )
@@ -428,41 +607,41 @@ loading_table_datasets_server <- function(id,
     )
 
     ## --------------- edit rows of  pgxtable ---------------------
-    observeEvent(
-      input[["datasets-datatable_cell_edit"]],
-      {
-        row <- input[["datasets-datatable_cell_edit"]]$row
-        col <- input[["datasets-datatable_cell_edit"]]$col
-        val <- input[["datasets-datatable_cell_edit"]]$value
+    # observeEvent(
+    #   input[["datasets-datatable_cell_edit"]],
+    #   {
+    #     row <- input[["datasets-datatable_cell_edit"]]$row
+    #     col <- input[["datasets-datatable_cell_edit"]]$col
+    #     val <- input[["datasets-datatable_cell_edit"]]$value
 
-        df <- table_data()
-        col_edited <- colnames(df)[col]
+    #     df <- table_data()
+    #     col_edited <- colnames(df)[col]
 
-        dataset_edited <- df$dataset[row]
-        pgxinfo <- getPGXINFO()
+    #     dataset_edited <- df$dataset[row]
+    #     pgxinfo <- getPGXINFO()
 
-        row_edited <- match(dataset_edited, pgxinfo$dataset)
-        pgxinfo[row_edited, col_edited] <- val
-        fname <- file.path(auth$user_dir, "datasets-info.csv")
-        write.csv(pgxinfo, fname)
+    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
+    #     pgxinfo[row_edited, col_edited] <- val
+    #     fname <- file.path(auth$user_dir, "datasets-info.csv")
+    #     write.csv(pgxinfo, fname)
 
-        ## also rewrite description in actual pgx file
-        pgx_name <- dataset_edited
-        pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
-        pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
+    #     ## also rewrite description in actual pgx file
+    #     pgx_name <- dataset_edited
+    #     pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
+    #     pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
 
-        row_edited <- match(dataset_edited, pgxinfo$dataset)
-        new_val <- pgxinfo[row_edited, col_edited]
-        pgx[[col_edited]] <- new_val
+    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
+    #     new_val <- pgxinfo[row_edited, col_edited]
+    #     pgx[[col_edited]] <- new_val
 
-        dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
-        dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
-        playbase::pgx.save(pgx, file = pgx_file)
-        remove(pgx)
-        dbg("[datasets-datatable_cell_edit] done!")
-      },
-      ignoreInit = TRUE
-    )
+    #     dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
+    #     dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
+    #     playbase::pgx.save(pgx, file = pgx_file)
+    #     remove(pgx)
+    #     dbg("[datasets-datatable_cell_edit] done!")
+    #   },
+    #   ignoreInit = TRUE
+    # )
 
 
     table_selected_pgx <- shiny::reactive({
@@ -540,7 +719,7 @@ loading_table_datasets_server <- function(id,
     shiny::observeEvent(input$recompute_pgx, {
       shinyalert::shinyalert(
         title = "Reanalyze",
-        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept.",
+        text = "Are you sure you want to reanalyze your data? All current contrasts will be kept. Please note that this will count as a new dataset and will not substitute the old one.",
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
         confirmButtonText = "OK",
@@ -555,7 +734,6 @@ loading_table_datasets_server <- function(id,
             load_uploaded_data <- shiny::reactiveVal(NULL)
             reload_pgxdir <- shiny::reactiveVal(0)
             recompute_pgx(pgx)
-            new_upload(new_upload() + 1)
 
             # bigdash.selectTab(session, "upload-tab")
             # shinyjs::runjs('$("[data-value=\'Upload\']").click();') # Should be Comparisons?
@@ -563,6 +741,94 @@ loading_table_datasets_server <- function(id,
             return(0)
           } else {
             return(0)
+          }
+        }
+      )
+    })
+
+    ## ---------------- CHANGE NAME PGX ----------------
+    observeEvent(input$changename_pgx, {
+      shinyalert::shinyalert(
+        title = "Change name",
+        text = paste0(
+          "Are you sure you want to change the name of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+        ),
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            shinyalert::shinyalert(
+              title = "Enter new name",
+              text = paste0(
+                "Rename your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "' as:"
+              ),
+              type = "input",
+              showCancelButton = TRUE,
+              callbackR = function(new_name) {
+                if (!is.logical(new_name) && !is.null(new_name) && nchar(new_name) > 0) {
+                  sel <- as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2])
+                  df <- getFilteredPGXINFO()
+                  pgxfile <- as.character(df$dataset[sel])
+                  pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+                  new_pgxfile <- paste0(gsub(" ", "_", new_name), ".pgx")
+                  file.rename(
+                    file.path(auth$user_dir, pgxfile),
+                    file.path(auth$user_dir, new_pgxfile)
+                  )
+                  pgx <- playbase::pgx.load(file.path(auth$user_dir, new_pgxfile), verbose = FALSE)
+                  pgx$name <- gsub(" ", "_", new_name)
+                  playbase::pgx.save(pgx, file = file.path(auth$user_dir, new_pgxfile))
+                  reload_pgxdir(reload_pgxdir() + 1)
+                }
+              }
+            )
+          }
+        }
+      )
+    })
+
+    ## ---------------- CHANGE DESCRIPTION PGX ----------------
+    observeEvent(input$changedesc_pgx, {
+      shinyalert::shinyalert(
+        title = "Change description",
+        text = paste0(
+          "Are you sure you want to change the description of your dataset '",
+          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+        ),
+        showCancelButton = TRUE,
+        cancelButtonText = "Cancel",
+        confirmButtonText = "OK",
+        callbackR = function(x) {
+          if (x) {
+            shinyalert::shinyalert(
+              title = "Enter new description",
+              text = paste0(
+                "Change the description of your dataset '",
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2]), "dataset", ], "' to:"
+              ),
+              type = "input",
+              showCancelButton = TRUE,
+              callbackR = function(new_desc) {
+                if (!is.logical(new_desc) && !is.null(new_desc) && nchar(new_desc) > 0) {
+                  sel <- as.numeric(stringr::str_split(input$changedesc_pgx, "_row_")[[1]][2])
+                  df <- getFilteredPGXINFO()
+                  pgxfile <- as.character(df$dataset[sel])
+                  pgxfile2 <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+                  pgx <- playbase::pgx.load(file.path(auth$user_dir, pgxfile2), verbose = FALSE)
+                  pgx$description <- new_desc
+                  playbase::pgx.save(pgx, file = file.path(auth$user_dir, pgxfile2))
+                  pgxinfo <- getPGXINFO()
+                  row_edited <- match(pgxfile, pgxinfo$dataset)
+                  pgxinfo[row_edited, "description"] <- new_desc
+                  fname <- file.path(auth$user_dir, "datasets-info.csv")
+                  write.csv(pgxinfo, fname)
+                  reload_pgxdir(reload_pgxdir() + 1)
+                }
+              }
+            )
           }
         }
       )
@@ -577,7 +843,6 @@ loading_table_datasets_server <- function(id,
     )
 
     output$download_pgx_btn <- shiny::downloadHandler(
-
       ## filename = "userdata.pgx",
       filename = function() {
         sel <- row_idx <- as.numeric(stringr::str_split(input$download_pgx, "_row_")[[1]][2])
@@ -887,8 +1152,6 @@ loading_table_datasets_server <- function(id,
 
       share_pgx(NULL)
     })
-
-
 
 
     ## please refer to TableModule for return values

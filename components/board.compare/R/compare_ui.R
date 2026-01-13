@@ -6,7 +6,6 @@
 CompareInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(
       shiny::selectInput(ns("contrast1"), "Dataset1:",
         choices = NULL, multiple = TRUE
@@ -14,7 +13,6 @@ CompareInputs <- function(id) {
       "Select the contrast that you want to compare.",
       placement = "right", options = list(container = "body")
     ),
-    shiny::br(),
     withTooltip(shiny::selectInput(ns("dataset2"), "Dataset2:", choices = NULL),
       "Select second dataset to compare.",
       placement = "right", options = list(container = "body")
@@ -36,54 +34,50 @@ CompareInputs <- function(id) {
     ),
     shiny::br(),
     shiny::br(),
-    shiny::br(),
-    withTooltip(shiny::actionLink(ns("options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "right", options = list(container = "body")
-    ),
-    shiny::br(),
-    shiny::conditionalPanel(
-      "input.options % 2 == 1",
-      ns = ns,
-      shiny::br(),
-      withTooltip(
-        shiny::radioButtons(ns("plottype"), "Plot type:",
-          choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2"),
-          selected = "UMAP1", inline = TRUE
-        ),
-        "Select plot type.",
-        placement = "right", options = list(container = "body")
-      ),
-      shiny::br(),
-      withTooltip(
-        shiny::radioButtons(ns("hilighttype"), tspan("Highlight genes:"),
-          choices = c("top scoring", "custom"),
-          inline = TRUE
-        ),
-        "Select highlight type.",
-        placement = "right", options = list(container = "body")
-      ),
-      shiny::conditionalPanel(
-        "input.hilighttype == 'custom'",
-        ns = ns,
+    bslib::accordion(
+      id = ns("compare_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(
-          shiny::textAreaInput(ns("genelist"), NULL,
-            value = NULL,
-            height = "100px", width = "100%",
-            rows = 5
+          shiny::radioButtons(ns("plottype"), "Plot type:",
+            choices = c("volcano", "MA", "scatter", "UMAP1", "UMAP2"),
+            selected = "UMAP1", inline = TRUE
           ),
-          "Paste a custom list of genes to highlight.",
-          placement = "right"
-        )
-      ),
-      shiny::br(),
-      withTooltip(
-        shiny::radioButtons(ns("ntop"), "ntop",
-          choices = c(10, 20, 40, 100),
-          selected = 20, inline = TRUE
+          "Select plot type.",
+          placement = "right", options = list(container = "body")
         ),
-        "number of top genes to show",
-        placement = "right", options = list(container = "body")
+        shiny::br(),
+        withTooltip(
+          shiny::radioButtons(ns("hilighttype"), tspan("Highlight genes:"),
+            choices = c("top scoring", "custom"),
+            inline = TRUE
+          ),
+          "Select highlight type.",
+          placement = "right", options = list(container = "body")
+        ),
+        shiny::conditionalPanel(
+          "input.hilighttype == 'custom'",
+          ns = ns,
+          withTooltip(
+            shiny::textAreaInput(ns("genelist"), NULL,
+              value = NULL,
+              height = "100px", width = "100%",
+              rows = 5
+            ),
+            "Paste a custom list of genes to highlight.",
+            placement = "right"
+          ),
+        ),
+        withTooltip(
+          shiny::radioButtons(ns("ntop"), "ntop",
+            choices = c(10, 20, 40, 100),
+            selected = 20, inline = TRUE
+          ),
+          "number of top genes to show",
+          placement = "right", options = list(container = "body")
+        )
       )
     )
   )
@@ -92,7 +86,7 @@ CompareInputs <- function(id) {
 CompareUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 180px)"
+  fullH <- "calc(100vh - 181px)"
   tabH <- "70vh"
 
   tabs <- shiny::tabsetPanel(

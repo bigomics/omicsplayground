@@ -4,15 +4,16 @@
 ##
 
 enrichment_plot_compare_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -25,7 +26,7 @@ enrichment_plot_compare_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -53,6 +54,7 @@ enrichment_plot_compare_server <- function(id,
         return()
       }
       gset <- gset[1]
+      shiny::req(gset)
 
       score <- sapply(pgx$gset.meta$meta, function(x) x[gset, "meta.fx"])
 
@@ -73,47 +75,38 @@ enrichment_plot_compare_server <- function(id,
           cmp <- top.up[i]
           rnk0 <- gx.meta[[cmp]]$meta.fx
           names(rnk0) <- rownames(gx.meta[[1]])
-          names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
+          names(rnk0) <- sub(".*:", "", names(rnk0))
 
           gs.meta <- pgx$gset.meta$meta[[cmp]]
           qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
 
           gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
           cmp <- paste0(gset, "\n@", cmp)
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
-            main = cmp, xlab = "",
-            cex.main = 0.80, len.main = 72
+
+          names(rnk0) <- unlist(lapply(names(rnk0), function(x) {
+            x0 <- strsplit(x, "_")[[1]]
+            return(x0[length(x0)])
+          }))
+
+          rnk0 <- playbase::rename_by(rnk0, pgx$genes)
+
+          shiny::validate(
+            shiny::need(any(names(rnk0) %in% genes), "No match between feature set and data.")
+          )
+
+          playbase::gsea.enplot(
+            rnk0,
+            genes,
+            names = NULL,
+            main = cmp,
+            xlab = "",
+            cex.main = 0.80,
+            len.main = 72
           )
           qv1 <- formatC(qv0, format = "e", digits = 2)
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
         }
       }
-      for (i in 1:5) {
-        if (i > length(top.dn)) {
-          frame()
-        } else {
-          cmp <- top.dn[i]
-          rnk0 <- gx.meta[[cmp]]$meta.fx
-          names(rnk0) <- rownames(gx.meta[[1]])
-          names(rnk0) <- toupper(sub(".*:", "", names(rnk0)))
-
-          gs.meta <- pgx$gset.meta$meta[[cmp]]
-          qv0 <- max(gs.meta[gset, "q"][, gsmethods], na.rm = TRUE)
-
-          gs1 <- playbase::breakstring(gset, 28, 50, force = FALSE)
-          cmp <- paste0(gset, "\n@", cmp)
-          playbase::gsea.enplot(rnk0, genes,
-            names = NULL, #
-            main = cmp, xlab = "",
-            cex.main = 0.80, len.main = 72
-          )
-          qv1 <- formatC(qv0, format = "e", digits = 2)
-          legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
-        }
-      }
-
-      #      p
     }
 
     compare.RENDER <- function() {
@@ -123,7 +116,6 @@ enrichment_plot_compare_server <- function(id,
     compare.RENDER2 <- function() {
       render_compare()
     }
-
 
     PlotModuleServer(
       "plot",

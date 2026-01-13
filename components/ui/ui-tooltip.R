@@ -4,18 +4,15 @@
 ##
 
 withTooltip <- function(
-    el,
-    title,
-    placement = "bottom",
-    trigger = NULL,
-    options = NULL) {
-  if (!is.null(trigger)) {
+  el,
+  title,
+  placement = "bottom",
+  trigger = NULL,
+  options = NULL
+) {
+  if (!is.null(trigger)) {}
 
-  }
-
-  if (!is.null(options)) {
-
-  }
+  if (!is.null(options)) {}
 
   htmltools::tagAppendAttributes(
     el,

@@ -15,12 +15,13 @@
 #'
 #' @return Shiny UI for gene plot enrichment visualization
 enrichment_plot_geneplot_ui <- function(
-    id,
-    title,
-    caption,
-    info.text,
-    height,
-    width) {
+  id,
+  title,
+  caption,
+  info.text,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -46,7 +47,7 @@ enrichment_plot_geneplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
@@ -91,6 +92,7 @@ enrichment_plot_geneplot_server <- function(id,
       } else {
         probe <- sel$rn
         gene <- sel$gene
+        gene <- playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE)
         ngrp <- length(unique(pgx$samples$group))
         grouped <- !input$ungroup
         srt <- ifelse(!grouped || ngrp > 4, 30, 0)

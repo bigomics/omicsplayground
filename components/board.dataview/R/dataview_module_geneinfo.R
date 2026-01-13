@@ -5,15 +5,16 @@
 
 
 dataview_module_geneinfo_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.references) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.references
+) {
   ns <- shiny::NS(id)
 
 
@@ -45,7 +46,7 @@ dataview_module_geneinfo_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## prepare data
-    geneinfo_data <- shiny::reactive({
+    geneinfo_data.OLD <- shiny::reactive({
       feature <- r.gene()
       shiny::req(feature %in% rownames(pgx$X))
 
@@ -59,11 +60,13 @@ dataview_module_geneinfo_server <- function(id,
       ortholog <- pgx$genes$human_ortholog[jj]
 
       if (datatype == "metabolomics") {
+        dbg("[geneinfo_data] calling getMetaboliteInfo()")
         info <- playbase::getMetaboliteInfo(
           organism = organism,
-          chebi = symbol
+          id = symbol
         )
       } else {
+        dbg("[geneinfo_data] calling getOrgGeneInfo()")
         info <- playbase::getOrgGeneInfo(
           organism = organism,
           gene = symbol,
@@ -100,8 +103,6 @@ dataview_module_geneinfo_server <- function(id,
       if (!is.na(symbol) && feature != symbol) {
         info <- c(feature = feature, info)
       }
-      ## info$organism <- NULL
-      ## info$databases <- NULL
 
       # prepare info for display
       res <- c()
@@ -114,6 +115,62 @@ dataview_module_geneinfo_server <- function(id,
       if (is.null(res)) {
         res <- tspan("(gene info not available)")
       }
+      res
+    })
+
+    geneinfo_data <- shiny::reactive({
+      feature <- r.gene()
+      shiny::req(feature %in% rownames(pgx$genes))
+
+      info <- playbase::pgx.getFeatureInfo(pgx, feature)
+
+      if (is.null(info)) {
+        info <- tspan("(gene info not available)")
+        return(info)
+      }
+
+      names(info) <- tolower(names(info))
+      names(info) <- sub("gene_symbol", "symbol", names(info))
+      names(info) <- sub("gene_title", "title", names(info))
+      names(info) <- sub("uniprot", "protein", names(info))
+      names(info) <- sub("map_location", "genome location", names(info))
+      names(info) <- sub("databases", "links", names(info))
+
+      # reorder: make some paragraphs
+      nn1 <- intersect(
+        c(
+          "feature", "gene_symbol", "symbol",
+          "name", "gene_name",
+          "organism", "human_ortholog", "ortholog",
+          "datatype", "data_type",
+          "uniprot", "protein",
+          "map_location", "map", "genome location",
+          "databases", "links"
+        ),
+        names(info)
+      )
+      nn2 <- intersect(
+        c(
+          "title", "gene_title",
+          "summary", "description"
+        ),
+        names(info)
+      )
+      nn3 <- setdiff(names(info), c(nn1, nn2))
+      info <- info[c(nn1, nn2, nn3)]
+
+      # prepare info for display
+      res <- c()
+      for (i in 1:length(info)) {
+        xx <- paste(info[[i]], collapse = ", ")
+        res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
+      }
+      names(res) <- names(info)
+      res <- c(
+        "<p>", paste(res[nn1], collapse = "<br>"),
+        "<p>", paste(res[nn2], collapse = "<p>"),
+        "<p>", paste(res[nn3], collapse = "<br>")
+      )
       res
     })
 

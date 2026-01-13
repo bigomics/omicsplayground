@@ -245,7 +245,6 @@ scale_color_omics_d <- function(palette = "default", reverse = FALSE, ...) {
 }
 
 
-
 #' Fill scale constructor for discrete omics color palettes
 #'
 #' @param palette Character name of palette in omics_palettes

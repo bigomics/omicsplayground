@@ -150,9 +150,46 @@ message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
+opt.default <- list(
+  TITLE = "Omics Playground",
+  AUTHENTICATION = "none", ## none, password, login-code, login-code-redirect
+  ALLOW_NEW_USERS = TRUE,
+  ALLOW_PERSONAL_EMAIL = FALSE,
+  USE_CREDENTIALS = FALSE,
+  DOMAIN = NULL,
+  BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
+  ## ENABLE_CHIRP         = TRUE,
+  ENABLE_DELETE = TRUE,
+  ENABLE_PGX_DOWNLOAD = TRUE,
+  ENABLE_PUBLIC_SHARE = TRUE,
+  ENABLE_UPLOAD = TRUE,
+  ENABLE_USERDIR = TRUE,
+  ENABLE_USER_SHARE = TRUE,
+  ENABLE_USER_LOCK = TRUE,
+  ENABLE_HEARTBEAT = TRUE,
+  ENABLE_INACTIVITY = TRUE,
+  INACTIVITY_TIMEOUT = 1800,
+  ENABLE_ANNOT = FALSE,
+  ENABLE_UPGRADE = FALSE,
+  ENCRYPTED_EMAIL = FALSE,
+  MAX_DATASETS = 25,
+  MAX_SAMPLES = 1000,
+  MAX_COMPARISONS = 20,
+  MAX_GENES = 20000,
+  MAX_GENESETS = 5000,
+  MAX_SHARED_QUEUE = 3,
+  MAX_SESSIONS = 2,
+  TIMEOUT = 0,
+  WATERMARK = TRUE,
+  APACHE_COOKIE_PATH = OPG,
+  ALLOW_CUSTOM_FC = FALSE,
+  DEVMODE = FALSE,
+  ENABLE_MULTIOMICS = TRUE
+)
+
 opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
-opt <- playbase::pgx.readOptions(file = opt.file) ## THIS IS GLOBAL!!!
+opt <- playbase::pgx.readOptions(file = opt.file, default = opt.default) ## THIS IS GLOBAL!!!
 
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {

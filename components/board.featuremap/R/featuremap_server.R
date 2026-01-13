@@ -14,6 +14,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     infotext <- tspan("Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
 <br><br>The tabs present Gene and Geneset UMAP dimensionality reduction plots and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
+<br><br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/phm1joeZTO4?si=G1fJyxS1lDmxZEpo' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>
 ", js = FALSE)
 
     ## ========================================================================
@@ -25,6 +26,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
         shiny::HTML(infotext),
+        size = "xl",
         easyClose = TRUE
       ))
     })
@@ -136,14 +138,13 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
     )
 
-
     ## =========================================================================
     ## ============================= FUNCTIONS =================================
     ## =========================================================================
 
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          labels = NULL, zlim = NULL, cex = 0.9, cex.label = 1,
-                         source = "", plotlib = "base") {
+                         source = "", plotlib = "base", ...) {
       opc.low <- 1
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
@@ -189,7 +190,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         labels = labels,
         title = title,
         source = source,
-        key = rownames(pos)
+        key = rownames(pos),
+        ...
       )
 
       p
@@ -199,7 +201,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)
-      cex <- ifelse(nc > 3, 0.5, 0.7)
+      cex <- ifelse(nc >= 2, 0.8, 1.2)
+      cex <- ifelse(nc > 3, 0.6, cex)
       jj <- 1:nrow(F)
       if (ncol(F) > 4 && nrow(F) > 8000) jj <- sample(1:nrow(F), 8000) ## subsample for speed
       if (ncol(F) > 9 && nrow(F) > 4000) jj <- sample(1:nrow(F), 4000) ## subsample for speed
@@ -267,31 +270,35 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
     }
 
-    filteredGenes <- shiny::reactive({
+    filteredProbes <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::validate(need(input$filter_genes, tspan("Please input at least one value in Annotate genes!", js = FALSE)))
       sel <- input$filter_genes
-      filtgenes <- c()
-      if (is.null(pgx$version) | pgx$organism == "Human") {
+      filtprobes <- c()
+      if (is.null(pgx$version) || pgx$organism == "Human") {
         filtgenes <- unlist(lapply(sel, function(genes) playdata::FAMILIES[[genes]]))
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)
+      } else if ("<all>" %in% sel) {
+        filtprobes <- rownames(pgx$genes)
       } else {
-        filtgenes <- unlist(lapply(sel, function(genes) {
-          if (genes == "<all>") {
-            x <- pgx$genes$symbol
-          } else {
-            x <- playdata::FAMILIES[[genes]]
-            x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
-          }
+        filtgenes <- unlist(lapply(sel, function(s) {
+          x <- playdata::FAMILIES[[s]]
+          x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
           return(x)
         }))
+        filtprobes <- playbase::map_probes(pgx$genes, filtgenes)
       }
       if ("<custom>" %in% sel) {
-        genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
-        if (length(genes) > 0) {
-          filtgenes <- c(playbase::filterProbes(pgx$genes, genes), filtgenes)
+        custum.genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+        if (length(custum.genes) == 0) {
+          custum.genes <- c()
+        }
+        if (length(custum.genes) > 0) {
+          custum.probes <- playbase::map_probes(pgx$genes, custum.genes)
+          filtprobes <- c(custum.probes, filtprobes)
         }
       }
-      filtgenes
+      filtprobes
     })
 
     ## =========================================================================
@@ -313,7 +320,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx = pgx,
       plotUMAP = plotUMAP,
       sigvar = sigvar2,
-      filteredGenes = filteredGenes,
+      filteredProbes = filteredProbes,
       watermark = WATERMARK,
       labeltype = labeltype
     )

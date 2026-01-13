@@ -5,13 +5,14 @@
 
 
 functional_table_wikipathway_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label,
-    width,
-    height) {
+  id,
+  title,
+  info.text,
+  caption,
+  label,
+  width,
+  height
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(

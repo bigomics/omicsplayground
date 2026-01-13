@@ -13,15 +13,16 @@
 #'
 #' @export
 biomarker_plot_boxplots_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_options <- tagList(
@@ -43,7 +44,7 @@ biomarker_plot_boxplots_ui <- function(
     info.extra_link = info.extra_link,
     options = NULL,
     caption = caption,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -58,6 +59,7 @@ biomarker_plot_boxplots_ui <- function(
 #' @return
 #' @export
 biomarker_plot_boxplots_server <- function(id,
+                                           pgx,
                                            calcVariableImportance,
                                            is_computed,
                                            watermark = FALSE) {
@@ -66,10 +68,12 @@ biomarker_plot_boxplots_server <- function(id,
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res)
+        shiny::req(is_computed())
 
         ## get variables used in the tree solution
-        vars <- setdiff(res$rf$frame$var, "<leaf>")
-        vars <- res$rf$orig.names[vars]
+        leafs <- setdiff(res$rf$frame$var, "<leaf>")
+        vars <- res$rf$orig.names[leafs]
+
         if (length(vars) == 0) {
           return(NULL)
         }
@@ -103,7 +107,6 @@ biomarker_plot_boxplots_server <- function(id,
       plot.RENDER <- function() {
         pdata <- plot_data()
 
-        shiny::validate(shiny::need(is_computed(), "Please select target class and run 'Compute'"))
         shiny::req(pdata)
 
         ## vars, X, y
@@ -121,6 +124,7 @@ biomarker_plot_boxplots_server <- function(id,
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]
           gx <- X[g, ]
+          g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
           boxplot(
             gx ~ y,
             col = "grey85",

@@ -4,56 +4,66 @@
 ##
 
 wgcna_plot_gclustering_ui <- function(
-    id,
-    label,
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height = 400,
+  width = 400,
+  ...
+) {
   ns <- shiny::NS(id)
 
-  umap.opts <- shiny::tagList(
-    shiny::selectInput(ns("clust_method"), "method:", choices = c("tsne2d", "umap2d", "pca2d"))
+  options <- shiny::tagList(
+    shiny::radioButtons(ns("method"), "Method:",
+      choices = c("umap", "mds"),
+      selected = "umap", inline = TRUE
+    ),
+    shiny::checkboxInput(ns("showhub"), "Show hubgenes", TRUE)
   )
 
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
+    options = options,
     info.text = info.text,
     caption = caption,
-    options = umap.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg"),
+    ...
   )
 }
 
 wgcna_plot_gclustering_server <- function(id,
-                                          wgcna.compute,
+                                          wgcna,
+                                          pgx,
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    umap.RENDER <- shiny::reactive({
-      out <- wgcna.compute()
-
-      method <- "tsne2d"
-      method <- input$clust_method
-
-      par(mfrow = c(1, 1), mar = c(2, 3, 1, 1))
-      me1 <- paste0("ME", out$net$colors)
-      pos <- out$clust[[method]]
-
-      playbase::pgx.scatterPlotXY.BASE(pos, var = me1, col = out$me.colors)
-      p <- grDevices::recordPlot()
-      p
-    })
+    RENDER <- function() {
+      res <- wgcna()
+      par(mar = c(3.2, 3.2, 0.8, 0.5), mgp = c(2.2, 0.8, 0))
+      if (input$method == "mds") {
+        playbase::wgcna.plotMDS(res, main = "", scale = FALSE)
+      } else {
+        playbase::wgcna.plotFeatureUMAP(
+          res,
+          nhub = ifelse(input$showhub, 3, 0),
+          main = "",
+          method = "clust",
+          annot = pgx$genes
+          # set.par = FALSE
+        )
+      }
+    }
 
     PlotModuleServer(
       "plot",
-      func = umap.RENDER,
+      func = RENDER,
       pdf.width = 5, pdf.height = 5,
-      res = c(72, 80),
+      res = c(80, 110),
       add.watermark = watermark
     )
   })

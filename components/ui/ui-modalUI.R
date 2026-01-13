@@ -40,10 +40,11 @@ pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
 }
 
 modalTrigger <- function(
-    id,
-    target,
-    ...,
-    class = "") {
+  id,
+  target,
+  ...,
+  class = ""
+) {
   class <- sprintf(
     "btn %s",
     class
@@ -59,19 +60,21 @@ modalTrigger <- function(
 }
 
 modalUI <- function(
-    id,
-    title,
-    ...,
-    size = c("default", "sm", "lg", "xl", "fullscreen"),
-    footer = tags$div(
-      class = "modal-footer",
-      tags$button(
-        type = "button",
-        class = "btn btn-secondary",
-        `data-bs-dismiss` = "modal",
-        "Close"
-      )
-    )) {
+  id,
+  title,
+  ...,
+  size = c("default", "sm", "lg", "xl", "fullscreen"),
+  track_open = FALSE,
+  footer = tags$div(
+    class = "modal-footer",
+    tags$button(
+      type = "button",
+      class = "btn btn-secondary",
+      `data-bs-dismiss` = "modal",
+      "Close"
+    )
+  )
+) {
   size <- match.arg(size)
 
   size_cl <- switch(size,
@@ -82,7 +85,7 @@ modalUI <- function(
     ""
   )
 
-  tags$div(
+  modal <- tags$div(
     class = "modal fade",
     id = id,
     tabindex = "-1",
@@ -113,11 +116,29 @@ modalUI <- function(
       )
     )
   )
+
+  if (track_open) {
+    tagList(
+      modal,
+      tags$script(sprintf(
+        "$('#%s').on('shown.bs.modal hidden.bs.modal', function(e) {
+          console.log('Modal event:', e.type, 'for modal:', '%s');
+          Shiny.setInputValue('%s_is_open', e.type === 'shown');
+        });",
+        id,
+        id,
+        id
+      ))
+    )
+  } else {
+    modal
+  }
 }
 
 modalDialog2 <- function(
-    ..., header = NULL, footer = modalButton("Dismiss"),
-    size = c("m", "s", "l", "xl", "fullscreen"), easyClose = FALSE, fade = TRUE) {
+  ..., header = NULL, footer = modalButton("Dismiss"),
+  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE
+) {
   size <- match.arg(size)
   backdrop <- if (!easyClose) {
     "static"
@@ -137,7 +158,8 @@ modalDialog2 <- function(
         m = NULL,
         l = "modal-lg",
         xl = "modal-xl",
-        fullscreen = "modal-fullscreen"
+        fullscreen = "modal-fullscreen",
+        midscreen = "modal-midscreen"
       ),
       div(
         class = "modal-content",

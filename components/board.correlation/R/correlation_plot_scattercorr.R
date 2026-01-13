@@ -13,14 +13,15 @@
 #'
 #' @export
 correlation_plot_scattercorr_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   cor_scatter.opts <- shiny::tagList(
@@ -53,7 +54,7 @@ correlation_plot_scattercorr_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = cor_scatter.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     width = width,
     height = height
   )
@@ -97,7 +98,7 @@ correlation_plot_scattercorr_server <- function(id,
 
       if (length(rho) == 1) names(rho) <- rownames(R)[1]
       pp <- unique(c(this.gene, names(rho)))
-      X <- pgx$X[pp, ]
+      X <- pgx$X[pp, , drop = FALSE]
 
       names(rho) <- playbase::probe2symbol(names(rho), pgx$genes, labeltype(), fill_na = TRUE)
       this.gene <- playbase::probe2symbol(this.gene, pgx$genes, labeltype(), fill_na = TRUE)
@@ -115,7 +116,6 @@ correlation_plot_scattercorr_server <- function(id,
         colorby = colorby,
         COL = COL
       )
-
       return(dt)
     })
 
@@ -161,10 +161,12 @@ correlation_plot_scattercorr_server <- function(id,
         dy <- diff(range(y))
         title_i <- gene2
         title_loc <- max(y) - 0.1 * dy
+
         # Make regression line
-        fit <- lm(y ~ x)
+        fit <- stats::lm(y ~ x)
         newdata <- data.frame(x = range(x))
-        newdata$y <- predict(fit, newdata)
+        newdata$y <- stats::predict(fit, newdata)
+
         plt <- plotly::plot_ly(
           hovertemplate = paste0(
             "<b>%{fullData.name}<br>",
@@ -218,7 +220,10 @@ correlation_plot_scattercorr_server <- function(id,
             yanchor = "bottom",
             x = min(x),
             y = title_loc
-          ) %>% playbase::plotly_build_light(.)
+          )
+        if (pgx$datatype != "scRNAseq") {
+          plt %>% playbase::plotly_build_light(.)
+        }
         sub_plots[[i]] <- plt
       }
 
@@ -262,6 +267,7 @@ correlation_plot_scattercorr_server <- function(id,
             )
           )
       )
+
       return(all_plt)
     }
 

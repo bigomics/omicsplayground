@@ -19,19 +19,17 @@ DrugConnectivityBoard <- function(id, pgx) {
         you can correlate your signature with known drug profiles from the L1000 database.
         An activation-heatmap compares drug activation profiles across multiple contrasts.
         This facilitates to quickly see and detect the similarities between contrasts for certain drugs.<br><br><br><br>
-        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
-        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-        allowfullscreen></iframe></center>")
+        <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BtMQ7Y0NoIA?si=3T61_k_onEqsTMcr&amp;start=91' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>")
+
+    ## ================================================================================
+    ## ============================== OBSERVERS  ======================================
+    ## ================================================================================
 
     shiny::observe({
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "dsea_method", choices = ct)
     })
-
-    ## ================================================================================
-    ## ======================= OBSERVE FUNCTIONS ======================================
-    ## ================================================================================
 
     shiny::observeEvent(input$dsea_info, {
       shiny::showModal(shiny::modalDialog(
@@ -43,8 +41,9 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     shiny::observe({
       shiny::req(pgx$X)
-      ct <- colnames(pgx$model.parameters$contr.matrix)
-      shiny::updateSelectInput(session, "dsea_contrast", choices = sort(ct))
+      ct <- playbase::pgx.getContrasts(pgx)
+      ct <- sort(ct[!grepl("^IA:", ct)])
+      shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
 
     ## =========================================================================
@@ -71,7 +70,11 @@ DrugConnectivityBoard <- function(id, pgx) {
       pv <- round(dr$P[, contr], 4)
       qv <- round(dr$Q[, contr], 4)
       drug <- rownames(dr$X)
-      stats <- dr$stats[, contr]
+      if (is.null(ncol(dr$stats))) {
+        stats <- dr$stats
+      } else {
+        stats <- dr$stats[, contr]
+      }
       annot <- dr$annot
       nes[is.na(nes)] <- 0
       qv[is.na(qv)] <- 1
@@ -196,7 +199,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       getActiveDSEA,
       watermark = WATERMARK
     )
-
 
 
     ## =======================================================================================

@@ -14,16 +14,17 @@
 #'
 #' @export
 expression_plot_volcanoMethods_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
@@ -44,7 +45,7 @@ expression_plot_volcanoMethods_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_options,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
     cards = TRUE,
@@ -68,6 +69,7 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   show_pv,
                                                   genes_selected,
                                                   labeltype = reactive("symbol"),
+                                                  pval_cap,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ## reactive function listening for changes in input
@@ -82,14 +84,8 @@ expression_plot_volcanoMethods_server <- function(id,
       mx <- pgx$gx.meta$meta[[comp]]
       mx.features <- rownames(mx)
       mx.symbols <- pgx$genes[mx.features, "symbol"]
-
-      if (labeltype() == "symbol") {
-        names <- mx.features
-        label.names <- mx.symbols
-      } else {
-        names <- mx.symbols
-        label.names <- mx.features
-      }
+      mx.names <- pgx$genes[mx.features, "gene_title"]
+      label.names <- playbase::probe2symbol(mx.features, pgx$genes, labeltype(), fill_na = TRUE)
 
       pd <- list(
         mx = mx,
@@ -99,7 +95,9 @@ expression_plot_volcanoMethods_server <- function(id,
         comp = comp,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        names = names,
+        names = mx.names,
+        symbols = mx.symbols,
+        features = mx.features,
         label.names = label.names
       )
 
@@ -130,13 +128,10 @@ expression_plot_volcanoMethods_server <- function(id,
       }
 
       mx.features <- rownames(mx)
-      mx.symbols <- pgx$genes[mx.features, "symbol"]
-      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
-        mx.features,
-        pgx$genes[mx.features, "gene_title"]
-      )
+      mx.symbols <- pd[["symbols"]]
+      mx.names <- pd[["names"]]
 
-      label.names <- playbase::probe2symbol(rownames(mx), pgx$genes, labeltype(), fill_na = TRUE)
+      pval_cap <- pval_cap()
 
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
@@ -157,7 +152,8 @@ expression_plot_volcanoMethods_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
-        by_sig = FALSE
+        by_sig = FALSE,
+        pval_cap = pval_cap
       )
       return(all_plts)
     }
@@ -188,6 +184,8 @@ expression_plot_volcanoMethods_server <- function(id,
 
       sel.genes <- pd[["sel.genes"]]
       lab.genes <- pd[["lab.genes"]]
+      sel.genes <- playbase::probe2symbol(sel.genes, pgx$genes, labeltype(), fill_na = TRUE)
+      lab.genes <- playbase::probe2symbol(lab.genes, pgx$genes, labeltype(), fill_na = TRUE)
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       names <- pd[["names"]]
@@ -216,7 +214,9 @@ expression_plot_volcanoMethods_server <- function(id,
       facet <- fc$facet
       x <- fc$fc
       y <- qv$qv
-      y <- -log10(y + 1e-12)
+
+      pval_cap <- pval_cap()
+      y <- -log10(y + pval_cap)
 
       playbase::ggVolcano(
         x = x,
@@ -268,7 +268,8 @@ expression_plot_volcanoMethods_server <- function(id,
         pdf.width = 12,
         pdf.height = 5,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        download.contrast.name = comp
       )
     })
   }) ## end of moduleServer

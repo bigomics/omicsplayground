@@ -13,13 +13,14 @@
 #'
 #' @export
 connectivity_plot_connectivityMap_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -74,7 +75,7 @@ connectivity_plot_connectivityMap_ui <- function(
     info.text = info.text,
     options = plot_opts,
     caption = caption,
-    download.fmt = c("pdf", "png", "html"),
+    download.fmt = c("pdf", "png", "html", "svg"),
     height = height,
     width = width
   )

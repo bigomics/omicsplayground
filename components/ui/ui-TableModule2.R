@@ -174,7 +174,8 @@ TableModuleServer <- function(id,
                               height = c(640, 800),
                               width = c("auto", 1400),
                               selector = c("none", "single", "multi", "key")[1],
-                              filename = "table") {
+                              filename = "table",
+                              download.contrast.name = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -185,13 +186,16 @@ TableModuleServer <- function(id,
 
       # Downloader
       output$download <- shiny::downloadHandler(
-        filename = function() {
+        filename = shiny::reactive({
+          if (!is.null(download.contrast.name)) {
+            filename <- paste0(filename, "-", download.contrast.name())
+          }
           if (input$format == "CSV") {
             paste0(filename, ".csv")
           } else {
             paste0(filename, ".xlsx")
           }
-        },
+        }),
         content = function(file) {
           if (!is.null(csvFunc)) {
             dt <- csvFunc() ## data.frame or matrix
@@ -269,6 +273,7 @@ TableModuleServer <- function(id,
         rows_selected = shiny::reactive(input$datatable_rows_selected),
         rows_all = shiny::reactive(input$datatable_rows_all),
         row_last_clicked = shiny::reactive(input$row_last_clicked),
+        search = shiny::reactive(input$datatable_search),
         rownames_current = shiny::reactive({
           rns <- rownames(func()$x$data)
           if (is.null(rns)) rns <- 1:nrow(func()$x$data)
@@ -294,8 +299,6 @@ TableModuleServer <- function(id,
     }
   )
 }
-
-
 
 
 CardUI <- function(...,
@@ -337,4 +340,112 @@ CardUI <- function(...,
       )))
     )
   ) ## end of card
+}
+
+#' Truncate row to display. Must be placed as list in columnDefs list
+#' under options of DT::datatable function.
+#'
+#' @param target  Target column
+#' @param length  Maximum string length
+#'
+trunc_display_row <- function(target, length) {
+  list(
+    targets = target, ## with no rownames column 1 is column 2
+    render = DT::JS(paste0(
+      "function(data, type, row, meta) {",
+      "return type === 'display' && data.length > ", length, " ?",
+      "'<span title=\"' + data + '\">' + data.substr(0, ", length,
+      ") + '...</span>' : data;}"
+    ))
+  )
+}
+
+
+#' Standard/default datatable.
+#'
+#'
+ui.DataTable <- function(df, rownames = TRUE,
+                         num.cols = NULL,
+                         color.cols = NULL,
+                         substr.cols = NULL,
+                         substr.len = 60,
+                         ...) {
+  columnDefs <- NULL
+  if (!is.null(substr.cols)) {
+    columnDefs <- list()
+    if (length(substr.len) == 1) substr.len <- rep(substr.len, length(substr.cols))
+    for (i in 1:length(substr.cols)) {
+      k <- substr.cols[i]
+      if (all(is.na(df[k]))) next
+      slen <- substr.len[i]
+      item1 <- list(
+        targets = k, ## with no rownames column 1 is column 2
+        render = DT::JS(
+          "function(data, type, row, meta) {",
+          paste0("return type === 'display' && data.length > ", slen, " ?"),
+          paste0(
+            "'<span title=\"' + data + '\">' + data.substr(0, ", slen,
+            ") + '...</span>' : data; }"
+          )
+        )
+      )
+      columnDefs <- c(columnDefs, list(item1))
+    }
+  }
+
+  ## table definition
+  dt <- DT::datatable(
+    df,
+    rownames = rownames,
+    extensions = c("Scroller"),
+    plugins = "scrollResize",
+    selection = list(mode = "single", target = "row", selected = c(1)),
+    fillContainer = TRUE,
+    options = list(
+      dom = "lfrtip",
+      pageLength = 9999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+      scrollX = TRUE,
+      scrollResize = TRUE,
+      scrollY = 100,
+      scroller = TRUE,
+      deferRender = TRUE,
+      columnDefs = columnDefs
+    ) ## end of options.list
+  )
+
+  ## add default styling
+  dt <- dt %>%
+    DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+
+  if (!is.null(num.cols)) {
+    dt <- dt %>% DT::formatSignif(columns = num.cols, digits = 4)
+  }
+
+  ## add column coloring
+  if (!is.null(color.cols)) {
+    if (is.integer(color.cols)) color.cols <- colnames(df)[color.cols]
+    for (k in color.cols) {
+      minx <- min(df[, k], na.rm = TRUE)
+      if (minx < 0) {
+        dt <- dt %>%
+          DT::formatStyle(
+            k,
+            background = color_from_middle(df[, k], "lightblue", "#f5aeae"),
+            backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+            backgroundPosition = "center"
+          )
+      } else {
+        dt <- dt %>%
+          DT::formatStyle(
+            k,
+            #            background = color_from_middle(df[,k], "white", "#fec34d"),
+            background = color_from_middle(df[, k], "white", "#f5aeae"),
+            backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
+            backgroundPosition = "center"
+          )
+      }
+    }
+  }
+
+  return(dt)
 }

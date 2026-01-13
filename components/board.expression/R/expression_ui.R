@@ -3,80 +3,9 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-## ExpressionInputs <- function(id) {
-##   ns <- shiny::NS(id) ## namespace
-##   bigdash::tabSettings(
-##     shiny::hr(), shiny::br(),
-##     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
-##       "Select a contrast of interest for the analysis.",
-##       placement = "top"
-##     ),
-##     withTooltip(
-##       shiny::selectInput(ns("gx_features"), tspan("Gene family:"),
-##         choices = NULL, multiple = FALSE
-##       ),
-##       "Choose a specific gene family for the analysis.",
-##       placement = "top"
-##     ),
-##     shiny::fillRow(
-##       flex = c(1, 1),
-##       withTooltip(
-##         shiny::selectInput(ns("gx_fdr"), "FDR",
-##           choices = c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2
-##         ),
-##         "Set the false discovery rate (FDR) threshold.",
-##         placement = "top"
-##       ),
-##       withTooltip(
-##         shiny::selectInput(ns("gx_lfc"), "logFC",
-##           choices = c(0, 0.1, 0.2, 0.5, 1, 2, 5), selected = 0
-##         ),
-##         "Set the logarithmic fold change (logFC) threshold.",
-##         placement = "top"
-##       )
-##     ),
-##     shiny::br(), shiny::br(),
-##     shiny::br(), shiny::br(),
-##     withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-##       "Toggle advanced options.",
-##       placement = "top"
-##     ),
-##     shiny::br(), br(),
-##     shiny::conditionalPanel(
-##       "input.gx_options % 2 == 1",
-##       ns = ns,
-##       shiny::tagList( ## gx_showall does not work??
-##         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
-##           "Display all genes in the table. Disable filtering of significant genes.",
-##           placement = "top", options = list(container = "body")
-##         ),
-##         withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
-##           "Show p-values in the table. WARNING: Nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
-##           placement = "top", options = list(container = "body")
-##         ),
-##         shiny::radioButtons(ns("labeltype"), "Plot labels:",
-##           c("symbol", "probe"),
-##           inline = TRUE
-##         ),
-##         withTooltip(
-##           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
-##             choices = NULL, inline = TRUE
-##           ),
-##           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-##            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
-##            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
-##           placement = "right", options = list(container = "body")
-##         )
-##       )
-##     )
-##   )
-## }
-
 ExpressionInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gx_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
       placement = "top"
@@ -88,8 +17,8 @@ ExpressionInputs <- function(id) {
       "Choose a specific gene family for the analysis.",
       placement = "top"
     ),
-    shiny::fillRow(
-      flex = c(1, 1),
+    bslib::layout_column_wrap(
+      width = 1 / 2,
       withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",
@@ -107,17 +36,13 @@ ExpressionInputs <- function(id) {
         placement = "top"
       )
     ),
-    shiny::br(), shiny::br(),
-    shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("gx_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), br(),
-    shiny::conditionalPanel(
-      "input.gx_options % 2 == 1",
-      ns = ns,
-      shiny::tagList( ## gx_showall does not work??
+    shiny::br(),
+    bslib::accordion(
+      id = ns("gx_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
         withTooltip(shiny::checkboxInput(ns("gx_showall"), tspan("Show all genes"), FALSE),
           "Display all genes in the table. Disable filtering of significant genes.",
           placement = "top", options = list(container = "body")
@@ -127,18 +52,22 @@ ExpressionInputs <- function(id) {
           placement = "top", options = list(container = "body")
         ),
         br(),
-        # shiny::radioButtons(ns("labeltype"), "Plot labels:",
-        #   c("symbol", "feature" = "probe", "name"),
-        #   inline = TRUE
-        # ),
-        br(),
         withTooltip(
           shiny::checkboxGroupInput(ns("gx_statmethod"), "Statistical methods:",
             choices = NULL, inline = TRUE
           ),
           "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground,
-           we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
-           Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
+            we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard,
+            Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results.",
+          placement = "right", options = list(container = "body")
+        ),
+        withTooltip(
+          shiny::selectInput(
+            inputId = ns("pval_cap"),
+            label = "Significance cap",
+            choices = c("1e-12", "1e-20", "Uncapped")
+          ),
+          "Significance cap",
           placement = "right", options = list(container = "body")
         )
       )
@@ -149,8 +78,8 @@ ExpressionInputs <- function(id) {
 ExpressionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
-  halfH <- "calc(50vh - 120px)" ## half height of page
+  fullH <- "calc(100vh - 125px)" ## full height of page (minus header)
+  halfH <- "calc(50vh - 125px)" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -162,7 +91,7 @@ ExpressionUI <- function(id) {
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
-          info.text = "Volcano plot of genes for the selected {Contrast} displaying fold-change versus significance. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
+          info.text = "Volcano plot of genes for the selected {Contrast} displaying fold-change versus significance. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Imputed genes are displayed with a cross. All other genes are displayed with a filled circle. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
           info.methods = "Statistical significance assessed using three independent statistical methods: DESeq2 (Wald test) [1], edgeR (QLF test) [2] and limma-trend [3]. The maximum q-value of the three methods is taken as aggregate q-value, which corresponds to taking the intersection of significant genes from all three tests.",
           info.references = list(
             list(
@@ -186,7 +115,7 @@ ExpressionUI <- function(id) {
         expression_plot_maplot_ui(
           id = ns("plots_maplot"),
           title = "MA plot",
-          info.text = "MA plot of genes for the selected {Contrast} displaying fold-change (M-values) versus the mean intensity (A-values). By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
+          info.text = "MA plot of genes for the selected {Contrast} displaying fold-change (M-values) versus the mean intensity (A-values). Imputed genes are displayed with a cross. All other genes are displayed with a filled circle. By selecting a specific gene under the Differential expression analysis table it will be highlighted. Similarly, if a geneset is selected under the Gene sets with gene table it will be highlighted.",
           info.methods = "See Volcano plot",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "MA-plot displaying signal intensity versus fold-change.",
@@ -293,6 +222,21 @@ ExpressionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
+    ), ## end upper tabPanel
+    shiny::tabPanel(
+      "FC-FC comparison",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
+        expression_plot_fc_fc_ui(
+          id = ns("fc_fc"),
+          title = "FC-FC comparison",
+          info.text = "Compare custom FC with baseline FC",
+          caption = "FC-FC comparison: Compare custom FC with baseline FC",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
     ) ## end upper tabPanel
   ) ## end of tabs1
 
@@ -306,7 +250,7 @@ ExpressionUI <- function(id) {
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
-          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions.",
+          info.text = "The table shows the results of the statistical tests. Omics Playground performs DE analysis using four commonly accepted methods, namely, T-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and combines the statistical results using a meta.q value that represents the highest q value among the methods. The number of stars indicate how many methods identified significant. The table is interactive (scrollable, clickable); users can sort by logFC, meta.q, or average expression in either conditions. The top 10 upregulated and downregulated feature can be displayed by clicking on the corresponding plots' option. The column pct.NA (displayed when clicking on the corresponding plots' option), reports the percentage of samples (within the selected contrast) in which a feature is missing in the original counts/abundance data matrix. A logFC value of 999 indicates NA (i.e., FC could not be computed due to feature missingness).",
           caption = "Table showing the significant results of the differential expression analysis on the selected contrast.",
           width = c("100%", "100%"),
           height = c("100%", TABLE_HEIGHT_MODAL)

@@ -1,6 +1,10 @@
 html {
   #app {
-    min-height: calc(100vh - 48px);
+    min-height: calc(100vh - 36px);
+  }
+
+  div:has(> #load-action-buttons) {
+    gap: 0px;
   }
   
 }

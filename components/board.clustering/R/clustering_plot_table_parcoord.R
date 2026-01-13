@@ -4,20 +4,20 @@
 ##
 
 
-
 ## Annotate clusters ############
 
 clustering_plot_parcoord_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   parcoord_opts <- shiny::tagList(
@@ -42,20 +42,21 @@ clustering_plot_parcoord_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = parcoord_opts,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
 }
 
 clustering_table_parcoord_ui <- function(
-    id,
-    label = "",
-    title,
-    info.text,
-    caption,
-    height,
-    width) {
+  id,
+  label = "",
+  title,
+  info.text,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -71,6 +72,7 @@ clustering_table_parcoord_ui <- function(
 
 clustering_plot_table_parcoord_server <- function(id,
                                                   getTopMatrix,
+                                                  pgx,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -153,6 +155,10 @@ clustering_plot_table_parcoord_server <- function(id,
     parcoord.RENDER <- function() {
       pc <- plot_data()
       zx <- pc$mat
+      shiny::validate(shiny::need(
+        !all(is.na(zx)),
+        "Filter is too restrictive. Please change 'Filter samples:'."
+      ))
       ## build dimensions
       dimensions <- list()
       for (i in 1:ncol(zx)) {
@@ -221,6 +227,7 @@ clustering_plot_table_parcoord_server <- function(id,
       mat <- parcoord$mat
       clust <- parcoord$clust
       df <- data.frame(gene.module = clust, mat, check.names = FALSE)
+      row.names(df) <- playbase::probe2symbol(row.names(df), pgx$genes, "gene_name", fill_na = TRUE)
       numeric.cols <- 2:ncol(df)
       DT::datatable(
         df,

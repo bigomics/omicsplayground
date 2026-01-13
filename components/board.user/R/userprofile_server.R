@@ -20,54 +20,10 @@ UserProfileBoard <- function(id, auth, nav_count) {
       ))
     })
 
-    observeEvent(auth$logged, {
-      if (!auth$logged) {
-        return()
-      }
-
-      removeModal()
-
-      session$sendCustomMessage(
-        "get-subs",
-        list(
-          ns = ns(NULL)
-        )
-      )
-    })
-
     output$plan <- renderUI({
-      plan_class <- "info"
-      if (auth$level == "premium") {
-        plan_class <- "success"
-      }
-      cl <- sprintf("badge badge-%s", plan_class)
       p(
-        span("Subscription level", style = "color:grey;"),
-        span(class = cl, tools::toTitleCase(auth$level))
+        span(paste0("Subscription level: ", tools::toTitleCase(auth$level)))
       )
-    })
-
-    observeEvent(input$manage, {
-      dbg("[UserBoard] !!! auth$email = ", auth$email)
-      dbg("[UserBoard] !!! auth$stripe_id = ", auth$stripe_id)
-      dbg("[UserBoard] !!! auth$href = ", auth$href)
-
-      response <- httr::POST(
-        "https://api.stripe.com/v1/billing_portal/sessions",
-        body = list(
-          customer = auth$stripe_id,
-          return_url = auth$href
-        ),
-        httr::authenticate(
-          Sys.getenv("OMICS_STRIPE_KEY"),
-          ""
-        ),
-        encode = "form"
-      )
-
-      httr::warn_for_status(response)
-      content <- httr::content(response)
-      session$sendCustomMessage("manage-sub", content$url)
     })
 
     output$userdata <- renderTable(
@@ -75,12 +31,10 @@ UserProfileBoard <- function(id, auth, nav_count) {
         dbg("[UserBoard::userdata]  renderDataTable")
         cl <- "badge badge-info"
         values <- c(
-          Name   = auth$username,
-          Email  = auth$email,
-          Plan   = auth$level,
-          Start  = "",
-          End    = "",
-          Status = "active"
+          Name = auth$username,
+          Email = auth$email,
+          End = auth$expiry,
+          Datasets = auth$options$MAX_DATASETS
         )
         values[which(values == "")] <- "(not set)"
         data.frame(" " = names(values), "  " = values, check.names = FALSE)

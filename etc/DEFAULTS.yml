@@ -5,3 +5,5 @@ computation_options:
     - remove.unknown
     - only.proteincoding
 datatype: RNA-seq
+qc:
+  impute: true

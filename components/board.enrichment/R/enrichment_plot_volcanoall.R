@@ -4,28 +4,30 @@
 ##
 
 enrichment_plot_volcanoall_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.references,
-    info.extra_link,
-    caption,
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.references,
+  info.extra_link,
+  caption,
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_options <- shiny::tagList(
-    withTooltip(shiny::checkboxInput(ns("scale_per_method"), "scale per method", FALSE),
+    withTooltip(
+      shiny::checkboxInput(ns("scale_per_method"), "Scale per method", FALSE),
       "Scale the volcano plots individually per method..",
       placement = "right", options = list(container = "body")
     ),
     withTooltip(
-      shiny::radioButtons(ns("enrch_volcanoall_subs"), "Subsample plot",
-        c("Yes", "No"),
-        inline = TRUE, selected = "No"
+      shiny::radioButtons(ns("n_contrasts"), "Number of contrasts shown:",
+        c("1", "4", "6", "all"),
+        inline = TRUE, selected = "6"
       ),
-      "Number of top genesets to consider for counting the gene frequency."
+      "Number of contrasts shown in Volcano plots."
     )
   )
 
@@ -43,16 +45,18 @@ enrichment_plot_volcanoall_ui <- function(
     width = width,
     cards = TRUE,
     card_names = c("dynamic", "static"),
-    download.fmt = c("png", "pdf")
+    download.fmt = c("png", "pdf", "svg")
   )
 }
 
 enrichment_plot_volcanoall_server <- function(id,
                                               pgx,
+                                              gs_contrast,
                                               gs_features,
                                               gs_statmethod,
                                               gs_fdr,
                                               gs_lfc,
+                                              show_pv,
                                               calcGsetMeta,
                                               gset_selected,
                                               watermark = FALSE) {
@@ -62,6 +66,22 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(gs_features())
 
       meta <- pgx$gset.meta$meta
+      ctx <- names(meta)[!grepl("^IA:", names(meta))]
+
+      sel_ctx <- gs_contrast()
+      if (input$n_contrasts == "all") {
+        ctx1 <- ctx[1:length(ctx)]
+      } else if (input$n_contrasts == "1") {
+        ctx1 <- sel_ctx
+      } else {
+        nn <- as.numeric(input$n_contrasts) - 1
+        ctx1 <- ctx[which(ctx != sel_ctx)]
+        ctx1 <- ctx1[c(1:nn)]
+        ctx1 <- ctx1[!is.na(ctx1)]
+        ctx1 <- unique(c(sel_ctx, ctx1))
+      }
+
+      meta <- meta[ctx1]
       gsmethod <- colnames(meta[[1]]$fc)
       gsmethod <- gs_statmethod()
       if (is.null(gsmethod) || length(gsmethod) == 0) {
@@ -75,28 +95,36 @@ enrichment_plot_volcanoall_server <- function(id,
       sel.gsets <- gset_collections[[gs_features()]]
 
       # Calc. meta scores and get Q and FC
-      FC <- vector("list", length(meta))
-      Q <- vector("list", length(meta))
-      names(FC) <- names(meta)
-      names(Q) <- names(meta)
+      FC <- Q <- P <- vector("list", length(meta))
+      names(FC) <- names(Q) <- names(P) <- names(meta)
+      i <- 1
       for (i in names(meta)) {
         mx <- calcGsetMeta(i, gsmethod, pgx = pgx)
         FC[[i]] <- mx[, "fc", drop = FALSE]
         Q[[i]] <- mx[, "qv", drop = FALSE]
+        P[[i]] <- mx[, "pv", drop = FALSE]
       }
 
       # Prepare output matrices
       matF <- do.call(cbind, FC)
       matQ <- do.call(cbind, Q)
-      colnames(matF) <- names(FC)
-      colnames(matQ) <- names(FC)
+      matP <- do.call(cbind, P)
+      colnames(matF) <- colnames(matQ) <- colnames(matP) <- names(FC)
+
+      S <- matQ
+      title_y <- "Significance (-log10q)"
+      if (show_pv()) {
+        S <- matP
+        title_y <- "Significance (-log10p)"
+      }
 
       pd <- list(
         FC = matF,
-        Q = matQ,
+        S = S,
         sel.gsets = sel.gsets,
         fdr = fdr,
         lfc = lfc,
+        title_y = title_y,
         gset_selected = gset_selected()
       )
       pd
@@ -108,20 +136,22 @@ enrichment_plot_volcanoall_server <- function(id,
 
       # Input vars
       F <- pd$FC
-      Q <- pd$Q
+      S <- pd$S
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
+      title_y <- pd[["title_y"]]
+
       # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = F,
-        Q = Q,
+        Q = S,
         fdr = fdr,
         lfc = lfc,
         cex = cex,
         names = rownames(F),
         source = "enrich_volcanoall",
-        title_y = "significance (-log10q)",
-        title_x = "effect size (log2FC)",
+        title_x = "Effect size (log2FC)",
+        title_y = title_y,
         share_axis = !input$scale_per_method,
         yrange = yrange,
         n_rows = n_rows,
@@ -132,7 +162,6 @@ enrichment_plot_volcanoall_server <- function(id,
         highlight = pd[["gset_selected"]],
         label = pd[["gset_selected"]]
       )
-
 
       return(all_plts)
     }
@@ -157,7 +186,7 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(pd)
 
       fc <- pd[["FC"]]
-      qv <- pd[["Q"]]
+      qv <- pd[["S"]]
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
       fc <- data.frame(fc) %>%

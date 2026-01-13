@@ -14,15 +14,16 @@
 #'
 #' @export
 expression_plot_maplot_ui <- function(
-    id,
-    title,
-    info.text,
-    info.methods,
-    info.extra_link,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  info.methods,
+  info.extra_link,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   options <- tagList()
@@ -36,7 +37,7 @@ expression_plot_maplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -71,8 +72,6 @@ expression_plot_maplot_server <- function(id,
                                           labeltype = reactive("symbol"),
                                           watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    # #calculate required inputs for plotting ---------------------------------
-
     plot_data <- shiny::reactive({
       comp1 <- gx_contrast()
       if (length(comp1) == 0) {
@@ -95,8 +94,25 @@ expression_plot_maplot_server <- function(id,
       symbols <- rownames(res)
 
       names <- ifelse(is.na(res$gene_title), rownames(res), res$gene_title)
+      label.names <- pgx$genes[rownames(res), ]$gene_name
 
-      label.names <- playbase::probe2symbol(rownames(res), pgx$genes, labeltype(), fill_na = TRUE)
+      shape <- rep("circle", nrow(res))
+      names(shape) <- rownames(res)
+      if (any(is.na(pgx$counts)) && !any(is.na(pgx$X))) {
+        jj <- which(!is.na(pgx$contrasts[, comp1]))
+        if (any(jj)) {
+          counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
+          nas <- apply(counts, 1, function(x) sum(is.na(x)))
+          na.features <- names(nas)[which(nas > 0)]
+          shape[match(na.features, names(shape))] <- "cross"
+        }
+      }
+
+      jj <- which(rownames(res) == genes_selected()$sel.genes)
+      if (any(jj)) {
+        fc <- y[jj]
+        shiny::validate(shiny::need(!is.na(fc), "Fold change for this feature is NA"))
+      }
 
       plot_data <- list(
         x = x,
@@ -107,6 +123,7 @@ expression_plot_maplot_server <- function(id,
         symbols = symbols,
         features = rownames(res),
         names = names,
+        shape = shape,
         fdr = fdr,
         lfc = lfc,
         label.names = label.names
@@ -131,6 +148,7 @@ expression_plot_maplot_server <- function(id,
         highlight = pd[["sel.genes"]],
         label = pd[["lab.genes"]],
         label.cex = lab.cex,
+        shape = pd[["shape"]],
         group.names = c("group1", "group0"),
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
@@ -148,13 +166,7 @@ expression_plot_maplot_server <- function(id,
 
     modal_plotly.RENDER <- function() {
       fig <- plotly.RENDER(marker.size = 8, lab.cex = 1.5) %>%
-        plotly::layout(
-          font = list(size = 18),
-          legend = list(
-            font = list(size = 18)
-          )
-        )
-      ## fig <- plotly::style(fig, marker.size = 8)
+        plotly::layout(font = list(size = 18), legend = list(font = list(size = 18)))
       fig
     }
 
@@ -174,7 +186,8 @@ expression_plot_maplot_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      download.contrast.name = gx_contrast
     )
   }) ## end of moduleServer
 }

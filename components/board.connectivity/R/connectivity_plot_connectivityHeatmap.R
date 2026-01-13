@@ -13,13 +13,14 @@
 #'
 #' @export
 connectivity_plot_connectivityHeatmap_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width
+) {
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
@@ -51,7 +52,7 @@ connectivity_plot_connectivityHeatmap_ui <- function(
     #
     info.text = info.text,
     options = plot_opts,
-    download.fmt = c("pdf", "png", "csv"),
+    download.fmt = c("pdf", "png", "csv", "svg"),
     height = height,
     width = width,
     caption = caption
@@ -70,6 +71,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
                                                          getProfiles,
                                                          getConnectivityScores,
                                                          getCurrentContrast,
+                                                         pgx,
                                                          watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -98,6 +100,7 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           F <- abs(F)
         }
         F <- F[order(-rowMeans(F**2, na.rm = TRUE)), , drop = FALSE]
+        rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
 
         list(
           F = F,
@@ -154,8 +157,12 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
           F <- reverse_negative(F, k = 1)
           score <- abs(score)
         }
+        ## iheatmap does not like NA
+        score[is.na(score)] <- 0
+        F[is.na(F)] <- 0
+
         ii <- order(rowMeans(F, na.rm = TRUE))
-        F <- F[ii, ]
+        F <- F[ii, , drop = FALSE]
 
         plt <- iheatmapr::main_heatmap(
           data = t(F),
@@ -213,13 +220,12 @@ connectivity_plot_connectivityHeatmap_server <- function(id,
 
       PlotModuleServer(
         "plotmodule",
-        #
         plotlib = "plotly",
-        #
         func = plot_RENDER,
         func2 = plot_RENDER2,
         csvFunc = plot_data,
-        pdf.width = 14, pdf.height = 5.5,
+        pdf.width = 14,
+        pdf.height = 5.5,
         res = c(90, 90),
         add.watermark = watermark
       )

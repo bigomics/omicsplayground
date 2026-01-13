@@ -6,7 +6,6 @@
 EnrichmentInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::hr(), shiny::br(),
     withTooltip(shiny::selectInput(ns("gs_contrast"), "Contrast:", choices = NULL),
       "Select a contrast of interest for the analysis.",
       placement = "top"
@@ -15,8 +14,8 @@ EnrichmentInputs <- function(id) {
       "Choose a specific gene set collection for the analysis.",
       placement = "top"
     ),
-    shiny::fillRow(
-      flex = c(1, 1),
+    bslib::layout_column_wrap(
+      width = 1 / 2,
       withTooltip(
         shiny::selectInput(ns("gs_fdr"), "FDR", c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2),
         "Set the false discovery rate (FDR) threshold.",
@@ -26,33 +25,35 @@ EnrichmentInputs <- function(id) {
         shiny::selectInput(ns("gs_lfc"), "logFC",
           choices = c(0, 0.05, 0.1, 0.2, 0.5, 1, 2), selected = 0
         ),
-        "Set the logarithmic fold change (logFC) threshold.",
+        "Set the logarithmic fold change (log2FC) threshold.",
         placement = "top"
       )
     ),
-    shiny::br(), shiny::br(),
-    shiny::br(), shiny::br(),
-    withTooltip(shiny::actionLink(ns("gs_options"), "Options", icon = icon("cog", lib = "glyphicon")),
-      "Toggle advanced options.",
-      placement = "top"
-    ),
-    shiny::br(), br(),
-    shiny::conditionalPanel(
-      "input.gs_options % 2 == 1",
-      ns = ns,
-      shiny::tagList(
-        withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
-          "Enbale significant genes filtering. Display only significant genesets in the table.",
-          placement = "top", options = list(container = "body")
-        ),
-        withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
-          "Select a method or multiple methos for the statistical test.",
-          placement = "right", options = list(container = "body")
-        ),
-        withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("top 10 gene sets"), FALSE),
-          "Display only top 10 differentially enirhced gene sets (positively and negatively) in the enrihcment analysis table.",
-          placement = "top", options = list(container = "body")
-        ),
+    shiny::br(),
+    bslib::accordion(
+      id = ns("gs_accordion"),
+      open = FALSE,
+      bslib::accordion_panel(
+        "Options",
+        icon = icon("cog", lib = "glyphicon"),
+        shiny::tagList(
+          withTooltip(shiny::checkboxInput(ns("gs_showall"), tspan("Show all genesets"), FALSE),
+            "Display all genesets in the table.",
+            placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxInput(ns("gs_top10"), tspan("Top10 genesets"), FALSE),
+            "Display only top 10 differentially enriched  (+ and -) genesets.",
+            placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxInput(ns("show_pv"), "Show p-values", FALSE),
+            "Show gset p-values in the table. WARNING: nominal p-values are NOT corrected for multiple testing errors. We do not advice their use.",
+            placement = "top", options = list(container = "body")
+          ),
+          withTooltip(shiny::checkboxGroupInput(ns("gs_statmethod"), "Statistical methods:", choices = NULL),
+            "Select a method or multiple methos for the statistical test.",
+            placement = "right", options = list(container = "body")
+          )
+        )
       )
     )
   )
@@ -61,8 +62,8 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 120px)" ## full height of page (minus header)
-  halfH <- "calc(50vh - 120px)" ## half height of page
+  fullH <- "calc(100vh - 125px)" ## full height of page (minus header)
+  halfH <- "calc(50vh - 125px)" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),

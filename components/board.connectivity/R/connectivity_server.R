@@ -4,10 +4,11 @@
 ##
 
 ConnectivityBoard <- function(
-    id,
-    auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
-    pgx,
-    reload_pgxdir = reactive(auth$user_dir)) {
+  id,
+  auth = NoAuthenticationModule(id = "auth", show_modal = FALSE),
+  pgx,
+  reload_pgxdir = reactive(auth$user_dir)
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 750 # row height of panel
@@ -19,10 +20,7 @@ ConnectivityBoard <- function(
       module provides pairwise correlation plots and/or enrichment plots with
       signatures from other data sets. The <strong>Connectivity map</strong>
       shows the similarity of the contrasts profiles as a t-SNE plot.<br><br>
-      <br><br><center><iframe width='500' height='333'
-      src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
-      frameborder='0' allow='accelerometer; autoplay; encrypted-media;
-      gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+      <br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=m4qEXCuQJo6o-A9o&amp;start=38' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
     ## ================================================================================
@@ -41,9 +39,11 @@ ConnectivityBoard <- function(
     shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
-      comparisons <- colnames(pgx$model.parameters$contr.matrix)
-      comparisons <- sort(comparisons)
-      shiny::updateSelectInput(session, "contrast",
+      comparisons <- playbase::pgx.getContrasts(pgx)
+      comparisons <- sort(comparisons[!grepl("^IA:", comparisons)])
+      shiny::updateSelectInput(
+        session,
+        "contrast",
         choices = comparisons,
         selected = head(comparisons, 1)
       )
@@ -71,33 +71,6 @@ ConnectivityBoard <- function(
       )
     })
 
-    getCurrentContrast <- shiny::reactive({
-      shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
-      ct <- input$contrast
-      meta1 <- pgx$gx.meta$meta
-      meta2 <- pgx$gset.meta$meta
-      has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
-      shiny::req(has.contrast)
-
-      ## convert to human symbols so we can match different organism
-      fc <- meta1[[ct]]$meta.fx
-      names(fc) <- rownames(meta1[[ct]])
-      fc <- playbase::collapse_by_humansymbol(fc, pgx$genes)
-
-      gs <- meta2[[ct]]$meta.fx
-      names(gs) <- rownames(meta2[[ct]])
-
-      list(name = ct, fc = fc, gs = gs)
-    })
-
-    observe({
-      contr <- getCurrentContrast()
-      shiny::req(contr)
-      ntop <- as.integer(input$genelist_ntop)
-      top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
-      top50 <- paste(top50, collapse = " ")
-      updateTextAreaInput(session, "genelist", value = top50)
-    })
 
     ## ================================================================================
     ## =============================  FUNCTIONS =======================================
@@ -160,6 +133,34 @@ ConnectivityBoard <- function(
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
     ## ================================================================================
+
+    getCurrentContrast <- shiny::reactive({
+      shiny::req(pgx$gx.meta, pgx$gset.meta, input$contrast)
+      ct <- input$contrast
+      meta1 <- pgx$gx.meta$meta
+      meta2 <- pgx$gset.meta$meta
+      has.contrast <- ct %in% names(meta1) && ct %in% names(meta2)
+      shiny::req(has.contrast)
+
+      ## convert to human symbols so we can match different organism
+      fc <- meta1[[ct]]$meta.fx
+      names(fc) <- rownames(meta1[[ct]])
+      fc <- playbase::collapse_by_humansymbol(fc, pgx$genes)
+
+      gs <- meta2[[ct]]$meta.fx
+      names(gs) <- rownames(meta2[[ct]])
+
+      list(name = ct, fc = fc, gs = gs)
+    })
+
+    observe({
+      contr <- getCurrentContrast()
+      shiny::req(contr)
+      ntop <- as.integer(input$genelist_ntop)
+      top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
+      top50 <- paste(top50, collapse = " ")
+      updateTextAreaInput(session, "genelist", value = top50)
+    })
 
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
@@ -231,7 +232,7 @@ ConnectivityBoard <- function(
         }
 
         has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
-        if (need_update || !has.user_sigdb) {
+        if (need_update || !has.user_sigdb || any(unlist(pgx$connectivity) == "NaN")) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
             info("[compute_connectivity] re-computing connectivity scores...")
@@ -250,7 +251,7 @@ ConnectivityBoard <- function(
           ## save results back?? but what is the real filename?????
           if (!is.null(pgx$filename)) {
             pgx.filepath <- file.path(pgxdir, basename(pgx$filename))
-            playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)
+            try(playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)) # on board snap test this fails, wrap in try
           }
         }
 
@@ -438,7 +439,8 @@ ConnectivityBoard <- function(
       ## getTopProfiles,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
-      getCurrentContrast = getCurrentContrast
+      getCurrentContrast = getCurrentContrast,
+      pgx = pgx
     )
 
     ## ================================================================================
@@ -529,6 +531,7 @@ ConnectivityBoard <- function(
     ## =============================================================================
     connectivity_plot_connectivityHeatmap_server(
       "connectivityHeatmap",
+      pgx = pgx,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast

@@ -12,7 +12,7 @@ compute_enrichmentmap <- function(pgx, qsig = 0.05, ntop = 120, wt = 1, contrast
   X <- pgx$gsetX
   G <- Matrix::t(pgx$GMT)
   table(rownames(G) == rownames(F))
-  G <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5", rownames(G)), ]
+  G <- G[grep("^PATHWAY|^GOBP|^GOMF|^C5|^GO_BP|^GO_MF", rownames(G)), ]
 
   ## take most significant genesets
   if (!is.null(contrast)) {
@@ -48,9 +48,9 @@ compute_enrichmentmap <- function(pgx, qsig = 0.05, ntop = 120, wt = 1, contrast
   dim(R1)
 
   qmin <- qmin[rownames(R1)]
-  F <- F[rownames(R1), ]
-  Q <- Q[rownames(R1), ]
-  G <- G[rownames(R1), ]
+  F <- F[rownames(R1), , drop = FALSE]
+  Q <- Q[rownames(R1), , drop = FALSE]
+  G <- G[rownames(R1), , drop = FALSE]
 
   ## geneset graph
   require(igraph)
@@ -279,7 +279,6 @@ plot_enrichmentmap <- function(res, contrast = NULL, qsig = 0.05,
   fig <- fig %>%
     plotly::layout(
       #      title = list(
-
 
 
       #      ),

@@ -5,15 +5,16 @@
 
 
 dataview_plot_tissue_ui <- function(
-    id,
-    label = "",
-    title,
-    height,
-    width,
-    caption,
-    info.text,
-    info.methods,
-    info.references) {
+  id,
+  label = "",
+  title,
+  height,
+  width,
+  caption,
+  info.text,
+  info.methods,
+  info.references
+) {
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -26,7 +27,7 @@ dataview_plot_tissue_ui <- function(
     info.references = info.references,
     caption = caption,
     options = NULL,
-    download.fmt = c("png", "pdf", "csv"),
+    download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
   )
@@ -49,7 +50,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       homologue_ratio <- ortho / n
       if (pgx$organism %in% c("Human", "human")) {
         hgnc.gene <- pgx$genes[gene, "symbol"]
-      } else if (homologue_ratio > .9) {
+      } else if (homologue_ratio > .5) {
         hgnc.gene <- pgx$genes[gene, "human_ortholog"]
       } else {
         shiny::validate(shiny::need(FALSE, "No tissue data available for this organism."))

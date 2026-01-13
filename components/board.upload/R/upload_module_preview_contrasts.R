@@ -10,21 +10,24 @@ upload_table_preview_contrasts_ui <- function(id) {
 }
 
 upload_table_preview_contrasts_server <- function(
-    id,
-    uploaded,
-    checklist,
-    scrollY,
-    width,
-    height,
-    title,
-    info.text,
-    caption,
-    checked_counts,
-    checked_samples,
-    checked_contrasts,
-    show_comparison_builder,
-    selected_contrast_input,
-    upload_wizard) {
+  id,
+  uploaded,
+  checklist,
+  scrollY,
+  width,
+  height,
+  title,
+  info.text,
+  caption,
+  checked_counts,
+  checked_samples,
+  checked_contrasts,
+  show_comparison_builder,
+  selected_contrast_input,
+  upload_datatype,
+  upload_wizard,
+  auth
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -162,7 +165,7 @@ upload_table_preview_contrasts_server <- function(
           if (is.null(uploaded$contrasts.csv)) {
             bslib::layout_columns(
               col_widths = c(-3, 6, -3),
-              row_heights = list("auto", 11, 1),
+              row_heights = list("auto", 8, 1, 2),
               gap = "0.3rem",
               bslib::as_fill_carrier(
                 bs_alert("The comparison file (comparisons.csv) is an optional input file. The file contains a list of pre-defined comparisons between groups (e.g. treatment versus controls, mutant versus wild-type). If you do not have a comparisons file, you can create comparisons using the interactive comparison builder.", closable = FALSE),
@@ -181,7 +184,8 @@ upload_table_preview_contrasts_server <- function(
                 ),
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
-              action_buttons2
+              action_buttons2,
+              br()
             )
           } else {
             bslib::layout_columns(
@@ -232,7 +236,7 @@ upload_table_preview_contrasts_server <- function(
             col_widths = 12,
             ## height = "calc(100vh - 340px)",
             heights_equal = "row",
-            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then create groups by dragging conditions to the 'Main group' or 'Control group' boxes, give a name and click 'add to list'. You can also try 'auto-detect comparisons'. If you have a file with pre-defined comparisons, you can upload this below.")),
+            bs_alert(HTML("To <b>create comparisons</b>, choose a phenotype, then drag conditions to the 'Main group' or 'Control group' boxes, give a name and click 'add to list'. You can also upload a CSV file with pre-defined comparisons.")),
             upload_module_makecontrast_ui(ns("makecontrast")),
             action_buttons1
           )
@@ -332,21 +336,32 @@ upload_table_preview_contrasts_server <- function(
         return()
       }
 
-      ct <- playbase::read.as_matrix(input$contrasts_csv$datapath)
-
-      ## IK: should we do contrasts.convertToLabelMatrix here
-      ## already?  to allow for short/old formats?
-      ## samples <- checked_samples()$SAMPLES
-      samples <- uploaded$samples.csv
-      new.ct <- try(playbase::contrasts.convertToLabelMatrix(
-        contrasts = ct, samples = samples
-      ))
-      if (!"try-error" %in% class(new.ct)) {
-        ct <- new.ct
+      ct <- tryCatch(
+        {
+          playbase::read.as_matrix(input$contrasts_csv$datapath)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
+      if (is.null(ct)) {
+        data_error_modal(
+          path = input$contrasts_csv$datapath,
+          data_type = "contrasts"
+        )
+      } else {
+        ## IK: should we do contrasts.convertToLabelMatrix here
+        ## already?  to allow for short/old formats?
+        ## samples <- checked_samples()$SAMPLES
+        samples <- uploaded$samples.csv
+        new.ct <- try(playbase::contrasts.convertToLabelMatrix(
+          contrasts = ct, samples = samples
+        ))
+        if (!"try-error" %in% class(new.ct)) {
+          ct <- new.ct
+        }
+        uploaded$contrasts.csv <- ct
       }
-
-
-      uploaded$contrasts.csv <- ct
     })
 
     observeEvent(input$remove_contrasts, {
@@ -355,7 +370,12 @@ upload_table_preview_contrasts_server <- function(
     })
 
     observeEvent(input$load_example, {
-      uploaded$contrasts.csv <- playbase::CONTRASTS
+      if (upload_datatype() == "scRNA-seq") {
+        ctx <- playdata::GSE243639_scRNAseq_contrasts
+      } else {
+        ctx <- playbase::CONTRASTS
+      }
+      uploaded$contrasts.csv <- ctx
     })
 
     modified_ct <- upload_module_makecontrast_server(
@@ -365,7 +385,8 @@ upload_table_preview_contrasts_server <- function(
       countsRT = reactive(checked_counts()$COUNTS),
       upload_wizard = upload_wizard,
       show_comparison_builder = show_comparison_builder,
-      autocontrast = reactive(input$autocontrast)
+      autocontrast = reactive(input$autocontrast),
+      auth = auth
     )
 
     TableModuleServer(

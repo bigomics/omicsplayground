@@ -14,14 +14,15 @@
 #'
 #' @export
 singlecell_plot_icpplot_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    label = "",
-    height,
-    width,
-    parent) {
+  id,
+  title,
+  info.text,
+  caption,
+  label = "",
+  height,
+  width,
+  parent
+) {
   ns <- shiny::NS(id)
 
   icp.opts <- shiny::tagList(
@@ -60,7 +61,7 @@ singlecell_plot_icpplot_ui <- function(
     title = title,
     caption = caption,
     options = icp.opts,
-    download.fmt = c("png", "pdf"),
+    download.fmt = c("png", "pdf", "svg"),
     height = height,
     width = width
   )

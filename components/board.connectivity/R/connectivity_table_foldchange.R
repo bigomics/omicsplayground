@@ -4,13 +4,14 @@
 ##
 
 connectivity_table_foldchange_ui <- function(
-    id,
-    title,
-    info.text,
-    caption,
-    width,
-    height,
-    label = "") {
+  id,
+  title,
+  info.text,
+  caption,
+  width,
+  height,
+  label = ""
+) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
@@ -50,6 +51,12 @@ connectivity_table_foldchange_server <- function(id,
       df
     })
 
+    get_csv <- function() {
+      df <- get_table()
+      colnames(df) <- playbase::probe2symbol(colnames(df), pgx$genes, "gene_name", fill_na = TRUE)
+      df
+    }
+
     foldchangeTable.RENDER <- function() {
       df <- get_table()
 
@@ -60,6 +67,7 @@ connectivity_table_foldchange_server <- function(id,
 
       DT::datatable(df,
         rownames = FALSE,
+        colnames = playbase::probe2symbol(colnames(df), pgx$genes, "gene_name", fill_na = TRUE),
         class = "compact cell-border stripe hover",
         extensions = c("Scroller"),
         selection = list(mode = "single", target = "row", selected = 1),
@@ -96,6 +104,7 @@ connectivity_table_foldchange_server <- function(id,
       "table",
       func = foldchangeTable.RENDER,
       func2 = foldchangeTable.RENDER_modal,
+      csvFunc = get_csv,
       selector = "single"
     )
 
