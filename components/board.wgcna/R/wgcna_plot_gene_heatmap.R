@@ -68,9 +68,12 @@ wgcna_plot_gene_heatmap_server <- function(id,
 
       df <- pgx$X[pp, , drop = FALSE]
       shiny::validate(shiny::need(nrow(df) > 1, "Geneset should contain at least two genes to plot a heatmap."))
-      rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+      if (playbase::is.multiomics(rownames(pgx$X))) {
+        rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE, add_datatype = TRUE)
+      } else {
+        rownames(df) <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+      }
 
-      # pgx <- pgx.load("~/Playground/omicsplayground/data/multi-liver2.pgx")
       sel <- input$pheno
       shiny::req(sel)
       annot <- pgx$samples[, sel, drop = FALSE]

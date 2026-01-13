@@ -155,7 +155,12 @@ BiomarkerBoard <- function(id, pgx) {
         samples <- rownames(pgx$Y)
         sel <- input$pdx_samplefilter
         if (!is.null(sel) && all(sel != "")) {
-          samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
+          ## Validate that selected levels exist in current dataset (when changing datasets this needs to be checked)
+          valid_levels <- playbase::getLevels(pgx$Y)
+          sel <- sel[sel %in% valid_levels]
+          if (length(sel) > 0) {
+            samples <- playbase::selectSamplesFromSelectedLevels(pgx$Y, sel)
+          }
         }
         samples
       }
