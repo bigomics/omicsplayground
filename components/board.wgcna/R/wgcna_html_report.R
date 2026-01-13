@@ -124,11 +124,15 @@ wgcna_html_report_server <- function(id,
         annot <- wgcna$annot
       }
       
-      dbg("[multiwgcna_html_report_server] creating AI report")
+      progress <- shiny::Progress$new()
+      on.exit(progress$close())
+      progress$set(message = "creating AI report...", value = 0)
+
       ai_model3 <- c("", ai_model, ai_model)
       rpt <- playbase::wgcna.create_report(
         wgcna, ai_model3, annot=annot, multi=multi,
-        format="markdown", ntop=100, verbose=1) 
+        format="markdown", ntop=100, verbose=1,
+        progress = progress) 
       
       return(rpt)
     },
