@@ -212,8 +212,25 @@ loading_table_datasets_public_server <- function(id,
       selected_row <- pgxtable_public$rows_selected()
       pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
-      file.rename(pgx_file, paste0(pgx_file, "_"))
-      reload_pgxdir_public(reload_pgxdir_public() + 1)
+
+      deletePublicPGX <- function(x) {
+        if (input$confirmdelete_public) {
+          file.rename(pgx_file, paste0(pgx_file, "_"))
+          reload_pgxdir_public(reload_pgxdir_public() + 1)
+        }
+      }
+
+      shinyalert::shinyalert(
+        "Delete this dataset?",
+        paste(
+          "Are you sure you want to delete '", pgx_name, "' from",
+          tolower(auth$options$PUBLIC_DATASETS_LABEL), "?"
+        ),
+        confirmButtonText = "Delete",
+        showCancelButton = TRUE,
+        callbackR = deletePublicPGX,
+        inputId = "confirmdelete_public"
+      )
     })
 
     pgxTable_DT <- reactive({
