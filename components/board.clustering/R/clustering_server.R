@@ -404,8 +404,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
-        gx <- pgx$X[1, ]
-        gx <- pgx$X[splitvar, colnames(zx)]
+        gx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+        gx <- gx[splitvar, colnames(zx)]
 
         ## TODO if this code is revived again, for some datasets
         ## the number of unique values in gx can be equal or
