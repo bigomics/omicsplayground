@@ -696,8 +696,7 @@ app_server <- function(input, output, session) {
     )
   })
 
-  OmicsChatServer("chat", pgx=PGX, input.click = reactive(input$copilot_click))
-
+##  OmicsChatServer("chat", pgx=PGX, input.click = reactive(input$copilot_click))
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
