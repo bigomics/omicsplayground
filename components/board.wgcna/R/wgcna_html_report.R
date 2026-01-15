@@ -209,7 +209,7 @@ wgcna_html_report_server <- function(id,
       } else if(!is.null(ai_model) && ai_model!='') {
         dg <- playbase::wgcna.create_diagram(rpt$report, ai_model, rankdir="LR") 
       } else {
-        dg <- NUL
+        dg <- NULL
       }
       dg
     })
