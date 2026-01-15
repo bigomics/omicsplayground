@@ -768,7 +768,7 @@ app_server <- function(input, output, session) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta && playbase::is.multiomics(rownames(PGX$counts)))
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
