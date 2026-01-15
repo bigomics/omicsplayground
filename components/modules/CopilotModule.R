@@ -19,35 +19,35 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   settings_card <- bslib::navset_underline(
     bslib::nav_panel(      
       "Examples",
-      br(),
+      shiny::br(),
       "Example questions:",
-      br(),
+      shiny::br(),
       shiny::actionButton(ns("ask_describe"), "Describe my experiment", width='100%', class="xbtn"),
       shiny::actionButton(ns("ask_findings"), "Summarize main findings", width='100%', class="xbtn"),
       shiny::actionButton(ns("ask_pathways"), "What pathways are involved?", width='100%', class="xbtn"),
       shiny::actionButton(ns("show_biomarkers"), "Show top biomarkers", width='100%', class="xbtn"),
       shiny::actionButton(ns("find_references"), "Find references", width='100%', class="xbtn"),
       shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width='100%', class="xbtn"),
-      shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width='100%', class="xbtn")
+      ##shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width='100%', class="xbtn")
+      shiny::br(),
+      shiny::checkboxInput(ns("followup"),"Suggest follow-up questions", TRUE)
     ),
     bslib::nav_panel(
       "Settings",
       br(),
-      shiny::selectInput(ns("model"), "Model:", choices = MODELS, width='100%'),
+      #shiny::selectInput(ns("model"), "Model:", choices = MODELS, width='100%'),
       shiny::textAreaInput(ns("prompt"), "Prompt:", value=sysprompt, height=120, width='100%'),
-      shiny::checkboxInput(ns("followup"),"Suggest follow-up questions", TRUE),
+      br(),
       shiny::checkboxGroupInput(ns("context"),"Context:", choices = sections,        
         selected = sections, inline = TRUE),
       br(),
       actionButton(ns("load"),"Load model")
-    ),
-    bslib::nav_panel(
-      "PGX",
-      br(),
-      shiny::fileInput(ns('uploadpgx'), 'Please select pgx', accept = ".pgx"),
-      br(),
-      ##actionButton(ns("loadpgx"),"Load PGX")
     )
+    ## bslib::nav_panel(
+    ##   "PGX",
+    ##   br(),
+    ##   shiny::fileInput(ns('uploadpgx'), 'Please select pgx', accept = ".pgx")
+    ## )
   )
 
   chat_card <- bslib::card(
@@ -55,7 +55,7 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
       fill = FALSE,
       max_height = "800px",
       shinychat::chat_ui(ns("chat"), width="100%", height = "min(100%,770px)",
-        fill = FALSE)
+        fill = TRUE)
   )
 
   plot_card <- bslib::card(  
@@ -68,12 +68,12 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   if(layout == "fixed") {
     ui <- bslib::layout_columns(
       # col_widths = c(2,6,4),
-      col_widths = c(3,9),      
+      col_widths = c(2,10),      
       style = "height: min(90%,700)",
-      fill = FALSE,
+      fill = TRUE,
       settings_card,
-      chat_card,
-      plot_card
+      chat_card
+      ##plot_card
     )
   }
     
@@ -81,7 +81,7 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
     ui <- bslib::layout_sidebar(
       style = "padding: 0px;",
       sidebar = bslib::sidebar(
-        width = 300,
+        width = 250,
         fill = TRUE,    
         settings_card
       ),
@@ -92,7 +92,7 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
           position = "right",
           plot_card
         ),
-        div( chat_card, class = "p-4 pt-5")
+        div(chat_card, class = "p-3 pt-4")
       )
     )
   }
@@ -104,10 +104,14 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
 #' Note: pgx needs to be reactiveValues
 #'
 #' 
-CopilotServer <- function(id, pgx, input.click, layout="fixed") {
+CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     chat <- NULL
+
+    ## count number of interactionsy
+    dbg("[CopilotServer] maxturns = ", maxturns)
+    n_turns <- reactiveVal(0)
         
     observeEvent( input$uploadpgx, {
       req(input$uploadpgx)
@@ -122,17 +126,34 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
     #' Observe the copilot button and show the modal AI dialog.
     #'
     observeEvent( input.click(), {
+
+      ai_model <- getUserOption(session,'llm_model')
+      dbg("[CopilotServer] ai_model = ", ai_model)
+
+      if(ai_model=='') {
+        shinyalert::shinyalert(
+          title = "Oops",
+          text = "AI/LLM is not enabled",
+          size = "xs",
+          showCancelButton = FALSE
+        )
+        return(NULL)
+      }
       
       if(is.null(pgx) || is.null(pgx$X)) {
         shinyalert::shinyalert(
-          title = "",
-          text = "Oops. First load a dataset before using Omics Copilot",
+          title = "Oops...",
+          text = "First load a dataset before using Omics Copilot",
           size = "xs",
           showCancelButton = FALSE
         )
         return(NULL)
       }
 
+      if(!is.null(chat)) {
+        if(!is.null(chat)) shinychat::chat_clear("chat")
+      }
+      
       shiny::showModal(modalDialog2(
         title = NULL,
         CopilotUI(id, layout=layout),
@@ -147,32 +168,62 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
     observeEvent({
       list( input$load, pgx$X )
     }, {
-
-      dbg("[CopilotModule] react on input.load")      
-      req( dim(pgx$X), input$model )
+      req( dim(pgx$X) )
       
       content <- playbase::ai.create_report(pgx, sections=input$context, collate=TRUE)
       prompt <- input$prompt
-      if(input$followup) {
-        prompt <- paste(prompt, "After each answer, suggest 3 short follow-up questions.")
-      }
-      prompt <- paste(prompt, "Refuse to answer any question that is not about biology and not related to this experiment.")
+      prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say plotting is not supported at the moment.")
       prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse=" ")
 
-      message("Creating new chat model ", input$model)
-      chat <<- playbase::ai.create_ellmer_chat(input$model, system_prompt=prompt)       
-      shinychat::chat_append("chat", paste("[Switching to model", input$model, "...]"))
-
-      message("registering tools...")
+      ai_model <- getUserOption(session,'llm_model')
+      dbg("[CopilotServer] ai_model = ", ai_model)
+      req(ai_model)
+      
+      message("Creating new chat model ", ai_model)
+      chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)       
+      if(n_turns()>0) {
+        shinychat::chat_append("chat", paste("[Switching to model", ai_model, "...]"))
+        if(!is.null(chat)) shinychat::chat_clear("chat")
+      }
+      
       register_tools(chat)
 
+      if(n_turns()==0) {
+        ask_copilot("Describe this experiment. Then ask 'how can I help?'",
+          showq=FALSE, suggest=FALSE)
+      }
+      
     }, ignoreNULL = FALSE)
+
+    ask_copilot <- function(question, showq=TRUE, suggest=TRUE) {
+      if(n_turns() > maxturns) {
+        shinyalert::shinyalert(
+          title = "Sorry...",
+          text = paste("You reached your",maxturns,"token limit. Please upgrade for more tokens."),
+          immediate = TRUE,
+          showCancelButton = FALSE,
+          showConfirmButton = TRUE
+        )
+        return(NULL)
+      }
+      if(showq) {
+        msg <- list(role="user", content=question)
+        shinychat::chat_append_message("chat", msg, chunk=FALSE)
+      }
+      if(suggest) {
+        question <- paste(question, "After that, suggest 3 short simple follow-up questions. Make sure you can answer these. Enumerate, do not put questions in bold.")
+      }
+      response <- chat$chat_async(question)
+      shinychat::chat_append("chat", response) %...>% {
+        n_turns(n_turns()+1)
+      }
+    }
 
     ## ----------------- tools -------------------------------
     register_tools <- function(chat) {
       chat$register_tool( playbase::ai.tool_get_current_time )
       chat$register_tool( playbase::ai.tool_get_expression )
-      chat$register_tool( playbase::ai.tool_plot_volcano )
+      #chat$register_tool( playbase::ai.tool_plot_volcano )
     }
 
     ## ------------ MAIN USER INTERACTION LOOP --------------------
@@ -180,79 +231,54 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
       dbg("[CopilotModule] onFlushed")
       mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
       shinychat::chat_append("chat", mesg)
-    })
-
-    session$onFlush( function() {
-      dbg("[CopilotModule] onFlush")
-      mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
-      shinychat::chat_append("chat", mesg)
-    })
-    
-    ## count number of interactions
-    n_turns <- reactiveVal(0)
-    
+    }, once = TRUE)
+        
     observeEvent( input$chat_user_input, {
-      dbg("[CopilotModule] input.user_input reacted -> sending to chat ")
       req(!is.null(chat))
-      response <- chat$chat_async(input$chat_user_input)
-      shinychat::chat_append("chat", response) %...>% {
-        n_turns( n_turns() + 1 )
-      }
+      ask_copilot(input$chat_user_input, showq=FALSE, suggest=input$followup)
     })
         
     ## ---------------------- examples -----------------------------
-    ask_copilot <- function(question) {
-      msg <- list(role = "user", content = question)
-      shinychat::chat_append_message("chat", msg, chunk=FALSE)
-      response <- chat$chat_async(msg$content)
-      shinychat::chat_append("chat", response) %...>% {
-        n_turns(n_turns()+1)
-      }
-    }
-
     observeEvent(input$ask_describe, {
       req(chat)
-      ask_copilot("Describe my experiment")
+      ask_copilot("Describe my experiment", suggest=input$followup)
     })
     
     observeEvent(input$ask_findings, {
       req(chat)
-      ask_copilot("Summarize the main findings")      
+      ask_copilot("Summarize the main findings", suggest=input$followup)      
     })
     
     observeEvent(input$ask_pathways, {
       req(chat)
-      ask_copilot("List the top enriched pathways and elaborate how they make sense in light of the experiment")
+      ask_copilot("List the top enriched pathways and elaborate how they make sense in light of the experiment",
+        suggest=input$followup)
     })
 
     observeEvent(input$show_biomarkers, {
       req(chat)
-      ask_copilot("Show the top candidate biomarkers for this experiment")
+      ask_copilot("Show the top candidate biomarkers for this experiment", suggest=input$followup)
     })
 
     observeEvent(input$find_references, {
       req(chat)
-      ask_copilot("Find literatur references that are relevant to my experiment")
+      ask_copilot("Find literature references that are relevant to my experiment", suggest=input$followup)
     })
     
     observeEvent(input$get_expression, {
       req(chat)
-      ask_copilot("Get the expression values of MTOR")
+      ask_copilot("Get the expression values of MTOR", suggest=input$followup)
     })
 
     observeEvent(input$plot_volcano, {
       req(chat)
-      ask_copilot("Using the tools, create a volcano plot for contrast=1. Return one-line code")
+      ask_copilot("Using the tools, create a volcano plot for contrast=1. Return one-line code",
+        suggest=FALSE)
     })
 
     ## ----------------- plot output -------------------------------
     output$plot <- renderPlot({
-      
-      dbg("[CopilotModule:output$plot] ***PLOT*** n_turns = ", n_turns())
-      dbg("[CopilotModule:output$plot] ***PLOT*** is.null(chat) = ", is.null(chat))
-      dbg("[CopilotModule:output$plot] names.pgx = ", names(pgx))
-      dbg("[CopilotModule:output$plot] contrasts = ", colnames(pgx$contrasts))      
-            
+                  
       if(is.null(chat)) {
         plot.new()
         return()

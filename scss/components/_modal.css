@@ -39,7 +39,7 @@ html {
     }
     
     .modal-dialog.modal-xl {
-	--bs-modal-width: 1600px;
+	--bs-modal-width: 95vw;
 	height: 90vh;
     }
     
