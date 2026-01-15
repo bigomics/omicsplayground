@@ -1,8 +1,7 @@
-library(dotenv)
-library(shiny)
-library(shinychat)
-#library(elmer)
-library(bslib)
+## library(dotenv)
+## library(shiny)
+## library(shinychat)
+## library(bslib)
 
 CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   ns <- shiny::NS(id)
@@ -118,13 +117,11 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
       for (i in 1:length(loaded_pgx)) {
         pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
       }
-      dbg("[CopilotModule:uploadpgx] pgx$name =  ", pgx$name)
     })
 
     #' Observe the copilot button and show the modal AI dialog.
     #'
     observeEvent( input.click(), {
-      dbg("[CopilotModule] input.click ")
       
       if(is.null(pgx) || is.null(pgx$X)) {
         shinyalert::shinyalert(
@@ -139,7 +136,6 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
       shiny::showModal(modalDialog2(
         title = NULL,
         CopilotUI(id, layout=layout),
-        ##footer = NULL,
         size = "xl",
         easyClose = FALSE,
         fade = FALSE
@@ -182,7 +178,14 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
     ## ------------ MAIN USER INTERACTION LOOP --------------------
     session$onFlushed( function() {
       dbg("[CopilotModule] onFlushed")
-      shinychat::chat_append("chat", paste("👋 Hi, I'm **BigOmics Copilot**! You can ask me about your data"))
+      mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
+      shinychat::chat_append("chat", mesg)
+    })
+
+    session$onFlush( function() {
+      dbg("[CopilotModule] onFlush")
+      mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
+      shinychat::chat_append("chat", mesg)
     })
     
     ## count number of interactions
@@ -251,26 +254,22 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
       dbg("[CopilotModule:output$plot] contrasts = ", colnames(pgx$contrasts))      
             
       if(is.null(chat)) {
-        ##return(NULL)
         plot.new()
         return()
       }
-      dbg("class.last_turn = ", class(chat$last_turn()))
+
       if(is.null(chat$last_turn())) return(NULL)
       
+      ## parse for R code in last response
       last_response <- chat$last_turn()@text
-      cat("last_response = ", last_response, "\n")
-
-      ## parse for R code
       m <- regexpr("```[rR].+?```", last_response)
       rcode <- regmatches(last_response, m)
-
-      message("rcode = ", rcode)
 
       plotcode <- NULL
       if(length(rcode)) {
 
-        dbg("rcode = ", rcode)
+        dbg("[CopilotModule:output$plot] WARNING: r code detected!")
+        dbg("[CopilotModule:output$plot] rcode = ", rcode)
         
         ## parse for valid plotting code        
         if(grepl("barplot",rcode)) {
@@ -282,7 +281,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed") {
           plotcode <- regmatches(rcode, m2)
         }
         if(length(plotcode) && nchar(plotcode) > 0) {
-          dbg("SUPERWARNING: running PLOTCODE = ", plotcode)
+          dbg("WARNING: running PLOTCODE = ", plotcode)
           ## super dangerous!!!
           eval(parse(text=plotcode))  
           ##plot(mtcars[,1:3])
