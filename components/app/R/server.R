@@ -631,11 +631,7 @@ app_server <- function(input, output, session) {
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      tag <- shiny::actionButton(
-        "dataset_click", pgx.name,
-        class = "quick-button",
-        style = "border: none; color: black; font-size: 0.9em;"
-      )
+      tag <- HTML(pgx.name)
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
@@ -692,6 +688,22 @@ app_server <- function(input, output, session) {
     ))
   })
 
+  ## Copilot button
+  output$copilot_button <- renderUI({
+    if(is.null(PGX$X)) return(NULL)
+    show.beta <- env$user_settings$enable_beta()
+    if(show.beta) {
+      ui <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
+  })
+  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
+    layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
