@@ -340,12 +340,14 @@ app_ui <- function(x) {
                 bslib::input_switch("enable_llm", "Enable AI"),
                 shiny::conditionalPanel(
                   "input.enable_llm",
-                  shiny::selectInput(
-                    inputId = "llm_model",
-                    label = NULL,
-                    choices = opt$LLM_MODELS,
-                    selected = 1,
-                    width = "100%"
+                  bigdash::navbarDropdownItem(
+                    shiny::selectInput(
+                      inputId = "llm_model",
+                      label = NULL,
+                      choices = opt$LLM_MODELS,
+                      selected = 1,
+                      width = "100%"
+                    )
                   )
                 )
               ),

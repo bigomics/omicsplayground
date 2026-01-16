@@ -42,13 +42,8 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
       shiny::checkboxGroupInput(ns("context"),"Context:", choices = sections,        
         selected = sections, inline = TRUE),
       br(),
-      actionButton(ns("load"),"Load model")
+      actionButton(ns("reset"),"Reset model")
     )
-    ## bslib::nav_panel(
-    ##   "PGX",
-    ##   br(),
-    ##   shiny::fileInput(ns('uploadpgx'), 'Please select pgx', accept = ".pgx")
-    ## )
   )
 
   chat_card <- bslib::card(
@@ -113,23 +108,12 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
     ## count number of interactionsy
     dbg("[CopilotServer] maxturns = ", maxturns)
     n_turns <- reactiveVal(0)
-        
-    observeEvent( input$uploadpgx, {
-      req(input$uploadpgx)
-      pgxfile <- input$uploadpgx$name
-      loaded_pgx <- playbase::pgx.load( input$uploadpgx$datapath )
-      loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
-      for (i in 1:length(loaded_pgx)) {
-        pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
-      }
-    })
-
+    
     #' Observe the copilot button and show the modal AI dialog.
     #'
     observeEvent( input.click(), {
 
       ai_model <- getUserOption(session,'llm_model')
-      dbg("[CopilotServer] ai_model = ", ai_model)
 
       if(ai_model=='') {
         shinyalert::shinyalert(
@@ -150,10 +134,6 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
         )
         return(NULL)
       }
-
-      if(!is.null(chat)) {
-        if(!is.null(chat)) shinychat::chat_clear("chat")
-      }
       
       shiny::showModal(modalDialog2(
         title = NULL,
@@ -167,7 +147,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 
     ## On new pgx data, reset/create new chatbot
     observeEvent({
-      list( input$load, pgx$X )
+      list( input$reset, pgx$X )
     }, {
       req( dim(pgx$X) )
       
@@ -177,14 +157,15 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse=" ")
 
       ai_model <- getUserOption(session,'llm_model')
-      dbg("[CopilotServer] ai_model = ", ai_model)
+      dbg("[CopilotServer] using ai_model = ", ai_model)
       req(ai_model)
       
       message("Creating new chat model ", ai_model)
       chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)       
       if(n_turns()>0) {
-        shinychat::chat_append("chat", paste("[Switching to model", ai_model, "...]"))
         if(!is.null(chat)) shinychat::chat_clear("chat")
+        ##shinychat::chat_append("chat", paste("[Switching to model", ai_model, "...]"))
+        shinychat::chat_append("chat", "How can I help you?")
       }
       
       if(!is.null(chat)) register_tools(chat)
@@ -197,6 +178,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
     }, ignoreNULL = FALSE)
 
     ask_copilot <- function(question, showq=TRUE, suggest=TRUE) {
+      if(is.null(chat)) return(NULL)
       if(n_turns() > maxturns) {
         shinyalert::shinyalert(
           title = "Sorry...",
@@ -248,7 +230,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
     
     observeEvent(input$ask_findings, {
       req(chat)
-      ask_copilot("Summarize the main findings", suggest=input$followup)      
+      ask_copilot("Summarize main findings of this experiment", suggest=input$followup)
     })
     
     observeEvent(input$ask_pathways, {
@@ -259,7 +241,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 
     observeEvent(input$show_biomarkers, {
       req(chat)
-      ask_copilot("Show the top candidate biomarkers for this experiment", suggest=input$followup)
+      ask_copilot("Show the top 3-5 candidate biomarkers (up and down) for this experiment", suggest=input$followup)
     })
 
     observeEvent(input$find_references, {
