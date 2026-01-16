@@ -19,6 +19,11 @@ preservationWGCNA_plot_dendrograms_ui <- function(
       inputId = ns("showtraits"),
       label = "Show traits",
       value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
+      value = TRUE
     )
   )
 
@@ -45,9 +50,11 @@ preservationWGCNA_plot_dendrograms_server <- function(id,
       playbase::wgcna.plotDendroAndTraitCorrelation_multi(
         res$layers,
         show.traits = input$showtraits,
+        show.contrasts = input$showcontrasts,
         marAll = c(1, 10, 3, 0.2),
         colorHeightMax = 0.75
       )
+      
     }
 
     PlotModuleServer(

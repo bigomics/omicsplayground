@@ -6,9 +6,9 @@
 ConsensusWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("splitby"), "Consensus by:", choices=NULL),
-    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices=NULL, multiple=FALSE)),
-    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices=NULL)),
+    shiny::selectInput(ns("splitby"), "Consensus by:", choices = NULL),
+    shinyjs::hidden(shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)),
+    shinyjs::hidden(shiny::selectInput(ns("trait"), "Trait:", choices = NULL)),
     shiny::br(),
     shiny::actionButton(ns("compute"), "Compute", size = "xs", icon = icon("refresh")),
     shiny::br(),
@@ -19,19 +19,14 @@ ConsensusWGCNA_Inputs <- function(id) {
       bslib::accordion_panel(
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
-        shiny::tagList(
-          shiny::selectInput(ns("power"), "Soft treshold:",
-            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
-          ),
-          shiny::selectInput(ns("deepsplit"), "Deepsplit:", choices = 0:4, 2),
-          shiny::selectInput(ns("ngenes"), "Max. features:",
-            choices = c(1000, 2000, 4000),
-            2000
-          ),
-          shiny::selectInput(ns("minmodsize"), "Min. module size:",
-            choices = c(5, 10, 20, 40, 100), 10
-          ),
-          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE)
+        shiny::tagList(          
+          shiny::selectInput(ns("power"),"Soft treshold:",
+            choices=c("<auto>",1,3,6,9,12,20), selected=12),
+          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices=0:4, 2),
+          shiny::selectInput(ns("ngenes"),"Max. features:", choices=c(1000,2000,4000),
+            2000),
+          shiny::selectInput(ns("minmodsize"),"Min. module size:",
+            choices=c(5,10,20,40,100), 10)
         )
       )
     )

@@ -20,7 +20,9 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     loaded_samples <- shiny::reactiveVal(FALSE)
+    sum_techreps <- shiny::reactiveVal(FALSE)
     orig_sample_matrix <- shiny::reactiveVal(NULL)
+    orig_counts_matrix <- shiny::reactiveVal(NULL)
     vars_selected <- shiny::reactiveVal(NULL)
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
@@ -1061,7 +1063,9 @@ UploadBoard <- function(id,
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
           loaded_samples(FALSE)
+          sum_techreps(FALSE) ## new az
           orig_sample_matrix(NULL)
+          orig_counts_matrix(NULL) ## new az
           vars_selected(NULL)
         })
 
@@ -1262,7 +1266,9 @@ UploadBoard <- function(id,
     upload_table_preview_samples_server(
       "samples_preview",
       orig_sample_matrix = orig_sample_matrix,
+      orig_counts_matrix = orig_counts_matrix,
       loaded_samples = loaded_samples,
+      sum_techreps = sum_techreps,
       vars_selected = vars_selected,
       uploaded,
       checklist = checklist,

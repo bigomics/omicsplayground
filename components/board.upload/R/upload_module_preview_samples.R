@@ -11,7 +11,9 @@ upload_table_preview_samples_ui <- function(id) {
 upload_table_preview_samples_server <- function(
   id,
   orig_sample_matrix,
+  orig_counts_matrix,
   loaded_samples,
+  sum_techreps,
   vars_selected,
   uploaded,
   checklist,
@@ -28,6 +30,12 @@ upload_table_preview_samples_server <- function(
     ns <- session$ns
 
     shiny::observe({
+      if (!is.null(uploaded$counts.csv) && is.null(orig_counts_matrix())) {
+        orig_counts_matrix(uploaded$counts.csv)
+      }
+    })
+    
+    shiny::observe({
       if (is.null(orig_sample_matrix()) && !is.null(uploaded$samples.csv)) {
         orig_sample_matrix(uploaded$samples.csv)
         loaded_samples(TRUE)
@@ -43,10 +51,31 @@ upload_table_preview_samples_server <- function(
       sel <- intersect(vars_selected_pending(), colnames(orig_sample_matrix()))
       if (length(sel) > 0) vars_selected(sel)
     })
+    
+    observeEvent(input$sum_treps, {
+      shiny::req(orig_sample_matrix(), orig_counts_matrix())
+      shiny::req(length(input$treps_var) > 0)
+      sel <- intersect(input$treps_var, colnames(orig_sample_matrix()))
+      shiny::req(length(sel) > 0)
+      Y <- orig_sample_matrix()
+      counts1 <- playbase::sum_treps(orig_counts_matrix(), Y[, sel[1]])
+      uploaded$counts.csv <- counts1
+      uploaded$samples.csv <- Y[colnames(counts1), , drop = FALSE]
+      sum_techreps(TRUE)
+    })
+
+    observeEvent(input$sum_treps, {
+      if (length(input$treps_var) == 0) {
+        uploaded$counts.csv  <- orig_counts_matrix()
+        uploaded$samples.csv <- orig_sample_matrix()
+        sum_techreps(FALSE)
+      }
+    })
 
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      if (sum_techreps()) dt <- uploaded$samples.csv
       vars_selected <- vars_selected()
       vars_selected <- intersect(vars_selected, colnames(dt))
       dt <- dt[, vars_selected, drop = FALSE]
@@ -92,6 +121,25 @@ upload_table_preview_samples_server <- function(
           ns("update_vars_selected"),
           "Update",
           icon = icon("refresh"),
+          class = "btn-sm btn-outline-primary"
+        ),
+        br()
+      )
+    })
+
+    output$tech_rep <- renderUI({
+      tagList(
+        checkboxGroupInput(
+          ns("treps_var"),
+          label = "Technical replicates' variable:",
+          choices = vars_selected(),
+          selected = NULL,
+          inline = TRUE
+        ),
+        actionButton(
+          ns("sum_treps"),
+          "Combine/Restore technical replicates",
+          icon = icon("plus"),
           class = "btn-sm btn-outline-primary"
         )
       )
@@ -184,7 +232,9 @@ upload_table_preview_samples_server <- function(
                 info.text = info.text,
                 caption = caption,
                 options = tagList(
-                  uiOutput(ns("col_sel"))
+                  uiOutput(ns("col_sel")),
+                  br(),
+                  uiOutput(ns("tech_rep"))
                 ),
                 label = "",
                 show.maximize = FALSE

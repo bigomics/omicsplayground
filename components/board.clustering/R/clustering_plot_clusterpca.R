@@ -244,7 +244,7 @@ clustering_plot_clustpca_server <- function(id,
       label <- input$pca_label
 
       shiny::validate(shiny::need(
-        length(samples) > 0,
+        length(samples) > 1,
         "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
       shiny::req(samples, colvar, shapevar, clustmethod, legend)

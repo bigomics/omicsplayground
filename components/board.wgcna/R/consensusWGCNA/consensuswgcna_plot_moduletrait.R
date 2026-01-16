@@ -112,8 +112,11 @@ consensusWGCNA_plot_moduletrait_server <- function(id,
       sel <- head(order(-zm), ntop)
       jj <- jj[which(jj %in% sel)]
 
-      par(mfrow = c(2, 2), mar = c(7, 12, 2.5, 1))
-      if (input$transpose) par(mfrow = c(2, 2), mar = c(10, 9, 2.5, 1))
+      nn <- length(cons$zlist)+2
+      nr <- ceiling(sqrt(nn))
+      nc <- ceiling(nn / nr)
+      par(mfrow=c(nr,nc), mar=c(7,12,2.5,1))
+      if(input$transpose) par(mfrow=c(nr,nc), mar=c(10,9,2.5,1))
 
       zmax <- max(sapply(cons$zlist, function(z) max(abs(z), na.rm = TRUE)))
       zlim <- c(-zmax, zmax)

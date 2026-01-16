@@ -35,8 +35,7 @@ MultiWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
-          shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
-          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE),
+          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute",
             size = "xs",
@@ -167,16 +166,16 @@ MultiWGCNA_UI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
-          bs_alert(HTML("<b>Multi-WGCNA LASAGNA</b>. MultiWGCNA is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association)")),
+          row_heights = c("auto",1),
+          bs_alert(HTML("<b>WGCNA-LASAGNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately and then integrated using LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association).")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
             multiwgcna_plot_lasagna_ui(
               ns("multiwgcnaLasagna"),
-              title = "Multipartite MultiWGCNA LASAGNA",
-              caption = "Multipartite MultiWGCNA LASAGNA graph.",
-              info.text = "Multipartite MultiWGCNA LASAGNA graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
+              title = "Multipartite graph",
+              caption = "Multipartite graph.",
+              info.text = "Multipartite graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
