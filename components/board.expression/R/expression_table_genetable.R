@@ -26,6 +26,10 @@ expression_table_genetable_ui <- function(
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
       placement = "top", options = list(container = "body")
     ),
+    withTooltip(shiny::checkboxInput(ns("show_cov_pvalues"), tspan("Show effect of covariates' correction"), FALSE),
+      "Display p-values for each feature upon covariates'regression.",
+      placement = "top", options = list(container = "body")
+    ),
     withTooltip(shiny::checkboxInput(ns("show_pct_na"), tspan("Show percent missingness"), FALSE),
       "Display a column reporting the percentage of missingness for each feature.",
       placement = "top", options = list(container = "body")
@@ -113,6 +117,24 @@ expression_table_genetable_server <- function(id,
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
       fx <- df[, fx.col]
 
+      ##-------------------------------------------
+      pval.covs <- 
+      pval.covs <- paste0("P.Value.", colnames(pgx$samples))
+      pval.covs <- intersect(colnames(df), pval.covs)
+      
+      pp <- playbase::pgx.load("~/omicsplayground/data/RC2.pgx")
+      M <- pp$gx.meta$meta.covs[[1]]; names(M)
+      head(M[[1]])
+      head(M[[2]])
+      
+      if (input$show_cov_pvalues) dbg("----------------M1: ", paste0(colnames(df), collapse="; "))      
+      if (!input$show_cov_pvalues & length(pval.covs) > 0) {
+        ex <- match(pval.covs, colnames(df))
+        df <- df[, -ex, drop = FALSE]
+      }
+      ##-------------------------------------------
+
+      
       if (input$show_pct_na) {
         comp <- comp()
         samples <- colnames(pgx$counts)
