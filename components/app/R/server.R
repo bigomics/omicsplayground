@@ -173,23 +173,6 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info)
   )
 
-  ## observe and set global User options
-  shiny::observeEvent( input$enable_llm, {
-    model <- input$llm_model
-    if(input$enable_llm) {
-      if(is.null(model) || model=="") {
-        shinyalert::shinyalert("ERROR",
-          "No LLM server available. Please check your settings.")
-        return(NULL)
-      }
-      shinyalert::shinyalert("WARNING",
-        "Using LLM might expose some of your data to external LLM servers.",
-        closeOnClickOutside = TRUE
-        #showCancelButton = TRUE
-      )
-    }
-  })
-
   shiny::observeEvent({
     list( input$enable_llm, input$llm_model)
   }, {
@@ -197,7 +180,7 @@ app_server <- function(input, output, session) {
       dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
       setUserOption(session,'llm_model', input$llm_model)
     } else {
-      dbg("[MAIN] AI/LLM diabled")
+      dbg("[MAIN] AI/LLM disabled")
       setUserOption(session,'llm_model', '')      
     }
   })
@@ -785,7 +768,7 @@ app_server <- function(input, output, session) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta && playbase::is.multiomics(rownames(PGX$counts)))
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
