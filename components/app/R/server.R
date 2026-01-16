@@ -691,10 +691,16 @@ app_server <- function(input, output, session) {
   ## Copilot button
   output$copilot_button <- renderUI({
     if(is.null(PGX$X)) return(NULL)
-    div.chirpbutton <- shiny::actionButton(
-      "copilot_click", "Copilot",
-      width = "auto", class = "quick-button"
-    )
+    show.beta <- env$user_settings$enable_beta()
+    if(show.beta) {
+      ui <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
   })
   CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
     layout="fixed", maxturns=opt$LLM_MAXTURNS)

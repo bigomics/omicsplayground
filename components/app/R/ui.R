@@ -334,7 +334,7 @@ app_ui <- function(x) {
                 bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
-                  label = "show captions",
+                  label = "Show captions",
                   is.checked = FALSE
                 ),
                 bslib::input_switch("enable_llm", "Enable AI"),

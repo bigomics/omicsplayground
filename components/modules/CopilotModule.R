@@ -28,7 +28,8 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
       shiny::actionButton(ns("show_biomarkers"), "Show top biomarkers", width='100%', class="xbtn"),
       shiny::actionButton(ns("find_references"), "Find references", width='100%', class="xbtn"),
       shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width='100%', class="xbtn"),
-      ##shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width='100%', class="xbtn")
+      shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width='100%', class="xbtn"),
+      shiny::br(),
       shiny::br(),
       shiny::checkboxInput(ns("followup"),"Suggest follow-up questions", TRUE)
     ),
@@ -132,8 +133,8 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 
       if(ai_model=='') {
         shinyalert::shinyalert(
-          title = "Oops",
-          text = "AI/LLM is not enabled",
+          title = "Oops...",
+          text = "Please enable AI/LLM in user settings.",
           size = "xs",
           showCancelButton = FALSE
         )
@@ -186,7 +187,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
         if(!is.null(chat)) shinychat::chat_clear("chat")
       }
       
-      register_tools(chat)
+      if(!is.null(chat)) register_tools(chat)
 
       if(n_turns()==0) {
         ask_copilot("Describe this experiment. Then ask 'how can I help?'",
@@ -221,6 +222,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 
     ## ----------------- tools -------------------------------
     register_tools <- function(chat) {
+      if(is.null(chat)) return(NULL)
       chat$register_tool( playbase::ai.tool_get_current_time )
       chat$register_tool( playbase::ai.tool_get_expression )
       #chat$register_tool( playbase::ai.tool_plot_volcano )
