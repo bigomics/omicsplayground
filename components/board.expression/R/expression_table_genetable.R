@@ -57,6 +57,7 @@ expression_table_genetable_ui <- function(
 expression_table_genetable_server <- function(id,
                                               pgx,
                                               comp,
+                                              gx_method,
                                               res,
                                               organism,
                                               show_pv,
@@ -117,24 +118,6 @@ expression_table_genetable_server <- function(id,
       fx.col <- grep("fc|fx|mean.diff|logfc|foldchange", tolower(colnames(df)))[1]
       fx <- df[, fx.col]
 
-      ##-------------------------------------------
-      pval.covs <- 
-      pval.covs <- paste0("P.Value.", colnames(pgx$samples))
-      pval.covs <- intersect(colnames(df), pval.covs)
-      
-      pp <- playbase::pgx.load("~/omicsplayground/data/RC2.pgx")
-      M <- pp$gx.meta$meta.covs[[1]]; names(M)
-      head(M[[1]])
-      head(M[[2]])
-      
-      if (input$show_cov_pvalues) dbg("----------------M1: ", paste0(colnames(df), collapse="; "))      
-      if (!input$show_cov_pvalues & length(pval.covs) > 0) {
-        ex <- match(pval.covs, colnames(df))
-        df <- df[, -ex, drop = FALSE]
-      }
-      ##-------------------------------------------
-
-      
       if (input$show_pct_na) {
         comp <- comp()
         samples <- colnames(pgx$counts)
@@ -144,6 +127,24 @@ expression_table_genetable_server <- function(id,
         df$pct.NA <- unname(round(rowMeans(is.na(counts)) * 100, 1))
       } else {
         df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]
+      }
+
+      meta.covs <- pgx$gx.meta$meta.covs
+      if (!is.null(meta.covs) & input$show_cov_pvalues) {
+        M <- lapply(meta.covs, function(x) do.call(cbind, x))
+        for(i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
+        M <- do.call(cbind, M)
+        M <- M[which(rownames(M) %in% rownames(df)), ]
+        M <- M[match(rownames(df), rownames(M)), ]
+        M <- M[, grep(comp(), colnames(M)), drop = FALSE]
+        colnames(M) <- sub(paste0(".", comp()), "", colnames(M), fixed = TRUE)
+        mm <- gx_method()
+        hh <- grep(paste0(mm, collapse = "|"), colnames(M))
+        if (length(hh) > 0) {
+          M <- M[, hh, drop = FALSE]
+          for(m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
+          df <- cbind(df,  M)
+        }
       }
 
       DT::datatable(
