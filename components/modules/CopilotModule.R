@@ -49,7 +49,7 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   chat_card <- bslib::card(
       class = "border-0",
       fill = FALSE,
-      max_height = "800px",
+      max_height = "calc(100vh - 120px)",
       shinychat::chat_ui(ns("chat"), width="100%", height = "min(100%,770px)",
         fill = TRUE)
   )
@@ -57,19 +57,18 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   plot_card <- bslib::card(  
       class = "border-0 pt-5",
       fill = TRUE,
-      max_height = "800px",
+      height = "600px",
       plotOutput(ns("plot"))
   )
 
   if(layout == "fixed") {
     ui <- bslib::layout_columns(
-      # col_widths = c(2,6,4),
-      col_widths = c(2,10),      
+      col_widths = c(2,7,3),      
       style = "height: min(90%,700)",
       fill = TRUE,
       settings_card,
-      chat_card
-      ##plot_card
+      chat_card,
+      plot_card
     )
   }
     
@@ -138,9 +137,20 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       shiny::showModal(modalDialog2(
         title = NULL,
         CopilotUI(id, layout=layout),
-        size = "xl",
+        size = "fullscreen",
         easyClose = FALSE,
-        fade = FALSE
+        fade = FALSE,
+        footer = div(
+          class="ai-modal-footer",
+          style="width: 100%;",
+          fluidRow(
+            column(3, ""),
+            column(6, align="center",
+              "AI disclaimer. This page contains AI-generated content. Please verify important info.",
+              style="align-self: flex-end; color: #888;"),
+            column(3, div(shiny::modalButton("Dismiss"), style="text-align: right;"))
+          )
+        )
       ))
 
     })
@@ -153,7 +163,7 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       
       content <- playbase::ai.create_report(pgx, sections=input$context, collate=TRUE)
       prompt <- input$prompt
-      prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say plotting is not supported at the moment.")
+      prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say creating images is not supported yet.")
       prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse=" ")
 
       ai_model <- getUserOption(session,'llm_model')
@@ -162,21 +172,29 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       
       message("Creating new chat model ", ai_model)
       chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)       
-      if(n_turns()>0) {
-        if(!is.null(chat)) shinychat::chat_clear("chat")
-        ##shinychat::chat_append("chat", paste("[Switching to model", ai_model, "...]"))
-        shinychat::chat_append("chat", "How can I help you?")
-      }
       
       if(!is.null(chat)) register_tools(chat)
 
       if(n_turns()==0) {
         ask_copilot("Describe this experiment. Then ask 'how can I help?'",
-          showq=FALSE, suggest=FALSE)
+          showq=FALSE, suggest=TRUE)
+      } else {
+        if(!is.null(chat)) shinychat::chat_clear("chat")
+        shinychat::chat_append("chat", "How can I help you?")
       }
       
     }, ignoreNULL = FALSE)
 
+    append_suggestions <- function(chat, num=3) {
+      ff <- chat$chat(paste("Suggest",num,"short follow-up questions. Just return the questions as clean enumerated list, do not use bold or italics."))
+      qq <- sub("1. ","",strsplit(ff, split='\n[2-9][.] ')[[1]])
+      qq <- trimws(qq)
+      qq <- paste("  <li class='suggestion submit'>",qq,"</li>")
+      qq <- paste("<ul>\n",paste(qq,collapse='\n'),"\n</ul>")
+      msg <- list( role = "assistant", content = qq)
+      shinychat::chat_append_message("chat", msg, chunk=TRUE, operation="append")
+    }
+    
     ask_copilot <- function(question, showq=TRUE, suggest=TRUE) {
       if(is.null(chat)) return(NULL)
       if(n_turns() > maxturns) {
@@ -193,11 +211,11 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
         msg <- list(role="user", content=question)
         shinychat::chat_append_message("chat", msg, chunk=FALSE)
       }
-      if(suggest) {
-        question <- paste(question, "After that, suggest 3 short simple follow-up questions. Make sure you can answer these. Enumerate, do not put questions in bold.")
-      }
       response <- chat$chat_async(question)
       shinychat::chat_append("chat", response) %...>% {
+        if(suggest) {
+          append_suggestions(chat, num=2) 
+        }
         n_turns(n_turns()+1)
       }
     }

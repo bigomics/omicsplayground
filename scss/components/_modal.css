@@ -38,7 +38,7 @@ html {
 	color: black;    
     }
     
-    .modal-dialog.modal-xl {
+    .modal-dialog.modal-ai {
 	--bs-modal-width: 95vw;
 	height: 90vh;
     }
