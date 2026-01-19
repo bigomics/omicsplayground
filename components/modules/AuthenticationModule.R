@@ -651,7 +651,7 @@ PasswordAuthenticationModule <- function(id,
       password = NA,
       level = "",
       limit = "",
-      admin = FALSE,
+      ADMIN = FALSE,
       options = opt,
       user_dir = PGX.DIR
     )
@@ -674,7 +674,7 @@ PasswordAuthenticationModule <- function(id,
       USER$password <- NA
       USER$level <- ""
       USER$limit <- ""
-      USER$admin <- FALSE
+      USER$ADMIN <- FALSE
       shiny::showModal(login_modal)
 
       # Reset loaded modules
@@ -701,7 +701,7 @@ PasswordAuthenticationModule <- function(id,
       USER$username <- cred$username
       USER$level <- cred$level
       USER$limit <- cred$limit
-      USER$admin <- isTRUE(as.logical(cred$admin))
+      USER$ADMIN <- isTRUE(as.logical(cred$ADMIN))
       USER$email <- decrypted_cookie
       USER$logged <- TRUE
 
@@ -801,7 +801,7 @@ PasswordAuthenticationModule <- function(id,
         USER$email <- cred$email
         USER$level <- cred$level
         USER$limit <- cred$limit
-        USER$admin <- isTRUE(as.logical(cred$admin))
+        USER$ADMIN <- isTRUE(as.logical(cred$ADMIN))
         USER$logged <- TRUE
 
         # create user_dir (always), set path, and set options
@@ -880,7 +880,7 @@ LoginCodeAuthenticationModule <- function(id,
       level = "",
       limit = "",
       expiry = "",
-      admin = FALSE,
+      ADMIN = FALSE,
       options = opt, ## global
       user_dir = PGX.DIR ## global
     )
@@ -925,7 +925,7 @@ LoginCodeAuthenticationModule <- function(id,
       USER$level <- ""
       USER$limit <- ""
       USER$expiry <- ""
-      USER$admin <- FALSE
+      USER$ADMIN <- FALSE
 
       email_sent <<- FALSE
       login_code <<- NULL
@@ -1024,13 +1024,13 @@ LoginCodeAuthenticationModule <- function(id,
         USER$username <- read_user_field_db(user_email, user_database, "firstname")
         USER$level <- read_user_field_db(user_email, user_database, "level")
         USER$expiry <- read_user_field_db(user_email, user_database, "expiry")
-        USER$admin <- isTRUE(as.logical(read_user_field_db(user_email, user_database, "admin")))
+        USER$ADMIN <- isTRUE(as.logical(read_user_field_db(user_email, user_database, "ADMIN")))
       } else {
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(user_dir)
         USER$level <- "free"
         USER$expiry <- "unlimited"
-        USER$admin <- FALSE
+        USER$ADMIN <- FALSE
       }
       session$sendCustomMessage("set-user", list(user = user_email))
 
@@ -1262,13 +1262,13 @@ LoginCodeAuthenticationModule <- function(id,
             USER$username <- read_user_field_db(USER$email, user_database, "firstname")
             USER$level <- read_user_field_db(USER$email, user_database, "level")
             USER$expiry <- read_user_field_db(USER$email, user_database, "expiry")
-            USER$admin <- isTRUE(as.logical(read_user_field_db(USER$email, user_database, "admin")))
+            USER$ADMIN <- isTRUE(as.logical(read_user_field_db(USER$email, user_database, "ADMIN")))
           } else {
             dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
             USER$options <- read_user_options(USER$user_dir)
             USER$level <- "free"
             USER$expiry <- "unlimited"
-            USER$admin <- FALSE
+            USER$ADMIN <- FALSE
           }
           session$sendCustomMessage("set-user", list(user = USER$email))
           entered_code("") ## important for next user

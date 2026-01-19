@@ -38,7 +38,7 @@ read_user_options <- function(user_dir) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -64,7 +64,7 @@ read_user_options_db <- function(email, user_database = NULL) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -77,7 +77,8 @@ read_user_options_db <- function(email, user_database = NULL) {
         ENABLE_UPLOAD = as.logical(ENABLE_UPLOAD),
         ENABLE_USER_SHARE = as.logical(ENABLE_USER_SHARE),
         WATERMARK = as.logical(WATERMARK),
-        ENABLE_MULTIOMICS = as.logical(ENABLE_MULTIOMICS)
+        ENABLE_MULTIOMICS = as.logical(ENABLE_MULTIOMICS),
+        ADMIN = as.logical(ADMIN)
       )
     for (opt_name in names(user_opt)) {
       new_opt[[opt_name]] <- user_opt[[opt_name]]
