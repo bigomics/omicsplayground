@@ -308,6 +308,10 @@ app_ui <- function(x) {
                 "App settings",
                 "usersettings-tab"
               ),
+              bigdash::navbarDropdownTab(
+                "Admin panel",
+                "admin-tab"
+              ),
               upgrade.tab,
               tags$li(
                 actionLink("navbar_about", "About")
@@ -552,6 +556,10 @@ app_ui <- function(x) {
             "usersettings-tab",
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
+          ),
+          bigdash::bigTabItem(
+            "admin-tab",
+            AdminPanelUI("admin_panel")
           ),
           bigdash::bigTabItem(
             "sharing-tab",
