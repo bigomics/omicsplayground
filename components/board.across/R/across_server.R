@@ -39,9 +39,26 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       NULL
     })
 
+    datasets_info_file <- reactive({
+      req(pgx_dir())
+      path <- file.path(pgx_dir(), "datasets-info.csv")
+      if (file.exists(path)) return(path)
+      parent_path <- file.path(dirname(pgx_dir()), "datasets-info.csv")
+      if (file.exists(parent_path)) return(parent_path)
+      NULL
+    })
+
     available_datasets <- reactive({
       req(tiledb_path())
       playbase::pgx.listDatasetsTileDB(tiledb_path())
+    })
+
+    dataset_info_table <- reactive({
+      req(tiledb_path())
+      playbase::pgx.getDatasetInfoTileDB(
+        tiledb_path(),
+        datasets_info_file = datasets_info_file()
+      )
     })
 
     available_genes <- reactive({
@@ -54,11 +71,14 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       playbase::pgx.listPhenotypesByDatasetTileDB(tiledb_path())
     })
 
+    ## Selected datasets (managed via modal)
+    selected_datasets <- reactiveVal(character(0))
+
     common_phenotypes <- reactive({
       pheno_by_ds <- phenotypes_by_dataset()
       if (length(pheno_by_ds) == 0) return(character(0))
 
-      selected <- input$selected_datasets
+      selected <- selected_datasets()
       if (length(selected) == 0) selected <- names(pheno_by_ds)
 
       pheno_lists <- pheno_by_ds[selected]
@@ -70,11 +90,11 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     phenotype_values <- reactive({
       req(input$filter_phenotype)
       req(tiledb_path())
-      selected_datasets <- if (length(input$selected_datasets) == 0) NULL else input$selected_datasets
+      sel_datasets <- if (length(selected_datasets()) == 0) NULL else selected_datasets()
       playbase::pgx.getPhenotypeValuesTileDB(
         tiledb_path(),
         phenotype = input$filter_phenotype,
-        datasets = selected_datasets
+        datasets = sel_datasets
       )
     })
 
@@ -92,11 +112,181 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       ))
     })
 
-    shiny::observe({
-      datasets <- available_datasets()
-      if (length(datasets) > 0) {
-        shiny::updateSelectizeInput(session, "selected_datasets", choices = datasets, selected = character(0))
+    ## ================================================================================
+    ## ======================= DATASET SELECTOR MODAL =================================
+    ## ================================================================================
+
+    ## Button label
+    output$dataset_button_label <- shiny::renderUI({
+      sel <- selected_datasets()
+      total <- length(available_datasets())
+      if (length(sel) == 0) {
+        shiny::span("All datasets", style = "color: #666;")
+      } else {
+        shiny::span(paste0(length(sel), " of ", total, " selected"))
       }
+    })
+
+    ## Selected datasets text (truncated list of names)
+    output$selected_datasets_text <- shiny::renderUI({
+      sel <- selected_datasets()
+      if (length(sel) == 0) {
+        return(shiny::tags$em("(querying all datasets)"))
+      }
+
+      ## Build truncated string with max ~60 characters
+      max_chars <- 60
+      result <- ""
+      shown_count <- 0
+
+      for (name in sel) {
+        if (shown_count == 0) {
+          candidate <- name
+        } else {
+          candidate <- paste0(result, ", ", name)
+        }
+
+        if (nchar(candidate) > max_chars && shown_count > 0) {
+          break
+        }
+
+        result <- candidate
+        shown_count <- shown_count + 1
+      }
+
+      remaining <- length(sel) - shown_count
+      if (remaining > 0) {
+        result <- paste0(result, " +", remaining, " more")
+      }
+
+      shiny::tags$span(result)
+    })
+
+    ## Store selection state before opening modal (for Cancel to revert)
+    selection_before_modal <- reactiveVal(character(0))
+
+    ## Open modal (show persistent div)
+    shiny::observeEvent(input$open_dataset_modal, {
+      ## Store current selection for Cancel
+      selection_before_modal(selected_datasets())
+      ## Show the modal
+      shinyjs::show("dataset_modal_container")
+    })
+
+    ## Helper to hide modal
+    hideModal <- function() {
+      shinyjs::hide("dataset_modal_container")
+    }
+
+    ## Modal selection count - reads directly from DT selection (no re-render)
+    output$modal_selection_count <- shiny::renderText({
+      sel_rows <- input$dataset_table_rows_selected
+      total <- length(available_datasets())
+      n_selected <- length(sel_rows)
+      if (n_selected == 0) {
+        paste0("No datasets selected (will query all ", total, " datasets)")
+      } else {
+        paste0(n_selected, " of ", total, " datasets selected")
+      }
+    })
+
+    ## Dataset table in modal - persistent, only re-renders when data changes
+    output$dataset_table <- DT::renderDataTable({
+      df <- dataset_info_table()
+      if (is.null(df) || nrow(df) == 0) {
+        return(DT::datatable(data.frame(Message = "No datasets found")))
+      }
+
+      ## Select columns to display
+      display_cols <- c("dataset", "nsamples", "datatype", "organism", "description")
+      display_cols <- intersect(display_cols, colnames(df))
+      df <- df[, display_cols, drop = FALSE]
+
+      ## Truncate long descriptions
+      if ("description" %in% colnames(df)) {
+        df$description <- sapply(df$description, function(x) {
+          if (is.na(x)) return("")
+          if (nchar(x) > 80) paste0(substr(x, 1, 77), "...") else x
+        })
+      }
+
+      ## Convert categorical columns to factors for dropdown filters
+      if ("datatype" %in% colnames(df)) {
+        df$datatype <- factor(df$datatype)
+      }
+      if ("organism" %in% colnames(df)) {
+        df$organism <- factor(df$organism)
+      }
+
+      ## Initial selection from current state (only affects first render)
+      init_sel <- isolate(selected_datasets())
+      sel_rows <- which(df$dataset %in% init_sel)
+
+      DT::datatable(
+        df,
+        class = "compact hover",
+        rownames = FALSE,
+        width = "100%",
+        selection = list(mode = "multiple", selected = sel_rows),
+        filter = list(position = "top", clear = TRUE),
+        options = list(
+          dom = "tip",
+          pageLength = 15,
+          scrollX = FALSE,
+          autoWidth = TRUE
+        )
+      )
+    })
+
+    ## Select all visible
+    shiny::observeEvent(input$modal_select_all, {
+      df <- dataset_info_table()
+      if (!is.null(df) && nrow(df) > 0) {
+        ## Get filtered rows if filter is active
+        visible_rows <- input$dataset_table_rows_all
+        if (is.null(visible_rows)) visible_rows <- seq_len(nrow(df))
+        DT::dataTableProxy("dataset_table") |> DT::selectRows(visible_rows)
+      }
+    })
+
+    ## Clear selection
+    shiny::observeEvent(input$modal_clear, {
+      DT::dataTableProxy("dataset_table") |> DT::selectRows(NULL)
+    })
+
+    ## Apply selection - save current DT selection and close
+    shiny::observeEvent(input$modal_apply, {
+      df <- dataset_info_table()
+      sel_rows <- input$dataset_table_rows_selected
+      if (!is.null(df) && length(sel_rows) > 0) {
+        selected_datasets(df$dataset[sel_rows])
+      } else {
+        selected_datasets(character(0))
+      }
+      hideModal()
+    })
+
+    ## Cancel - revert to previous selection and close
+    shiny::observeEvent(input$modal_cancel, {
+      ## Restore previous selection in DT
+      df <- dataset_info_table()
+      prev_sel <- selection_before_modal()
+      if (!is.null(df) && nrow(df) > 0) {
+        sel_rows <- which(df$dataset %in% prev_sel)
+        DT::dataTableProxy("dataset_table") |> DT::selectRows(sel_rows)
+      }
+      hideModal()
+    })
+
+    ## Cancel button (second one in footer)
+    shiny::observeEvent(input$modal_cancel2, {
+      df <- dataset_info_table()
+      prev_sel <- selection_before_modal()
+      if (!is.null(df) && nrow(df) > 0) {
+        sel_rows <- which(df$dataset %in% prev_sel)
+        DT::dataTableProxy("dataset_table") |> DT::selectRows(sel_rows)
+      }
+      hideModal()
     })
 
     shiny::observe({
@@ -147,7 +337,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
       genes <- input$selected_genes
       path <- tiledb_path()
-      selected_datasets <- input$selected_datasets
+      sel_datasets <- selected_datasets()
       filter_phenotype <- input$filter_phenotype
       filter_values <- input$filter_values
       color_by <- input$color_by_phenotype
@@ -173,8 +363,8 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
         df <- df[!is.na(df$count), ]
 
-        if (length(selected_datasets) > 0) {
-          df <- df[df$dataset %in% selected_datasets, ]
+        if (length(sel_datasets) > 0) {
+          df <- df[df$dataset %in% sel_datasets, ]
         }
 
         if (!is.null(filter_phenotype) && filter_phenotype != "" &&
