@@ -268,6 +268,15 @@ app_server <- function(input, output, session) {
     )
   }
 
+  ## Across module (always available from Datasets menu)
+  if (exists("MODULE.across")) {
+    AcrossBoard("across",
+      pgx = PGX,
+      pgx_dir = reactive(auth$user_dir),
+      labeltype = labeltype
+    )
+  }
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     # depending on datatpye, subset modules enabled and create modules active,
