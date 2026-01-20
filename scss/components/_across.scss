@@ -11,20 +11,104 @@
   // Make table fill the modal width
   .dataTables_wrapper {
     width: 100%;
+    overflow: visible;
   }
 
   table.dataTable {
     width: 100% !important;
   }
 
-  // Better column proportions
-  table.dataTable th,
-  table.dataTable td {
-    &:nth-child(1) { width: 20%; }  // dataset
-    &:nth-child(2) { width: 8%; }   // nsamples
-    &:nth-child(3) { width: 12%; }  // datatype
-    &:nth-child(4) { width: 12%; }  // organism
-    &:nth-child(5) { width: 48%; }  // description
+  // Fix filter dropdowns display
+  table.dataTable thead {
+    // Allow dropdowns to overflow
+    overflow: visible;
+    
+    th {
+      overflow: visible;
+      vertical-align: top;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    // Style the filter inputs and selects
+    .column-filter {
+      width: 100%;
+      min-width: 60px;
+    }
+
+    select.column-filter {
+      width: 100%;
+      min-width: 70px;
+      padding: 4px 2px;
+      font-size: 0.85em;
+      height: auto;
+      max-height: 28px;
+    }
+
+    input.column-filter {
+      width: 100%;
+      min-width: 50px;
+      padding: 4px;
+      font-size: 0.85em;
+    }
+  }
+
+  // Ensure modal body doesn't clip dropdowns
+  .modal-body {
+    overflow: visible;
+  }
+
+  // Fix selectize dropdown width - allow it to expand beyond column
+  .selectize-dropdown {
+    min-width: 150px !important;
+    width: auto !important;
+    max-width: 300px;
+    z-index: 10000;
+  }
+
+  .selectize-dropdown-content {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  .selectize-dropdown .option {
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  // Ensure the selectize input container doesn't clip
+  .selectize-control {
+    overflow: visible;
+  }
+
+  // Fix the selectize input area (where selected items appear)
+  .selectize-input {
+    min-width: 80px;
+    overflow: visible;
+    
+    // Selected items (chips/tags) styling
+    .item {
+      white-space: nowrap;
+      max-width: none;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      margin: 2px;
+      font-size: 0.85em;
+      
+      // Remove button
+      .remove {
+        margin-left: 4px;
+      }
+    }
+  }
+
+  // Multi-select input should allow horizontal scrolling if needed
+  .selectize-input.items {
+    min-height: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
   }
 }
 

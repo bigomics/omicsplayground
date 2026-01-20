@@ -197,8 +197,10 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         return(DT::datatable(data.frame(Message = "No datasets found")))
       }
 
-      ## Select columns to display
-      display_cols <- c("dataset", "nsamples", "datatype", "organism", "description")
+      ## Select columns to display (base + metadata columns)
+      base_cols <- c("dataset", "nsamples", "datatype", "organism", "description")
+      metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
+      display_cols <- c(base_cols, metadata_cols)
       display_cols <- intersect(display_cols, colnames(df))
       df <- df[, display_cols, drop = FALSE]
 
@@ -211,12 +213,26 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       }
 
       ## Convert categorical columns to factors for dropdown filters
-      if ("datatype" %in% colnames(df)) {
-        df$datatype <- factor(df$datatype)
+      ## Ensure proper character conversion and NA handling
+      categorical_cols <- c("datatype", "organism", metadata_cols)
+      for (col in categorical_cols) {
+        if (col %in% colnames(df)) {
+          vals <- as.character(df[[col]])
+          vals[is.na(vals) | vals == "" | vals == "NA"] <- NA
+          unique_vals <- unique(vals[!is.na(vals)])
+          if (length(unique_vals) > 0) {
+            df[[col]] <- factor(vals, levels = unique_vals)
+          } else {
+            df[[col]] <- factor(vals)
+          }
+        }
       }
-      if ("organism" %in% colnames(df)) {
-        df$organism <- factor(df$organism)
-      }
+
+      ## Clean up metadata column names for display (remove "metadata_" prefix)
+      clean_names <- colnames(df)
+      clean_names <- gsub("^metadata_", "", clean_names)
+      clean_names <- gsub("_", " ", clean_names)
+      colnames(df) <- clean_names
 
       ## Initial selection from current state (only affects first render)
       init_sel <- isolate(selected_datasets())
@@ -232,7 +248,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         options = list(
           dom = "tip",
           pageLength = 15,
-          scrollX = FALSE,
+          scrollX = TRUE,
           autoWidth = TRUE
         )
       )
