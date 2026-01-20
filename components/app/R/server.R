@@ -168,10 +168,12 @@ app_server <- function(input, output, session) {
     pgx = PGX
   )
 
-  AdminPanelBoard(
-    "admin_panel",
-    auth = auth
-  )
+  if (isTRUE(opt$ENABLE_ADMIN)) {
+    AdminPanelBoard(
+      "admin_panel",
+      auth = auth
+    )
+  }
 
   env$user_settings <- list(
     enable_beta = shiny::reactive(input$enable_beta),
@@ -210,7 +212,9 @@ app_server <- function(input, output, session) {
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
   ## Hide admin tab by default (will be shown for admin users after login)
-  bigdash.hideMenuItem(session, "admin-tab")
+  if (isTRUE(opt$ENABLE_ADMIN)) {
+    bigdash.hideMenuItem(session, "admin-tab")
+  }
   shinyjs::runjs("sidebarClose()")
 
   ## Modules needed from the start
@@ -1114,17 +1118,21 @@ app_server <- function(input, output, session) {
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
 
-      ## Show/hide admin tab based on user's ADMIN status
-      is_admin <- isTRUE(auth$ADMIN)
-      bigdash.toggleMenuItem(session, "admin-tab", is_admin)
-      dbg("[SERVER] ADMIN status for user = ", is_admin)
+      ## Show/hide admin tab based on user's ADMIN status AND global ENABLE_ADMIN option
+      if (isTRUE(opt$ENABLE_ADMIN)) {
+        is_admin <- isTRUE(auth$ADMIN)
+        bigdash.toggleMenuItem(session, "admin-tab", is_admin)
+        dbg("[SERVER] ADMIN status for user = ", is_admin)
+      }
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
       ## Hide upload tab when logged out (will be re-evaluated on next login)
       bigdash.hideMenuItem(session, "upload-tab")
-      ## Hide admin tab when logged out
-      bigdash.hideMenuItem(session, "admin-tab")
+      ## Hide admin tab when logged out (only if admin is enabled globally)
+      if (isTRUE(opt$ENABLE_ADMIN)) {
+        bigdash.hideMenuItem(session, "admin-tab")
+      }
     }
   })
 

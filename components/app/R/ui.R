@@ -308,7 +308,7 @@ app_ui <- function(x) {
                 "App settings",
                 "usersettings-tab"
               ),
-              bigdash::navbarDropdownTab(
+              if (isTRUE(opt$ENABLE_ADMIN)) bigdash::navbarDropdownTab(
                 "Admin panel",
                 "admin-tab"
               ),
@@ -557,7 +557,7 @@ app_ui <- function(x) {
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
           ),
-          bigdash::bigTabItem(
+          if (isTRUE(opt$ENABLE_ADMIN)) bigdash::bigTabItem(
             "admin-tab",
             AdminPanelUI("admin_panel")
           ),
