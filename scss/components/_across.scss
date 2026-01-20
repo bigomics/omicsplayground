@@ -1,0 +1,37 @@
+// Across Datasets module styles
+
+// Dataset selector modal overlay
+.across-dataset-modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  padding-top: 10px;
+}
+
+// Dataset selector modal dialog
+.across-dataset-modal-dialog {
+  // Make table fill the modal width
+  .dataTables_wrapper {
+    width: 100%;
+  }
+
+  table.dataTable {
+    width: 100% !important;
+  }
+
+  // Better column proportions
+  table.dataTable th,
+  table.dataTable td {
+    &:nth-child(1) { width: 20%; }  // dataset
+    &:nth-child(2) { width: 8%; }   // nsamples
+    &:nth-child(3) { width: 12%; }  // datatype
+    &:nth-child(4) { width: 12%; }  // organism
+    &:nth-child(5) { width: 48%; }  // description
+  }
+}
+
+// Selected datasets text under button
+.across-selected-datasets-text {
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}

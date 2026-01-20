@@ -7,18 +7,21 @@ AcrossInputs <- function(id) {
 
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(
-      shiny::selectizeInput(
-        ns("selected_datasets"),
-        "Select datasets:",
-        choices = NULL,
-        multiple = TRUE,
-        options = list(
-          placeholder = "All datasets (default)"
-        )
-      ),
-      "Select which datasets to query. Leave empty to query all datasets.",
-      placement = "right", options = list(container = "body")
+    ## Dataset selector button (opens modal)
+    shiny::tags$label("Select datasets:", class = "control-label"),
+    shiny::div(
+      style = "margin-bottom: 5px;",
+      shiny::actionButton(
+        ns("open_dataset_modal"),
+        shiny::uiOutput(ns("dataset_button_label"), inline = TRUE),
+        class = "btn-outline-secondary btn-sm",
+        style = "width: 100%; text-align: left;",
+        icon = shiny::icon("database")
+      )
+    ),
+    shiny::div(
+      class = "across-selected-datasets-text",
+      shiny::uiOutput(ns("selected_datasets_text"))
     ),
     shiny::br(),
     withTooltip(
@@ -199,7 +202,52 @@ AcrossUI <- function(id) {
 
   div(
     boardHeader(title = "Across Datasets", info_link = ns("info")),
-    tabs
+    tabs,
+    ## Persistent dataset selector modal (hidden by default)
+    shiny::tags$div(
+      id = ns("dataset_modal_container"),
+      style = "display: none;",
+      shiny::tags$div(
+        class = "modal fade show across-dataset-modal-overlay",
+        style = "display: block;",
+        tabindex = "-1",
+        shiny::tags$div(
+          class = "modal-dialog modal-xl across-dataset-modal-dialog",
+          shiny::tags$div(
+            class = "modal-content",
+            shiny::tags$div(
+              class = "modal-header",
+              shiny::tags$h5(class = "modal-title", "Select Datasets"),
+              shiny::actionButton(
+                ns("modal_cancel"),
+                label = NULL,
+                icon = shiny::icon("times"),
+                class = "btn-close",
+                style = "background: none; border: none;"
+              )
+            ),
+            shiny::tags$div(
+              class = "modal-body",
+              shiny::div(
+                style = "margin-bottom: 10px;",
+                shiny::textOutput(ns("modal_selection_count"))
+              ),
+              DT::dataTableOutput(ns("dataset_table"))
+            ),
+            shiny::tags$div(
+              class = "modal-footer",
+              shiny::div(
+                style = "margin-right: auto;",
+                shiny::actionButton(ns("modal_select_all"), "Select All", class = "btn btn-sm btn-outline-secondary"),
+                shiny::actionButton(ns("modal_clear"), "Clear", class = "btn btn-sm btn-outline-secondary")
+              ),
+              shiny::actionButton(ns("modal_cancel2"), "Cancel", class = "btn btn-secondary"),
+              shiny::actionButton(ns("modal_apply"), "Apply", class = "btn btn-primary")
+            )
+          )
+        )
+      )
+    )
   )
 }
 
