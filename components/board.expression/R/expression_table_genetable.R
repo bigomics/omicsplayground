@@ -142,6 +142,7 @@ expression_table_genetable_server <- function(id,
         hh <- grep(paste0(mm, collapse = "|"), colnames(M))
         if (length(hh) > 0) {
           M <- M[, hh, drop = FALSE]
+          for(i in 1:ncol(M)) M[,i] <- formatC(M[,i], format = "e", digits = 2)
           for(m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
           df <- cbind(df,  M)
         }
