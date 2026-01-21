@@ -39,16 +39,12 @@ loading_table_datasets_public_ui <- function(
         icon = icon("file-import"),
         class = "btn btn-primary"
       ),
-      ## Always render delete button but hidden initially.
-      ## Server-side will control visibility based on user options.
       if (delete_button) {
-        shinyjs::hidden(
-          shiny::actionButton(
-            ns("deletebutton"),
-            label = "Delete dataset",
-            icon = icon("trash"),
-            class = "btn btn-danger"
-          )
+        shiny::actionButton(
+          ns("deletebutton"),
+          label = "Delete dataset",
+          icon = icon("trash"),
+          class = "btn btn-danger"
         )
       }
     )
@@ -62,18 +58,6 @@ loading_table_datasets_public_server <- function(id,
                                                  reload_pgxdir,
                                                  loadAndActivatePGX = NULL) {
   moduleServer(id, function(input, output, session) {
-    ## Control delete button visibility based on per-user options
-    observeEvent(auth$logged, {
-      if (!is.null(auth$logged) && auth$logged) {
-        enable_delete <- isTRUE(auth$options$ENABLE_PUBLIC_DELETE)
-        if (enable_delete) {
-          shinyjs::show("deletebutton")
-        } else {
-          shinyjs::hide("deletebutton")
-        }
-      }
-    })
-
     getPGXINFO_PUBLIC <- shiny::reactive({
       shiny::req(auth$logged)
       if (is.null(auth$logged) || !auth$logged) {

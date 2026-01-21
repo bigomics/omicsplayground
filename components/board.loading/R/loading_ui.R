@@ -105,7 +105,7 @@ LoadingUI <- function(id) {
           height = c("100%", 700),
           width = c("100%", "100%"),
           load_button = opt$ENABLE_PUBLIC_LOAD,
-          delete_button = TRUE
+          delete_button = opt$ENABLE_PUBLIC_DELETE
         ),
         loading_tsne_ui(
           ns("tsne_public"),

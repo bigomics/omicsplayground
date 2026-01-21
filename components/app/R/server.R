@@ -173,23 +173,6 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info)
   )
 
-  ## observe and set global User options
-  shiny::observeEvent( input$enable_llm, {
-    model <- input$llm_model
-    if(input$enable_llm) {
-      if(is.null(model) || model=="") {
-        shinyalert::shinyalert("ERROR",
-          "No LLM server available. Please check your settings.")
-        return(NULL)
-      }
-      shinyalert::shinyalert("WARNING",
-        "Using LLM might expose some of your data to external LLM servers.",
-        closeOnClickOutside = TRUE
-        #showCancelButton = TRUE
-      )
-    }
-  })
-
   shiny::observeEvent({
     list( input$enable_llm, input$llm_model)
   }, {
@@ -197,7 +180,7 @@ app_server <- function(input, output, session) {
       dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
       setUserOption(session,'llm_model', input$llm_model)
     } else {
-      dbg("[MAIN] AI/LLM diabled")
+      dbg("[MAIN] AI/LLM disabled")
       setUserOption(session,'llm_model', '')      
     }
   })
@@ -631,7 +614,11 @@ app_server <- function(input, output, session) {
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      tag <- HTML(pgx.name)
+      tag <- shiny::actionButton(
+        "dataset_click", pgx.name,
+        class = "quick-button",
+        style = "border: none; color: black; font-size: 0.9em;"
+      )
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
@@ -688,22 +675,6 @@ app_server <- function(input, output, session) {
     ))
   })
 
-  ## Copilot button
-  output$copilot_button <- renderUI({
-    if(is.null(PGX$X)) return(NULL)
-    show.beta <- env$user_settings$enable_beta()
-    if(show.beta) {
-      ui <- shiny::actionButton(
-        "copilot_click", "Copilot",
-        width = "auto", class = "quick-button"
-      )
-    } else {
-      ui <- NULL
-    }
-    return(ui)
-  })
-  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
-    layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -797,7 +768,7 @@ app_server <- function(input, output, session) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta && playbase::is.multiomics(rownames(PGX$counts)))
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow

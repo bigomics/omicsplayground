@@ -32,8 +32,7 @@ WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
 DEVMODE              = TRUE
 HUBSPOT_CHECK        = TRUE
-LLM_MODELS           = llama3.2:1b;granite4:micro;gpt-5-nano;grok-4-fast-non-reasoning;groq:llama-3.1-8b-instant;groq:openai/gpt-oss-20b
-LLM_MAXTURNS         = 10
+LLM_MODELS           = llama3.2:1b;granite4:micro;gpt-5-nano;grok-4-fast-non-reasoning;groq:llama-3.1-8b-instant
 PUBLIC_DATASETS_LABEL = Team Datasets
 
 #BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
