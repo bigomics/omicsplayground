@@ -519,6 +519,7 @@ upload_table_preview_counts_server <- function(id,
     })
 
     output$histogram <- renderPlot({
+      # counts <- checked_matrix()
       counts <- uploaded$counts.csv
       shiny::req(counts)
       xx <- counts
@@ -526,6 +527,7 @@ upload_table_preview_counts_server <- function(id,
         prior <- min(counts[counts > 0], na.rm = TRUE)
         xx <- log2(prior + counts)
       }
+      # Add seed to make it deterministic
       set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- reshape2::melt(xx))
@@ -547,7 +549,9 @@ upload_table_preview_counts_server <- function(id,
         xx <- log2(pmax(xx, 0) + prior)
       }
       # Downsample to 40 columns as we do on qc/bc tab
-      if (ncol(xx) > 40) xx <- xx[, sample(1:ncol(xx), 40)]
+      if (ncol(xx) > 40) {
+        xx <- xx[, sample(1:ncol(xx), 40)]
+      }
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
@@ -613,13 +617,19 @@ upload_table_preview_counts_server <- function(id,
       ## ---counts---##
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
-
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
         if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
-          df <- tryCatch({ playbase::read_h5_counts(datafile) }, error = function(w) { NULL } )
+          df <- tryCatch(
+            {
+              playbase::read_h5_counts(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
           if (is.null(df)) {
             shinyalert::shinyalert(
               title = "Error",
@@ -631,12 +641,12 @@ upload_table_preview_counts_server <- function(id,
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
             df <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_Olink_NPX(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (is.null(df)) {
               shinyalert::shinyalert(
@@ -646,51 +656,44 @@ upload_table_preview_counts_server <- function(id,
             }
             if (!is.null(df)) {
               df.samples <- tryCatch(
+                {
+                  playbase::read_Olink_samples(datafile)
+                },
+                error = function(w) {
+                  NULL
+                }
+              )
+            }
+          } else {
+            df <- tryCatch(
               {
-                playbase::read_Olink_samples(datafile)
+                playbase::read_counts(datafile)
               },
               error = function(w) {
                 NULL
               }
-              )
-            }
-          } else if (upload_datatype() == "proteomics" && !is.olink()) {
-            df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
-            if (is.null(df)) {
-              df <- tryCatch({ playbase::read_spectronaut(datafile) }, error = function(w) { NULL } )
-              if (!is.null(df)) {
-                char.cols <- which(sapply(df, class) == "character")
-                if (length(char.cols) > 0) {
-                  uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
-                  df <- df[, colnames(df) != names(char.cols), drop = FALSE]
-                  df <- as.matrix(df)
-                }
-              }
-            }
-          } else {
-            df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
+            )
           }
         }
       } else {
         df <- tryCatch(
-        {
-          playbase::read_counts(datafile)
-        },
-        error = function(w) {
-          NULL
-        }
+          {
+            playbase::read_counts(datafile)
+          },
+          error = function(w) {
+            NULL
+          }
         )
       }
-      
-      
+
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
         uploaded$counts.csv <- df
-        if (is.null(uploaded$annot.csv)) {
-          uploaded$annot.csv <- if (file.ext != "h5") playbase::read_annot(datafile) else NULL
-        }
+        af <- NULL
+        if (file.ext != "h5") af <- playbase::read_annot(datafile)
+        uploaded$annot.csv <- af
       }
 
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {

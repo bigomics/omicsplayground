@@ -451,7 +451,7 @@ upload_module_normalization_server <- function(
           if (input$missing_plottype == "heatmap") {
             if (any(X2 > 0)) {
               par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
-              playbase::gx.imagemap(X2, cex = -1, col = rev(heat.colors(64)))
+              playbase::gx.imagemap(X2, cex = -1)
               title("missing values patterns", cex.main = 1.2)
             } else {
               plot.new()
