@@ -258,24 +258,34 @@ MultiWGCNA_UI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
-          bs_alert(HTML("⚠️ This page contains AI-generated content. While efforts are made for accuracy, please verify information independently.")),
+          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
           bslib::layout_columns(
-            col_widths = c(8,4),
+            col_widths = c(6,6),
             height = "calc(100vh - 180px)",
+            bslib::layout_columns(
+              col_widths = 12,
+              wgcna_report_diagram_ui(
+                ns("multiwgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI generated diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),              
+              wgcna_report_diagram_ui(
+                ns("multiwgcnaReport"),
+                title = "Infographic",
+                caption = "AI-generated infographic",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            ),
             wgcna_html_report_ui(
               ns("multiwgcnaReport"),
               title = "AI Report",
               caption = "AI summary report",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),
-            wgcna_report_diagram_ui(
-              ns("multiwgcnaReport"),
-            title = "AI Diagram",
-            caption = "AI generated diagram",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-            )
+            )            
           )
         )
       )

@@ -318,34 +318,34 @@ WgcnaUI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
-          bs_alert(HTML("⚠️ AI disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
           bslib::layout_columns(
-            col_widths = c(7,5),
+            col_widths = c(6,6),
             height = "calc(100vh - 180px)",            
+            bslib::layout_columns(
+              col_widths = 12,
+              wgcna_report_diagram_ui(
+                ns("wgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI-generated module diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_report_infographic_ui(
+                ns("wgcnaReport"),
+                title = "Infographic",
+                caption = "AI-generated infographic",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            ),
             wgcna_html_report_ui(
               ns("wgcnaReport"),
               title = "AI Report",
               caption = "AI-generated summary report",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),
-            bslib::layout_columns(
-              col_widths = 12,
-              wgcna_report_infographic_ui(
-                ns("wgcnaReport"),
-                title = "AI Infographic",
-                caption = "AI-generated infographic",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              wgcna_report_diagram_ui(
-                ns("wgcnaReport"),
-                title = "AI Diagram",
-                caption = "AI-generated diagram",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
-            )
+            )            
           )
         )
       )

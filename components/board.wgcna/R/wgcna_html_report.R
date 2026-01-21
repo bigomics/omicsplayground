@@ -283,7 +283,8 @@ wgcna_html_report_server <- function(id,
       # Generate a png
       outfile <- tempfile(fileext='.png')
       png(outfile, width=400, height=400)
-      hist(rnorm(10000))
+      #hist(rnorm(10000))
+      plot.new()
       dev.off()
       
       # Return a list

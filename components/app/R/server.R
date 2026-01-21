@@ -692,22 +692,6 @@ app_server <- function(input, output, session) {
     ))
   })
 
-  ## Copilot button
-  output$copilot_button <- renderUI({
-    if(is.null(PGX$X)) return(NULL)
-    show.beta <- env$user_settings$enable_beta()
-    if(show.beta) {
-      ui <- shiny::actionButton(
-        "copilot_click", "Copilot",
-        width = "auto", class = "quick-button"
-      )
-    } else {
-      ui <- NULL
-    }
-    return(ui)
-  })
-  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
-    layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -801,7 +785,7 @@ app_server <- function(input, output, session) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta && playbase::is.multiomics(rownames(PGX$counts)))
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
