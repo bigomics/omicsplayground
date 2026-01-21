@@ -1041,6 +1041,11 @@ UploadBoard <- function(id,
     shiny::observeEvent(
       list(new_upload()),
       {
+        # skip upload trigger at first startup (must be first check!)
+        if (new_upload() == 0) {
+          return(NULL)
+        }
+
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (!enable_upload) {
@@ -1071,11 +1076,6 @@ UploadBoard <- function(id,
 
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
 
         if (input$selected_organism == "No organism") {
           shinyalert::shinyalert(

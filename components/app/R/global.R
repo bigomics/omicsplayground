@@ -170,6 +170,7 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
@@ -218,6 +219,16 @@ if (file.exists(defaults.file)) {
       impute = TRUE
     )
   )
+}
+
+## Load metadata options configuration
+metadata.file <- file.path(ETC, "metadata_options.yml")
+if (file.exists(metadata.file)) {
+  METADATA_OPTIONS <<- yaml::read_yaml(metadata.file)
+  message("[GLOBAL] Loaded metadata_options.yml")
+} else {
+  message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
+  METADATA_OPTIONS <<- list(fields = list())
 }
 
 ## Check and set authentication method

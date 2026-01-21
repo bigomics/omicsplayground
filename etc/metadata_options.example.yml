@@ -1,0 +1,110 @@
+# Metadata options for dataset uploads
+# Supported types: select, multiselect
+# Each field can have:
+#   - label: Display label for the field
+#   - type: select (single choice) or multiselect (multiple choices)
+#   - required: true/false
+#   - choices: List of options
+#   - default: Default value
+
+fields:
+  - id: study_type
+    label: Study Type
+    type: select
+    required: true
+    choices:
+      - Observational
+      - Interventional
+      - Case-control
+      - Cohort
+      - Cross-sectional
+      - Longitudinal
+      - Other
+
+  - id: tissue_type
+    label: Tissue Type
+    type: select
+    required: false
+    choices:
+      - Blood
+      - Bone marrow
+      - Brain
+      - Breast
+      - Colon
+      - Heart
+      - Kidney
+      - Liver
+      - Lung
+      - Lymph node
+      - Muscle
+      - Ovary
+      - Pancreas
+      - Prostate
+      - Skin
+      - Spleen
+      - Stomach
+      - Thyroid
+      - Cell line
+      - Mixed/Multiple
+      - Other
+
+  - id: disease_category
+    label: Disease Category
+    type: select
+    required: false
+    choices:
+      - Healthy/Control
+      - Cancer
+      - Cardiovascular
+      - Autoimmune
+      - Infectious
+      - Metabolic
+      - Neurological
+      - Respiratory
+      - Genetic disorder
+      - Other
+
+  - id: treatment_type
+    label: Treatment Type
+    type: select
+    required: false
+    choices:
+      - None/Untreated
+      - Drug/Small molecule
+      - Antibody
+      - Gene therapy
+      - Cell therapy
+      - Radiation
+      - Surgery
+      - Combination
+      - Other
+
+  - id: sample_source
+    label: Sample Source
+    type: select
+    required: false
+    choices:
+      - Human
+      - Mouse
+      - Rat
+      - Cell line
+      - Organoid
+      - PDX
+      - Other
+
+  - id: tags
+    label: Tags
+    type: multiselect
+    required: false
+    choices:
+      - Biomarker discovery
+      - Drug response
+      - Differential expression
+      - Time series
+      - Dose response
+      - Knockout/Knockdown
+      - Overexpression
+      - Patient stratification
+      - Survival analysis
+      - Published
+      - Internal
