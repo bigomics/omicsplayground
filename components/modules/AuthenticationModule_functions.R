@@ -38,7 +38,7 @@ read_user_options <- function(user_dir) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
