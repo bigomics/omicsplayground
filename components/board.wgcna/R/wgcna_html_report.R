@@ -88,15 +88,20 @@ wgcna_report_infographic_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  options <- tagList(
+  img_models <- playbase::ai.get_image_models()   
+  options <- shiny::tagList(
+    shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
+    shiny::actionButton(ns("generate_infographic"),"regenerate")
   )
 
   PlotModuleUI(
     ns("infographic"),
+    #outputFunc = uiOutput,
+    #plotlib = "generic",
     plotlib = "image",
     title = title,
     label = label,
-    #options = options,
+    options = options,
     info.text = info.text,
     caption = caption,
     height = height,
@@ -126,7 +131,7 @@ wgcna_html_report_server <- function(id,
                                      r_annot = reactive(NULL),
                                      watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    
+    ns <- session$ns
     btn_count <- reactiveVal(0)
 
     observe({
@@ -276,26 +281,76 @@ wgcna_html_report_server <- function(id,
     ##---------------------------- infographic -----------------------------
     ##----------------------------------------------------------------------
 
+    # Store and trigger the generated image path
+    infographic_path <- reactiveVal(NULL)
+    
+    # Create ExtendedTask for background image generation
+    infographic_task <- ExtendedTask$new(function(prompt, model, api_key) {
+      dbg("infographic_task:ExtendedTask$new()...")
+      future_promise({
+        outfile <- tempfile(fileext = '.jpg')
+        playbase::ai.create_image_gemini(
+          prompt, model = model, filename = outfile,
+          api_key = api_key
+        )
+        outfile
+      })
+    }) ## |> bslib::bind_task_button("generate_infographic")
+    
+    # Trigger the task when button is clicked
+    observeEvent(
+      list(get_report(), input$generate_infographic), {
+
+      rpt <- get_report()
+      shiny::req(rpt)
+      
+      has.model <- length(input$img_model)>0 && input$img_model[1]!=""
+      shiny::validate(shiny::need(has.model, "No AI image model available."))      
+      
+      prompt <- paste("Create an infographic according to the given diagram and information in the WGCNA report: ", rpt$report, "\n---------------\n\n", rpt$diagram)
+      model = "gemini-2.5-flash-image"
+      #model <- "gemini-3-pro-image-preview"
+      model <- isolate(input$img_model)
+      api_key <- Sys.getenv("GEMINI_API_KEY")
+      infographic_task$invoke(prompt, model, api_key)
+    })
+    
+    # Update reactive value when task completes
+    observeEvent(infographic_task$result(), {
+      dbg("infographic_task$result = ", infographic_task$result())
+      infographic_path(infographic_task$result())
+    })
+
     infographic.RENDER <- function() {
 
-      #dg <- get_diagram()
+      ##req(infographic_path())
+      shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))      
       
-      # Generate a png
-      outfile <- tempfile(fileext='.png')
-      png(outfile, width=400, height=400)
-      #hist(rnorm(10000))
-      plot.new()
-      dev.off()
+      cd <- session$clientData
+      ##dbg("[wgcna_html_report_server] names(session$clientData) = ", names(cd))
+
+      id <- paste0("output_",ns("infographic"),"-renderfigure")
+      width  <- cd[[paste0(id,"_width")]]
+      height <- cd[[paste0(id,"_height")]]
+
+      width = "100%"
+      height = "100%"
+      message("[output$image] width = ", width)
+      message("[output$image] height = ", height)
+      message("[output$image] infographic_path = ", infographic_path())
       
-      # Return a list
-      list(src = outfile, alt="Infographic")      
+      # Return a list containing the filename
+      list(src = infographic_path(),
+        width = width,
+        height = height,
+        alt = "WGCNA Infographic")
     }
     
     PlotModuleServer(
       "infographic",
       plotlib = "image",
+      #plotlib = "generic",
       func = infographic.RENDER,
-      #renderFunc = renderImage,
       pdf.width = 8, pdf.height = 5,
       res = c(75, 100),
       add.watermark = watermark

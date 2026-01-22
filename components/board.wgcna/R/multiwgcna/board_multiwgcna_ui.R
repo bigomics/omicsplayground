@@ -271,7 +271,7 @@ MultiWGCNA_UI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),              
-              wgcna_report_diagram_ui(
+              wgcna_report_infographic_ui(
                 ns("multiwgcnaReport"),
                 title = "Infographic",
                 caption = "AI-generated infographic",

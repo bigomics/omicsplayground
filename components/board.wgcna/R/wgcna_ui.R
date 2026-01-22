@@ -324,6 +324,7 @@ WgcnaUI <- function(id) {
             height = "calc(100vh - 180px)",            
             bslib::layout_columns(
               col_widths = 12,
+              row_heights = c(1,1),
               wgcna_report_diagram_ui(
                 ns("wgcnaReport"),
                 title = "Module Diagram",
