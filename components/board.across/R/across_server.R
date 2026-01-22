@@ -347,10 +347,8 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
              metadata$n_files, " datasets, ", n_pheno, " phenotypes")
     })
 
-    shiny::observeEvent(input$query_button, {
-      req(input$selected_genes)
-      req(tiledb_path())
-
+    ## Helper function to run the TileDB query
+    runTileDBQuery <- function() {
       genes <- input$selected_genes
       path <- tiledb_path()
       sel_datasets <- selected_datasets()
@@ -393,7 +391,21 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         attr(df, "value_type") <- value_type
         query_result(df)
       })
+    }
+
+    shiny::observeEvent(input$query_button, {
+      req(input$selected_genes)
+      req(tiledb_path())
+      runTileDBQuery()
     })
+
+    ## Re-query when value_type changes (only if a query has already been made)
+    shiny::observeEvent(input$value_type, {
+      req(query_result())  # Only re-query if we already have results
+      req(input$selected_genes)
+      req(tiledb_path())
+      runTileDBQuery()
+    }, ignoreInit = TRUE)
 
     ## ================================================================================
     ## ======================= REACTIVE DATA ==========================================
