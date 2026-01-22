@@ -109,6 +109,17 @@ AcrossInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         withTooltip(
           shiny::radioButtons(
+            ns("value_type"),
+            "Value type:",
+            choices = c("Counts" = "count", "Z-score" = "zscore"),
+            selected = "count",
+            inline = TRUE
+          ),
+          "Select value type: raw counts or z-scores (per-dataset standardized values).",
+          placement = "right", options = list(container = "body")
+        ),
+        withTooltip(
+          shiny::radioButtons(
             ns("plot_scale"),
             "Scale:",
             choices = c("linear", "log2"),
