@@ -357,7 +357,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       filter_phenotype <- input$filter_phenotype
       filter_values <- input$filter_values
       color_by <- input$color_by_phenotype
-      value_type <- input$value_type %||% "count"
+      value_type <- if (is.null(input$value_type)) "count" else input$value_type
 
       shiny::withProgress(message = "Querying TileDB...", value = 0.3, {
         counts <- playbase::pgx.queryTileDB(path, genes = genes, value = value_type)
@@ -408,7 +408,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       df <- query_result()
       if (is.null(df) || nrow(df) == 0) return(NULL)
 
-      value_type <- input$value_type %||% "count"
+      value_type <- if (is.null(input$value_type)) "count" else input$value_type
       plot_scale <- ifelse(value_type == "zscore", "linear", input$plot_scale)
 
       if (plot_scale == "log2" && any(df$count > 0)) {
