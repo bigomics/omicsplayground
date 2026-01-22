@@ -12,6 +12,7 @@ html {
 	margin-bottom: 5px;
 	font-size: 2em;
 	font-weight: 600;
+	display: none;
     }
     
     .modal-content .well {
@@ -64,8 +65,10 @@ html {
 	opacity: 0.85;
     }
 
-    .modal-header
-    
+    .modal-header {
+	height: 0px;
+	padding: 15px 25px;
+    }
     
     .bg-cover-image {
 	background-color: #fff;

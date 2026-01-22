@@ -340,6 +340,7 @@ PlotModuleUI <- function(id,
 
   height.2 <- "100%"
   height.2 <- "calc(80vh - 100px)"
+  height.2 <- "calc(100vh - 200px)"  
 
   if (cards) {
     tabs_modal <- lapply(1:length(card_names), function(x) {
