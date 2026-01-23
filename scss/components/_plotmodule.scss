@@ -36,6 +36,10 @@ html {
 	display: none;
     }
 
+    .popup-modal .modal-body {
+	line-height: 1.5rem;	
+    }
+
     // center contents
     .popup-plot > div {
 	margin-left: auto;

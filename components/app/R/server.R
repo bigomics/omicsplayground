@@ -182,9 +182,12 @@ app_server <- function(input, output, session) {
           "No LLM server available. Please check your settings.")
         return(NULL)
       }
-      shinyalert::shinyalert("WARNING",
-        "Using LLM might expose some of your data to external LLM servers.",
-        closeOnClickOutside = TRUE
+      shinyalert::shinyalert(
+        "WARNING",
+        "Using LLM exposes your data to external LLM servers.",
+        timer = 2800,
+        closeOnClickOutside = TRUE,
+        showConfirmButton = FALSE
         #showCancelButton = TRUE
       )
     }
@@ -790,6 +793,8 @@ app_server <- function(input, output, session) {
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    toggleTab("wgcna-tabs", "AI Report", show.beta)
+    toggleTab("mwgcna-tabs", "AI Report", show.beta)     
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)

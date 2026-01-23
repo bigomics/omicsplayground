@@ -283,66 +283,72 @@ wgcna_html_report_server <- function(id,
 
     # Store and trigger the generated image path
     infographic_path <- reactiveVal(NULL)
+
+    infographic_info <- function(msg) {
+      outfile <- tempfile(fileext = '.png')
+      png(outfile,w=1600,h=800)
+      plot.new()
+      text(0.5,0.5, msg, cex=2.5)
+      dev.off()
+      infographic_path(outfile)
+    }
     
     # Create ExtendedTask for background image generation
     infographic_task <- ExtendedTask$new(function(prompt, model, api_key) {
-      dbg("infographic_task:ExtendedTask$new()...")
+      infographic_info("starting...")
       future_promise({
         outfile <- tempfile(fileext = '.jpg')
-        playbase::ai.create_image_gemini(
-          prompt, model = model, filename = outfile,
+        outfile <- try(playbase::ai.create_image_gemini(
+          prompt,
+          model = model,
+          filename = outfile,
           api_key = api_key
-        )
+        ))
+        if(inherits(outfile,"try-error")) return(NULL)
         outfile
       })
     }) ## |> bslib::bind_task_button("generate_infographic")
     
-    # Trigger the task when button is clicked
-    observeEvent(
-      list(get_report(), input$generate_infographic), {
-
-      rpt <- get_report()
-      shiny::req(rpt)
+    # Trigger the ExtendedTask when button is clicked
+    observeEvent({
+      c(input$generate_infographic, get_report())
+    }, {
+      rpt <- get_report()      
+      if(is.null(rpt)) return(NULL)
       
       has.model <- length(input$img_model)>0 && input$img_model[1]!=""
-      shiny::validate(shiny::need(has.model, "No AI image model available."))      
-      
-      prompt <- paste("Create an infographic according to the given diagram and information in the WGCNA report: ", rpt$report, "\n---------------\n\n", rpt$diagram)
-      model = "gemini-2.5-flash-image"
-      #model <- "gemini-3-pro-image-preview"
+      shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set GEMINI_API_KEY"))      
+
+      prompt <- paste("Create an infograpics (graphical abstract) according to the given diagram and information in the WGCNA report. Use scientific visual style. Illustrate biological concepts with small graphics. \n\n",rpt$report, "\n---------------\n\n", rpt$diagram)      
       model <- isolate(input$img_model)
       api_key <- Sys.getenv("GEMINI_API_KEY")
       infographic_task$invoke(prompt, model, api_key)
     })
     
+    # Update reactive value when task status changes. This show a kind
+    # of progress message
+    observeEvent(infographic_task$status(), {
+      status <- infographic_task$status()
+      if(status != "success") {
+        msg <- "..."
+        if(status == "initial") msg <- "waiting for diagram..."
+        if(status == "running") msg <- "GenAI image model running ..."
+        infographic_info(msg)
+      }
+    })
+
     # Update reactive value when task completes
     observeEvent(infographic_task$result(), {
-      dbg("infographic_task$result = ", infographic_task$result())
-      infographic_path(infographic_task$result())
+      result <- infographic_task$result()
+      infographic_path(result)
     })
 
     infographic.RENDER <- function() {
-
-      ##req(infographic_path())
-      shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))      
-      
-      cd <- session$clientData
-      ##dbg("[wgcna_html_report_server] names(session$clientData) = ", names(cd))
-
-      id <- paste0("output_",ns("infographic"),"-renderfigure")
-      width  <- cd[[paste0(id,"_width")]]
-      height <- cd[[paste0(id,"_height")]]
-
-      width = "100%"
-      height = "100%"
-      message("[output$image] width = ", width)
-      message("[output$image] height = ", height)
-      message("[output$image] infographic_path = ", infographic_path())
-      
+      shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
       # Return a list containing the filename
       list(src = infographic_path(),
-        width = width,
-        height = height,
+        width = "100%",
+        height = "100%",
         alt = "WGCNA Infographic")
     }
     

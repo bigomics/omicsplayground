@@ -318,7 +318,7 @@ WgcnaUI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
-          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently."), translate=FALSE),
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "calc(100vh - 180px)",            

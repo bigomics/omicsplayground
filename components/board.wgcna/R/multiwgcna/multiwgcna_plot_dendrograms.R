@@ -65,12 +65,13 @@ multiwgcna_plot_dendrograms_server <- function(id,
         nc <- ceiling(sqrt(nw))
         nr <- ceiling(nw / nc)
       }
+      dr <- ifelse(input$showtraits || input$showcontrasts, 0.3, 1)
 
       ## Need to set layout manually
-      layout.matrix <- matrix(1:(2 * nr * nc), nrow = nr * 2, ncol = nc)
+      layout.matrix <- matrix(1:(2*nr*nc), nrow = nr*2, ncol = nc)
       graphics::layout(
         mat = layout.matrix,
-        heights = rep(c(1, 1), nr),
+        heights = rep(c(1*dr, 1), nr),
         widths = rep(1, nc)
       )
       i <- 1

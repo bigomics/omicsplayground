@@ -154,13 +154,18 @@ app_ui <- function(x) {
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
-
-      dbg("names(menu_tree) = ", names(menu_tree))
-      dbg("names.ENABLED = ", names(ENABLED))
+      
       menu_tree <- menu_tree[MODULES_ENABLED]
       ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
       ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
+      ## LLM preference
+      for( r in c("gpt-oss","grok")) {
+        sel.llm <- head(grep(r,unlist(opt$LLM_MODELS),value=TRUE),1)
+        if(length(sel.llm)>0) break
+      }
+      if(length(sel.llm)==0) sel.llm <- 1      
+      
       populateSidebar <- function(menu_tree) {
         sidebar_item <- function(title, name) {
           div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
@@ -326,23 +331,31 @@ app_ui <- function(x) {
                 bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
-                  label = "show captions",
+                  label = "Show captions",
                   is.checked = FALSE
-                ),
-                bslib::input_switch("enable_llm", "Enable AI")
+                )
               ),
+              ##--------------------- beta -----------------
               shiny::conditionalPanel(
-                "input.enable_llm",
-                bigdash::navbarDropdownItem(
-                  shiny::selectInput(
-                    inputId = "llm_model",
-                    label = NULL,
-                    choices = opt$LLM_MODELS,
-                    selected = 1,
-                    width = "100%"
+                "input.enable_beta",
+                div(
+                  class = "dropdown-items",
+                  bslib::input_switch("enable_llm", "Enable AI")
+                ),
+                shiny::conditionalPanel(
+                  "input.enable_llm",
+                  bigdash::navbarDropdownItem(
+                    shiny::selectInput(
+                      inputId = "llm_model",
+                      label = NULL,
+                      choices = opt$LLM_MODELS,
+                      selected = sel.llm,
+                      width = "100%"
+                    )
                   )
                 )
               ),
+              ##--------------------- beta -----------------              
               bigdash::navbarDropdownItem(
                 withTooltip(
                   shiny::selectInput(
