@@ -64,6 +64,7 @@ RUN R -e "BiocManager::install('singscore')"
 RUN R -e "BiocManager::install('ArrayExpress')"
 RUN R -e "install.packages('tidyprompt')"
 RUN R -e "install.packages('xgboost')"
+RUN R -e "install.packages('arrow')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
