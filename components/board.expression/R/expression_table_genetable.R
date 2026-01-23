@@ -26,6 +26,10 @@ expression_table_genetable_ui <- function(
       "Display only top 10 differentially (positively and negatively) expressed genes in the table.",
       placement = "top", options = list(container = "body")
     ),
+    withTooltip(shiny::checkboxInput(ns("show_cov_pvalues"), tspan("Show effect of covariates' correction"), FALSE),
+      "Display p-values for each feature upon covariates'regression.",
+      placement = "top", options = list(container = "body")
+    ),
     withTooltip(shiny::checkboxInput(ns("show_pct_na"), tspan("Show percent missingness"), FALSE),
       "Display a column reporting the percentage of missingness for each feature.",
       placement = "top", options = list(container = "body")
@@ -53,6 +57,7 @@ expression_table_genetable_ui <- function(
 expression_table_genetable_server <- function(id,
                                               pgx,
                                               comp,
+                                              gx_method,
                                               res,
                                               organism,
                                               show_pv,
@@ -122,6 +127,25 @@ expression_table_genetable_server <- function(id,
         df$pct.NA <- unname(round(rowMeans(is.na(counts)) * 100, 1))
       } else {
         df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]
+      }
+
+      meta.covs <- pgx$gx.meta$meta.covs
+      if (!is.null(meta.covs) & input$show_cov_pvalues) {
+        M <- lapply(meta.covs, function(x) do.call(cbind, x))
+        for(i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
+        M <- do.call(cbind, M)
+        M <- M[which(rownames(M) %in% rownames(df)), ]
+        M <- M[match(rownames(df), rownames(M)), ]
+        M <- M[, grep(comp(), colnames(M)), drop = FALSE]
+        colnames(M) <- sub(paste0(".", comp()), "", colnames(M), fixed = TRUE)
+        mm <- gx_method()
+        hh <- grep(paste0(mm, collapse = "|"), colnames(M))
+        if (length(hh) > 0) {
+          M <- M[, hh, drop = FALSE]
+          for(i in 1:ncol(M)) M[,i] <- formatC(M[,i], format = "e", digits = 2)
+          for(m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
+          df <- cbind(df,  M)
+        }
       }
 
       DT::datatable(

@@ -454,6 +454,16 @@ upload_module_computepgx_server <- function(
                     selected = NULL
                   )
                 )
+              } else {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Remove effects of:</h4>"),
+                    choices = colnames(samplesRT()),
+                    selected = NULL
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Regress out potential confounding effects. Valid for linear model-based gene tests.</small>")
+                )
               },
               bslib::card(
                 shiny::checkboxGroupInput(
@@ -464,7 +474,6 @@ upload_module_computepgx_server <- function(
                   ),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
-                  # disabled = c("methods to be greyed-out")
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
@@ -492,7 +501,7 @@ upload_module_computepgx_server <- function(
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
-              ),
+                ),
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
                 div(
@@ -514,7 +523,7 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-              ),
+                ),
               bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
@@ -1045,6 +1054,7 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
+        
         ## -----------------------------------------------
         ## Collect user-defined metadata from inputs
         ## -----------------------------------------------
@@ -1067,7 +1077,7 @@ upload_module_computepgx_server <- function(
         }
 
         ## -----------------------------------------------
-        ## Params for scRNA-seq
+        ## Covariates to regress out
         do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         if (!any(nfeature_threshold)) nfeature_threshold <- FALSE
@@ -1075,7 +1085,8 @@ upload_module_computepgx_server <- function(
         if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold <- FALSE
-        sc.covs <- as.character(input$regress_covariates)
+        covariates <- input$regress_covariates 
+        if (!is.null(covariates)) covariates <- as.character(covariates)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1083,12 +1094,12 @@ upload_module_computepgx_server <- function(
           mt_threshold = mt_threshold,
           hb_threshold = hb_threshold,
           compute_supercells = ifelse(any(do.supercells), TRUE, FALSE),
-          regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
-          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
-          regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
-          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+          regress_mt = ifelse("Mitochondrial contamination" %in% covariates, TRUE, FALSE),
+          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% covariates, TRUE, FALSE),
+          regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
+          regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
-
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1117,12 +1128,13 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
           only.known = remove.unknown,
-          average.duplicated = average.duplicated, ## new
+          average.duplicated = average.duplicated,
           only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
-          batch.correct.method = batch.correct.method, ## new
-          batch.pars <- batch.pars, ## NEW
+          batch.correct.method = batch.correct.method,
+          batch.pars = batch.pars,
+          covariates = covariates, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
@@ -1147,7 +1159,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-
+        
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 
