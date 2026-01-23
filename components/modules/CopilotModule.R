@@ -5,10 +5,6 @@
 
 CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
   ns <- shiny::NS(id)
-
-  #MODELS <- c("gpt-4o-mini","gemma2","gemma2:2b","mistral:7b","llama3.2")
-  MODELS <- c("groq:openai/gpt-oss-20b", "groq:llama-3.1-8b-instant",
-    "openai:gpt-4.1-nano", "llama3.2:3b","mistral:7b")
   
   sections <- c("description", "dataset_info","compute_settings",
     "differential_expression", "geneset_enrichment",
@@ -36,7 +32,6 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
     bslib::nav_panel(
       "Settings",
       br(),
-      #shiny::selectInput(ns("model"), "Model:", choices = MODELS, width='100%'),
       shiny::textAreaInput(ns("prompt"), "Prompt:", value=sysprompt, height=120, width='100%'),
       br(),
       shiny::checkboxGroupInput(ns("context"),"Context:", choices = sections,        
@@ -105,7 +100,6 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
     chat <- NULL
 
     ## count number of interactionsy
-    dbg("[CopilotServer] maxturns = ", maxturns)
     n_turns <- reactiveVal(0)
     
     #' Observe the copilot button and show the modal AI dialog.
@@ -167,11 +161,10 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse=" ")
 
       ai_model <- getUserOption(session,'llm_model')
-      dbg("[CopilotServer] using ai_model = ", ai_model)
       req(ai_model)
       
       message("Creating new chat model ", ai_model)
-      chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)       
+      chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)
       
       if(!is.null(chat)) register_tools(chat)
 
