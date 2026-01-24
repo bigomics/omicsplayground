@@ -165,8 +165,12 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
       
       message("Creating new chat model ", ai_model)
       chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt=prompt)
-      
-      if(!is.null(chat)) register_tools(chat)
+
+      if(!is.null(chat)) {
+      ## ------------ still experimential --------
+#        register_tools(chat)
+#        register_mcp(chat)
+      }
 
       if(n_turns()==0) {
         ask_copilot("Describe this experiment. Then ask 'how can I help?'",
