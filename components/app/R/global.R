@@ -337,6 +337,7 @@ i18n$set_translation_language("RNA-seq")
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
 # opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
-
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+  
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
