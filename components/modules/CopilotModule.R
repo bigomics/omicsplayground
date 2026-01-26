@@ -45,7 +45,7 @@ CopilotUI <- function(id, layout = c("sidebar","fixed")[1]) {
       class = "border-0",
       fill = FALSE,
       max_height = "calc(100vh - 120px)",
-      bs_alert(HTML("<b>EXPERIMENTAL</b>. This AI module is experimental in early beta. Use only for testing purposes.")),
+      bs_alert(HTML("<b>EXPERIMENTAL</b>. This AI module is experimental in early beta. Only for testing purposes."), closable = FALSE),
       shinychat::chat_ui(ns("chat"), width="100%", height = "min(100%,770px)",
         fill = TRUE)
   )
