@@ -1279,6 +1279,7 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
       public_dataset_id = public_dataset_id ## accession ID
     )
 
