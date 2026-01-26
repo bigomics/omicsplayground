@@ -65,6 +65,7 @@ RUN R -e "BiocManager::install('ArrayExpress')"
 RUN R -e "install.packages('tidyprompt')"
 RUN R -e "install.packages('xgboost')"
 RUN R -e "install.packages('arrow')"
+RUN R -e "install.packages('DiagrammeRsvg')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
