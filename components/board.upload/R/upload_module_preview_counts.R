@@ -180,7 +180,7 @@ upload_table_preview_counts_server <- function(id,
           style = "width: 100%; display: flex; ",
           if (is.null(uploaded$counts.csv)) {
             if (upload_datatype() == "proteomics") {
-              msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
+              msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format and can be a parquet file."
             } else {
               msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
             }
@@ -571,12 +571,15 @@ upload_table_preview_counts_server <- function(id,
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
-      if (!all(ext %in% c("csv", "RData", "h5"))) {
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
+      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
+      c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet"))) 
+      if (c1 & c2 & c3) {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please make sure the file is a CSV file. For scRNA-seq, h5 format is also allowed.",
+          text = "Please upload a .csv file. For scRNA-seq, h5 format is allowed. For Olink NPX data, parquet format is allowed.",
           type = "error"
         )
         return()
@@ -689,7 +692,8 @@ upload_table_preview_counts_server <- function(id,
       } else {
         uploaded$counts.csv <- df
         if (is.null(uploaded$annot.csv)) {
-          uploaded$annot.csv <- if (file.ext != "h5") playbase::read_annot(datafile) else NULL
+          ann.data <- if (! file.ext %in% c("h5", "parquet")) playbase::read_annot(datafile) else NULL
+          uploaded$annot.csv <- ann.data
         }
       }
 
