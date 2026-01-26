@@ -137,15 +137,6 @@ loading_table_datasets_server <- function(id,
           filters <- filters & (df$datatype %in% input$flt_datatype)
         }
 
-        ## Apply dynamic metadata filters (columns with metadata_ prefix)
-        metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
-        for (mcol in metadata_cols) {
-          filter_id <- paste0("flt_", mcol)
-          if (notnull(input[[filter_id]])) {
-            filters <- filters & (df[[mcol]] %in% input[[filter_id]])
-          }
-        }
-
         df <- df[which(filters), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
