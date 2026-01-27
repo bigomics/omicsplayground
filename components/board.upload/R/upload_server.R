@@ -294,7 +294,6 @@ UploadBoard <- function(id,
 
         olink <- is.olink()
         if (olink) {
-          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
