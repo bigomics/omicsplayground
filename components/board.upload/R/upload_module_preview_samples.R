@@ -212,7 +212,7 @@ upload_table_preview_samples_server <- function(
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
         div(
-          if (loaded_samples()) {
+          if (loaded_samples() && !is.olink()) {
             shiny::actionButton(
               ns("remove_samples"),
               "Cancel",
