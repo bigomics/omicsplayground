@@ -335,6 +335,9 @@ upload_table_preview_samples_server <- function(
       prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
+      cm <- intersect(colnames(X), rownames(Y))
+      X <- X[, cm, drop = FALSE]
+      Y <- Y[cm, , drop = FALSE]
       shiny::req(nrow(Y))
       shiny::validate(shiny::need(ncol(Y) > 0, "Please select at least 1 variable."))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
@@ -462,23 +465,27 @@ upload_table_preview_samples_server <- function(
       }
       samples <- uploaded$samples.csv
       shiny::req(samples)
+      counts <- uploaded$counts.csv
       cm <- intersect(as.character(rownames(samples)), as.character(rownames(new_samples)))
+      cm <- intersect(cm, colnames(counts))
       if (length(cm) == 0) {
         shinyalert::shinyalert(
-          title = "No matching samples.",
-          text = "The newly uploaded metadata file does not share any sample identifiers with the current samples",
+          title = "No matching samples",
+          text = "The newly uploaded metadata file does not share any sample identifiers with the current samples and abundance file.",
           type = "error"
         )
         return()
       }
       if ((length(cm) != nrow(samples)) | (length(cm) != nrow(new_samples))) {
         shinyalert::shinyalert(
-          title = "Samples mismatch.",
-          text = "The newly uploaded sample file contains a different set of samples than the current metadata. We will intersect these.",
+          title = "Samples mismatch",
+          text = "The new sample file contains a different set of samples than the current metadata. We will intersect these.",
           type = "warning"
         )
-        samples <- samples[cm, ]
-        new_samples <- new_samples[cm, ]
+        samples <- samples[cm, , drop = FALSE]
+        new_samples <- new_samples[cm, , drop = FALSE]
+        counts <- counts[, cm, drop = FALSE]
+        uploaded$counts.csv <- counts
       }
       new_cols <- setdiff(colnames(new_samples), colnames(samples))
       if (length(new_cols) > 0) {
