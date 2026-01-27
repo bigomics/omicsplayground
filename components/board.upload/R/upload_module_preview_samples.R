@@ -462,7 +462,7 @@ upload_table_preview_samples_server <- function(
       }
       samples <- uploaded$samples.csv
       shiny::req(samples)
-      cm <- intersect(rownames(samples), rownames(new_samples))
+      cm <- intersect(as.character(rownames(samples)), as.character(rownames(new_samples)))
       if (length(cm) == 0) {
         shinyalert::shinyalert(
           title = "No matching samples.",
@@ -470,6 +470,15 @@ upload_table_preview_samples_server <- function(
           type = "error"
         )
         return()
+      }
+      if ((length(cm) != nrow(samples)) | (length(cm) != nrow(new_samples))) {
+        shinyalert::shinyalert(
+          title = "Samples mismatch.",
+          text = "The newly uploaded sample file contains a different set of samples than the current metadata. We will intersect these.",
+          type = "error"
+        )
+        samples <- samples[cm, ]
+        new_samples <- new_samples[cm, ]
       }
       new_cols <- setdiff(colnames(new_samples), colnames(samples))
       if (length(new_cols) > 0) {
