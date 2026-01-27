@@ -166,7 +166,7 @@ upload_table_preview_samples_server <- function(
       bslib::card(fileInputArea(ns("metadata_csv"),
           shiny::h4("Expand Olink metadata: upload an additional file (.csv)", class = "mb-0"),
           multiple = FALSE, accept = c(".csv"), width = "100%"),
-        style = "background-color: lightyellow; border: 0.07rem dashed goldenrod;")
+        style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;")
     })
 
     samples_options <- shiny::reactive({
