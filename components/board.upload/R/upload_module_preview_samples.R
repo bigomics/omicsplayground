@@ -475,7 +475,7 @@ upload_table_preview_samples_server <- function(
         shinyalert::shinyalert(
           title = "Samples mismatch.",
           text = "The newly uploaded sample file contains a different set of samples than the current metadata. We will intersect these.",
-          type = "error"
+          type = "warning"
         )
         samples <- samples[cm, ]
         new_samples <- new_samples[cm, ]
