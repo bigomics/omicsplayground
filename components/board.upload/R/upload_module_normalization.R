@@ -20,6 +20,7 @@ upload_module_normalization_server <- function(
   r_counts,
   r_samples,
   r_contrasts,
+  r_annot,
   upload_datatype,
   is.olink,
   is.count = FALSE,
@@ -117,6 +118,7 @@ upload_module_normalization_server <- function(
 
           X <- X[which(sel), , drop = FALSE]
           counts <- counts[which(sel), , drop = FALSE]
+          annot <- r_annot()[which(sel), , drop = FALSE]
         }
 
         ## Impute if required
@@ -128,7 +130,7 @@ upload_module_normalization_server <- function(
           }
         }
 
-        return(list(counts = counts, X = X, prior = prior))
+        return(list(counts = counts, X = X, prior = prior, annot = annot))
       })
 
       ## Normalize
@@ -188,6 +190,12 @@ upload_module_normalization_server <- function(
         X <- cleanX()$X
         cx <- list(X = X)
         return(cx)
+      })
+
+      annot <- shiny::reactive({
+        shiny::req(dim(imputedX()$annot))
+        annot <- imputedX()$annot
+        return(annot)
       })
 
       ## ------------------------------------------------------------------
@@ -1249,7 +1257,8 @@ upload_module_normalization_server <- function(
           norm_method = norm_method,
           imputation_method = imputation_method,
           bc_method = bc_method,
-          remove_outliers = remove_outliers
+          remove_outliers = remove_outliers,
+          annot = annot
         )
       ) ## pointing to reactive
     } ## end-of-server
