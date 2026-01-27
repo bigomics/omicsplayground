@@ -294,7 +294,6 @@ UploadBoard <- function(id,
 
         olink <- is.olink()
         if (olink) {
-          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
@@ -1279,6 +1278,7 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
       public_dataset_id = public_dataset_id ## accession ID
     )
 
@@ -1307,6 +1307,7 @@ UploadBoard <- function(id,
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.count = TRUE,
@@ -1363,7 +1364,7 @@ UploadBoard <- function(id,
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
+      annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       lib.dir = FILES,

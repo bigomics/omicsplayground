@@ -272,6 +272,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.wgcna/R/consensusWGCNA/consensuswgcna_ui.R',encoding='UTF-8')
   source('board.wgcna/R/multiwgcna/board_multiwgcna_server.R',encoding='UTF-8')
   source('board.wgcna/R/multiwgcna/board_multiwgcna_ui.R',encoding='UTF-8')
+  source('board.wgcna/R/multiwgcna/multiwgcna_html_report.R',encoding='UTF-8')
   source('board.wgcna/R/multiwgcna/multiwgcna_plot_dendrograms.R',encoding='UTF-8')
   source('board.wgcna/R/multiwgcna/multiwgcna_plot_lasagna.R',encoding='UTF-8')
   source('board.wgcna/R/multiwgcna/multiwgcna_plot_modulecorr.R',encoding='UTF-8')
