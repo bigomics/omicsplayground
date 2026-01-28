@@ -50,12 +50,12 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     available_datasets <- reactive({
       req(tiledb_path())
-      playbase::pgx.listDatasetsTileDB(tiledb_path())
+      playbase::listDatasetsTileDB(tiledb_path())
     })
 
     dataset_info_table <- reactive({
       req(tiledb_path())
-      playbase::pgx.getDatasetInfoTileDB(
+      playbase::getDatasetInfoTileDB(
         tiledb_path(),
         datasets_info_file = datasets_info_file()
       )
@@ -63,12 +63,12 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     available_genes <- reactive({
       req(tiledb_path())
-      playbase::pgx.listGenesTileDB(tiledb_path())
+      playbase::listGenesTileDB(tiledb_path())
     })
 
     phenotypes_by_dataset <- reactive({
       req(tiledb_path())
-      playbase::pgx.listPhenotypesByDatasetTileDB(tiledb_path())
+      playbase::listPhenotypesByDatasetTileDB(tiledb_path())
     })
 
     ## Selected datasets (managed via modal)
@@ -91,7 +91,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       req(input$filter_phenotype)
       req(tiledb_path())
       sel_datasets <- if (length(selected_datasets()) == 0) NULL else selected_datasets()
-      playbase::pgx.getPhenotypeValuesTileDB(
+      playbase::getPhenotypeValuesTileDB(
         tiledb_path(),
         phenotype = input$filter_phenotype,
         datasets = sel_datasets
@@ -358,7 +358,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       value_type <- if (is.null(input$value_type)) "count" else input$value_type
 
       shiny::withProgress(message = "Querying TileDB...", value = 0.3, {
-        counts <- playbase::pgx.queryTileDB(path, genes = genes, value = value_type)
+        counts <- playbase::queryTileDB(path, genes = genes, value = value_type)
         shiny::incProgress(0.2, message = "Processing data...")
 
         phenotypes_to_fetch <- character(0)
@@ -371,9 +371,9 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         phenotypes_to_fetch <- unique(phenotypes_to_fetch)
 
         df <- if (length(phenotypes_to_fetch) > 0) {
-          playbase::pgx.tiledbToPlotDF(counts, tiledb_path = path, phenotypes = phenotypes_to_fetch)
+          playbase::tiledbToPlotDF(counts, tiledb_path = path, phenotypes = phenotypes_to_fetch)
         } else {
-          playbase::pgx.tiledbToPlotDF(counts)
+          playbase::tiledbToPlotDF(counts)
         }
 
         df <- df[!is.na(df$count), ]
