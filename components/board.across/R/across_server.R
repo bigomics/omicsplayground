@@ -407,6 +407,15 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       runTileDBQuery()
     }, ignoreInit = TRUE)
 
+    ## Disable scale selector when z-score is selected (z-scores should not be log-transformed)
+    shiny::observe({
+      if (isTRUE(input$value_type == "zscore")) {
+        shinyjs::disable("plot_scale")
+      } else {
+        shinyjs::enable("plot_scale")
+      }
+    })
+
     ## ================================================================================
     ## ======================= REACTIVE DATA ==========================================
     ## ================================================================================
