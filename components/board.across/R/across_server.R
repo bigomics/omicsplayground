@@ -437,12 +437,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     ## =========================== MODULES ============================================
     ## ================================================================================
 
-    multigene_display <- reactive({
-      if (is.null(input$multigene_display)) "barplot" else input$multigene_display
-    })
-
-    across_plot_barplot_server("barplot", getPlotData = getPlotData,
-                               multigene_display = multigene_display, watermark = WATERMARK)
+    across_plot_barplot_server("barplot", getPlotData = getPlotData, watermark = WATERMARK)
     across_plot_boxplot_server("boxplot", getPlotData = getPlotData, watermark = WATERMARK)
     across_table_data_server("datatable", getPlotData = getPlotData)
   })
