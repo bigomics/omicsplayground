@@ -17,6 +17,7 @@ loading_table_datasets_ui <- function(
   ## Metadata filters are rendered dynamically based on available columns
   options <- tagList(
     shiny::checkboxGroupInput(ns("flt_datatype"), "Datatype", choices = ""),
+    shiny::uiOutput(ns("metadata_filters"))
   )
 
   tagList(
@@ -137,6 +138,15 @@ loading_table_datasets_server <- function(id,
           filters <- filters & (df$datatype %in% input$flt_datatype)
         }
 
+        ## Apply dynamic metadata filters (columns with metadata_ prefix)
+        metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
+        for (mcol in metadata_cols) {
+          filter_id <- paste0("flt_", mcol)
+          if (notnull(input[[filter_id]])) {
+            filters <- filters & (df[[mcol]] %in% input[[filter_id]])
+          }
+        }
+
         df <- df[which(filters), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
@@ -162,6 +172,47 @@ loading_table_datasets_server <- function(id,
       datatypes <- sort(setdiff(df$datatype, c(NA, "")))
       shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
     })
+
+    ## Render metadata filters dynamically based on available metadata columns
+    output$metadata_filters <- shiny::renderUI({
+      df <- getPGXINFO()
+      if (is.null(df)) {
+        return(NULL)
+      }
+
+      ## Find metadata columns (prefixed with "metadata_")
+      metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
+      if (length(metadata_cols) == 0) {
+        return(NULL)
+      }
+
+      ## Create a filter for each metadata column that has values
+      filter_inputs <- lapply(metadata_cols, function(mcol) {
+        values <- sort(setdiff(df[[mcol]], c(NA, "")))
+        if (length(values) == 0) {
+          return(NULL)
+        }
+
+        ## Create a nice label from the column name (remove metadata_ prefix, replace _ with space)
+        label <- sub("^metadata_", "", mcol)
+        label <- gsub("_", " ", label)
+        label <- paste0(toupper(substring(label, 1, 1)), substring(label, 2))
+
+        shiny::checkboxGroupInput(
+          ns(paste0("flt_", mcol)),
+          label,
+          choices = values
+        )
+      })
+
+      ## Remove NULL entries and return
+      filter_inputs <- Filter(Negate(is.null), filter_inputs)
+      if (length(filter_inputs) == 0) {
+        return(NULL)
+      }
+      tagList(filter_inputs)
+    })
+
 
     ## -------------------------------------------------------------------
     ## make a pgx public (i.e. share publicly)

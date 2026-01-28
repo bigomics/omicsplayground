@@ -260,7 +260,7 @@ upload_table_preview_counts_server <- function(id,
                       ns("counts_csv"),
                       shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
                       multiple = FALSE,
-                      accept = if (upload_datatype() == "proteomics" && is.olink()) c(".csv", ".parquet") else c(".csv"),
+                      accept = c(".csv"),
                       width = "100%"
                     )
                   }

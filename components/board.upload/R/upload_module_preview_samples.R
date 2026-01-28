@@ -24,7 +24,6 @@ upload_table_preview_samples_server <- function(
   info.text,
   caption,
   upload_datatype,
-  is.olink,
   public_dataset_id
 ) {
   moduleServer(id, function(input, output, session) {
@@ -127,7 +126,7 @@ upload_table_preview_samples_server <- function(
         br()
       )
     })
-    
+
     output$tech_rep <- renderUI({
       tagList(
         checkboxGroupInput(
@@ -142,48 +141,8 @@ upload_table_preview_samples_server <- function(
           "Combine/Restore technical replicates",
           icon = icon("plus"),
           class = "btn-sm btn-outline-primary"
-        ),
-        br()
-      )
-    })
-
-    output$add_metadata <- renderUI({
-      tagList(
-        withTooltip(
-          checkboxInput(
-            ns("add_metadata_button"),
-            label = "Add metadata",
-            value = FALSE
-          ),
-          "Expand Olink metadata by uploading an additional sample file (.csv)"
-        ),
-        uiOutput(ns("metadata_upload_area"))
-      )
-    })
-    
-    output$metadata_upload_area <- renderUI({
-      shiny::req(input$add_metadata_button == TRUE)
-      bslib::card(fileInputArea(ns("metadata_csv"),
-          shiny::h4("Expand Olink metadata: upload an additional file (.csv)", class = "mb-0"),
-          multiple = FALSE, accept = c(".csv"), width = "100%"),
-        style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;")
-    })
-
-    samples_options <- shiny::reactive({
-      base_options <- shiny::tagList(
-        uiOutput(ns("col_sel")),
-        br(),
-        uiOutput(ns("tech_rep"))
-      )
-      if (upload_datatype() == "proteomics" && is.olink()) {
-        shiny::tagList(
-          base_options,
-          br(),
-          uiOutput(ns("add_metadata"))
         )
-      } else {
-        base_options
-      }
+      )
     })
 
     table.RENDER <- function() {
@@ -212,7 +171,7 @@ upload_table_preview_samples_server <- function(
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
         div(
-          if (loaded_samples() && !is.olink()) {
+          if (loaded_samples()) {
             shiny::actionButton(
               ns("remove_samples"),
               "Cancel",
@@ -272,7 +231,11 @@ upload_table_preview_samples_server <- function(
                 title = title,
                 info.text = info.text,
                 caption = caption,
-                options = samples_options(),
+                options = tagList(
+                  uiOutput(ns("col_sel")),
+                  br(),
+                  uiOutput(ns("tech_rep"))
+                ),
                 label = "",
                 show.maximize = FALSE
               ),
@@ -335,9 +298,6 @@ upload_table_preview_samples_server <- function(
       prior <- min(counts[which(counts > 0)], na.rm = TRUE)
       X <- log2(counts + prior)
       Y <- uploaded$samples.csv
-      cm <- intersect(colnames(X), rownames(Y))
-      X <- X[, cm, drop = FALSE]
-      Y <- Y[cm, , drop = FALSE]
       shiny::req(nrow(Y))
       shiny::validate(shiny::need(ncol(Y) > 0, "Please select at least 1 variable."))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
@@ -433,8 +393,14 @@ upload_table_preview_samples_server <- function(
       # Save file
       datafile <- input$samples_csv$datapath
       file.copy(from = datafile, to = paste0(raw_dir(), "/samples.csv"), overwrite = TRUE)
-      df <- tryCatch({ playbase::read.as_matrix(datafile) },
-        error = function(w) { NULL })      
+      df <- tryCatch(
+        {
+          playbase::read.as_matrix(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
       if (is.null(df)) {
         data_error_modal(path = datafile, data_type = "samples")
       } else {
@@ -444,69 +410,6 @@ upload_table_preview_samples_server <- function(
       loaded_samples(TRUE)
     })
 
-    observeEvent(input$metadata_csv, {
-      shiny::req(input$metadata_csv)
-      c1 <- (tools::file_ext(input$metadata_csv$name)[1] != "csv")
-      c2 <- (!grepl("sample", input$metadata_csv$name, ignore.case = TRUE))
-      if (c1 | c2) {
-        shinyalert::shinyalert(
-          title = "File format not supported.",
-          text = "Please make sure the file is a CSV file and contains 'samples' in the file name.",
-          type = "error"
-        )
-        return()
-      }
-      datafile <- input$metadata_csv$datapath
-      new_samples <- tryCatch({ playbase::read.as_matrix(datafile) },
-        error = function(w) { NULL })
-      if (is.null(new_samples)) {
-        data_error_modal(path = datafile, data_type = "metadata")
-        return()
-      }
-      samples <- uploaded$samples.csv
-      shiny::req(samples)
-      counts <- uploaded$counts.csv
-      cm <- intersect(as.character(rownames(samples)), as.character(rownames(new_samples)))
-      cm <- intersect(cm, colnames(counts))
-      if (length(cm) == 0) {
-        shinyalert::shinyalert(
-          title = "No matching samples",
-          text = "The newly uploaded metadata file does not share any sample identifiers with the current samples and abundance file.",
-          type = "error"
-        )
-        return()
-      }
-      if ((length(cm) != nrow(samples)) | (length(cm) != nrow(new_samples))) {
-        shinyalert::shinyalert(
-          title = "Samples mismatch",
-          text = "The new sample file contains a different set of samples than the current metadata. We will intersect these.",
-          type = "warning"
-        )
-        samples <- samples[cm, , drop = FALSE]
-        new_samples <- new_samples[cm, , drop = FALSE]
-        counts <- counts[, cm, drop = FALSE]
-        uploaded$counts.csv <- counts
-      }
-      new_cols <- setdiff(colnames(new_samples), colnames(samples))
-      if (length(new_cols) > 0) {
-        merged <- cbind(samples, new_samples[rownames(samples), new_cols, drop = FALSE])
-        uploaded$samples.csv <- merged
-        orig_sample_matrix(merged)
-        vars_selected(colnames(merged))
-        shinyalert::shinyalert(
-          title = "Metadata added",
-          text = paste("Added", length(new_cols), "new variables:", paste(new_cols, collapse = ", ")),
-          type = "success"
-        )
-      } else {
-        shinyalert::shinyalert(
-          title = "No new columns added",
-          text = "The newly upload metadata file does not contain any new variables.",
-          type = "warning"
-        )
-      }
-    })
-      
     observeEvent(input$remove_samples, {
       delete_all_files_samples <- function(value) {
         if (value) {
