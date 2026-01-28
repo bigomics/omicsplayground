@@ -30,6 +30,7 @@ across_plot_barplot_ui <- function(id,
 #' @export
 across_plot_barplot_server <- function(id,
                                        getPlotData,
+                                       multigene_display = reactive("barplot"),
                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -52,6 +53,13 @@ across_plot_barplot_server <- function(id,
 
       genes <- unique(df$gene)
       n_genes <- length(genes)
+      display_mode <- multigene_display()
+
+      ## Use heatmap for multiple genes when heatmap mode is selected
+      if (n_genes > 1 && display_mode == "heatmap") {
+        p <- render_expression_heatmap(df, genes, color_by, legend_title)
+        return(p)
+      }
 
       if (n_genes == 1) {
         p <- plotly::plot_ly(
@@ -140,5 +148,62 @@ across_plot_barplot_server <- function(id,
       add.watermark = watermark
     )
   })
+}
+
+#' Render heatmap for multi-gene expression data using playbase::pgx.splitHeatmapFromMatrix
+#' @keywords internal
+render_expression_heatmap <- function(df, genes, color_by, legend_title) {
+  ## Create expression matrix (genes x samples)
+  samples <- unique(df$sample)
+  expr_matrix <- matrix(NA, nrow = length(genes), ncol = length(samples),
+                        dimnames = list(genes, samples))
+
+  for (i in seq_len(nrow(df))) {
+    gene <- df$gene[i]
+    sample <- df$sample[i]
+    if (gene %in% genes && sample %in% samples) {
+      expr_matrix[gene, sample] <- df$count[i]
+    }
+  }
+
+  ## Get sample annotations for color grouping
+  sample_info <- df[!duplicated(df$sample), c("sample", "color_group")]
+  rownames(sample_info) <- sample_info$sample
+  sample_info <- sample_info[samples, , drop = FALSE]
+
+  ## Create annotation data frame
+  annot <- data.frame(row.names = samples)
+  annot[[legend_title]] <- sample_info$color_group
+
+  ## Order samples by group for better visualization
+  sample_order <- order(sample_info$color_group)
+  expr_matrix <- expr_matrix[, sample_order, drop = FALSE]
+  annot <- annot[sample_order, , drop = FALSE]
+
+  ## Use playbase function to create heatmap
+  ## scale = "none" since data may already be transformed (log2 or z-score)
+  plt <- playbase::pgx.splitHeatmapFromMatrix(
+    X = expr_matrix,
+    annot = annot,
+    splitx = annot[[legend_title]],
+    scale = "none",
+    row_clust = (nrow(expr_matrix) > 1),
+    show_legend = TRUE,
+    rowcex = 1,
+    colcex = 0  ## hide column labels (too many samples)
+  )
+
+ ## Convert iheatmapr to plotly widget
+  plt <- plt %>%
+    iheatmapr::to_plotly_list() %>%
+    plotly::as_widget()
+
+  plt <- plt %>%
+    plotly::config(
+      modeBarButtonsToRemove = setdiff(all.plotly.buttons, "toImage"),
+      displaylogo = FALSE
+    )
+
+  return(plt)
 }
 

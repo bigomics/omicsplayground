@@ -128,6 +128,18 @@ AcrossInputs <- function(id) {
           ),
           "Select scale for expression values.",
           placement = "right", options = list(container = "body")
+        ),
+        shiny::hr(),
+        withTooltip(
+          shiny::radioButtons(
+            ns("multigene_display"),
+            "Multi-gene display:",
+            choices = c("Bar plots" = "barplot", "Heatmap" = "heatmap"),
+            selected = "barplot",
+            inline = TRUE
+          ),
+          "Choose how to display multiple genes: individual bar plots or a combined heatmap.",
+          placement = "right", options = list(container = "body")
         )
       )
     ),
