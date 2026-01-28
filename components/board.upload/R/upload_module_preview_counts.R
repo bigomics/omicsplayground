@@ -633,7 +633,7 @@ upload_table_preview_counts_server <- function(id,
         } else {
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
-            df <- tryCatch(
+            df0 <- tryCatch(
             {
               playbase::read_Olink_NPX(datafile)
             },
@@ -641,21 +641,15 @@ upload_table_preview_counts_server <- function(id,
               NULL
             }
             )
-            if (is.null(df)) {
+            if (is.null(df0)) {
               shinyalert::shinyalert(
                 title = "Error",
-                text = "You data are not in Official Olink NPX format. Please correct the data."
+                text = "Your data may not be in Official Olink format. Please check."
               )
-            }
-            if (!is.null(df)) {
-              df.samples <- tryCatch(
-              {
-                playbase::read_Olink_samples(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
-              )
+            } else {              
+              df <- df0[["counts"]]
+              df.samples <- df0[["samples"]]
+              rm(df0)
             }
           } else if (upload_datatype() == "proteomics" && !is.olink()) {
             df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
