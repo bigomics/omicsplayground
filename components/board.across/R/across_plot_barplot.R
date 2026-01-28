@@ -13,11 +13,26 @@ across_plot_barplot_ui <- function(id,
                                    height) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    withTooltip(
+      shiny::radioButtons(
+        inputId = ns("multigene_display"),
+        label = "Multi-gene display",
+        choices = c("Bar plots" = "barplot", "Heatmap" = "heatmap"),
+        selected = "barplot",
+        inline = TRUE
+      ),
+      "Choose how to display multiple genes: individual bar plots or a combined heatmap.",
+      placement = "top"
+    )
+  )
+
   PlotModuleUI(
     ns("plot"),
     title = title,
     plotlib = "plotly",
     label = "a",
+    options = options,
     info.text = info.text,
     info.methods = info.methods,
     info.extra_link = info.extra_link,
@@ -30,7 +45,6 @@ across_plot_barplot_ui <- function(id,
 #' @export
 across_plot_barplot_server <- function(id,
                                        getPlotData,
-                                       multigene_display = reactive("barplot"),
                                        watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -53,7 +67,7 @@ across_plot_barplot_server <- function(id,
 
       genes <- unique(df$gene)
       n_genes <- length(genes)
-      display_mode <- multigene_display()
+      display_mode <- if (is.null(input$multigene_display)) "barplot" else input$multigene_display
 
       ## Use heatmap for multiple genes when heatmap mode is selected
       if (n_genes > 1 && display_mode == "heatmap") {
