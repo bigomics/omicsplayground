@@ -17,7 +17,12 @@ multiwgcna_plot_dendrograms_ui <- function(
   options <- shiny::tagList(
     shiny::checkboxInput(
       inputId = ns("showtraits"),
-      label = "Show trait correlation",
+      label = "Show traits",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
       value = FALSE
     )
   )
@@ -39,9 +44,9 @@ multiwgcna_plot_dendrograms_server <- function(id,
                                                mwgcna,
                                                r_layers) {
   moduleServer(id, function(input, output, session) {
-    plot.RENDER <- function() {
-      wgcna <- mwgcna()
 
+    plot.RENDER <- function() {
+      wgcna <- mwgcna()$layers
       layers <- r_layers()
       shiny::req(layers)
 
@@ -59,47 +64,27 @@ multiwgcna_plot_dendrograms_server <- function(id,
         nc <- ceiling(sqrt(nw))
         nr <- ceiling(nw / nc)
       }
+      dr <- ifelse(input$showtraits || input$showcontrasts, 0.3, 1)
 
-      if (input$showtraits) {
-        ## Need to set layout manually
-        layout.matrix <- matrix(1:(2 * nr * nc), nrow = nr * 2, ncol = nc)
-        graphics::layout(
-          mat = layout.matrix,
-          heights = rep(c(1, 1), nr),
-          widths = rep(1, nc)
+      ## Need to set layout manually
+      layout.matrix <- matrix(1:(2*nr*nc), nrow = nr*2, ncol = nc)
+      graphics::layout(
+        mat = layout.matrix,
+        heights = rep(c(1*dr, 1), nr),
+        widths = rep(1, nc)
+      )
+      i <- 1
+      for (i in 1:length(wgcna)) {
+        power <- wgcna[[i]]$net$power
+        playbase::wgcna.plotDendroAndColors(
+          wgcna = wgcna[[i]],
+          main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
+          show.traits = input$showtraits,
+          show.contrasts = input$showcontrasts,
+          marAll = c(1,7,1,0),
+          #use.tree = input$clusterby,
+          setLayout = FALSE
         )
-        i <- 1
-        for (i in 1:length(wgcna)) {
-          power <- wgcna[[i]]$net$power
-          playbase::wgcna.plotDendroAndTraitCorrelation(
-            wgcna = wgcna[[i]],
-            main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
-            show.traits = input$showtraits,
-            show.contrasts = input$showtraits,
-            marAll = c(1,7,1,0),
-            #use.tree = input$clusterby,
-            setLayout = FALSE
-          )
-        }
-      } else {
-        ## Need to set layout manually
-        layout.matrix <- matrix(1:(2 * nr * nc), nrow = nr * 2, ncol = nc)
-        graphics::layout(
-          mat = layout.matrix,
-          heights = rep(c(2.5, 1), nr),
-          widths = rep(1, nc)
-        )
-
-        i <- 1
-        for (i in 1:length(wgcna)) {
-          power <- wgcna[[i]]$net$power
-          playbase::wgcna.plotDendroAndColors(
-            wgcna = wgcna[[i]],
-            main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
-            marAll = c(3, 5.5, 3, 1),
-            setLayout = FALSE
-          )
-        }
       }
     }
 

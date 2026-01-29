@@ -29,27 +29,27 @@ multiwgcna_table_enrichment_server <- function(id,
                                                mwgcna,
                                                r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
+
     table_df <- function() {
       wgcna <- mwgcna()
       module <- r_module()
       shiny::req(module)
-
-      df <- lapply(wgcna, function(w) w$gsea)
-      names(df) <- NULL
-      df <- unlist(df, recursive = FALSE)
-      df <- df[names(df) %in% module]
-      df <- do.call(rbind, df)
+      if(!module %in% names(wgcna$gsea)) {
+        return(NULL)
+      }
+      df <- wgcna$gsea[[module]]
       return(df)
     }
 
     render_table <- function(full = TRUE) {
       df <- table_df()
-      shiny::req(df)
-      ## df$module <- factor(df$module)
-      df$module <- NULL ## don't show
+      ##shiny::req(df)
+      shiny::validate(shiny::need(!is.null(df),
+        "no enrichment data"
+      ))
 
       if (!full) {
-        sel <- c("geneset", "module", "score", "q.value", "overlap")
+        sel <- c("geneset", "score", "q.value", "overlap")
         sel <- intersect(sel, colnames(df))
         df <- df[, sel]
       }

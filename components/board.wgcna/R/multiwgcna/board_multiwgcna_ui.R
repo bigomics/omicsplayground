@@ -6,15 +6,21 @@
 MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
-    shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL),
+    shinyjs::hidden(
+      shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL)
+    ),
+    shinyjs::hidden(    
+      shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL)
+    ),
+    shinyjs::hidden(    
+      shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)
+    ),
     shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
     shiny::conditionalPanel(
       "input.layers && input.layers.indexOf('gset') > -1",
       ns = ns,
       shiny::selectInput(ns("gsfilter"), "Geneset filter:", choices = NULL)
     ),
-    shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
@@ -36,6 +42,7 @@ MultiWGCNA_Inputs <- function(id) {
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
           shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
+          shiny::checkboxInput(ns("addgsets"),"add genesets",FALSE),          
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute",
             size = "xs",
@@ -48,11 +55,22 @@ MultiWGCNA_Inputs <- function(id) {
     shinyjs::hidden(
       bslib::accordion(
         id = ns("lasagna_options"),
-        open = FALSE,
+        open = TRUE,
         bslib::accordion_panel(
           "Lasagna options",
           icon = icon("cog", lib = "glyphicon"),
           multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna"))
+        )
+      )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("report_options"),
+        open = TRUE,
+        bslib::accordion_panel(
+          "Report options",
+          icon = icon("cog", lib = "glyphicon"),
+          wgcna_report_inputs(ns("multiwgcnaReport"))
         )
       )
     )
@@ -231,7 +249,48 @@ MultiWGCNA_UI <- function(id) {
             )
           )
         )
+      ),
+
+      ## ----------------------------------------------------------------
+      shiny::tabPanel(
+        "AI Report",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto", 1),
+          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          bslib::layout_columns(
+            col_widths = c(6,6),
+            height = "calc(100vh - 180px)",
+            bslib::layout_columns(
+              col_widths = 12,
+              wgcna_report_diagram_ui(
+                ns("multiwgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI generated diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),              
+              wgcna_report_infographic_ui(
+                ns("multiwgcnaReport"),
+                title = "Infographic",
+                caption = "AI-generated infographic",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            ),
+            wgcna_html_report_ui(
+              ns("multiwgcnaReport"),
+              title = "AI Report",
+              caption = "AI summary report",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            )            
+          )
+        )
       )
+
+      
     ) ## end tabsetPanel
   ) ## end div
 }

@@ -174,7 +174,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         compute.enrichment = TRUE,
         summary = TRUE,
         ai_model = NULL,
-        ai_experiment = pgx$description,
+        experiment = pgx$description,
         gsea.mingenes = 5,
         gsea.ntop = 1000,
         progress = progress,
