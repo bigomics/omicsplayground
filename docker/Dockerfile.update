@@ -66,6 +66,7 @@ RUN R -e "install.packages('tidyprompt')"
 RUN R -e "install.packages('xgboost')"
 RUN R -e "install.packages('arrow')"
 RUN R -e "install.packages('DiagrammeRsvg')"
+RUN R -e "install.packages('shinychat')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
