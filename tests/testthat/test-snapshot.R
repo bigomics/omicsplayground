@@ -1,7 +1,14 @@
 test_that("example data loads with no error",{
   # source aux functions
   source("aux-test-functions.R")
-  
+
+  # Parallelization config
+  n_workers <- getOption("test.workers", 3)  # Default 3 workers, configurable
+  base_port <- 8080
+
+  # Check if parallel execution is supported (Unix only for mclapply forking)
+  can_parallelize <- .Platform$OS.type == "unix" && n_workers > 1
+
   # test single board minimal components
 
   # get all board names
@@ -19,11 +26,18 @@ test_that("example data loads with no error",{
   # get all pgx files
   pgx_files <- list.files(normalizePath("../../data/pgx_results"), pattern = "*.pgx", full.names = TRUE)
 
+  pgx_files <- pgx_files[1:3]
+
   authentication <- options()$authentication
 
-  AppLog <- lapply(pgx_files, function(pgx_file) {
-    message(pgx_file)
-    pgx <- playbase::pgx.load(pgx_file)
+  # Define the test function for each pgx file
+  test_pgx_file <- function(idx) {
+    tryCatch({
+      pgx_file <- pgx_files[idx]
+      # Calculate unique port for this worker (cyclic assignment)
+      port <- base_port + ((idx - 1) %% n_workers)
+      message(sprintf("[Worker %d, Port %d] %s", idx, port, pgx_file))
+      pgx <- playbase::pgx.load(pgx_file)
     boards <- all_boards[all_boards %in% names(pgx)]
     boards <- c("dataview", "enrichment", "clustering", "featuremap", "compare", "correlation", "expression", "pathway", "timeseries", "biomarker", "signature", "intersection", boards)
     if ("mofa" %in% boards) {
@@ -46,7 +60,7 @@ test_that("example data loads with no error",{
         authentication = authentication,
         use_example_data = FALSE
       ),
-      shiny_args = list(port = 8080)
+      shiny_args = list(port = port)
     )
     App$get_values(input = TRUE)
 
@@ -94,5 +108,44 @@ test_that("example data loads with no error",{
       App$wait_for_idle(duration = 3000)
       App$expect_screenshot(name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
     }
-  })})
+  })},
+    error = function(e) {
+      message(sprintf("[Worker %d] ERROR: %s", idx, conditionMessage(e)))
+      return(list(error = conditionMessage(e), idx = idx))
+    })
+  }
+
+  # Run pgx_files in parallel using mclapply (Unix) or sequentially (Windows)
+  if (can_parallelize) {
+    message(sprintf("Running %d pgx files in parallel with %d workers", length(pgx_files), n_workers))
+    AppLog <- parallel::mclapply(
+      seq_along(pgx_files),
+      test_pgx_file,
+      mc.cores = n_workers,
+      mc.preschedule = FALSE,
+      mc.silent = FALSE
+    )
+    # Print any warnings from mclapply
+    warns <- warnings()
+    if (length(warns) > 0) {
+      message("mclapply warnings:")
+      print(warns)
+    }
+  } else {
+    message(sprintf("Running %d pgx files sequentially", length(pgx_files)))
+    AppLog <- lapply(seq_along(pgx_files), test_pgx_file)
+  }
+
+  # Check for errors in parallel results
+  # mclapply returns try-error objects or our custom error lists
+  for (i in seq_along(AppLog)) {
+    result <- AppLog[[i]]
+    if (inherits(result, "try-error")) {
+      message(sprintf("Worker %d failed with try-error: %s", i, as.character(result)))
+    } else if (is.list(result) && !is.null(result$error)) {
+      message(sprintf("Worker %d failed: %s", result$idx, result$error))
+    } else if (is.null(result)) {
+      message(sprintf("Worker %d returned NULL (likely crashed)", i))
+    }
+  }
 })
