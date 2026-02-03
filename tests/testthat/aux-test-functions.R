@@ -22,15 +22,27 @@ searchTabs <- function(board) {
     return(tabs[[board]])
 }
 
-generate_js_click_code <- function(data_value) {
-  js_code <- sprintf(
+generate_js_click_code <- function(data_value, tab_pane = FALSE) {
+  if (tab_pane) {
+    js_code <- sprintf(
     "
-    const targetElement = document.querySelector('a[data-value*=\"%s\"]');
+    const targetElement = document.querySelector('.tab-pane.active a[data-value*=\"%s\"]');
     if (targetElement) {
     targetElement.click();
     }
     ",
     data_value
-  )
+    )
+  } else {
+    js_code <- sprintf(
+      "
+      const targetElement = document.querySelector('a[data-value*=\"%s\"]');
+      if (targetElement) {
+      targetElement.click();
+      }
+      ",
+      data_value
+    )
+  }
   return(js_code)
 }
