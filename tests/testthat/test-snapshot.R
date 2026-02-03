@@ -26,7 +26,6 @@ test_that("example data loads with no error",{
   # get all pgx files
   pgx_files <- list.files(normalizePath("../../data/pgx_results"), pattern = "*.pgx", full.names = TRUE)
 
-  pgx_files <- pgx_files[1:3]
 
   authentication <- options()$authentication
 
@@ -76,9 +75,6 @@ test_that("example data loads with no error",{
       App$run_js("$('#biomarker-pdx_runbutton').click(); ")
       App$wait_for_idle(duration = 3000, timeout = 100000)
     }
-    if(board == "expression") {
-      App$run_js("$('#expression-genetable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
-    }
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
       lapply(tabs, function(tab){
@@ -89,6 +85,40 @@ test_that("example data loads with no error",{
         } else if (board == "clustering") {
           duration <- 50000
           App$wait_for_idle(duration = 15000, timeout = duration)
+        } else if (board == "expression") {
+          if (tab == "Overview") {
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_normal"), threshold = 10, selector = "viewport")
+            App$run_js("$('#expression-genetable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_1gene"), threshold = 10, selector = "viewport")
+            App$run_js("$('#expression-gsettable-datasets-datatable').find('table tr').eq(2).trigger('mousedown').trigger('mouseup'); ")
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_1set"), threshold = 10, selector = "viewport")
+            App$run_js(generate_js_click_code("Foldchange (all)"))
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_foldchange"), threshold = 10, selector = "viewport")
+            App$run_js(generate_js_click_code("FDR table"))
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_fdr"), threshold = 10, selector = "viewport")
+            App$run_js(generate_js_click_code("static"))
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_static"), threshold = 10, selector = "viewport")
+          }
+          if (tab == "Volcano by comparison" || tab == "Volcano by method") {
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_dynamic"), threshold = 10, selector = "viewport")
+            App$run_js(generate_js_click_code("static", tab_pane = TRUE))
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_static"), threshold = 10, selector = "viewport")
+          }
+          App$wait_for_idle(duration = 3000, timeout = 100000)
+        } else if (board == "featuremap") {
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_dynamic"), threshold = 10, selector = "viewport")
+            App$run_js(generate_js_click_code("static"))
+            App$wait_for_idle(duration = 3000, timeout = 100000)
+            App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab, "_static"), threshold = 10, selector = "viewport")
         } else {
           duration <- 50000
           App$wait_for_idle(duration = 3000, timeout = duration)
