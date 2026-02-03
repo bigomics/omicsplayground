@@ -208,7 +208,7 @@ app_ui <- function(x) {
 
 
       div.copilotbutton <- NULL
-      if(opt$DEVMODE) {
+      if (opt$ENABLE_CHIRP) {
         div.copilotbutton <- uiOutput("copilot_button")
       }
       div.invitebutton <- InviteFriendUI("invite")
@@ -262,8 +262,6 @@ app_ui <- function(x) {
               )
             )
           ),
-
-          
           div.copilotbutton,
           div.upgradebutton,
           div.invitebutton,
