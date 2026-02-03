@@ -52,6 +52,7 @@ upload_module_normalization_server <- function(
         counts <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()
+        annot <- r_annot()
         shiny::req(dim(contrasts))
 
         counts[which(is.nan(counts))] <- NA
@@ -118,7 +119,7 @@ upload_module_normalization_server <- function(
 
           X <- X[which(sel), , drop = FALSE]
           counts <- counts[which(sel), , drop = FALSE]
-          annot <- r_annot()[which(sel), , drop = FALSE]
+          annot <- annot[which(sel), , drop = FALSE]
         }
 
         ## Impute if required
@@ -193,7 +194,6 @@ upload_module_normalization_server <- function(
       })
 
       annot <- shiny::reactive({
-        shiny::req(dim(imputedX()$annot))
         annot <- imputedX()$annot
         return(annot)
       })
