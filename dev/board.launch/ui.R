@@ -10,8 +10,11 @@ app_ui <- function() {
     # handle pgx file input
     pgx_file <- ""
 
-    if(!is.null(use_example_data) && use_example_data == TRUE){
-        pgx_file <- file.path(OPG,"data/example-data.pgx")
+    pgx_file_opt <- options()$pgx_file
+    if (!is.null(pgx_file_opt) && nchar(pgx_file_opt) > 0) {
+        pgx_file <- pgx_file_opt
+    } else if (!is.null(use_example_data) && use_example_data == TRUE) {
+        pgx_file <- file.path(OPG, "data/example-data.pgx")
     }
 
     # handle board inputs and dependencies
