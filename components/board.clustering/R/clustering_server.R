@@ -724,7 +724,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           rho[, i] <- colMeans(rr, na.rm = TRUE)
         }
       }
-      
+
       return(rho)
     })
 

@@ -125,8 +125,8 @@ LasagnaUI <- function(id) {
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
             col_widths = 12,
-            #height = "calc(100vh - 180px)",
-            row_heights = c(3,2),
+            # height = "calc(100vh - 180px)",
+            row_heights = c(3, 2),
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
               title = "Multi-partite graph",

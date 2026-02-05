@@ -35,7 +35,7 @@ MultiWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
-          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
+          shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute",
             size = "xs",
@@ -166,7 +166,7 @@ MultiWGCNA_UI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>WGCNA-LASAGNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately and then integrated using LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association).")),
           bslib::layout_columns(
             col_widths = c(12),
