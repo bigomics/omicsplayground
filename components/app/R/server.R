@@ -695,9 +695,11 @@ app_server <- function(input, output, session) {
 
   ## Copilot button
   output$copilot_button <- renderUI({
-    if(is.null(PGX$X)) return(NULL)
+    if (is.null(PGX$X)) {
+      return(NULL)
+    }
     show.beta <- env$user_settings$enable_beta()
-    if(show.beta) {
+    if (show.beta) {
       ui <- shiny::actionButton(
         "copilot_click", "Copilot",
         width = "auto", class = "quick-button"
@@ -707,8 +709,10 @@ app_server <- function(input, output, session) {
     }
     return(ui)
   })
-  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
-    layout="fixed", maxturns=opt$LLM_MAXTURNS)
+  CopilotServer("copilot",
+    pgx = PGX, input.click = reactive(input$copilot_click),
+    layout = "fixed", maxturns = opt$LLM_MAXTURNS
+  )
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())

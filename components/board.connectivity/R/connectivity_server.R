@@ -221,7 +221,7 @@ ConnectivityBoard <- function(
           check.sigdb = TRUE,
           verbose = FALSE
         )
-        
+
         if (need_update || !file.exists(sigdb.file)) {
           pgx.showSmallModal("Updating your signature database<br>Please wait...")
           info("[compute_connectivity] calling updateDatasetFolder")
@@ -232,8 +232,8 @@ ConnectivityBoard <- function(
         }
 
         has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
-        any.nan <- any(unlist(pgx$connectivity) == "NaN", na.rm=TRUE)
-        
+        any.nan <- any(unlist(pgx$connectivity) == "NaN", na.rm = TRUE)
+
         if (need_update || !has.user_sigdb || any.nan) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
@@ -256,7 +256,7 @@ ConnectivityBoard <- function(
             try(playbase::pgx.save(shiny::reactiveValuesToList(pgx), file = pgx.filepath)) # on board snap test this fails, wrap in try
           }
         }
-        
+
         ## return connectivity results object
         pgx$connectivity
       },

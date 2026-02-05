@@ -360,7 +360,6 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-
           if (!is.null(probetype()) && probetype() == "running") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
@@ -501,7 +500,7 @@ upload_module_computepgx_server <- function(
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
-                ),
+              ),
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
                 div(
@@ -523,7 +522,7 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-                ),
+              ),
               bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
@@ -656,7 +655,9 @@ upload_module_computepgx_server <- function(
       metadata_validators_added <- reactiveVal(FALSE)
       shiny::observe({
         ## Only run once when auth becomes available
-        if (metadata_validators_added()) return()
+        if (metadata_validators_added()) {
+          return()
+        }
         shiny::req(auth$options)
 
         if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
@@ -1054,7 +1055,7 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
-        
+
         ## -----------------------------------------------
         ## Collect user-defined metadata from inputs
         ## -----------------------------------------------
@@ -1085,7 +1086,7 @@ upload_module_computepgx_server <- function(
         if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold <- FALSE
-        covariates <- input$regress_covariates 
+        covariates <- input$regress_covariates
         if (!is.null(covariates)) covariates <- as.character(covariates)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
@@ -1099,7 +1100,7 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
-        
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1159,7 +1160,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-        
+
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 

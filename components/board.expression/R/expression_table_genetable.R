@@ -132,7 +132,7 @@ expression_table_genetable_server <- function(id,
       meta.covs <- pgx$gx.meta$meta.covs
       if (!is.null(meta.covs) & input$show_cov_pvalues) {
         M <- lapply(meta.covs, function(x) do.call(cbind, x))
-        for(i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
+        for (i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
         M <- do.call(cbind, M)
         M <- M[which(rownames(M) %in% rownames(df)), ]
         M <- M[match(rownames(df), rownames(M)), ]
@@ -142,9 +142,9 @@ expression_table_genetable_server <- function(id,
         hh <- grep(paste0(mm, collapse = "|"), colnames(M))
         if (length(hh) > 0) {
           M <- M[, hh, drop = FALSE]
-          for(i in 1:ncol(M)) M[,i] <- formatC(M[,i], format = "e", digits = 2)
-          for(m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
-          df <- cbind(df,  M)
+          for (i in 1:ncol(M)) M[, i] <- formatC(M[, i], format = "e", digits = 2)
+          for (m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
+          df <- cbind(df, M)
         }
       }
 
