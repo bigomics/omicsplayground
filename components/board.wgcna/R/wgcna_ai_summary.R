@@ -200,7 +200,6 @@ wgcna_ai_summary_server <- function(id,
   })
 
   # Build config reactive from user's selected LLM model
-  # Uses session passed from caller (no moduleServer wrapper needed)
   config_reactive <- shiny::reactive({
     ai_model <- getUserOption(session, "llm_model")
     shiny::req(ai_model, ai_model != "")
@@ -223,7 +222,7 @@ wgcna_ai_summary_server <- function(id,
     )
   }
 
-  # Initialize omicsai card module (no double moduleServer wrapping)
+  # Initialize omicsai card module
   omics.ai::omicsai_summary_card_server(
     id = id,
     params_reactive = params_reactive,
