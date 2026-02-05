@@ -20,6 +20,7 @@ upload_module_normalization_server <- function(
   r_counts,
   r_samples,
   r_contrasts,
+  r_annot,
   upload_datatype,
   is.olink,
   is.count = FALSE,
@@ -51,6 +52,7 @@ upload_module_normalization_server <- function(
         counts <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()
+        annot <- r_annot()
         shiny::req(dim(contrasts))
 
         counts[which(is.nan(counts))] <- NA
@@ -117,6 +119,7 @@ upload_module_normalization_server <- function(
 
           X <- X[which(sel), , drop = FALSE]
           counts <- counts[which(sel), , drop = FALSE]
+          annot <- annot[which(sel), , drop = FALSE]
         }
 
         ## Impute if required
@@ -128,7 +131,7 @@ upload_module_normalization_server <- function(
           }
         }
 
-        return(list(counts = counts, X = X, prior = prior))
+        return(list(counts = counts, X = X, prior = prior, annot = annot))
       })
 
       ## Normalize
@@ -188,6 +191,11 @@ upload_module_normalization_server <- function(
         X <- cleanX()$X
         cx <- list(X = X)
         return(cx)
+      })
+
+      annot <- shiny::reactive({
+        annot <- imputedX()$annot
+        return(annot)
       })
 
       ## ------------------------------------------------------------------
@@ -451,7 +459,7 @@ upload_module_normalization_server <- function(
           if (input$missing_plottype == "heatmap") {
             if (any(X2 > 0)) {
               par(mar = c(3, 3, 2, 2), mgp = c(2.5, 0.85, 0))
-              playbase::gx.imagemap(X2, cex = -1)
+              playbase::gx.imagemap(X2, cex = -1, col = rev(heat.colors(64)))
               title("missing values patterns", cex.main = 1.2)
             } else {
               plot.new()
@@ -671,7 +679,8 @@ upload_module_normalization_server <- function(
         labs <- c(1, 0.85, 0.7, 0.55, 0.4)
         cex1 <- cut(xdim, breaks, labs)
         cex1 <- 2.5 * as.numeric(as.character(cex1))
-
+        if (is.na(cex1)) cex1 <- 1
+        
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
@@ -693,7 +702,7 @@ upload_module_normalization_server <- function(
           cex.lab <- 1
           cex.main <- 1.2
         }
-
+        
         for (m in methods) {
           if (m %in% names(pos.list)) {
             plot(pos.list[[m]],
@@ -1249,7 +1258,8 @@ upload_module_normalization_server <- function(
           norm_method = norm_method,
           imputation_method = imputation_method,
           bc_method = bc_method,
-          remove_outliers = remove_outliers
+          remove_outliers = remove_outliers,
+          annot = annot
         )
       ) ## pointing to reactive
     } ## end-of-server

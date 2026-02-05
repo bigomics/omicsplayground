@@ -208,6 +208,39 @@ upload_module_computepgx_server <- function(
 
       readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
+      ## Helper function to generate UI input based on metadata field config
+      ## Only supports select and multiselect types for easier filtering
+      generate_metadata_input <- function(field, ns) {
+        input_id <- ns(paste0("metadata_", field$id))
+        label_html <- shiny::tags$p(
+          paste0(field$label, if (isTRUE(field$required)) " *" else ""),
+          style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"
+        )
+
+        input_element <- if (field$type == "multiselect") {
+          shiny::selectInput(
+            input_id,
+            label = NULL,
+            choices = field$choices,
+            selected = if (!is.null(field$default)) field$default else NULL,
+            multiple = TRUE
+          )
+        } else {
+          ## Default to single select
+          shiny::selectInput(
+            input_id,
+            label = NULL,
+            choices = c("Select..." = "", field$choices),
+            selected = if (!is.null(field$default)) field$default else ""
+          )
+        }
+
+        shiny::div(
+          label_html,
+          input_element
+        )
+      }
+
       htmltag_with_info_url <- function(tag, url) {
         shiny::HTML(paste("<div style='display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%;'>", tag, "<a href='", url, "'target='_blank' class='info-link' style='margin-left: 15px;'><i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 18px;'></i></a></div>"))
       }
@@ -290,6 +323,43 @@ upload_module_computepgx_server <- function(
               )
             )
           ), ## end layout_col
+
+          ## Dataset metadata section (conditional on ENABLE_METADATA option)
+          if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
+            shiny::tagList(
+              shiny::div(
+                shiny::actionLink(ns("metadata_toggle"), "Dataset metadata",
+                  icon = icon("tags")
+                ),
+                style = "display: flex; justify-content: center; margin: 15px 0;"
+              ),
+              shiny::conditionalPanel(
+                "input.metadata_toggle%2 == 1",
+                ns = ns,
+                bslib::layout_columns(
+                  width = "100%",
+                  col_widths = c(-2, 8, -2),
+                  fill = FALSE,
+                  bslib::card(
+                    class = "metadata-card",
+                    shiny::div(
+                      style = "padding: 15px;",
+                      shiny::tags$p(
+                        "Add optional metadata to help describe and organize your dataset.",
+                        style = "color: #666; font-size: 0.9em; margin-bottom: 15px; text-align: center;"
+                      ),
+                      shiny::div(
+                        style = "display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px 25px;",
+                        lapply(METADATA_OPTIONS$fields, function(field) {
+                          generate_metadata_input(field, ns)
+                        })
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          },
 
           if (!is.null(probetype()) && probetype() == "running") {
             shiny::div(
@@ -384,6 +454,16 @@ upload_module_computepgx_server <- function(
                     selected = NULL
                   )
                 )
+              } else {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Remove effects of:</h4>"),
+                    choices = colnames(samplesRT()),
+                    selected = NULL
+                  ),
+                  shiny::HTML("<small style='margin-top: -20px; display: block;'>Regress out potential confounding effects. Valid for linear model-based gene tests.</small>")
+                )
               },
               bslib::card(
                 shiny::checkboxGroupInput(
@@ -394,7 +474,6 @@ upload_module_computepgx_server <- function(
                   ),
                   choices = GENETEST.METHODS(),
                   selected = GENETEST.SELECTED()
-                  # disabled = c("methods to be greyed-out")
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
@@ -422,7 +501,7 @@ upload_module_computepgx_server <- function(
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
-              ),
+                ),
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
                 div(
@@ -444,7 +523,7 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-              ),
+                ),
               bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
@@ -571,6 +650,27 @@ upload_module_computepgx_server <- function(
       })
       shiny::observeEvent(input$selected_description, {
         iv$add_rule("selected_description", shinyvalidate::sv_required())
+      })
+
+      ## Add validation rules for required metadata fields (once auth is available)
+      metadata_validators_added <- reactiveVal(FALSE)
+      shiny::observe({
+        ## Only run once when auth becomes available
+        if (metadata_validators_added()) return()
+        shiny::req(auth$options)
+
+        if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
+          for (field in METADATA_OPTIONS$fields) {
+            if (isTRUE(field$required)) {
+              field_id <- paste0("metadata_", field$id)
+              field_label <- field$label
+              iv$add_rule(field_id, shinyvalidate::sv_required(
+                message = paste(field_label, "is required")
+              ))
+            }
+          }
+        }
+        metadata_validators_added(TRUE)
       })
 
       shiny::outputOptions(output,
@@ -872,6 +972,16 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
+        ## Check if all required fields are valid
+        if (!iv$is_valid()) {
+          shinyalert::shinyalert(
+            title = "Missing required fields",
+            text = "Please fill in all required fields before computing.",
+            type = "warning"
+          )
+          return(NULL)
+        }
+
         ## bail out if probetype task is not finished or has error
         p <- probetype()
         if (is.null(p) || grepl("error", tolower(p)) || p == "") {
@@ -944,8 +1054,30 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
+        
         ## -----------------------------------------------
-        ## Params for scRNA-seq
+        ## Collect user-defined metadata from inputs
+        ## -----------------------------------------------
+        user_metadata <- NULL
+        if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
+          user_metadata <- lapply(METADATA_OPTIONS$fields, function(field) {
+            input_id <- paste0("metadata_", field$id)
+            value <- input[[input_id]]
+            ## Return NULL for empty values (empty string or NULL)
+            if (is.null(value) || (length(value) == 1 && value == "")) {
+              return(NULL)
+            }
+            value
+          })
+          names(user_metadata) <- sapply(METADATA_OPTIONS$fields, function(f) f$id)
+          ## Remove NULL entries
+          user_metadata <- user_metadata[!sapply(user_metadata, is.null)]
+          ## If all empty, set to NULL
+          if (length(user_metadata) == 0) user_metadata <- NULL
+        }
+
+        ## -----------------------------------------------
+        ## Covariates to regress out
         do.supercells <- as.character(input$compute_supercells) == "Compute supercells"
         nfeature_threshold <- sc_compute_settings()$nfeature_threshold
         if (!any(nfeature_threshold)) nfeature_threshold <- FALSE
@@ -953,7 +1085,8 @@ upload_module_computepgx_server <- function(
         if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold <- FALSE
-        sc.covs <- as.character(input$regress_covariates)
+        covariates <- input$regress_covariates 
+        if (!is.null(covariates)) covariates <- as.character(covariates)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -961,12 +1094,12 @@ upload_module_computepgx_server <- function(
           mt_threshold = mt_threshold,
           hb_threshold = hb_threshold,
           compute_supercells = ifelse(any(do.supercells), TRUE, FALSE),
-          regress_mt = ifelse("Mitochondrial contamination" %in% sc.covs, TRUE, FALSE),
-          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% sc.covs, TRUE, FALSE),
-          regress_ribo = ifelse("Ribosomal expression" %in% sc.covs, TRUE, FALSE),
-          regress_ccs = ifelse("Cell cycle scores" %in% sc.covs, TRUE, FALSE)
+          regress_mt = ifelse("Mitochondrial contamination" %in% covariates, TRUE, FALSE),
+          regress_hb = ifelse("Haemoglobin (blood) contamination" %in% covariates, TRUE, FALSE),
+          regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
+          regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
-
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -995,12 +1128,13 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
           only.known = remove.unknown,
-          average.duplicated = average.duplicated, ## new
+          average.duplicated = average.duplicated,
           only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
-          batch.correct.method = batch.correct.method, ## new
-          batch.pars <- batch.pars, ## NEW
+          batch.correct.method = batch.correct.method,
+          batch.pars = batch.pars,
+          covariates = covariates, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
@@ -1017,6 +1151,7 @@ upload_module_computepgx_server <- function(
           name = dataset_name,
           datatype = upload_datatype(),
           description = input$selected_description,
+          metadata = user_metadata,
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder,
@@ -1024,7 +1159,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-
+        
         path_to_params <- file.path(raw_dir(), "params.RData")
         saveRDS(params, file = path_to_params)
 

@@ -206,6 +206,11 @@ app_ui <- function(x) {
         .where = "declarations"
       )
 
+
+      div.copilotbutton <- NULL
+      if (opt$ENABLE_CHIRP) {
+        div.copilotbutton <- uiOutput("copilot_button")
+      }
       div.invitebutton <- InviteFriendUI("invite")
       div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
         UpgradeModuleUI("upgrade")
@@ -257,6 +262,7 @@ app_ui <- function(x) {
               )
             )
           ),
+          div.copilotbutton,
           div.upgradebutton,
           div.invitebutton,
           div(
@@ -326,18 +332,20 @@ app_ui <- function(x) {
                 bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
-                  label = "show captions",
+                  label = "Show captions",
                   is.checked = FALSE
                 ),
                 bslib::input_switch("enable_llm", "Enable AI"),
                 shiny::conditionalPanel(
                   "input.enable_llm",
-                  shiny::selectInput(
-                    inputId = "llm_model",
-                    label = NULL,
-                    choices = opt$LLM_MODELS,
-                    selected = 1,
-                    width = "100%"
+                  bigdash::navbarDropdownItem(
+                    shiny::selectInput(
+                      inputId = "llm_model",
+                      label = NULL,
+                      choices = opt$LLM_MODELS,
+                      selected = 1,
+                      width = "100%"
+                    )
                   )
                 )
               ),

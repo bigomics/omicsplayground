@@ -230,30 +230,30 @@ app_server <- function(input, output, session) {
   )
 
   ## Modules needed from the start
-  if (opt$ENABLE_UPLOAD) {
-    upload_datatype <- UploadBoard(
-      id = "upload",
-      pgx_dir = PGX.DIR,
-      pgx = PGX,
-      auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx,
-      inactivityCounter = inactivityCounter,
-      new_upload = new_upload
-    )
+  ## NOTE: UploadBoard is always loaded to allow per-user ENABLE_UPLOAD options
+  ## The upload tab visibility is controlled after login based on user/global options
+  upload_datatype <- UploadBoard(
+    id = "upload",
+    pgx_dir = PGX.DIR,
+    pgx = PGX,
+    auth = auth,
+    reload_pgxdir = reload_pgxdir,
+    load_uploaded_data = load_uploaded_data,
+    recompute_pgx = recompute_pgx,
+    inactivityCounter = inactivityCounter,
+    new_upload = new_upload
+  )
 
 
-    shiny::observeEvent(upload_datatype(), {
-      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-        shiny.i18n::update_lang("proteomics", session)
-      } else if (tolower(upload_datatype()) == "metabolomics") {
-        shiny.i18n::update_lang("metabolomics", session)
-      } else {
-        shiny.i18n::update_lang("RNA-seq", session)
-      }
-    })
-  }
+  shiny::observeEvent(upload_datatype(), {
+    if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+      shiny.i18n::update_lang("proteomics", session)
+    } else if (tolower(upload_datatype()) == "metabolomics") {
+      shiny.i18n::update_lang("metabolomics", session)
+    } else {
+      shiny.i18n::update_lang("RNA-seq", session)
+    }
+  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -636,11 +636,7 @@ app_server <- function(input, output, session) {
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      tag <- shiny::actionButton(
-        "dataset_click", pgx.name,
-        class = "quick-button",
-        style = "border: none; color: black; font-size: 0.9em;"
-      )
+      tag <- HTML(pgx.name)
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
@@ -697,6 +693,22 @@ app_server <- function(input, output, session) {
     ))
   })
 
+  ## Copilot button
+  output$copilot_button <- renderUI({
+    if(is.null(PGX$X)) return(NULL)
+    show.beta <- env$user_settings$enable_beta()
+    if(show.beta) {
+      ui <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
+  })
+  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
+    layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -1102,9 +1114,20 @@ app_server <- function(input, output, session) {
       message("-------------------------------")
 
       pgx.record_access(auth$email, action = "login", session = session)
+
+      ## Show/hide upload tab based on user-specific or global ENABLE_UPLOAD option
+      ## User option takes precedence over global option if set
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      if (is.null(enable_upload)) {
+        enable_upload <- opt$ENABLE_UPLOAD
+      }
+      bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
+      dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
+      ## Hide upload tab when logged out (will be re-evaluated on next login)
+      bigdash.hideMenuItem(session, "upload-tab")
     }
   })
 
