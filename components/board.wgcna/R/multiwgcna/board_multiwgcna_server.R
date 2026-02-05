@@ -212,13 +212,14 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # AI module summary
+    wgcna_ai_summary_server(
       "multiwgcnaSummary",
       wgcna = r_multiwgcna,
-      multi = TRUE,
-      r_annot = reactive(pgx$genes),
       r_module = shiny::reactive(input$module),
+      r_annot = reactive(pgx$genes),
+      session = session,
+      multi = TRUE,
       watermark = WATERMARK
     )
 

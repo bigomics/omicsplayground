@@ -253,12 +253,13 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       mwgcna = r_wgcna
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # AI module summary
+    wgcna_ai_summary_server(
       "consensusWGCNAmoduleSummary",
       wgcna = r_wgcna,
-      multi = FALSE,
       r_module = shiny::reactive(input$module),
+      session = session,
+      multi = FALSE,
       watermark = WATERMARK
     )
 

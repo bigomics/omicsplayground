@@ -194,10 +194,10 @@ MultiWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(3, 4, 5),
             height = "100vh",
-            wgcna_html_module_summary_ui(
+            wgcna_ai_summary_ui(
               id = ns("multiwgcnaSummary"),
               title = "Summary",
-              info.text = "Summary. Description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right.",
+              info.text = "Summary. Description about selected WGCNA module.",
               caption = "Information about the selected WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")

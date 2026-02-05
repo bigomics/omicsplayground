@@ -296,12 +296,13 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # AI module summary
+    wgcna_ai_summary_server(
       "moduleSummary",
       wgcna = wgcna,
-      multi = FALSE,
       r_module = shiny::reactive(input$selected_module),
+      session = session,
+      multi = FALSE,
       watermark = WATERMARK
     )
 
