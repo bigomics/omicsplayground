@@ -93,7 +93,8 @@ IntersectionBoard <- function(
     tab_elements <- list(
       "Pairwise scatter" = list(disable = NULL),
       ## "Signature clustering" = list(disable = c("comparisons"))
-      "Signature clustering" = list(disable = NULL)
+      "Signature clustering" = list(disable = NULL),
+      "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
@@ -333,6 +334,19 @@ IntersectionBoard <- function(
       getFoldChangeMatrix = getFoldChangeMatrix,
       pgx = pgx,
       input_comparisons = input_comparisons
+    )
+
+    # AI intersection summary
+
+    intersection_ai_summary_server(
+      "intersectionAISummary",
+      pgx = pgx,
+      input_comparisons = input_comparisons,
+      level = shiny::reactive(input$level),
+      getFoldChangeMatrix = getFoldChangeMatrix,
+      getActiveFoldChangeMatrix = getActiveFoldChangeMatrix,
+      session = session,
+      watermark = WATERMARK
     )
   })
 } ## end-of-Board
