@@ -123,5 +123,16 @@ WordCloudBoard <- function(id, pgx) {
       wordcloud_enrichmentTable = wordcloud_enrichmentTable,
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
+
+    # AI keyword enrichment summary
+
+    wordcloud_ai_summary_server(
+      "wordcloud_ai_summary",
+      pgx = pgx,
+      getCurrentWordEnrichment = getCurrentWordEnrichment,
+      r_contrast = shiny::reactive(input$wc_contrast),
+      session = session,
+      watermark = WATERMARK
+    )
   })
 }

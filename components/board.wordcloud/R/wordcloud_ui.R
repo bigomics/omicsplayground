@@ -21,10 +21,10 @@ WordCloudUI <- function(id) {
   halfH <- c("calc(50vh - 70px)", TABLE_HEIGHT_MODAL)
 
   ns <- shiny::NS(id) ## namespace
-  shiny::tabsetPanel(
+  tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
-    tabs <- shiny::tabPanel(
-      "",
+    shiny::tabPanel(
+      "Word Cloud",
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
         wordcloud_plot_enrichment_ui(
@@ -90,6 +90,21 @@ WordCloudUI <- function(id) {
           title = "Leading-edge table",
           info.text = "This table contains the input datasets used to create the word cloud.",
           caption = "Keyword leading edge table."
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = "calc(100vh - 181px)",
+        wordcloud_ai_summary_ui(
+          ns("wordcloud_ai_summary"),
+          title = "AI Keyword Summary",
+          info.text = "AI-generated interpretation of keyword enrichment results for the selected contrast.",
+          caption = "AI-generated keyword enrichment summary.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     )
