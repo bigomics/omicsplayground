@@ -188,6 +188,21 @@ FeatureMapUI <- function(id) {
             )
           )
         )
+      ),
+      shiny::tabPanel(
+        "AI Summary",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = fullH,
+          featuremap_ai_summary_ui(
+            ns("featuremapAISummary"),
+            title = "AI Feature Map Summary",
+            info.text = "AI-generated summary of the feature map analysis for the selected contrast.",
+            caption = "AI-generated feature map summary.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
+        )
       )
     )
   )

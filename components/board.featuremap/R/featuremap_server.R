@@ -40,6 +40,10 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Geneset" = list(
         enable = c("filter_gsets"),
         disable = c("filter_genes")
+      ),
+      "AI Summary" = list(
+        enable = NULL,
+        disable = NULL
       )
     )
     shiny::observeEvent(input$tabs, {
@@ -352,6 +356,23 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       sigvar = sigvar2,
       ref_group = shiny::reactive(input$ref_group),
       plotFeaturesPanel = plotFeaturesPanel,
+      watermark = WATERMARK
+    )
+
+    # AI feature map summary
+    feature_level <- shiny::reactive({
+      tab <- input$tabs
+      if (is.null(tab) || tab == "Gene") return("gene")
+      if (tab == "Geneset") return("geneset")
+      return("gene")
+    })
+
+    featuremap_ai_summary_server(
+      "featuremapAISummary",
+      pgx = pgx,
+      sigvar = sigvar2,
+      feature_level = feature_level,
+      session = session,
       watermark = WATERMARK
     )
   }) ## end of serverModule
