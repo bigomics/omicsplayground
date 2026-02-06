@@ -294,5 +294,18 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx = pgx,
       watermark = WATERMARK
     )
+
+    # AI correlation summary
+
+    correlation_ai_summary_server(
+      "correlationAISummary",
+      pgx = pgx,
+      getGeneCorr = getGeneCorr,
+      getPartialCorrelation = getPartialCorrelation,
+      sel_gene = shiny::reactive(input$gene),
+      gene_filter = shiny::reactive(input$cor_filter),
+      session = session,
+      watermark = WATERMARK
+    )
   })
 } ## end of Board
