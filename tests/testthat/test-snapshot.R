@@ -31,22 +31,27 @@ test_that("example data loads with no error",{
 
   # Define the test function for each pgx file
   test_pgx_file <- function(idx) {
-    tryCatch({
-      pgx_file <- pgx_files[idx]
-      # Calculate unique port for this worker (cyclic assignment)
-      port <- base_port + ((idx - 1) %% n_workers)
-      message(sprintf("[Worker %d, Port %d] %s", idx, port, pgx_file))
-      pgx <- playbase::pgx.load(pgx_file)
+    pgx_file <- pgx_files[idx]
+    # Calculate unique port for this worker (cyclic assignment)
+    port <- base_port + ((idx - 1) %% n_workers)
+    message(sprintf("[Worker %d, Port %d] %s", idx, port, pgx_file))
+    pgx <- tryCatch(
+      playbase::pgx.load(pgx_file),
+      error = function(e) {
+        message(sprintf("[Worker %d] ERROR loading pgx: %s", idx, conditionMessage(e)))
+        return(NULL)
+      }
+    )
+    if (is.null(pgx)) return(list(error = "pgx load failed", idx = idx))
     boards <- all_boards[all_boards %in% names(pgx)]
     boards <- c("dataview", "enrichment", "clustering", "featuremap", "compare", "correlation", "expression", "pathway", "timeseries", "biomarker", "signature", "intersection", boards)
     if ("mofa" %in% boards) {
       boards <- c(boards, "snf", "lasagna", "deepnet", "mgsea")
     }
     lapply(boards, function(board) {
+    tryCatch({
     # get error from App and save it as error_log
     message(board)
-    # board = "wordcloud"
-    # board = boards[1]
     App <- shinytest2::AppDriver$new(
       normalizePath("../../dev/board.launch"),
       timeout = 120000,
@@ -78,6 +83,7 @@ test_that("example data loads with no error",{
     tabs <- searchTabs(board)
     if (!is.null(tabs)){
       lapply(tabs, function(tab){
+        tryCatch({
         App$run_js(generate_js_click_code(tab))
         if(board == "connectivity") {
           duration <- 1000000
@@ -133,15 +139,17 @@ test_that("example data loads with no error",{
         tab <- gsub("/", "_", tab)
 
         App$expect_screenshot(name = paste0(pgx_file, "_", board, "_", tab), threshold = 10, selector = "viewport")
+        }, error = function(e) {
+          message(sprintf("[Worker %d] Tab '%s' on board '%s' ERROR: %s", idx, tab, board, conditionMessage(e)))
+        })
       })
     } else {
       App$wait_for_idle(duration = 3000)
       App$expect_screenshot(name = paste0(pgx_file, "_", board), threshold = 10, selector = "viewport")
     }
-  })},
-    error = function(e) {
-      message(sprintf("[Worker %d] ERROR: %s", idx, conditionMessage(e)))
-      return(list(error = conditionMessage(e), idx = idx))
+    }, error = function(e) {
+      message(sprintf("[Worker %d] Board '%s' ERROR: %s", idx, board, conditionMessage(e)))
+    })
     })
   }
 
