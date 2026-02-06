@@ -11,21 +11,21 @@
 #'
 #' @param wgcna WGCNA results object
 #' @param module Character; module name (e.g., "blue", "turquoise")
-#' @param docstyle Character; "short summary" or "long detailed scientific discussion"
-#' @param numpar Integer; maximum paragraphs (default 2)
 #' @param annot Data frame; gene annotation (optional)
 #' @param ntop Integer; number of top genes/sets to include (default 40)
 #' @param multi Logical; TRUE for multi-omics WGCNA
 #'
-#' @return Named list with template parameters:
-#'   docstyle, module, phenotypes, experiment, numpar, genesets, keygenes_section
+#' @return Named list with template parameters (board_params):
+#'   module, phenotypes, experiment, genesets, keygenes_section
 wgcna_build_ai_params <- function(wgcna,
                                   module,
-                                  docstyle = "short summary",
-                                  numpar = 2,
                                   annot = NULL,
                                   ntop = 40,
                                   multi = FALSE) {
+  fmt_num <- function(x, digits = 2) {
+    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
+  }
+
   # Get top genes and sets using playbase function
 
 # (mirrors playbase/R/pgx-wgcna.R lines 5280-5288)
@@ -47,45 +47,208 @@ wgcna_build_ai_params <- function(wgcna,
     )
   }
 
-  # Extract genesets - strip prefix, semicolon-joined
-# (mirrors playbase/R/pgx-wgcna.R lines 5344-5345)
-  ss <- ""
-  if (!is.null(top$sets[[module]])) {
-    ss <- sub(".*:", "", top$sets[[module]])
-    ss <- paste(ss, collapse = ";")
-  }
-
-  # Extract phenotypes - quoted, semicolon-joined
-# (mirrors playbase/R/pgx-wgcna.R lines 5346-5349)
-  pp <- ""
+  # Extract phenotypes - format as comma-separated list
+  pp <- "None"
   if (module %in% names(top$pheno)) {
-    pp <- paste0("'", top$pheno[[module]], "'")
-    pp <- paste(pp, collapse = ";")
+    pp <- paste(top$pheno[[module]], collapse = ", ")
   }
 
-  # Extract key genes - semicolon-joined
-# (mirrors playbase/R/pgx-wgcna.R lines 5352-5355)
+  # Extract genesets with quantitative metrics (fallback to names only)
+  ss <- ""
+  gse <- NULL
+  if (!is.null(wgcna$gse) && !is.null(wgcna$gse[[module]])) {
+    gse <- wgcna$gse[[module]]
+  }
+  if (is.data.frame(gse) && nrow(gse) > 0 &&
+    all(c("geneset", "score", "q.value", "overlap") %in% colnames(gse))) {
+    gse <- gse[order(gse$q.value, gse$score, na.last = TRUE), , drop = FALSE]
+    sig <- gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
+    top_gse <- head(sig, 8)
+    if (nrow(top_gse) > 0) {
+      pathways <- sub(".*:", "", top_gse$geneset)
+      gset_table <- paste0(
+        "| Pathway | Score | Q-value | Overlap |\n",
+        "|---------|-------|---------|---------|\n",
+        paste(
+          sprintf(
+            "| %s | %s | %s | %s |",
+            pathways,
+            fmt_num(top_gse$score, 2),
+            fmt_num(top_gse$q.value, 3),
+            top_gse$overlap
+          ),
+          collapse = "\n"
+        )
+      )
+
+      score_vals <- gse$score
+      score_vals <- score_vals[!is.na(score_vals)]
+      score_range <- if (length(score_vals) > 0) {
+        paste0(
+          fmt_num(min(score_vals), 2), "-",
+          fmt_num(max(score_vals), 2),
+          " (median: ", fmt_num(median(score_vals), 2), ")"
+        )
+      } else {
+        "NA"
+      }
+      n_sig <- sum(gse$q.value < 0.05, na.rm = TRUE)
+
+      ss <- paste0(
+        "**Top Enriched Pathways (q < 0.05):**\n\n",
+        gset_table, "\n\n",
+        "**Score range:** ", score_range, "  \n",
+        "**Total significant pathways:** ", n_sig, " of ", nrow(gse), " tested"
+      )
+    }
+  }
+  if (ss == "" && !is.null(top$sets[[module]])) {
+    pathways <- sub(".*:", "", top$sets[[module]])
+    ss <- paste0("- ", pathways, collapse = "\n")
+  }
+
+  # Extract key genes with metrics (fallback to names only)
   keygenes_section <- ""
-  if (!is.null(top$genes[[module]]) && length(top$genes[[module]]) > 0) {
-    gg <- paste(top$genes[[module]], collapse = ";")
-    keygenes_section <- paste0(
-      "\nAfter that, shortly discuss if any of these key genes/proteins/metabolites ",
-      "might be involved in the biological function. No need to mention all, just a few. ",
-      "Here is the list of key genes/proteins/metabolites: ", gg, "\n"
+  gene_stats <- NULL
+  trait <- NULL
+  if (is.character(pp) && pp != "None" && nzchar(pp)) {
+    trait <- strsplit(pp, ",\\s*")[[1]][1]
+  }
+  if (!is.null(trait) && trait != "None") {
+    gene_stats <- tryCatch(
+      playbase::wgcna.getGeneStats(
+        wgcna,
+        module = module,
+        trait = trait,
+        plot = FALSE
+      ),
+      error = function(e) NULL
     )
   }
 
+  if (is.data.frame(gene_stats) && nrow(gene_stats) > 0) {
+    if (!"moduleMembership" %in% colnames(gene_stats)) {
+      gene_stats$moduleMembership <- NA_real_
+    }
+    if (!"traitSignificance" %in% colnames(gene_stats)) {
+      gene_stats$traitSignificance <- NA_real_
+    }
+    if (!"foldChange" %in% colnames(gene_stats)) {
+      gene_stats$foldChange <- NA_real_
+    }
+    if (!"centrality" %in% colnames(gene_stats)) {
+      gene_stats$centrality <- NA_real_
+    }
+
+    if ("moduleMembership" %in% colnames(gene_stats)) {
+      gene_stats <- gene_stats[order(-abs(gene_stats$moduleMembership)), , drop = FALSE]
+    } else if ("score" %in% colnames(gene_stats)) {
+      gene_stats <- gene_stats[order(-gene_stats$score), , drop = FALSE]
+    }
+
+    top_genes <- head(gene_stats, 8)
+    symbols <- top_genes$feature
+    if (!is.null(annot)) {
+      symbols <- tryCatch(
+        playbase::probe2symbol(top_genes$feature, annot, "symbol"),
+        error = function(e) top_genes$feature
+      )
+      symbols <- ifelse(is.na(symbols) | symbols == "", top_genes$feature, symbols)
+    }
+
+    gene_table <- paste0(
+      "| Gene | MM | TS | LogFC | Centrality |\n",
+      "|------|----|----|-------|------------|\n",
+      paste(
+        sprintf(
+          "| %s | %s | %s | %s | %s |",
+          symbols,
+          fmt_num(top_genes$moduleMembership, 2),
+          fmt_num(top_genes$traitSignificance, 2),
+          fmt_num(top_genes$foldChange, 1),
+          fmt_num(top_genes$centrality, 2)
+        ),
+        collapse = "\n"
+      )
+    )
+
+    module_size <- NA_integer_
+    if (!is.null(wgcna$me.genes) && !is.null(wgcna$me.genes[[module]])) {
+      module_size <- length(wgcna$me.genes[[module]])
+    } else if (is.data.frame(gene_stats)) {
+      module_size <- nrow(gene_stats)
+    }
+
+    keygenes_section <- paste0(
+      "**Hub Genes (ranked by module membership):**\n\n",
+      gene_table, "\n\n",
+      "**MM:** Module Membership (correlation with eigengene)  \n",
+      "**TS:** Trait Significance (correlation with ", trait, ")  \n",
+      "**LogFC:** Log2 fold change  \n",
+      "**Top ", nrow(top_genes), " of ",
+      if (!is.na(module_size)) module_size else nrow(gene_stats),
+      " module genes shown**"
+    )
+  } else if (!is.null(top$genes[[module]]) && length(top$genes[[module]]) > 0) {
+    genes <- head(top$genes[[module]], 15)
+    keygenes_section <- paste0(
+      "The following hub genes show high intramodular connectivity:\n\n",
+      paste(genes, collapse = ", ")
+    )
+  }
+
+  # Module-level summary statistics
+  module_stats <- ""
+  module_size <- NA_integer_
+  if (!is.null(wgcna$me.genes) && !is.null(wgcna$me.genes[[module]])) {
+    module_size <- length(wgcna$me.genes[[module]])
+  } else if (is.data.frame(gene_stats) && nrow(gene_stats) > 0) {
+    module_size <- nrow(gene_stats)
+  }
+
+  lines <- c("**Module Statistics:**")
+  if (!is.na(module_size)) {
+    lines <- c(lines, paste0("- **Size:** ", module_size, " genes"))
+  }
+
+  trait_cor <- NA_real_
+  if (!is.null(trait) && trait != "None") {
+    M <- tryCatch(playbase::wgcna.get_modTraits(wgcna), error = function(e) NULL)
+    if (is.matrix(M) || is.data.frame(M)) {
+      module_idx <- which(rownames(M) %in% c(module, paste0("ME", module)))
+      trait_idx <- which(colnames(M) == trait)
+      if (length(module_idx) > 0 && length(trait_idx) > 0) {
+        trait_cor <- M[module_idx[1], trait_idx[1]]
+      }
+    }
+  }
+  if (!is.na(trait_cor) && !is.null(trait) && trait != "None") {
+    lines <- c(lines, paste0("- **Trait correlation:** ", fmt_num(trait_cor, 2), " with ", trait))
+  }
+
+  mean_fc <- NA_real_
+  if (is.data.frame(gene_stats) && "foldChange" %in% colnames(gene_stats)) {
+    mean_fc <- mean(gene_stats$foldChange, na.rm = TRUE)
+  }
+  if (!is.na(mean_fc)) {
+    fc_direction <- ifelse(mean_fc > 0, "upregulated", "downregulated")
+    lines <- c(
+      lines,
+      paste0("- **Mean expression change:** ", fmt_num(abs(mean_fc), 1), "-fold ", fc_direction)
+    )
+  }
+  module_stats <- paste(lines, collapse = "\n")
+
   # Get experiment description
-  experiment <- if (is.null(wgcna$experiment)) "" else wgcna$experiment
+  experiment <- wgcna$experiment %||% ""
 
   list(
-    docstyle = docstyle,
     module = module,
     phenotypes = pp,
     experiment = experiment,
-    numpar = as.character(numpar),
     genesets = ss,
-    keygenes_section = keygenes_section
+    keygenes_section = keygenes_section,
+    module_stats = module_stats
   )
 }
 
@@ -166,7 +329,7 @@ wgcna_ai_summary_server <- function(id,
                                     cache = NULL,
                                     watermark = FALSE) {
 
-  # Build params reactive for omicsai (note: docstyle handled by card server)
+  # Build board_params reactive (data to inject into user prompt template)
   params_reactive <- shiny::reactive({
     w <- wgcna()
     module <- r_module()
@@ -181,29 +344,46 @@ wgcna_ai_summary_server <- function(id,
     wgcna_build_ai_params(
       wgcna = w,
       module = module,
-      docstyle = "short summary",  # Will be overridden by card UI input
-      numpar = 2,
       annot = annot,
       ntop = 40,
       multi = multi
     )
   })
 
-  # Load template from board.wgcna templates directory
-  template_path <- file.path(
+  # Load template from board.wgcna prompts directory
+  board_template_path <- file.path(
     OPG,
-    "components/board.wgcna/templates/wgcna_summary_template.md"
+    "components/board.wgcna/prompts/wgcna_summary_template.md"
   )
 
   template_reactive <- shiny::reactive({
-    omics.ai::omicsai_load_template(template_path)
+    omics.ai::omicsai_load_template(board_template_path)
   })
 
+  # Load WGCNA methods context template
+  context_template_path <- file.path(
+    OPG,
+    "components/board.wgcna/prompts/WGCNA_methods.md"
+  )
+  context_template <- omics.ai::omicsai_load_template(context_template_path)
+
   # Build config reactive from user's selected LLM model
+  # Includes board-specific context in system prompt
   config_reactive <- shiny::reactive({
     ai_model <- getUserOption(session, "llm_model")
-    shiny::req(ai_model, ai_model != "")
-    omics.ai::omicsai_config(ai_model)
+    w <- wgcna()
+    shiny::req(ai_model, ai_model != "", w)
+
+    # Build context params for template substitution
+    context_params <- list(
+      experiment = w$experiment %||% "omics experiment"
+    )
+
+    omics.ai::omicsai_config(
+      model = ai_model,
+      context = context_template,
+      context_params = context_params
+    )
   })
 
   # PlotModuleServer wrapper

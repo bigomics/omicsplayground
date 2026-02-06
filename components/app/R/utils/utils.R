@@ -9,6 +9,16 @@
 ##                                                                     ##
 #########################################################################
 
+#' Null-coalescing operator
+#'
+#' Returns the left-hand side if not NULL, otherwise returns the right-hand side.
+#' @param x Left-hand side value
+#' @param y Right-hand side (default) value
+#' @return x if not NULL, otherwise y
+`%||%` <- function(x, y) {
+  if (is.null(x)) y else x
+}
+
 setUserOption <- function(session, var, value) {
   session$userData[[var]] <- value
 }
