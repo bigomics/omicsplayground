@@ -167,6 +167,21 @@ BiomarkerUI <- function(id) {
             width = c("auto", "100%")
           )
         )
+      ),
+      shiny::tabPanel(
+        "AI Summary",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = fullH,
+          biomarker_ai_summary_ui(
+            ns("biomarkerAISummary"),
+            title = "AI Biomarker Summary",
+            info.text = "AI-generated summary of the biomarker discovery results for the selected prediction target.",
+            caption = "AI-generated biomarker summary.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
+        )
       )
     ) ## tabsetpanel
   ) ## div

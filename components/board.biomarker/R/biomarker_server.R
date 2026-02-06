@@ -42,6 +42,10 @@ BiomarkerBoard <- function(id, pgx) {
       "Feature-set ranking" = list(
         enable = NULL,
         disable = c("pdx_target", "pdx_filter")
+      ),
+      "AI Summary" = list(
+        enable = NULL,
+        disable = c("pdx_target", "pdx_filter")
       )
     )
     shiny::observeEvent(input$tabs1, {
@@ -263,6 +267,18 @@ BiomarkerBoard <- function(id, pgx) {
       pgx = pgx,
       ft_level = shiny::reactive("gene"),
       samplefilter = shiny::reactive(input$pdx_samplefilter),
+      watermark = WATERMARK
+    )
+
+    # AI biomarker summary
+
+    biomarker_ai_summary_server(
+      "biomarkerAISummary",
+      pgx = pgx,
+      calcVariableImportance = calcVariableImportance,
+      pdx_target = shiny::reactive(input$pdx_target),
+      is_computed = is_computed,
+      session = session,
       watermark = WATERMARK
     )
   })
