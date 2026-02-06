@@ -41,6 +41,10 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       "Gene Correlation" = list(
         enable = NULL,
         disable = c("plottype", "ntop", "hilighttype", "genelist")
+      ),
+      "AI Summary" = list(
+        enable = NULL,
+        disable = NULL
       )
     )
 
@@ -507,6 +511,17 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       getMatrices = getMatrices,
       getScoreTable = getScoreTable,
       selected = score_table_rows,
+      watermark = WATERMARK
+    )
+
+    # AI comparison summary
+
+    compare_ai_summary_server(
+      "compareAISummary",
+      pgx = pgx,
+      contrast1 = contrast1,
+      contrast2 = contrast2,
+      session = session,
       watermark = WATERMARK
     )
   })
