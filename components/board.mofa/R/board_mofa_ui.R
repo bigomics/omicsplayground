@@ -245,8 +245,8 @@ MofaUI <- function(id) {
           bslib::layout_columns(
             height = "calc(100vh - 180px)",
             col_widths = bslib::breakpoints(
-              lg = c(4, 4, 4, 8, 4),
-              sm = c(12, 12, 12, 12)
+              lg = c(4, 4, 4, 4, 4, 4),
+              sm = c(12, 12, 12, 12, 12, 12)
             ),
             mofa_plot_enrichment_ui(
               ns("plotenrichment"),
@@ -272,6 +272,14 @@ MofaUI <- function(id) {
               caption = "Pathways that integrate proteomics and metabolomics data types in a single pathway diagram.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
+            ),
+            mofa_ai_summary_ui(
+              id = ns("factorSummary"),
+              title = "AI Summary",
+              info.text = "AI-generated summary of the selected MOFA factor based on enrichment analysis and feature loadings.",
+              caption = "AI-generated factor summary.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
             ),
             mofa_table_factorenrichment_ui(
               ns("mofa_factorenrichment"),

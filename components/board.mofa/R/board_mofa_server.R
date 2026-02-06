@@ -323,6 +323,16 @@ MofaBoard <- function(id, pgx) {
     )
 
 
+
+    # AI factor summary
+    mofa_ai_summary_server(
+      "factorSummary",
+      mofa = mofa,
+      pgx = pgx,
+      r_factor = shiny::reactive(input$selected_factor),
+      session = session,
+      watermark = WATERMARK
+    )
     return(NULL)
   })
 } ## end of Board
