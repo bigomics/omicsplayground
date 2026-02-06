@@ -600,6 +600,17 @@ EnrichmentBoard <- function(id, pgx,
       gs_statmethod = shiny::reactive(input$gs_statmethod)
     )
 
+
+    # AI enrichment summary
+
+    enrichment_ai_summary_server(
+      "enrichmentAISummary",
+      pgx = pgx,
+      getFilteredGeneSetTable = getFilteredGeneSetTable,
+      gs_contrast = shiny::reactive(input$gs_contrast),
+      session = session,
+      watermark = WATERMARK
+    )
     ## reactive values to return to parent environment
     outx <- list(selected_gsetmethods = selected_gsetmethods)
     return(outx)

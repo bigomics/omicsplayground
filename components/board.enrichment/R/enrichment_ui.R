@@ -167,7 +167,7 @@ EnrichmentUI <- function(id) {
           caption = "Barplot of the selected gene set in the phenotypic groups. ",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", 900)
-        )
+        ),
       )
     ),
     shiny::tabPanel(
@@ -305,6 +305,21 @@ EnrichmentUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing",
           caption = "Simultaneous visualisation of volcano plots of gene sets for different enrichment methods.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
+        enrichment_ai_summary_ui(
+          ns("enrichmentAISummary"),
+          title = "AI Enrichment Summary",
+          info.text = "AI-generated summary of the enrichment analysis results for the selected contrast.",
+          caption = "AI-generated enrichment summary.",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         )
