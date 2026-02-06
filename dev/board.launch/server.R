@@ -9,9 +9,7 @@ app_server <- function(input, output, session) {
   # list functions in global
   
   board = options()$board
-  board = "upload"
   authentication = options()$authentication
-  authentication = "none"
   server_fn_name <- glue::glue("{board}board")
   board_server <- grep(server_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
   length <- nchar(board) + nchar("board")
