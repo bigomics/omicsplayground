@@ -113,6 +113,21 @@ SingleCellUI <- function(id) {
             parent = ns
           )
         )
+      ),
+      shiny::tabPanel(
+        "AI Summary",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          singlecell_ai_summary_ui(
+            ns("singlecellAISummary"),
+            title = "AI Cell Profiling Summary",
+            info.text = "AI-generated summary of the cell type deconvolution and marker gene analysis results.",
+            caption = "AI-generated cell profiling summary.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
+        )
       )
     )
   )
