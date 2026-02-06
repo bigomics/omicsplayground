@@ -28,7 +28,10 @@ Focus on identifying:
 
 ## Output Instructions
 
-Synthesize the above information to explain:
+Always begin your summary with a heading in this exact format (mantain stric adherence):
+**{module} module** | Correlated phenotypes: {phenotypes}
+
+Then synthesize the above information to explain:
 - The primary biological function of this module
 - How the enriched pathways collectively support this interpretation
 - The biological relevance to the experimental phenotypes
