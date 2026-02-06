@@ -461,5 +461,11 @@ pcsf_genepanel_server <- function(id,
       func2 = table.RENDER_modal,
       selector = "single"
     )
+
+    # Return reactives for use by parent module (e.g., AI summary)
+    list(
+      gene_pcsf = gene_pcsf,
+      table_data = table_data
+    )
   }) ## end of moduleServer
 }
