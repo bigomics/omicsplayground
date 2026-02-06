@@ -538,5 +538,16 @@ ConnectivityBoard <- function(
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast
     )
+
+    # AI connectivity summary
+    connectivity_ai_summary_server(
+      "connectivityAISummary",
+      pgx = pgx,
+      getConnectivityScores = getConnectivityScores,
+      cumEnrichmentTable = cumEnrichmentTable,
+      r_contrast = shiny::reactive(input$contrast),
+      session = session,
+      watermark = WATERMARK
+    )
   }) ## end of moduleserver
 } ## end-of-Board

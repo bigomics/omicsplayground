@@ -196,6 +196,23 @@ ConnectivityUI <- function(id) {
           )
         )
       )
+    ),
+
+    ## ---------------------------- panel4 ------------------------------------------
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = "calc(100vh - 181px)",
+        connectivity_ai_summary_ui(
+          ns("connectivityAISummary"),
+          title = "AI Connectivity Summary",
+          info.text = "AI-generated summary of the connectivity analysis results for the selected contrast.",
+          caption = "AI-generated connectivity summary.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
     )
   )
 
