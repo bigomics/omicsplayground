@@ -179,3 +179,117 @@ test_that("example data loads with no error",{
     }
   }
 })
+
+test_that("upload screens render correctly + compute gets triggered", {
+  source("aux-test-functions.R")
+
+  App <- shinytest2::AppDriver$new(
+    normalizePath("../../dev/board.launch"),
+    timeout = 120000,
+    height = 1080,
+    width = 1920,
+    seed = 2910,
+    variant = shinytest2::platform_variant(),
+    options = list(
+      board = "upload",
+      authentication = "none",
+      use_example_data = TRUE
+    ),
+    shiny_args = list(port = 8080)
+  )
+  withr::defer(App$stop())
+
+  # Counts
+
+  App$run_js("$('#upload-start_upload').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_counts", threshold = 10, selector = "viewport")
+
+  App$run_js("$('#upload-counts_preview-load_example').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_counts_loaded", threshold = 10, selector = "viewport")
+
+  App$run_js(generate_js_click_code("Box plots"))
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_counts_loaded_2", threshold = 10, selector = "viewport")
+
+  # Samples
+  App$run_js("$('.wizard-btn.next').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_samples", threshold = 10, selector = "viewport")
+
+  App$run_js("$('#upload-samples_preview-load_example').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_samples_loaded", threshold = 10, selector = "viewport")
+
+  App$run_js(generate_js_click_code("Distribution"))
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_samples_loaded_2", threshold = 10, selector = "viewport")
+
+  # Contrasts
+  App$run_js("$('.wizard-btn.next').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_contrasts", threshold = 10, selector = "viewport")
+
+  App$run_js("$('#upload-contrasts_preview-autocontrast').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_contrasts_loaded", threshold = 10, selector = "viewport")
+
+  # QC
+  App$run_js("$('.wizard-btn.next').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-zero_as_na" = TRUE)
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_zero_as_na", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-missing_plottype" = "ratio plot")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_missing_plottype", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-missing_plottype" = "missingness per sample")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_missing_plottype_2", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-missing_plottype" = "missingness across features")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_missing_plottype_3", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-missing_plottype" = "PCA of imputed data")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_missing_plottype_4", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-norm_plottype" = "histogram")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_norm_plottype_5", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-outlier_shownames" = TRUE)
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_norm_plottype_6", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-colorby_var" = "activated")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_norm_plottype_7", threshold = 10, selector = "viewport")
+
+  App$set_inputs("upload-checkqc-colorby_var" = "time")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_qc_norm_plottype_8", threshold = 10, selector = "viewport")
+
+  # Compute
+
+  App$run_js("$('.wizard-btn.next').click();")
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+  App$expect_screenshot(name = "upload_compute", threshold = 10, selector = "viewport")
+  App$set_inputs("upload-compute-selected_name" = "test")
+  App$set_inputs("upload-compute-selected_description" = "test")
+  App$expect_screenshot(name = "upload_compute_2", threshold = 10, selector = "viewport")
+
+  App$run_js("$('.wizard-btn.finish').click();")
+
+  App$wait_for_idle(duration = 3000, timeout = 60000)
+
+  spinners <- App$get_js("document.querySelectorAll('.spinner-wrapper').length;")
+
+  expect_equal(spinners, 1)
+})
