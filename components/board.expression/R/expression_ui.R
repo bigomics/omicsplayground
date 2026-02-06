@@ -237,7 +237,22 @@ ExpressionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
-    ) ## end upper tabPanel
+    ), ## end upper tabPanel
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = halfH,
+        expression_ai_summary_ui(
+          ns("expressionAISummary"),
+          title = "AI Expression Summary",
+          info.text = "AI-generated summary of the differential expression analysis results for the selected contrast.",
+          caption = "AI-generated differential expression summary.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
+    )
   ) ## end of tabs1
 
   tabs2 <- shiny::tabsetPanel(

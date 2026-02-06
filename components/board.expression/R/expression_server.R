@@ -670,6 +670,16 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       metaFC
     })
 
+    # AI expression summary
+
+    expression_ai_summary_server(
+      "expressionAISummary",
+      pgx = pgx,
+      contrast_reactive = shiny::reactive(input$gx_contrast),
+      session = session,
+      watermark = WATERMARK
+    )
+
     outx <- list(
       selected_gxmethods = selected_gxmethods
     )
