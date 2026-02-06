@@ -65,7 +65,7 @@ wgcna_build_ai_params <- function(wgcna,
     sig <- gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
     top_gse <- head(sig, 8)
     if (nrow(top_gse) > 0) {
-      pathways <- sub(".*:", "", top_gse$geneset)
+      pathways <- top_gse$geneset
       gset_table <- paste0(
         "| Pathway | Score | Q-value | Overlap |\n",
         "|---------|-------|---------|---------|\n",
@@ -103,91 +103,147 @@ wgcna_build_ai_params <- function(wgcna,
     }
   }
   if (ss == "" && !is.null(top$sets[[module]])) {
-    pathways <- sub(".*:", "", top$sets[[module]])
+    pathways <- top$sets[[module]]
     ss <- paste0("- ", pathways, collapse = "\n")
   }
 
-  # Extract key genes with metrics (fallback to names only)
+  # Extract key genes with metrics — multi-trait approach
+  # WGCNA modules are trait-independent (MM, centrality are network properties).
+  # TS and logFC are trait-dependent, so we compute them for ALL correlated traits
+  # to give the AI a complete picture across phenotypes.
   keygenes_section <- ""
-  gene_stats <- NULL
-  trait <- NULL
+  traits <- NULL
   if (is.character(pp) && pp != "None" && nzchar(pp)) {
-    trait <- strsplit(pp, ",\\s*")[[1]][1]
-  }
-  if (!is.null(trait) && trait != "None") {
-    gene_stats <- tryCatch(
-      playbase::wgcna.getGeneStats(
-        wgcna,
-        module = module,
-        trait = trait,
-        plot = FALSE
-      ),
-      error = function(e) NULL
-    )
+    traits <- trimws(strsplit(pp, ",\\s*")[[1]])
+    traits <- traits[nzchar(traits) & traits != "None"]
+    traits <- head(traits, 3) # cap to avoid very wide tables
   }
 
-  if (is.data.frame(gene_stats) && nrow(gene_stats) > 0) {
-    if (!"moduleMembership" %in% colnames(gene_stats)) {
-      gene_stats$moduleMembership <- NA_real_
+  # Collect gene stats for each correlated trait
+  trait_stats_list <- list()
+  if (length(traits) > 0) {
+    for (tr in traits) {
+      gs <- tryCatch(
+        playbase::wgcna.getGeneStats(
+          wgcna,
+          module = module,
+          trait = tr,
+          plot = FALSE
+        ),
+        error = function(e) NULL
+      )
+      if (is.data.frame(gs) && nrow(gs) > 0) {
+        trait_stats_list[[tr]] <- gs
+      }
     }
-    if (!"traitSignificance" %in% colnames(gene_stats)) {
-      gene_stats$traitSignificance <- NA_real_
+  }
+
+  if (length(trait_stats_list) > 0) {
+    # Use first trait's stats as base for shared columns (MM, centrality)
+    base_stats <- trait_stats_list[[1]]
+    if (!"moduleMembership" %in% colnames(base_stats)) {
+      base_stats$moduleMembership <- NA_real_
     }
-    if (!"foldChange" %in% colnames(gene_stats)) {
-      gene_stats$foldChange <- NA_real_
-    }
-    if (!"centrality" %in% colnames(gene_stats)) {
-      gene_stats$centrality <- NA_real_
+    if (!"centrality" %in% colnames(base_stats)) {
+      base_stats$centrality <- NA_real_
     }
 
-    if ("moduleMembership" %in% colnames(gene_stats)) {
-      gene_stats <- gene_stats[order(-abs(gene_stats$moduleMembership)), , drop = FALSE]
-    } else if ("score" %in% colnames(gene_stats)) {
-      gene_stats <- gene_stats[order(-gene_stats$score), , drop = FALSE]
+    # Sort by module membership (trait-independent)
+    if ("moduleMembership" %in% colnames(base_stats)) {
+      base_stats <- base_stats[order(-abs(base_stats$moduleMembership)), , drop = FALSE]
+    } else if ("score" %in% colnames(base_stats)) {
+      base_stats <- base_stats[order(-base_stats$score), , drop = FALSE]
     }
 
-    top_genes <- head(gene_stats, 8)
-    symbols <- top_genes$feature
+    top_genes <- head(base_stats, 8)
+    features <- top_genes$feature
+
+    # Resolve gene symbols
+    symbols <- features
     if (!is.null(annot)) {
       symbols <- tryCatch(
-        playbase::probe2symbol(top_genes$feature, annot, "symbol"),
-        error = function(e) top_genes$feature
+        playbase::probe2symbol(features, annot, "symbol"),
+        error = function(e) features
       )
-      symbols <- ifelse(is.na(symbols) | symbols == "", top_genes$feature, symbols)
+      symbols <- ifelse(is.na(symbols) | symbols == "", features, symbols)
     }
 
-    gene_table <- paste0(
-      "| Gene | MM | TS | LogFC | Centrality |\n",
-      "|------|----|----|-------|------------|\n",
+    # --- Table 1: trait-independent network metrics ---
+    network_table <- paste0(
+      "### Trait-independent metrics (network structure)\n\n",
+      "| Gene | MM | Centrality |\n",
+      "|------|----|------------|\n",
       paste(
         sprintf(
-          "| %s | %s | %s | %s | %s |",
+          "| %s | %s | %s |",
           symbols,
           fmt_num(top_genes$moduleMembership, 2),
-          fmt_num(top_genes$traitSignificance, 2),
-          fmt_num(top_genes$foldChange, 1),
           fmt_num(top_genes$centrality, 2)
         ),
         collapse = "\n"
       )
     )
 
+    # --- Tables 2..N: per-trait gene-trait associations ---
+    trait_names <- names(trait_stats_list)
+    M <- tryCatch(playbase::wgcna.get_modTraits(wgcna), error = function(e) NULL)
+
+    trait_tables <- vapply(trait_names, function(tr) {
+      gs <- trait_stats_list[[tr]]
+
+      # Module-trait correlation for header
+      mod_cor <- NA_real_
+      if (is.matrix(M) || is.data.frame(M)) {
+        mi <- which(rownames(M) %in% c(module, paste0("ME", module)))
+        ti <- which(colnames(M) == tr)
+        if (length(mi) > 0 && length(ti) > 0) mod_cor <- M[mi[1], ti[1]]
+      }
+      cor_label <- if (!is.na(mod_cor)) {
+        paste0(" (module r = ", fmt_num(mod_cor, 2), ")")
+      } else {
+        ""
+      }
+
+      # Build rows for each hub gene
+      rows <- vapply(seq_along(features), function(i) {
+        idx <- match(features[i], gs$feature)
+        ts_val <- NA_real_
+        fc_val <- NA_real_
+        if (!is.na(idx)) {
+          if ("traitSignificance" %in% colnames(gs)) ts_val <- gs$traitSignificance[idx]
+          if ("foldChange" %in% colnames(gs)) fc_val <- gs$foldChange[idx]
+        }
+        sprintf("| %s | %s | %s |", symbols[i], fmt_num(ts_val, 2), fmt_num(fc_val, 1))
+      }, character(1))
+
+      paste0(
+        "### Gene-trait associations: ", tr, cor_label, "\n\n",
+        "| Gene | TS | logFC |\n",
+        "|------|----|-------|\n",
+        paste(rows, collapse = "\n")
+      )
+    }, character(1))
+
+    # Module size
     module_size <- NA_integer_
     if (!is.null(wgcna$me.genes) && !is.null(wgcna$me.genes[[module]])) {
       module_size <- length(wgcna$me.genes[[module]])
-    } else if (is.data.frame(gene_stats)) {
-      module_size <- nrow(gene_stats)
+    } else {
+      module_size <- nrow(base_stats)
     }
 
     keygenes_section <- paste0(
-      "**Hub Genes (ranked by module membership):**\n\n",
-      gene_table, "\n\n",
-      "**MM:** Module Membership (correlation with eigengene)  \n",
-      "**TS:** Trait Significance (correlation with ", trait, ")  \n",
-      "**LogFC:** Log2 fold change  \n",
-      "**Top ", nrow(top_genes), " of ",
-      if (!is.na(module_size)) module_size else nrow(gene_stats),
-      " module genes shown**"
+      "**Hub Genes (ranked by module membership, top ",
+      nrow(top_genes), " of ",
+      if (!is.na(module_size)) module_size else nrow(base_stats),
+      " module genes):**\n\n",
+      network_table, "\n\n",
+      paste(trait_tables, collapse = "\n\n"),
+      "\n\n",
+      "**MM:** Module Membership (correlation with eigengene) — trait-independent  \n",
+      "**Centrality:** Intramodular connectivity — trait-independent  \n",
+      "**TS:** Trait Significance (gene-trait correlation) — specific to each trait  \n",
+      "**logFC:** Log2 fold change — specific to each trait"
     )
   } else if (!is.null(top$genes[[module]]) && length(top$genes[[module]]) > 0) {
     genes <- head(top$genes[[module]], 15)
@@ -197,47 +253,55 @@ wgcna_build_ai_params <- function(wgcna,
     )
   }
 
-  # Module-level summary statistics
+  # Module-level summary statistics (multi-trait)
   module_stats <- ""
   module_size <- NA_integer_
   if (!is.null(wgcna$me.genes) && !is.null(wgcna$me.genes[[module]])) {
     module_size <- length(wgcna$me.genes[[module]])
-  } else if (is.data.frame(gene_stats) && nrow(gene_stats) > 0) {
-    module_size <- nrow(gene_stats)
+  } else if (length(trait_stats_list) > 0) {
+    module_size <- nrow(trait_stats_list[[1]])
   }
 
-  lines <- c("**Module Statistics:**")
+  stat_lines <- c("**Module Statistics:**")
   if (!is.na(module_size)) {
-    lines <- c(lines, paste0("- **Size:** ", module_size, " genes"))
+    stat_lines <- c(stat_lines, paste0("- **Size:** ", module_size, " genes"))
   }
 
-  trait_cor <- NA_real_
-  if (!is.null(trait) && trait != "None") {
+  # Per-trait: module-trait correlation and mean fold change
+  if (length(traits) > 0) {
     M <- tryCatch(playbase::wgcna.get_modTraits(wgcna), error = function(e) NULL)
-    if (is.matrix(M) || is.data.frame(M)) {
-      module_idx <- which(rownames(M) %in% c(module, paste0("ME", module)))
-      trait_idx <- which(colnames(M) == trait)
-      if (length(module_idx) > 0 && length(trait_idx) > 0) {
-        trait_cor <- M[module_idx[1], trait_idx[1]]
+    for (tr in traits) {
+      trait_cor <- NA_real_
+      if (is.matrix(M) || is.data.frame(M)) {
+        module_idx <- which(rownames(M) %in% c(module, paste0("ME", module)))
+        trait_idx <- which(colnames(M) == tr)
+        if (length(module_idx) > 0 && length(trait_idx) > 0) {
+          trait_cor <- M[module_idx[1], trait_idx[1]]
+        }
+      }
+      if (!is.na(trait_cor)) {
+        stat_lines <- c(stat_lines, paste0(
+          "- **Trait correlation with ", tr, ":** ", fmt_num(trait_cor, 2)
+        ))
+      }
+      # Mean fold change for this trait
+      if (tr %in% names(trait_stats_list)) {
+        gs <- trait_stats_list[[tr]]
+        if ("foldChange" %in% colnames(gs)) {
+          mean_fc <- mean(gs$foldChange, na.rm = TRUE)
+          if (!is.na(mean_fc)) {
+            fc_dir <- ifelse(mean_fc > 0, "upregulated", "downregulated")
+            stat_lines <- c(stat_lines, paste0(
+              "- **Mean expression change (", tr, "):** ",
+              fmt_num(abs(mean_fc), 1), "-fold ", fc_dir
+            ))
+          }
+        }
       }
     }
   }
-  if (!is.na(trait_cor) && !is.null(trait) && trait != "None") {
-    lines <- c(lines, paste0("- **Trait correlation:** ", fmt_num(trait_cor, 2), " with ", trait))
-  }
 
-  mean_fc <- NA_real_
-  if (is.data.frame(gene_stats) && "foldChange" %in% colnames(gene_stats)) {
-    mean_fc <- mean(gene_stats$foldChange, na.rm = TRUE)
-  }
-  if (!is.na(mean_fc)) {
-    fc_direction <- ifelse(mean_fc > 0, "upregulated", "downregulated")
-    lines <- c(
-      lines,
-      paste0("- **Mean expression change:** ", fmt_num(abs(mean_fc), 1), "-fold ", fc_direction)
-    )
-  }
-  module_stats <- paste(lines, collapse = "\n")
+  module_stats <- paste(stat_lines, collapse = "\n")
 
   # Get experiment description
   experiment <- wgcna$experiment %||% ""
