@@ -206,7 +206,23 @@ PathwayUI <- function(id) {
           label = "a"
         )
       )
-    ) ## Enrichment map tabpanel
+    ), ## Enrichment map tabpanel
+    ## ----------------------------- AI Summary  -------------------------------
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = "calc(100vh - 181px)",
+        pathway_ai_summary_ui(
+          id = ns("pathway_ai_summary"),
+          title = "AI Pathway Summary",
+          info.text = "AI-generated summary of the pathway enrichment results for the selected contrast. Uses the top enriched pathways across all databases to provide a biological interpretation.",
+          caption = "AI-generated interpretation of the pathway enrichment analysis results.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("100%", "100%")
+        )
+      )
+    ) ## AI Summary tabpanel
   ) ## end of tabset panel
 
   page_ui <- div(

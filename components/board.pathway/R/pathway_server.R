@@ -58,7 +58,8 @@ PathwayBoard <- function(id,
       "WikiPathways" = list(disable = NULL),
       "Reactome" = list(disable = NULL),
       "GO graph" = list(disable = NULL),
-      "Enrichment Map (beta)" = list(disable = NULL)
+      "Enrichment Map (beta)" = list(disable = NULL),
+      "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
@@ -277,6 +278,45 @@ PathwayBoard <- function(id,
       pgx,
       getFilteredWikiPathwayTable,
       reactive(input$fa_contrast)
+    )
+
+    ## ================================================================================
+    ## AI Summary module server
+    ## ================================================================================
+
+    # Build a combined pathway table from all databases for the AI summary.
+    # Uses the full enrichment data from gset.meta (all genesets for contrast).
+    getCombinedPathwayTable <- shiny::reactive({
+      shiny::req(pgx$X, input$fa_contrast)
+      comparison <- input$fa_contrast
+      if (!(comparison %in% names(pgx$gset.meta$meta))) {
+        return(NULL)
+      }
+      meta <- pgx$gset.meta$meta[[comparison]]
+      mm <- selected_gsetmethods()
+      mm <- intersect(mm, colnames(meta$q))
+      if (length(mm) == 0) return(NULL)
+      meta.q <- apply(meta$q[, mm, drop = FALSE], 1, max, na.rm = TRUE)
+      df <- data.frame(
+        pathway = rownames(meta),
+        logFC = meta$meta.fx,
+        meta.q = meta.q,
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
+      df <- df[!is.na(df$logFC), , drop = FALSE]
+      df <- df[order(-abs(df$logFC)), ]
+      return(df)
+    })
+
+    pathway_ai_summary_server(
+      "pathway_ai_summary",
+      pgx = pgx,
+      pathway_table_reactive = getCombinedPathwayTable,
+      gs_contrast = reactive(input$fa_contrast),
+      pathway_type = "Combined (GO + Reactome + WikiPathways)",
+      session = session,
+      watermark = WATERMARK
     )
   }) ## end-of-moduleServer
 }
