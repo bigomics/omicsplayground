@@ -37,6 +37,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Parallel" = list(
         enable = NULL,
         disable = c("selected_phenotypes", "hm_clustmethod")
+      ),
+      "AI Summary" = list(
+        enable = NULL,
+        disable = NULL
       )
     )
 
@@ -791,6 +795,17 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       getClustAnnotCorrelation = getClustAnnotCorrelation,
       xann_level = clusterannot$xann_level,
       scrollY = "calc(40vh - 236px)",
+      watermark = WATERMARK
+    )
+
+    # AI clustering summary
+    clustering_ai_summary_server(
+      "clusteringAISummary",
+      pgx = pgx,
+      getTopMatrix = getTopMatrix,
+      getClustAnnotCorrelation = getClustAnnotCorrelation,
+      clustmethod = shiny::reactive(input$hm_clustmethod),
+      session = session,
       watermark = WATERMARK
     )
   }) ## end of moduleServer
