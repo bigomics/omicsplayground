@@ -129,13 +129,30 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
+  panel3 <- shiny::tabPanel(
+    "AI Summary",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = fullH,
+      drugconnectivity_ai_summary_ui(
+        ns("drugconnectivityAISummary"),
+        title = "AI Drug Connectivity Summary",
+        info.text = "AI-generated summary of the drug connectivity analysis results for the selected contrast.",
+        caption = "AI-generated drug connectivity summary.",
+        height = c("100%", TABLE_HEIGHT_MODAL),
+        width = c("auto", "100%")
+      )
+    )
+  )
+
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
     panel1 <- shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,
-      panel2
+      panel2,
+      panel3
     )
   )
 }

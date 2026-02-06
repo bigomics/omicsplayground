@@ -229,5 +229,21 @@ DrugConnectivityBoard <- function(id, pgx) {
       "cmap_table",
       getActiveDSEA
     )
+
+    ## =======================================================================================
+    ## AI SUMMARY TAB
+    ## =======================================================================================
+
+    drugconnectivity_ai_summary_server(
+      "drugconnectivityAISummary",
+      pgx = pgx,
+      getActiveDSEA = getActiveDSEA,
+      getMOA.class = getMOA.class,
+      getMOA.target = getMOA.target,
+      dsea_contrast = shiny::reactive(input$dsea_contrast),
+      dsea_method = shiny::reactive(input$dsea_method),
+      session = session,
+      watermark = WATERMARK
+    )
   })
 }
