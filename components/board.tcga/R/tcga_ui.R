@@ -92,6 +92,21 @@ TcgaUI <- function(id) {
             width = c("auto", "100%")
           )
         )
+      ),
+      tabPanel(
+        "AI Summary",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          tcga_ai_summary_ui(
+            ns("tcgaAISummary"),
+            title = "AI TCGA Summary",
+            info.text = "AI-generated summary of the TCGA survival analysis results for the selected contrast.",
+            caption = "AI-generated TCGA survival summary.",
+            height = c("100%", TABLE_HEIGHT_MODAL),
+            width = c("auto", "100%")
+          )
+        )
       )
     )
   )

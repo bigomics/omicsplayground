@@ -59,5 +59,17 @@ TcgaBoard <- function(id, pgx) {
       genelist = shiny::reactive(input$genelist),
       watermark = WATERMARK
     )
+
+    # AI TCGA summary
+
+    tcga_ai_summary_server(
+      "tcgaAISummary",
+      pgx = pgx,
+      contrast = shiny::reactive(input$contrast),
+      sigtype = shiny::reactive(input$sigtype),
+      genelist = shiny::reactive(input$genelist),
+      session = session,
+      watermark = WATERMARK
+    )
   })
 }
