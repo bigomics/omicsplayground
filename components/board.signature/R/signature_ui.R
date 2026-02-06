@@ -244,6 +244,21 @@ SignatureUI <- function(id) {
           width = c("auto", "100%")
         )
       )
+    ),
+    shiny::tabPanel(
+      "AI Summary",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = "calc(100vh - 181px)",
+        signature_ai_summary_ui(
+          ns("aiSummary"),
+          title = "AI Summary",
+          info.text = "AI-generated summary of the gene signature overlap and enrichment analysis. The summary interprets the top overlapping gene sets and key genes to identify the biological function of the signature.",
+          caption = "AI-generated interpretation of the signature analysis results.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
+        )
+      )
     )
   )
 

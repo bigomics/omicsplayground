@@ -530,5 +530,16 @@ SignatureBoard <- function(id, pgx,
       organism = pgx$organism,
       getEnrichmentGeneTable = getEnrichmentGeneTable
     )
+
+    # AI signature summary
+    signature_ai_summary_server(
+      "aiSummary",
+      pgx = pgx,
+      getCurrentMarkers = getCurrentMarkers,
+      getOverlapTable = getOverlapTable,
+      getEnrichmentGeneTable = getEnrichmentGeneTable,
+      session = session,
+      watermark = WATERMARK
+    )
   })
 } ## end-of-Board
