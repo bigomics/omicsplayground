@@ -125,6 +125,14 @@ TimeSeriesUI <- function(id) {
               TimeSeriesBoard.enrichment_table_ui(
                 id = ns("enrichment"),
                 title = "Enriched genesets"
+              ),
+              timeseries_ai_summary_ui(
+                id = ns("aiSummary"),
+                title = "AI Summary",
+                info.text = "AI-generated summary of the selected time series cluster based on enrichment analysis.",
+                caption = "AI-generated cluster summary.",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
               )
             )
           )

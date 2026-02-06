@@ -210,5 +210,16 @@ TimeSeriesBoard <- function(id,
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK
     )
+
+    # AI cluster summary
+    timeseries_ai_summary_server(
+      "aiSummary",
+      pgx = pgx,
+      data = timeseries_filtered,
+      r_module = shiny::reactive(input$module),
+      r_contrast = shiny::reactive(input$contrast),
+      session = session,
+      watermark = WATERMARK
+    )
   }) ## end of moduleServer
 } ## end of Board
