@@ -173,15 +173,21 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 #        register_mcp(chat)
       }
 
-      if(n_turns()==0) {
-        ask_copilot("Describe this experiment. Then ask 'how can I help?'",
-          showq=FALSE, suggest=TRUE)
-      } else {
-        if(!is.null(chat)) shinychat::chat_clear("chat")
-        shinychat::chat_append("chat", "How can I help you?")
+      if(!is.null(chat)) {
+        shinychat::chat_clear("chat")
+        shinychat::chat_append("chat", "Hi. I'm your copilot. How can I help you?")
+        ## initial_suggestions(chat) 
       }
       
     }, ignoreNULL = FALSE)
+
+    initial_suggestions <- function(chat) {
+      qq <- c("Describe my experiment","Summarize the main findings")
+      qq <- paste("  <li class='suggestion submit'>",qq,"</li>")
+      qq <- paste("<ul>\n",paste(qq,collapse='\n'),"\n</ul>")
+      msg <- list( role = "assistant", content = qq)
+      shinychat::chat_append_message("chat", msg, chunk=TRUE, operation="append")
+    }
 
     append_suggestions <- function(chat, num=3) {
       ff <- chat$chat(paste("Suggest",num,"short follow-up questions. Just return the questions as clean enumerated list, do not use bold or italics."))

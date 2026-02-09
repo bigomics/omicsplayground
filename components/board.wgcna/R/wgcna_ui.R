@@ -322,6 +322,13 @@ WgcnaUI <- function(id) {
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "calc(100vh - 180px)",            
+            wgcna_html_report_ui(
+              ns("wgcnaReport"),
+              title = "AI Report",
+              caption = "AI-generated summary report",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto","100%")
+            ),                        
             bslib::layout_columns(
               col_widths = 12,
               row_heights = c(1,1),
@@ -334,19 +341,12 @@ WgcnaUI <- function(id) {
               ),
               wgcna_report_infographic_ui(
                 ns("wgcnaReport"),
-                title = "Infographic",
-                caption = "AI-generated infographic",
+                title = "Graphical Abtract",
+                caption = "AI-generated graphical abstract",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               )
-            ),
-            wgcna_html_report_ui(
-              ns("wgcnaReport"),
-              title = "AI Report",
-              caption = "AI-generated summary report",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )            
+            )
           )
         )
       )
