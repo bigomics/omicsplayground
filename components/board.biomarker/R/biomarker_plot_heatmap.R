@@ -53,11 +53,8 @@ biomarker_plot_heatmap_ui <- function(
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 biomarker_plot_heatmap_server <- function(id,
@@ -66,31 +63,22 @@ biomarker_plot_heatmap_server <- function(id,
                                           pdx_predicted,
                                           is_computed,
                                           watermark = FALSE) {
+
   moduleServer(
+
     id, function(input, output, session) {
-      ## return data structure for plots
+
       plot_data <- shiny::reactive({
-        shiny::req(pgx$X)
-        shiny::req(is_computed())
-
+        shiny::req(pgx$X, is_computed())
         res <- calcVariableImportance()
-        if (is.null(res)) {
-          return(NULL)
-        }
-
+        if (is.null(res)) return(NULL)
         gg <- rownames(res$X)
         gg <- intersect(gg, rownames(pgx$X))
-        if (input$show_all) {
-          kk <- colnames(pgx$X)
-        } else {
-          kk <- colnames(res$X)
-        }
+        kk <- colnames(res$X)
+        if (input$show_all) kk <- colnames(pgx$X)
         X <- pgx$X[gg, kk, drop = FALSE]
-        ## X <- head(X[order(-apply(X, 1, sd)), ], 40) ## top50
-        splitx <- NULL
         ct <- pdx_predicted()
         do.survival <- grepl("survival", ct, ignore.case = TRUE)
-
         splitx <- pgx$Y[colnames(X), ct]
         if (!playbase::is.categorical(splitx) || do.survival) {
           splitx <- NULL
@@ -103,14 +91,9 @@ biomarker_plot_heatmap_server <- function(id,
 
         rownames(X) <- substring(rownames(X), 1, 40)
         ii <- which(rownames(X) %in% tree.vars)
-        if (length(ii)) {
-          rownames(X)[ii] <- paste(rownames(X)[ii], "*****")
-        }
-
-        annot <- pgx$Y[colnames(X), ]
-        sdx <- apply(X, 1, sd)
-
+        if (length(ii)) rownames(X)[ii] <- paste(rownames(X)[ii], "*****")
         res <- list(X = X, splitx = splitx)
+
       })
 
       plot.RENDER <- function() {
@@ -126,8 +109,8 @@ biomarker_plot_heatmap_server <- function(id,
         playbase::gx.splitmap(X,
           split = NULL, splitx = splitx, main = "  ",
           dist.method = "euclidean", col.dist.method = "euclidean",
-          show_colnames = FALSE, ## save space, no sample names
-          show_legend = ifelse(is.null(splitx), TRUE, FALSE),
+          show_colnames = FALSE,
+          show_legend = is.null(splitx),
           key.offset = c(0.05, 0.98),
           show_rownames = 99,
           lab.len = 50,
@@ -137,9 +120,7 @@ biomarker_plot_heatmap_server <- function(id,
       }
       plot_data_output <- function() {
         res <- plot_data()
-        if (is.null(res)) {
-          return(NULL)
-        }
+        if (is.null(res)) return(NULL)
         # average duplicated columns in the data, keep only one entry for duplicates
         res$X <- t(do.call(rbind, by(t(res$X), row.names(t(res$X)), FUN = colMeans)))
         return(res$X)
