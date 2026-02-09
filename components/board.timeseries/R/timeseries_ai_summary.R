@@ -22,9 +22,6 @@ timeseries_build_ai_params <- function(data,
                                        module,
                                        contrast,
                                        ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   ## -----------------------------------------------------------
   ## Cluster information
@@ -57,7 +54,7 @@ timeseries_build_ai_params <- function(data,
 
     ## Format time profile
     profile_str <- paste(
-      sprintf("%s: %s", time_points, fmt_num(avg_profile, 2)),
+      sprintf("%s: %s", time_points, omicsai::format_num(avg_profile, 2)),
       collapse = ", "
     )
     cluster_lines <- c(cluster_lines, paste0("- **Mean expression profile (scaled):** ", profile_str))
@@ -65,7 +62,7 @@ timeseries_build_ai_params <- function(data,
     ## Expression range
     sd_vals <- matrixStats::rowSds(module_expr, na.rm = TRUE)
     cluster_lines <- c(cluster_lines, paste0(
-      "- **Mean SD across time:** ", fmt_num(mean(sd_vals, na.rm = TRUE), 2)
+      "- **Mean SD across time:** ", omicsai::format_num(mean(sd_vals, na.rm = TRUE), 2)
     ))
   }
 
@@ -132,8 +129,8 @@ timeseries_build_ai_params <- function(data,
           sprintf(
             "| %s | %s | %s |",
             pathways,
-            fmt_num(rho[top_gsets], 3),
-            fmt_num(pv[top_gsets], 4)
+            omicsai::format_num(rho[top_gsets], 3),
+            omicsai::format_num(pv[top_gsets], 4)
           ),
           collapse = "\n"
         )
@@ -189,41 +186,6 @@ timeseries_build_ai_params <- function(data,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-timeseries_ai_summary_ui <- function(id,
-                                     title = "AI Summary",
-                                     label = "",
-                                     info.text = "",
-                                     caption = "AI-generated cluster summary.",
-                                     height = c("100%", TABLE_HEIGHT_MODAL),
-                                     width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Time Series AI Summary Server
 #'

@@ -18,9 +18,6 @@ compare_build_ai_params <- function(pgx,
                                     contrast1,
                                     contrast2,
                                     ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -90,8 +87,8 @@ compare_build_ai_params <- function(pgx,
         "**Fold-change correlation between contrasts:**\n\n",
         "| Metric | Value |\n",
         "|--------|-------|\n",
-        "| Pearson r | ", fmt_num(pearson_r, 3), " |\n",
-        "| Spearman rho | ", fmt_num(spearman_r, 3), " |\n",
+        "| Pearson r | ", omicsai::format_num(pearson_r, 3), " |\n",
+        "| Spearman rho | ", omicsai::format_num(spearman_r, 3), " |\n",
         "| Total shared genes | ", length(f1_valid), " |\n",
         "| Significant in contrast 1 (|logFC| > ", sig_threshold, ") | ", n_sig1, " |\n",
         "| Significant in contrast 2 (|logFC| > ", sig_threshold, ") | ", n_sig2, " |\n",
@@ -144,8 +141,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s | %s |",
               symbols,
-              fmt_num(f1_valid[top_idx], 3),
-              fmt_num(f2_valid[top_idx], 3),
+              omicsai::format_num(f1_valid[top_idx], 3),
+              omicsai::format_num(f2_valid[top_idx], 3),
               direction
             ),
             collapse = "\n"
@@ -206,8 +203,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s |",
               sym1,
-              fmt_num(f1_valid[top1], 3),
-              fmt_num(f2_valid[top1], 3)
+              omicsai::format_num(f1_valid[top1], 3),
+              omicsai::format_num(f2_valid[top1], 3)
             ),
             collapse = "\n"
           ),
@@ -234,8 +231,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s |",
               sym2,
-              fmt_num(f1_valid[top2], 3),
-              fmt_num(f2_valid[top2], 3)
+              omicsai::format_num(f1_valid[top2], 3),
+              omicsai::format_num(f2_valid[top2], 3)
             ),
             collapse = "\n"
           ),
@@ -265,54 +262,6 @@ compare_build_ai_params <- function(pgx,
 # Shiny Module: Compare AI Summary
 # -----------------------------------------------------------------------------
 
-#' Compare AI Summary UI
-#'
-#' Creates AI summary UI wrapped in PlotModuleUI for consistent OmicsPlayground styling.
-#'
-#' @param id Shiny module namespace ID
-#' @param title Card title
-#' @param label Optional label
-#' @param info.text Help/info text
-#' @param caption Caption text
-#' @param height Card height (can be vector for responsive sizing)
-#' @param width Card width (can be vector for responsive sizing)
-#'
-#' @return Shiny UI element
-compare_ai_summary_ui <- function(id,
-                                  title = "AI Summary",
-                                  label = "",
-                                  info.text = "",
-                                  caption = "AI-generated comparison summary.",
-                                  height = c("100%", TABLE_HEIGHT_MODAL),
-                                  width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Compare AI Summary Server
 #'

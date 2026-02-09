@@ -98,7 +98,7 @@ TcgaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          tcga_ai_summary_ui(
+          AISummaryCardUI(
             ns("tcgaAISummary"),
             title = "AI TCGA Summary",
             info.text = "AI-generated summary of the TCGA survival analysis results for the selected contrast.",

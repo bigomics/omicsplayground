@@ -19,9 +19,6 @@ singlecell_build_ai_params <- function(pgx,
                                        refset,
                                        dcmethod,
                                        ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- pgx$name %||% pgx$description %||% "omics experiment"
@@ -67,9 +64,9 @@ singlecell_build_ai_params <- function(pgx,
         )
         rows <- vapply(seq_along(top_types), function(i) {
           ct <- top_types[i]
-          overall <- fmt_num(mean_props[ct] * 100, 1)
+          overall <- omicsai::format_num(mean_props[ct] * 100, 1)
           per_grp <- vapply(grp_levels, function(g) {
-            fmt_num(grp_means[g, ct] * 100, 1)
+            omicsai::format_num(grp_means[g, ct] * 100, 1)
           }, character(1))
           paste0("| ", ct, " | ", overall, "% |",
             paste(paste0(per_grp, "%"), collapse = " | "), " |")
@@ -91,7 +88,7 @@ singlecell_build_ai_params <- function(pgx,
       "| Cell Type | Mean Proportion |\n",
       "|-----------|----------------|\n",
       paste(
-        sprintf("| %s | %s%% |", names(mean_props), fmt_num(mean_props * 100, 1)),
+        sprintf("| %s | %s%% |", names(mean_props), omicsai::format_num(mean_props * 100, 1)),
         collapse = "\n"
       ), "\n\n",
       "**Cell types with >1% mean proportion:** ", n_detected,
@@ -127,7 +124,7 @@ singlecell_build_ai_params <- function(pgx,
       "| Gene | Mean Expression | SD |\n",
       "|------|----------------|----|\n",
       paste(
-        sprintf("| %s | %s | %s |", symbols, fmt_num(mean_vals, 2), fmt_num(sd_vals, 2)),
+        sprintf("| %s | %s | %s |", symbols, omicsai::format_num(mean_vals, 2), omicsai::format_num(sd_vals, 2)),
         collapse = "\n"
       )
     )
@@ -197,41 +194,6 @@ singlecell_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-singlecell_ai_summary_ui <- function(id,
-                                     title = "AI Summary",
-                                     label = "",
-                                     info.text = "",
-                                     caption = "AI-generated cell profiling summary.",
-                                     height = c("100%", TABLE_HEIGHT_MODAL),
-                                     width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Single Cell AI Summary Server
 #'

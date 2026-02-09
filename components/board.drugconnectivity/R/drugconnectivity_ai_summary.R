@@ -26,9 +26,6 @@ drugconnectivity_build_ai_params <- function(pgx,
                                              moa_class = NULL,
                                              moa_target = NULL,
                                              ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- pgx$name %||% pgx$description %||% "omics experiment"
@@ -48,9 +45,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s | %s |",
           tbl$drug,
-          fmt_num(tbl$NES, 3),
-          fmt_num(tbl$pval, 4),
-          fmt_num(tbl$padj, 4),
+          omicsai::format_num(tbl$NES, 3),
+          omicsai::format_num(tbl$pval, 4),
+          omicsai::format_num(tbl$padj, 4),
           ifelse(is.na(tbl$moa) | tbl$moa == "", "-", tbl$moa),
           ifelse(is.na(tbl$target) | tbl$target == "", "-", tbl$target)
         ),
@@ -87,9 +84,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           mc$pathway,
-          fmt_num(mc$NES, 3),
-          fmt_num(mc$pval, 4),
-          fmt_num(mc$padj, 4),
+          omicsai::format_num(mc$NES, 3),
+          omicsai::format_num(mc$pval, 4),
+          omicsai::format_num(mc$padj, 4),
           mc$size
         ),
         collapse = "\n"
@@ -109,9 +106,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           mt$pathway,
-          fmt_num(mt$NES, 3),
-          fmt_num(mt$pval, 4),
-          fmt_num(mt$padj, 4),
+          omicsai::format_num(mt$NES, 3),
+          omicsai::format_num(mt$pval, 4),
+          omicsai::format_num(mt$padj, 4),
           mt$size
         ),
         collapse = "\n"
@@ -150,41 +147,6 @@ drugconnectivity_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-drugconnectivity_ai_summary_ui <- function(id,
-                                           title = "AI Summary",
-                                           label = "",
-                                           info.text = "",
-                                           caption = "AI-generated drug connectivity summary.",
-                                           height = c("100%", TABLE_HEIGHT_MODAL),
-                                           width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Drug Connectivity AI Summary Server
 #'

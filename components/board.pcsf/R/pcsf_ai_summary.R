@@ -21,9 +21,6 @@ pcsf_build_ai_params <- function(pgx,
                                  centrality_table,
                                  pcsf_graph,
                                  ntop = 15) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -88,8 +85,8 @@ pcsf_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s |",
           sym_col,
-          fmt_num(tbl$logFC, 3),
-          fmt_num(tbl$centrality, 4),
+          omicsai::format_num(tbl$logFC, 3),
+          omicsai::format_num(tbl$centrality, 4),
           substr(title_col, 1, 50)
         ),
         collapse = "\n"
@@ -143,7 +140,7 @@ pcsf_build_ai_params <- function(pgx,
                 sprintf(
                   "| %s | %s | %s |",
                   pathway_names,
-                  fmt_num(gs_sub, 3),
+                  omicsai::format_num(gs_sub, 3),
                   overlap_n
                 ),
                 collapse = "\n"
@@ -192,41 +189,6 @@ pcsf_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-pcsf_ai_summary_ui <- function(id,
-                               title = "AI Summary",
-                               label = "",
-                               info.text = "",
-                               caption = "AI-generated PCSF network summary.",
-                               height = c("100%", TABLE_HEIGHT_MODAL),
-                               width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' PCSF AI Summary Server
 #'

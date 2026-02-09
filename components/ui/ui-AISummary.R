@@ -16,24 +16,13 @@
 #' @param height Card height, vector c(default, fullscreen)
 #' @param width Card width, vector c(default, fullscreen)
 #'
-#' @return Shiny UI element or NULL if AI is disabled globally
+#' @return Shiny UI element
 AISummaryCardUI <- function(id,
                             title = "AI Summary",
                             caption = "AI-generated summary.",
                             info.text = "",
                             height = c("100%", TABLE_HEIGHT_MODAL),
                             width = c("auto", "100%")) {
-  ## --- Check if AI is enabled globally ---
-  # This check happens at UI render time (when modules are loaded)
-  # The option is set by the observer in server.R when enable_llm changes
-  ai_enabled <- getOption("omicsplayground.enableAI", default = TRUE)
-
-  if (!isTRUE(ai_enabled)) {
-    # Return NULL to prevent tab from rendering at all
-    # This makes the entire tab disappear from the UI
-    return(NULL)
-  }
-
   ## --- Argument validation ---
   if (!is.character(id) || length(id) != 1 || !nzchar(id)) {
     stop("AISummaryCardUI: `id` must be a non-empty string.")

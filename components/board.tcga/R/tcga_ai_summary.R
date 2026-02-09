@@ -21,9 +21,6 @@ tcga_build_ai_params <- function(pgx,
                                  sigtype = "contrast",
                                  genelist = NULL,
                                  ntop = 15) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- pgx$name %||% pgx$description %||% "omics experiment"
@@ -89,7 +86,7 @@ tcga_build_ai_params <- function(pgx,
             "| Gene | logFC |\n",
             "|------|-------|\n",
             paste(
-              sprintf("| %s | %s |", df$symbol, fmt_num(df$fc, 3)),
+              sprintf("| %s | %s |", df$symbol, omicsai::format_num(df$fc, 3)),
               collapse = "\n"
             )
           )
@@ -179,41 +176,6 @@ tcga_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-tcga_ai_summary_ui <- function(id,
-                               title = "AI Summary",
-                               label = "",
-                               info.text = "",
-                               caption = "AI-generated TCGA survival summary.",
-                               height = c("100%", TABLE_HEIGHT_MODAL),
-                               width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' TCGA AI Summary Server
 #'

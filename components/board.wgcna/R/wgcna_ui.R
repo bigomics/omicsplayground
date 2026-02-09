@@ -203,7 +203,7 @@ WgcnaUI <- function(id) {
           bslib::layout_columns(
             height = "100%",
             col_widths = c(3, 9),
-            wgcna_ai_summary_ui(
+            AISummaryCardUI(
               id = ns("moduleSummary"),
               title = "(a) Summary",
               info.text = "",

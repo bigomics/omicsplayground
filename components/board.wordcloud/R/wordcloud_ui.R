@@ -98,7 +98,7 @@ WordCloudUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "calc(100vh - 181px)",
-        wordcloud_ai_summary_ui(
+        AISummaryCardUI(
           ns("wordcloud_ai_summary"),
           title = "AI Keyword Summary",
           info.text = "AI-generated interpretation of keyword enrichment results for the selected contrast.",

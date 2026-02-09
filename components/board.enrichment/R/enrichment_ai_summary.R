@@ -19,9 +19,6 @@ enrichment_build_ai_params <- function(pgx,
                                        contrast,
                                        filtered_table,
                                        ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -59,8 +56,8 @@ enrichment_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           pathways,
-          fmt_num(tbl$logFC, 3),
-          fmt_num(tbl$meta.q, 4),
+          omicsai::format_num(tbl$logFC, 3),
+          omicsai::format_num(tbl$meta.q, 4),
           sizes,
           stars_col
         ),
@@ -135,7 +132,7 @@ enrichment_build_ai_params <- function(pgx,
             "| Gene | logFC |\n",
             "|------|-------|\n",
             paste(
-              sprintf("| %s | %s |", df$symbol, fmt_num(df$fc, 3)),
+              sprintf("| %s | %s |", df$symbol, omicsai::format_num(df$fc, 3)),
               collapse = "\n"
             )
           )
@@ -188,41 +185,6 @@ enrichment_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-enrichment_ai_summary_ui <- function(id,
-                                     title = "AI Summary",
-                                     label = "",
-                                     info.text = "",
-                                     caption = "AI-generated enrichment summary.",
-                                     height = c("100%", TABLE_HEIGHT_MODAL),
-                                     width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Enrichment AI Summary Server
 #'

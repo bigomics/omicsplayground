@@ -22,9 +22,6 @@ connectivity_build_ai_params <- function(pgx,
                                          connectivity_scores,
                                          cum_enrichment_table = NULL,
                                          ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -50,11 +47,11 @@ connectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s | %s |",
           playbase::shortstring(tbl$pathway, 80),
-          if ("score" %in% sig_cols) fmt_num(tbl$score, 3) else rep("NA", nrow(tbl)),
-          if ("rho" %in% sig_cols) fmt_num(tbl$rho, 3) else rep("NA", nrow(tbl)),
-          if ("NES" %in% sig_cols) fmt_num(tbl$NES, 3) else rep("NA", nrow(tbl)),
-          if ("odd.ratio" %in% sig_cols) fmt_num(tbl$odd.ratio, 3) else rep("NA", nrow(tbl)),
-          if ("tau" %in% sig_cols) fmt_num(tbl$tau, 3) else rep("NA", nrow(tbl))
+          if ("score" %in% sig_cols) omicsai::format_num(tbl$score, 3) else rep("NA", nrow(tbl)),
+          if ("rho" %in% sig_cols) omicsai::format_num(tbl$rho, 3) else rep("NA", nrow(tbl)),
+          if ("NES" %in% sig_cols) omicsai::format_num(tbl$NES, 3) else rep("NA", nrow(tbl)),
+          if ("odd.ratio" %in% sig_cols) omicsai::format_num(tbl$odd.ratio, 3) else rep("NA", nrow(tbl)),
+          if ("tau" %in% sig_cols) omicsai::format_num(tbl$tau, 3) else rep("NA", nrow(tbl))
         ),
         collapse = "\n"
       )
@@ -110,7 +107,7 @@ connectivity_build_ai_params <- function(pgx,
             "| %s | %s | %s |",
             names(top_le),
             as.integer(top_le),
-            fmt_num(fc_vals, 3)
+            omicsai::format_num(fc_vals, 3)
           ),
           collapse = "\n"
         )
@@ -157,8 +154,8 @@ connectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s |",
           pathway_names,
-          fmt_num(top_values, 3),
-          fmt_num(query_values, 3)
+          omicsai::format_num(top_values, 3),
+          omicsai::format_num(query_values, 3)
         ),
         collapse = "\n"
       )
@@ -191,54 +188,6 @@ connectivity_build_ai_params <- function(pgx,
 # Shiny Module: Connectivity AI Summary
 # -----------------------------------------------------------------------------
 
-#' Connectivity AI Summary UI
-#'
-#' Creates AI summary UI wrapped in PlotModuleUI for consistent OmicsPlayground styling.
-#'
-#' @param id Shiny module namespace ID
-#' @param title Card title
-#' @param label Optional label
-#' @param info.text Help/info text
-#' @param caption Caption text
-#' @param height Card height (can be vector for responsive sizing)
-#' @param width Card width (can be vector for responsive sizing)
-#'
-#' @return Shiny UI element
-connectivity_ai_summary_ui <- function(id,
-                                       title = "AI Summary",
-                                       label = "",
-                                       info.text = "",
-                                       caption = "AI-generated connectivity summary.",
-                                       height = c("100%", TABLE_HEIGHT_MODAL),
-                                       width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Connectivity AI Summary Server
 #'

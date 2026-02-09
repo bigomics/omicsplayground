@@ -128,7 +128,7 @@ IntersectionUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        intersection_ai_summary_ui(
+        AISummaryCardUI(
           ns("intersectionAISummary"),
           title = "AI Intersection Summary",
           info.text = "AI-generated summary of the contrast intersection analysis for the selected contrasts.",

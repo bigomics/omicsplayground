@@ -19,10 +19,6 @@ biomarker_build_ai_params <- function(pgx,
                                       target,
                                       importance_result,
                                       ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
-
   # Extract experiment description
   experiment <- ""
   if (!is.null(pgx$name) && nzchar(pgx$name)) {
@@ -57,8 +53,8 @@ biomarker_build_ai_params <- function(pgx,
     )
 
     rows <- vapply(seq_len(nrow(R)), function(i) {
-      scores <- paste(fmt_num(R[i, ], 3), collapse = " | ")
-      cum_score <- fmt_num(sum(R[i, ], na.rm = TRUE), 3)
+      scores <- paste(omicsai::format_num(R[i, ], 3), collapse = " | ")
+      cum_score <- omicsai::format_num(sum(R[i, ], na.rm = TRUE), 3)
       sprintf("| %s | %s | %s |", symbols[i], scores, cum_score)
     }, character(1))
 
@@ -132,55 +128,6 @@ biomarker_build_ai_params <- function(pgx,
 # -----------------------------------------------------------------------------
 # Shiny Module: Biomarker AI Summary
 # -----------------------------------------------------------------------------
-
-#' Biomarker AI Summary UI
-#'
-#' Creates AI summary UI wrapped in PlotModuleUI for consistent OmicsPlayground styling.
-#'
-#' @param id Shiny module namespace ID
-#' @param title Card title
-#' @param label Optional label
-#' @param info.text Help/info text
-#' @param caption Caption text
-#' @param height Card height (can be vector for responsive sizing)
-#' @param width Card width (can be vector for responsive sizing)
-#'
-#' @return Shiny UI element
-biomarker_ai_summary_ui <- function(id,
-                                    title = "AI Summary",
-                                    label = "",
-                                    info.text = "",
-                                    caption = "AI-generated biomarker summary.",
-                                    height = c("100%", TABLE_HEIGHT_MODAL),
-                                    width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Biomarker AI Summary Server
 #'

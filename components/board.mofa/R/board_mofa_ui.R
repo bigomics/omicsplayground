@@ -273,7 +273,7 @@ MofaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("100%", "100%")
             ),
-            mofa_ai_summary_ui(
+            AISummaryCardUI(
               id = ns("factorSummary"),
               title = "AI Summary",
               info.text = "AI-generated summary of the selected MOFA factor based on enrichment analysis and feature loadings.",

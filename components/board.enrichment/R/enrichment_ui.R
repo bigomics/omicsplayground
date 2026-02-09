@@ -315,7 +315,7 @@ EnrichmentUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = halfH,
-        enrichment_ai_summary_ui(
+        AISummaryCardUI(
           ns("enrichmentAISummary"),
           title = "AI Enrichment Summary",
           info.text = "AI-generated summary of the enrichment analysis results for the selected contrast.",

@@ -126,7 +126,7 @@ TimeSeriesUI <- function(id) {
                 id = ns("enrichment"),
                 title = "Enriched genesets"
               ),
-              timeseries_ai_summary_ui(
+              AISummaryCardUI(
                 id = ns("aiSummary"),
                 title = "AI Summary",
                 info.text = "AI-generated summary of the selected time series cluster based on enrichment analysis.",

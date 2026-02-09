@@ -119,7 +119,7 @@ SingleCellUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          singlecell_ai_summary_ui(
+          AISummaryCardUI(
             ns("singlecellAISummary"),
             title = "AI Cell Profiling Summary",
             info.text = "AI-generated summary of the cell type deconvolution and marker gene analysis results.",

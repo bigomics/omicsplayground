@@ -24,9 +24,6 @@ correlation_build_ai_params <- function(pgx,
                                         partial_corr,
                                         gene_filter = "<all>",
                                         ntop = 20) {
-  fmt_num <- function(x, digits = 3) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -84,9 +81,9 @@ correlation_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s |",
           symbols,
-          fmt_num(tbl[, "cor"]),
-          fmt_num(pcor_vals),
-          fmt_num(tbl[, "cov"])
+          omicsai::format_num(tbl[, "cor"]),
+          omicsai::format_num(pcor_vals),
+          omicsai::format_num(tbl[, "cov"])
         ),
         collapse = "\n"
       )
@@ -134,8 +131,8 @@ correlation_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s |",
           symbols,
-          fmt_num(pcor_tbl$pcor),
-          fmt_num(pcor_tbl$cor)
+          omicsai::format_num(pcor_tbl$pcor),
+          omicsai::format_num(pcor_tbl$cor)
         ),
         collapse = "\n"
       )
@@ -166,54 +163,6 @@ correlation_build_ai_params <- function(pgx,
 # Shiny Module: Correlation AI Summary
 # -----------------------------------------------------------------------------
 
-#' Correlation AI Summary UI
-#'
-#' Creates AI summary UI wrapped in PlotModuleUI for consistent OmicsPlayground styling.
-#'
-#' @param id Shiny module namespace ID
-#' @param title Card title
-#' @param label Optional label
-#' @param info.text Help/info text
-#' @param caption Caption text
-#' @param height Card height (can be vector for responsive sizing)
-#' @param width Card width (can be vector for responsive sizing)
-#'
-#' @return Shiny UI element
-correlation_ai_summary_ui <- function(id,
-                                      title = "AI Summary",
-                                      label = "",
-                                      info.text = "",
-                                      caption = "AI-generated correlation summary.",
-                                      height = c("100%", TABLE_HEIGHT_MODAL),
-                                      width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Correlation AI Summary Server
 #'

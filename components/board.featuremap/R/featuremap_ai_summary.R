@@ -18,9 +18,6 @@ featuremap_build_ai_params <- function(pgx,
                                        contrast,
                                        feature_level = "gene",
                                        ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- ""
@@ -87,8 +84,8 @@ featuremap_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s |",
             display_names,
-            fmt_num(rms_fc[top_names], 3),
-            fmt_num(fc_vals, 3)
+            omicsai::format_num(rms_fc[top_names], 3),
+            omicsai::format_num(fc_vals, 3)
           ),
           collapse = "\n"
         )
@@ -101,7 +98,7 @@ featuremap_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s |",
             display_names,
-            fmt_num(rms_fc[top_names], 3)
+            omicsai::format_num(rms_fc[top_names], 3)
           ),
           collapse = "\n"
         )
@@ -158,7 +155,7 @@ featuremap_build_ai_params <- function(pgx,
       neigh_fc <- ""
       if (!is.null(contrast_fc)) {
         fc_vals <- contrast_fc[neighbors]
-        neigh_fc <- paste0(" (logFC: ", paste(fmt_num(fc_vals, 3), collapse = ", "), ")")
+        neigh_fc <- paste0(" (logFC: ", paste(omicsai::format_num(fc_vals, 3), collapse = ", "), ")")
       }
 
       nearby_lines <- c(
@@ -205,41 +202,6 @@ featuremap_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-featuremap_ai_summary_ui <- function(id,
-                                     title = "AI Summary",
-                                     label = "",
-                                     info.text = "",
-                                     caption = "AI-generated feature map summary.",
-                                     height = c("100%", TABLE_HEIGHT_MODAL),
-                                     width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Feature Map AI Summary Server
 #'

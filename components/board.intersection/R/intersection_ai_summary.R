@@ -27,9 +27,6 @@ intersection_build_ai_params <- function(pgx,
                                          fdr = 0.05,
                                          lfc = 0.2,
                                          ntop = 30) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Extract experiment description
   experiment <- pgx$name %||% pgx$description %||% "omics experiment"
@@ -117,7 +114,7 @@ intersection_build_ai_params <- function(pgx,
         "|---------|", paste(rep("------", ncol(FC)), collapse = "|"), "|\n"
       )
       rows <- vapply(seq_len(nrow(FC)), function(i) {
-        vals <- paste(fmt_num(FC[i, ], 3), collapse = " | ")
+        vals <- paste(omicsai::format_num(FC[i, ], 3), collapse = " | ")
         sprintf("| %s | %s |", row_labels[i], vals)
       }, character(1))
 
@@ -149,7 +146,7 @@ intersection_build_ai_params <- function(pgx,
         "|----------|", paste(rep("------", ncol(R)), collapse = "|"), "|\n"
       )
       rows <- vapply(seq_len(nrow(R)), function(i) {
-        vals <- paste(fmt_num(R[i, ], 2), collapse = " | ")
+        vals <- paste(omicsai::format_num(R[i, ], 2), collapse = " | ")
         sprintf("| %s | %s |", rownames(R)[i], vals)
       }, character(1))
 
@@ -189,41 +186,6 @@ intersection_build_ai_params <- function(pgx,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-intersection_ai_summary_ui <- function(id,
-                                       title = "AI Summary",
-                                       label = "",
-                                       info.text = "",
-                                       caption = "AI-generated intersection summary.",
-                                       height = c("100%", TABLE_HEIGHT_MODAL),
-                                       width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Intersection AI Summary Server
 #'

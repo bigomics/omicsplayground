@@ -17,9 +17,6 @@
 wordcloud_build_ai_params <- function(word_enrichment,
                                       contrast,
                                       ntop = 30) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Select top keywords by absolute NES
   df <- word_enrichment
@@ -34,8 +31,8 @@ wordcloud_build_ai_params <- function(word_enrichment,
       sprintf(
         "| %s | %s | %s | %s |",
         top_df$word,
-        fmt_num(top_df$NES, 2),
-        fmt_num(top_df$padj, 3),
+        omicsai::format_num(top_df$NES, 2),
+        omicsai::format_num(top_df$padj, 3),
         top_df$size
       ),
       collapse = "\n"
@@ -51,9 +48,9 @@ wordcloud_build_ai_params <- function(word_enrichment,
   nes_vals <- df$NES[!is.na(df$NES)]
   nes_range <- if (length(nes_vals) > 0) {
     paste0(
-      fmt_num(min(nes_vals), 2), " to ",
-      fmt_num(max(nes_vals), 2),
-      " (median: ", fmt_num(median(nes_vals), 2), ")"
+      omicsai::format_num(min(nes_vals), 2), " to ",
+      omicsai::format_num(max(nes_vals), 2),
+      " (median: ", omicsai::format_num(median(nes_vals), 2), ")"
     )
   } else {
     "NA"
@@ -92,41 +89,6 @@ wordcloud_build_ai_params <- function(word_enrichment,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-wordcloud_ai_summary_ui <- function(id,
-                                    title = "AI Summary",
-                                    label = "",
-                                    info.text = "",
-                                    caption = "AI-generated keyword enrichment summary.",
-                                    height = c("100%", TABLE_HEIGHT_MODAL),
-                                    width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' WordCloud AI Summary Server
 #'

@@ -21,10 +21,6 @@ clustering_build_ai_params <- function(pgx,
                                        clust_annot_cor = NULL,
                                        cluster_method = "umap",
                                        ntop = 10) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
-
   # Extract experiment description
   experiment <- ""
   if (!is.null(pgx$name) && nzchar(pgx$name)) {
@@ -104,7 +100,7 @@ clustering_build_ai_params <- function(pgx,
         "| Annotation term | Correlation (R) |\n",
         "|----------------|----------------|\n",
         paste(
-          sprintf("| %s | %s |", top_terms, fmt_num(top_vals, 3)),
+          sprintf("| %s | %s |", top_terms, omicsai::format_num(top_vals, 3)),
           collapse = "\n"
         )
       )
@@ -151,8 +147,8 @@ clustering_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s |",
             top_g,
-            fmt_num(gene_mean[top_g], 2),
-            fmt_num(gene_sd[top_g], 2)
+            omicsai::format_num(gene_mean[top_g], 2),
+            omicsai::format_num(gene_sd[top_g], 2)
           ),
           collapse = "\n"
         )
@@ -182,55 +178,6 @@ clustering_build_ai_params <- function(pgx,
 # -----------------------------------------------------------------------------
 # Shiny Module: Clustering AI Summary
 # -----------------------------------------------------------------------------
-
-#' Clustering AI Summary UI
-#'
-#' Creates AI summary UI wrapped in PlotModuleUI for consistent OmicsPlayground styling.
-#'
-#' @param id Shiny module namespace ID
-#' @param title Card title
-#' @param label Optional label
-#' @param info.text Help/info text
-#' @param caption Caption text
-#' @param height Card height (can be vector for responsive sizing)
-#' @param width Card width (can be vector for responsive sizing)
-#'
-#' @return Shiny UI element
-clustering_ai_summary_ui <- function(id,
-                                     title = "AI Summary",
-                                     label = "",
-                                     info.text = "",
-                                     caption = "AI-generated clustering summary.",
-                                     height = c("100%", TABLE_HEIGHT_MODAL),
-                                     width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' Clustering AI Summary Server
 #'

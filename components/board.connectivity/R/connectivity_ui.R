@@ -204,7 +204,7 @@ ConnectivityUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "calc(100vh - 181px)",
-        connectivity_ai_summary_ui(
+        AISummaryCardUI(
           ns("connectivityAISummary"),
           title = "AI Connectivity Summary",
           info.text = "AI-generated summary of the connectivity analysis results for the selected contrast.",

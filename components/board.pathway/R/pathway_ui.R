@@ -213,7 +213,7 @@ PathwayUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "calc(100vh - 181px)",
-        pathway_ai_summary_ui(
+        AISummaryCardUI(
           id = ns("pathway_ai_summary"),
           title = "AI Pathway Summary",
           info.text = "AI-generated summary of the pathway enrichment results for the selected contrast. Uses the top enriched pathways across all databases to provide a biological interpretation.",

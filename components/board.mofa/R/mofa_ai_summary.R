@@ -20,9 +20,6 @@ mofa_build_ai_params <- function(mofa,
                                  pgx,
                                  factor_name,
                                  ntop = 20) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # --- Extract enriched pathways ---
   genesets <- ""
@@ -54,8 +51,8 @@ mofa_build_ai_params <- function(mofa,
             sprintf(
               "| %s | %s | %s | %s |",
               pathways,
-              fmt_num(top_gse$NES, 2),
-              fmt_num(top_gse$padj, 3),
+              omicsai::format_num(top_gse$NES, 2),
+              omicsai::format_num(top_gse$padj, 3),
               sizes
             ),
             collapse = "\n"
@@ -111,8 +108,8 @@ mofa_build_ai_params <- function(mofa,
           "| %s | %s | %s | %s |",
           sub(";.*", ";[...]", top_features),
           symbols,
-          fmt_num(top_weights, 3),
-          fmt_num(centrality_vals, 2)
+          omicsai::format_num(top_weights, 3),
+          omicsai::format_num(centrality_vals, 2)
         ),
         collapse = "\n"
       )
@@ -152,14 +149,14 @@ mofa_build_ai_params <- function(mofa,
         if (length(sig_traits) > 0) {
           sig_traits <- sort(abs(sig_traits), decreasing = TRUE)
           traits <- paste(
-            sprintf("%s (r=%s)", names(sig_traits), fmt_num(sig_traits, 2)),
+            sprintf("%s (r=%s)", names(sig_traits), omicsai::format_num(sig_traits, 2)),
             collapse = ", "
           )
         } else {
           # If no strong correlations, show top 3
           top_cors <- head(sort(abs(cors), decreasing = TRUE), 3)
           traits <- paste(
-            sprintf("%s (r=%s)", names(top_cors), fmt_num(top_cors, 2)),
+            sprintf("%s (r=%s)", names(top_cors), omicsai::format_num(top_cors, 2)),
             collapse = ", "
           )
         }
@@ -203,41 +200,6 @@ mofa_build_ai_params <- function(mofa,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-mofa_ai_summary_ui <- function(id,
-                               title = "AI Summary",
-                               label = "",
-                               info.text = "",
-                               caption = "AI-generated factor summary.",
-                               height = c("100%", TABLE_HEIGHT_MODAL),
-                               width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' MOFA AI Summary Server
 #'

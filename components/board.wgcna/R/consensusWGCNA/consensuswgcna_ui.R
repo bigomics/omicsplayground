@@ -162,11 +162,11 @@ ConsensusWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(3, 4, 5),
             height = "100vh",
-            wgcna_ai_summary_ui(
+            AISummaryCardUI(
               id = ns("consensusWGCNAmoduleSummary"),
               title = "Summary",
+              caption = "AI-generated summary of selected WGCNA module.",
               info.text = "Description of the selected WGCNA module.",
-              caption = "LLM-generated information about the selected WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),

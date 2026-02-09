@@ -22,9 +22,6 @@ wgcna_build_ai_params <- function(wgcna,
                                   annot = NULL,
                                   ntop = 40,
                                   multi = FALSE) {
-  fmt_num <- function(x, digits = 2) {
-    ifelse(is.na(x), "NA", sprintf(paste0("%.", digits, "f"), x))
-  }
 
   # Get top genes and sets using playbase function
 
@@ -73,8 +70,8 @@ wgcna_build_ai_params <- function(wgcna,
           sprintf(
             "| %s | %s | %s | %s |",
             pathways,
-            fmt_num(top_gse$score, 2),
-            fmt_num(top_gse$q.value, 3),
+            omicsai::format_num(top_gse$score, 2),
+            omicsai::format_num(top_gse$q.value, 3),
             top_gse$overlap
           ),
           collapse = "\n"
@@ -85,9 +82,9 @@ wgcna_build_ai_params <- function(wgcna,
       score_vals <- score_vals[!is.na(score_vals)]
       score_range <- if (length(score_vals) > 0) {
         paste0(
-          fmt_num(min(score_vals), 2), "-",
-          fmt_num(max(score_vals), 2),
-          " (median: ", fmt_num(median(score_vals), 2), ")"
+          omicsai::format_num(min(score_vals), 2), "-",
+          omicsai::format_num(max(score_vals), 2),
+          " (median: ", omicsai::format_num(median(score_vals), 2), ")"
         )
       } else {
         "NA"
@@ -177,8 +174,8 @@ wgcna_build_ai_params <- function(wgcna,
         sprintf(
           "| %s | %s | %s |",
           symbols,
-          fmt_num(top_genes$moduleMembership, 2),
-          fmt_num(top_genes$centrality, 2)
+          omicsai::format_num(top_genes$moduleMembership, 2),
+          omicsai::format_num(top_genes$centrality, 2)
         ),
         collapse = "\n"
       )
@@ -199,7 +196,7 @@ wgcna_build_ai_params <- function(wgcna,
         if (length(mi) > 0 && length(ti) > 0) mod_cor <- M[mi[1], ti[1]]
       }
       cor_label <- if (!is.na(mod_cor)) {
-        paste0(" (module r = ", fmt_num(mod_cor, 2), ")")
+        paste0(" (module r = ", omicsai::format_num(mod_cor, 2), ")")
       } else {
         ""
       }
@@ -213,7 +210,7 @@ wgcna_build_ai_params <- function(wgcna,
           if ("traitSignificance" %in% colnames(gs)) ts_val <- gs$traitSignificance[idx]
           if ("foldChange" %in% colnames(gs)) fc_val <- gs$foldChange[idx]
         }
-        sprintf("| %s | %s | %s |", symbols[i], fmt_num(ts_val, 2), fmt_num(fc_val, 1))
+        sprintf("| %s | %s | %s |", symbols[i], omicsai::format_num(ts_val, 2), omicsai::format_num(fc_val, 1))
       }, character(1))
 
       paste0(
@@ -281,7 +278,7 @@ wgcna_build_ai_params <- function(wgcna,
       }
       if (!is.na(trait_cor)) {
         stat_lines <- c(stat_lines, paste0(
-          "- **Trait correlation with ", tr, ":** ", fmt_num(trait_cor, 2)
+          "- **Trait correlation with ", tr, ":** ", omicsai::format_num(trait_cor, 2)
         ))
       }
       # Mean fold change for this trait
@@ -293,7 +290,7 @@ wgcna_build_ai_params <- function(wgcna,
             fc_dir <- ifelse(mean_fc > 0, "upregulated", "downregulated")
             stat_lines <- c(stat_lines, paste0(
               "- **Mean expression change (", tr, "):** ",
-              fmt_num(abs(mean_fc), 1), "-fold ", fc_dir
+              omicsai::format_num(abs(mean_fc), 1), "-fold ", fc_dir
             ))
           }
         }
@@ -333,41 +330,6 @@ wgcna_build_ai_params <- function(wgcna,
 #' @param width Card width (can be vector for responsive sizing)
 #'
 #' @return Shiny UI element
-wgcna_ai_summary_ui <- function(id,
-                                title = "AI Summary",
-                                label = "",
-                                info.text = "",
-                                caption = "AI-generated module summary.",
-                                height = c("100%", TABLE_HEIGHT_MODAL),
-                                width = c("auto", "100%")) {
-  # PlotModuleUI wrapper for omicsai card integration
-  card_wrapper <- function(id, content, options, title, label, info.text,
-                           caption, height, width, download.fmt, ...) {
-    PlotModuleUI(
-      id,
-      outputFunc = shiny::htmlOutput,
-      title = title,
-      label = label,
-      info.text = info.text,
-      options = options,
-      caption = caption,
-      height = height,
-      width = width,
-      download.fmt = download.fmt
-    )
-  }
-
-  omicsai::omicsai_summary_card_ui(
-    id = id,
-    card_wrapper = card_wrapper,
-    title = title,
-    label = label,
-    info.text = info.text,
-    caption = caption,
-    height = height,
-    width = width
-  )
-}
 
 #' WGCNA AI Summary Server
 #'

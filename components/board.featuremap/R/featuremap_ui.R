@@ -194,7 +194,7 @@ FeatureMapUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
-          featuremap_ai_summary_ui(
+          AISummaryCardUI(
             ns("featuremapAISummary"),
             title = "AI Feature Map Summary",
             info.text = "AI-generated summary of the feature map analysis for the selected contrast.",

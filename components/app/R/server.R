@@ -200,11 +200,9 @@ app_server <- function(input, output, session) {
       if (input$enable_llm) {
         dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
         setUserOption(session, "llm_model", input$llm_model)
-        options(omicsplayground.enableAI = TRUE)
       } else {
         dbg("[MAIN] AI/LLM diabled")
         setUserOption(session, "llm_model", "")
-        options(omicsplayground.enableAI = FALSE)
       }
     }
   )
