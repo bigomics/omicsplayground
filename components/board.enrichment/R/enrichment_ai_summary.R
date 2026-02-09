@@ -212,7 +212,7 @@ enrichment_ai_summary_ui <- function(id,
     )
   }
 
-  omics.ai::omicsai_summary_card_ui(
+  omicsai::omicsai_summary_card_ui(
     id = id,
     card_wrapper = card_wrapper,
     title = title,
@@ -267,7 +267,7 @@ enrichment_ai_summary_server <- function(id,
   )
 
   template_reactive <- shiny::reactive({
-    omics.ai::omicsai_load_template(board_template_path)
+    omicsai::omicsai_load_template(board_template_path)
   })
 
   # Load enrichment methods context template
@@ -275,7 +275,7 @@ enrichment_ai_summary_server <- function(id,
     OPG,
     "components/board.enrichment/prompts/Enrichment_methods.md"
   )
-  context_template <- omics.ai::omicsai_load_template(context_template_path)
+  context_template <- omicsai::omicsai_load_template(context_template_path)
 
   # Build config reactive from user's selected LLM model
   # Includes board-specific context in system prompt
@@ -289,7 +289,7 @@ enrichment_ai_summary_server <- function(id,
       experiment = experiment
     )
 
-    omics.ai::omicsai_config(
+    omicsai::omicsai_config(
       model = ai_model,
       context = context_template,
       context_params = context_params
@@ -313,7 +313,7 @@ enrichment_ai_summary_server <- function(id,
   }
 
   # Initialize omicsai card module
-  omics.ai::omicsai_summary_card_server(
+  omicsai::omicsai_summary_card_server(
     id = id,
     params_reactive = params_reactive,
     template_reactive = template_reactive,
