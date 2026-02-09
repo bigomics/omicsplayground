@@ -1245,11 +1245,8 @@ app_server <- function(input, output, session) {
   # error will be shown on the app. Note that errors that are
   # not related to Shiny are not caught (e.g. an error on the
   # global.R file is not caught by this)
-  options(shiny.error = function() {
-    # The error message is on the parent environment, it is
-    # not passed to the function called on error
-    parent_env <- parent.frame()
-    error <- parent_env$e
+  shiny::onUnhandledError(function(err) {
+    error <- err
     err_traceback <- NULL
 
     if (!is.null(error)) {
@@ -1272,13 +1269,13 @@ app_server <- function(input, output, session) {
       return()
     }
     # Get inputs to reproduce state
-    board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
+    board_inputs <- shiny::isolate(names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))])
 
     # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
-    board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
+    board_inputs <- shiny::isolate(board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)])
 
     input_values <- lapply(board_inputs, function(x) {
-      value <- input[[x]]
+      value <- shiny::isolate(input[[x]])
       return(paste0(x, ": ", value))
     }) |> unlist()
 
@@ -1301,11 +1298,11 @@ app_server <- function(input, output, session) {
     err_prev <<- error$message
 
     pgx_name <- NULL
-    user_email <- auth$email
-    user_tab <- input$nav
-    raw_dir <- raw_dir()
+    user_email <- shiny::isolate(auth$email)
+    user_tab <- shiny::isolate(input$nav)
+    raw_dir <- shiny::isolate(raw_dir())
 
-    if (!is.null(PGX) && !is.null(PGX$name)) {
+    if (!is.null(PGX) && !is.null(shiny::isolate(PGX$name))) {
       pgx_name <- PGX$name
     } else {
       pgx_name <- "No PGX loaded when error occurred"
@@ -1320,7 +1317,13 @@ app_server <- function(input, output, session) {
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
 
-    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential)
+    if (inherits(error, "shiny.error.fatal")) {
+      full_app_crash <- TRUE
+    } else {
+      full_app_crash <- FALSE
+    }
+
+    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential, full_app_crash = full_app_crash)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 
