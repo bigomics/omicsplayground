@@ -341,7 +341,7 @@ WgcnaUI <- function(id) {
               ),
               wgcna_report_infographic_ui(
                 ns("wgcnaReport"),
-                title = "Graphical Abtract",
+                title = "Graphical Abstract",
                 caption = "AI-generated graphical abstract",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")

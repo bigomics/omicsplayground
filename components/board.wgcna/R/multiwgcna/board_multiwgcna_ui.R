@@ -280,7 +280,7 @@ MultiWGCNA_UI <- function(id) {
               ),              
               wgcna_report_infographic_ui(
                 ns("multiwgcnaReport"),
-                title = "Graphical Abtract",
+                title = "Graphical Abstract",
                 caption = "AI-generated infographic",
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")

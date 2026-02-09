@@ -26,12 +26,12 @@ multiwgcna_table_enrichment_ui <- function(
 }
 
 multiwgcna_table_enrichment_server <- function(id,
-                                               mwgcna,
+                                               r_wgcna,
                                                r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-
+    
     table_df <- function() {
-      wgcna <- mwgcna()
+      wgcna <- r_wgcna()
       module <- r_module()
       shiny::req(module)
       if(!module %in% names(wgcna$gsea)) {
