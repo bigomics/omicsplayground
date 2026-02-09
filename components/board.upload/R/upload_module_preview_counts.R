@@ -662,7 +662,6 @@ upload_table_preview_counts_server <- function(id,
                 uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
                 df <- df[, colnames(df) != names(char.cols), drop = FALSE]
                 df <- as.matrix(df)
-                dbg("------------------------------2. colnames(df)=", paste0(colnames(df), collapse="; "))
               }
             } else {
               df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
