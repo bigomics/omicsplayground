@@ -36,6 +36,10 @@ options(DT.options = list(
   fillContainer = FALSE
 ))
 
+# Initialize AI/LLM enable state - default to TRUE (enabled)
+# This will be updated by server.R when user toggles the setting
+options(omicsplayground.enableAI = TRUE)
+
 # Set global modal height values for tables.
 # - The SCROLLY_MODAL defines the size of the scroll Y bar on the modals,
 # this only defines the srollable part of the table, not the header height.
