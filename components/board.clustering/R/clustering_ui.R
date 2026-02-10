@@ -291,35 +291,16 @@ ClusteringUI <- function(id) {
           height = fullH,
           bs_alert(parallel_info),
           bslib::layout_columns(
-            col_widths = c(8, 4),
-            bslib::layout_columns(
-              col_widths = 12,
-              clustering_plot_parcoord_ui(
-                id = ns("parcoord"),
-                title = "Parallel coordinates",
-                info.text = "Control the scale of the values from the options. Also, there is the possibility of averaging by gene module. Arrange the experimental conditions by click&dragging their names on the x-axis. Highlight genes by click and dragging on any y-axis.",
-                info.methods = "Expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustering (performed using the fastcluster R package [1]).",
-                info.references = list(
-                  list(
-                    "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
-                    "https://doi.org/10.18637/jss.v053.i09"
-                  )
-                ),
-                info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
-                caption = "The interactive Parallel Coordinates plot displays the expression levels of selected genes across all conditions.",
-                label = "a",
-                width = c("100%", "100%"),
-                height = c("100%", TABLE_HEIGHT_MODAL)
-              ),
-              clustering_table_parcoord_ui(
-                id = ns("parcoord"),
-                title = "Selected genes",
-                info.text = "Expression levels of selected genes across all conditions in the analysis. The selection of genes is performed on the Parallel coordinates plot by click & dragging on any y-axis. If not selection is performed on the plot, all the genes are displayed.",
-                caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
-                label = "a",
-                width = c("100%", "100%"),
-                height = c("100%", TABLE_HEIGHT_MODAL)
-              )
+            col_widths = c(6, 6),
+            height = fullH,
+            clustering_table_parcoord_ui(
+              id = ns("parcoord"),
+              title = "Features and modules",
+              info.text = "Expression levels of selected genes across all conditions in the analysis. The selection of genes is performed on the Parallel coordinates plot by click & dragging on any y-axis. If not selection is performed on the plot, all the genes are displayed.",
+              caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
+              label = "a",
+              width = c("100%", "100%"),
+              height = c("100%", TABLE_HEIGHT_MODAL)
             ),
             clustering_plot_genemodule_ui(
               id = ns("genemodule"),
@@ -343,3 +324,4 @@ ClusteringUI <- function(id) {
     )
   )
 }
+  
