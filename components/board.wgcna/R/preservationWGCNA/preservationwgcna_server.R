@@ -71,43 +71,43 @@ PreservationWGCNA_Board <- function(id, pgx) {
       {
         shiny::req(pgx$X)
         shiny::req(input$splitpheno)
-        shiny::req(input$compute) ## refute first call     
-        
-        pheno="activated"
+        shiny::req(input$compute) ## refute first call
+
+        pheno <- "activated"
         samples <- pgx$samples
         contrasts <- pgx$contrasts
-        
+
         pheno <- input$splitpheno
-        if( is.null(pheno) || pheno == '') {
+        if (is.null(pheno) || pheno == "") {
           pheno <- colnames(samples)[1]
         }
         shiny::req(pheno %in% colnames(samples))
-        
-        group <- samples[,pheno]
-        if(is.numeric(group) && length(unique(group)) > 3) {
-          group <- c("LO", "HI")[1 + (group >= median(group,na.rm=TRUE))]
+
+        group <- samples[, pheno]
+        if (is.numeric(group) && length(unique(group)) > 3) {
+          group <- c("LO", "HI")[1 + (group >= median(group, na.rm = TRUE))]
         }
-        group <- base::abbreviate(toupper(group),2L)
-        exprList<- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[,ii,drop=FALSE])
-        
-        progress <- shiny::Progress$new(session, min=0, max=1)
+        group <- base::abbreviate(toupper(group), 2L)
+        exprList <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[, ii, drop = FALSE])
+
+        progress <- shiny::Progress$new(session, min = 0, max = 1)
         on.exit(progress$close())
         progress$set(message = paste("computing preservation WGCNA..."), value = 0.33)
         pgx.showSmallModal("computing preservation WGCNA...")
-        
+
         power <- input$power
-        if(power == "<auto>") {
+        if (power == "<auto>") {
           power <- NULL
         } else {
           power <- as.numeric(power)
         }
-        
+
         ## This runs preservation WGCNA on an expression list
-        #ngenes=2000;minModuleSize=20;deepSplit=2
-        ngenes = as.integer(input$ngenes)
-        minModuleSize = as.integer(input$minmodsize)
-        deepSplit = as.integer(input$deepsplit)
-        
+        # ngenes=2000;minModuleSize=20;deepSplit=2
+        ngenes <- as.integer(input$ngenes)
+        minModuleSize <- as.integer(input$minmodsize)
+        deepSplit <- as.integer(input$deepsplit)
+
         res <- playbase::wgcna.runPreservationWGCNA(
           exprList,
           samples,
@@ -118,14 +118,16 @@ PreservationWGCNA_Board <- function(id, pgx) {
           add.merged = FALSE,
           compute.stats = TRUE,
           compute.enrichment = TRUE
-        ) 
-        
+        )
+
         shiny::removeModal()
-        
+
         all_modules <- rownames(res$modTraits[[1]])
         module1 <- all_modules[1]
-        updateSelectInput(session, "module", choices = sort(all_modules),
-          selected = module1)
+        updateSelectInput(session, "module",
+          choices = sort(all_modules),
+          selected = module1
+        )
 
         ## all_traits <- colnames(res$zlist[[1]])
         all_traits <- colnames(res$modTraits[[1]])

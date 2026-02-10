@@ -35,9 +35,9 @@ wgcna_plot_sampledendrogram_server <- function(id,
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
         res,
-        show.me = (what=="me"),
-        show.traits = (what=="traits"),
-        show.contrasts = (what=="contrasts"),        
+        show.me = (what == "me"),
+        show.traits = (what == "traits"),
+        show.contrasts = (what == "contrasts"),
         justdata = TRUE
       )
     }
@@ -46,10 +46,10 @@ wgcna_plot_sampledendrogram_server <- function(id,
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
         res,
-        ##what = what,
-        show.me = (what=="me"),
-        show.traits = (what=="traits"),
-        show.contrasts = (what=="contrasts"),
+        ## what = what,
+        show.me = (what == "me"),
+        show.traits = (what == "traits"),
+        show.contrasts = (what == "contrasts"),
         main = ""
       )
     }

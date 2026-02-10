@@ -286,7 +286,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_topgenes_server(
       "topgenesPlot",
       enrichTable = enrichTableModule,
-      ##pgx = pgx,
+      ## pgx = pgx,
       watermark = WATERMARK
     )
 

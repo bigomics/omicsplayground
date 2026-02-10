@@ -16,7 +16,8 @@ wgcna_html_module_summary_ui <- function(
 
   options <- tagList(
     shiny::radioButtons(
-      ns("docstyle"), "Ai summary:", c("short","long"), inline=TRUE
+      ns("docstyle"), "Ai summary:", c("short", "long"),
+      inline = TRUE
     ),
     shiny::actionButton(
       ns("refresh_btn"), "Generate!",
@@ -28,7 +29,7 @@ wgcna_html_module_summary_ui <- function(
       selected = "report", inline=TRUE
     )    
   )
-  
+
   PlotModuleUI(
     ns("text"),
     outputFunc = htmlOutput,
@@ -50,7 +51,6 @@ wgcna_html_module_summary_server <- function(id,
                                              r_module,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     get_summary <- function() {
       wgcna <- wgcna()
       module <- r_module()
@@ -66,7 +66,7 @@ wgcna_html_module_summary_server <- function(id,
     ##
     ##
     ##
-    
+
     btn_count <- reactiveVal(0)
 
     observe({
@@ -76,7 +76,7 @@ wgcna_html_module_summary_server <- function(id,
     })
 
     observeEvent(input$refresh_btn, {
-      btn_count( btn_count() + 1)
+      btn_count(btn_count() + 1)
     })
 
     get_report <- shiny::eventReactive({
@@ -141,12 +141,12 @@ wgcna_html_module_summary_server <- function(id,
     
     text.RENDER <- function() {
       res <- contents_text()
-      shiny::div(class="gene-info", shiny::HTML(res))
+      shiny::div(class = "gene-info", shiny::HTML(res))
     }
 
     text.RENDER2 <- function() {
       res <- contents_text()
-      shiny::div( shiny::HTML(res), style="font-size:22px;" )
+      shiny::div(shiny::HTML(res), style = "font-size:22px;")
     }
 
     PlotModuleServer(

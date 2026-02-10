@@ -120,84 +120,89 @@ ConsensusWGCNA_Board <- function(id, pgx) {
           shiny::validate(shiny::need(!is.null(xx), "Your dataset is incompatible for consensus WGCNA."))
         }
 
-      ## exclude sample matrices with less than 4 samples.
-      ## WGCNA::blockwiseConsensusModules fails when nsamples<4
-      xx <- xx[sapply(xx, function(x) ncol(x)>=4)]
-      shiny::validate(shiny::need(length(xx)>1,
-        "Your selected phenotype is incompatible for consensus WGCNA: less than 4 samples available for any given phenotype level. Please select another trait from the 'Consensus by' menu."))
-      samples <- unique(unlist(lapply(xx, colnames)))
-      phenoData <- pgx$samples[samples, , drop = FALSE]
-      contrasts <- pgx$contrasts[samples, , drop = FALSE]
-      
-      ## random noise: avoids ME with NaNs; increase robustness
-      for(i in 1:length(xx)) {
-        mat <- xx[[i]]
-        sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
-        sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
-        xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))  
-      }
+        ## exclude sample matrices with less than 4 samples.
+        ## WGCNA::blockwiseConsensusModules fails when nsamples<4
+        xx <- xx[sapply(xx, function(x) ncol(x) >= 4)]
+        shiny::validate(shiny::need(
+          length(xx) > 1,
+          "Your selected phenotype is incompatible for consensus WGCNA: less than 4 samples available for any given phenotype level. Please select another trait from the 'Consensus by' menu."
+        ))
+        samples <- unique(unlist(lapply(xx, colnames)))
+        phenoData <- pgx$samples[samples, , drop = FALSE]
+        contrasts <- pgx$contrasts[samples, , drop = FALSE]
 
-      progress <- shiny::Progress$new(session, min=0, max=1)
-      on.exit(progress$close())
-      progress$set(message = paste("computing consensus WGCNA..."), value = 0.33)
-      pgx.showSmallModal("computing consensus WGCNA...")
-      
-      power <- input$power
-      if(power == "<auto>") {
-        power <- NULL
-      } else {
-        power <- as.numeric(power)
-      }
-      
-      ## This runs consensus WGCNA on an expression list
-      ngenes = as.integer(input$ngenes)
-      minModuleSize = as.integer(input$minmodsize)
-      deepSplit = as.integer(input$deepsplit)
-      
-      cons <- playbase::wgcna.runConsensusWGCNA(
-        exprList = xx,
-        phenoData = phenoData,
-        contrasts = contrasts,
-        GMT = pgx$GMT,
-        annot = pgx$genes,
-        power = power,
-        ngenes = ngenes,
-        minModuleSize = minModuleSize,
-        maxBlockSize = 9999,
-        minKME = 0.3,
-        mergeCutHeight = 0.15,
-        deepSplit = deepSplit,
-        calcMethod = "fast",
-        drop.ref = FALSE,
-        addCombined = FALSE,
-        compute.stats = TRUE,
-        compute.enrichment = TRUE,
-        summary = TRUE,
-        ai_model = NULL,
-        experiment = pgx$description,
-        gsea.mingenes = 5,
-        gsea.ntop = 1000,
-        progress = progress,
-        verbose = 1
-      ) 
-      
-      shiny::removeModal()
-            
-      all_modules <- rownames(cons$modTraits)
-      module1 <- all_modules[[1]][1]
-      updateSelectInput(session, "module", choices = sort(all_modules),
-        selected = module1)
-      
-      # traits <- colnames(cons$datTraits)
-      traits <- colnames(cons$stats[[1]][["moduleTraitCor"]])
-      updateSelectInput(session, "trait",
-        choices = sort(traits),
-        selected = traits[1]
-      )
-      
-      return(cons)
-    },
-    ignoreNULL = FALSE
+        ## random noise: avoids ME with NaNs; increase robustness
+        for (i in 1:length(xx)) {
+          mat <- xx[[i]]
+          sdx0 <- matrixStats::rowSds(mat, na.rm = TRUE)
+          sdx1 <- 0.05 * sdx0 + 0.5 * mean(sdx0, na.rm = TRUE)
+          xx[[i]] <- mat + 0.1 * sdx1 * matrix(rnorm(length(mat)), nrow(mat), ncol(mat))
+        }
+
+        progress <- shiny::Progress$new(session, min = 0, max = 1)
+        on.exit(progress$close())
+        progress$set(message = paste("computing consensus WGCNA..."), value = 0.33)
+        pgx.showSmallModal("computing consensus WGCNA...")
+
+        power <- input$power
+        if (power == "<auto>") {
+          power <- NULL
+        } else {
+          power <- as.numeric(power)
+        }
+
+        ## This runs consensus WGCNA on an expression list
+        ngenes <- as.integer(input$ngenes)
+        minModuleSize <- as.integer(input$minmodsize)
+        deepSplit <- as.integer(input$deepsplit)
+
+        cons <- playbase::wgcna.runConsensusWGCNA(
+          exprList = xx,
+          phenoData = phenoData,
+          contrasts = contrasts,
+          GMT = pgx$GMT,
+          annot = pgx$genes,
+          power = power,
+          ngenes = ngenes,
+          minModuleSize = minModuleSize,
+          maxBlockSize = 9999,
+          minKME = 0.3,
+          mergeCutHeight = 0.15,
+          deepSplit = deepSplit,
+          calcMethod = "fast",
+          drop.ref = FALSE,
+          addCombined = FALSE,
+          compute.stats = TRUE,
+          compute.enrichment = TRUE,
+          summary = TRUE,
+          ai_model = NULL,
+          experiment = pgx$description,
+          gsea.mingenes = 5,
+          gsea.ntop = 1000,
+          progress = progress,
+          verbose = 1
+        )
+
+        shiny::removeModal()
+
+        all_modules <- rownames(cons$modTraits)
+        module1 <- all_modules[[1]][1]
+        updateSelectInput(session, "module",
+          choices = sort(all_modules),
+          selected = module1
+        )
+
+        # traits <- colnames(cons$datTraits)
+        traits <- colnames(cons$stats[[1]][["moduleTraitCor"]])
+        updateSelectInput(session, "trait",
+          choices = sort(traits),
+          selected = traits[1]
+        )
+
+        return(cons)
+      },
+      ignoreNULL = FALSE
+
     )
 
 

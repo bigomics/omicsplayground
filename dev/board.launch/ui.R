@@ -10,8 +10,11 @@ app_ui <- function() {
     # handle pgx file input
     pgx_file <- ""
 
-    if(!is.null(use_example_data) && use_example_data == TRUE){
-        pgx_file <- file.path(OPG,"data/example-data.pgx")
+    pgx_file_opt <- options()$pgx_file
+    if (!is.null(pgx_file_opt) && nchar(pgx_file_opt) > 0) {
+        pgx_file <- pgx_file_opt
+    } else if (!is.null(use_example_data) && use_example_data == TRUE) {
+        pgx_file <- file.path(OPG, "data/example-data.pgx")
     }
 
     # handle board inputs and dependencies
@@ -28,6 +31,11 @@ app_ui <- function() {
         source(file.path(OPG,'components/ui/', ui_file))
     }
 
+    module_files <- list.files(path = file.path(OPG,'components/modules/'), pattern="*[.][rR]$")
+    for (module_file in module_files) {
+        source(file.path(OPG,'components/modules/', module_file))
+    }
+
     board_input <- grep("inputs", ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
     # find the function name
     board_input <- board_input[grepl(board, board_input, ignore.case = TRUE)]
@@ -37,7 +45,9 @@ app_ui <- function() {
     
     board_input <- board_input[which(length == nchar(board_input))]
 
-    board_input_fn <- get(board_input)
+    board_input_fn <- tryCatch(get(board_input), error = function(e) {
+        return(NULL)
+    })
 
     # to the same for ui
     
@@ -120,13 +130,13 @@ app_ui <- function() {
         bigdash::bigTabs(
             bigdash::bigTabItem(
                 paste0(board,"-tab"),
-                board_input_fn(board),
+                if (!is.null(board_input_fn)) board_input_fn(board) else NULL,
                 board_ui_fn(board)
             ),
         bigdash::bigTabs(
             bigdash::bigTabItem(
                 paste0("pgx-tab"),
-                board_input_fn("hello"),
+                if (!is.null(board_input_fn)) board_input_fn("hello") else NULL,
                 textInput("pgx_path", label = NULL, value = pgx_file, placeholder = "Absolute path to pgx object", width = "100%")
             )
             
