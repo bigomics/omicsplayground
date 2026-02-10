@@ -25,24 +25,21 @@ mofa_plot_lasagna_clustering_server <- function(id,
                                                 data,
                                                 input_contrast = reactive(NULL),
                                                 watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     plot.RENDER <- function() {
       res <- data()
       k <- input_contrast()
-      shiny::req(res$posx)
-      shiny::req(res$posf)
-      shiny::req(res$Y)
+      shiny::req(res$posx, res$posf, res$Y)      
       if (!is.null(k)) shiny::req(k %in% colnames(res$Y))
 
       col1 <- "black"
-      y <- as.numeric(res$Y[, k])
-      y <- sign(y)
+      y <- sign(as.numeric(res$Y[, k]))
       y[y == 0] <- NA
       if (input$colorby == "correlation") {
-        ## color by contrast correlation
         rho <- cor(t(res$X), y, use = "pairwise")[, 1]
       } else {
-        ## color by fold-change
         m1 <- rowMeans(res$X[, which(y == 1)], na.rm = TRUE)
         m0 <- rowMeans(res$X[, which(y == -1)], na.rm = TRUE)
         rho <- m1 - m0
@@ -60,8 +57,7 @@ mofa_plot_lasagna_clustering_server <- function(id,
         ylab <- colnames(pos1)[2]
         plot(pos1,
           col = col1, pch = 20, cex = 1.4,
-          xlab = xlab, ylab = ylab, las = 1
-        )
+          xlab = xlab, ylab = ylab, las = 1)
         title(toupper(names(posf)[i]), cex.main = 1.2)
       }
     }

@@ -42,13 +42,10 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types")),
-      "Response" = list(disable = c("show_types", "selected_module", "selected_trait")),
-      "Weights" = list(disable = c("selected_module", "selected_trait")),
-      "Enrichment" = list(disable = c(
-        "selected_module", "selected_trait",
-        "show_types"
-      )),
+      "Overview" = list(disable = c("selected_factor", "show_types")),
+      "Response" = list(disable = c("show_types")),
+      "Weights" = list(disable = c()),
+      "Enrichment" = list(disable = c("show_types")),
       "gsetMOFA" = list(disable = c("show_types"))
     )
 
@@ -63,9 +60,7 @@ MofaBoard <- function(id, pgx) {
       {
         shiny::req(pgx$X, input$kernel, input$numfactors)
 
-        if (input$compute == 0) {
-          return(NULL)
-        }
+        if (input$compute == 0) return(NULL)
 
         if (!is.null(pgx$datatype) && pgx$datatype != "multi-omics") {
           shinyalert::shinyalert("Error", "This is not a multi-omics dataset.")
@@ -126,10 +121,6 @@ MofaBoard <- function(id, pgx) {
           choices = factors,
           selected = factors[1]
         )
-        updateSelectInput(session, "selected_trait",
-          choices = traits,
-          selected = traits[1]
-        )
         updateSelectInput(session, "show_types",
           choices = dtypes,
           selected = sel.dtypes
@@ -165,7 +156,6 @@ MofaBoard <- function(id, pgx) {
     ## =========================== MODULES ====================================
     ## ========================================================================
 
-    # Gene dendrogram and gene modules
     mofa_plot_variance_server(
       "factorxview",
       type = "factorxview",
@@ -299,9 +289,6 @@ MofaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-
-    ## ------------- Table Modules --------------------------
-
     mofa_table_genetable_server(
       "mofa_genetable",
       mofa = mofa,
@@ -322,7 +309,7 @@ MofaBoard <- function(id, pgx) {
       selected_pathway = enrichmentTable_selected
     )
 
-
     return(NULL)
+
   })
 } ## end of Board
