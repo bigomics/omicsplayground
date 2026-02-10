@@ -711,7 +711,7 @@ app_server <- function(input, output, session) {
     }
     return(ui)
   })
-  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
+  CopilotServer("copilot", pgx=PGX, input.click = reactive({ req(input$copilot_click > 0); input$copilot_click }),
     layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
