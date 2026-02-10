@@ -4,14 +4,11 @@
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 expression_plot_volcanoMethods_ui <- function(
   id,
@@ -54,11 +51,8 @@ expression_plot_volcanoMethods_ui <- function(
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 expression_plot_volcanoMethods_server <- function(id,
@@ -72,7 +66,6 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   pval_cap,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(comp())
@@ -108,7 +101,6 @@ expression_plot_volcanoMethods_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      # Input vars
       sel.genes <- pd[["sel.genes"]]
       lab.genes <- pd[["lab.genes"]]
       fdr <- pd[["fdr"]]
@@ -116,7 +108,6 @@ expression_plot_volcanoMethods_server <- function(id,
       names <- pd[["names"]]
       label.names <- pd[["label.names"]]
 
-      ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       x <- mx[, "fc", drop = FALSE]
@@ -133,7 +124,6 @@ expression_plot_volcanoMethods_server <- function(id,
 
       pval_cap <- pval_cap()
 
-      # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = x,
         Q = y,
@@ -163,17 +153,6 @@ expression_plot_volcanoMethods_server <- function(id,
       fig <- plotly_plots(
         cex = 3, yrange = 0.05, n_rows = 2, margin_b = 50, margin_l = 70
       ) %>%
-        playbase::plotly_build_light(.)
-      return(fig)
-    }
-
-    big_plotly.RENDER <- function() {
-      fig <- plotly_plots(
-        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70
-      ) %>%
-        plotly::style(
-          marker.size = 6
-        ) %>%
         playbase::plotly_build_light(.)
       return(fig)
     }
@@ -246,17 +225,6 @@ expression_plot_volcanoMethods_server <- function(id,
       list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
     )
 
-    plot_data_csv <- function() {
-      pd <- plot_data()
-      sel.genes <- pd[["sel.genes"]]
-      comp <- pd[["comp"]]
-      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
-      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
-      qv <- mx[which(rownames(mx) %in% sel.genes), "q", drop = FALSE]
-      df <- cbind(fc, qv, mx)
-      return(df)
-    }
-
     lapply(plot_grid, function(x) {
       PlotModuleServer(
         "pltmod",
@@ -272,5 +240,5 @@ expression_plot_volcanoMethods_server <- function(id,
         download.contrast.name = comp
       )
     })
-  }) ## end of moduleServer
+  })
 }
