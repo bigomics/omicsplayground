@@ -221,7 +221,6 @@ DeepNetBoard <- function(id, pgx) {
         ii <- which(rowSums(is.na(y)) == 0)
         y <- y[ii, , drop = FALSE]
         X <- X[, ii]
-        sdX <- matrixStats::rowSds(X, na.rm = TRUE)
         xx <- playbase::mofa.split_data(X) ## also handles single-omics
 
         ## Subset selection of datatypes for deepnet

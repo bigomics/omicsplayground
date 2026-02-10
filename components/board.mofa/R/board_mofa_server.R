@@ -114,9 +114,6 @@ MofaBoard <- function(id, pgx) {
         factors <- colnames(mofa$W)
         dtypes <- names(mofa$ww)
         sel.dtypes <- grep("^gset", dtypes, value = TRUE, invert = TRUE)
-        contrasts <- colnames(mofa$contrasts)
-        phenotypes <- colnames(mofa$samples)
-        traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor",
           choices = factors,
           selected = factors[1]
