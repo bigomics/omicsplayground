@@ -191,7 +191,7 @@ MultiWGCNA_Board <- function(id, pgx) {
 
     multiwgcna_table_enrichment_server(
       id = "multiwgcnaEnrichment",
-      mwgcna = r_multiwgcna,
+      r_wgcna = r_multiwgcna,
       r_module = reactive(input$module)
     )
 

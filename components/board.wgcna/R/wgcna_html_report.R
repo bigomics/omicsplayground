@@ -15,15 +15,7 @@ wgcna_html_report_ui <- function(
   ns <- shiny::NS(id)
 
   options <- tagList(
-    shiny::actionButton(
-      ns("generate_btn"), "Generate!",
-      icon = icon("refresh"),
-      class = "btn-outline-primary"
-    ),
-    shiny::radioButtons(
-      ns("what2show"), "Show:", c("report","prompt"),
-      selected = "report", inline=TRUE
-    )    
+    shiny::radioButtons(ns("format"),"format",c("html","PDF"), inline=TRUE)
   )
   
   PlotModuleUI(
@@ -32,11 +24,35 @@ wgcna_html_report_ui <- function(
     title = title,
     label = label,
     info.text = info.text,
-#    options = options,
+    options = options,
     caption = caption,
     height = height,
     width = width,
     download.fmt = c("png", "pdf", "svg")
+  )
+}
+
+wgcna_report_pdf_ui <- function(
+  id,
+  label = "",
+  title = "",
+  info.text = "",
+  caption = "",
+  height,
+  width
+) {
+  ns <- shiny::NS(id)
+  
+  PlotModuleUI(
+    ns("pdfview"),
+    outputFunc = uiOutput,
+    title = title,
+    label = label,
+    info.text = info.text,
+    caption = caption,
+    height = height,
+    width = width,
+    download.fmt = c()
   )
 }
 
@@ -185,10 +201,7 @@ wgcna_html_report_server <- function(id,
     contents_text <- shiny::reactive({
       rpt <- get_report()
       ## shiny::validate(shiny::need(!is.null(rpt), "Report not available. Please enable AI and generate."))
-      if (is.null(rpt)) {
-        txt <- "Report not available. Please enable AI and generate."
-        return(txt)
-      }
+      if (is.null(rpt)) return(NULL)
       if(input$what2show == "prompt") {
         q <- rpt$report_prompt
         txt <- paste("\n\n***Prompt***\n\n",q,"\n")
@@ -196,17 +209,30 @@ wgcna_html_report_server <- function(id,
       if(input$what2show == "report") {
         txt <- rpt$report
       }
-      markdown::markdownToHTML(txt, fragment.only=TRUE)
+      return(txt)
     })
     
     text.RENDER <- function() {
-      res <- contents_text()
-      shiny::div(class="gene-info", shiny::HTML(res))
+      txt <- contents_text()
+      shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
+      if(input$format == "html") {
+        res <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+        out <- shiny::div(class="gene-info", shiny::HTML(res))
+      } else {
+        tmp <- tempfile(fileext=".pdf")
+        playbase::markdownToPDF(txt, file=tmp) 
+        shiny::addResourcePath("img",dirname(tmp)) ## tempdir
+        srcfile <- file.path("img", basename(tmp))
+        out <- tags$iframe(style="height:100%; width:100%", src=srcfile)
+      }
+      out
     }
 
     text.RENDER2 <- function() {
-      res <- contents_text()
-      shiny::div( shiny::HTML(res), style="font-size:22px;" )
+      txt <- contents_text()
+      shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
+      res <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+      shiny::div(class="gene-info", shiny::HTML(res))
     }
 
     PlotModuleServer(
@@ -221,7 +247,7 @@ wgcna_html_report_server <- function(id,
       res = c(75, 100),
       add.watermark = watermark
     )
-
+    
     ##----------------------------------------------------------------------
     ##---------------------------- diagram ---------------------------------
     ##----------------------------------------------------------------------
