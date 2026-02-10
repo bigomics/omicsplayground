@@ -45,80 +45,9 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## prepare data
-    geneinfo_data.OLD <- shiny::reactive({
-      feature <- r.gene()
-      shiny::req(feature %in% rownames(pgx$X))
-
-      organism <- pgx$organism
-      if (is.null(organism) || is.na(organism) || organism == "") organism <- "Human"
-      datatype <- pgx$datatype
-      if (is.null(datatype) || is.na(datatype) || datatype == "") datatype <- "RNA-seq"
-
-      jj <- match(feature, rownames(pgx$genes))
-      symbol <- pgx$genes$symbol[jj]
-      ortholog <- pgx$genes$human_ortholog[jj]
-
-      if (datatype == "metabolomics") {
-        dbg("[geneinfo_data] calling getMetaboliteInfo()")
-        info <- playbase::getMetaboliteInfo(
-          organism = organism,
-          id = symbol
-        )
-      } else {
-        dbg("[geneinfo_data] calling getOrgGeneInfo()")
-        info <- playbase::getOrgGeneInfo(
-          organism = organism,
-          gene = symbol,
-          feature = feature,
-          ortholog = ortholog,
-          datatype = datatype,
-          as.link = TRUE
-        )
-      }
-      if (!is.null(info)) {
-        ## reorder
-        nn <- intersect(
-          c(
-            "gene_symbol", "organism", "name", "map_location",
-            "uniprot", "databases", "summary", names(info)
-          ),
-          names(info)
-        )
-        info <- info[nn]
-        names(info) <- sub("gene_symbol", "symbol", names(info))
-        names(info) <- sub("uniprot", "protein", names(info))
-        names(info) <- sub("map_location", "genome location", names(info))
-      } else {
-        info <- list()
-        info$summary <- "(no info available)"
-        if (symbol %in% names(playdata::GENE_SUMMARY)) {
-          info$summary <- playdata::GENE_SUMMARY[symbol]
-          info$summary <- gsub("Publication Note.*|##.*", "", info$summary)
-        }
-      }
-
-      ## add feature name is not symbol
-      info$feature <- NULL
-      if (!is.na(symbol) && feature != symbol) {
-        info <- c(feature = feature, info)
-      }
-
-      # prepare info for display
-      res <- c()
-      for (i in 1:length(info)) {
-        xx <- paste(info[[i]], collapse = ", ")
-        res[[i]] <- paste0("<b>", names(info)[i], "</b>: ", xx)
-      }
-      res <- paste(res, collapse = "<p>")
-
-      if (is.null(res)) {
-        res <- tspan("(gene info not available)")
-      }
-      res
-    })
 
     geneinfo_data <- shiny::reactive({
+
       feature <- r.gene()
       shiny::req(feature %in% rownames(pgx$genes))
 
@@ -136,7 +65,6 @@ dataview_module_geneinfo_server <- function(id,
       names(info) <- sub("map_location", "genome location", names(info))
       names(info) <- sub("databases", "links", names(info))
 
-      # reorder: make some paragraphs
       nn1 <- intersect(
         c(
           "feature", "gene_symbol", "symbol",
@@ -159,7 +87,6 @@ dataview_module_geneinfo_server <- function(id,
       nn3 <- setdiff(names(info), c(nn1, nn2))
       info <- info[c(nn1, nn2, nn3)]
 
-      # prepare info for display
       res <- c()
       for (i in 1:length(info)) {
         xx <- paste(info[[i]], collapse = ", ")
@@ -171,7 +98,9 @@ dataview_module_geneinfo_server <- function(id,
         "<p>", paste(res[nn2], collapse = "<p>"),
         "<p>", paste(res[nn3], collapse = "<br>")
       )
-      res
+
+      return(res)
+
     })
 
 
@@ -191,9 +120,8 @@ dataview_module_geneinfo_server <- function(id,
       plotlib2 = "generic",
       func = info.RENDER,
       func2 = modal_info.RENDER,
-      ## csvFunc = geneinfo_data,   ##  *** downloadable data as CSV
       renderFunc = shiny::renderUI,
       renderFunc2 = shiny::renderUI
     )
-  }) ## end of moduleServer
+  })
 }
