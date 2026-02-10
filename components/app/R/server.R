@@ -170,7 +170,8 @@ app_server <- function(input, output, session) {
 
   env$user_settings <- list(
     enable_beta = shiny::reactive(input$enable_beta),
-    enable_info = shiny::reactive(input$enable_info)
+    enable_info = shiny::reactive(input$enable_info),
+    enable_ai = shiny::reactive(input$enable_llm)
   )
 
   ## observe and set global User options
@@ -730,6 +731,7 @@ app_server <- function(input, output, session) {
       list(
         auth$logged,
         env$user_settings$enable_beta(),
+        env$user_settings$enable_ai(),
         trigger_on_change_dataset()
       )
     },
@@ -793,6 +795,7 @@ app_server <- function(input, output, session) {
   tab_control <- function() {
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
+    show.ai <- env$user_settings$enable_ai()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
 
     has.libx <- dir.exists(file.path(OPG, "libx"))
@@ -807,6 +810,24 @@ app_server <- function(input, output, session) {
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+
+    ## hide AI summary tabs
+    toggleTab("bio-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("clustersamples-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("comp-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("cmap-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("corr-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("drug-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("enrich-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("diffexpr-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("clusterfeatures-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("isect-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("pathway-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("sig-tabs2", "AI Summary", show.ai && show.beta)
+    toggleTab("cell-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("timeseries-tabs1", "AI Summary", show.ai && show.beta)
+    toggleTab("wordcloud-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("pcsf-tabs", "AI Summary", show.ai && show.beta)
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
