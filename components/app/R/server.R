@@ -636,7 +636,11 @@ app_server <- function(input, output, session) {
     if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      tag <- HTML(pgx.name)
+      tag <- shiny::actionButton(
+        "dataset_click", pgx.name,
+        class = "quick-button",
+        style = "border: none; color: black; font-size: 0.9em;"
+      )
     } else {
       tag <- HTML(paste("Omics Playground", VERSION))
     }
