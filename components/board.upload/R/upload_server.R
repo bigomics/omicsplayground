@@ -96,7 +96,6 @@ UploadBoard <- function(id,
 
     module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
 
-    ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")
@@ -104,7 +103,7 @@ UploadBoard <- function(id,
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
-
+      
       if (opt$ENABLE_MULTIOMICS) {
         shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
       } else {
@@ -656,26 +655,9 @@ UploadBoard <- function(id,
           finish = "Compute!"
         )
       )
-      ## } else {
-      ##   wizard <- wizardR::wizard(
-      ##     id = ns("upload_wizard"),
-      ##     width = 90,
-      ##     height = 75,
-      ##     modal = TRUE,
-      ##     style = "dots",
-      ##     lock_start = FALSE,
-      ##     counts_ui,
-      ##     samples_ui,
-      ##     contrasts_ui,
-      ##     normalization_panel,
-      ##     compute_panel,
-      ##     options = list(
-      ##       navigation = "buttons",
-      ##       finish = "Compute!"
-      ##     )
-      ##   )
-      ## }
+
       return(wizard)
+
     })
 
     ## --------------------------------------------------------
@@ -764,12 +746,21 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
+      if (input$selected_datatype == "methylomics") {
+        shiny::updateSelectizeInput(session, "selected_organism",
+          choices = c("Human" = "Human"), selected = "Human")
+      } else {
+        all_species <- playbase::allSpecies(col = "species_name")
+        common_name <- playbase::allSpecies(col = "display_name")
+        names(all_species) <- paste0(all_species, " (", common_name, ")")
+        names(all_species)[all_species == "No organism"] <- "<custom organism>"
+        shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+        shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
+      }
     })
 
-    # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
     })
@@ -789,7 +780,7 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-      recompute_pgx(NULL) ## need to reset ???
+      recompute_pgx(NULL)
     })
 
     observeEvent(recompute_pgx(),
@@ -864,10 +855,8 @@ UploadBoard <- function(id,
 
           summary_checks <- summary_checks[find_content]
 
-
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
-
 
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
@@ -1059,7 +1048,6 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
           upload_organism(input$selected_organism)
           upload_name(NULL)
           upload_description(NULL)
