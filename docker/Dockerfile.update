@@ -58,6 +58,16 @@ RUN R -e "devtools::install_github('seandavi/GEOquery')" # Need newer GEOquery v
 RUN R -e "remotes::install_github('lifs-tools/rgoslin')"
 RUN R -e "remotes::install_github('ncats/RAMP-DB')"
 RUN R -e "install.packages('plotly')" # Force latest plotly, test!
+RUN R -e "remotes::install_github('bigomics/plaid')"
+RUN R -e "install.packages('ellmer')"
+RUN R -e "BiocManager::install('singscore')"
+RUN R -e "BiocManager::install('ArrayExpress')"
+RUN R -e "install.packages('tidyprompt')"
+RUN R -e "install.packages('xgboost')"
+RUN R -e "install.packages('arrow')"
+RUN R -e "install.packages('DiagrammeRsvg')"
+RUN R -e "install.packages('shinychat')"
+RUN R -e "install.packages('ggprism')"
     
 #------------------------------------------------------------
 # Add supporting R libraries

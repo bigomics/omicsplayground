@@ -173,6 +173,40 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info)
   )
 
+  ## observe and set global User options
+  shiny::observeEvent(input$enable_llm, {
+    model <- input$llm_model
+    if (input$enable_llm) {
+      if (is.null(model) || model == "") {
+        shinyalert::shinyalert(
+          "ERROR",
+          "No LLM server available. Please check your settings."
+        )
+        return(NULL)
+      }
+      shinyalert::shinyalert("WARNING",
+        "Using LLM might expose some of your data to external LLM servers.",
+        closeOnClickOutside = TRUE
+        # showCancelButton = TRUE
+      )
+    }
+  })
+
+  shiny::observeEvent(
+    {
+      list(input$enable_llm, input$llm_model)
+    },
+    {
+      if (input$enable_llm) {
+        dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
+        setUserOption(session, "llm_model", input$llm_model)
+      } else {
+        dbg("[MAIN] AI/LLM diabled")
+        setUserOption(session, "llm_model", "")
+      }
+    }
+  )
+
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
   shinyjs::runjs("sidebarClose()")
@@ -196,30 +230,30 @@ app_server <- function(input, output, session) {
   )
 
   ## Modules needed from the start
-  if (opt$ENABLE_UPLOAD) {
-    upload_datatype <- UploadBoard(
-      id = "upload",
-      pgx_dir = PGX.DIR,
-      pgx = PGX,
-      auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx,
-      inactivityCounter = inactivityCounter,
-      new_upload = new_upload
-    )
+  ## NOTE: UploadBoard is always loaded to allow per-user ENABLE_UPLOAD options
+  ## The upload tab visibility is controlled after login based on user/global options
+  upload_datatype <- UploadBoard(
+    id = "upload",
+    pgx_dir = PGX.DIR,
+    pgx = PGX,
+    auth = auth,
+    reload_pgxdir = reload_pgxdir,
+    load_uploaded_data = load_uploaded_data,
+    recompute_pgx = recompute_pgx,
+    inactivityCounter = inactivityCounter,
+    new_upload = new_upload
+  )
 
 
-    shiny::observeEvent(upload_datatype(), {
-      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-        shiny.i18n::update_lang("proteomics", session)
-      } else if (tolower(upload_datatype()) == "metabolomics") {
-        shiny.i18n::update_lang("metabolomics", session)
-      } else {
-        shiny.i18n::update_lang("RNA-seq", session)
-      }
-    })
-  }
+  shiny::observeEvent(upload_datatype(), {
+    if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+      shiny.i18n::update_lang("proteomics", session)
+    } else if (tolower(upload_datatype()) == "metabolomics") {
+      shiny.i18n::update_lang("metabolomics", session)
+    } else {
+      shiny.i18n::update_lang("RNA-seq", session)
+    }
+  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -235,7 +269,8 @@ app_server <- function(input, output, session) {
       bigdash.hideMenuElement(session, "GeneSets")
       bigdash.hideMenuElement(session, "Compare")
       bigdash.hideMenuElement(session, "SystemsBio")
-      bigdash.hideMenuElement(session, "MultiOmics (beta)")
+      bigdash.hideMenuElement(session, "MultiOmics")
+      bigdash.hideMenuElement(session, "WGCNA")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -285,8 +320,15 @@ app_server <- function(input, output, session) {
         lapply(names(MODULE.multiomics$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
-        bigdash.hideMenuElement(session, "MultiOmics (beta)")
+        bigdash.hideMenuElement(session, "MultiOmics")
         loaded$multiomics <- 0
+      }
+      if (x == "WGCNA") {
+        lapply(names(MODULE.wgcna$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "WGCNA")
+        loaded$wgcna <- 0
       }
     })
 
@@ -396,8 +438,18 @@ app_server <- function(input, output, session) {
             info("[SERVER] initializing MultiOmics module")
             mod <- MODULE.multiomics
             insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "MultiOmics (beta)")
+            bigdash.showMenuElement(session, "MultiOmics")
             lapply(names(MODULE.multiomics$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
+          }
+
+          if (MODULES_TO_LOAD["WGCNA"] && exists("MODULE.wgcna")) {
+            info("[SERVER] initializing WGCNA module")
+            mod <- MODULE.wgcna
+            insertBigTabUI(mod$module_ui())
+            bigdash.showMenuElement(session, "WGCNA")
+            lapply(names(MODULE.wgcna$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
           }
@@ -468,18 +520,23 @@ app_server <- function(input, output, session) {
     enrichment = 0,
     compare = 0,
     systems = 0,
-    multiomics = 0
+    multiomics = 0,
+    wgcna = 0
   )
   observeEvent(input$nav, {
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") && loaded$clustering == 0) {
-      info("[UI:SERVER] reacted: calling Clustering module")
+    dbg("[SERVER] input$nav =", input$nav)
+
+    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
+      loaded$clustering == 0) {
+      info("[SERVER] reacted: calling Clustering module")
       mod <- MODULE.clustering
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX, labeltype = labeltype)
       loaded$clustering <- 1
       tab_control()
     }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") && loaded$expression == 0) {
+    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
+      loaded$expression == 0) {
       info("[UI:SERVER] reacted: calling Expression module")
       mod <- MODULE.expression
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -487,7 +544,8 @@ app_server <- function(input, output, session) {
       loaded$expression <- 1
       tab_control()
     }
-    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") && loaded$enrichment == 0) {
+    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
+      loaded$enrichment == 0) {
       info("[UI:SERVER] reacted: calling Enrichment module")
       mod <- MODULE.enrichment
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -503,7 +561,8 @@ app_server <- function(input, output, session) {
       loaded$compare <- 1
       tab_control()
     }
-    if (input$nav %in% c("drug-tab", "wgcna-tab", "tcga-tab", "cell-tab", "pcsf-tab") && loaded$systems == 0) {
+    if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
+      loaded$systems == 0) {
       info("[UI:SERVER] reacted: calling Systems module")
       mod <- MODULE.systems
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
@@ -511,12 +570,26 @@ app_server <- function(input, output, session) {
       loaded$systems <- 1
       tab_control()
     }
-    if (input$nav %in% c("mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab", "deepnet-tab") && loaded$multiomics == 0) {
+    if (input$nav %in% c(
+      "mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
+      "deepnet-tab"
+    ) && loaded$multiomics == 0) {
       info("[UI:SERVER] reacted: calling Multi-Omics module")
       mod <- MODULE.multiomics
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX)
       loaded$multiomics <- 1
+      tab_control()
+    }
+    if (input$nav %in% c(
+      "wgcna-tab", "mwgcna-tab", "consensus-tab",
+      "preservation-tab"
+    ) && loaded$wgcna == 0) {
+      info("[UI:SERVER] reacted: calling WGCNA module")
+      mod <- MODULE.wgcna
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
+      mod$module_server(PGX)
+      loaded$wgcna <- 1
       tab_control()
     }
   })
@@ -624,6 +697,22 @@ app_server <- function(input, output, session) {
     ))
   })
 
+  ## Copilot button
+  output$copilot_button <- renderUI({
+    if(is.null(PGX$X)) return(NULL)
+    show.beta <- env$user_settings$enable_beta()
+    if(show.beta) {
+      ui <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
+  })
+  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
+    layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -712,9 +801,14 @@ app_server <- function(input, output, session) {
 
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
-    ## Beta features
+    ## Hide beta main tabs
     info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+    bigdash.toggleTab(session, "consensus-tab", show.beta)
+    bigdash.toggleTab(session, "preservation-tab", show.beta)
+    bigdash.toggleTab(session, "mwgcna-tab", show.beta)
+
+    ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
 
@@ -736,8 +830,8 @@ app_server <- function(input, output, session) {
 
     ## Hide PCSF and WGCNA for metabolomics.
     # WGCNA will be available upon gmt refactoring
-    if (DATATYPEPGX == "metabolomics") {
-      info("[SERVER] disabling WGCNA and PCSF for metabolomics data")
+    if (PGX$datatype == "metabolomics") {
+      info("[SERVER] disabling modules for metabolomics data")
       bigdash.hideTab(session, "cmap-tab")
     }
 
@@ -1024,9 +1118,20 @@ app_server <- function(input, output, session) {
       message("-------------------------------")
 
       pgx.record_access(auth$email, action = "login", session = session)
+
+      ## Show/hide upload tab based on user-specific or global ENABLE_UPLOAD option
+      ## User option takes precedence over global option if set
+      enable_upload <- auth$options$ENABLE_UPLOAD
+      if (is.null(enable_upload)) {
+        enable_upload <- opt$ENABLE_UPLOAD
+      }
+      bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
+      dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
+      ## Hide upload tab when logged out (will be re-evaluated on next login)
+      bigdash.hideMenuItem(session, "upload-tab")
     }
   })
 
@@ -1144,11 +1249,8 @@ app_server <- function(input, output, session) {
   # error will be shown on the app. Note that errors that are
   # not related to Shiny are not caught (e.g. an error on the
   # global.R file is not caught by this)
-  options(shiny.error = function() {
-    # The error message is on the parent environment, it is
-    # not passed to the function called on error
-    parent_env <- parent.frame()
-    error <- parent_env$e
+  shiny::onUnhandledError(function(err) {
+    error <- err
     err_traceback <- NULL
 
     if (!is.null(error)) {
@@ -1171,13 +1273,13 @@ app_server <- function(input, output, session) {
       return()
     }
     # Get inputs to reproduce state
-    board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
+    board_inputs <- shiny::isolate(names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))])
 
     # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
-    board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
+    board_inputs <- shiny::isolate(board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)])
 
     input_values <- lapply(board_inputs, function(x) {
-      value <- input[[x]]
+      value <- shiny::isolate(input[[x]])
       return(paste0(x, ": ", value))
     }) |> unlist()
 
@@ -1200,11 +1302,11 @@ app_server <- function(input, output, session) {
     err_prev <<- error$message
 
     pgx_name <- NULL
-    user_email <- auth$email
-    user_tab <- input$nav
-    raw_dir <- raw_dir()
+    user_email <- shiny::isolate(auth$email)
+    user_tab <- shiny::isolate(input$nav)
+    raw_dir <- shiny::isolate(raw_dir())
 
-    if (!is.null(PGX) && !is.null(PGX$name)) {
+    if (!is.null(PGX) && !is.null(shiny::isolate(PGX$name))) {
       pgx_name <- PGX$name
     } else {
       pgx_name <- "No PGX loaded when error occurred"
@@ -1219,7 +1321,13 @@ app_server <- function(input, output, session) {
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
 
-    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential)
+    if (inherits(error, "shiny.error.fatal")) {
+      full_app_crash <- TRUE
+    } else {
+      full_app_crash <- FALSE
+    }
+
+    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential, full_app_crash = full_app_crash)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 

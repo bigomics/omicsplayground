@@ -186,7 +186,7 @@ enrichment_plot_volcanoall_server <- function(id,
       shiny::req(pd)
 
       fc <- pd[["FC"]]
-      qv <- pd[["Q"]]
+      qv <- pd[["S"]]
 
       gene_names <- rep(rownames(fc), each = ncol(fc))
       fc <- data.frame(fc) %>%

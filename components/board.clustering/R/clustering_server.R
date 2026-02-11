@@ -281,7 +281,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
 
         if (any(is.na(pgx$X))) {
-          zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          is.mox <- playbase::is.multiomics(rownames(pgx$X))
+          if (is.mox) {
+            zx <- playbase::imputeMissing.mox(pgx$X, method = "SVD2")
+          } else {
+            zx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+          }
           zx <- zx[pp, , drop = FALSE]
         } else {
           zx <- pgx$X[pp, , drop = FALSE]
@@ -320,7 +325,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         if (!is.null(idx)) idx <- idx[rownames(zx)]
       }
       shiny::validate(shiny::need(
-        ncol(zx) > 0, "Filtering too restrictive. Please change 'Filter samples' settings."
+        ncol(zx) > 1, "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
 
       flt <- list(
@@ -399,8 +404,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
       ## split on gene expression value: hi vs. low
       if (do.split && splitvar %in% rownames(pgx$X)) {
-        gx <- pgx$X[1, ]
-        gx <- pgx$X[splitvar, colnames(zx)]
+        gx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+        gx <- gx[splitvar, colnames(zx)]
 
         ## TODO if this code is revived again, for some datasets
         ## the number of unique values in gx can be equal or
@@ -471,7 +476,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
-        NPCA <- 5
+        NPCA <- min(5, ncol(zx) - 1)
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
@@ -720,32 +725,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         }
       }
 
-      if (input$hm_level == "gene" && ann.level == "geneset" && clusterannot$xann_odds_weighting()) {
-        table(idx)
-        grp <- tapply(toupper(rownames(zx)), idx, list) ## toupper for mouse!!
-        gmt <- playbase::getGSETS_playbase(sub("_", ":", rownames(rho)))
-        bg.genes <- toupper(rownames(X))
-        P <- c()
-        for (i in 1:ncol(rho)) {
-          k <- colnames(rho)[i]
-          res <- playbase::gset.fisher(
-            grp[[k]], gmt,
-            fdr = 1, min.genes = 0, max.genes = Inf,
-            background = bg.genes
-          )
-          r <- res[, "odd.ratio"]
-          odd.prob <- r / (1 + r)
-          P <- cbind(P, odd.prob)
-        }
-        colnames(P) <- colnames(rho)
-        rownames(P) <- sub(":", "_", names(gmt))
-        rho <- rho[rownames(P), ]
-        rho <- rho * (P / max(P))
-      }
-
       return(rho)
     })
-
 
     selected_samples <- reactive({
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
@@ -778,6 +759,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     clustering_plot_table_parcoord_server(
       id = "parcoord",
       getTopMatrix = getTopMatrixGrouped,
+      pgx = pgx,
       watermark = WATERMARK
     )
 

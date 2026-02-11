@@ -34,9 +34,11 @@ pgx <- playbase::pgx.createPGX(
   datatype = params$datatype,
   probe_type = params$probe_type,
   description = params$description,
+  metadata = params$metadata,
   creator = params$creator,
-  batch.correct.method = params$batch.correct.method, ## NEW
-  batch.pars = params$batch.pars, ## NEW
+  batch.correct.method = params$batch.correct.method,
+  batch.pars = params$batch.pars,
+  covariates = params$covariates, ## new
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
@@ -90,13 +92,15 @@ if (dir.exists(params$pgx.save.folder)) {
 }
 save(pgx, file = pgx_name)
 
-ds_name <- paste0("<b>", params$name, "</b>")
-gmail_creds <- file.path(params$ETC, "gmail_creds")
+# We now send success message to user from the shiny app, because the process only runs if the app is alive, so there is no need to send the message here.
 
-params$sendSuccessMessageToUser(
-  user_email = params$email,
-  pgx_name = ds_name,
-  path_to_creds = gmail_creds
-)
+# ds_name <- paste0("<b>", params$name, "</b>")
+# gmail_creds <- file.path(params$ETC, "gmail_creds")
+
+# params$sendSuccessMessageToUser(
+#   user_email = params$email,
+#   pgx_name = ds_name,
+#   path_to_creds = gmail_creds
+# )
 
 message("[compute PGX process] : process finished, pgx is saved as", pgx_name, "\n")

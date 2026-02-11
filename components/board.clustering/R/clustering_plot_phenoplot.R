@@ -60,7 +60,7 @@ clustering_plot_phenoplot_server <- function(id,
       kk <- kk[which(kk %in% colnames(Y))]
       pos <- pos[jj, , drop = FALSE]
       shiny::validate(shiny::need(
-        nrow(pos) > 0,
+        nrow(pos) > 1,
         "Filtering too restrictive. Please change 'Filter samples' settings."
       ))
       Y <- Y[jj, kk, drop = FALSE]

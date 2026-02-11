@@ -68,7 +68,14 @@ biomarker_plot_featurerank_server <- function(id,
       } else {
         features <- pgx$families
         X <- pgx$X
-        if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+        is.mox <- playbase::is.multiomics(rownames(X))
+        if (sum(is.na(X)) > 0) {
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X, method = "SVD2")
+          } else {
+            X <- playbase::imputeMissing(X, method = "SVD2")
+          }
+        }
       }
 
       ## ------------ intersect features, set minimum set size

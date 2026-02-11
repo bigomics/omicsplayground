@@ -85,6 +85,10 @@ contrast_correlation_server <- function(id,
 
       F[is.na(F)] <- 0
       jj <- head(order(-rowMeans(F**2, na.rm = TRUE)), ntop)
+      validate(need(
+        length(jj) >= 2,
+        "Need at least 2 features to compute correlation."
+      ))
       F <- apply(F[jj, , drop = FALSE], 2, rank, na.last = "keep")
       R <- cor(F, use = "pairwise")
       R <- round(R, digits = 2)

@@ -180,7 +180,7 @@ upload_table_preview_counts_server <- function(id,
           style = "width: 100%; display: flex; ",
           if (is.null(uploaded$counts.csv)) {
             if (upload_datatype() == "proteomics") {
-              msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format."
+              msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format and can be a parquet file."
             } else {
               msg <- "The counts file (counts.csv) contains the gene counts for all samples. The file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample."
             }
@@ -247,13 +247,23 @@ upload_table_preview_counts_server <- function(id,
                   )
                 },
                 if (upload_datatype() != "multi-omics") {
-                  fileInputArea(
-                    ns("counts_csv"),
-                    shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
-                    multiple = FALSE,
-                    accept = c(".csv"),
-                    width = "100%"
-                  )
+                  if (upload_datatype() == "scRNA-seq") {
+                    fileInputArea(
+                      ns("counts_csv"),
+                      shiny::h4(tspan("Upload counts.csv/.h5", js = FALSE), class = "mb-0"),
+                      multiple = FALSE,
+                      accept = c(".csv", ".h5"),
+                      width = "100%"
+                    )
+                  } else {
+                    fileInputArea(
+                      ns("counts_csv"),
+                      shiny::h4(tspan("Upload counts.csv", js = FALSE), class = "mb-0"),
+                      multiple = FALSE,
+                      accept = if (upload_datatype() == "proteomics" && is.olink()) c(".csv", ".parquet") else c(".csv"),
+                      width = "100%"
+                    )
+                  }
                 },
                 style = "background-color: aliceblue; border: 0.07rem dashed steelblue;"
               ),
@@ -475,10 +485,10 @@ upload_table_preview_counts_server <- function(id,
         df <- data_cache[[i]]
         dt <- tolower(datatypes[i])
         prefix <- "gx"
-        if(grepl("proteomics",dt)) prefix <- "px"
-        if(grepl("metabolomics|lipidomics",dt)) prefix <- "mx"
-        if(grepl("microarray|micro.array|rna|rnatranscriptomics",dt)) prefix <- "gx"
-        if(grepl("mirna|mi.rna",dt))  prefix <- "mi"          
+        if (grepl("proteomics", dt)) prefix <- "px"
+        if (grepl("metabolomics|lipidomics", dt)) prefix <- "mx"
+        if (grepl("microarray|micro.array|rna|rnatranscriptomics", dt)) prefix <- "gx"
+        if (grepl("mirna|mi.rna", dt)) prefix <- "mi"
         rownames(df) <- paste0(prefix, ":", rownames(df))
         df <- df[, common_cols, drop = FALSE]
         combined_df <- rbind(combined_df, df)
@@ -509,7 +519,6 @@ upload_table_preview_counts_server <- function(id,
     })
 
     output$histogram <- renderPlot({
-      # counts <- checked_matrix()
       counts <- uploaded$counts.csv
       shiny::req(counts)
       xx <- counts
@@ -517,7 +526,6 @@ upload_table_preview_counts_server <- function(id,
         prior <- min(counts[counts > 0], na.rm = TRUE)
         xx <- log2(prior + counts)
       }
-      # Add seed to make it deterministic
       set.seed(123)
       if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- reshape2::melt(xx))
@@ -539,9 +547,7 @@ upload_table_preview_counts_server <- function(id,
         xx <- log2(pmax(xx, 0) + prior)
       }
       # Downsample to 40 columns as we do on qc/bc tab
-      if (ncol(xx) > 40) {
-        xx <- xx[, sample(1:ncol(xx), 40)]
-      }
+      if (ncol(xx) > 40) xx <- xx[, sample(1:ncol(xx), 40)]
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
@@ -565,12 +571,15 @@ upload_table_preview_counts_server <- function(id,
 
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
-      # check if counts is csv (necessary due to drag and drop of any file)
       ext <- tools::file_ext(input$counts_csv$name)
-      if (!all(ext %in% c("csv", "RData"))) {
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
+      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
+      c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet"))) 
+      if (c1 & c2 & c3) {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please make sure the file is a CSV file.",
+          text = "Please upload a .csv file. For scRNA-seq, h5 format is allowed. For Olink NPX data, parquet format is allowed.",
           type = "error"
         )
         return()
@@ -605,101 +614,88 @@ upload_table_preview_counts_server <- function(id,
       }
 
       ## ---counts---##
-
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
+
         datafile <- input$counts_csv$datapath[sel[1]]
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
-        df.samples <- NULL
-        if (upload_datatype() == "proteomics" && is.olink()) {
-          df <- tryCatch(
+        if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
+          df <- tryCatch({ playbase::read_h5_counts(datafile) }, error = function(w) { NULL } )
+          if (is.null(df)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
+              type = "error"
+            )
+          }
+        } else {
+          df.samples <- NULL
+          if (upload_datatype() == "proteomics" && is.olink()) {
+            df0 <- tryCatch(
             {
               playbase::read_Olink_NPX(datafile)
             },
             error = function(w) {
               NULL
             }
-          )
-          if (is.null(df)) {
-            shinyalert::shinyalert(
-              title = "Error",
-              text = "You data are not in Official Olink NPX format. Please correct the data."
             )
-          }
-          if (!is.null(df)) {
-            df.samples <- tryCatch(
-              {
-                playbase::read_Olink_samples(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
-            )
-          }
-        } else {
-          df <- tryCatch(
-            {
-              playbase::read_counts(datafile)
-            },
-            error = function(w) {
-              NULL
+            if (is.null(df0)) {
+              shinyalert::shinyalert(
+                title = "Error",
+                text = "Your data may not be in Official Olink format. Please check."
+              )
+            } else {              
+              df <- df0[["counts"]]
+              df.samples <- df0[["samples"]]
+              rm(df0)
             }
-          )
+          } else if (upload_datatype() == "proteomics" && !is.olink()) {
+            df <- tryCatch({ playbase::read_spectronaut(datafile) }, error = function(w) { NULL } )
+            if (is.null(df)) {
+              df <- tryCatch({ playbase::read_spectronaut_hPTM(datafile) }, error = function(w) { NULL } )
+            }
+            if (!is.null(df)) {
+              char.cols <- which(sapply(df, class) == "character")
+              if (length(char.cols) > 0) {
+                uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
+                df <- df[, colnames(df) != names(char.cols), drop = FALSE]
+                df <- as.matrix(df)
+              }
+            } else {
+              df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
+            }
+          } else {
+            df <- tryCatch({ playbase::read_counts(datafile) }, error = function(w) { NULL } )
+          }
         }
       } else {
         df <- tryCatch(
-          {
-            playbase::read_counts(datafile)
-          },
-          error = function(w) {
-            NULL
-          }
+        {
+          playbase::read_counts(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
         )
       }
-
-      if (is.null(df)) {
+      
+      
+      file.ext <- tools::file_ext(input$counts_csv$name)
+      if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
         uploaded$counts.csv <- df
-        af <- playbase::read_annot(datafile) # counts filecontains annotation
-        uploaded$annot.csv <- af
+        if (is.null(uploaded$annot.csv)) {
+          ann.data <- if (! file.ext %in% c("h5", "parquet")) playbase::read_annot(datafile) else NULL
+          uploaded$annot.csv <- ann.data
+        }
       }
 
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
         uploaded$samples.csv <- df.samples
       }
-
-      ## ##---samples---##
-      ## sel <- grep("samples", tolower(input$counts_csv$name))
-      ## if (length(sel)) {
-      ##   datafile <- input$counts_csv$datapath[sel[1]]
-      ##   datafile.name <- input$counts_csv$name
-      ##   df <- tryCatch( { playbase::read_samples(datafile) },
-      ##     error = function(w) { NULL }
-      ##   )
-      ##   if (is.null(df)) {
-      ##     data_error_modal(path = datafile, data_type = "samples")
-      ##   } else {
-      ##     uploaded$samples.csv <- df
-      ##   }
-      ## }
-
-      ## ##---contrasts---##
-      ## sel <- grep("contrast|comparison", tolower(input$counts_csv$name))
-      ## if (length(sel)) {
-      ##   datafile <- input$counts_csv$datapath[sel[1]]
-      ##   datafile.name <- input$counts_csv$name
-      ##   df <- tryCatch( { playbase::read_contrasts(datafile) },
-      ##     error = function(w) { NULL }
-      ##   )
-      ##   if (is.null(df)) {
-      ##     data_error_modal(path = datafile, data_type = "contrasts")
-      ##   } else {
-      ##     uploaded$contrasts.csv <- df
-      ##   }
-      ## }
 
       sel <- grep("params.RData", input$counts_csv$name)
       if (length(sel)) {

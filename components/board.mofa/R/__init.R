@@ -6,7 +6,7 @@ MODULE.multiomics <- list(
     c(
       snf = "SNF",
       lasagna = "LASAGNA",
-      mgsea = "multiGSEA",
+      mgsea = "Multiomics GSEA",
       mofa = "MOFA",
       deepnet = "DeepLearning"
     )

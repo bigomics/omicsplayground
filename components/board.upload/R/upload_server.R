@@ -20,7 +20,9 @@ UploadBoard <- function(id,
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     loaded_samples <- shiny::reactiveVal(FALSE)
+    sum_techreps <- shiny::reactiveVal(FALSE)
     orig_sample_matrix <- shiny::reactiveVal(NULL)
+    orig_counts_matrix <- shiny::reactiveVal(NULL)
     vars_selected <- shiny::reactiveVal(NULL)
     # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
@@ -285,14 +287,13 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
           }
         }
-        
+
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         olink <- is.olink()
         if (olink) {
-          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
@@ -310,33 +311,6 @@ UploadBoard <- function(id,
             )
           } else {
             checked_for_log(TRUE)
-          }
-
-          checked_for_log(FALSE)
-          res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-          write_check_output(res$checks, "COUNTS", raw_dir())
-
-          olink <- is.olink()
-          if (olink) {
-            shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
-            checked_for_log(TRUE)
-          } else {
-            if ("e29" %in% names(res$checks)) {
-              shinyalert::shinyalert(
-                title = paste("Log-scale detected"),
-                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-                html = TRUE,
-                confirmButtonText = "Yes",
-                showCancelButton = TRUE,
-                cancelButtonText = "No",
-                inputId = "logCorrectCounts",
-                closeOnEsc = FALSE,
-                immediate = FALSE,
-                callbackR = function(x) checked_for_log(TRUE)
-              )
-            } else {
-              checked_for_log(TRUE)
-            }
           }
         }
         return(list(res = res, olink = olink))
@@ -367,7 +341,6 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        ## RESTORE AVERAGE RANK PLOT.
         if (olink) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
@@ -500,24 +473,6 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
-              type = "error"
-            )
-          }
-          # Hard stop for scRNA-seq
-          if (nrow(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
-            checked <- NULL
-            # remove only counts.csv from last_uploaded
-            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of cells allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
-              ),
               type = "error"
             )
           }
@@ -1085,6 +1040,11 @@ UploadBoard <- function(id,
     shiny::observeEvent(
       list(new_upload()),
       {
+        # skip upload trigger at first startup (must be first check!)
+        if (new_upload() == 0) {
+          return(NULL)
+        }
+
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (!enable_upload) {
@@ -1101,23 +1061,20 @@ UploadBoard <- function(id,
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
           # upload_datatype(NULL)  ## not good! crash on new upload
-          # upload_organism(NULL)
+          upload_organism(input$selected_organism)
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
           loaded_samples(FALSE)
+          sum_techreps(FALSE) ## new az
           orig_sample_matrix(NULL)
+          orig_counts_matrix(NULL) ## new az
           vars_selected(NULL)
         })
 
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
 
         if (input$selected_organism == "No organism") {
           shinyalert::shinyalert(
@@ -1179,28 +1136,6 @@ UploadBoard <- function(id,
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
-
-        if (0) {
-          dbg("[*** testing check probes ***]")
-
-          dbg("[UploadServer:uploaded.counts] head.probes = ", head(probes))
-          dbg("[UploadServer:uploaded.counts] upload.organism = ", upload_organism())
-          dbg("[UploadServer:uploaded.counts] upload.datatype = ", upload_datatype())
-          dbg("[UploadServer:uploaded.counts] dim.annot = ", dim(annot))
-          dbg("[UploadServer:uploaded.counts] annot.cols = ", annot.cols)
-          dbg("[UploadServer:uploaded.counts] probetype = ", probetype())
-
-          organism <- upload_organism()
-          datatype <- upload_datatype()
-          res <- playbase::check_species_probetype(
-            probes = probes,
-            datatype = datatype,
-            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
-            annot.cols = annot.cols
-          )
-          dbg("[*** testing check probes ***] names.res = ", names(res))
-          if (length(res)) dbg("[*** testing check probes ***] names.res = ", names(res[[1]]))
-        }
 
         checkprobes_task$invoke(
           organism = upload_organism(),
@@ -1330,7 +1265,9 @@ UploadBoard <- function(id,
     upload_table_preview_samples_server(
       "samples_preview",
       orig_sample_matrix = orig_sample_matrix,
+      orig_counts_matrix = orig_counts_matrix,
       loaded_samples = loaded_samples,
+      sum_techreps = sum_techreps,
       vars_selected = vars_selected,
       uploaded,
       checklist = checklist,
@@ -1341,6 +1278,7 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
       public_dataset_id = public_dataset_id ## accession ID
     )
 
@@ -1369,10 +1307,12 @@ UploadBoard <- function(id,
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.count = TRUE,
-      height = height
+      height = height,
+      recompute_pgx = recompute_pgx
     )
 
     sc_normalized <- upload_module_normalizationSC_server(
@@ -1424,7 +1364,7 @@ UploadBoard <- function(id,
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
+      annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       lib.dir = FILES,
@@ -1443,7 +1383,8 @@ UploadBoard <- function(id,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
-      probetype = probetype
+      probetype = probetype,
+      recompute_pgx = recompute_pgx
     )
 
     ## ------------------------------------------------

@@ -311,10 +311,10 @@ opg_ui <- function() {
         drug = "Drug connectivity",
         cell = "Cell profiling",
         pcsf = "PCSF",
-        wgcna = "WGCNA",
         tcga = "TCGA survival (beta)"
       ),
-      "MultiOmics (beta)" = MODULE.multiomics$module_menu()
+      "MultiOmics (beta)" = MODULE.multiomics$module_menu(),
+      "WGCNA" = MODULE.wgcna$module_menu()
     )
 
     ## filter disabled modules
@@ -546,8 +546,8 @@ opg_ui <- function() {
           "load-tab",
           "Analyze dataset",
           "This panel shows the available datasets within the platform. These data sets
-                    have been pre-computed and are ready to be used. Select a
-                    dataset in the table and load the data set by clicking the 'Analyze dataset' button."
+           have been pre-computed and are ready to be used. Select a
+           dataset in the table and load the data set by clicking the 'Analyze dataset' button."
         ),
         bigdash::sidebarTabHelp(
           "upload-tab",
@@ -662,8 +662,8 @@ opg_ui <- function() {
           "cmap-tab",
           "Similar Experiments",
           tspan("Find similar experiments by correlating their signatures.
-                    The main goal is to identify experiments showing similar signatures and find genes
-                    that are commonly up/down regulated between experiments.")
+                 The main goal is to identify experiments showing similar signatures and find 
+                 genes that are commonly up/down regulated between experiments.")
         ),
         bigdash::sidebarTabHelp(
           "comp-tab",
@@ -681,6 +681,16 @@ opg_ui <- function() {
           "Single-Cell Profiling",
           tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
+        ),
+        bigdash::sidebarTabHelp(
+          "consensus-tab",
+          "Consensus WGCNA",
+          tspan("Consensus analysis using the WGCNA framework")
+        ),
+        bigdash::sidebarTabHelp(
+          "preservation-tab",
+          "Preservation WGCNA",
+          tspan("Preservation analysis using the WGCNA framework")
         ),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),

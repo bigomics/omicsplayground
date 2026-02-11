@@ -1,16 +1,16 @@
-### v4.0.6+master251028 (2025-10-28)
+### v4.1.2+master260108 (2026-01-08)
 
--  feat: add consent text to customer support [view](https://github.com/bigomics/omicsplayground/commit/e9bd560738bab4f8a52fc8ceb7e16e0dc5ab6587)
--  feat: message instead of error when azimuth run is unsuccessful [view](https://github.com/bigomics/omicsplayground/commit/9b16dfc308cfa777635d578c47aeba2edfb26405)
--  feat: no need to debounce this [view](https://github.com/bigomics/omicsplayground/commit/cd4fd58bf8e42528788bee26ab6dff1644b1db07)
--  feat: Add dynamic visibility control for archive tab panel [view](https://github.com/bigomics/omicsplayground/commit/70300b454797050caf4287b79dee21a71b7e3cac)
--  feat: ability to customize public data folder name+load from public data [view](https://github.com/bigomics/omicsplayground/commit/ee46524fd8ce6b3acf04e6494259595dd47cba54)
--  rename ngenes to nfeatures [view](https://github.com/bigomics/omicsplayground/commit/d9ae321cdb3c4cbce700058757b08be73718bfa7)
--  feat: control public bucket max pgx count [view](https://github.com/bigomics/omicsplayground/commit/db959a84ca0a1a21f4a8dfe6d262e831d4286762)
+-  feat: make biomarker work with 1 feature [view](https://github.com/bigomics/omicsplayground/commit/8fa1cf454c02c918c53e4c05290128121565dd84)
+-  feat: move computeok email to main thread [view](https://github.com/bigomics/omicsplayground/commit/c990ee5eac6ea936f6b2c74f502b557bfa16c099)
+-  feat: samples table use names instead of -1/1 [view](https://github.com/bigomics/omicsplayground/commit/3127f969191c069cfbdb74b76bc9f49ff179ad62)
+-  feat: global label type on lasagna module [view](https://github.com/bigomics/omicsplayground/commit/07a8103d08b89a2671e154225abd28d6419718c0)
 
 
-### v4.0.5+master251013 (2025-10-13)
+### v4.1.1+master251216 (2025-12-16)
 
--  feat: remove vert space + hide if too many int_vars [view](https://github.com/bigomics/omicsplayground/commit/84081b832f0fefaaace1d76fc98e08c6fa728b7b)
+-  fix: control no up/down features case [view](https://github.com/bigomics/omicsplayground/commit/a0fbc3208ab7694bb525e2b5d6e2c2437f0e238e)
+-  feat: translate labels on comp signature scatterplot [view](https://github.com/bigomics/omicsplayground/commit/6f599ad680af68c03b13acbf22dec62eccf6dc93)
+-  feat: improve label change on multiple plots [view](https://github.com/bigomics/omicsplayground/commit/582d55a3643bb1bb04af878a62e85bddb040f0e6)
+-  feat: translate wgcna labels [view](https://github.com/bigomics/omicsplayground/commit/37c1c2ee146671ecebd107a42503320efeb5da7c)
 
 

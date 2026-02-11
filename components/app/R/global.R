@@ -157,11 +157,11 @@ opt.default <- list(
   USE_CREDENTIALS = FALSE,
   DOMAIN = NULL,
   BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
-  ## ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE = TRUE,
   ENABLE_PGX_DOWNLOAD = TRUE,
   ENABLE_PUBLIC_SHARE = TRUE,
   ENABLE_PUBLIC_LOAD = FALSE,
+  ENABLE_PUBLIC_DELETE = FALSE,
   ENABLE_UPLOAD = TRUE,
   ENABLE_USERDIR = TRUE,
   ENABLE_USER_SHARE = TRUE,
@@ -170,6 +170,7 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
@@ -218,6 +219,16 @@ if (file.exists(defaults.file)) {
       impute = TRUE
     )
   )
+}
+
+## Load metadata options configuration
+metadata.file <- file.path(ETC, "metadata_options.yml")
+if (file.exists(metadata.file)) {
+  METADATA_OPTIONS <<- yaml::read_yaml(metadata.file)
+  message("[GLOBAL] Loaded metadata_options.yml")
+} else {
+  message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
+  METADATA_OPTIONS <<- list(fields = list())
 }
 
 ## Check and set authentication method
@@ -274,7 +285,7 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
@@ -322,5 +333,11 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
+## Filter LLM models with available models, add all local models(?)
+opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
+LOCAL_MODELS <- playbase::ai.get_ollama_models()
+# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+  
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")

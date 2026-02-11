@@ -13,9 +13,10 @@ loading_table_datasets_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  ## not sure if this should be here or in settings (IK)
+  ## Datatype filter (always present)
+  ## Metadata filters are rendered dynamically based on available columns
   options <- tagList(
-    shiny::checkboxGroupInput(ns("flt_datatype"), "Datatype", choices = "")
+    shiny::checkboxGroupInput(ns("flt_datatype"), "Datatype", choices = ""),
   )
 
   tagList(
@@ -128,21 +129,27 @@ loading_table_datasets_server <- function(id,
 
       ## Apply filters
       if (nrow(df) > 0) {
-        f1 <- f2 <- f3 <- rep(TRUE, nrow(df))
+        filters <- rep(TRUE, nrow(df))
         notnull <- function(x) !is.null(x) && length(x) > 0 && x[1] != "" && !is.na(x[1])
-        if (notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
-        df <- df[which(f1 & f2 & f3), , drop = FALSE]
+
+        ## Apply datatype filter
+        if (notnull(input$flt_datatype)) {
+          filters <- filters & (df$datatype %in% input$flt_datatype)
+        }
+
+        df <- df[which(filters), , drop = FALSE]
         df$date <- as.Date(df$date, format = "%Y-%m-%d")
         df <- df[order(df$date, decreasing = TRUE), ]
         if (nrow(df) > 0) rownames(df) <- nrow(df):1
       }
 
-      kk <- unique(c(
+      ## Select core columns plus any metadata columns
+      core_cols <- c(
         "dataset", "description", "organism", "datatype", "nsamples",
-        "nfeatures", "nsets", "conditions", "date",
-        "creator"
-      ))
-      kk <- intersect(kk, colnames(df))
+        "nfeatures", "nsets", "conditions", "date", "creator"
+      )
+      metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
+      kk <- intersect(c(core_cols, metadata_cols), colnames(df))
       df <- df[, kk, drop = FALSE]
       df
     })
@@ -155,7 +162,6 @@ loading_table_datasets_server <- function(id,
       datatypes <- sort(setdiff(df$datatype, c(NA, "")))
       shiny::updateCheckboxGroupInput(session, "flt_datatype", choices = datatypes)
     })
-
 
     ## -------------------------------------------------------------------
     ## make a pgx public (i.e. share publicly)

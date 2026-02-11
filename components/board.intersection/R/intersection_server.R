@@ -28,6 +28,10 @@ IntersectionBoard <- function(
       input$comparisons
     }) %>% shiny::debounce(500)
 
+    input_customlist <- shiny::reactive({
+      input$customlist
+    }) %>% shiny::debounce(500)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -78,6 +82,7 @@ IntersectionBoard <- function(
       } else {
         ## gene level
         ft <- playbase::pgx.getFamilies(pgx, nmin = 10, extended = FALSE)
+        ft <- c(ft, "<custom>")
       }
       ft <- sort(ft)
       names(ft) <- sub(".*:", "", ft)
@@ -122,12 +127,7 @@ IntersectionBoard <- function(
 
         ## apply user selected filter
         gsets <- rownames(fc0)
-        if (input$filter == "<custom>") {
-          gsets <- strsplit(input$customlist, split = "[, ;]")[[1]]
-          if (length(gsets) > 0) {
-            gsets <- intersect(rownames(pgx$gsetX), gsets)
-          }
-        } else if (input$filter != "<all>") {
+        if (input$filter != "<all>") {
           gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
           gsets <- unique(unlist(gset_collections[input$filter]))
         }
@@ -156,7 +156,7 @@ IntersectionBoard <- function(
         ## filter with active filter
         sel.probes <- rownames(fc0) ## default to all probes
         if (input$filter == "<custom>") {
-          genes <- strsplit(input$customlist, split = "[, ;]")[[1]]
+          genes <- strsplit(input_customlist(), split = "[, ;]")[[1]]
           if (length(genes) > 0) {
             sel.probes <- playbase::filterProbes(pgx$genes, genes)
           }

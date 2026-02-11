@@ -104,7 +104,8 @@ LoadingUI <- function(id) {
           ## height = c("calc(100vh - 330px)", 700),
           height = c("100%", 700),
           width = c("100%", "100%"),
-          load_button = opt$ENABLE_PUBLIC_LOAD
+          load_button = opt$ENABLE_PUBLIC_LOAD,
+          delete_button = TRUE
         ),
         loading_tsne_ui(
           ns("tsne_public"),

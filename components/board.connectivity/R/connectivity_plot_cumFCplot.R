@@ -62,6 +62,7 @@ connectivity_plot_cumFCplot_server <- function(id,
                                                getProfiles,
                                                getConnectivityScores,
                                                getCurrentContrast,
+                                               pgx,
                                                watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -107,6 +108,7 @@ connectivity_plot_cumFCplot_server <- function(id,
           F1 <- head(F, ngenes)
           F1 <- F1[order(rowMeans(F1, na.rm = TRUE)), , drop = FALSE]
         }
+        rownames(F1) <- playbase::probe2symbol(rownames(F1), pgx$genes, "gene_name", fill_na = TRUE)
 
         playbase::pgx.stackedBarplot(
           x = data.frame(F1, check.names = FALSE),

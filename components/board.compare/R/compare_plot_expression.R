@@ -116,7 +116,7 @@ compare_plot_expression_server <- function(id,
         }
 
         plt <- plotly::add_annotations(plt,
-          text = paste("<b>", gene_i, "</b>"),
+          text = paste("<b>", playbase::probe2symbol(gene_i, pgx$genes, "gene_name", fill_na = TRUE), "</b>"),
           font = list(size = 9),
           showarrow = FALSE,
           xanchor = "left",
