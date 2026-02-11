@@ -150,8 +150,25 @@ upload_module_normalization_server <- function(
           }
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
+          } else if (upload_datatype() == "methylomics") {
+            probe.types <- NULL
+            if (m == "BMIQ") {
+              if (meth_type() == "450K array") {
+                require("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+                ann <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+              } else if (meth_type() == "EPIC array") {
+                require("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+                ann <- minfi::getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+              }
+              jj <- which(!is.na(rownames(ann)) & rownames(ann) != "")
+              ann <- ann[jj, , drop = FALSE]           
+              jj <- match(rownames(X), rownames(ann))
+              ann <- ann[jj, , drop = FALSE]
+              probe.types <- ifelse(as.character(ann$Type) == "I", 1, 2)
+            }
+            X <- playbase::normalizeMethylationArray(X, m, probe.types)
           } else {
-            dbg("[normalization_server:normalizedX] normalizing data using ", m)
+            dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
@@ -594,8 +611,6 @@ upload_module_normalization_server <- function(
         )
         cex1 <- 3 * as.numeric(as.character(cex1))
         pos <- playbase::uscale(pos)
-
-        ## How about plotly??
         plot(pos,
           col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
           xlim = c(-0.1, 1.1), ylim = c(-0.1, 1.1),
@@ -625,7 +640,6 @@ upload_module_normalization_server <- function(
         zscore <- res$z.outlier
         Z <- res$Z
         pos <- res$pos[["pca"]]
-        ## plottype <- input$outlier_plottype
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -856,7 +870,6 @@ upload_module_normalization_server <- function(
       )
 
       output$normalization <- shiny::renderUI({
-        ## reactive
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
 
@@ -1020,6 +1033,12 @@ upload_module_normalization_server <- function(
                       ignore.case = TRUE
                     )) {
                       c("maxMedian", "maxSum", "quantile", "reference")
+                    } else if (grepl("methylomics", upload_datatype(),
+                      ignore.case = TRUE
+                    )) {
+                      c(
+                        "BMIQ", "quantile"
+                      )
                     } else if (grepl("multi-omics", upload_datatype(),
                       ignore.case = TRUE
                     )) {
@@ -1242,7 +1261,6 @@ upload_module_normalization_server <- function(
 
       bc_method <- reactive({
         param <- input$bec_param
-        ## Remove <autodetect> if other params are selected
         if ("<autodetect>" %in% param && length(param) > 1) {
           param <- setdiff(param, "<autodetect>")
           shiny::updateSelectizeInput(session, "bec_param", selected = param)
