@@ -16,7 +16,6 @@ UploadUI <- function(id) {
         tabsetPanel(
           id = ns("upload_tabs"),
           type = "tabs",
-          # Upload your own data tab
           tabPanel(
             "Upload your data",
             value = "upload",
@@ -36,6 +35,7 @@ UploadUI <- function(id) {
                     "mRNA microarray",
                     "proteomics",
                     "scRNA-seq",
+                    "methylomics",
                     "metabolomics (beta)" = "metabolomics",
                     "multi-omics (beta)" = "multi-omics"
                   ),
