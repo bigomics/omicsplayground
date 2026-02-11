@@ -3,9 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-
-
 app_ui <- function(x) {
   if (identical("/cookie", x$PATH_INFO)) {
     value <- x$HTTP_HEADER_USER_COOKIE
