@@ -194,7 +194,7 @@ sever_disconnected <- function() {
   sever_crash(error = NULL)
 }
 
-sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, path_to_creds = "hubspot_creds") {
+sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, path_to_creds = "hubspot_creds", full_app_crash = FALSE) {
   if (!file.exists(path_to_creds)) {
     message("[sendErrorMessageToCustomerSuport] WARNING : ticket not opened. cannot get credential =", path_to_creds)
     return(NULL)
@@ -219,6 +219,8 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, p
           {error}"
   )
 
+  subject <- if (full_app_crash) "PRIORITY: Full App Crash Ticket" else "Simple Error Ticket"
+
   # Define the payload
   payload <- list(
     fields = list(
@@ -230,7 +232,7 @@ sendErrorLogToCustomerSuport <- function(user_email, pgx_name, raw_dir, error, p
       list(
         objectTypeId = "0-5",
         name = "subject",
-        value = "Blue Screen Crash Ticket"
+        value = subject
       ),
       list(
         objectTypeId = "0-5",

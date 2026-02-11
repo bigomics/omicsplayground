@@ -174,8 +174,8 @@ dataview_plot_expression_server <- function(id,
             df$group <- reorder(df$group, -df$x)
           } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic) &&
             all(input$rank_list_basic %in% unique(data$group))) {
-            data$group <- factor(data$group, levels = valid_ranks)
-            df$group <- factor(df$group, levels = valid_ranks)
+            data$group <- factor(data$group, levels = input$rank_list_basic)
+            df$group <- factor(df$group, levels = input$rank_list_basic)
           }
         }
 
