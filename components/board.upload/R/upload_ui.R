@@ -42,7 +42,8 @@ UploadUI <- function(id) {
                   selected = DEFAULTS$datatype,
                   width = "400px"
                 ),
-                shiny::uiOutput(ns("proteomics_subtype_ui"))
+                shiny::uiOutput(ns("proteomics_subtype_ui")),
+                shiny::uiOutput(ns("methylomics_subtype_ui"))
               ),
               div(
                 p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),

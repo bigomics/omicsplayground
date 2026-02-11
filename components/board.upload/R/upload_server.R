@@ -132,11 +132,10 @@ UploadBoard <- function(id,
     })
 
     output$methylomics_subtype_ui <- shiny::renderUI({
-      req(upload_datatype())
       if (upload_datatype() == "methylomics") {
         shiny::selectInput(
           ns("methylomics_type"),
-          label = "Methylomics type:",
+          label = "Methylomics platform:",
           choices = c("450K array", "EPIC array"),
           selected = "450K array",
           width = "150px"
@@ -188,13 +187,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
-      ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
-      ## object again.  We should skip saving and pass the filename to
-      ## pgxfile to be sure the filename is correct.
-
-      ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
-      ## -------------- save PGX file/object ---------------
-      # Old pgx does not have name slot, overwrite it with file name
       if (is.null(new_pgx$name)) {
         new_pgx$name <- sub("[.]pgx$", "", input$upload_files$name)
       }
@@ -204,9 +196,6 @@ UploadBoard <- function(id,
       pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-      ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ## switch 'pgx' as standard name. Actually saving as RDS
-      ## would have been better...
       dbg("[UploadBoard:observe:uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
@@ -486,9 +475,7 @@ UploadBoard <- function(id,
         if (!is.null(checked)) {
           if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
-            ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
-            # pop up telling user max samples reached
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
@@ -498,7 +485,6 @@ UploadBoard <- function(id,
         }
 
         ## -------------- cross-check with counts ------------------
-        # initialize results
         res_samples <- NULL
         res_counts <- NULL
 
@@ -538,7 +524,6 @@ UploadBoard <- function(id,
         list(uploaded$contrasts.csv, uploaded$samples.csv)
       },
       {
-        ## get uploaded counts
         df0 <- uploaded$contrasts.csv
         if (is.null(df0)) {
           return(list(status = "Missing contrasts.csv", matrix = NULL))
@@ -546,7 +531,6 @@ UploadBoard <- function(id,
 
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-        # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         write_check_output(res$checks, "CONTRASTS", raw_dir())
         checked <- res$df
@@ -557,7 +541,6 @@ UploadBoard <- function(id,
           status <- "ERROR: invalid contrast. please check your input file."
         }
 
-        ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
         ## -------------- max contrast check ------------------
@@ -1318,7 +1301,7 @@ UploadBoard <- function(id,
       r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      ## meth_type = meth_type,
+      meth_type = meth_type,
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx

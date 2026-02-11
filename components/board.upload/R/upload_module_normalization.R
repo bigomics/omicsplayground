@@ -23,6 +23,7 @@ upload_module_normalization_server <- function(
   r_annot,
   upload_datatype,
   is.olink,
+  meth_type,
   is.count = FALSE,
   height = 720,
   recompute_pgx = NULL
