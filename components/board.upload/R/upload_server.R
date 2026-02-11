@@ -15,7 +15,6 @@ UploadBoard <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     loaded_samples <- shiny::reactiveVal(FALSE)
@@ -23,7 +22,6 @@ UploadBoard <- function(id,
     orig_sample_matrix <- shiny::reactiveVal(NULL)
     orig_counts_matrix <- shiny::reactiveVal(NULL)
     vars_selected <- shiny::reactiveVal(NULL)
-    # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
@@ -49,7 +47,6 @@ UploadBoard <- function(id,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
           annot.cols = annot.cols
         )
-        ## if (is.null(detected)) detected <- "error"
         detected
       })
     })
@@ -131,6 +128,30 @@ UploadBoard <- function(id,
         return(input$proteomics_type == "Olink NPX")
       } else {
         return(FALSE)
+      }
+    })
+
+    output$methylomics_subtype_ui <- shiny::renderUI({
+      req(upload_datatype())
+      if (upload_datatype() == "methylomics") {
+        shiny::selectInput(
+          ns("methylomics_type"),
+          label = "Methylomics type:",
+          choices = c("450K array", "EPIC array"),
+          selected = "450K array",
+          width = "150px"
+        )
+      } else {
+        NULL
+      }
+    })
+
+    meth_type <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "methylomics" && !is.null(input$methylomics_type)) {
+        return(input$methylomics_type)
+      } else {
+        return(NULL)
       }
     })
 
@@ -1297,6 +1318,7 @@ UploadBoard <- function(id,
       r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
+      ## meth_type = meth_type,
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx
@@ -1312,7 +1334,6 @@ UploadBoard <- function(id,
       height = height
     )
 
-    ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
     sc_compute_settings <- reactiveValues()
 
