@@ -88,7 +88,7 @@ app_ui <- function(x) {
         bslib::nav_panel(title = "Chat", icon=icon("robot", style=iconstyle),
           p("Chat content")
         ),
-        bslib::nav_panel(title = "Graph", icon=icon("gem", style=iconstyle),
+        bslib::nav_panel(title = "Prism", icon=icon("gem", style=iconstyle),
           prism_ui("prism")
         ),
         bslib::nav_panel(title = "Settings", icon=icon("gear", style=iconstyle),

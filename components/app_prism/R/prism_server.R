@@ -129,6 +129,8 @@ prism_server <- function(id) {
       data <- get_dataframe()
       dbg("WARNING: performing eval(): plotcode = \n", plotcode)
       require(ggplot2)
+      if(grepl("ggrepel", plotcode)) require(ggrepel)
+      if(grepl("xkcd", plotcode)) require(xkcd)
       eval(parse(text=plotcode))  
     })
 
@@ -139,6 +141,11 @@ prism_server <- function(id) {
       plotcode <- gsub("\n","<br>",plotcode)
       ##plotcode <- gsub("[+]","+<br>&nbsp;",plotcode)      
       HTML(plotcode)      
+    })
+
+    output$data1 <- renderDataTable({
+      data <- get_dataframe()
+      return(data)
     })
     
     

@@ -46,18 +46,26 @@ prism_ui <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         class = "pl-4",
-        bslib::card(
-          shiny::plotOutput(ns("plot1"), height='600px')
-        ),
-        ## shinychat::chat_ui(
-        ##   ns("chartbot"),
-        ##   style = "max-height: 180px; width: min(800px, 100%);",
-        ##   fill = FALSE
-        ## )
-        div(
-          shiny::textInput(ns("chartbot_user_input"),"",
-            placeholder = "What do you want to plot?", width='100%'),
-          shiny::actionButton(ns("chartbot_send"),"send",icon=icon("arrow-right-from-bracket"))
+        bslib::navset_tab(
+          bslib::nav_panel(
+            title = "plot",
+            shiny::plotOutput(ns("plot1"), height='600px'),
+            ## shinychat::chat_ui(
+            ##   ns("chartbot"),
+            ##   style = "max-height: 180px; width: min(800px, 100%);",
+            ##   fill = FALSE
+            ## )
+            div(
+              shiny::textInput(ns("chartbot_user_input"),"",
+                placeholder = "What do you want to plot?", width=600),
+              shiny::actionButton(ns("chartbot_send"),"send",
+                icon = icon("arrow-right-from-bracket"))
+            )
+          ),
+          bslib::nav_panel(
+            title = "data",
+            shiny::dataTableOutput(ns("data1"))
+          )
         )
       )
     )
