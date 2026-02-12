@@ -150,9 +150,9 @@ CopilotServer <- function(id, pgx, input.click, layout="fixed", maxturns=100) {
 
     })
 
-    ## On new pgx data, reset/create new chatbot
+    ## On modal open or reset, create new chatbot
     observeEvent({
-      list( input$reset, pgx$X )
+      list( input$reset, input.click() )
     }, {
       req( dim(pgx$X) )
       
