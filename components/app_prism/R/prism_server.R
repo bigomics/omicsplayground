@@ -69,7 +69,7 @@ prism_server <- function(id) {
     last_plotcode <- ""
 
     ##get_plotcode <- eventReactive( input$chartbot_user_input, {
-    get_plotcode <- eventReactive( input$chartbot_send, {        
+    llm_plotcode <- eventReactive( input$chartbot_send, {        
 
       dbg("chartbot_user_input reacted!") 
       
@@ -96,19 +96,29 @@ prism_server <- function(id) {
       pointsize <- input$pointsize
       fontsize <- input$fontsize
       theme <- input$theme
+      dataset <- input$dataset
       
       msg2 <- paste(
         "You are asked the following request about modifying a ggplot figure.", 
-        "Just give the raw plotting code. Do not give explanations. Load package libraries if needed.",
+        "Just give the raw plotting code. No explanations. Load package libraries if needed.",
+        ##"Add xkcdaxis if theme is xkcd.",
         "\nThis is the request of the user: ", msg,        
         "\nThese are the variables in the dataframe called 'data': ", vars,
         "\nThese are the rownames of 'data': ", rows,        
         "\nThis is the last plotting code of the graph: ", last_plotcode,
+        "\nSet default title as dataset name: ", dataset,
         "\nDefault point size unless asked by user: ", pointsize,
         "\nDefault font size unless asked by user: ", fontsize,
         "\nDefault theme unless asked by user: ", theme                
       )
-
+      
+      plotcode = "library(ggplot2)
+ggplot(data, aes(x = wt, y = mpg)) +
+geom_point(size = 3) +
+labs(title = 'mtcars', x = 'wt', y = 'mpg') +
+theme_gray() +
+theme(text = element_text(size = 18))"
+      
       plotcode <- playbase::ai.ask(msg2, "groq:openai/gpt-oss-20b")
       plotcode <- paste0(plotcode,"\n")
       plotcode <- gsub("```[rR]|```","",plotcode)
@@ -122,15 +132,50 @@ prism_server <- function(id) {
       return(plotcode)      
     })
 
+    update_plotcode <- function(pointsize, fontsize, theme, dataset) {      
+      if(last_plotcode=="") return(NULL)
+      plotcode <- trimws(last_plotcode)
+      plotcode <- gsub("\\)$",") +\n",plotcode)
+      plotcode <- paste0(plotcode,"theme_",theme,"()")
+      plotcode <- paste0(plotcode," +\n geom_point(size=",pointsize,")")
+      plotcode <- paste0(plotcode," +\n theme(text=element_text(size=",fontsize,"))")
+      plotcode <- paste0(plotcode," +\n labs(title='",dataset,"')")
+      ##eval(parse(text=plotcode))
+      return(plotcode)
+    }
     
+    get_plotcode <- reactive({
+
+      pointsize=4;fontsize=12;theme="classic"
+      pointsize=8;fontsize=32;theme="dark";dataset="geiger"
+      pointsize <- input$pointsize
+      fontsize <- input$fontsize
+      theme <- input$theme
+      dataset <- input$dataset
+
+      dbg("input$chartbot_send = ", input$chartbot_send)
+      dbg("input$chartbot_user_input = ", isolate(input$chartbot_user_input))
+      
+      if(isolate(input$chartbot_user_input) == "") {
+        dbg("updating plotcode")
+        code <- update_plotcode(pointsize, fontsize, theme, dataset)
+      } else {
+        dbg("retrieving plotcode")
+        code <- llm_plotcode()
+      }
+      code
+    })
+      
     output$plot1 <- renderPlot({
       plotcode <- get_plotcode()
       shiny::req(plotcode)
       data <- get_dataframe()
       dbg("WARNING: performing eval(): plotcode = \n", plotcode)
-      require(ggplot2)
+      if(grepl("ggplot", plotcode)) require(ggplot2)
       if(grepl("ggrepel", plotcode)) require(ggrepel)
       if(grepl("xkcd", plotcode)) require(xkcd)
+      if(grepl("prism", plotcode)) require(ggprism)
+
       eval(parse(text=plotcode))  
     })
 

@@ -36,7 +36,7 @@ prism_ui <- function(id) {
         bslib::layout_columns(
           col_widths = c(6,6),
           shiny::sliderInput(ns("pointsize"), "Point size:", 1, 10, 3, step=1),
-          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 32, 18, step=2)
+          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 48, 18, step=4)
         ),
         wellPanel(
           style = "width: 100%; font-family: monospace; font-size: 11px;",
