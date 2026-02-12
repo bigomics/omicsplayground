@@ -155,10 +155,9 @@ upload_module_normalization_server <- function(
           } else if (upload_datatype() == "methylomics") {
             probe.types <- NULL
             if (m == "BMIQ") {
-              if (meth_type() == "450K array") {  
-                require("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-                ann <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-              } else if (meth_type() == "EPIC array") {
+              require("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+              ann <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+              if (meth_type() == "EPIC array") {
                 require("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
                 ann <- minfi::getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
               }
