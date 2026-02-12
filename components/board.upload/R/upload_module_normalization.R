@@ -161,12 +161,11 @@ upload_module_normalization_server <- function(
                 require("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
                 ann <- minfi::getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
               }
-              jj <- match(rownames(X), rownames(ann))
-              ann <- ann[jj, , drop = FALSE]
-              probe.types <- ifelse(as.character(ann$Type) == "I", 1, 2)
-              names(probe.types) <- rownames(ann)
+              probe.types <- as.character(ann[rownames(X), "Type"])
+              names(probe.types) <- rownames(X)[which(rownames(X) %in% rownames(ann))]
+              probe.types <- ifelse(probe.types == "I", 1, ifelse(probe.types == "II", 2, NA))
             }
-            X <- playbase::normalizeMethylationArray(X, m, probe.types)
+            #X <- playbase::normalizeMethylationArray(X, m, probe.types)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
