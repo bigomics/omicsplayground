@@ -137,9 +137,11 @@ upload_module_normalization_server <- function(
 
       ## Normalize
       normalizedX <- reactive({
+
         shiny::req(dim(imputedX()$X))
         X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
         prior <- imputedX()$prior
+
         if (input$normalize) {
           m <- input$normalization_method
           ref <- NULL
@@ -153,18 +155,17 @@ upload_module_normalization_server <- function(
           } else if (upload_datatype() == "methylomics") {
             probe.types <- NULL
             if (m == "BMIQ") {
-              if (meth_type() == "450K array") {
+              if (meth_type() == "450K array") {  
                 require("IlluminaHumanMethylation450kanno.ilmn12.hg19")
                 ann <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
               } else if (meth_type() == "EPIC array") {
                 require("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
                 ann <- minfi::getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
               }
-              jj <- which(!is.na(rownames(ann)) & rownames(ann) != "")
-              ann <- ann[jj, , drop = FALSE]           
               jj <- match(rownames(X), rownames(ann))
               ann <- ann[jj, , drop = FALSE]
               probe.types <- ifelse(as.character(ann$Type) == "I", 1, 2)
+              names(probe.types) <- rownames(ann)
             }
             X <- playbase::normalizeMethylationArray(X, m, probe.types)
           } else {
@@ -176,6 +177,7 @@ upload_module_normalization_server <- function(
         }
 
         return(X)
+
       })
 
       ## Remove outliers
