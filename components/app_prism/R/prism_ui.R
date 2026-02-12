@@ -32,25 +32,21 @@ prism_ui <- function(id) {
         buttons,
         shiny::selectInput(ns("theme"), "Theme:", sort(c("gray","bw","light","dark",
           "minimal","classic","xkcd","prism")), selected="gray"),
-        shiny::sliderInput(ns("pointsize"), "Point size:", 1, 10, 3, step=1),
-        shiny::sliderInput(ns("fontsize"), "Font size:", 8, 32, 18, step=2),
+        bslib::layout_columns(
+          col_widths = c(6,6),
+          shiny::sliderInput(ns("pointsize"), "Point size:", 1, 10, 3, step=1),
+          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 32, 18, step=2)
+        ),
         wellPanel(
-          style = "width: 100%; font-family: monospace; font-size: 10px;",
+          style = "width: 100%; font-family: monospace; font-size: 11px;",
           shiny::htmlOutput(ns("plotcode"), height="400px")
         )
       ),
       bslib::layout_columns(
         col_widths = 12,
         class = "pl-4",
-        bslib::navset_card_tab(
-          bslib::nav_panel(
-            title = "One",
-            shiny::plotOutput(ns("plot1"), height='600px')
-          ),
-          bslib::nav_panel(
-            title = "Two",
-            p("Second tab content.")
-          )
+        bslib::card(
+          shiny::plotOutput(ns("plot1"), height='600px')
         ),
         ## shinychat::chat_ui(
         ##   ns("chartbot"),

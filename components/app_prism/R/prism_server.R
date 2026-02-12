@@ -69,6 +69,13 @@ prism_server <- function(id) {
 
       msg <- input$chartbot_user_input
       if(msg == "") return(NULL)
+      if(msg == "reset") {
+        last_plotcode <<- ""
+        shiny::updateTextInput(session, "chartbot_user_input", value = "",
+          placeholder = "What do you want to plot?")
+        empty <- "ggplot() + theme_void()"
+        return(empty)
+      }
       
       data <- get_dataframe()
       vars <- paste(colnames(data),collapse=", ")
@@ -95,10 +102,10 @@ prism_server <- function(id) {
       plotcode <- paste0(plotcode,"\n")
       plotcode <- gsub("```[rR]|```","",plotcode)
       ##plotcode <- sub(".*ggplot\\(","ggplot(",plotcode)      
-      cat(plotcode)
             
       last_plotcode <<- plotcode      
-      shiny::updateTextInput(session, "chartbot_user_input", value = "")
+      shiny::updateTextInput(session, "chartbot_user_input", value = "",
+        placeholder = "Any edits?")
       ##shinychat::chat_clear("chartbot")
 
       return(plotcode)      
@@ -109,7 +116,7 @@ prism_server <- function(id) {
       plotcode <- get_plotcode()
       shiny::req(plotcode)
       data <- get_dataframe()
-      dbg("WARNING: performing eval(): plotcode = ", plotcode)
+      dbg("WARNING: performing eval(): plotcode = \n", plotcode)
       require(ggplot2)
       eval(parse(text=plotcode))  
     })
