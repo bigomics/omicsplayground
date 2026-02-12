@@ -14,8 +14,7 @@ prism_ui <- function(id) {
       actionButton(ns("button1"), "button1", icon=icon("pen")),
       actionButton(ns("button2"), "button2", icon=icon("eraser")),
       actionButton(ns("button3"), "button3", icon=icon("font")),
-      actionButton(ns("button4"), "button4", icon=icon("eye-dropper")),
-      actionButton(ns("button5"), "button5", icon=icon("paint-roller"))
+      actionButton(ns("button4"), "button4", icon=icon("eye-dropper"))
     )
   )
 
@@ -30,6 +29,8 @@ prism_ui <- function(id) {
         col_widths = 12,
         fill = FALSE,
         buttons,
+        shiny::selectInput(ns("dataset"), "Dataset:", c("mtcars","iris","geiger"),
+          selected="mtcars"),
         shiny::selectInput(ns("theme"), "Theme:", sort(c("gray","bw","light","dark",
           "minimal","classic","xkcd","prism")), selected="gray"),
         bslib::layout_columns(

@@ -46,14 +46,25 @@ prism_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    get_dataframe <- function() {
-      within(mtcars, {
-        vs <- factor(vs)
-        am <- factor(am)
-        cyl  <- factor(cyl)
-        gear <- factor(gear)
-      })      
-    }
+    get_dataframe <- reactive({
+      if(input$dataset == "mtcars") {
+        df <- within(mtcars, {
+          vs <- factor(vs)
+          am <- factor(am)
+          cyl  <- factor(cyl)
+          gear <- factor(gear)
+        })
+      }
+      if(input$dataset == "iris") {
+        df <- iris
+      }
+      if(input$dataset == "geiger") {
+        pgx <- playdata::GEIGER_PGX
+        mm <- playbase::pgx.getMetaMatrix(pgx)
+        df <- data.frame(logFC = mm$fc[,1], pv = mm$pv[,1])
+      }
+      df 
+    })
         
     last_plotcode <- ""
 
@@ -88,7 +99,7 @@ prism_server <- function(id) {
       
       msg2 <- paste(
         "You are asked the following request about modifying a ggplot figure.", 
-        "Just give the raw plotting code. Do not give explanations. Prepend package namespace if the function is not from ggplot2.",
+        "Just give the raw plotting code. Do not give explanations. Load package libraries if needed.",
         "\nThis is the request of the user: ", msg,        
         "\nThese are the variables in the dataframe called 'data': ", vars,
         "\nThese are the rownames of 'data': ", rows,        
@@ -125,7 +136,8 @@ prism_server <- function(id) {
       plotcode <- get_plotcode()
       shiny::req(plotcode)
       plotcode <- sub("ggplot\\(","ggplot(<br>&nbsp;&nbsp;",plotcode)
-      plotcode <- gsub("[+]","+<br>&nbsp;",plotcode)      
+      plotcode <- gsub("\n","<br>",plotcode)
+      ##plotcode <- gsub("[+]","+<br>&nbsp;",plotcode)      
       HTML(plotcode)      
     })
     
