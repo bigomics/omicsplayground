@@ -688,7 +688,7 @@ upload_table_preview_counts_server <- function(id,
             type = "error"
           )
         } else {
-          df <- df[, -ex, drop = FALSE]
+          df <- df[, ex, drop = FALSE]
         }
       }
       
