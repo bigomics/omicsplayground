@@ -633,14 +633,7 @@ upload_table_preview_counts_server <- function(id,
         } else {
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
-            df0 <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
-            )
+            df0 <- tryCatch({ playbase::read_Olink_NPX(datafile) }, error = function(w) { NULL } )
             if (is.null(df0)) {
               shinyalert::shinyalert(
                 title = "Error",
@@ -680,7 +673,24 @@ upload_table_preview_counts_server <- function(id,
         }
         )
       }
-      
+
+      if (!is.null(df) && upload_datatype() == "methylomics") { ## precheck
+        ## clean features
+        jj <- which(!is.na(rownames(df)) & rownames(df) != "")
+        df <- df[jj, , drop = FALSE]
+        ## Assume minimum 10K unique values for continuous beta signal
+        vv <- apply(df, 2, function(x) length(unique(x[!is.na(x)])))
+        ex <- which(vv >= 10000)
+        if (length(ex) == 0) {
+          shinyalert::shinyalert(
+            title = "Error",
+            text = "Error: all samples exhibit a very narrow range of beta values. Please fix & re-upload.",
+            type = "error"
+          )
+        } else {
+          df <- df[, -ex, drop = FALSE]
+        }
+      }
       
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
