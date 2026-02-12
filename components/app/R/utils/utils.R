@@ -56,25 +56,47 @@ envcat <- function(var) {
 
 mem.vmrss <- function(digits = 0) {
   mem <- "[? MB]"
-  if (Sys.info()["sysname"] %in% c("Linux")) {
+  sysname <- Sys.info()["sysname"]
+
+  if (sysname == "Linux") {
     proc <- paste("/proc", Sys.getpid(), "status", sep = "/")
     rss <- system(paste("grep -i vmrss", proc), intern = TRUE)
     rss <- gsub("VmRSS:[\t ]+| kB", "", rss)
     rss <- as.numeric(rss) / (1024) ## MB
     mem <- paste0(round(rss, digits), "MB")
+  } else if (sysname == "Darwin") {
+    # macOS: use ps command to get RSS in KB
+    rss <- tryCatch({
+      system(paste("ps -o rss= -p", Sys.getpid()), intern = TRUE)
+    }, error = function(e) NULL)
+    if (!is.null(rss) && nzchar(rss)) {
+      rss <- as.numeric(trimws(rss)) / 1024 ## Convert KB to MB
+      mem <- paste0(round(rss, digits), "MB")
+    }
   }
   mem
 }
 
 mem.proc <- function(digits = 0) {
   mem <- "[? MB]"
-  if (Sys.info()["sysname"] %in% c("Linux")) {
+  sysname <- Sys.info()["sysname"]
+
+  if (sysname == "Linux") {
     file <- paste("/proc", Sys.getpid(), "stat", sep = "/")
     what <- vector("character", 52)
     ## In your logging routine
     vsz <- as.numeric(scan(file, what = what, quiet = TRUE)[23])
     vsz <- vsz / (1024**2) ## MB
     mem <- paste0(round(vsz, digits), "MB")
+  } else if (sysname == "Darwin") {
+    # macOS: use ps command to get VSZ in KB
+    vsz <- tryCatch({
+      system(paste("ps -o vsz= -p", Sys.getpid()), intern = TRUE)
+    }, error = function(e) NULL)
+    if (!is.null(vsz) && nzchar(vsz)) {
+      vsz <- as.numeric(trimws(vsz)) / 1024 ## Convert KB to MB
+      mem <- paste0(round(vsz, digits), "MB")
+    }
   }
   mem
 }
