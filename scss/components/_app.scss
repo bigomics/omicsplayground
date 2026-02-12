@@ -1,0 +1,30 @@
+
+#app .well {
+    background-color: #e9eef6;
+    width: 80px;
+}
+
+#app .col-sm-11 {
+    width: calc(100% - 80px);
+}
+
+#app-sidebar {
+    white-space: pre-line;
+    height: 95vh;
+}
+
+#app-sidebar .nav {
+    --bs-nav-link-padding-x: 1rem;
+    --bs-nav-link-padding-y: 0rem;
+}
+
+#app-sidebar .nav-link.active {
+    background-color: #bacbe7;
+    border-radius: 10px;
+}
+
+#app-sidebar .nav-item {
+    --bs-nav-link-padding-x: 0px;
+    --bs-nav-link-padding-y: 0px;
+    width: 50px;
+}

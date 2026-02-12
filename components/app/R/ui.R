@@ -69,153 +69,27 @@ app_ui <- function(x) {
         loader = shinybusy::spin_epic("hollow-dots", color = "#FFF")
       )
     )
-    
 
     app_ui <- bigdash::bigPage(
       header,
-      navbar = bigdash::navbar(
-        # title = tags$img(
-        #   id = "logo-bigomics",
-        #   ## src = "assets/img/bigomics.png",
-        #   src = "static/bigomics-logo.png",
-        #   height = "30"
-        #   # width = "110",
-        # ),
-        # center = tags$div(
-        #  # shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
-        # ),
-        title = "Omics Playground",
-        left = tags$div(
-          style = "padding: 0 0 0 20px;",
-          div(
-            style = "display: inline-block; ",
-            bigdash::navbarDropdown(
-              "Datasets",
-              style = "border: 1px; padding: 2px 6px;",
-              bigdash::navbarDropdownTab(
-                "Upload new",
-                "upload-tab"
-              ),
-              bigdash::navbarDropdownTab(
-                "Load from library",
-                "load-tab"
-              ),
-              bigdash::navbarDropdownTab(
-                "Shared datasets",
-                "sharing-tab"
-              )
-            )
-          )
-        )#,
-        # div.upgradebutton,
-        # div.invitebutton,
-        # div.chirpbutton,
-        # div(
-        #   id = "mainmenu_help",
-        #   bigdash::navbarDropdown(
-        #     "Help",
-        #     bigdash::navbarDropdownItem(
-        #       "Documentation",
-        #       link = "https://omicsplayground.readthedocs.io",
-        #       target = "_blank"
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       "Video tutorials",
-        #       link = "https://bigomics.ch/tutorials/",
-        #       target = "_blank"
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       "Google forum",
-        #       link = "https://groups.google.com/d/forum/omicsplayground",
-        #       target = "_blank"
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       "Submit a support ticket",
-        #       link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
-        #       target = "_blank"
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       "Github issues",
-        #       link = "https://github.com/bigomics/omicsplayground/issues",
-        #       target = "_blank"
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       "Case studies",
-        #       link = "https://bigomics.ch/case-studies/",
-        #       target = "_blank"
-        #     )
-        #   )
-        # ),
-        # div(
-        #   id = "mainmenu_user",
-        #   bigdash::navbarDropdown(
-        #     ## "User",
-        #    # shiny::textOutput("current_user", inline = TRUE),
-        #     bigdash::navbarDropdownTab(
-        #       "User profile",
-        #       "userprofile-tab"
-        #     ),
-        #     bigdash::navbarDropdownTab(
-        #       "App settings",
-        #       "usersettings-tab"
-        #     ),
-        #     # upgrade.tab,
-        #     tags$li(
-        #       actionLink("navbar_about", "About")
-        #     )#,
-        #     # logout.tab
-        #   )
-        # ),
-        # div(
-        #   id = "mainmenu_appsettings",
-        #   bigdash::navbarDropdown(
-        #     auto_close = "outside",
-        #     shiny::icon("cog"),
-        #     div(
-        #       class = "dropdown-items",
-        #       bslib::input_switch("enable_beta", "Enable beta features"),
-        #       bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
-        #       selector_switch(
-        #         class = "card-footer-checked",
-        #         label = "show captions",
-        #         is.checked = FALSE
-        #       )
-        #     ),
-        #     bigdash::navbarDropdownItem(
-        #       withTooltip(
-        #         shiny::selectInput(
-        #           inputId = "selected_labeltype",
-        #           label = "Label type:",
-        #           choices = c("feature", "symbol", "name"),
-        #           selected = "feature",
-        #           width = "100%"
-        #         ),
-        #         "Choose a label type to be displayed in the plots",
-        #         placement = "right", options = list(container = "body")
-        #       )
-        #     )
-        #   )
-        # ),
-        # ## THIS IS SO WEIRD. if we remove/comment out the
-        # ## prettySwitch, the header of all plotModules f*ck
-        # ## up... (IK). HELP!!! we do not need this button...
-        # div(
-        #   style = "visibility: hidden; display: none;",
-        #   shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
-        # )
-      ),
+      navbar = NULL,
       bslib::navset_pill_list(
+        id = "app-sidebar",
+        ##widths = c("50px","calc(100% - 50px)"),
         widths = c(1,11),
-        selected = "OmicsPlayground",
+        selected = "Play",
         well = TRUE,
-        bslib::nav_panel(title = "Home", icon=icon("home", style=iconstyle),
-          p("Home content")
-        ),
-        bslib::nav_panel(title = "OmicsPlayground", icon=icon("flask", style=iconstyle),
+        bslib::nav_panel(title = "Play", icon=icon("flask", style=iconstyle),
           opg_ui()
         ),
-        bslib::nav_panel(title = "Multi-Omics", icon=icon("layer-group", style=iconstyle),
-          p("Multi-Omics content")
+        bslib::nav_panel(title = "MOX", icon=icon("layer-group", style=iconstyle),
+          mox_ui("mox")
+        ),
+        bslib::nav_panel(title = "Chat", icon=icon("robot", style=iconstyle),
+          p("Chat content")
+        ),
+        bslib::nav_panel(title = "Graph", icon=icon("gem", style=iconstyle),
+          prism_ui("prism")
         ),
         bslib::nav_panel(title = "Settings", icon=icon("gear", style=iconstyle),
           p("Settings content")
@@ -399,10 +273,8 @@ opg_ui <- function() {
       navbar = bigdash::navbar(
         title = tags$img(
           id = "logo-bigomics",
-          ## src = "assets/img/bigomics.png",
           src = "static/bigomics-logo.png",
           height = "30"
-          # width = "110",
         ),
         center = tags$div(
           shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
@@ -501,7 +373,20 @@ opg_ui <- function() {
                 class = "card-footer-checked",
                 label = "show captions",
                 is.checked = FALSE
-              )
+              ),
+              bslib::input_switch("enable_llm", "Enable AI"),
+              shiny::conditionalPanel(
+                "input.enable_llm",
+                bigdash::navbarDropdownItem(
+                  shiny::selectInput(
+                    inputId = "llm_model",
+                    label = NULL,
+                    choices = opt$LLM_MODELS,
+                    selected = 1,
+                    width = "100%"
+                    )
+                )
+              )              
             ),
             bigdash::navbarDropdownItem(
               withTooltip(
