@@ -3,10 +3,6 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-## ---------------------------------------------------
-## COUNTS UPLOAD (for wizard dialog)
-## ---------------------------------------------------
-
 upload_table_preview_counts_ui <- function(id) {
   ns <- shiny::NS(id)
   uiOutput(ns("table_counts"), fill = TRUE)
@@ -674,11 +670,12 @@ upload_table_preview_counts_server <- function(id,
         )
       }
 
-      if (!is.null(df) && upload_datatype() == "methylomics") { ## precheck
-        ## clean features
+      ## Precheck methylation: hope to filter probes & samples
+      if (!is.null(df) && upload_datatype() == "methylomics") {
+        ## Remove probes
         jj <- which(!is.na(rownames(df)) & rownames(df) != "")
         df <- df[jj, , drop = FALSE]
-        ## Assume minimum 10K unique values for continuous beta signal
+        ## Assume >=10K unique values for continuous (beta) signal
         vv <- apply(df, 2, function(x) length(unique(x[!is.na(x)])))
         ex <- which(vv >= 10000)
         if (length(ex) == 0) {
