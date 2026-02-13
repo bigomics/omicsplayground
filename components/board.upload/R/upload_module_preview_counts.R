@@ -568,7 +568,7 @@ upload_table_preview_counts_server <- function(id,
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       ext <- tools::file_ext(input$counts_csv$name)
-      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "methylomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
       c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet"))) 
