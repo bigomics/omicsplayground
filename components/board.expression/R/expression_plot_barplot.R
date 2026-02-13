@@ -48,7 +48,11 @@ expression_plot_barplot_ui <- function(
     options = plots_barplot_opts,
     download.fmt = c("png", "pdf", "svg"),
     width = width,
-    height = height
+    height = height,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "barplot",
+    bar_color_default = "#A6CEE3"
   )
 }
 
@@ -74,6 +78,40 @@ expression_plot_barplot_server <- function(id,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
+
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+
+      expmat <- pd[["pgx"]]$model.parameters$exp.matrix
+      ct <- expmat[, pd[["comp"]]]
+
+      if (pd[["grouped"]]) {
+        ## Extract group names from contrasts or contrast name
+        if ("contrasts" %in% names(pd[["pgx"]])) {
+          contr.labels <- pd[["pgx"]]$contrasts[, pd[["comp"]]]
+          labels <- unique(contr.labels[ct != 0])
+        } else {
+          comp1 <- sub(".*:", "", pd[["comp"]])
+          labels <- rev(strsplit(comp1, split = "_vs_|_VS_")[[1]])
+        }
+        if (pd[["showothers"]] && any(ct == 0)) labels <- c(labels, "other")
+      } else {
+        labels <- rownames(expmat)
+        if (!pd[["showothers"]]) labels <- rownames(expmat)[ct != 0]
+      }
+
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = session$ns("rank_list_basic"),
+          text = NULL,
+          labels = labels
+        )
+      )
+    })
 
     plot_data <- shiny::reactive({
       comp <- comp()
@@ -130,6 +168,43 @@ expression_plot_barplot_server <- function(id,
         xlab = "",
         plotlib = "plotly"
       )
+
+      ## Editor: bar color (only override when user changed from default #A6CEE3)
+      bar_color <- input$bar_color
+      effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
+      if (!is.null(bar_color) && bar_color != "#A6CEE3" && !is.null(fig)) {
+        fig <- plotly::plotly_build(fig)
+        for (i in seq_along(fig$x$data)) {
+          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+            fig$x$data[[i]]$marker$color <- bar_color
+          }
+        }
+      }
+
+      ## Editor: sync title color with bar color
+      if (!is.null(fig)) {
+        fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
+      }
+
+      ## Editor: bars order
+      bars_order <- input$bars_order
+      if (!is.null(bars_order) && !is.null(fig)) {
+        if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          fig <- plotly::layout(fig, xaxis = list(
+            categoryorder = "array",
+            categoryarray = input$rank_list_basic
+          ))
+        } else {
+          cat_order <- switch(bars_order,
+            "alphabetical" = "category ascending",
+            "ascending" = "total ascending",
+            "descending" = "total descending",
+            "trace"
+          )
+          fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
+        }
+      }
+
       fig
     }
 
@@ -137,9 +212,11 @@ expression_plot_barplot_server <- function(id,
       "pltmod",
       plotlib = "plotly",
       func = plotly.RENDER,
+      csvFunc = plot_data,
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

@@ -48,7 +48,11 @@ expression_plot_topgenes_ui <- function(
     options = topgenes_opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "barplot",
+    bar_color_default = "#A6CEE3"
   )
 }
 
@@ -74,6 +78,39 @@ expression_plot_topgenes_server <- function(id,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     # #calculate required inputs for plotting ---------------------------------
+
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+
+      expmat <- pd[["pgx"]]$model.parameters$exp.matrix
+      ct <- expmat[, pd[["comp"]]]
+
+      if (pd[["grouped"]]) {
+        if ("contrasts" %in% names(pd[["pgx"]])) {
+          contr.labels <- pd[["pgx"]]$contrasts[, pd[["comp"]]]
+          labels <- unique(contr.labels[ct != 0])
+        } else {
+          comp1 <- sub(".*:", "", pd[["comp"]])
+          labels <- rev(strsplit(comp1, split = "_vs_|_VS_")[[1]])
+        }
+        if (pd[["showothers"]] && any(ct == 0)) labels <- c(labels, "other")
+      } else {
+        labels <- rownames(expmat)
+        if (!pd[["showothers"]]) labels <- rownames(expmat)[ct != 0]
+      }
+
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = session$ns("rank_list_basic"),
+          text = NULL,
+          labels = labels
+        )
+      )
+    })
 
     plot_data <- shiny::reactive({
       comp <- comp() # input$gx_contrast
@@ -124,17 +161,25 @@ expression_plot_topgenes_server <- function(id,
         nplots <- min(18, nrow(pd[["res"]]))
       }
 
+      ## Editor: effective bar color and title color
+      bar_color <- input$bar_color
+      effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
+      color_changed <- !is.null(bar_color) && bar_color != "#A6CEE3"
+
+      ## Editor: bars order
+      bars_order <- input$bars_order
+
       plts <- list()
 
       for (i in 1:nplots) {
         gene <- rownames(pd[["res"]])[i]
 
-        ## manual plotly annotation for plot title
+        ## manual plotly annotation for plot title (with synced color)
         annotations <- list(
           x = 0.5,
           y = annot.y,
           text = playbase::probe2symbol(gene, pgx$genes, "gene_name", fill_na = TRUE),
-          font = list(size = 10 * title.cex),
+          font = list(size = 10 * title.cex, color = effective_color),
           xref = "paper",
           yref = "paper",
           xanchor = "bottom",
@@ -160,6 +205,34 @@ expression_plot_topgenes_server <- function(id,
           plotly.annotations = annotations,
           plotly.margin = list(l = 5, r = 5, b = 5, t = 20, pad = 3)
         )
+
+        ## Editor: override bar color
+        if (color_changed && !is.null(p)) {
+          p <- plotly::plotly_build(p)
+          for (j in seq_along(p$x$data)) {
+            if (!is.null(p$x$data[[j]]$type) && p$x$data[[j]]$type == "bar") {
+              p$x$data[[j]]$marker$color <- bar_color
+            }
+          }
+        }
+
+        ## Editor: bars order
+        if (!is.null(bars_order) && !is.null(p)) {
+          if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+            p <- plotly::layout(p, xaxis = list(
+              categoryorder = "array",
+              categoryarray = input$rank_list_basic
+            ))
+          } else {
+            cat_order <- switch(bars_order,
+              "alphabetical" = "category ascending",
+              "ascending" = "total ascending",
+              "descending" = "total descending",
+              "trace"
+            )
+            p <- plotly::layout(p, xaxis = list(categoryorder = cat_order))
+          }
+        }
 
         p <- p %>% plotly::layout(
           plot_bgcolor = "#f2f2f2",
@@ -237,7 +310,8 @@ expression_plot_topgenes_server <- function(id,
       res = c(90, 105), ## resolution of plots
       pdf.width = 14,
       pdf.height = 3.5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

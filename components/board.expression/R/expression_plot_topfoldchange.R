@@ -32,7 +32,11 @@ expression_plot_topfoldchange_ui <- function(
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "barplot",
+    bar_color_default = "#A6CEE3"
   )
 }
 
@@ -57,6 +61,25 @@ expression_plot_topfoldchange_server <- function(id,
                                                  res,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd, pd[["fc.top"]])
+
+      labels <- names(pd[["fc.top"]])
+      labels <- labels[!is.na(pd[["fc.top"]])]
+
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = session$ns("rank_list_basic"),
+          text = NULL,
+          labels = labels
+        )
+      )
+    })
+
     plot_data <- shiny::reactive({
       comp <- comp()
       sel <- sel()
@@ -102,7 +125,7 @@ expression_plot_topfoldchange_server <- function(id,
         return(NULL)
       }
 
-      playbase::pgx.barplot.PLOTLY(
+      fig <- playbase::pgx.barplot.PLOTLY(
         data = data.frame(x = names(pd[["fc.top"]]), y = as.numeric(pd[["fc.top"]])),
         x = "x",
         y = "y",
@@ -113,6 +136,44 @@ expression_plot_topfoldchange_server <- function(id,
         margin = list(l = 10, r = 10, b = 0, t = 25),
         grouped = FALSE
       )
+
+      ## Editor: bar color (only override when user changed from default #A6CEE3)
+      bar_color <- input$bar_color
+      effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
+      if (!is.null(bar_color) && bar_color != "#A6CEE3" && !is.null(fig)) {
+        fig <- plotly::plotly_build(fig)
+        for (i in seq_along(fig$x$data)) {
+          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+            fig$x$data[[i]]$marker$color <- bar_color
+          }
+        }
+      }
+
+      ## Editor: sync title color with bar color
+      if (!is.null(fig)) {
+        fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
+      }
+
+      ## Editor: bars order
+      bars_order <- input$bars_order
+      if (!is.null(bars_order) && !is.null(fig)) {
+        if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          fig <- plotly::layout(fig, xaxis = list(
+            categoryorder = "array",
+            categoryarray = input$rank_list_basic
+          ))
+        } else {
+          cat_order <- switch(bars_order,
+            "alphabetical" = "category ascending",
+            "ascending" = "total ascending",
+            "descending" = "total descending",
+            "trace"
+          )
+          fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
+        }
+      }
+
+      fig
     }
 
     plot_data_csv <- function() {
@@ -129,7 +190,8 @@ expression_plot_topfoldchange_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
