@@ -153,17 +153,7 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
-            probe.types <- NULL
-            if (m == "BMIQ") {
-              pkg="IlluminaHumanMethylation450kanno.ilmn12.hg19"
-              if (meth_type() == "EPIC array") pkg="IlluminaHumanMethylationEPICanno.ilm10b4.hg19"
-              require(pkg, character.only = TRUE)
-              annot <- minfi::getAnnotation(get(pkg))
-              probe.types <- as.character(annot[rownames(X), "Type"])
-              names(probe.types) <- rownames(X)[which(rownames(X) %in% rownames(annot))]
-              probe.types <- ifelse(probe.types == "I", 1, ifelse(probe.types == "II", 2, NA))
-            }
-            X <- playbase::normalizeMethylation(X, m, probe.types)
+            X <- playbase::normalizeMethylation(X, m)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
