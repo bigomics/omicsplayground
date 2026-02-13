@@ -676,17 +676,17 @@ upload_table_preview_counts_server <- function(id,
         jj <- which(!is.na(rownames(df)) & rownames(df) != "")
         df <- df[jj, , drop = FALSE]
         ## Assume >=10K unique values for continuous (beta) signal
-        vv <- apply(df, 2, function(x) length(unique(x[!is.na(x)])))
-        ex <- which(vv >= 10000)
-        if (length(ex) == 0) {
-          shinyalert::shinyalert(
-            title = "Error",
-            text = "Error: all samples exhibit a very narrow range of beta values. Please fix & re-upload.",
-            type = "error"
-          )
-        } else {
-          df <- df[, ex, drop = FALSE]
-        }
+        ## vv <- apply(df, 2, function(x) length(unique(x[!is.na(x)])))
+        ## ex <- which(vv >= 10000)
+        ## if (length(ex) == 0) {
+        ##  shinyalert::shinyalert(
+        ##    title = "Error",
+        ##    text = "Error: all samples exhibit a very narrow range of beta values. Please fix & re-upload.",
+        ##    type = "error"
+        ##  )
+        ## } else {
+        ##   df <- df[, ex, drop = FALSE]
+        ## }
       }
       
       file.ext <- tools::file_ext(input$counts_csv$name)
