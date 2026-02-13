@@ -42,7 +42,10 @@ featuremap_plot_gene_map_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "featuremap"
   )
 }
 
@@ -153,6 +156,17 @@ featuremap_plot_gene_map_server <- function(id,
           )
         p
       } else if (plotlib == "ggplot") {
+        ## Editor inputs
+        low_color <- if (!is.null(input$color_low)) input$color_low else "#3181de"
+        high_color <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+        custom_col <- c(low_color, "#f8f8f8", high_color)
+
+        custom_hilight2 <- NULL
+        if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
+          custom_features <- strsplit(input$label_features, "\\s+")[[1]]
+          custom_hilight2 <- playbase::map_probes(pgx$genes, custom_features)
+        }
+
         p <- plotUMAP(
           pos,
           fc,
@@ -167,6 +181,8 @@ featuremap_plot_gene_map_server <- function(id,
           cex.axis = cex.label * 0.6,
           bgcolor = "white",
           gridcolor = "grey90",
+          col = custom_col,
+          hilight2_override = custom_hilight2,
           plotlib = "ggplot"
         )
         p
@@ -217,7 +233,8 @@ featuremap_plot_gene_map_server <- function(id,
         pdf.width = 10,
         pdf.height = 8,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
 

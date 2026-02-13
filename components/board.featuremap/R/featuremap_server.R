@@ -144,7 +144,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     plotUMAP <- function(pos, var, hilight = NULL, nlabel = 20, title = "",
                          labels = NULL, zlim = NULL, cex = 0.9, cex.label = 1,
-                         source = "", plotlib = "base", ...) {
+                         source = "", plotlib = "base", hilight2_override = NULL, ...) {
       opc.low <- 1
       if (!is.null(hilight) && !all(rownames(pos) %in% hilight)) {
         opc.low <- 0.2
@@ -166,6 +166,11 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (length(hilight) == 0) {
         hilight <- NULL
         hilight2 <- NULL
+      }
+
+      if (!is.null(hilight2_override)) {
+        hilight2 <- hilight2_override
+        hilight <- hilight2_override
       }
       cexlab <- ifelse(length(hilight2) <= 20, 1, 0.85)
       cexlab <- ifelse(length(hilight2) <= 8, 1.15, cexlab)
@@ -197,7 +202,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       p
     }
 
-    plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress) {
+    plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress, col = NULL) {
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)
@@ -243,6 +248,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         playbase::pgx.scatterPlotXY.BASE(
           pos[jj, ],
           var = var[jj],
+          col = col,
           zsym = zsym,
           zlim = zlim,
           set.par = FALSE,
@@ -253,7 +259,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           bty = "n",
           dlim = c(0.05, 0.05),
           hilight = hmarks,
-          hilight2 = NULL,
+          hilight2 = hmarks,
           hilight.col = NULL,
           opacity = opacity,
           xlab = "", ylab = "",
