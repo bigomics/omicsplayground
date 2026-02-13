@@ -35,7 +35,10 @@ intersection_scatterplot_pairs_ui <- function(
     options = scatterplot_pairs.opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "significance"
   )
 }
 
@@ -85,16 +88,31 @@ intersection_scatterplot_pairs_server <- function(id,
       sel.genes <- data[[3]]
       shiny::req(sel.genes)
 
+      ## Editor: significance colors
+      clr_ns <- if (!is.null(input$color_ns)) input$color_ns else omics_colors("grey")
+      clr_both <- if (!is.null(input$color_both)) input$color_both else omics_colors("green")
+      clr_one <- if (!is.null(input$color_one)) input$color_one else omics_colors("orange")
+
       is.sel <- (rownames(df) %in% sel.genes)
-      df.color <- rep(omics_colors("grey"), nrow(df))
+      df.color <- rep(clr_ns, nrow(df))
       ## if (input$splom_highlight)
       ##  df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]
 
-      ## Labels for top 50
-      label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
-      label.text <- sub(".*[:]", "", label.text)
-      label.text <- playbase::probe2symbol(label.text, pgx$genes, "gene_name", fill_na = TRUE)
-      label.text <- playbase::shortstring(label.text, 30)
+      ## Labels for top 50 (or custom from editor)
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
+        custom_genes <- strsplit(input$label_features, "\\s+")[[1]]
+        ## match custom genes to rownames (by symbol or rowname)
+        all_symbols <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+        idx <- which(rownames(df) %in% custom_genes | all_symbols %in% custom_genes)
+        label.text0 <- rownames(df)[idx]
+        label.text <- all_symbols[idx]
+        label.text <- playbase::shortstring(label.text, 30)
+      } else {
+        label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
+        label.text <- sub(".*[:]", "", label.text)
+        label.text <- playbase::probe2symbol(label.text, pgx$genes, "gene_name", fill_na = TRUE)
+        label.text <- playbase::shortstring(label.text, 30)
+      }
       if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
       ## reorder so the selected genes don't get overlapped
@@ -127,12 +145,12 @@ intersection_scatterplot_pairs_server <- function(id,
         sig.fc <- apply(df, 1, function(x) sum(abs(x) >= 1) == 2)
         sig.qv <- apply(qv, 1, function(x) sum(x <= 0.05) == 2)
         jj <- which(sig.fc & sig.qv)
-        if (any(jj)) df.color1[jj] <- omics_colors("green")
+        if (any(jj)) df.color1[jj] <- clr_both
 
         jj1 <- abs(df[, 1]) >= 1 & qv[, 1] <= 0.05
         jj2 <- abs(df[, 2]) >= 1 & qv[, 2] <= 0.05
         jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
-        if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
+        if (any(jj3)) df.color1[jj3] <- clr_one
 
         ## make non-selected genes transparent
         opacity <- rep(1, nrow(df))
@@ -231,12 +249,12 @@ intersection_scatterplot_pairs_server <- function(id,
           sig.fc <- apply(df1, 1, function(x) sum(abs(x) >= 1) == 2)
           sig.qv <- apply(qv1, 1, function(x) sum(x <= 0.05) == 2)
           jj <- which(sig.fc & sig.qv)
-          if (any(jj)) df.color1[jj] <- omics_colors("green")
+          if (any(jj)) df.color1[jj] <- clr_both
 
           jj1 <- abs(df1[, 1]) >= 1 & qv1[, 1] <= 0.05
           jj2 <- abs(df1[, 2]) >= 1 & qv1[, 2] <= 0.05
           jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
-          if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
+          if (any(jj3)) df.color1[jj3] <- clr_one
 
           ## make non-selected genes transparent
           opacity <- rep(1, nrow(df))
@@ -331,7 +349,8 @@ intersection_scatterplot_pairs_server <- function(id,
       csvFunc = plot_data,
       res = 95,
       pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }
