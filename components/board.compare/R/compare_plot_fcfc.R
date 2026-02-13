@@ -30,7 +30,10 @@ compare_plot_fcfc_ui <- function(id,
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_highlight"
   )
 }
 
@@ -62,7 +65,8 @@ compare_plot_fcfc_server <- function(id,
     })
 
     interactive_fcfc <- function(plot_data, hilight = NULL,
-                                 marker_size = 6, label_size = 6, cex.axis = 12) {
+                                 marker_size = 6, label_size = 6, cex.axis = 12,
+                                 color_point = "#22222255", color_highlight = "red") {
       shiny::req(plot_data())
       FC <- plot_data()
       mat <- getMatrices()
@@ -116,7 +120,7 @@ compare_plot_fcfc_server <- function(id,
             marker = list(
               size = marker_size,
               opacity = 0.33,
-              color = "#22222255",
+              color = color_point,
               line = list(
                 color = "#AAAAAA44",
                 width = 0.2
@@ -137,7 +141,7 @@ compare_plot_fcfc_server <- function(id,
                 key = hilight1,
                 type = "scattergl",
                 mode = "marker+text",
-                marker = list(opacity = 1, size = marker_size, color = "red"),
+                marker = list(opacity = 1, size = marker_size, color = color_highlight),
                 textposition = "top center",
                 textfont = list(color = "#464545"),
                 showlegend = FALSE
@@ -186,9 +190,20 @@ compare_plot_fcfc_server <- function(id,
       shiny::validate(shiny::need(getMatrices(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
 
+      ## Editor: custom colors
+      clr_point <- if (!is.null(input$color_point)) input$color_point else "#222222"
+      clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#f23451"
+
+      ## Editor: custom labels
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
+        custom_genes <- strsplit(input$label_features, "\\s+")[[1]]
+        higenes <- custom_genes
+      }
+
       p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,
-        hilight = higenes
+        hilight = higenes,
+        color_point = clr_point, color_highlight = clr_highlight
       ) %>%
         plotly::layout(
           dragmode = "select",
@@ -204,7 +219,8 @@ compare_plot_fcfc_server <- function(id,
       csvFunc = plot_data,
       res = c(85, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

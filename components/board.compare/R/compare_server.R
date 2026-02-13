@@ -333,7 +333,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
     ## ============================================================================
 
     createPlot <- function(pgx, pgx1, pgx2, ct, target_col, type, cex.lab,
-                           higenes, ntop, get_data = FALSE, labeltype = shiny::reactive("feature")) {
+                           higenes, ntop, get_data = FALSE, labeltype = shiny::reactive("feature"),
+                           col = NULL) {
       p <- NULL
       ## map hilighted genes to pgx probes
       label <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
@@ -369,7 +370,8 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           par.sq = TRUE,
           plotlib = "base",
           data = get_data,
-          labeltype = labeltype()
+          labeltype = labeltype(),
+          col = col
         )
         ## } else if (type == "heatmap") {
         ##   gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
