@@ -358,7 +358,12 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        if (olink) {
+        is.meth.beta <- FALSE
+        if (upload_datatype() == "methylomics" && "e29" %in% names(res$checks)) {
+          vv <- range(res$df, na.rm = TRUE)
+          is.meth.beta <- all(vv >= 0 & vv <= 1)
+        }
+        if (olink || is.meth.beta) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {
