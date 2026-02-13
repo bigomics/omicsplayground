@@ -1208,39 +1208,46 @@ UploadBoard <- function(id,
           detected_probetype <- paste(detected[[organism]], collapse = "+")
         }
 
-        probetype(detected_probetype) ## set RV
-        info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
+        if (upload_datatype() != "methylomics") {
 
-        if (detected_probetype == "error") {
-          info("[UploadBoard] ExtendedTask result has ERROR")
-          shinyalert::shinyalert(
-            title = "Probes not recognized!",
-            text = paste0(
-              "Error. Your probes do not match any probe type for <b>",
-              organism, "</b>. Please check your probe names and select ",
-              "another organism. ", paste(alt.text, collapse = " ")
-            ),
-            type = "error",
-            size = "s",
-            html = TRUE
-          )
+          probetype(detected_probetype) ## set RV
+          info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
+          
+          if (!is.null(detected_probetype) && detected_probetype == "error") {
+            info("[UploadBoard] ExtendedTask result has ERROR")
+            shinyalert::shinyalert(
+              title = "Probes not recognized!",
+              text = paste0(
+                "Error. Your probes do not match any probe type for <b>",
+                organism, "</b>. Please check your probe names and select ",
+                "another organism. ", paste(alt.text, collapse = " ")
+              ),
+              type = "error",
+              size = "s",
+              html = TRUE
+            )
+          }
+
+          ## wrong datatype. just give warning. or should we change datatype?
+          if (detected_probetype != "error" &&
+                any(grepl("PROT", detected_probetype)) &&
+                !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+            shinyalert::shinyalert(
+              title = "Is this proteomics data?",
+              text = paste0(
+                "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+                "<b>", upload_datatype(), "</b> as data type."
+              ),
+              type = "warning",
+              size = "s",
+              html = TRUE
+            )
+          }
+
+        } else {
+          detected_probetype <- NULL
         }
 
-        ## wrong datatype. just give warning. or should we change datatype?
-        if (detected_probetype != "error" &&
-          any(grepl("PROT", detected_probetype)) &&
-          !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
-          shinyalert::shinyalert(
-            title = "Is this proteomics data?",
-            text = paste0(
-              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
-              "<b>", upload_datatype(), "</b> as data type."
-            ),
-            type = "warning",
-            size = "s",
-            html = TRUE
-          )
-        }
       }
     )
 
