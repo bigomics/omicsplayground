@@ -153,7 +153,8 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
-            X <- playbase::normalizeMethylation(X, m)
+            nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
+            if (!is.null(nX)) X=nX; rm(nX)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
