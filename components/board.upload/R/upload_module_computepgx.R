@@ -361,7 +361,7 @@ upload_module_computepgx_server <- function(
             )
           },
 
-          if (!is.null(probetype()) && probetype() == "running") {
+          if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
               shiny::tags$h4(
@@ -724,12 +724,9 @@ upload_module_computepgx_server <- function(
           shiny::HTML("<b>Data type:</b>", upload_datatype()),
           shiny::HTML("<br><b>Organism:</b>", upload_organism()),
           shiny::HTML("<br><b>Probe type:</b>", probetype())
-          ## shiny::HTML("<b>Name:</b><br>", upload_name()),
-          ## shiny::HTML("<b>Description:</b><br>", upload_description())
         )
       })
 
-      # handle ah task result
       output$probetype_result <- shiny::renderUI({
         p <- probetype()
         if (is.null(p) || p == "error") {

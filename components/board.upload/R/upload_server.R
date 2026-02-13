@@ -1245,7 +1245,7 @@ UploadBoard <- function(id,
           }
 
         } else {
-          detected_probetype <- NULL
+          probetype("CpG probes")
         }
 
       }
