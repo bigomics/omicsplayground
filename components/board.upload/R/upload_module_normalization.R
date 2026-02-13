@@ -163,7 +163,7 @@ upload_module_normalization_server <- function(
               names(probe.types) <- rownames(X)[which(rownames(X) %in% rownames(annot))]
               probe.types <- ifelse(probe.types == "I", 1, ifelse(probe.types == "II", 2, NA))
             }
-            X <- playbase::normalizeMethylationArray(X, m, probe.types)
+            X <- playbase::normalizeMethylation(X, m, probe.types)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
