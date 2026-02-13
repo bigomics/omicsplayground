@@ -305,18 +305,25 @@ UploadBoard <- function(id,
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
-            shinyalert::shinyalert(
-              title = paste("Log-scale detected"),
-              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-              html = TRUE,
-              confirmButtonText = "Yes",
-              showCancelButton = TRUE,
-              cancelButtonText = "No",
-              inputId = "logCorrectCounts",
-              closeOnEsc = FALSE,
-              immediate = FALSE,
-              callbackR = function(x) checked_for_log(TRUE)
-            )
+            is.meth.beta <- FALSE
+            if (upload_datatype() == "methylomics") { 
+              vv <- range(df0, na.rm = TRUE)
+              is.meth.beta <- all(vv>=0 & vv<=1)
+            }
+            if (!is.meth.beta) {
+              shinyalert::shinyalert(
+                title = paste("Log-scale detected"),
+                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+                html = TRUE,
+                confirmButtonText = "Yes",
+                showCancelButton = TRUE,
+                cancelButtonText = "No",
+                inputId = "logCorrectCounts",
+                closeOnEsc = FALSE,
+                immediate = FALSE,
+                callbackR = function(x) checked_for_log(TRUE)
+              )
+            }
           } else {
             checked_for_log(TRUE)
           }
