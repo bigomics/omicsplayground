@@ -123,6 +123,33 @@ clustering_plot_splitmap_server <- function(id,
       }
     })
 
+    ## Editor: get custom group order for split heatmaps
+    get_splitx_order <- function() {
+      custom_order <- input$hm_group_order
+      if (is.null(custom_order) || length(custom_order) == 0) return(NULL)
+      custom_order
+    }
+
+    ## Editor: drag-and-drop group ordering for split heatmaps
+    output$hm_group_order_ui <- shiny::renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      splitx <- pd$filt$grp
+      if (is.null(splitx) || length(unique(splitx)) <= 1) {
+        return(shiny::tags$em("Split the heatmap by a variable to reorder groups."))
+      }
+      grp_levels <- unique(splitx)
+      sortable::bucket_list(
+        header = "Drag to reorder groups:",
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = ns("hm_group_order"),
+          text = NULL,
+          labels = grp_levels
+        )
+      )
+    })
+
     plot_data <- shiny::reactive({
       filt <- getTopMatrix()
       shiny::req(filt)
@@ -191,7 +218,6 @@ clustering_plot_splitmap_server <- function(id,
       }
 
       ## split samples
-      splitx <- NULL
       splitx <- filt$grp
 
       # Calculate text sizes
@@ -261,6 +287,7 @@ clustering_plot_splitmap_server <- function(id,
         zx,
         split = splity,
         splitx = splitx,
+        splitx_order = get_splitx_order(),
         scale = scale.mode,
         show_legend = input$show_legend,
         show_colnames = show_colnames,
@@ -380,6 +407,7 @@ clustering_plot_splitmap_server <- function(id,
         ytips = tooltips,
         idx = idx,
         splitx = splitx,
+        splitx_order = get_splitx_order(),
         scale = scale.mode,
         zlim = zlim,
         symm = symm,

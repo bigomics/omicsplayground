@@ -33,7 +33,10 @@ clustering_plot_phenoplot_ui <- function(
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -45,6 +48,44 @@ clustering_plot_phenoplot_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      jj <- selected_samples()
+      kk <- selected_phenotypes()
+      shiny::req(length(jj) > 0, length(kk) > 0)
+      kk <- kk[which(kk %in% colnames(pgx$Y))]
+      shiny::req(length(kk) > 0)
+      Y <- pgx$Y[jj, kk, drop = FALSE]
+
+      ## collect unique group names per color position across all phenotypes
+      max_levels <- 0
+      level_names <- vector("list", 8)
+      for (ph in kk) {
+        vals <- as.character(Y[, ph])
+        vals[vals %in% c("", " ", "NA", "na")] <- NA
+        lvls <- sort(unique(vals[!is.na(vals)]))
+        if (length(lvls) == 0) next
+        max_levels <- max(max_levels, length(lvls))
+        for (j in seq_along(lvls)) {
+          if (j <= 8) level_names[[j]] <- c(level_names[[j]], lvls[j])
+        }
+      }
+      max_levels <- min(max(max_levels, 1), 8)
+
+      default_clrs <- omics_pal_d(palette = "muted_light")(8)
+      pickers <- lapply(seq_len(max_levels), function(i) {
+        nms <- level_names[[i]]
+        group_label <- if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
+        colourpicker::colourInput(
+          ns(paste0("custom_color_", i)),
+          label = group_label,
+          value = default_clrs[i]
+        )
+      })
+      shiny::tagList(pickers)
+    })
 
     plot_data <- reactive({
       pgx <- pgx
@@ -92,13 +133,25 @@ clustering_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 6, 0.8, 1)
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
+      ## Editor: palette
+      palette <- if (!is.null(input$palette)) input$palette else "muted_light"
+      if (palette == "original") palette <- "muted_light"
+      if (palette == "custom") {
+        base_clrs <- sapply(1:8, function(j) {
+          val <- input[[paste0("custom_color_", j)]]
+          if (is.null(val)) omics_pal_d(palette = "muted_light")(8)[j] else val
+        })
+      } else {
+        base_clrs <- omics_pal_d(palette = palette)(8)
+      }
+
       plt <- list()
       for (i in 1:min(20, length(pheno))) {
         ## ------- set colors
         colvar <- factor(Y[, pheno[i]])
         colvar[which(colvar %in% c(NA, "", " ", "NA", "na"))] <- NA
         colvar <- factor(as.character(colvar))
-        klrpal <- rep(omics_pal_d("muted_light")(8), 10)
+        klrpal <- rep(base_clrs, 10)
         klr1 <- klrpal[colvar]
         jj <- which(is.na(klr1))
         if (length(jj)) klr1[jj] <- "#AAAAAA22"
@@ -159,7 +212,8 @@ clustering_plot_phenoplot_server <- function(id,
       res = c(85), ## resolution of plots
       pdf.width = 6,
       pdf.height = 9,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

@@ -44,7 +44,11 @@ clustering_plot_clusterannot_ui <- function(
     options = clustannot_plots.opts,
     download.fmt = c("png", "pdf", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot",
+    palette_default = "muted_light"
   )
 }
 
@@ -108,6 +112,35 @@ clustering_plot_clusterannot_server <- function(id,
       getClustAnnotCorrelation()
     }
 
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      rho <- plot_data()
+      shiny::req(rho)
+      clusters <- colnames(rho)
+      shiny::req(length(clusters) > 0)
+      default_clrs <- omics_pal_d("muted_light")(length(clusters))
+      pickers <- lapply(seq_along(clusters), function(i) {
+        colourpicker::colourInput(
+          ns(paste0("custom_color_", i)),
+          label = clusters[i],
+          value = default_clrs[i]
+        )
+      })
+      shiny::tagList(pickers)
+    })
+
+    ## Editor: override bars_order choices (no drag-and-drop for multi-panel)
+    shiny::observe({
+      shiny::updateSelectInput(session, "bars_order",
+        choices = c(
+          "Value (ascending)" = "ascending",
+          "Value (descending)" = "descending"
+        ),
+        selected = "ascending"
+      )
+    })
+
     ##    clustannot_plots.PLOTLY <- shiny::reactive({
     createAnnotBarPlots <- function(fontsize = 10) {
       rho <- plot_data()
@@ -129,7 +162,19 @@ clustering_plot_clusterannot_server <- function(id,
         NTERMS <- 22
       }
 
-      klrpal <- omics_pal_d("muted_light")(ncol(rho))
+      ## Editor: palette override
+      n_clusters <- ncol(rho)
+      palette <- input$palette
+      if (!is.null(palette) && palette == "custom") {
+        klrpal <- sapply(seq_len(n_clusters), function(j) {
+          val <- input[[paste0("custom_color_", j)]]
+          if (is.null(val)) omics_pal_d("muted_light")(n_clusters)[j] else val
+        })
+      } else if (!is.null(palette) && !palette %in% c("muted_light", "original")) {
+        klrpal <- rep(omics_pal_d(palette = palette)(8), ceiling(n_clusters / 8))[1:n_clusters]
+      } else {
+        klrpal <- omics_pal_d("muted_light")(n_clusters)
+      }
 
       plot_list <- list()
       i <- 1
@@ -137,6 +182,17 @@ clustering_plot_clusterannot_server <- function(id,
         x <- rev(head(sort(rho[, i], decreasing = TRUE), NTERMS))
         names(x) <- sub(".*:", "", names(x))
         names(x) <- gsub(playdata::GSET_PREFIX_REGEX, "", names(x))
+
+        ## Editor: bar ordering
+        bars_order <- input$bars_order
+        if (!is.null(bars_order)) {
+          if (bars_order == "ascending") {
+            x <- sort(x)
+          } else {
+            x <- sort(x, decreasing = TRUE)
+          }
+        }
+
         y <- names(x)
         y <- factor(y, levels = unique(y))
         anntitle <- function(tt) {
@@ -250,7 +306,8 @@ clustering_plot_clusterannot_server <- function(id,
       res = 80, ## resolution of plots
       remove_margins = FALSE,
       pdf.width = 8, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
 
     return(
