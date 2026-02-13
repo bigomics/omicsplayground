@@ -47,7 +47,11 @@ enrichment_plot_geneplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "barplot",
+    bar_color_default = "#A6CEE3"
   )
 }
 
@@ -70,6 +74,42 @@ enrichment_plot_geneplot_server <- function(id,
                                             subplot.MAR,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- renderUI({
+      shiny::req(pgx$X)
+
+      comp0 <- gs_contrast()
+      shiny::req(comp0)
+
+      expmat <- pgx$model.parameters$exp.matrix
+      ct <- expmat[, comp0]
+      grouped <- !input$ungroup
+
+      if (grouped) {
+        if ("contrasts" %in% names(pgx)) {
+          contr.labels <- pgx$contrasts[, comp0]
+          labels <- unique(contr.labels[ct != 0])
+        } else {
+          comp1 <- sub(".*:", "", comp0)
+          labels <- rev(strsplit(comp1, split = "_vs_|_VS_")[[1]])
+        }
+        if (input$show_others && any(ct == 0)) labels <- c(labels, "other")
+      } else {
+        labels <- rownames(expmat)
+        if (!input$show_others) labels <- rownames(expmat)[ct != 0]
+      }
+
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = session$ns("rank_list_basic"),
+          text = NULL,
+          labels = labels
+        )
+      )
+    })
+
     render_subplot_geneplot <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
@@ -100,7 +140,7 @@ enrichment_plot_geneplot_server <- function(id,
         has.design <- !is.null(pgx$model.parameters$design)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
 
-        playbase::pgx.plotExpression(
+        fig <- playbase::pgx.plotExpression(
           pgx,
           probe,
           comp = comp0,
@@ -112,8 +152,46 @@ enrichment_plot_geneplot_server <- function(id,
           srt = srt,
           main = "",
           xlab = gene,
-          plotlib = "plotly",
+          plotlib = "plotly"
         )
+
+        ## Editor: bar color
+        bar_color <- input$bar_color
+        effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
+        if (!is.null(bar_color) && bar_color != "#A6CEE3" && !is.null(fig)) {
+          fig <- plotly::plotly_build(fig)
+          for (j in seq_along(fig$x$data)) {
+            if (!is.null(fig$x$data[[j]]$type) && fig$x$data[[j]]$type == "bar") {
+              fig$x$data[[j]]$marker$color <- bar_color
+            }
+          }
+        }
+
+        ## Editor: sync title color with bar color
+        if (!is.null(fig)) {
+          fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
+        }
+
+        ## Editor: bars order
+        bars_order <- input$bars_order
+        if (!is.null(bars_order) && !is.null(fig)) {
+          if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+            fig <- plotly::layout(fig, xaxis = list(
+              categoryorder = "array",
+              categoryarray = input$rank_list_basic
+            ))
+          } else {
+            cat_order <- switch(bars_order,
+              "alphabetical" = "category ascending",
+              "ascending" = "total ascending",
+              "descending" = "total descending",
+              "trace"
+            )
+            fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
+          }
+        }
+
+        fig
       }
     }
 
@@ -138,7 +216,8 @@ enrichment_plot_geneplot_server <- function(id,
       func2 = subplot_geneplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(78, 100),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }
