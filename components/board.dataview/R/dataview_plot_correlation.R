@@ -28,7 +28,11 @@ dataview_plot_correlation_ui <- function(
     options = NULL,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    # outputFunc = plotly::plotlyOutput,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "correlation"
   )
 }
 
@@ -108,6 +112,27 @@ dataview_plot_correlation_server <- function(id,
       pd
     })
 
+    observe({
+      shiny::updateSelectInput(session, "bars_order", selected = "ascending")
+    })
+
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      df <- pd[[1]]
+      gene_labels <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
+      gene_labels <- unique(gene_labels)
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = session$ns("rank_list_basic"),
+          text = NULL,
+          labels = gene_labels
+        )
+      )
+    })
+
     plotly_render <- function() {
       pd <- plot_data()
       shiny::req(pd)
@@ -116,6 +141,29 @@ dataview_plot_correlation_server <- function(id,
       gg <- unique(df$genes)
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
+
+      if (!is.null(input$bar_color)) {
+        light_end <- colorRampPalette(c("#FFFFFF", input$bar_color))(10)[4]
+        pal <- colorRampPalette(c(light_end, input$bar_color))(16)
+        df$color <- pal[1 + round(15 * df$value)]
+      }
+
+      if (!is.null(input$bars_order)) {
+        if (input$bars_order == "alphabetical") {
+          df <- df[order(df$genes), ]
+        } else if (input$bars_order == "ascending") {
+          df <- df[order(df$rho), ]
+        } else if (input$bars_order == "descending") {
+          df <- df[order(-df$rho), ]
+        } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          valid_ranks <- input$rank_list_basic
+          if (all(valid_ranks %in% df$genes)) {
+            df$genes <- factor(df$genes, levels = valid_ranks)
+            df <- df[order(df$genes), ]
+          }
+        }
+      }
+
       df$genes <- factor(df$genes, levels = unique(df$genes))
 
       ay <- list(overlaying = "y", side = "right", title = "")

@@ -35,7 +35,10 @@ dataview_plot_averagerank_ui <- function(id,
     caption = caption,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "rank_plot"
   )
 }
 
@@ -106,6 +109,11 @@ dataview_plot_averagerank_server <- function(id,
       ylab <- pd$ylab
       xanchor <- "center"
 
+      ## Editor: custom colors
+      clr_fill <- if (!is.null(input$color_fill)) input$color_fill else "#b8d4f0"
+      clr_line <- if (!is.null(input$color_line)) input$color_line else "#3181de"
+      clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#e3a45a"
+
       # subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
@@ -118,7 +126,7 @@ dataview_plot_averagerank_server <- function(id,
         type = "scatter",
         mode = "lines",
         fill = "tozeroy",
-        fillcolor = omics_colors("light_blue"),
+        fillcolor = clr_fill,
         line = list(width = 0),
         hovertemplate = ~ paste("<extra></extra>")
       )
@@ -131,7 +139,7 @@ dataview_plot_averagerank_server <- function(id,
             y = c(0, mean.fc[sel[i]]),
             type = "scatter",
             mode = "lines",
-            line = list(color = omics_colors("orange"), width = 5)
+            line = list(color = clr_highlight, width = 5)
           )
       }
 
@@ -145,7 +153,7 @@ dataview_plot_averagerank_server <- function(id,
           mode = "lines",
           fill = "tozeroy",
           fillcolor = "#00000000",
-          line = list(color = omics_colors("brand_blue"), width = 2.5)
+          line = list(color = clr_line, width = 2.5)
         )
 
       i <- 1
@@ -190,7 +198,8 @@ dataview_plot_averagerank_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
