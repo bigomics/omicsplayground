@@ -68,7 +68,7 @@ expression_table_genetable_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    table_data <- function() {
+    table_data <- function(full_table = FALSE) {
       res <- res()
       req(res)
 
@@ -79,10 +79,12 @@ expression_table_genetable_server <- function(id,
       na.fc <- which(is.na(res$logFC))
       if (any(na.fc)) res$logFC[na.fc] <- 999
 
-      if (show_pv()) {
-        res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
-      } else {
-        res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+      if (!full_table) {
+        if (show_pv()) {
+          res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
+        } else {
+          res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+        }
       }
 
       if (input$gx_top10) {
@@ -183,7 +185,7 @@ expression_table_genetable_server <- function(id,
     }
 
     table_csv <- function() {
-      dt <- table_data()
+      dt <- table_data(full_table = TRUE)
       dt$stars <- NULL
       return(dt)
     }
