@@ -195,15 +195,10 @@ upload_module_normalization_server <- function(
 
       correctedX <- shiny::reactive({
         shiny::req(dim(cleanX()$X))
-        X <- cleanX()$X
-        cx <- list(X = X)
-        return(cx)
+        return(list(X = cleanX()$X))
       })
 
-      annot <- shiny::reactive({
-        annot <- imputedX()$annot
-        return(annot)
-      })
+      annot <- shiny::reactive({ return(imputedX()$annot) })
 
       ## ------------------------------------------------------------------
       ## Compute reactive
@@ -211,7 +206,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
         X0 <- imputedX()$X
-        X1 <- cleanX()$X ## normalized+cleaned
+        X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
@@ -654,7 +649,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_correction <- function() {
-        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effect correction requires at least 3 samples."))
+        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
         if (input$batchcorrect) {
           plot_before_after()
         } else {
@@ -1223,14 +1218,12 @@ upload_module_normalization_server <- function(
 
       counts <- reactive({
         shiny::req(dim(cleanX()$counts))
-        counts <- cleanX()$counts
-        return(counts)
+        return(cleanX()$counts)
       })
 
       cX <- reactive({
         shiny::req(dim(correctedX()$X))
-        cX <- correctedX()$X
-        return(cX)
+        return(correctedX()$X)
       })
 
       imputation_method <- reactive({
