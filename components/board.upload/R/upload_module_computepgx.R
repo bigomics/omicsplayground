@@ -60,6 +60,9 @@ upload_module_computepgx_server <- function(
           if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
         } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
+        } else if (dt == "methylomics") {
+          mm <- c("ttest", "ttest.welch", "trend.limma",
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
@@ -477,6 +480,17 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
+                if (upload_datatype() == "methylomics") {
+                  shiny::checkboxGroupInput(
+                    ns("regress_covariates"),
+                    shiny::HTML("<h4>Test for:</h4>"),
+                    choices = c(
+                      "Differentially methylated positions",
+                      "Differentially methylated regions"
+                    ),
+                    selected = "Differentially methylated positions",
+                  )
+                },
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
