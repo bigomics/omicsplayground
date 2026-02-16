@@ -4,14 +4,11 @@
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 expression_plot_fc_fc_ui <- function(
   id,
@@ -38,20 +35,18 @@ expression_plot_fc_fc_ui <- function(
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 expression_plot_fc_fc_server <- function(id,
                                          pgx,
-                                         comp, # input$gx_contrast
+                                         comp,
                                          labeltype = reactive("symbol"),
                                          watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
-    ## reactive function listening for changes in input
+  
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(comp())
@@ -120,10 +115,10 @@ expression_plot_fc_fc_server <- function(id,
       plotlib = "plotly",
       func = plotly_plot,
       csvFunc = plot_data_csv,
-      res = c(80, 90), # resolution of plots
+      res = c(80, 90),
       pdf.width = 12,
       pdf.height = 5,
       add.watermark = watermark
     )
-  }) ## end of moduleServer
+  })
 }
