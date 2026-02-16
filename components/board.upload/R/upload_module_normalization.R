@@ -1172,10 +1172,6 @@ upload_module_normalization_server <- function(
         return(ui)
       })
 
-      ## ------------------------------------------------------------------
-      ## Plot modules
-      ## ------------------------------------------------------------------
-
       PlotModuleServer(
         "plot1",
         plotlib = "base",
@@ -1227,10 +1223,6 @@ upload_module_normalization_server <- function(
       })
 
       imputation_method <- reactive({
-        ## ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
-        ## if (!input$impute) {
-        ##   ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
-        ## }
         ll <- list(zero_as_na = zero_as_na(), imputation = input$impute_method)
         if (!input$impute) {
           ll <- list(zero_as_na = zero_as_na(), imputation = "no_imputation")
