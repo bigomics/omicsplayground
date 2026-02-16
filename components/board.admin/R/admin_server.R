@@ -3,7 +3,17 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-AdminPanelBoard <- function(id, auth) {
+
+#' AdminPanel module server function
+#'
+#' @description A shiny Module (server code).
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#' @param auth Reactive list that provides authentication info (ADMIN, username, email)
+#' @param credentials_file Path to the CREDENTIALS CSV file (optional)
+#'
+#' @export
+AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     dbg("[AdminPanelBoard] >>> initializing AdminBoard...")
@@ -12,6 +22,10 @@ AdminPanelBoard <- function(id, auth) {
     is_admin <- reactive({
       isTRUE(auth$ADMIN)
     })
+
+    ## ----------------------------------------------------------------------
+    ## More Info (pop up window)
+    ## ----------------------------------------------------------------------
 
     shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
@@ -25,51 +39,37 @@ AdminPanelBoard <- function(id, auth) {
       ))
     })
 
-    ## Admin info display
-    output$admin_info <- renderUI({
-      req(is_admin())
-      tagList(
-        p(strong("Current Admin: "), auth$username),
-        p(strong("Email: "), auth$email),
-        p(strong("Admin Status: "), span(class = "badge bg-success", "Active"))
-      )
-    })
+    ## ================================================================================
+    ## =========================== MODULES ============================================
+    ## ================================================================================
 
-    ## System status display
-    output$system_status <- renderUI({
-      req(is_admin())
-      
-      ## Get some basic system info
-      r_version <- paste0(R.version$major, ".", R.version$minor)
-      platform <- R.version$platform
-      
-      tagList(
-        p(strong("R Version: "), r_version),
-        p(strong("Platform: "), platform),
-        p(strong("Working Directory: "), getwd())
-      )
-    })
-
-    ## User statistics table
-    output$user_stats <- renderTable(
-      {
-        req(is_admin())
-        dbg("[AdminBoard::user_stats] renderTable")
-        
-        ## Get user directories as a proxy for registered users
-        user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
-        user_dirs <- grep("@", user_dirs, value = TRUE)
-        
-        data.frame(
-          Metric = c("Total User Directories", "Data Directory"),
-          Value = c(length(user_dirs), PGX.DIR),
-          check.names = FALSE
-        )
-      },
-      width = "100%",
-      striped = TRUE
+    admin_module_info_server(
+      "admin_info",
+      auth = auth
     )
 
+    admin_module_status_server(
+      "system_status",
+      auth = auth
+    )
 
+    ## ================================================================================
+    ## ===============================  TABLES ========================================
+    ## ================================================================================
+
+    admin_table_users_server(
+      "user_stats",
+      auth = auth
+    )
+
+    admin_table_credentials_server(
+      "credentials",
+      auth = auth,
+      credentials_file = credentials_file
+    )
+
+    ## ================================================================================
+    ## =================================== END ========================================
+    ## ================================================================================
   })
 }

@@ -171,7 +171,8 @@ app_server <- function(input, output, session) {
   if (isTRUE(opt$ENABLE_ADMIN)) {
     AdminPanelBoard(
       "admin_panel",
-      auth = auth
+      auth = auth,
+      credentials_file = credentials_file
     )
   }
 
