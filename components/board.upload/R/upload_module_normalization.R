@@ -40,14 +40,15 @@ upload_module_normalization_server <- function(
 
       ## ImputedX
       imputedX <- reactive({
-        shiny::req(dim(r_counts()))
-        ## shiny::req(!is.null(input$zero_as_na))
-        shiny::req(!is.null(input$normalize)) ## new
+        shiny::req(dim(r_counts()), !is.null(input$normalize))
         counts <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()
         annot <- r_annot()
         shiny::req(dim(contrasts))
+        ## shiny::req(dim(r_counts()))
+        ## shiny::req(!is.null(input$zero_as_na))
+        ## shiny::req(!is.null(input$normalize)) ## new
 
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
@@ -81,7 +82,11 @@ upload_module_normalization_server <- function(
           is.meth.beta <- FALSE
           vv <- range(counts, na.rm = TRUE)
           is.meth.beta <- (all(vv>=0 & vv<=1) & upload_datatype() == "methylomics")
-          if (!is.meth.beta) {
+          if (is.meth.beta) {
+            X <- counts
+            prior <- 0
+          } else {
+            dbg("-------------------------------M1")
             prior0 <- playbase::getPrior(counts)
             m <- input$normalization_method
             prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
@@ -130,6 +135,7 @@ upload_module_normalization_server <- function(
         }
 
         return(list(counts = counts, X = X, prior = prior, annot = annot))
+
       })
 
       ## Normalize
