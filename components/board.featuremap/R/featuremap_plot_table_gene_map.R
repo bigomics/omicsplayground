@@ -45,7 +45,9 @@ featuremap_plot_gene_map_ui <- function(
     card_names = c("dynamic", "static"),
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "featuremap"
+    plot_type = "featuremap",
+    color_selection = TRUE,
+    color_selection_default = TRUE
   )
 }
 
@@ -131,7 +133,8 @@ featuremap_plot_gene_map_server <- function(id,
 
       ## dim non hilighted genes
       fc <- sign(fc) * abs(fc / max(abs(fc), na.rm = TRUE))**colgamma
-      if (length(setdiff(names(fc), hilight))) {
+      color_sel <- is.null(input$color_selection) || isTRUE(input$color_selection)
+      if (color_sel && length(setdiff(names(fc), hilight))) {
         fc[!names(fc) %in% hilight] <- NA
       }
 
@@ -148,7 +151,8 @@ featuremap_plot_gene_map_server <- function(id,
           xlab = "UMAP-x",
           ylab = "UMAP-y",
           plotlib = "plotly",
-          source = ns("gene_umap")
+          source = ns("gene_umap"),
+          dim_others = color_sel
         ) %>%
           plotly::layout(
             dragmode = "select",
@@ -183,7 +187,8 @@ featuremap_plot_gene_map_server <- function(id,
           gridcolor = "grey90",
           col = custom_col,
           hilight2_override = custom_hilight2,
-          plotlib = "ggplot"
+          plotlib = "ggplot",
+          dim_others = color_sel
         )
         p
       }

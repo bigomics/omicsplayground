@@ -29,7 +29,9 @@ featuremap_plot_gene_sig_ui <- function(
     download.fmt = c("png", "pdf", "svg"),
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "featuremap"
+    plot_type = "featuremap",
+    color_selection = TRUE,
+    color_selection_default = TRUE
   )
 }
 
@@ -92,6 +94,9 @@ featuremap_plot_gene_sig_server <- function(id,
         sel <- playbase::map_probes(pgx$genes, custom_features)
       }
 
+      ## Editor: color just selected
+      color_sel <- is.null(input$color_selection) || isTRUE(input$color_selection)
+
       par(mfrow = c(nr, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)
       progress <- NULL
       if (!interactive()) {
@@ -99,7 +104,8 @@ featuremap_plot_gene_sig_server <- function(id,
         on.exit(progress$close())
         progress$set(message = "Computing feature plots...", value = 0)
       }
-      plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = sel, progress, col = custom_col)
+      plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = sel, progress, col = custom_col,
+                        dim_others = color_sel)
     }
 
     PlotModuleServer(
