@@ -77,10 +77,8 @@ upload_module_normalization_server <- function(
             X[ii, ] <- log2(counts[ii, ] + prior)
           }
         } else {
-          vv <- range(counts, na.rm = TRUE)
-          c1 <- (vv[1] >= 0 & vv[2] <= 1)
-          if (c1 & upload_datatype() == "methylomics") {
-            X <- counts
+          if (upload_datatype() == "methylomics") {
+            X <- playbase::mToBeta(counts)
             prior <- 0
           } else {
             prior0 <- playbase::getPrior(counts)
