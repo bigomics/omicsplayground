@@ -40,6 +40,7 @@ upload_module_normalization_server <- function(
 
       ## ImputedX
       imputedX <- reactive({
+
         shiny::req(dim(r_counts()), !is.null(input$normalize))
         counts <- r_counts()
         samples <- r_samples()
@@ -76,10 +77,9 @@ upload_module_normalization_server <- function(
             X[ii, ] <- log2(counts[ii, ] + prior)
           }
         } else {
-          is.meth.beta <- FALSE
           vv <- range(counts, na.rm = TRUE)
-          is.meth.beta <- (all(vv>=0 & vv<=1) & upload_datatype() == "methylomics")
-          if (is.meth.beta) {
+          c1 <- (vv[1] >= 0 & vv[2] <= 1)
+          if (c1 & upload_datatype() == "methylomics") {
             X <- counts
             prior <- 0
           } else {
