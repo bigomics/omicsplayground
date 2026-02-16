@@ -83,10 +83,10 @@ expression_table_genetable_server <- function(id,
         if (show_pv()) {
           res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
         } else {
-          res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+          res <- res[, -grep("\\.p$", colnames(res)), drop = FALSE]
         }
       }
-
+      
       if (input$gx_top10) {
         res <- res[!is.na(res$logFC), ]
         res <- res[order(res$logFC, decreasing = TRUE), ]
@@ -98,7 +98,9 @@ expression_table_genetable_server <- function(id,
           if (pos && neg) res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
         }
       }
-      res
+
+      return(res)
+      
     }
 
     table.RENDER <- function(showdetails = FALSE) {
@@ -149,7 +151,7 @@ expression_table_genetable_server <- function(id,
           df <- cbind(df,  M)
         }
       }
-
+      
       DT::datatable(
         df,
         rownames = FALSE,
