@@ -33,7 +33,8 @@ compare_plot_compare2_ui <- function(id,
     width = width,
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "featuremap"
+    plot_type = "featuremap",
+    color_selection = TRUE
   )
 }
 
@@ -88,10 +89,13 @@ compare_plot_compare2_server <- function(id,
         higenes <- custom_genes
       }
 
+      ## Editor: color just selected
+      color_sel <- isTRUE(input$color_selection)
+
       if (length(higenes) <= 3) cex.lab <- 1.3
       data <- createPlot(
         pgx2, pgx1, pgx2, ct, target_col, type, cex.lab,
-        higenes, ntop, get_data, labeltype, col = custom_col
+        higenes, ntop, get_data, labeltype, col = custom_col, color_selection = color_sel
       )
       data
     }

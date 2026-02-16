@@ -39,7 +39,8 @@ PlotModuleUI <- function(id,
                          },
                          plot_type = "volcano",
                          bar_color_default = "#3181de",
-                         palette_default = "muted_light") {
+                         palette_default = "muted_light",
+                         color_selection = FALSE) {
   ns <- shiny::NS(id)
 
   # Svg is only available if watermark is disabled
@@ -422,7 +423,8 @@ PlotModuleUI <- function(id,
     width.2 = width.2,
     height.2 = height.2,
     bar_color_default = bar_color_default,
-    palette_default = palette_default
+    palette_default = palette_default,
+    color_selection = color_selection
   )
 
   ## inline styles (should be in CSS...)

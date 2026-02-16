@@ -334,10 +334,17 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
 
     createPlot <- function(pgx, pgx1, pgx2, ct, target_col, type, cex.lab,
                            higenes, ntop, get_data = FALSE, labeltype = shiny::reactive("feature"),
-                           col = NULL) {
+                           col = NULL, color_selection = FALSE) {
       p <- NULL
       ## map hilighted genes to pgx probes
       label <- playbase::map_probes(pgx$genes, higenes, ignore.case = TRUE)
+
+      ## color just selected: only highlight the labeled genes
+      hilight_arg <- NULL
+      if (isTRUE(color_selection) && length(label) > 0) {
+        hilight_arg <- label
+      }
+
       if (type %in% c("UMAP1", "UMAP2")) {
         if (type == "UMAP1") {
           pos <- pgx1$cluster.genes$pos[["umap2d"]]
@@ -363,7 +370,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           pos = mapped.pos,
           cex = 0.9,
           cex.lab = cex.lab,
-          hilight = NULL,
+          hilight = hilight_arg,
           label = label,
           ntop = ntop,
           zfix = TRUE,
@@ -397,7 +404,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         p <- playbase::pgx.plotContrast(
           pgx,
           contrast = ct,
-          hilight = NULL,
+          hilight = hilight_arg,
           label = label,
           ntop = ntop,
           cex.lab = cex.lab, #

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "muted_light") {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "muted_light", color_selection = FALSE) {
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -390,6 +390,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           ),
           bslib::accordion_panel(
             "Labels",
+            if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
             checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
             textAreaInput(ns_parent("label_features"), "Label features", value = "")
           )
