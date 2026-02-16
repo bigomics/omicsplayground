@@ -152,9 +152,18 @@ intersection_scatterplot_pairs_server <- function(id,
         jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
         if (any(jj3)) df.color1[jj3] <- clr_one
 
+        ## color just selected: dim non-labeled points
+        if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+          is.labeled <- rownames(df) %in% label.text0
+          df.color1[!is.labeled] <- "#DDDDDD"
+        }
+
         ## make non-selected genes transparent
         opacity <- rep(1, nrow(df))
-        if (sum(is.sel) > 0) {
+        if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+          is.labeled <- rownames(df) %in% label.text0
+          opacity[!is.labeled] <- 0.15
+        } else if (sum(is.sel) > 0) {
           no.sel <- !rownames(df) %in% sel.genes
           opacity[no.sel] <- 0.1
         }
@@ -256,9 +265,18 @@ intersection_scatterplot_pairs_server <- function(id,
           jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
           if (any(jj3)) df.color1[jj3] <- clr_one
 
+          ## color just selected: dim non-labeled points
+          if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+            is.labeled <- rownames(df) %in% label.text0
+            df.color1[!is.labeled] <- "#DDDDDD"
+          }
+
           ## make non-selected genes transparent
           opacity <- rep(1, nrow(df))
-          if (sum(is.sel) > 0) {
+          if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+            is.labeled <- rownames(df) %in% label.text0
+            opacity[!is.labeled] <- 0.15
+          } else if (sum(is.sel) > 0) {
             no.sel <- !rownames(df) %in% sel.genes
             opacity[no.sel] <- 0.1
           }

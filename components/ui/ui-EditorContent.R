@@ -627,6 +627,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           ),
           bslib::accordion_panel(
             "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
             checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
             textAreaInput(ns_parent("label_features"), "Label features", value = "")
           )
