@@ -298,7 +298,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "Alphabetical" = "alphabetical",
                 "Value (ascending)" = "ascending",
                 "Value (descending)" = "descending",
-                "Custom (drag & drop)" = "custom"
+                "Custom (shuffle the order)" = "custom"
               ),
               selected = "alphabetical"
             ),
@@ -316,7 +316,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -354,7 +354,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -400,7 +400,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -445,7 +445,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -487,7 +487,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -531,7 +531,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "Alphabetical" = "alphabetical",
                 "Value (ascending)" = "ascending",
                 "Value (descending)" = "descending",
-                "Custom (drag & drop)" = "custom"
+                "Custom (shuffle the order)" = "custom"
               ),
               selected = "alphabetical"
             ),
@@ -549,7 +549,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -590,7 +590,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -637,7 +637,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -680,7 +680,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -722,7 +722,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )

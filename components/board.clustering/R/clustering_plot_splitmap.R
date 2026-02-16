@@ -140,7 +140,7 @@ clustering_plot_splitmap_server <- function(id,
       }
       grp_levels <- unique(splitx)
       sortable::bucket_list(
-        header = "Drag to reorder groups:",
+        header = "Shuffle to reorder groups:",
         class = "default-sortable custom-sortable",
         sortable::add_rank_list(
           input_id = ns("hm_group_order"),
