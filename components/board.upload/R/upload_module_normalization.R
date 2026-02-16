@@ -3,12 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-## =========================================================================
-## =============== NORMALIZATION UI/SERVER =================================
-## =========================================================================
-
-
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
   uiOutput(ns("normalization"), fill = TRUE)
@@ -33,6 +27,8 @@ upload_module_normalization_server <- function(
     function(input, output, session) {
       ns <- session$ns
 
+      zero_as_na <- function() isTRUE(input$zero_as_na)
+
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
@@ -42,14 +38,11 @@ upload_module_normalization_server <- function(
         )
       })
 
-      ## ------------------------------------------------------------------
-      ## Object reactive chain
-      ## ------------------------------------------------------------------
-
       ## ImputedX
       imputedX <- reactive({
         shiny::req(dim(r_counts()))
-        shiny::req(!is.null(input$zero_as_na))
+        ## shiny::req(!is.null(input$zero_as_na))
+        shiny::req(!is.null(input$normalize)) ## new
         counts <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -68,7 +61,8 @@ upload_module_normalization_server <- function(
 
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
 
-        if (input$zero_as_na) {
+        #if (input$zero_as_na) {
+        if (zero_as_na()) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
@@ -84,12 +78,16 @@ upload_module_normalization_server <- function(
             X[ii, ] <- log2(counts[ii, ] + prior)
           }
         } else {
-          prior0 <- playbase::getPrior(counts)
-          m <- input$normalization_method
-          prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
-          X <- log2(counts + prior)
+          is.meth.beta <- FALSE
+          vv <- range(counts, na.rm = TRUE)
+          is.meth.beta <- (all(vv>=0 & vv<=1) & upload_datatype() == "methylomics")
+          if (!is.meth.beta) {
+            prior0 <- playbase::getPrior(counts)
+            m <- input$normalization_method
+            prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
+            X <- log2(counts + prior)
+          }
         }
-
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
 
@@ -117,7 +115,6 @@ upload_module_normalization_server <- function(
             sel <- (rowMeans(is.na(X)) <= f)
           }
           dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", sum(!sel))
-
           X <- X[which(sel), , drop = FALSE]
           counts <- counts[which(sel), , drop = FALSE]
           annot <- annot[which(sel), , drop = FALSE]
@@ -153,7 +150,9 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
+            write.csv(X, "~/Desktop/XX.csv")
             nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
+            if (is.null(nX)) dbg("--------------------nX is NULL")
             if (!is.null(nX)) X=nX; rm(nX)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
@@ -424,7 +423,8 @@ upload_module_normalization_server <- function(
         X0 <- X0[rownames(X1), , drop = FALSE]
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
-        if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
+        ## if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
+        if (!any(is.na(X0)) && !(zero_as_na() && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
         } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
@@ -440,7 +440,8 @@ upload_module_normalization_server <- function(
           title("No missing values in imputed data", cex.main = 0.8)
         } else {
           ii <- which(is.na(X0))
-          if (isolate(input$zero_as_na)) {
+          ## if (isolate(input$zero_as_na)) {
+          if (isolate(zero_as_na())) {
             ii <- which(is.na(X0) | X0 == 0)
           }
           q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
@@ -450,7 +451,8 @@ upload_module_normalization_server <- function(
 
           ## set zero value to 1, NA values to 2
           X2 <- 1 * is.na(X0)
-          if (input$zero_as_na) X2[X0 == 0] <- 1
+          ## if (input$zero_as_na) X2[X0 == 0] <- 1
+          if (zero_as_na()) X2[X0 == 0] <- 1
           jj <- head(order(-apply(X2, 1, sd)), 200)
           X2 <- X2[jj, ]
 
@@ -981,7 +983,9 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
+                if (upload_datatype() != "methylomics") {
+                  shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na)
+                },
                 shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
                 shiny::conditionalPanel("input.filtermissing == true",
                   ns = ns,
@@ -1229,9 +1233,13 @@ upload_module_normalization_server <- function(
       })
 
       imputation_method <- reactive({
-        ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
+        ## ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
+        ## if (!input$impute) {
+        ##   ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
+        ## }
+        ll <- list(zero_as_na = zero_as_na(), imputation = input$impute_method)
         if (!input$impute) {
-          ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
+          ll <- list(zero_as_na = zero_as_na(), imputation = "no_imputation")
         }
         return(ll)
       })
