@@ -46,9 +46,6 @@ upload_module_normalization_server <- function(
         contrasts <- r_contrasts()
         annot <- r_annot()
         shiny::req(dim(contrasts))
-        ## shiny::req(dim(r_counts()))
-        ## shiny::req(!is.null(input$zero_as_na))
-        ## shiny::req(!is.null(input$normalize)) ## new
 
         counts[which(is.nan(counts))] <- NA
         counts[which(is.infinite(counts))] <- NA
@@ -86,7 +83,6 @@ upload_module_normalization_server <- function(
             X <- counts
             prior <- 0
           } else {
-            dbg("-------------------------------M1")
             prior0 <- playbase::getPrior(counts)
             m <- input$normalization_method
             prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
@@ -158,7 +154,6 @@ upload_module_normalization_server <- function(
           } else if (upload_datatype() == "methylomics") {
             write.csv(X, "~/Desktop/XX.csv")
             nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
-            if (is.null(nX)) dbg("--------------------nX is NULL")
             if (!is.null(nX)) X=nX; rm(nX)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
