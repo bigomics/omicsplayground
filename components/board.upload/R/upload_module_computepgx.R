@@ -483,7 +483,7 @@ upload_module_computepgx_server <- function(
                 if (upload_datatype() == "methylomics") {
                   shiny::checkboxGroupInput(
                     ns("regress_covariates"),
-                    shiny::HTML("<h4>Test for:</h4>"),
+                    shiny::HTML("<h4>Methylomics analysis:</h4>"),
                     choices = c(
                       "Differentially methylated positions",
                       "Differentially methylated regions"
