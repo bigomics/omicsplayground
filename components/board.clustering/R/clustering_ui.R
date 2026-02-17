@@ -284,43 +284,43 @@ ClusteringUI <- function(id) {
           )
         )
       ),
-      shiny::tabPanel(
-        "Parallel",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = fullH,
-          bs_alert(parallel_info),
-          bslib::layout_columns(
-            col_widths = c(6, 6),
-            height = fullH,
-            clustering_table_parcoord_ui(
-              id = ns("parcoord"),
-              title = "Features and modules",
-              info.text = "Expression levels of selected genes across all conditions in the analysis. The selection of genes is performed on the Parallel coordinates plot by click & dragging on any y-axis. If not selection is performed on the plot, all the genes are displayed.",
-              caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
-              label = "a",
-              width = c("100%", "100%"),
-              height = c("100%", TABLE_HEIGHT_MODAL)
-            ),
-            clustering_plot_genemodule_ui(
-              id = ns("genemodule"),
-              title = "Module expression",
-              info.text = "Series of histograms displaying the overall expression of each module by individual sample.",
-              info.methods = "The modules are computed using the fastcluster R package [1].",
-              info.references = list(
-                list(
-                  "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
-                  "https://doi.org/10.18637/jss.v053.i09"
-                )
-              ),
-              info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
-              caption = "",
-              width = c("100%", "100%"),
-              height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL)
-            )
-          )
-        )
-      )
+      # shiny::tabPanel(
+      #   "Parallel",
+      #   bslib::layout_columns(
+      #     col_widths = 12,
+      #     height = fullH,
+      #     bs_alert(parallel_info),
+      #     bslib::layout_columns(
+      #       col_widths = c(6, 6),
+      #       height = fullH,
+      #       clustering_table_parcoord_ui(
+      #         id = ns("parcoord"),
+      #         title = "Features and modules",
+      #         info.text = "Expression levels of selected genes across all conditions in the analysis. The selection of genes is performed on the Parallel coordinates plot by click & dragging on any y-axis. If not selection is performed on the plot, all the genes are displayed.",
+      #         caption = "Table showing the expression in each sample of the  genes displayed in the Parallel Coordinates.",
+      #         label = "a",
+      #         width = c("100%", "100%"),
+      #         height = c("100%", TABLE_HEIGHT_MODAL)
+      #       ),
+      #       clustering_plot_genemodule_ui(
+      #         id = ns("genemodule"),
+      #         title = "Module expression",
+      #         info.text = "Series of histograms displaying the overall expression of each module by individual sample.",
+      #         info.methods = "The modules are computed using the fastcluster R package [1].",
+      #         info.references = list(
+      #           list(
+      #             "Müllner D (2013). “fastcluster: Fast Hierarchical, Agglomerative Clustering Routines for R and Python.” Journal of Statistical Software, 53(9), 1–18.",
+      #             "https://doi.org/10.18637/jss.v053.i09"
+      #           )
+      #         ),
+      #         info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
+      #         caption = "",
+      #         width = c("100%", "100%"),
+      #         height = c("calc(100vh - 200px)", TABLE_HEIGHT_MODAL)
+      #       )
+      #     )
+      #   )
+      # )
     )
   )
 }
