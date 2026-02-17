@@ -161,7 +161,43 @@ featuremap_plot_table_geneset_map_server <- function(id,
           cex.label = cex.label,
           source = ns("geneset_umap"),
           plotlib = "plotly"
-        ) %>%
+        )
+
+        ## Replace static annotations with repelled labels (plotly.repel)
+        annots <- p$x$layout$annotations
+        if (!is.null(annots) && length(annots) > 0) {
+          label_x <- vapply(annots, function(a) a$x, numeric(1))
+          label_y <- vapply(annots, function(a) a$y, numeric(1))
+          label_text <- vapply(annots, function(a) a$text, character(1))
+          label_font_size <- if (!is.null(annots[[1]]$font$size)) annots[[1]]$font$size else 12
+
+          ## Remove static annotations
+          p$x$layout$annotations <- NULL
+
+          ## Add repelled labels using plotly.repel
+          label_df <- data.frame(
+            x = label_x,
+            y = label_y,
+            text = label_text,
+            stringsAsFactors = FALSE
+          )
+          p <- plotly.repel::add_text_repel(
+            p,
+            data = label_df,
+            x = ~x,
+            y = ~y,
+            text = ~text,
+            font = list(size = label_font_size),
+            point_padding = 0.15,
+            box_padding = 0.3,
+            force = 1,
+            max_time_ms = 50,
+            segment = list(color = "rgba(0,0,0,0.3)", width = 0.8),
+            on = c("render", "zoom", "resize")
+          )
+        }
+
+        p <- p %>%
           plotly::layout(
             dragmode = "select",
             margin = list(l = 5, r = 5, b = 5, t = 20)
