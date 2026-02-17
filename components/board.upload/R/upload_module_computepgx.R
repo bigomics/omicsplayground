@@ -482,7 +482,7 @@ upload_module_computepgx_server <- function(
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
                 if (upload_datatype() == "methylomics") {
                   shiny::checkboxGroupInput(
-                    ns("regress_covariates"),
+                    ns("diff_meth"),
                     shiny::HTML("<h4>Methylomics analysis:</h4>"),
                     choices = c(
                       "Differentially methylated positions",
@@ -803,8 +803,6 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      # Input name and description. NEED CHECK!!! seems not to
-      # work. 18.11.24IK.
       shiny::observeEvent(list(metaRT(), compute_settings), {
         meta <- metaRT()
         pgx_info <- compute_settings
@@ -1098,6 +1096,8 @@ upload_module_computepgx_server <- function(
         if (!any(hb_threshold)) hb_threshold <- FALSE
         covariates <- input$regress_covariates 
         if (!is.null(covariates)) covariates <- as.character(covariates)
+        dma <- input$diff_meth # dma = differential meth. analysis
+        if (!is.null(dma)) dma <- as.character(dma)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1127,7 +1127,6 @@ upload_module_computepgx_server <- function(
           #-------- preprocess options ---------
           norm_method = norm_method(),
           settings = list(
-            ## compute settings only for info
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
             remove_outliers = compute_settings$remove_outliers,
@@ -1145,7 +1144,8 @@ upload_module_computepgx_server <- function(
           convert.hugo = append.symbol, ## should be renamed
           batch.correct.method = batch.correct.method,
           batch.pars = batch.pars,
-          covariates = covariates, ## NEW
+          covariates = covariates,
+          dma = dma, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
