@@ -42,17 +42,20 @@ admin_table_credentials_ui <- function(
   bslib::card(
     class = "tablemodule",
     full_screen = FALSE,
-    style = paste0("height:", height.1, ";overflow:visible;"),
+    style = paste0("height:", height.1, ";overflow:auto;"),
     bslib::as.card_item(div(header)),
     bslib::card_body(
-      DT::DTOutput(ns("credentials_tbl"), height = "100%") %>% bigLoaders::useSpinner(),
+      style = "flex: 1 1 auto; overflow: auto;",
+      DT::DTOutput(ns("credentials_tbl")) %>% bigLoaders::useSpinner()
+    ),
+    bslib::as.card_item(
       shiny::div(
-        style = "padding-top: 10px;",
-        shiny::actionButton(ns("add_user"), "Add User", icon = shiny::icon("plus"), class = "btn-sm btn-primary"),
-        shiny::actionButton(ns("delete_user"), "Delete Selected", icon = shiny::icon("trash"), class = "btn-sm btn-danger"),
+        style = "padding: 10px 15px;",
+        # shiny::actionButton(ns("add_user"), "Add User", icon = shiny::icon("plus"), class = "btn-sm btn-primary"),
+        # shiny::actionButton(ns("delete_user"), "Delete Selected", icon = shiny::icon("trash"), class = "btn-sm btn-danger"),
         shiny::actionButton(ns("save_credentials"), "Save Changes", icon = shiny::icon("floppy-disk"), class = "btn-sm btn-success"),
         shiny::span(
-          style = "margin-left: 15px;",
+          style = "margin-left: 15px; color: #888;",
           shiny::textOutput(ns("status_msg"), inline = TRUE)
         )
       )
@@ -161,9 +164,9 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
           options = list(
             dom = "lfrtip",
             scrollX = TRUE,
-            scrollY = "calc(100vh - 400px)",
+            scrollY = "45vh",
             deferRender = TRUE,
-            pageLength = 50
+            pageLength = 20
           )
         ) %>%
           DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
