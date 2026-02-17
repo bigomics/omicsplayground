@@ -39,7 +39,7 @@ pgx <- playbase::pgx.createPGX(
   batch.correct.method = params$batch.correct.method,
   batch.pars = params$batch.pars,
   covariates = params$covariates, ## new
-  params = params$dma, ## new
+  dma = params$dma, ## new
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
