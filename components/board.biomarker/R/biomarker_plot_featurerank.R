@@ -93,7 +93,6 @@ biomarker_plot_featurerank_server <- function(id,
         message("[biomarkers: feature-set scores] scRNAseq. Down-sampling by cell type")
         Y <- pgx$samples
         ct <- unique(Y$celltype)
-        i <- 1
         cells <- c()
         for (i in 1:length(ct)) {
           jj <- which(Y$celltype == ct[i])
@@ -108,14 +107,12 @@ biomarker_plot_featurerank_server <- function(id,
 
       if (is.null(Y)) Y <- pgx$Y
 
-      ## ------------- rm redundant/unneeded pheno
       kk <- c(
         "nCount_SCT", "nCount_RNA", "nFeature_SCT", "SCT_snn_res.1",
         "orig.ident", "percent.ribo", "percent.hb", ".cell_cycle", "S.Score", "G2M.Score"
       )
       Y <- Y[, !colnames(Y) %in% kk, drop = FALSE]
 
-      ## ------------ Just to get current samples
       samples <- playbase::selectSamplesFromSelectedLevels(Y, samplefilter())
       X <- X[, samples, drop = FALSE]
 
@@ -153,23 +150,16 @@ biomarker_plot_featurerank_server <- function(id,
       }
 
       for (i in 1:ncol(Y)) {
+
         if (!interactive()) progress$inc(1 / ncol(Y))
-
         grp <- as.character(Y[, i])
-
         score <- rep(NA, length(features))
         names(score) <- names(features)
-
+        
         for (j in 1:length(features)) {
           pp <- features[[j]]
-
-          if (gene.level) {
-            pp <- playbase::filterProbes(annot, features[[j]])
-          }
-
-          sdtop <- 1000
-          pp <- head(pp[order(-sdx[pp])], sdtop)
-
+          if (gene.level) pp <- playbase::filterProbes(annot, features[[j]])
+          pp <- head(pp[order(-sdx[pp])], 1000)
           X1 <- playbase::rename_by(X, pgx$genes, "symbol")
           pp <- intersect(pp, rownames(X1))
           X1 <- X1[pp, , drop = FALSE]
@@ -219,26 +209,20 @@ biomarker_plot_featurerank_server <- function(id,
       S[is.na(S)] <- 0
 
       return(S)
+
     })
 
     render_featureRank <- function() {
       S <- calcFeatureRanking()
       c1 <- (is.null(S) || nrow(S) == 0 || ncol(S) == 0)
-      if (c1) {
-        return(NULL)
-      }
+      if (c1) return(NULL)
 
       ## top scoring
       S <- tail(S[order(rowSums(S, na.rm = TRUE)), , drop = FALSE], 25)
       rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
-      playbase::pgx.stackedBarplot(
-        x = t(S),
-        showlegend = TRUE,
-        xlab = "Discriminant score",
-        ylab = "",
-        horiz = TRUE
-      )
+      playbase::pgx.stackedBarplot(x = t(S), showlegend = TRUE,
+        xlab = "Discriminant score", ylab = "", horiz = TRUE)
     }
 
     clust_featureRank.RENDER <- function() {
