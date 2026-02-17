@@ -40,26 +40,13 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
     })
 
     ## ================================================================================
-    ## =========================== MODULES ============================================
-    ## ================================================================================
-
-    admin_module_info_server(
-      "admin_info",
-      auth = auth
-    )
-
-    admin_module_status_server(
-      "system_status",
-      auth = auth
-    )
-
-    ## ================================================================================
     ## ===============================  TABLES ========================================
     ## ================================================================================
 
     admin_table_users_server(
       "user_stats",
-      auth = auth
+      auth = auth,
+      credentials_file = credentials_file
     )
 
     admin_table_credentials_server(

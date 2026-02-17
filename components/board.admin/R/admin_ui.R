@@ -36,38 +36,16 @@ AdminPanelUI <- function(id) {
     shiny::tabPanel(
       "Overview",
       bslib::layout_columns(
+        col_widths = 12,
         height = fullH,
-        col_widths = c(4, 8),
-        row_heights = list("auto", 1),
-        bslib::layout_columns(
-          col_widths = 12,
-          admin_module_info_ui(
-            id = ns("admin_info"),
-            title = "Admin Information",
-            info.text = "Information about the currently logged-in administrator.",
-            caption = "Details about the current admin user.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          ),
-          admin_module_status_ui(
-            id = ns("system_status"),
-            title = "System Status",
-            info.text = "Current system status information including R version and platform details.",
-            caption = "System environment information.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
-        ),
-        bslib::layout_columns(
-          col_widths = 12,
-          admin_table_users_ui(
-            id = ns("user_stats"),
-            title = "User Statistics",
-            info.text = "Summary statistics about registered users on the platform.",
-            caption = "Table of user statistics and platform metrics.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
+        row_heights = list(1),
+        admin_table_users_ui(
+          id = ns("user_stats"),
+          title = "Platform Statistics",
+          info.text = "Summary statistics about registered users, datasets, and storage on the platform.",
+          caption = "Platform overview metrics.",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto", "100%")
         )
       )
     ),
