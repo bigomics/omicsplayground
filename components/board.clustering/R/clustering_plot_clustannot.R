@@ -48,7 +48,7 @@ clustering_plot_clusterannot_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "grouped_barplot",
-    palette_default = "muted_light"
+    palette_default = "default"
   )
 }
 
@@ -170,7 +170,7 @@ clustering_plot_clusterannot_server <- function(id,
           val <- input[[paste0("custom_color_", j)]]
           if (is.null(val)) omics_pal_d("muted_light")(n_clusters)[j] else val
         })
-      } else if (!is.null(palette) && !palette %in% c("muted_light", "original")) {
+      } else if (!is.null(palette) && !palette %in% c("muted_light", "original", "default")) {
         klrpal <- rep(omics_pal_d(palette = palette)(8), ceiling(n_clusters / 8))[1:n_clusters]
       } else {
         klrpal <- omics_pal_d("muted_light")(n_clusters)

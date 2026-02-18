@@ -55,7 +55,7 @@ enrichment_plot_freq_top_gsets_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "grouped_barplot",
-    palette_default = "original"
+    palette_default = "default"
   )
 }
 
@@ -210,7 +210,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
 
       ## Editor: palette override
       palette <- input$palette
-      if (!is.null(palette) && palette != "original") {
+      if (!is.null(palette) && !palette %in% c("original", "default")) {
         fig <- plotly::plotly_build(fig)
         n_series <- ncol(F)
         if (palette == "custom") {

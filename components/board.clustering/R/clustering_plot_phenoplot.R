@@ -135,7 +135,7 @@ clustering_plot_phenoplot_server <- function(id,
 
       ## Editor: palette
       palette <- if (!is.null(input$palette)) input$palette else "muted_light"
-      if (palette == "original") palette <- "muted_light"
+      if (palette %in% c("original", "default")) palette <- "muted_light"
       if (palette == "custom") {
         base_clrs <- sapply(1:8, function(j) {
           val <- input[[paste0("custom_color_", j)]]

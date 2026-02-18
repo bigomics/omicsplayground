@@ -58,7 +58,7 @@ signature_plot_overlap_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "grouped_barplot",
-    palette_default = "original"
+    palette_default = "default"
   )
 }
 
@@ -157,7 +157,7 @@ signature_plot_overlap_server <- function(id,
           val <- input[[paste0("custom_color_", j)]]
           if (is.null(val)) rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[j] else val
         })
-      } else if (!is.null(palette) && !palette %in% c("original", "")) {
+      } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
         grp_clrs <- rep(omics_pal_d(palette = palette)(8), ceiling(n_groups / 8))[1:n_groups]
       } else {
         grp_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[1:n_groups]

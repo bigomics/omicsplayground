@@ -58,7 +58,7 @@ correlation_plot_barplot_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "grouped_barplot",
-    palette_default = "original"
+    palette_default = "default"
   )
 }
 
@@ -168,6 +168,7 @@ correlation_plot_barplot_server <- function(id,
 
       ## Editor: palette override
       palette <- input$palette
+      if (!is.null(palette) && palette == "default") palette <- "muted_light"
       if (!is.null(palette) && palette != "original") {
         fig <- plotly::plotly_build(fig)
         n_series <- 2

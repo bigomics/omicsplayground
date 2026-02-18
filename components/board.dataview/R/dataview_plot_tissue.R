@@ -33,7 +33,7 @@ dataview_plot_tissue_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "grouped_barplot",
-    palette_default = "original"
+    palette_default = "default"
   )
 }
 
@@ -207,7 +207,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
           marker = list(color = bar_colors),
           hovertemplate = "%{y}: %{x}<extra></extra>"
         )
-      } else if (!is.null(palette) && !palette %in% c("original", "")) {
+      } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
         ## Named palette
         bar_colors <- omics_pal_d(palette = palette)(8)[df$group]
         p <- plotly::plot_ly(

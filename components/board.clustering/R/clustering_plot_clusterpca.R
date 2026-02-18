@@ -285,7 +285,7 @@ clustering_plot_clustpca_server <- function(id,
 
       ## Editor: palette and custom colors
       palette <- if (!is.null(input$palette)) input$palette else "muted_light"
-      if (palette == "original") palette <- "muted_light"
+      if (palette %in% c("original", "default")) palette <- "muted_light"
       custom_colors <- NULL
       if (palette == "custom") {
         groups <- sort(unique(as.character(pgx$samples[samples, colvar])))

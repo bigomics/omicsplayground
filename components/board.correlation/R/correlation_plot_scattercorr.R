@@ -60,7 +60,7 @@ correlation_plot_scattercorr_ui <- function(
     editor = TRUE,
     ns_parent = ns,
     plot_type = "clustering",
-    palette_default = "original"
+    palette_default = "default"
   )
 }
 
@@ -162,6 +162,7 @@ correlation_plot_scattercorr_server <- function(id,
       ## Editor: palette override (default "original" uses Paired palette)
       clrs.length <- length(levels(pheno))
       palette <- input$palette
+      if (!is.null(palette) && palette == "default") palette <- "muted_light"
       if (!is.null(palette) && palette == "custom") {
         COL <- sapply(seq_len(clrs.length), function(j) {
           val <- input[[paste0("custom_color_", j)]]
