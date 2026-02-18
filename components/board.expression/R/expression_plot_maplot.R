@@ -4,14 +4,11 @@
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 expression_plot_maplot_ui <- function(
   id,
@@ -44,9 +41,7 @@ expression_plot_maplot_ui <- function(
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
 #' @param pgx
 #' @param gx_fdr
@@ -57,9 +52,6 @@ expression_plot_maplot_ui <- function(
 #' @param sel1
 #' @param df1
 #' @param watermark
-#'
-#'
-#'
 #' @export
 expression_plot_maplot_server <- function(id,
                                           pgx,
@@ -71,7 +63,9 @@ expression_plot_maplot_server <- function(id,
                                           genes_selected,
                                           labeltype = reactive("symbol"),
                                           watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+
     plot_data <- shiny::reactive({
       comp1 <- gx_contrast()
       if (length(comp1) == 0) {
@@ -183,11 +177,13 @@ expression_plot_maplot_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       remove_margins = FALSE,
-      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
-      res = c(80, 95), ## resolution of plots
+      csvFunc = plot_data_csv,
+      res = c(80, 95),
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark,
       download.contrast.name = gx_contrast
     )
-  }) ## end of moduleServer
+
+  })
+
 }
