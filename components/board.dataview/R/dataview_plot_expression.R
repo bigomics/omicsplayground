@@ -46,7 +46,7 @@ dataview_plot_expression_ui <- function(
     height = height,
     ns_parent = ns,
     editor = TRUE,
-    plot_type = "barplot"
+    plot_type = "expression_barplot"
   )
 }
 
@@ -186,7 +186,7 @@ dataview_plot_expression_server <- function(id,
           fig <- plotly::plot_ly(
             data = data, x = ~group, y = ~mean, type = "bar",
             name = pd$gene, error_y = ~ list(array = sd, color = "#000000"),
-            marker = list(color = input$bar_color)
+            marker = list(color = input$scatter_color)
           )
           fig <- fig %>% plotly::add_markers(
             x = df$group, y = df$x,
@@ -235,7 +235,7 @@ dataview_plot_expression_server <- function(id,
           df$samples <- factor(df$samples, levels = df$samples)
         }
 
-        points.color[which(points.color == "black")] <- input$bar_color
+        points.color[which(points.color == "black")] <- input$scatter_color
         fig <- plotly::plot_ly(
           df,
           x = ~samples, y = ~x,
@@ -271,7 +271,8 @@ dataview_plot_expression_server <- function(id,
       download.fmt = c("png", "pdf", "csv", "obj", "svg"),
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

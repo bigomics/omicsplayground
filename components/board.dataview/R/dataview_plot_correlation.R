@@ -75,7 +75,8 @@ dataview_plot_correlation_server <- function(id,
 
       gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples, drop = FALSE]**2, na.rm = TRUE))
       gx1 <- (gx1 / max(gx1))
-      klr1 <- omics_pal_c(palette = "brand_blue")(16)[1 + round(15 * gx1)]
+      sec_col <- get_color_theme()$secondary
+      klr1 <- colorRampPalette(c("#FFFFFF", sec_col))(20)[5:20][1 + round(15 * gx1)]
       klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
 
       ## names(top.rho) <- mofa.strip_prefix(names(top.rho)
@@ -142,11 +143,10 @@ dataview_plot_correlation_server <- function(id,
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
 
-      if (!is.null(input$bar_color)) {
-        light_end <- colorRampPalette(c("#FFFFFF", input$bar_color))(10)[4]
-        pal <- colorRampPalette(c(light_end, input$bar_color))(16)
-        df$color <- pal[1 + round(15 * df$value)]
-      }
+      bar_col <- if (!is.null(input$scatter_color)) input$scatter_color else get_color_theme()$secondary
+      light_end <- colorRampPalette(c("#FFFFFF", bar_col))(10)[4]
+      pal <- colorRampPalette(c(light_end, bar_col))(16)
+      df$color <- pal[1 + round(15 * df$value)]
 
       if (!is.null(input$bars_order)) {
         if (input$bars_order == "alphabetical") {
@@ -232,7 +232,8 @@ dataview_plot_correlation_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

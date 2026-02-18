@@ -111,7 +111,7 @@ dataview_plot_averagerank_server <- function(id,
 
       ## Editor: custom colors
       clr_fill <- if (!is.null(input$color_fill)) input$color_fill else "#b8d4f0"
-      clr_line <- if (!is.null(input$color_line)) input$color_line else "#3181de"
+      clr_line <- if (!is.null(input$rank_color_line)) input$rank_color_line else get_color_theme()$secondary
       clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#e3a45a"
 
       # subsample for speed
