@@ -10,7 +10,8 @@
 COLOR_THEME_DEFAULTS <- list(
   primary    = "#f23451",   # Up / High
   secondary  = "#3181de",   # Down / Low / scatter_color
-  neutral    = "#eeeeee",   # Mid / NS
+  neutral    = "#eeeeee",   # Mid (heatmap midpoint)
+  ns_color   = "#eeeeee",   # Not significant dots
   bar_color  = "#A6CEE3",   # Bar color
   accent     = "#e3a45a",   # Significant in one (color_one)
   success    = "#5B9B5B",   # Significant in both (color_both)
@@ -25,7 +26,8 @@ COLOR_THEME_DEFAULTS <- list(
 COLOR_THEME_MAPPING <- list(
   primary   = c("color_up", "color_high"),
   secondary = c("color_down", "color_low", "scatter_color", "rank_color_line"),
-  neutral   = c("color_mid", "color_ns"),
+  neutral   = c("color_mid"),
+  ns_color  = c("color_ns"),
   bar_color = c("bar_color"),
   accent    = c("color_one"),
   success   = c("color_both"),

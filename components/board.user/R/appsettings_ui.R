@@ -43,13 +43,13 @@ AppSettingsUI <- function(id) {
             bslib::card_header("Directional Colors"),
             bslib::card_body(
               colourpicker::colourInput(ns("theme_primary"), "Primary (Up / High)", "#f23451"),
-              colourpicker::colourInput(ns("theme_secondary"), "Secondary (Down / Low)", "#3181de")
+              colourpicker::colourInput(ns("theme_secondary"), "Secondary (Down / Low)", "#3181de"),
+              colourpicker::colourInput(ns("theme_neutral"), "Mid / Zero (heatmap)", "#eeeeee")
             )
           ),
           bslib::card(
             bslib::card_header("Chart Elements"),
             bslib::card_body(
-              colourpicker::colourInput(ns("theme_neutral"), "Neutral / Mid", "#eeeeee"),
               colourpicker::colourInput(ns("theme_bar_color"), "Bar Color", "#A6CEE3"),
               shiny::selectInput(
                 ns("theme_palette"), "Default Palette",
@@ -74,6 +74,7 @@ AppSettingsUI <- function(id) {
             bslib::card_body(
               colourpicker::colourInput(ns("theme_accent"), "Accent (one significant)", "#e3a45a"),
               colourpicker::colourInput(ns("theme_success"), "Success (both significant)", "#5B9B5B"),
+              colourpicker::colourInput(ns("theme_ns_color"), "Not significant", "#eeeeee"),
               colourpicker::colourInput(ns("theme_line"), "Enrichment Line", "#00EE00"),
               shiny::hr(),
               shiny::actionButton(ns("theme_reset"), "Reset to defaults", icon = shiny::icon("rotate-left"), class = "btn-outline-secondary")

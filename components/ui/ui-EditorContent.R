@@ -630,7 +630,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             ),
             colourpicker::colourInput(
               ns_parent("color_ns"), "Not significant",
-              ct$neutral
+              ct$ns_color
             )
           ),
           bslib::accordion_panel(

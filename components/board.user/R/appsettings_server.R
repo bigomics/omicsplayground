@@ -32,6 +32,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       theme_primary   = "primary",
       theme_secondary = "secondary",
       theme_neutral   = "neutral",
+      theme_ns_color  = "ns_color",
       theme_bar_color = "bar_color",
       theme_accent    = "accent",
       theme_success   = "success",
@@ -72,6 +73,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       colourpicker::updateColourInput(session, "theme_primary", value = defaults$primary)
       colourpicker::updateColourInput(session, "theme_secondary", value = defaults$secondary)
       colourpicker::updateColourInput(session, "theme_neutral", value = defaults$neutral)
+      colourpicker::updateColourInput(session, "theme_ns_color", value = defaults$ns_color)
       colourpicker::updateColourInput(session, "theme_bar_color", value = defaults$bar_color)
       colourpicker::updateColourInput(session, "theme_accent", value = defaults$accent)
       colourpicker::updateColourInput(session, "theme_success", value = defaults$success)
