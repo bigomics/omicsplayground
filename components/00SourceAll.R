@@ -349,6 +349,7 @@ if(!file.exists('00SourceAll.R')) {
   source('ui/ui-bigdashplus.R',encoding='UTF-8')
   source('ui/ui-boardHeader.R',encoding='UTF-8')
   source('ui/ui-code.R',encoding='UTF-8')
+  source('ui/ui-ColorDefaults.R',encoding='UTF-8')
   source('ui/ui-colors.R',encoding='UTF-8')
   source('ui/ui-defaults.R',encoding='UTF-8')
   source('ui/ui-DropDownMenu.R',encoding='UTF-8')
