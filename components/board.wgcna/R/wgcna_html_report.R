@@ -104,7 +104,7 @@ wgcna_report_infographic_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  img_models <- rev(playbase::ai.get_image_models())   
+  img_models <- playbase::ai.get_image_models()   
   options <- shiny::tagList(
     shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
     shiny::actionButton(ns("generate_infographic"),"regenerate")
@@ -334,7 +334,8 @@ wgcna_html_report_server <- function(id,
           report = report,
           diagram = diagram,
           model = model,
-          filename = outfile
+          filename = outfile,
+          add.fallback = TRUE
         ))
         if(inherits(outfile,"try-error")) return(NULL)
         outfile
