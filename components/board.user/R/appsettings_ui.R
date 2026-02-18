@@ -33,6 +33,54 @@ AppSettingsUI <- function(id) {
           )
         )
       ),
+      # Plot Colors #####
+      shiny::tabPanel(
+        "Plot Colors",
+        bslib::layout_columns(
+          height = "calc(100vh - 183px)",
+          col_widths = c(4, 4, 4),
+          bslib::card(
+            bslib::card_header("Directional Colors"),
+            bslib::card_body(
+              colourpicker::colourInput(ns("theme_primary"), "Primary (Up / High)", "#f23451"),
+              colourpicker::colourInput(ns("theme_secondary"), "Secondary (Down / Low)", "#3181de")
+            )
+          ),
+          bslib::card(
+            bslib::card_header("Chart Elements"),
+            bslib::card_body(
+              colourpicker::colourInput(ns("theme_neutral"), "Neutral / Mid", "#eeeeee"),
+              colourpicker::colourInput(ns("theme_bar_color"), "Bar Color", "#A6CEE3"),
+              shiny::selectInput(
+                ns("theme_palette"), "Default Palette",
+                choices = c(
+                  "muted_light", "default", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom_gradient"
+                ),
+                selected = "default"
+              ),
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns("theme_palette"), "'] == 'custom_gradient'"),
+                colourpicker::colourInput(ns("theme_palette_c1"), "Gradient start", "#3181de"),
+                colourpicker::colourInput(ns("theme_palette_c2"), "Gradient middle", "#eeeeee"),
+                colourpicker::colourInput(ns("theme_palette_c3"), "Gradient end", "#f23451")
+              )
+            )
+          ),
+          bslib::card(
+            bslib::card_header("Accent Colors"),
+            bslib::card_body(
+              colourpicker::colourInput(ns("theme_accent"), "Accent (one significant)", "#e3a45a"),
+              colourpicker::colourInput(ns("theme_success"), "Success (both significant)", "#5B9B5B"),
+              colourpicker::colourInput(ns("theme_line"), "Enrichment Line", "#00EE00"),
+              shiny::hr(),
+              shiny::actionButton(ns("theme_reset"), "Reset to defaults", icon = shiny::icon("rotate-left"), class = "btn-outline-secondary")
+            )
+          )
+        )
+      ),
       # Resource info #####
       shiny::tabPanel(
         "Resource info",
