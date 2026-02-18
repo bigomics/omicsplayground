@@ -3,7 +3,16 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "muted_light", color_selection = FALSE, color_selection_default = FALSE) {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", color_selection = FALSE, color_selection_default = FALSE) {
+  ## Snapshot current theme values (non-reactive) so that lazily-loaded
+  ## modules start with the colours the user has already chosen.
+  ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
+
+  ## Per-plot-type bar colour: correlation and expression_barplot use
+  ## scatter_color (→ secondary theme); all other bar plots use bar_color.
+  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
+  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary    else ct$bar_color
+
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -22,11 +31,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_up"), "Up",
-                "#f23451"
+                ct$primary
               ),
               colourpicker::colourInput(
                 ns_parent("color_down"), "Down",
-                "#3181de"
+                ct$secondary
               )
             )
           ),
@@ -222,15 +231,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_high"), "High",
-                "#f23451"
+                ct$primary
               ),
               colourpicker::colourInput(
                 ns_parent("color_mid"), "Mid",
-                "#eeeeee"
+                ct$neutral
               ),
               colourpicker::colourInput(
                 ns_parent("color_low"), "Low",
-                "#3181de"
+                ct$secondary
               )
             )
           ),
@@ -282,8 +291,8 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             bslib::layout_column_wrap(
               width = 1,
               colourpicker::colourInput(
-                ns_parent("bar_color"), "Bar Color",
-                bar_color_default
+                ns_parent(bar_color_input_id), "Bar Color",
+                bar_color_init
               )
             )
           ),
@@ -343,7 +352,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1,
               colourpicker::colourInput(
                 ns_parent("scatter_color"), "Point Color",
-                "#3181de"
+                ct$secondary
               )
             )
           )
@@ -380,11 +389,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_low"), "Low color",
-                "#3181de"
+                ct$secondary
               ),
               colourpicker::colourInput(
                 ns_parent("color_high"), "High color",
-                "#f23451"
+                ct$primary
               )
             )
           ),
@@ -427,16 +436,16 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_up"), "Up (positive)",
-                "#f23451"
+                ct$primary
               ),
               colourpicker::colourInput(
                 ns_parent("color_down"), "Down (negative)",
-                "#3181de"
+                ct$secondary
               )
             ),
             colourpicker::colourInput(
               ns_parent("color_line"), "Enrichment line",
-              "#00EE00"
+              ct$line
             )
           )
         ),
@@ -471,13 +480,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             shiny::selectInput(
               ns_parent("palette"), "Color palette",
               choices = c(
-                "original",
-                "muted_light", "default", "light", "dark",
+                "default", "muted_light", "light", "dark",
                 "super_light", "super_dark", "muted", "expanded",
                 "highlight_blue", "highlight_red", "highlight_orange",
-                "custom"
+                "custom", "custom_gradient"
               ),
-              selected = palette_default
+              selected = ct$palette
             ),
             shiny::uiOutput(ns_parent("custom_palette_ui"))
           )
@@ -513,13 +521,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             shiny::selectInput(
               ns_parent("palette"), "Color palette",
               choices = c(
-                "original",
-                "muted_light", "default", "light", "dark",
+                "default", "muted_light", "light", "dark",
                 "super_light", "super_dark", "muted", "expanded",
                 "highlight_blue", "highlight_red", "highlight_orange",
-                "custom"
+                "custom", "custom_gradient"
               ),
-              selected = palette_default
+              selected = ct$palette
             ),
             shiny::uiOutput(ns_parent("custom_palette_ui"))
           ),
@@ -576,11 +583,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_low"), "Low color",
-                "#3181de"
+                ct$secondary
               ),
               colourpicker::colourInput(
                 ns_parent("color_high"), "High color",
-                "#f23451"
+                ct$primary
               )
             )
           )
@@ -615,15 +622,15 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             "Color Scheme",
             colourpicker::colourInput(
               ns_parent("color_both"), "Significant in both",
-              "#5B9B5B"
+              ct$success
             ),
             colourpicker::colourInput(
               ns_parent("color_one"), "Significant in one",
-              "#e3a45a"
+              ct$accent
             ),
             colourpicker::colourInput(
               ns_parent("color_ns"), "Not significant",
-              "#eeeeee"
+              ct$neutral
             )
           ),
           bslib::accordion_panel(
@@ -709,8 +716,8 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               "#b8d4f0"
             ),
             colourpicker::colourInput(
-              ns_parent("color_line"), "Line color",
-              "#3181de"
+              ns_parent("rank_color_line"), "Line color",
+              ct$secondary
             ),
             colourpicker::colourInput(
               ns_parent("color_highlight"), "Highlight color",
@@ -737,6 +744,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "volcano" = volcano_content,
     "heatmap" = heatmap_content,
     "barplot" = barplot_content,
+    "expression_barplot" = barplot_content,
     "correlation" = barplot_content,
     "scatterplot" = scatterplot_content,
     "featuremap" = featuremap_content,
