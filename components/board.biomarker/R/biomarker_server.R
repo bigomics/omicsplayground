@@ -7,8 +7,8 @@ BiomarkerBoard <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    fullH <- 800 ## full height of panel
-    rowH <- 320 ## row height of panel
+    fullH <- 800
+    rowH <- 320
     imgH <- 260
 
     pdx_infotext <- tspan("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=0m9gvGU7jArsZNnW&amp;start=193' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center><br><br>The <strong>Biomarker Board</strong> performs
@@ -65,23 +65,13 @@ BiomarkerBoard <- function(id, pgx) {
 
     shiny::observe({
       shiny::req(pgx$Y)
-      ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "pdx_samplefilter", choices = levels)
     })
 
     shiny::observe({
       shiny::req(pgx$X)
-      if (FALSE && shiny::isolate(input$pdx_level == "geneset")) {
-        gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
-        ft <- names(gset_collections)
-        nn <- sapply(gset_collections, function(x) sum(x %in% rownames(pgx$gsetX)))
-        ft <- ft[nn >= 10]
-      } else {
-        ## gene level
-        ft <- names(pgx$families)
-      }
-      ft <- sort(ft)
+      ft <- sort(names(pgx$families))
       ft <- sort(c("<custom>", ft))
       shiny::updateSelectInput(session, "pdx_filter", choices = ft, selected = "<all>")
       shiny::updateTextAreaInput(
@@ -94,16 +84,9 @@ BiomarkerBoard <- function(id, pgx) {
     # Enable or disable the run button in the UI
     # if the pdx_target overlaps with the pdx_samplefilter variable
     shiny::observeEvent(
-      list(
-        pgx$Y,
-        input$pdx_samplefilter,
-        input$pdx_target
-      ),
+      list(pgx$Y, input$pdx_samplefilter, input$pdx_target),
       {
         shiny::req(pgx$Y, input$pdx_target)
-        # check how many levels pgx_predicted has if it has more than
-        # 1 level, then enable the run button if it has 1 level, then
-        # disable the run button
         kk <- selected_samples()
         levels_filtered <- unique(pgx$Y[kk, input$pdx_target])
         if (length(levels_filtered) > 1) {
@@ -135,14 +118,9 @@ BiomarkerBoard <- function(id, pgx) {
 
     input_pdx_select <- shiny::reactive({
       gg <- input$pdx_select
-      if (is.null(gg)) {
-        return(NULL)
-      }
-
+      if (is.null(gg)) return(NULL)
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
-      if (length(gg) == 0) {
-        return(NULL)
-      }
+      if (length(gg) == 0) return(NULL)
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
     })
@@ -168,32 +146,19 @@ BiomarkerBoard <- function(id, pgx) {
 
     ## calculate variable importance upon compute button
     calcVariableImportance <- shiny::eventReactive(input$pdx_runbutton, {
-      ## This code also features a progress indicator.
       shiny::req(pgx$X, input$pdx_target)
-
       shiny::isolate(ph <- input$pdx_target)
       do.survival <- grepl("survival", ph, ignore.case = TRUE)
-      if (is.null(ph)) {
-        return(NULL)
-      }
-
-      ## Create a Progress object
+      if (is.null(ph)) return(NULL)
       progress <- shiny::Progress$new()
-      ## Make sure it closes when we exit this reactive, even if there's an error
       on.exit(progress$close())
       progress$set(message = "", value = 0)
-
-      if (!(ph %in% colnames(pgx$Y))) {
-        return(NULL)
-      }
-
+      if (!(ph %in% colnames(pgx$Y))) return(NULL)
       ft <- shiny::isolate(input$pdx_filter)
-      if (is.null(ft)) {
-        return(NULL)
-      }
+      if (is.null(ft)) return(NULL)
       shiny::isolate(sel <- input_pdx_select())
-
       progress$inc(0.33, detail = "Calculating variable importance. Please wait...")
+
       if (pgx$datatype == "multi-omics") {
         res <- playbase::pgx.compute_importance(
           pgx,
@@ -219,6 +184,7 @@ BiomarkerBoard <- function(id, pgx) {
 
       is_computed(TRUE)
       return(res)
+
     })
 
     ## ===========================================================================

@@ -34,7 +34,7 @@ mofa_table_mgsea_server <- function(id,
       mgsea <- mgsea()
       validate(need(!is.null(mgsea), "missing GSEA data."))
       k <- 1
-      k <- input_k() ## which factor/phenotype
+      k <- input_k()
       shiny::req(k, mgsea[[k]])
       df <- mgsea[[k]]
       df
@@ -43,7 +43,7 @@ mofa_table_mgsea_server <- function(id,
     table.RENDER <- function(full = FALSE) {
       mgsea <- mgsea()
       validate(need(!is.null(mgsea), "missing GSEA data."))
-      k <- input_k() ## which factor/phenotype
+      k <- input_k()
       shiny::req(k, mgsea[[k]])
       df <- mgsea[[k]]
       df <- cbind(pathway = rownames(df), df)
@@ -63,7 +63,6 @@ mofa_table_mgsea_server <- function(id,
         plugins = "scrollResize",
         options = list(
           dom = "lfrtip", #
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, #
           scrollY = "70vh",
           scroller = TRUE,
