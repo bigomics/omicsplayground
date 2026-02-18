@@ -181,7 +181,7 @@ featuremap_plot_table_geneset_map_server <- function(id,
             text = label_text,
             stringsAsFactors = FALSE
           )
-          p <- plotly.repel::add_text_repel(
+          p <- plotly.repel::add_label_repel(
             p,
             data = label_df,
             x = ~x,
@@ -189,8 +189,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
             text = ~text,
             font = list(size = label_font_size),
             point_padding = 0.15,
-            box_padding = 0.3,
-            force = 1,
+            #box_padding = 0.3,
+            #force = 1,
             max_time_ms = 50,
             segment = list(color = "rgba(0,0,0,0.3)", width = 0.8),
             on = c("render", "zoom", "resize")
