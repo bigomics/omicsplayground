@@ -173,7 +173,13 @@ signature_plot_volcano_server <- function(id,
         # Remove default titles
         title_y = "",
         title_x = "",
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = c(
+          up     = if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary,
+          notsig = "#707070AA",
+          down   = if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary,
+          notsel = "#cccccc88"
+        )
       ) %>%
         plotly::layout(
           annotations = list(

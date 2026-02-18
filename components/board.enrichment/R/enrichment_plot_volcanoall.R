@@ -161,6 +161,12 @@ enrichment_plot_volcanoall_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
+        colors = c(
+          up     = if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary,
+          notsig = "#707070AA",
+          down   = if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary,
+          notsel = "#cccccc88"
+        ),
         by_sig = FALSE,
         highlight = pd[["gset_selected"]],
         label = pd[["gset_selected"]]
