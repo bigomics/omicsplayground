@@ -27,6 +27,30 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## ----------------------------------------------------------------
     theme <- get_color_theme()
 
+    ## Load persisted theme when user logs in
+    shiny::observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged)) return()
+      saved <- load_color_theme(auth$user_dir)
+      if (is.null(saved)) return()
+      ## Apply known keys only (guards against stale/corrupt files)
+      for (key in intersect(names(saved), names(COLOR_THEME_DEFAULTS))) {
+        theme[[key]] <- saved[[key]]
+      }
+      ## Sync UI pickers
+      colourpicker::updateColourInput(session, "theme_primary",    value = theme$primary)
+      colourpicker::updateColourInput(session, "theme_secondary",  value = theme$secondary)
+      colourpicker::updateColourInput(session, "theme_neutral",    value = theme$neutral)
+      colourpicker::updateColourInput(session, "theme_ns_color",   value = theme$ns_color)
+      colourpicker::updateColourInput(session, "theme_bar_color",  value = theme$bar_color)
+      colourpicker::updateColourInput(session, "theme_accent",     value = theme$accent)
+      colourpicker::updateColourInput(session, "theme_success",    value = theme$success)
+      colourpicker::updateColourInput(session, "theme_line",       value = theme$line)
+      shiny::updateSelectInput(session, "theme_palette",           selected = theme$palette)
+      colourpicker::updateColourInput(session, "theme_palette_c1", value = theme$palette_c1)
+      colourpicker::updateColourInput(session, "theme_palette_c2", value = theme$palette_c2)
+      colourpicker::updateColourInput(session, "theme_palette_c3", value = theme$palette_c3)
+    })
+
     ## Map UI input IDs to theme keys
     theme_inputs <- list(
       theme_primary   = "primary",
@@ -44,23 +68,28 @@ AppSettingsBoard <- function(id, auth, pgx) {
       theme_key <- theme_inputs[[input_id]]
       shiny::observeEvent(input[[input_id]], {
         theme[[theme_key]] <- input[[input_id]]
+        save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
       }, ignoreInit = TRUE)
     })
 
     ## Palette dropdown
     shiny::observeEvent(input$theme_palette, {
       theme$palette <- input$theme_palette
+      save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     }, ignoreInit = TRUE)
 
     ## Custom gradient colour pickers
     shiny::observeEvent(input$theme_palette_c1, {
       theme$palette_c1 <- input$theme_palette_c1
+      save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     }, ignoreInit = TRUE)
     shiny::observeEvent(input$theme_palette_c2, {
       theme$palette_c2 <- input$theme_palette_c2
+      save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     }, ignoreInit = TRUE)
     shiny::observeEvent(input$theme_palette_c3, {
       theme$palette_c3 <- input$theme_palette_c3
+      save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     }, ignoreInit = TRUE)
 
     ## Reset button
@@ -82,6 +111,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       colourpicker::updateColourInput(session, "theme_palette_c1", value = defaults$palette_c1)
       colourpicker::updateColourInput(session, "theme_palette_c2", value = defaults$palette_c2)
       colourpicker::updateColourInput(session, "theme_palette_c3", value = defaults$palette_c3)
+      save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     })
 
     newfeatures.RENDER <- reactive({

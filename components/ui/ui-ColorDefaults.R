@@ -58,3 +58,22 @@ get_color_theme <- function() {
   }
   .color_theme_env$theme
 }
+
+#' Save the colour theme to a user directory as JSON.
+save_color_theme <- function(theme_list, user_dir) {
+  if (is.null(user_dir) || !dir.exists(user_dir)) return(invisible(NULL))
+  path <- file.path(user_dir, "color_theme.json")
+  jsonlite::write_json(theme_list, path, auto_unbox = TRUE, pretty = TRUE)
+  invisible(path)
+}
+
+#' Load colour theme from a user directory. Returns NULL if file missing/invalid.
+load_color_theme <- function(user_dir) {
+  if (is.null(user_dir)) return(NULL)
+  path <- file.path(user_dir, "color_theme.json")
+  if (!file.exists(path)) return(NULL)
+  tryCatch(
+    jsonlite::read_json(path, simplifyVector = TRUE),
+    error = function(e) NULL
+  )
+}
