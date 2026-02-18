@@ -86,7 +86,6 @@ mofa_plot_snf_server <- function(id,
         ph <- input$tsne_colorby
         cc <- factor(pgx_samples[, ph])
         par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
-        i <- 1
         for (i in 1:length(snf$posx)) {
           plot(snf$posx[[i]],
             col = cc, pch = 19, cex = 1,
