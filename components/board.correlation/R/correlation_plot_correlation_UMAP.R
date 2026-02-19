@@ -39,9 +39,14 @@ correlation_plot_correlation_UMAP_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = cor_umap.opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_updown"
   )
 }
 
@@ -104,28 +109,53 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
     cor_umap.PLOTFUN <- shiny::reactive({
       dt <- cor_umap.DATA()
+      shiny::req(dt)
 
       pos <- dt[, 1:2]
       rho0 <- dt[, 3]
       rho1 <- dt[, 4]
 
       gene <- gene()
-      higenes <- c(gene)
-      higenes <- names(tail(sort(rho1**2), 20))
       higenes <- unique(names(c(head(sort(rho1), 10), tail(sort(rho1), 10))))
       cexlab <- ifelse(length(higenes) == 1, 2.2, 1.3)
+
+      ## Editor: custom labels override
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
+        lab_genes <- trimws(strsplit(input$label_features, "[,\n]+")[[1]])
+        higenes <- lab_genes[lab_genes != ""]
+      }
+
+      ## Editor: up/down colors → diverging gradient
+      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+
+      ## Editor: color just selected — collapse non-highlighted genes to 0 (neutral midpoint)
+      rho0_plot <- rho0
+      if (isTRUE(input$color_selection) && length(higenes) > 0) {
+        ## Convert probe IDs → gene symbols using the same method as pgx.plotGeneUMAP
+        ## (probe2symbol auto-detects the key column; make.names without unique=TRUE
+        ##  so all probes for a gene map to the same symbol and can be matched)
+        probe_syms <- make.names(playbase::probe2symbol(
+          names(rho0_plot), pgx$genes, "gene_name", fill_na = TRUE
+        ))
+        hi_syms <- make.names(playbase::probe2symbol(
+          higenes, pgx$genes, "gene_name", fill_na = TRUE
+        ))
+        rho0_plot[!probe_syms %in% hi_syms] <- 0
+      }
 
       p <- playbase::pgx.plotGeneUMAP(
         pgx,
         pos = pos,
-        value = rho0,
+        value = rho0_plot,
         title = "",
         cex = 0.9,
         cex.lab = cexlab,
         hilight = higenes,
         ntop = 20,
         labeltype = "gene_name",
-        plotlib = "plotly"
+        plotlib = "plotly",
+        col = c(col_down, "white", col_up)
       )
 
       if (!is.null(p)) {
@@ -140,7 +170,8 @@ correlation_plot_correlation_UMAP_server <- function(id,
       csvFunc = cor_umap.DATA,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
