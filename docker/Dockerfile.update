@@ -69,6 +69,7 @@ RUN R -e "install.packages('DiagrammeRsvg')"
 RUN R -e "install.packages('shinychat')"
 RUN R -e "install.packages('ggprism')"
 RUN R -e "devtools::install_github('alastairrushworth/inspectdf@bugfix/cran-dplyr-failing')"
+RUN R -e "install.packages('quarto')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
