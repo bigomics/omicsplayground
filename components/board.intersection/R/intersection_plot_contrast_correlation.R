@@ -38,9 +38,14 @@ contrast_correlation_ui <- function(
     info.text = info.text,
     caption = caption,
     options = ctcorrplot.opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -98,12 +103,15 @@ contrast_correlation_server <- function(id,
     ctcorrplot.PLOTLY <- function() {
       R <- plot_data()
       res <- getFoldChangeMatrix()
-      col <- grDevices::colorRampPalette(c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))(16)
-      col <- gplots::colorpanel(64, "royalblue3", "grey90", "indianred3")
+
+      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+
+      col <- gplots::colorpanel(64, col_down, "grey90", col_up)
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
       if (max(R, na.rm = TRUE) <= 0) col <- head(col, 32)
 
-      bluered.pal <- colorRampPalette(colors = c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))
+      bluered.pal <- colorRampPalette(colors = c(col_down, "grey90", col_up))
       cellnote <- NULL
 
       if (is.null(R) && !is.null(res)) {
@@ -141,7 +149,8 @@ contrast_correlation_server <- function(id,
       plotlib = "plotly",
       res = c(80, 85),
       pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }
