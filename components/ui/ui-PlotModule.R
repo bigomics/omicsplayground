@@ -40,6 +40,7 @@ PlotModuleUI <- function(id,
                          plot_type = "volcano",
                          bar_color_default = "#3181de",
                          palette_default = "muted_light",
+                         bars_order_default = "alphabetical",
                          color_selection = FALSE,
                          color_selection_default = FALSE) {
   ns <- shiny::NS(id)
@@ -425,6 +426,7 @@ PlotModuleUI <- function(id,
     height.2 = height.2,
     bar_color_default = bar_color_default,
     palette_default = palette_default,
+    bars_order_default = bars_order_default,
     color_selection = color_selection,
     color_selection_default = color_selection_default
   )

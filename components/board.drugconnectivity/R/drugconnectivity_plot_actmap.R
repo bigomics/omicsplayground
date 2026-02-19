@@ -38,10 +38,16 @@ drugconnectivity_plot_actmap_ui <- function(
     label = label,
     plotlib = "plotly",
     info.text = info.text,
+    caption = caption,
     options = plot_opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -121,13 +127,16 @@ drugconnectivity_plot_actmap_server <- function(id,
 
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
+
+        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+        pal <- grDevices::colorRampPalette(c(col_down, "white", col_up))(5)
         color.scale <- list(
-          list(0, "#3a5fcd"),
-          list(0.25, "#ebeffa"),
-          list(0.5, "white"),
-          list(0.66, "#faeeee"),
-          list(0.83, "#ebbbbb"),
-          list(1, "#cd5555")
+          list(0,    pal[[1]]),
+          list(0.25, pal[[2]]),
+          list(0.5,  pal[[3]]),
+          list(0.75, pal[[4]]),
+          list(1,    pal[[5]])
         )
         x_axis <- colnames(score)
         y_axis <- rownames(score)
@@ -197,7 +206,8 @@ drugconnectivity_plot_actmap_server <- function(id,
         csvFunc = plot_data_csv,
         res = 72,
         pdf.width = 6, pdf.height = 9,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

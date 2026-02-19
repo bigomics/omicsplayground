@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", color_selection = FALSE, color_selection_default = FALSE) {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE) {
   ## Snapshot current theme values (non-reactive) so that lazily-loaded
   ## modules start with the colours the user has already chosen.
   ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
@@ -309,7 +309,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "Value (descending)" = "descending",
                 "Custom (shuffle the order)" = "custom"
               ),
-              selected = "alphabetical"
+              selected = bars_order_default
             ),
             shiny::conditionalPanel(
               condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
@@ -541,7 +541,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "Value (descending)" = "descending",
                 "Custom (shuffle the order)" = "custom"
               ),
-              selected = "alphabetical"
+              selected = bars_order_default
             ),
             shiny::conditionalPanel(
               condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
