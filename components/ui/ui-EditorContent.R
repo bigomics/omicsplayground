@@ -739,6 +739,47 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     )
   )
 
+  # Scatter up/down: up/down colors + label control (MA plot, etc.)
+  scatter_updown_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+            )
+          ),
+          bslib::accordion_panel(
+            "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Correlation matrix: up/down colors only
   correlation_matrix_content <- shiny::div(
     class = "popup-modal",
@@ -790,6 +831,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "significance" = significance_content,
     "scatter_highlight" = scatter_highlight_content,
     "rank_plot" = rank_plot_content,
-    "correlation_matrix" = correlation_matrix_content
+    "correlation_matrix" = correlation_matrix_content,
+    "scatter_updown" = scatter_updown_content
   )
 }
