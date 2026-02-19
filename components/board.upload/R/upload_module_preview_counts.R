@@ -3,10 +3,6 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-## ---------------------------------------------------
-## COUNTS UPLOAD (for wizard dialog)
-## ---------------------------------------------------
-
 upload_table_preview_counts_ui <- function(id) {
   ns <- shiny::NS(id)
   uiOutput(ns("table_counts"), fill = TRUE)
@@ -572,7 +568,7 @@ upload_table_preview_counts_server <- function(id,
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       ext <- tools::file_ext(input$counts_csv$name)
-      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "methylomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
       c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet"))) 
@@ -633,14 +629,7 @@ upload_table_preview_counts_server <- function(id,
         } else {
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
-            df0 <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
-            )
+            df0 <- tryCatch({ playbase::read_Olink_NPX(datafile) }, error = function(w) { NULL } )
             if (is.null(df0)) {
               shinyalert::shinyalert(
                 title = "Error",
@@ -680,7 +669,25 @@ upload_table_preview_counts_server <- function(id,
         }
         )
       }
-      
+
+      ## Precheck methylation: hope to filter probes & samples
+      if (!is.null(df) && upload_datatype() == "methylomics") {
+        ## Remove probes
+        jj <- which(!is.na(rownames(df)) & rownames(df) != "")
+        df <- df[jj, , drop = FALSE]
+        ## Assume >=10K unique values for continuous (beta) signal
+        ## vv <- apply(df, 2, function(x) length(unique(x[!is.na(x)])))
+        ## ex <- which(vv >= 10000)
+        ## if (length(ex) == 0) {
+        ##  shinyalert::shinyalert(
+        ##    title = "Error",
+        ##    text = "Error: all samples exhibit a very narrow range of beta values. Please fix & re-upload.",
+        ##    type = "error"
+        ##  )
+        ## } else {
+        ##   df <- df[, ex, drop = FALSE]
+        ## }
+      }
       
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {

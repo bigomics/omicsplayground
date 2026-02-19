@@ -3,12 +3,6 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-
-## =========================================================================
-## =============== NORMALIZATION UI/SERVER =================================
-## =========================================================================
-
-
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
   uiOutput(ns("normalization"), fill = TRUE)
@@ -23,6 +17,7 @@ upload_module_normalization_server <- function(
   r_annot,
   upload_datatype,
   is.olink,
+  meth_type,
   is.count = FALSE,
   height = 720,
   recompute_pgx = NULL
@@ -31,6 +26,8 @@ upload_module_normalization_server <- function(
     id,
     function(input, output, session) {
       ns <- session$ns
+
+      zero_as_na <- function() isTRUE(input$zero_as_na)
 
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
@@ -41,14 +38,10 @@ upload_module_normalization_server <- function(
         )
       })
 
-      ## ------------------------------------------------------------------
-      ## Object reactive chain
-      ## ------------------------------------------------------------------
-
       ## ImputedX
       imputedX <- reactive({
-        shiny::req(dim(r_counts()))
-        shiny::req(!is.null(input$zero_as_na))
+
+        shiny::req(dim(r_counts()), !is.null(input$normalize))
         counts <- r_counts()
         samples <- r_samples()
         contrasts <- r_contrasts()
@@ -67,7 +60,8 @@ upload_module_normalization_server <- function(
 
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
 
-        if (input$zero_as_na) {
+        #if (input$zero_as_na) {
+        if (zero_as_na()) {
           dbg("[normalization_server:imputedX] Setting 0 values to NA")
           counts[which(counts == 0)] <- NA
         }
@@ -83,12 +77,16 @@ upload_module_normalization_server <- function(
             X[ii, ] <- log2(counts[ii, ] + prior)
           }
         } else {
-          prior0 <- playbase::getPrior(counts)
-          m <- input$normalization_method
-          prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
-          X <- log2(counts + prior)
+          if (upload_datatype() == "methylomics") {
+            X <- playbase::mToBeta(counts)
+            prior <- 0
+          } else {
+            prior0 <- playbase::getPrior(counts)
+            m <- input$normalization_method
+            prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
+            X <- log2(counts + prior)
+          }
         }
-
         dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
 
@@ -116,7 +114,6 @@ upload_module_normalization_server <- function(
             sel <- (rowMeans(is.na(X)) <= f)
           }
           dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", sum(!sel))
-
           X <- X[which(sel), , drop = FALSE]
           counts <- counts[which(sel), , drop = FALSE]
           annot <- annot[which(sel), , drop = FALSE]
@@ -132,13 +129,16 @@ upload_module_normalization_server <- function(
         }
 
         return(list(counts = counts, X = X, prior = prior, annot = annot))
+
       })
 
       ## Normalize
       normalizedX <- reactive({
+
         shiny::req(dim(imputedX()$X))
         X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
         prior <- imputedX()$prior
+
         if (input$normalize) {
           m <- input$normalization_method
           ref <- NULL
@@ -149,8 +149,12 @@ upload_module_normalization_server <- function(
           }
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
+          } else if (upload_datatype() == "methylomics") {
+            write.csv(X, "~/Desktop/XX.csv")
+            nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
+            if (!is.null(nX)) X=nX; rm(nX)
           } else {
-            dbg("[normalization_server:normalizedX] normalizing data using ", m)
+            dbg("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
@@ -158,6 +162,7 @@ upload_module_normalization_server <- function(
         }
 
         return(X)
+
       })
 
       ## Remove outliers
@@ -188,15 +193,10 @@ upload_module_normalization_server <- function(
 
       correctedX <- shiny::reactive({
         shiny::req(dim(cleanX()$X))
-        X <- cleanX()$X
-        cx <- list(X = X)
-        return(cx)
+        return(list(X = cleanX()$X))
       })
 
-      annot <- shiny::reactive({
-        annot <- imputedX()$annot
-        return(annot)
-      })
+      annot <- shiny::reactive({ return(imputedX()$annot) })
 
       ## ------------------------------------------------------------------
       ## Compute reactive
@@ -204,7 +204,7 @@ upload_module_normalization_server <- function(
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
         X0 <- imputedX()$X
-        X1 <- cleanX()$X ## normalized+cleaned
+        X1 <- cleanX()$X
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
@@ -417,7 +417,8 @@ upload_module_normalization_server <- function(
         X0 <- X0[rownames(X1), , drop = FALSE]
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
-        if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
+        ## if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
+        if (!any(is.na(X0)) && !(zero_as_na() && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
         } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
@@ -433,7 +434,8 @@ upload_module_normalization_server <- function(
           title("No missing values in imputed data", cex.main = 0.8)
         } else {
           ii <- which(is.na(X0))
-          if (isolate(input$zero_as_na)) {
+          ## if (isolate(input$zero_as_na)) {
+          if (isolate(zero_as_na())) {
             ii <- which(is.na(X0) | X0 == 0)
           }
           q999 <- quantile(X1, probs = 0.999, na.rm = TRUE)[1]
@@ -443,7 +445,8 @@ upload_module_normalization_server <- function(
 
           ## set zero value to 1, NA values to 2
           X2 <- 1 * is.na(X0)
-          if (input$zero_as_na) X2[X0 == 0] <- 1
+          ## if (input$zero_as_na) X2[X0 == 0] <- 1
+          if (zero_as_na()) X2[X0 == 0] <- 1
           jj <- head(order(-apply(X2, 1, sd)), 200)
           X2 <- X2[jj, ]
 
@@ -593,8 +596,6 @@ upload_module_normalization_server <- function(
         )
         cex1 <- 3 * as.numeric(as.character(cex1))
         pos <- playbase::uscale(pos)
-
-        ## How about plotly??
         plot(pos,
           col = col1, cex = 0.8 * cex1, pch = 20, las = 1,
           xlim = c(-0.1, 1.1), ylim = c(-0.1, 1.1),
@@ -624,7 +625,6 @@ upload_module_normalization_server <- function(
         zscore <- res$z.outlier
         Z <- res$Z
         pos <- res$pos[["pca"]]
-        ## plottype <- input$outlier_plottype
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -647,7 +647,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_correction <- function() {
-        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effect correction requires at least 3 samples."))
+        shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
         if (input$batchcorrect) {
           plot_before_after()
         } else {
@@ -855,7 +855,6 @@ upload_module_normalization_server <- function(
       )
 
       output$normalization <- shiny::renderUI({
-        ## reactive
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
 
@@ -978,7 +977,9 @@ upload_module_normalization_server <- function(
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
                 ),
-                shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
+                if (upload_datatype() != "methylomics") {
+                  shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na)
+                },
                 shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
                 shiny::conditionalPanel("input.filtermissing == true",
                   ns = ns,
@@ -1019,6 +1020,12 @@ upload_module_normalization_server <- function(
                       ignore.case = TRUE
                     )) {
                       c("maxMedian", "maxSum", "quantile", "reference")
+                    } else if (grepl("methylomics", upload_datatype(),
+                      ignore.case = TRUE
+                    )) {
+                      c(
+                        "BMIQ", "quantile"
+                      )
                     } else if (grepl("multi-omics", upload_datatype(),
                       ignore.case = TRUE
                     )) {
@@ -1163,10 +1170,6 @@ upload_module_normalization_server <- function(
         return(ui)
       })
 
-      ## ------------------------------------------------------------------
-      ## Plot modules
-      ## ------------------------------------------------------------------
-
       PlotModuleServer(
         "plot1",
         plotlib = "base",
@@ -1209,20 +1212,18 @@ upload_module_normalization_server <- function(
 
       counts <- reactive({
         shiny::req(dim(cleanX()$counts))
-        counts <- cleanX()$counts
-        return(counts)
+        return(cleanX()$counts)
       })
 
       cX <- reactive({
         shiny::req(dim(correctedX()$X))
-        cX <- correctedX()$X
-        return(cX)
+        return(correctedX()$X)
       })
 
       imputation_method <- reactive({
-        ll <- list(zero_as_na = input$zero_as_na, imputation = input$impute_method)
+        ll <- list(zero_as_na = zero_as_na(), imputation = input$impute_method)
         if (!input$impute) {
-          ll <- list(zero_as_na = input$zero_as_na, imputation = "no_imputation")
+          ll <- list(zero_as_na = zero_as_na(), imputation = "no_imputation")
         }
         return(ll)
       })
@@ -1241,7 +1242,6 @@ upload_module_normalization_server <- function(
 
       bc_method <- reactive({
         param <- input$bec_param
-        ## Remove <autodetect> if other params are selected
         if ("<autodetect>" %in% param && length(param) > 1) {
           param <- setdiff(param, "<autodetect>")
           shiny::updateSelectizeInput(session, "bec_param", selected = param)

@@ -1,7 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -60,6 +58,9 @@ upload_module_computepgx_server <- function(
           if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
         } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
+        } else if (dt == "methylomics") {
+          mm <- c("ttest", "ttest.welch", "trend.limma",
+            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
@@ -361,7 +362,7 @@ upload_module_computepgx_server <- function(
             )
           },
 
-          if (!is.null(probetype()) && probetype() == "running") {
+          if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
               shiny::tags$h4(
@@ -411,7 +412,7 @@ upload_module_computepgx_server <- function(
                     shiny::span(
                       "Exclude void features:",
                       inline_info_button(
-                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored."
+                        "Exclude features matching specific patterns. Please specify a list of patterns. Note: patterns are matched only at the start or end of their symbol. Case is ignored."
                       )
                     ),
                     FALSE
@@ -425,7 +426,16 @@ upload_module_computepgx_server <- function(
                     shiny::textInput(ns("exclude_genes"), NULL, "LOC ORF RIK")
                   )
                 ),
-              ),
+                if (upload_datatype() == "methylomics") {
+                  div(
+                    style = "margin-top:-24px;",
+                    shiny::checkboxInput(
+                      ns("remove.xy.probes"),
+                      shiny::span("Remove X and Y probes", inline_info_button("In methylation array, remove X- and Y-linked CpG probes.")),
+                      FALSE)
+                  )
+                },
+                ),
               if (upload_datatype() == "scRNA-seq") {
                 bslib::card(
                   shiny::checkboxGroupInput(
@@ -477,6 +487,17 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
+                if (upload_datatype() == "methylomics") {
+                  shiny::checkboxGroupInput(
+                    ns("diff_meth"),
+                    shiny::HTML("<h4>Methylomics analysis:</h4>"),
+                    choices = c(
+                      "Differentially methylated positions",
+                      "Differentially methylated regions"
+                    ),
+                    selected = "Differentially methylated positions",
+                    )
+                },
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -724,12 +745,9 @@ upload_module_computepgx_server <- function(
           shiny::HTML("<b>Data type:</b>", upload_datatype()),
           shiny::HTML("<br><b>Organism:</b>", upload_organism()),
           shiny::HTML("<br><b>Probe type:</b>", probetype())
-          ## shiny::HTML("<b>Name:</b><br>", upload_name()),
-          ## shiny::HTML("<b>Description:</b><br>", upload_description())
         )
       })
 
-      # handle ah task result
       output$probetype_result <- shiny::renderUI({
         p <- probetype()
         if (is.null(p) || p == "error") {
@@ -792,8 +810,6 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      # Input name and description. NEED CHECK!!! seems not to
-      # work. 18.11.24IK.
       shiny::observeEvent(list(metaRT(), compute_settings), {
         meta <- metaRT()
         pgx_info <- compute_settings
@@ -1031,7 +1047,8 @@ upload_module_computepgx_server <- function(
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        average.duplicated <- ("average.duplicated" %in% flt) ## new
+        average.duplicated <- ("average.duplicated" %in% flt)
+        remove.xy.probes <- ("remove.xy.probes" %in% flt)
         batch.correct.method <- "no_batch_correct"
         batch.pars <- "<autodetect>"
         if (class(compute_settings$bc_method) == "list") {
@@ -1089,8 +1106,10 @@ upload_module_computepgx_server <- function(
         if (!any(mt_threshold)) mt_threshold <- FALSE
         hb_threshold <- sc_compute_settings()$hb_threshold
         if (!any(hb_threshold)) hb_threshold <- FALSE
-        covariates <- input$regress_covariates 
+        covariates <- input$regress_covariates
         if (!is.null(covariates)) covariates <- as.character(covariates)
+        dma <- input$diff_meth # dma = differential meth. analysis
+        if (!is.null(dma)) dma <- as.character(dma)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1120,7 +1139,6 @@ upload_module_computepgx_server <- function(
           #-------- preprocess options ---------
           norm_method = norm_method(),
           settings = list(
-            ## compute settings only for info
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
             remove_outliers = compute_settings$remove_outliers,
@@ -1131,6 +1149,7 @@ upload_module_computepgx_server <- function(
           prune.samples = TRUE,
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
+          remove.xy.probes = remove.xy.probes, ## NEW
           only.known = remove.unknown,
           average.duplicated = average.duplicated,
           only.proteincoding = only.proteincoding,
@@ -1138,7 +1157,8 @@ upload_module_computepgx_server <- function(
           convert.hugo = append.symbol, ## should be renamed
           batch.correct.method = batch.correct.method,
           batch.pars = batch.pars,
-          covariates = covariates, ## NEW
+          covariates = covariates,
+          dma = dma, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
