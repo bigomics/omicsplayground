@@ -53,9 +53,14 @@ singlecell_plot_mappingplot_ui <- function(
     options = mapping.opts,
     title = title,
     caption = caption,
+    outputFunc = shiny::plotOutput,
+    outputFunc2 = shiny::plotOutput,
     download.fmt = c("png", "pdf", "svg", "csv"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "gradient"
   )
 }
 
@@ -197,6 +202,10 @@ singlecell_plot_mappingplot_server <- function(id,
         return(NULL)
       }
 
+      ## Editor: color palette (white → user color)
+      color_low <- if (!is.null(input$color_low)) input$color_low else get_color_theme()$secondary
+      col_pal <- grDevices::colorRampPalette(c("white", "grey90", color_low))
+
       final_data <- pd$final_data
       b0 <- 0.1 + 0.70 * pmax(30 - ncol(pd[["score"]]), 0)
 
@@ -208,6 +217,7 @@ singlecell_plot_mappingplot_server <- function(id,
         tl.cex <- ifelse(nrow(score3) > 60, 0.7, 0.85)
         if (max(sapply(rownames(score3), nchar)) > 30) tl.srt <- 45
         corrplot::corrplot(score3,
+          col = col_pal(100),
           mar = c(b0, 1, 4, 0.5),
           cl.lim = c(0, max(score3)), cl.pos = "n",
           tl.cex = tl.cex, tl.col = "grey20",
@@ -241,7 +251,8 @@ singlecell_plot_mappingplot_server <- function(id,
           if (k %% n != 0) rownames(score_matrix) <- rep("", nrow(score_matrix))
           if (nrow(score_matrix) > 100) rownames(score_matrix) <- rep("", nrow(score_matrix))
 
-          playbase::gx.imagemap(score_matrix, cex = 0.85, main = "", clust = FALSE)
+          playbase::gx.imagemap(score_matrix, cex = 0.85, main = "", clust = FALSE,
+            col = col_pal(64))
           title(main = method_name, cex.main = 1.1, line = 0.4, font.main = 1)
           k <- k + 1
         }
@@ -254,7 +265,7 @@ singlecell_plot_mappingplot_server <- function(id,
 
         playbase::gx.heatmap(score_matrix,
           scale = "none",
-          cexRow = 1, cexCol = 0.6, col = heat.colors(16),
+          cexRow = 1, cexCol = 0.6, col = col_pal(16),
           mar = c(b0, 15), key = FALSE, keysize = 0.5
         )
       }
@@ -279,7 +290,8 @@ singlecell_plot_mappingplot_server <- function(id,
       res = c(85, 95),
       pdf.width = 8, pdf.height = 8,
       add.watermark = watermark,
-      csvFunc = plot_data_csv
+      csvFunc = plot_data_csv,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

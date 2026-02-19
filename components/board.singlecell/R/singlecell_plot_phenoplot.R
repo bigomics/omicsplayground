@@ -41,7 +41,10 @@ singlecell_plot_phenoplot_ui <- function(
     options = phenoplot.opts,
     download.fmt = c("png", "pdf", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -58,6 +61,47 @@ singlecell_plot_phenoplot_server <- function(id,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      pd <- plot_data()
+      shiny::req(pd)
+      Y <- pd$pgx$samples
+      sel <- pd$sel
+      pheno <- pd$pheno
+
+      is.num.check <- function(y) {
+        suppressWarnings(numy <- as.numeric(as.character(y)))
+        !all(is.na(numy)) && (length(unique(y)) / length(y)) > 0.1
+      }
+
+      max_levels <- 0
+      level_names <- vector("list", 8)
+      for (ph in pheno) {
+        y <- Y[sel, ph]
+        y <- y[!y %in% c(NA, "", " ", "NA", "na")]
+        if (length(y) == 0 || is.num.check(y)) next
+        lvls <- sort(unique(as.character(y)))
+        max_levels <- max(max_levels, length(lvls))
+        for (j in seq_along(lvls)) {
+          if (j <= 8) level_names[[j]] <- c(level_names[[j]], lvls[j])
+        }
+      }
+      max_levels <- min(max(max_levels, 1), 8)
+
+      default_clrs <- omics_pal_d(palette = "muted_light")(8)
+      pickers <- lapply(seq_len(max_levels), function(i) {
+        nms <- level_names[[i]]
+        group_label <- if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
+        colourpicker::colourInput(
+          ns(paste0("custom_color_", i)),
+          label = group_label,
+          value = default_clrs[i]
+        )
+      })
+      shiny::tagList(pickers)
+    })
 
     plot_data <- shiny::reactive({
       #
@@ -93,6 +137,18 @@ singlecell_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 6, 0.8, 1)
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
+      ## Editor: palette
+      palette <- if (!is.null(input$palette)) input$palette else "muted_light"
+      if (palette %in% c("original", "default")) palette <- "muted_light"
+      if (palette == "custom") {
+        base_clrs <- sapply(1:8, function(j) {
+          val <- input[[paste0("custom_color_", j)]]
+          if (is.null(val)) omics_pal_d(palette = "muted_light")(8)[j] else val
+        })
+      } else {
+        base_clrs <- omics_pal_d(palette = palette)(8)
+      }
+
       ## is it a float/number???
       is.num <- function(y, fmin = 0.1) {
         suppressWarnings(numy <- as.numeric(as.character(y)))
@@ -117,8 +173,7 @@ singlecell_plot_phenoplot_server <- function(id,
           klr0 <- klrpal[ny]
         } else {
           y <- factor(as.character(y))
-          klrpal <- playdata::COLORS
-          klrpal <- paste0(gplots::col2hex(klrpal), "99")
+          klrpal <- rep(paste0(gplots::col2hex(base_clrs), "99"), length.out = 100)
           klr0 <- klrpal[y]
         }
 
@@ -209,7 +264,8 @@ singlecell_plot_phenoplot_server <- function(id,
       res = c(85, 95),
       pdf.width = 6,
       pdf.height = 10,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

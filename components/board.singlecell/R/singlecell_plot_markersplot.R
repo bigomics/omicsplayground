@@ -62,7 +62,10 @@ singlecell_plot_markersplot_ui <- function(
     options = markersplot.opts,
     download.fmt = c("png"), # FIXME pdf is not working, to avoid crashing other things, we decided to remove it
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "gradient"
   )
 }
 
@@ -198,7 +201,8 @@ singlecell_plot_markersplot_server <- function(id,
       cex1 <- 0.95 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
-      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
+      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      klrpal <- colorRampPalette(c("grey90", "grey60", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       plt <- list()
@@ -259,8 +263,8 @@ singlecell_plot_markersplot_server <- function(id,
       cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
-      klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60", "red4", "red3"))(16)
-      klrpal <- colorRampPalette(c("grey90", "grey60", "red3"))(16)
+      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      klrpal <- colorRampPalette(c("grey90", "grey60", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       plt <- list()
@@ -364,7 +368,8 @@ singlecell_plot_markersplot_server <- function(id,
       plotlib = "ggplot",
       res = c(85, 90),
       pdf.width = 10, pdf.height = 10,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

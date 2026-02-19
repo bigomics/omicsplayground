@@ -63,7 +63,10 @@ singlecell_plot_icpplot_ui <- function(
     options = icp.opts,
     download.fmt = c("png", "pdf", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "gradient"
   )
 }
 
@@ -143,7 +146,8 @@ singlecell_plot_icpplot_server <- function(id,
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey95", "grey65", "red3"))(16)
+      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      klrpal <- colorRampPalette(c("grey95", "grey65", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
 
       ntop <- 25
@@ -207,7 +211,8 @@ singlecell_plot_icpplot_server <- function(id,
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      klrpal <- colorRampPalette(c("grey95", "grey65", "red3"))(16)
+      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      klrpal <- colorRampPalette(c("grey95", "grey65", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
       cmin <- min(pd[["score"]], na.rm = TRUE)
@@ -320,7 +325,8 @@ singlecell_plot_icpplot_server <- function(id,
       ##      plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
