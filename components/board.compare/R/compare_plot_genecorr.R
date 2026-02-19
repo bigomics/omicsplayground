@@ -30,9 +30,14 @@ compare_plot_genecorr_ui <- function(
     label = "c",
     info.text = info.text,
     options = genecorr.opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -46,6 +51,26 @@ compare_plot_genecorr_server <- function(id,
                                          selected,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      colorby <- input$colorby
+      shiny::req(colorby)
+      grp <- playbase::pgx.getContrastGroups(pgx, colorby, as.factor = FALSE)
+      groups <- sort(unique(na.omit(as.character(grp))))
+      default_clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(length(groups) / 8))
+      pickers <- lapply(seq_along(groups), function(i) {
+        colourpicker::colourInput(
+          ns(paste0("custom_color_", i)),
+          label = groups[i],
+          value = default_clrs[i]
+        )
+      })
+      shiny::tagList(pickers)
+    })
+
     shiny::observeEvent(contrast1(), {
       shiny::req(contrast1())
       ct <- contrast1()
@@ -170,14 +195,29 @@ compare_plot_genecorr_server <- function(id,
       higenes <- head(selected(), 16)
 
       ## Set color for points
-      klrpal <- rep(1:7, 99)
-      klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
       colorby <- input$colorby
       grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = FALSE)
       grp <- grp[colnames(X1)]
       grp[is.na(grp)] <- "_"
       grp <- factor(grp)
-      klr1 <- klrpal[as.integer(grp)]
+
+      ## Editor: palette and custom colors
+      palette <- if (!is.null(input$palette)) input$palette else "default"
+      n_groups <- nlevels(grp)
+      if (palette %in% c("original", "default")) {
+        ## preserve the original RColorBrewer "Paired" palette
+        paired_pal <- rep(RColorBrewer::brewer.pal(12, "Paired"), ceiling(n_groups / 12))
+        klr_colors <- setNames(paired_pal[seq_len(n_groups)], levels(grp))
+      } else if (palette == "custom") {
+        default_clrs <- omics_pal_d("muted_light")(8)
+        klr_colors <- sapply(seq_len(n_groups), function(j) {
+          val <- input[[paste0("custom_color_", j)]]
+          if (is.null(val)) default_clrs[(j - 1) %% 8 + 1] else val
+        })
+        klr_colors <- setNames(klr_colors, levels(grp))
+      } else {
+        klr_colors <- setNames(omics_pal_d(palette)(n_groups), levels(grp))
+      }
 
       # Assemble subplots
       sub_plots <- vector("list", length(higenes))
@@ -198,9 +238,9 @@ compare_plot_genecorr_server <- function(id,
           plotly::add_trace(
             x = X1[j, ],
             y = X2[j, ],
-            name = grp,
             text = colnames(X1),
-            color = klr1,
+            color = grp,
+            colors = klr_colors,
             type = "scatter",
             mode = "markers",
             marker = list(size = 6),
@@ -277,7 +317,8 @@ compare_plot_genecorr_server <- function(id,
       func = plotly.RENDER, # genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }
