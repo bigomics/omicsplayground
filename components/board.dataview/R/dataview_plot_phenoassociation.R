@@ -35,7 +35,10 @@ dataview_plot_phenoassociation_ui <- function(
     options = opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -76,10 +79,14 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
         ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
         ## TODO: use na.omit to prevent plot error. This removes all rows where any value is NA. shall we use imputation?
         clean_annot <- na.omit(res$annot)
+        color_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+        color_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
         pq <- playbase::pgx.testPhenoCorrelation(
           df = clean_annot,
           plot = TRUE,
-          cex = 0.8
+          cex = 0.8,
+          color_up = color_up,
+          color_down = color_down
         )
         return(NULL)
       } else {
@@ -103,7 +110,8 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
       renderFunc2 = shiny::renderPlot,
       res = c(100, 170) * 0.85, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

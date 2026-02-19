@@ -739,6 +739,41 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     )
   )
 
+  # Correlation matrix: up/down colors only
+  correlation_matrix_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Return content based on plot type
   switch(plot_type,
     "volcano" = volcano_content,
@@ -754,6 +789,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "gradient" = gradient_content,
     "significance" = significance_content,
     "scatter_highlight" = scatter_highlight_content,
-    "rank_plot" = rank_plot_content
+    "rank_plot" = rank_plot_content,
+    "correlation_matrix" = correlation_matrix_content
   )
 }
