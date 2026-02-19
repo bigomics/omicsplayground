@@ -790,11 +790,12 @@ app_server <- function(input, output, session) {
         WATERMARK <<- auth$options$WATERMARK
       }
 
-      info("[SERVER] trigger on change dataset done!")
     }
   )
 
   tab_control <- function() {
+    info("[SERVER] tab_control")
+
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
@@ -802,7 +803,6 @@ app_server <- function(input, output, session) {
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
     ## Hide beta main tabs
-    info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", show.beta)
@@ -816,7 +816,6 @@ app_server <- function(input, output, session) {
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
 
     ## Dynamically show upon availability in pgx object
-    info("[SERVER] disabling extra features")
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
     tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
     tabRequire(PGX, session, "cell-tab", "deconv", TRUE)

@@ -41,7 +41,7 @@ multiwgcna_table_modulegenes_server <- function(id,
                                                 r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     table_df <- function() {
-      wgcna <- mwgcna()
+      wgcna <- mwgcna()$layers
 
       pheno <- r_phenotype()
       module <- r_module()

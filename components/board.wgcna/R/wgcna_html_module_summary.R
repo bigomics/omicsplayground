@@ -19,14 +19,15 @@ wgcna_html_module_summary_ui <- function(
       ns("docstyle"), "Ai summary:", c("short", "long"),
       inline = TRUE
     ),
-    shiny::checkboxInput(
-      ns("show_prompt"), "Show prompt", FALSE
-    ),
     shiny::actionButton(
       ns("refresh_btn"), "Generate!",
       icon = icon("refresh"),
       class = "btn-outline-primary"
-    )
+    ),
+    shiny::radioButtons(
+      ns("what2show"), "Show:", c("report","prompt"),
+      selected = "report", inline=TRUE
+    )    
   )
 
   PlotModuleUI(
@@ -55,18 +56,9 @@ wgcna_html_module_summary_server <- function(id,
       module <- r_module()
       shiny::req(wgcna)
       res <- "Summary not available"
-
-      if (multi) {
-        summaries <- lapply(wgcna, function(w) names(w$summary))
-        has.summary <- any(sapply(summaries, function(s) module %in% s))
-        if (has.summary) {
-          k <- which(sapply(summaries, function(s) module %in% s))
-          res <- wgcna[[k]]$summary[[module]]
-        }
-      } else {
-        if ("summary" %in% names(wgcna) && module %in% names(wgcna$summary)) {
-          res <- wgcna$summary[[module]]
-        }
+      rpt <- wgcna$report
+      if ( !is.null(rpt) && module %in% names(rpt$summaries)) {
+        res <- rpt$summaries[[module]]
       }
       return(res)
     }
@@ -87,55 +79,66 @@ wgcna_html_module_summary_server <- function(id,
       btn_count(btn_count() + 1)
     })
 
-    contents_text <- shiny::eventReactive(
-      {
-        btn_count()
-      },
-      {
-        wgcna <- wgcna()
-        module <- r_module()
-        ai_model <- getUserOption(session, "llm_model")
+    get_report <- shiny::eventReactive({
+      btn_count()
+    } ,{
+      wgcna <- wgcna()
+      module <- r_module()        
+      ai_model <- getUserOption(session,'llm_model')
 
-        if (btn_count() > 1 && ai_model != "") {
-          docstyle <- switch(input$docstyle,
-            "short" = "short summary",
-            "long" = "long detailed scientific discussion"
-          )
+      if( btn_count() < 1 || ai_model=='' ) {
+        return(NULL)
+      }
 
-          annot <- r_annot()
-          if (is.null(annot) && !is.null(wgcna$annot)) {
-            annot <- wgcna$annot
-          }
-
-          res <- playbase::wgcna.describeModules(
-            wgcna,
-            modules = module,
-            model = ai_model,
-            multi = multi,
-            annot = annot,
-            docstyle = docstyle,
-            numpar = 2,
-            experiment = wgcna$experiment,
-            verbose = 0
-          )
-          txt <- res$answers[[1]]
-          if (input$show_prompt) {
-            q <- res$questions[[1]]
-            txt <- paste(txt, "\n\n**Prompt**\n\n", q, "\n")
-          }
-        } else {
-          txt <- get_summary()
-        }
-        txt <- gsub(module, paste0("**", module, "**"), txt)
-        txt <- markdown::markdownToHTML(txt, fragment.only = TRUE)
-        txt <- paste0("<b>", module, " module</b><br><br>", txt)
-        return(txt)
-      },
-      ignoreNULL = FALSE,
-      ignoreInit = FALSE
+      docstyle <- switch( input$docstyle,
+        "short" = "short summary",
+        "long" = "long detailed scientific discussion"          
+      )
+      
+      annot <- r_annot()
+      if(is.null(annot) && !is.null(wgcna$annot)) {
+        annot <- wgcna$annot
+      }
+      
+      rpt <- playbase::wgcna.describeModules(
+        wgcna,
+        modules = module,
+        ntop = 50,
+        model = ai_model,
+        multi = multi,
+        annot = annot,
+        docstyle = docstyle,
+        numpar = 2,
+        experiment = wgcna$experiment,
+        verbose=0
+      )      
+      return(rpt)
+    },
+    ignoreNULL = FALSE,
+    ignoreInit = FALSE
     )
 
-
+    contents_text <- shiny::reactive({
+      rpt <- get_report()
+      if (is.null(rpt)) {
+        txt <- get_summary()
+        txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+        return(txt)
+      }
+      if(input$what2show == "prompt") {
+        q <- rpt$questions[[1]]
+        txt <- paste("\n\n***Prompt***\n\n",q,"\n")
+      }
+      if(input$what2show == "report") {
+        txt <- rpt$answers[[1]]
+      }
+      module <- isolate(r_module())        
+      txt <- gsub(module,paste0("**",module,"**"),txt)
+      txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+      txt <- paste0("<b>",module," module</b><br><br>", txt)
+      txt
+    })    
+    
     text.RENDER <- function() {
       res <- contents_text()
       shiny::div(class = "gene-info", shiny::HTML(res))

@@ -335,16 +335,19 @@ app_ui <- function(x) {
                   label = "Show captions",
                   is.checked = FALSE
                 ),
-                bslib::input_switch("enable_llm", "Enable AI"),
                 shiny::conditionalPanel(
-                  "input.enable_llm",
-                  bigdash::navbarDropdownItem(
-                    shiny::selectInput(
-                      inputId = "llm_model",
-                      label = NULL,
-                      choices = opt$LLM_MODELS,
-                      selected = 1,
-                      width = "100%"
+                  "input.enable_beta",
+                  bslib::input_switch("enable_llm", "Enable AI"),
+                  shiny::conditionalPanel(
+                    "input.enable_llm",
+                    bigdash::navbarDropdownItem(
+                      shiny::selectInput(
+                        inputId = "llm_model",
+                        label = NULL,
+                        choices = opt$LLM_MODELS,
+                        selected = 1,
+                        width = "100%"
+                      )
                     )
                   )
                 )
