@@ -113,6 +113,22 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
       shiny::req(res)
       shiny::req(trait)
 
+      ## Traits that are constant within a layer get NaN correlations in
+      ## modTraits (cor() of constant vector). barplot() then receives all
+      ## non-finite values and crashes with 'need finite ylim values'.
+      ## Also guard against trait being absent from some layers entirely.
+      m1 <- tryCatch(
+        sapply(res$modTraits, function(x) {
+          if (!trait %in% colnames(x)) return(rep(NA_real_, nrow(x)))
+          x[, trait]
+        }),
+        error = function(e) NULL
+      )
+      shiny::validate(shiny::need(
+        !is.null(m1) && any(is.finite(m1)),
+        "Selected trait has no finite correlation values across condition groups. Please select a different trait."
+      ))
+
       par(mfrow = c(1, 1), mar = c(8, 4, 2.5, 1))
       playbase::wgcna.plotTraitCorrelationBarPlots(
         res,
