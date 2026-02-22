@@ -2,7 +2,7 @@
 
 This analysis uses feature-level dimensionality reduction (UMAP) to explore co-expression structure among genes and gene sets.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## FEATURE MAP-SPECIFIC GUIDANCE
 

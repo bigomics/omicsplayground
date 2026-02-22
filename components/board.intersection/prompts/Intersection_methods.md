@@ -2,7 +2,7 @@
 
 This analysis compares differential expression signatures across multiple contrasts to identify shared and unique biological signals.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## INTERSECTION-SPECIFIC GUIDANCE
 

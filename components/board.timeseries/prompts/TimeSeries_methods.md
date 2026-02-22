@@ -2,7 +2,7 @@
 
 This analysis uses time series clustering to identify groups of genes with similar temporal expression patterns.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## TIME SERIES-SPECIFIC GUIDANCE
 

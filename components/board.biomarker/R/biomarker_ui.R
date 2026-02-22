@@ -173,7 +173,7 @@ BiomarkerUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
-          AISummaryCardUI(
+          AiTextCardUI(
             ns("biomarkerAISummary"),
             title = "AI Biomarker Summary",
             info.text = "AI-generated summary of the biomarker discovery results for the selected prediction target.",

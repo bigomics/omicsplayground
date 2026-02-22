@@ -2,7 +2,7 @@
 
 This analysis uses The Cancer Genome Atlas (TCGA) to evaluate survival associations and gene expression patterns across 32 cancer types in over 10,000 cancer patients.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## TCGA-SPECIFIC GUIDANCE
 

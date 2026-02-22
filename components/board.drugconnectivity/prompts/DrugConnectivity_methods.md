@@ -2,7 +2,7 @@
 
 This analysis uses drug connectivity mapping and drug set enrichment analysis (DSEA) to identify drugs whose perturbation signatures match or oppose the experimental gene expression signature.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## DRUG CONNECTIVITY-SPECIFIC GUIDANCE
 

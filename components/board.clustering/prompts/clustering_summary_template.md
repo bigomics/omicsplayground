@@ -4,32 +4,32 @@ Interpret the biological significance of the unsupervised clustering analysis ba
 
 ## Analysis Overview
 
-**Experiment:** {experiment}
+**Experiment:** {{experiment}}
 
-**Clustering method:** {cluster_method}
+**Clustering method:** {{cluster_method}}
 
-**Number of gene modules (K):** {n_modules}
+**Number of gene modules (K):** {{n_modules}}
 
 The analysis uses hierarchical clustering to group co-expressed genes into modules and identify patterns across samples.
 
 ## Gene Module Summary
 
-{cluster_info}
+{{cluster_info}}
 
 ## Functional Annotation of Gene Modules
 
 The following annotation terms show the strongest correlation with each gene module:
 
-{enriched_terms}
+{{enriched_terms}}
 
 ## Top Marker Genes
 
-{top_genes}
+{{top_genes}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**Clustering analysis** | {experiment}
+**Clustering analysis** | {{experiment}}
 
 Then synthesize the above information to explain:
 - The major gene expression programs revealed by the clustering analysis

@@ -1,16 +1,16 @@
 ## Task
 
-Interpret the biological significance of the pathway enrichment results for the contrast **{contrast}** using {pathway_type} pathway analysis.
+Interpret the biological significance of the pathway enrichment results for the contrast **{{contrast}}** using {{pathway_type}} pathway analysis.
 
 ## Contrast
 
-**Comparison:** {contrast}
+**Comparison:** {{contrast}}
 
 ## Enriched Pathways
 
 The following pathways show significant enrichment for the selected contrast:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological themes or processes
@@ -21,7 +21,7 @@ Focus on identifying:
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Pathway database: {pathway_type}
+**{{contrast}}** | Pathway database: {{pathway_type}}
 
 Then synthesize the above information to explain:
 - The primary biological processes affected in this comparison

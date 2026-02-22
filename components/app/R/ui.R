@@ -335,16 +335,23 @@ app_ui <- function(x) {
                   label = "Show captions",
                   is.checked = FALSE
                 ),
-                bslib::input_switch("enable_llm", "Enable AI"),
                 shiny::conditionalPanel(
-                  "input.enable_llm",
-                  bigdash::navbarDropdownItem(
-                    shiny::selectInput(
-                      inputId = "llm_model",
-                      label = NULL,
-                      choices = opt$LLM_MODELS,
-                      selected = 1,
-                      width = "100%"
+                  "input.enable_beta == true",
+                  bslib::input_switch("enable_ai", "Enable AI Features (requires API key)", value = FALSE),
+                  shiny::conditionalPanel(
+                    "input.enable_ai == true",
+                    bigdash::navbarDropdownItem(
+                      shiny::selectInput(
+                        inputId = "llm_model",
+                        label = "LLM Model:",
+                        choices = opt$LLM_MODELS,
+                        selected = 1,
+                        width = "100%"
+                      )
+                    ),
+                    shiny::helpText(
+                      "Set API keys in environment variables: ",
+                      "OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY"
                     )
                   )
                 )

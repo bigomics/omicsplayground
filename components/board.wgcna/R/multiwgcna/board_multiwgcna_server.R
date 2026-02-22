@@ -212,16 +212,12 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    # AI module summary
-    wgcna_ai_summary_server(
-      "multiwgcnaSummary",
-      wgcna = r_multiwgcna,
-      r_module = shiny::reactive(input$module),
-      r_annot = reactive(pgx$genes),
-      session = session,
-      multi = TRUE,
-      watermark = WATERMARK
-    )
+    ## TODO: wire AI report for multiwgcna once main WGCNA AI report is finalized
+    ## May need specialized multi-omics report templates
+    # wgcna_ai_report_server("multiwgcnaSummary",
+    #   wgcna = r_multiwgcna, pgx = pgx,
+    #   parent_session = session, watermark = WATERMARK
+    # )
 
     return(NULL)
   })

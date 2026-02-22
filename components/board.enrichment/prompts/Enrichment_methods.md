@@ -2,7 +2,7 @@
 
 This analysis uses gene set enrichment analysis to identify differentially enriched pathways and biological processes.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## ENRICHMENT-SPECIFIC GUIDANCE
 

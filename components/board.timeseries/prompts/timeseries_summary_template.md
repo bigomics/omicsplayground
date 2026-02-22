@@ -1,14 +1,14 @@
 ## Task
 
-Interpret the biological function and temporal dynamics of time series cluster **{module}** based on the enrichment analysis and gene expression patterns provided below.
+Interpret the biological function and temporal dynamics of time series cluster **{{module}}** based on the enrichment analysis and gene expression patterns provided below.
 
 ## Cluster Overview
 
-**Cluster:** {module}
+**Cluster:** {{module}}
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-{cluster_info}
+{{cluster_info}}
 
 This cluster contains genes that share a similar temporal expression profile. Consider how the cluster's biological function relates to the observed temporal pattern and experimental conditions.
 
@@ -16,7 +16,7 @@ This cluster contains genes that share a similar temporal expression profile. Co
 
 The following gene sets show significant correlation with this cluster's temporal expression pattern:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological theme or process
@@ -26,7 +26,7 @@ Focus on identifying:
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{module}** | Contrast: {contrast}
+**{{module}}** | Contrast: {{contrast}}
 
 Then synthesize the above information to explain:
 - The primary biological function of this gene cluster

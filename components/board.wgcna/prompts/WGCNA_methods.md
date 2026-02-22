@@ -2,7 +2,7 @@
 
 This analysis uses Weighted Gene Co-expression Network Analysis (WGCNA) to identify modules of co-expressed genes.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## WGCNA-SPECIFIC GUIDANCE
 

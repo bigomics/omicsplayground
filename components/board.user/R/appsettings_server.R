@@ -23,11 +23,9 @@ AppSettingsBoard <- function(id, auth, pgx) {
     })
 
     newfeatures.RENDER <- reactive({
-      newfeat <- markdown::markdownToHTML(
-        file = file.path(OPG, "FEATURES.md"),
-        fragment.only = TRUE
-      )
-      HTML(newfeat)
+      feature_file <- file.path(OPG, "FEATURES.md")
+      newfeat <- xfun::read_utf8(feature_file)
+      HTML(opg_markdown_to_html(paste(newfeat, collapse = "\n")))
     })
 
     PlotModuleServer(

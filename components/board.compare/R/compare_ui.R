@@ -212,7 +212,7 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        AISummaryCardUI(
+        AiTextCardUI(
           ns("compareAISummary"),
           title = "AI Comparison Summary",
           info.text = "AI-generated summary of the fold-change comparison between the two selected contrasts.",

@@ -2,7 +2,7 @@
 
 This analysis uses keyword enrichment (WordCloud analysis) to identify biological themes from gene set enrichment results.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## WORDCLOUD-SPECIFIC GUIDANCE
 

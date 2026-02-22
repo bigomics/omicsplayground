@@ -1,12 +1,12 @@
 ## Task
 
-Interpret the biological function and significance of MOFA factor **{factor}** based on the enrichment analysis and feature loading results provided below.
+Interpret the biological function and significance of MOFA factor **{{factor}}** based on the enrichment analysis and feature loading results provided below.
 
 ## Factor Overview
 
-**Factor:** {factor}
+**Factor:** {{factor}}
 
-**Associated Traits:** {traits}
+**Associated Traits:** {{traits}}
 
 The factor scores show correlation with the traits listed above. Consider how the factor's biological function might relate to these experimental conditions.
 
@@ -14,7 +14,7 @@ The factor scores show correlation with the traits listed above. Consider how th
 
 The following pathways and gene sets show significant enrichment for this factor:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological theme or process
@@ -22,12 +22,12 @@ Focus on identifying:
 3. Potential mechanistic connections to the associated traits
 
 ## Top Loading Features
-{top_genes}
+{{top_genes}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{factor}** | Associated traits: {traits}
+**{{factor}}** | Associated traits: {{traits}}
 
 Then synthesize the above information to explain:
 - The primary biological function captured by this factor

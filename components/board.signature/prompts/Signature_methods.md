@@ -2,7 +2,7 @@
 
 This analysis tests a gene signature against known gene set databases and contrast profiles to identify biological overlap and functional enrichment.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## GENE SIGNATURE ANALYSIS GUIDANCE
 

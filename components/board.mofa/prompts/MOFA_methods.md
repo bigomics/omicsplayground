@@ -2,7 +2,7 @@
 
 This analysis uses Multi-Omics Factor Analysis (MOFA) to identify latent factors that capture the major sources of variation across multiple omics data types.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## MOFA-SPECIFIC GUIDANCE
 

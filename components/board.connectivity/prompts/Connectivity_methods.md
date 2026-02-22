@@ -2,7 +2,7 @@
 
 This analysis uses gene signature connectivity mapping to identify experiments with similar or opposite expression profiles to the query contrast.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## CONNECTIVITY-SPECIFIC GUIDANCE
 

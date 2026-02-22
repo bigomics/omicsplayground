@@ -2,7 +2,7 @@
 
 This analysis uses differential gene expression analysis to identify genes with significant changes between experimental conditions.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## DIFFERENTIAL EXPRESSION-SPECIFIC GUIDANCE
 

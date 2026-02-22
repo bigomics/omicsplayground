@@ -2,7 +2,7 @@
 
 This analysis uses the Prize-Collecting Steiner Forest (PCSF) algorithm to reconstruct biological networks from differential expression data.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## PCSF-SPECIFIC GUIDANCE
 

@@ -147,7 +147,7 @@ CorrelationUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "calc(100vh - 181px)",
-        AISummaryCardUI(
+        AiTextCardUI(
           ns("correlationAISummary"),
           title = "AI Correlation Summary",
           info.text = "AI-generated summary of the correlation analysis results for the selected gene.",

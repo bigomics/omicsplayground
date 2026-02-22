@@ -1,12 +1,12 @@
 ## Task
 
-Interpret the biological significance of the gene set enrichment analysis results for the contrast **{contrast}** based on the enrichment data provided below.
+Interpret the biological significance of the gene set enrichment analysis results for the contrast **{{contrast}}** based on the enrichment data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Phenotype:** {phenotype}
+**Phenotype:** {{phenotype}}
 
 The enrichment analysis compares gene set activity between the experimental conditions defined by this contrast. Positive logFC indicates upregulation in the first group relative to the second.
 
@@ -14,7 +14,7 @@ The enrichment analysis compares gene set activity between the experimental cond
 
 The following gene sets show the strongest differential enrichment for this contrast:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological themes among the top enriched pathways
@@ -23,12 +23,12 @@ Focus on identifying:
 
 ## Leading Edge Genes
 
-{top_genes}
+{{top_genes}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Enrichment summary
+**{{contrast}}** | Enrichment summary
 
 Then synthesize the above information to explain:
 - The primary biological processes activated or suppressed in this contrast

@@ -1,10 +1,10 @@
 ## Task
 
-Interpret the biological significance of the connectivity analysis results for the contrast **{contrast}** based on the similarity data provided below.
+Interpret the biological significance of the connectivity analysis results for the contrast **{{contrast}}** based on the similarity data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
 The connectivity analysis compares the gene expression signature of this contrast against a reference database of public dataset signatures. Positive correlation (rho) indicates concordant regulation; negative correlation indicates discordant (opposite) regulation.
 
@@ -12,7 +12,7 @@ The connectivity analysis compares the gene expression signature of this contras
 
 The following reference signatures show the strongest connectivity to the query contrast:
 
-{top_signatures}
+{{top_signatures}}
 
 Focus on identifying:
 1. The dominant biological themes among the most similar experiments
@@ -21,16 +21,16 @@ Focus on identifying:
 
 ## Leading Edge Genes
 
-{leading_edge_genes}
+{{leading_edge_genes}}
 
 ## Enriched Pathways Across Similar Signatures
 
-{enriched_pathways}
+{{enriched_pathways}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Connectivity summary
+**{{contrast}}** | Connectivity summary
 
 Then synthesize the above information to explain:
 - The primary biological connections between the query experiment and the most similar public signatures

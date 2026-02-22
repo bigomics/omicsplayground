@@ -194,7 +194,7 @@ MultiWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(3, 4, 5),
             height = "100vh",
-            AISummaryCardUI(
+            AiTextCardUI(
               id = ns("multiwgcnaSummary"),
               title = "Summary",
               caption = "AI-generated summary of selected WGCNA module.",

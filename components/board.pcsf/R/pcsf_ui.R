@@ -135,7 +135,7 @@ PcsfUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          AISummaryCardUI(
+          AiTextCardUI(
             ns("pcsfAISummary"),
             title = "AI PCSF Summary",
             info.text = "AI-generated summary of the PCSF network analysis results for the selected contrast.",

@@ -171,13 +171,13 @@ app_server <- function(input, output, session) {
   env$user_settings <- list(
     enable_beta = shiny::reactive(input$enable_beta),
     enable_info = shiny::reactive(input$enable_info),
-    enable_ai = shiny::reactive(input$enable_llm)
+    enable_ai = shiny::reactive(input$enable_ai)
   )
 
   ## observe and set global User options
-  shiny::observeEvent(input$enable_llm, {
+  shiny::observeEvent(input$enable_ai, {
     model <- input$llm_model
-    if (input$enable_llm) {
+    if (input$enable_ai) {
       if (is.null(model) || model == "") {
         shinyalert::shinyalert(
           "ERROR",
@@ -193,17 +193,36 @@ app_server <- function(input, output, session) {
     }
   })
 
+  # Populate LLM models when AI is enabled
+  observe({
+    shiny::req(input$enable_beta, input$enable_ai)
+    if (isTRUE(input$enable_beta) && isTRUE(input$enable_ai)) {
+      models <- tryCatch({
+        all_models <- playbase::ai.get_models()
+        # Combine local and remote
+        c(all_models$local, all_models$remote)
+      }, error = function(e) {
+        c("No models available")
+      })
+
+      updateSelectInput(session, "llm_model", choices = models)
+    }
+  })
+
   shiny::observeEvent(
     {
-      list(input$enable_llm, input$llm_model)
+      list(input$enable_ai, input$llm_model)
     },
     {
-      if (input$enable_llm) {
+      shiny::req(input$enable_ai)
+      if (isTRUE(input$enable_ai)) {
         dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
         setUserOption(session, "llm_model", input$llm_model)
+        setUserOption(session, "enable_ai", TRUE)
       } else {
-        dbg("[MAIN] AI/LLM diabled")
+        dbg("[MAIN] AI/LLM disabled")
         setUserOption(session, "llm_model", "")
+        setUserOption(session, "enable_ai", FALSE)
       }
     }
   )
@@ -712,7 +731,7 @@ app_server <- function(input, output, session) {
     }
     return(ui)
   })
-  CopilotServer("copilot", pgx=PGX, input.click = reactive(input$copilot_click),
+  CopilotServer("copilot", pgx=PGX, input.click = reactive({ req(input$copilot_click > 0); input$copilot_click }),
     layout="fixed", maxturns=opt$LLM_MAXTURNS)
 
   ## count the number of times a navtab is clicked during the session
@@ -832,6 +851,7 @@ app_server <- function(input, output, session) {
     toggleTab("timeseries-tabs1", "AI Summary", show.ai && show.beta)
     toggleTab("wordcloud-tabs", "AI Summary", show.ai && show.beta)
     toggleTab("pcsf-tabs", "AI Summary", show.ai && show.beta)
+    toggleTab("wgcna-tabs", "AI Report", show.ai && show.beta)
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)

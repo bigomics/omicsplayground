@@ -1,12 +1,12 @@
 ## Task
 
-Interpret the biological significance of the differential gene expression analysis results for the contrast **{contrast}** based on the data provided below.
+Interpret the biological significance of the differential gene expression analysis results for the contrast **{{contrast}}** based on the data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Phenotype:** {phenotype}
+**Phenotype:** {{phenotype}}
 
 The differential expression analysis compares gene expression between the experimental conditions defined by this contrast. Positive logFC indicates upregulation in the first group relative to the second.
 
@@ -14,7 +14,7 @@ The differential expression analysis compares gene expression between the experi
 
 The following genes show the strongest differential expression for this contrast:
 
-{top_genes}
+{{top_genes}}
 
 Focus on identifying:
 1. The dominant functional themes among the top differentially expressed genes
@@ -23,12 +23,12 @@ Focus on identifying:
 
 ## Summary Statistics
 
-{summary_stats}
+{{summary_stats}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Expression summary
+**{{contrast}}** | Expression summary
 
 Then synthesize the above information to explain:
 - The primary biological processes activated or suppressed in this contrast

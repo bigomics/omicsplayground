@@ -2,7 +2,7 @@
 
 This analysis uses pathway enrichment analysis to identify biological pathways and gene sets with coordinated expression changes.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## PATHWAY ANALYSIS GUIDANCE
 

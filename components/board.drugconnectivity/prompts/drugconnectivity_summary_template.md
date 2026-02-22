@@ -1,12 +1,12 @@
 ## Task
 
-Interpret the drug connectivity analysis results for the contrast **{contrast}** based on the drug enrichment data provided below.
+Interpret the drug connectivity analysis results for the contrast **{{contrast}}** based on the drug enrichment data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Analysis type:** {method}
+**Analysis type:** {{method}}
 
 The drug connectivity analysis correlates the experimental gene expression signature for this contrast with known drug perturbation profiles from the L1000 database. Positive NES indicates drugs that mimic the experimental signature; negative NES indicates drugs that oppose it.
 
@@ -14,7 +14,7 @@ The drug connectivity analysis correlates the experimental gene expression signa
 
 The following drugs show the strongest connectivity with the experimental signature:
 
-{top_drugs}
+{{top_drugs}}
 
 Focus on identifying:
 1. The most promising drug candidates (especially those opposing the disease signature)
@@ -23,12 +23,12 @@ Focus on identifying:
 
 ## Mechanism of Action Analysis
 
-{moa_summary}
+{{moa_summary}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Drug connectivity summary
+**{{contrast}}** | Drug connectivity summary
 
 Then synthesize the above information to explain:
 - The most significant drug-experiment connections and their potential therapeutic implications

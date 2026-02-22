@@ -2,7 +2,7 @@
 
 This analysis uses computational cell type deconvolution and marker gene analysis to characterize cell populations in the dataset.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## SINGLE-CELL ANALYSIS GUIDANCE
 

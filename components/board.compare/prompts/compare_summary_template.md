@@ -1,18 +1,18 @@
 ## Task
 
-Interpret the biological significance of comparing fold-change signatures between the contrasts **{contrast1}** and **{contrast2}** based on the comparison data provided below.
+Interpret the biological significance of comparing fold-change signatures between the contrasts **{{contrast1}}** and **{{contrast2}}** based on the comparison data provided below.
 
 ## Analysis Overview
 
-**Contrast 1:** {contrast1}
+**Contrast 1:** {{contrast1}}
 
-**Contrast 2:** {contrast2}
+**Contrast 2:** {{contrast2}}
 
 This analysis compares the transcriptional responses of two experimental contrasts by correlating their gene-level fold-change profiles. Concordant changes suggest shared biological mechanisms while discordant changes highlight condition-specific responses.
 
 ## Correlation Statistics
 
-{correlation_stats}
+{{correlation_stats}}
 
 Focus on identifying:
 1. The degree of similarity between the two transcriptional responses
@@ -23,18 +23,18 @@ Focus on identifying:
 
 The following genes are differentially expressed in both contrasts:
 
-{shared_genes}
+{{shared_genes}}
 
 ## Contrast-Specific Genes
 
 The following genes are differentially expressed in only one of the contrasts:
 
-{contrast_specific}
+{{contrast_specific}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast1}** vs **{contrast2}** | Comparison summary
+**{{contrast1}}** vs **{{contrast2}}** | Comparison summary
 
 Then synthesize the above information to explain:
 - The overall similarity or divergence between the two contrasts based on fold-change correlation

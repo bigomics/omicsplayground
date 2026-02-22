@@ -2,7 +2,7 @@
 
 This analysis compares fold-change signatures between two experimental contrasts to identify shared and divergent transcriptional responses.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## COMPARISON-SPECIFIC GUIDANCE
 

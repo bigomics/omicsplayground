@@ -4,9 +4,9 @@ Interpret the cell type composition and marker gene analysis results for the exp
 
 ## Analysis Overview
 
-**Reference dataset:** {refset}
+**Reference dataset:** {{refset}}
 
-**Deconvolution method:** {dcmethod}
+**Deconvolution method:** {{dcmethod}}
 
 The cell profiling analysis estimates the proportion of different cell types in each sample using computational deconvolution against the selected reference dataset. Marker genes highlight the most variable genes across samples or clusters.
 
@@ -14,7 +14,7 @@ The cell profiling analysis estimates the proportion of different cell types in 
 
 The following cell types were identified as the dominant populations across all samples:
 
-{cell_types}
+{{cell_types}}
 
 Focus on identifying:
 1. The dominant cell populations and their relative abundance
@@ -23,16 +23,16 @@ Focus on identifying:
 
 ## Marker Genes
 
-{marker_genes}
+{{marker_genes}}
 
 ## Phenotype Associations
 
-{phenotype_info}
+{{phenotype_info}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{refset}** | Cell profiling summary
+**{{refset}}** | Cell profiling summary
 
 Then synthesize the above information to explain:
 - The primary cell type composition of the samples and how it relates to the experimental context

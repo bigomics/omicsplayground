@@ -253,15 +253,12 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       mwgcna = r_wgcna
     )
 
-    # AI module summary
-    wgcna_ai_summary_server(
-      "consensusWGCNAmoduleSummary",
-      wgcna = r_wgcna,
-      r_module = shiny::reactive(input$module),
-      session = session,
-      multi = FALSE,
-      watermark = WATERMARK
-    )
+    ## TODO: wire AI report for consensusWGCNA once main WGCNA AI report is finalized
+    ## May need specialized consensus report templates
+    # wgcna_ai_report_server("consensusWGCNAmoduleSummary",
+    #   wgcna = r_wgcna, pgx = pgx,
+    #   parent_session = session, watermark = WATERMARK
+    # )
 
     consensusWGCNA_plot_traitsignificance_server(
       id = "consensusWGCNATraitSignificance",

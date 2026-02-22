@@ -2,7 +2,7 @@
 
 This analysis uses gene-gene and sample-gene correlation analysis to identify co-expressed features and potential regulatory relationships.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## CORRELATION-SPECIFIC GUIDANCE
 

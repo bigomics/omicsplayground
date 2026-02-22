@@ -1,24 +1,24 @@
 ## Task
 
-Interpret the biological significance of the Prize-Collecting Steiner Forest (PCSF) network analysis results for the contrast **{contrast}** based on the network data provided below.
+Interpret the biological significance of the Prize-Collecting Steiner Forest (PCSF) network analysis results for the contrast **{{contrast}}** based on the network data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Phenotype:** {phenotype}
+**Phenotype:** {{phenotype}}
 
 The PCSF analysis reconstructs a subnetwork of interacting genes connecting the most differentially expressed genes for this contrast, using protein-protein interaction databases as the backbone.
 
 ## Network Summary
 
-{network_summary}
+{{network_summary}}
 
 ## Hub Genes (by centrality)
 
 The following genes have the highest centrality scores in the PCSF network, indicating topological importance as potential driver genes:
 
-{hub_genes}
+{{hub_genes}}
 
 Focus on identifying:
 1. Which hub genes are most likely to be functional drivers of the observed phenotype
@@ -27,12 +27,12 @@ Focus on identifying:
 
 ## Enriched Pathways in Network
 
-{network_pathways}
+{{network_pathways}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | PCSF network summary
+**{{contrast}}** | PCSF network summary
 
 Then synthesize the above information to explain:
 - The key hub genes and their potential roles as drivers of the biological response

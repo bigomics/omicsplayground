@@ -345,7 +345,7 @@ ClusteringUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
-          AISummaryCardUI(
+          AiTextCardUI(
             ns("clusteringAISummary"),
             title = "AI Clustering Summary",
             info.text = "AI-generated summary of the clustering analysis results including gene modules and functional annotations.",

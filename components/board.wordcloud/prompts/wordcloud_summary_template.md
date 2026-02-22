@@ -1,10 +1,10 @@
 ## Task
 
-Interpret the biological themes and significance of keyword enrichment results for contrast **{contrast}** based on the enrichment analysis provided below.
+Interpret the biological themes and significance of keyword enrichment results for contrast **{{contrast}}** based on the enrichment analysis provided below.
 
 ## Contrast Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
 The keyword enrichment analysis extracts frequently appearing words from enriched gene set names, providing an unbiased text-based summary of the biological processes affected in this comparison.
 
@@ -12,16 +12,16 @@ The keyword enrichment analysis extracts frequently appearing words from enriche
 
 The following keywords show the strongest enrichment for this contrast:
 
-{top_keywords}
+{{top_keywords}}
 
 ## Keyword Statistics
 
-{keyword_stats}
+{{keyword_stats}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**Keyword enrichment** | Contrast: {contrast}
+**Keyword enrichment** | Contrast: {{contrast}}
 
 Then synthesize the above information to explain:
 - The dominant biological themes emerging from the keyword enrichment

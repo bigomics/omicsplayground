@@ -243,7 +243,7 @@ ExpressionUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = halfH,
-        AISummaryCardUI(
+        AiTextCardUI(
           ns("expressionAISummary"),
           title = "AI Expression Summary",
           info.text = "AI-generated summary of the differential expression analysis results for the selected contrast.",

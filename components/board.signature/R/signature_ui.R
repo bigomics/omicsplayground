@@ -250,7 +250,7 @@ SignatureUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "calc(100vh - 181px)",
-        AISummaryCardUI(
+        AiTextCardUI(
           ns("aiSummary"),
           title = "AI Summary",
           info.text = "AI-generated summary of the gene signature overlap and enrichment analysis. The summary interprets the top overlapping gene sets and key genes to identify the biological function of the signature.",

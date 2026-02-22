@@ -182,7 +182,7 @@ clustering_build_ai_params <- function(pgx,
 #' Clustering AI Summary Server
 #'
 #' Server logic for clustering AI-generated summaries.
-#' Uses omicsai_summary_card_server with PlotModuleServer integration.
+#' Uses omicsai_text_server with PlotModuleServer integration.
 #'
 #' @param id Shiny module namespace ID
 #' @param pgx PGX object (non-reactive)
@@ -193,7 +193,7 @@ clustering_build_ai_params <- function(pgx,
 #' @param cache OmicsAI cache object (optional)
 #' @param watermark Logical; add watermark to output
 #'
-#' @return Result from omicsai_summary_card_server
+#' @return Result from omicsai_text_server
 clustering_ai_summary_server <- function(id,
                                          pgx,
                                          getTopMatrix,
@@ -261,29 +261,11 @@ clustering_ai_summary_server <- function(id,
     )
   })
 
-  # PlotModuleServer wrapper
-  plot_server_wrapper <- function(id, func, func2, watermark) {
-    PlotModuleServer(
-      id,
-      plotlib = "generic",
-      plotlib2 = "generic",
-      func = func,
-      func2 = func2,
-      renderFunc = shiny::renderUI,
-      renderFunc2 = shiny::renderUI,
-      pdf.width = 8, pdf.height = 5,
-      res = c(75, 100),
-      add.watermark = watermark
-    )
-  }
-
-  # Initialize omicsai card module
-  omicsai::omicsai_summary_card_server(
+  AiTextCardServer(
     id = id,
     params_reactive = params_reactive,
     template_reactive = template_reactive,
     config_reactive = config_reactive,
-    plot_server_wrapper = plot_server_wrapper,
     cache = cache,
     watermark = watermark
   )

@@ -39,10 +39,11 @@ WgcnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WGCNA" = list(disable = c("selected_module", "selected_trait")),
-      "Eigengenes" = list(disable = c("selected_module", "selected_trait")),
-      "Modules" = list(disable = c(NULL)),
-      "Enrichment" = list(disable = c("selected_trait"))
+      "WGCNA" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
+      "Eigengenes" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
+      "Modules" = list(disable = c("ai_report_accordion")),
+      "Enrichment" = list(disable = c("selected_trait", "ai_report_accordion")),
+      "AI Report" = list(disable = c("selected_module", "selected_trait", "compare_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -296,14 +297,13 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
-    # AI module summary
-    wgcna_ai_summary_server(
-      "moduleSummary",
-      wgcna = wgcna,
-      r_module = shiny::reactive(input$selected_module),
-      session = session,
-      multi = FALSE,
-      watermark = WATERMARK
+    ## TODO: bring back AI summary card in Modules tab if requested
+    ## AI summary moved to AI Report tab (Summary mode)
+
+    ## ===== AI REPORT =====
+    wgcna_ai_report_server("ai_report",
+      wgcna = wgcna, pgx = pgx,
+      parent_session = session, watermark = WATERMARK
     )
 
     return(NULL)

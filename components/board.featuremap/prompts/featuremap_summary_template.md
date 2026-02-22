@@ -1,12 +1,12 @@
 ## Task
 
-Interpret the biological significance of the feature map analysis for the contrast **{contrast}** based on the feature clustering and expression data provided below.
+Interpret the biological significance of the feature map analysis for the contrast **{{contrast}}** based on the feature clustering and expression data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Feature level:** {feature_level}
+**Feature level:** {{feature_level}}
 
 The feature map visualizes genes (or gene sets) in a 2D UMAP embedding based on co-expression structure. Features that are nearby on the map have high pairwise covariance and tend to change together across conditions.
 
@@ -14,7 +14,7 @@ The feature map visualizes genes (or gene sets) in a 2D UMAP embedding based on 
 
 The following features show the strongest variation across contrasts (ranked by rms.FC or sd):
 
-{top_features}
+{{top_features}}
 
 Focus on identifying:
 1. The dominant biological themes among the most variable features
@@ -23,12 +23,12 @@ Focus on identifying:
 
 ## Nearby Features on the Map
 
-{nearby_features}
+{{nearby_features}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | Feature map summary
+**{{contrast}}** | Feature map summary
 
 Then synthesize the above information to explain:
 - The primary gene modules or co-expression clusters suggested by the feature map

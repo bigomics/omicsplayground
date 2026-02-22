@@ -1,14 +1,18 @@
+{{methods_context}}
+
+{{style_instructions}}
+
 ## Task
 
-Interpret the biological function and significance of WGCNA module **{module}** based on the enrichment analysis and correlation results provided below.
+Interpret the biological function and significance of WGCNA module **{{module}}** based on the enrichment analysis and correlation results provided below.
 
 ## Module Overview
 
-**Module:** {module}
+**Module:** {{module}}
 
-**Associated Phenotypes:** {phenotypes}
+**Associated Phenotypes:** {{phenotypes}}
 
-{module_stats}
+{{module_stats}}
 
 The module eigengene shows correlation with the phenotypes listed above. Consider how the module's biological function might relate to these experimental conditions.
 
@@ -16,7 +20,7 @@ The module eigengene shows correlation with the phenotypes listed above. Conside
 
 The following pathways and gene sets show significant enrichment in this module:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological theme or process
@@ -24,12 +28,12 @@ Focus on identifying:
 3. Potential mechanistic connections to the associated phenotypes
 
 ## Hub Genes
-{keygenes_section}
+{{keygenes_section}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{module} module** | Correlated phenotypes: {phenotypes}
+**{{module}} module** | Correlated phenotypes: {{phenotypes}}
 
 Then synthesize the above information to explain:
 - The primary biological function of this module

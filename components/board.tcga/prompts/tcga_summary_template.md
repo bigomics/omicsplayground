@@ -1,14 +1,14 @@
 ## Task
 
-Interpret the biological and clinical significance of the TCGA survival analysis results for the contrast **{contrast}** based on the data provided below.
+Interpret the biological and clinical significance of the TCGA survival analysis results for the contrast **{{contrast}}** based on the data provided below.
 
 ## Analysis Overview
 
-**Contrast:** {contrast}
+**Contrast:** {{contrast}}
 
-**Phenotype:** {phenotype}
+**Phenotype:** {{phenotype}}
 
-**Signature type:** {signature_type}
+**Signature type:** {{signature_type}}
 
 The TCGA analysis correlates the gene expression signature from this contrast with survival outcomes across 32 TCGA cancer types. Each cancer cohort is split into patients positively and negatively correlated with the signature, and survival is compared using the Kaplan-Meier method.
 
@@ -16,7 +16,7 @@ The TCGA analysis correlates the gene expression signature from this contrast wi
 
 The following genes define the expression signature used for the TCGA survival analysis:
 
-{top_genes}
+{{top_genes}}
 
 Focus on identifying:
 1. Known cancer-related genes and their potential roles in tumor biology
@@ -25,12 +25,12 @@ Focus on identifying:
 
 ## Survival Results Across Cancer Types
 
-{survival_results}
+{{survival_results}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{contrast}** | TCGA survival summary
+**{{contrast}}** | TCGA survival summary
 
 Then synthesize the above information to explain:
 - Which cancer types show significant survival associations with this gene signature

@@ -2,7 +2,7 @@
 
 This analysis uses unsupervised clustering to discover patterns, subgroups, and gene modules in high-dimensional omics data.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## CLUSTERING-SPECIFIC GUIDANCE
 

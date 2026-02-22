@@ -134,7 +134,7 @@ DrugConnectivityUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,
-      AISummaryCardUI(
+      AiTextCardUI(
         ns("drugconnectivityAISummary"),
         title = "AI Drug Connectivity Summary",
         info.text = "AI-generated summary of the drug connectivity analysis results for the selected contrast.",

@@ -4,7 +4,7 @@ Interpret the biological function and significance of the tested gene signature 
 
 ## Signature Overview
 
-**Signature size:** {signature_size} genes
+**Signature size:** {{signature_size}} genes
 
 The signature was compared against curated gene set databases to identify overlapping biological processes and pathways.
 
@@ -12,7 +12,7 @@ The signature was compared against curated gene set databases to identify overla
 
 The following gene sets show significant overlap with the tested signature:
 
-{genesets}
+{{genesets}}
 
 Focus on identifying:
 1. The dominant biological theme or process captured by the signature
@@ -21,12 +21,12 @@ Focus on identifying:
 
 ## Top Genes in Signature
 
-{top_genes}
+{{top_genes}}
 
 ## Output Instructions
 
 Always begin your summary with a heading in this exact format (maintain strict adherence):
-**Gene Signature Analysis** | Signature size: {signature_size} genes
+**Gene Signature Analysis** | Signature size: {{signature_size}} genes
 
 Then synthesize the above information to explain:
 - The primary biological function captured by this signature

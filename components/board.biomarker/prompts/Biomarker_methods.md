@@ -2,7 +2,7 @@
 
 This analysis uses machine learning-based feature selection to identify potential biomarkers for classification or prediction of phenotypic outcomes.
 
-Experiment: {experiment}
+Experiment: {{experiment}}
 
 ## BIOMARKER-SPECIFIC GUIDANCE
 
