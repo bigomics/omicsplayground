@@ -80,7 +80,7 @@ wgcna_build_ai_params <- function(wgcna,
       )
       gset_table <- omicsai::omicsai_format_mdtable(gset_df, formatters = list(
         Score = function(x) omicsai::omicsai_format_num(x, 2),
-        `Q-value` = function(x) omicsai::omicsai_format_num(x, 3)
+        `Q-value` = omicsai::omicsai_format_pvalue
       ))
 
       score_vals <- gse$score[!is.na(gse$score)]
