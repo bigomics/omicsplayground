@@ -55,8 +55,13 @@ functional_plot_wikipathway_actmap_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     height = height,
-    width = c("100%", "100%")
+    width = c("100%", "100%"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -130,6 +135,9 @@ functional_plot_wikipathway_actmap_server <- function(id,
           !is.null(res), "Enrichment table is too small to plot an activation matrix."
         ))
 
+        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+
         playbase::pgx.plotActivation(
           pgx,
           contrasts = input$selected_contrasts,
@@ -145,7 +153,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           maxfc = 20,
           mar = c(15, 30),
           tl.cex = 0.85,
-          row.nchar = 50
+          row.nchar = 50,
+          heatmap_colors = c(col_down, "grey90", col_up)
         )
       }
 
@@ -154,6 +163,9 @@ functional_plot_wikipathway_actmap_server <- function(id,
         if (is.null(res) || nrow(res) == 0) {
           return(NULL)
         }
+
+        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
 
         playbase::pgx.plotActivation(
           pgx,
@@ -170,7 +182,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           maxfc = 100,
           mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200)
+          row.nchar = ifelse(input$rotate, 60, 200),
+          heatmap_colors = c(col_down, "grey90", col_up)
         )
       }
 
@@ -184,7 +197,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
         remove_margins = FALSE,
         pdf.height = 11,
         pdf.width = 6,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

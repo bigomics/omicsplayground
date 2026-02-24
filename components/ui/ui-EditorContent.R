@@ -3,7 +3,16 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL) {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE) {
+  ## Snapshot current theme values (non-reactive) so that lazily-loaded
+  ## modules start with the colours the user has already chosen.
+  ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
+
+  ## Per-plot-type bar colour: correlation and expression_barplot use
+  ## scatter_color (→ secondary theme); all other bar plots use bar_color.
+  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
+  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary    else ct$bar_color
+
   # Default editor content
   volcano_content <- shiny::div(
     class = "popup-modal",
@@ -22,11 +31,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_up"), "Up",
-                "#f23451"
+                ct$primary
               ),
               colourpicker::colourInput(
                 ns_parent("color_down"), "Down",
-                "#3181de"
+                ct$secondary
               )
             )
           ),
@@ -222,17 +231,22 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               width = 1 / 2,
               colourpicker::colourInput(
                 ns_parent("color_high"), "High",
-                "#f23451"
+                ct$primary
               ),
               colourpicker::colourInput(
                 ns_parent("color_mid"), "Mid",
-                "#eeeeee"
+                ct$neutral
               ),
               colourpicker::colourInput(
                 ns_parent("color_low"), "Low",
-                "#3181de"
+                ct$secondary
               )
             )
+          ),
+          # Group Order (for split heatmaps)
+          bslib::accordion_panel(
+            "Group Order",
+            shiny::uiOutput(ns_parent("hm_group_order_ui"))
           ),
           # Margins
           bslib::accordion_panel(
@@ -277,8 +291,8 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             bslib::layout_column_wrap(
               width = 1,
               colourpicker::colourInput(
-                ns_parent("bar_color"), "Bar Color",
-                "#3181de"
+                ns_parent(bar_color_input_id), "Bar Color",
+                bar_color_init
               )
             )
           ),
@@ -293,9 +307,9 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 "Alphabetical" = "alphabetical",
                 "Value (ascending)" = "ascending",
                 "Value (descending)" = "descending",
-                "Custom (drag & drop)" = "custom"
+                "Custom (shuffle the order)" = "custom"
               ),
-              selected = "alphabetical"
+              selected = bars_order_default
             ),
             shiny::conditionalPanel(
               condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
@@ -311,7 +325,489 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2")) %>%
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Scatterplot specific content
+  scatterplot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          # Color Scheme
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1,
+              colourpicker::colourInput(
+                ns_parent("scatter_color"), "Point Color",
+                ct$secondary
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Feature map specific content
+  featuremap_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(
+                ns_parent("color_low"), "Low color",
+                ct$secondary
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_high"), "High color",
+                ct$primary
+              )
+            )
+          ),
+          bslib::accordion_panel(
+            "Labels",
+            if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = color_selection_default),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Enrichment plot specific content
+  enrichment_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(
+                ns_parent("color_up"), "Up (positive)",
+                ct$primary
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_down"), "Down (negative)",
+                ct$secondary
+              )
+            ),
+            colourpicker::colourInput(
+              ns_parent("color_line"), "Enrichment line",
+              ct$line
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Clustering scatterplot (categorical palette) specific content
+  clustering_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::selectInput(
+              ns_parent("palette"), "Color palette",
+              choices = c(
+                "default", "muted_light", "light", "dark",
+                "super_light", "super_dark", "muted", "expanded",
+                "highlight_blue", "highlight_red", "highlight_orange",
+                "custom", "custom_gradient"
+              ),
+              selected = ct$palette
+            ),
+            shiny::uiOutput(ns_parent("custom_palette_ui"))
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Grouped barplot: palette selector + bar ordering
+  grouped_barplot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::selectInput(
+              ns_parent("palette"), "Color palette",
+              choices = c(
+                "default", "muted_light", "light", "dark",
+                "super_light", "super_dark", "muted", "expanded",
+                "highlight_blue", "highlight_red", "highlight_orange",
+                "custom", "custom_gradient"
+              ),
+              selected = ct$palette
+            ),
+            shiny::uiOutput(ns_parent("custom_palette_ui"))
+          ),
+          bslib::accordion_panel(
+            "Bars Order",
+            shiny::selectInput(
+              ns_parent("bars_order"),
+              "Sort bars by:",
+              choices = c(
+                "Alphabetical" = "alphabetical",
+                "Value (ascending)" = "ascending",
+                "Value (descending)" = "descending",
+                "Custom (shuffle the order)" = "custom"
+              ),
+              selected = bars_order_default
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+              shiny::div(
+                shiny::uiOutput(ns_parent("rank_list"))
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Gradient scatterplot: low/high color pickers only (no labels)
+  gradient_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(
+                ns_parent("color_low"), "Low color",
+                ct$secondary
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_high"), "High color",
+                ct$primary
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Significance scatter: colors for significance categories
+  significance_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            colourpicker::colourInput(
+              ns_parent("color_both"), "Significant in both",
+              ct$success
+            ),
+            colourpicker::colourInput(
+              ns_parent("color_one"), "Significant in one",
+              ct$accent
+            ),
+            colourpicker::colourInput(
+              ns_parent("color_ns"), "Not significant",
+              ct$ns_color
+            )
+          ),
+          bslib::accordion_panel(
+            "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Scatter with highlight: point color, highlight color, and labels
+  scatter_highlight_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            colourpicker::colourInput(
+              ns_parent("color_point"), "Point color",
+              "#222222"
+            ),
+            colourpicker::colourInput(
+              ns_parent("color_highlight"), "Highlight color",
+              "#f23451"
+            )
+          ),
+          bslib::accordion_panel(
+            "Labels",
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Rank/density plot: fill, outline, and highlight colors
+  rank_plot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            colourpicker::colourInput(
+              ns_parent("color_fill"), "Fill color",
+              "#b8d4f0"
+            ),
+            colourpicker::colourInput(
+              ns_parent("rank_color_line"), "Line color",
+              ct$secondary
+            ),
+            colourpicker::colourInput(
+              ns_parent("color_highlight"), "Highlight color",
+              "#e3a45a"
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Scatter up/down: up/down colors + label control (MA plot, etc.)
+  scatter_updown_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+            )
+          ),
+          bslib::accordion_panel(
+            "Labels",
+            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
+            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Correlation matrix: up/down colors only
+  correlation_matrix_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            bslib::layout_column_wrap(
+              width = 1 / 2,
+              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -323,6 +819,19 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   switch(plot_type,
     "volcano" = volcano_content,
     "heatmap" = heatmap_content,
-    "barplot" = barplot_content
+    "barplot" = barplot_content,
+    "expression_barplot" = barplot_content,
+    "correlation" = barplot_content,
+    "scatterplot" = scatterplot_content,
+    "featuremap" = featuremap_content,
+    "enrichment" = enrichment_content,
+    "clustering" = clustering_content,
+    "grouped_barplot" = grouped_barplot_content,
+    "gradient" = gradient_content,
+    "significance" = significance_content,
+    "scatter_highlight" = scatter_highlight_content,
+    "rank_plot" = rank_plot_content,
+    "correlation_matrix" = correlation_matrix_content,
+    "scatter_updown" = scatter_updown_content
   )
 }

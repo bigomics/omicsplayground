@@ -34,9 +34,14 @@ expression_plot_maplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = NULL,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_updown"
   )
 }
 
@@ -134,13 +139,27 @@ expression_plot_maplot_server <- function(id,
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
 
+      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+
+      lab.genes <- pd[["lab.genes"]]
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
+        lab.genes <- trimws(strsplit(input$label_features, "[,\n]+")[[1]])
+        lab.genes <- lab.genes[lab.genes != ""]
+      }
+
+      highlight <- pd[["sel.genes"]]
+      if (isTRUE(input$color_selection) && length(lab.genes) > 0) {
+        highlight <- lab.genes
+      }
+
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
         label.names = label.names,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = highlight,
+        label = lab.genes,
         label.cex = lab.cex,
         shape = pd[["shape"]],
         group.names = c("group1", "group0"),
@@ -153,7 +172,8 @@ expression_plot_maplot_server <- function(id,
         showlegend = FALSE,
         source = "plot1",
         marker.type = "scattergl",
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = c(up = col_up, notsig = "#8F8F8F", down = col_down)
       )
       plt
     }
@@ -181,7 +201,8 @@ expression_plot_maplot_server <- function(id,
       res = c(80, 95),
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark,
-      download.contrast.name = gx_contrast
+      download.contrast.name = gx_contrast,
+      parent_session = session
     )
 
   })

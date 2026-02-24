@@ -62,7 +62,10 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     height = height,
     width = width,
     options = options,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -173,6 +176,14 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (ntop == 1) rowcol <- c(1, 1)
       if (ntop == 12) rowcol <- c(3, 4)
 
+      ## Editor: read color inputs
+      color_up <- if (!is.null(input$color_up)) input$color_up else "#f23451"
+      color_down <- if (!is.null(input$color_down)) input$color_down else "#3181de"
+      color_line <- if (!is.null(input$color_line)) input$color_line else "#00EE00"
+      colors_changed <- (!is.null(input$color_up) && input$color_up != "#f23451") ||
+        (!is.null(input$color_down) && input$color_down != "#3181de") ||
+        (!is.null(input$color_line) && input$color_line != "#00EE00")
+
       plist <- list()
 
       for (i in 1:ntop) {
@@ -223,6 +234,35 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
               margin = list(l = 0, r = 0, t = 80, b = 40)
             )
         }
+
+        ## Editor: override colors in plotly traces
+        if (colors_changed && !is.null(plt)) {
+          plt <- plotly::plotly_build(plt)
+
+          ## Identify colorbar segment indices (wide segments, not the green line)
+          cbar_indices <- which(sapply(plt$x$data, function(t) {
+            !is.null(t$line$width) && t$line$width >= 15 &&
+              !is.null(t$line$color) && t$line$color != "#00EE00"
+          }))
+
+          ## Build custom colorbar palette
+          if (length(cbar_indices) > 0) {
+            suppressWarnings(
+              custom_cc <- gplots::colorpanel(length(cbar_indices), color_down, "#CCCCCC", color_up)
+            )
+            for (ci in seq_along(cbar_indices)) {
+              plt$x$data[[cbar_indices[ci]]]$line$color <- custom_cc[ci]
+            }
+          }
+
+          ## Override enrichment score line color
+          for (j in seq_along(plt$x$data)) {
+            if (!is.null(plt$x$data[[j]]$line$color) && plt$x$data[[j]]$line$color == "#00EE00") {
+              plt$x$data[[j]]$line$color <- color_line
+            }
+          }
+        }
+
         plist[[i]] <- plt
       }
       plist
@@ -277,7 +317,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       pdf.width = 5,
       pdf.height = 5,
       res = c(90, 120),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

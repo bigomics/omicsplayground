@@ -36,9 +36,14 @@ drugconnectivity_plot_enplots_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     options = plot_opts,
+    outputFunc = shiny::plotOutput,
+    outputFunc2 = shiny::plotOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -143,6 +148,10 @@ drugconnectivity_plot_enplots_server <- function(id,
           par(mfrow = c(nc, nc), mar = c(0.3, 1.0, 1.3, 0), mgp = c(1.9, 0.6, 0))
         }
 
+        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
+        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+        col_line <- if (!is.null(input$color_line)) input$color_line else get_color_theme()$line
+
         for (i in 1:nrow(dt)) {
           dx <- rownames(dt)[i]
           gmtdx <- grep(dx, names(rnk), fixed = TRUE, value = TRUE) ## L1000 naming
@@ -152,7 +161,8 @@ drugconnectivity_plot_enplots_server <- function(id,
           suppressWarnings(
             playbase::gsea.enplot(rnk, gmtdx,
               main = dx1, cex.main = 1.2,
-              xlab = xlab, ylab = ylab
+              xlab = xlab, ylab = ylab,
+              col_up = col_up, col_down = col_down, col_line = col_line
             )
           )
           nes <- round(dt$NES[i], 2)
@@ -176,7 +186,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         csvFunc = plot_data,
         res = c(78, 110),
         pdf.width = 6.5, pdf.height = 12.8,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

@@ -29,7 +29,10 @@ dataview_plot_tsne_ui <- function(
     height = height,
     label = label,
     caption = caption,
-    title = title
+    title = title,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "scatterplot"
   )
 }
 
@@ -195,6 +198,15 @@ dataview_plot_tsne_server <- function(id,
 
       df <- data[[1]]
       gene <- data[[2]]
+
+      ## dynamic color palette from editor
+      if (!is.null(input$scatter_color)) {
+        light_end <- colorRampPalette(c("#FFFFFF", input$scatter_color))(10)[4]
+        pal <- colorRampPalette(c(light_end, input$scatter_color))(100)
+      } else {
+        pal <- omics_pal_c(palette = "brand_blue")(100)
+      }
+
       symbols <- c(
         "circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
         "star-diamond", "square-cross", "diamond-wide"
@@ -211,7 +223,7 @@ dataview_plot_tsne_server <- function(id,
             symbol = ~group,
             symbols = symbols[1:length(unique(df$group))],
             color = ~expression,
-            colors = omics_pal_c(palette = "brand_blue")(100),
+            colors = pal,
             marker = list(
               size = 10,
               line = list(
@@ -236,7 +248,7 @@ dataview_plot_tsne_server <- function(id,
             x = ~pos_x,
             y = ~pos_y,
             color = ~expression,
-            colors = omics_pal_c(palette = "brand_blue")(100),
+            colors = pal,
             marker = list(
               size = 10,
               line = list(
@@ -294,7 +306,8 @@ dataview_plot_tsne_server <- function(id,
       res = c(100, 300) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       ## label = label, title = "t-SNE clustering",
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

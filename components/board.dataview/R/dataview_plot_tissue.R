@@ -29,12 +29,27 @@ dataview_plot_tissue_ui <- function(
     options = NULL,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot",
+    palette_default = "default"
   )
 }
 
 dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    ## Override bar ordering default to ascending
+    shiny::observeEvent(TRUE, once = TRUE, {
+      shiny::updateSelectInput(
+        session, "bars_order",
+        selected = "ascending"
+      )
+    })
+
+    ## Original plot_data reactive — kept intact
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(r.gene(), r.data_type())
@@ -97,6 +112,51 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       )
     })
 
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      pdat <- plot_data()
+      shiny::req(pdat)
+      grp_indices <- sort(unique(pdat$df$group))
+      shiny::req(length(grp_indices) > 0)
+      default_pal <- omics_pal_d()(8)
+      pickers <- lapply(seq_along(grp_indices), function(i) {
+        colourpicker::colourInput(
+          ns(paste0("custom_color_", grp_indices[i])),
+          label = paste("Group", grp_indices[i]),
+          value = default_pal[grp_indices[i]]
+        )
+      })
+      shiny::tagList(pickers)
+    })
+
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- shiny::renderUI({
+      pdat <- plot_data()
+      shiny::req(pdat)
+      df <- pdat$df
+
+      ## Apply current ordering so drag-and-drop starts from it
+      bar_order <- if (!is.null(input$bars_order)) input$bars_order else "ascending"
+      if (bar_order == "ascending" || bar_order == "custom") {
+        df <- df[order(df$x), ]
+      } else if (bar_order == "alphabetical") {
+        df <- df[order(df$tissue), ]
+      }
+      ## "descending" keeps the default order
+
+      labels <- as.character(df$tissue)
+      sortable::bucket_list(
+        header = NULL,
+        class = "default-sortable custom-sortable",
+        sortable::add_rank_list(
+          input_id = ns("rank_list_order"),
+          text = NULL,
+          labels = labels
+        )
+      )
+    })
+
     plot.RENDER <- function() {
       pdat <- plot_data()
       shiny::req(pdat)
@@ -109,25 +169,71 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         title <- "Expression in human tissue"
       }
 
-      ## plot as regular bar plot
-      df <- dplyr::mutate(
-        df,
-        tissue = forcats::fct_reorder(
-          stringr::str_to_title(paste(tissue, " ")), x
+      ## Editor: bar ordering (default ascending)
+      bar_order <- if (!is.null(input$bars_order)) input$bars_order else "ascending"
+      if (bar_order == "ascending") {
+        df <- df[order(df$x), ]
+      } else if (bar_order == "alphabetical") {
+        df <- df[order(df$tissue), ]
+      } else if (bar_order == "custom" && !is.null(input$rank_list_order)) {
+        custom_order <- input$rank_list_order
+        custom_order <- intersect(custom_order, df$tissue)
+        if (length(custom_order) > 0) {
+          df <- df[match(custom_order, df$tissue), ]
+        }
+      }
+      ## "descending" is already the default from plot_data
+
+      ## Set tissue factor levels to preserve ordering
+      df$tissue <- stringr::str_to_title(paste(df$tissue, " "))
+      df$tissue <- factor(df$tissue, levels = df$tissue)
+
+      ## Editor: palette override
+      palette <- input$palette
+      if (!is.null(palette) && palette == "custom") {
+        ## Custom per-group colors
+        grp_indices <- sort(unique(df$group))
+        default_pal <- omics_pal_d()(8)
+        bar_colors <- sapply(df$group, function(g) {
+          val <- input[[paste0("custom_color_", g)]]
+          if (is.null(val)) default_pal[g] else val
+        })
+        p <- plotly::plot_ly(
+          data = df,
+          y = ~tissue,
+          x = ~x,
+          type = "bar",
+          orientation = "h",
+          marker = list(color = bar_colors),
+          hovertemplate = "%{y}: %{x}<extra></extra>"
         )
-      )
+      } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
+        ## Named palette
+        bar_colors <- omics_pal_d(palette = palette)(8)[df$group]
+        p <- plotly::plot_ly(
+          data = df,
+          y = ~tissue,
+          x = ~x,
+          type = "bar",
+          orientation = "h",
+          marker = list(color = bar_colors),
+          hovertemplate = "%{y}: %{x}<extra></extra>"
+        )
+      } else {
+        ## Original behavior
+        p <- plotly::plot_ly(
+          data = df,
+          y = ~tissue,
+          x = ~x,
+          type = "bar",
+          orientation = "h",
+          color = ~color,
+          colors = omics_pal_d()(length(unique(df$color))),
+          hovertemplate = "%{y}: %{x}<extra></extra>"
+        )
+      }
 
-
-      plotly::plot_ly(
-        data = df,
-        y = ~tissue,
-        x = ~x,
-        type = "bar",
-        orientation = "h",
-        color = ~color, ## TODO: use variable that encodes grouping
-        colors = omics_pal_d()(length(unique(df$color))),
-        hovertemplate = "%{y}: %{x}<extra></extra>"
-      ) %>%
+      p %>%
         plotly::layout(
           yaxis = list(title = title),
           xaxis = list(title = ylab),
@@ -163,7 +269,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 8, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

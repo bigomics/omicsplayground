@@ -54,7 +54,10 @@ signature_plot_markers_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "svg"),
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "gradient"
   )
 }
 
@@ -264,18 +267,22 @@ signature_plot_markers_server <- function(id,
         top.gx <- top.gx[order(-rho), , drop = FALSE]
       }
 
+      ## Editor: gradient colors
+      color_low <- if (!is.null(input$color_low)) input$color_low else omics_colors("brand_blue")
+      color_high <- if (!is.null(input$color_high)) input$color_high else omics_colors("red")
+
       plt <- list()
       i <- 0
       for (i in 0:min(nmax, nrow(top.gx))) {
         jj <- 1:ncol(top.gx)
         if (i == 0) {
-          klrpal <- grDevices::colorRampPalette(c(omics_colors("brand_blue"), omics_colors("grey"), omics_colors("red")))(16)
+          klrpal <- grDevices::colorRampPalette(c(color_low, omics_colors("grey"), color_high))(16)
           colvar <- fc1
           klr1 <- klrpal[8 + round(7 * fc1)]
           tt <- "INPUT SIGNATURE"
           jj <- order(abs(fc1))
         } else {
-          klrpal <- colorRampPalette(c("grey90", "grey60", omics_colors("red")))(16)
+          klrpal <- colorRampPalette(c("grey90", "grey60", color_high))(16)
           colvar <- pmax(top.gx[i, ], 0)
           colvar <- 1 + round(15 * (colvar / (0.7 * max(colvar, na.rm = TRUE) + 0.3 * max(top.gx, na.rm = TRUE))))
           klr1 <- klrpal[colvar]
@@ -347,7 +354,8 @@ signature_plot_markers_server <- function(id,
       plotlib = "plotly",
       res = c(100, 95), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

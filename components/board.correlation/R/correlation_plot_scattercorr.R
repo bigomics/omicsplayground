@@ -57,7 +57,11 @@ correlation_plot_scattercorr_ui <- function(
     options = cor_scatter.opts,
     download.fmt = c("png", "pdf", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering",
+    palette_default = "default"
   )
 }
 
@@ -80,6 +84,28 @@ correlation_plot_scattercorr_server <- function(id,
       px <- colnames(pgx$Y)
       s1 <- grep("^[.]", px, value = TRUE, invert = TRUE)[1]
       shiny::updateSelectInput(session, "colorby", choices = px, selected = s1)
+    })
+
+    ## Default colors: Paired palette (consistent with correlation barplot)
+    DEFAULT_COL <- RColorBrewer::brewer.pal(12, "Paired")
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      colorby <- input$colorby
+      shiny::req(colorby, colorby %in% colnames(pgx$Y))
+      groups <- sort(unique(as.character(pgx$samples[, colorby])))
+      groups <- groups[!groups %in% c(NA, "", " ", "NA", "na")]
+      shiny::req(length(groups) > 0)
+      default_clrs <- rep(DEFAULT_COL, ceiling(length(groups) / length(DEFAULT_COL)))
+      pickers <- lapply(seq_along(groups), function(i) {
+        colourpicker::colourInput(
+          session$ns(paste0("custom_color_", i)),
+          label = groups[i],
+          value = default_clrs[i]
+        )
+      })
+      shiny::tagList(pickers)
     })
 
     cor_scatter.DATA <- shiny::reactive({
@@ -128,10 +154,22 @@ correlation_plot_scattercorr_server <- function(id,
       pheno <- dt$pheno
       colorby <- dt$colorby
       this.gene <- dt$this.gene
-      COL <- rep(dt$COL, 99)
-
       shiny::req(length(rho) > 0)
-      klr <- COL[as.integer(pheno)]
+
+      ## Editor: palette override (default "original" uses Paired palette)
+      clrs.length <- length(levels(pheno))
+      palette <- input$palette
+      if (!is.null(palette) && palette == "default") palette <- "muted_light"
+      if (!is.null(palette) && palette == "custom") {
+        COL <- sapply(seq_len(clrs.length), function(j) {
+          val <- input[[paste0("custom_color_", j)]]
+          if (is.null(val)) DEFAULT_COL[(j - 1) %% length(DEFAULT_COL) + 1] else val
+        })
+      } else if (!is.null(palette) && palette != "original") {
+        COL <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))[1:clrs.length]
+      } else {
+        COL <- rep(DEFAULT_COL, ceiling(clrs.length / length(DEFAULT_COL)))[1:clrs.length]
+      }
 
       nplots <- n_row * n_cols
       rho <- head(rho, nplots)
@@ -177,8 +215,8 @@ correlation_plot_scattercorr_server <- function(id,
           plotly::add_trace(
             x = x,
             y = y,
-            name = pheno,
-            color = klr,
+            color = pheno,
+            colors = COL,
             type = "scatter",
             mode = "markers",
             marker = list(size = markersize),
@@ -329,7 +367,8 @@ correlation_plot_scattercorr_server <- function(id,
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

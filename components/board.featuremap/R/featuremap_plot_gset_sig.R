@@ -28,7 +28,10 @@ featuremap_plot_gset_sig_ui <- function(
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "featuremap"
   )
 }
 
@@ -85,6 +88,20 @@ featuremap_plot_gset_sig_server <- function(id,
       nc <- ceiling(sqrt(1.33 * ncol(F)))
       nr <- ceiling(ncol(F) / nc)
 
+      ## Editor: custom colors
+      low_color <- if (!is.null(input$color_low)) input$color_low else "#3181de"
+      high_color <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+      custom_col <- c(low_color, "#f8f8f8", high_color)
+
+      ## Editor: custom labels
+      sel <- NULL
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
+        custom_features <- strsplit(input$label_features, "\\s+")[[1]]
+        sel <- unlist(lapply(custom_features, function(f) {
+          grep(f, rownames(pos), value = TRUE, ignore.case = TRUE, fixed = TRUE)
+        }))
+      }
+
       par(mfrow = c(nr, nc), mar = c(3, 1, 1, 0.5), mgp = c(1.6, 0.55, 0))
       progress <- NULL
       if (!interactive()) {
@@ -92,7 +109,7 @@ featuremap_plot_gset_sig_server <- function(id,
         on.exit(progress$close())
         progress$set(message = "Computing feature plots...", value = 0)
       }
-      plotFeaturesPanel(pos, F, ntop, nr, nc, sel = NULL, progress)
+      plotFeaturesPanel(pos, F, ntop, nr, nc, sel = sel, progress, col = custom_col)
     }
 
     PlotModuleServer(
@@ -101,7 +118,8 @@ featuremap_plot_gset_sig_server <- function(id,
       csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

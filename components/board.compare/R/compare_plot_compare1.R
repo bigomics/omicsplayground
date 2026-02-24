@@ -32,7 +32,11 @@ compare_plot_compare1_ui <- function(id,
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "featuremap",
+    color_selection = TRUE
   )
 }
 
@@ -75,8 +79,22 @@ compare_plot_compare1_server <- function(id,
       mat <- getMatrices()
       target_col <- mat$target_col
 
+      ## Editor: custom gradient colors
+      color_low <- if (!is.null(input$color_low)) input$color_low else "#3181de"
+      color_high <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+      custom_col <- c(color_low, "#f8f8f8", color_high)
+
+      ## Editor: custom labels
+      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
+        custom_genes <- strsplit(input$label_features, "\\s+")[[1]]
+        higenes <- custom_genes
+      }
+
+      ## Editor: color just selected
+      color_sel <- isTRUE(input$color_selection)
+
       if (length(higenes) <= 3) cex.lab <- 1.3
-      data <- createPlot(pgx1, pgx1, pgx2, ct, target_col, type, cex.lab, higenes, ntop, get_data, labeltype)
+      data <- createPlot(pgx1, pgx1, pgx2, ct, target_col, type, cex.lab, higenes, ntop, get_data, labeltype, col = custom_col, color_selection = color_sel)
       data
     }
 
@@ -97,7 +115,8 @@ compare_plot_compare1_server <- function(id,
       csvFunc = plot_data,
       res = c(90, 110), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
