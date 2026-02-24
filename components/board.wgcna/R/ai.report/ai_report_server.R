@@ -36,19 +36,25 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       "layout-diagram",
       params_reactive = shiny::reactive({
         txt <- text_result$report_text() %||% ""
-        txt <- gsub("\\bME(\\w+)\\b", "Module \\1", txt)
         shiny::req(nzchar(txt))
-        list(content = txt)
+        organism <- pgx$organism %||% "human"
+        board_root <- file.path(OPG, "components/board.wgcna")
+        prompt <- wgcna_build_diagram_prompt(txt, organism, board_root)
+        list(content = prompt)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         llm <- getUserOption(parent_session, "llm_model")
-        omicsai::omicsai_diagram_config(model = llm %||% "ollama:llama3.2")
+        omicsai::omicsai_diagram_config(
+          model = llm %||% "ollama:llama3.2",
+          default_regulation = "positive"
+        )
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
         if (controls$mode() == "report") controls$trigger() else 0
-      })
+      }),
+      style = wgcna_diagram_style()
     )
 
     AiImageCardServer(

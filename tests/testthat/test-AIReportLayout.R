@@ -52,12 +52,10 @@ test_that("ai_report_layout_server function exists and has correct signature", {
   expect_true("text_reactive" %in% names(args))
   expect_true("diagram_result_reactive" %in% names(args))
   expect_true("infographic_reactive" %in% names(args))
-  expect_true("diagram_colors" %in% names(args))
   expect_true("watermark" %in% names(args))
 
   # Test default values
   expect_equal(args$watermark, FALSE)
-  expect_null(args$diagram_colors)
 })
 
 test_that("module follows Shiny module pattern", {

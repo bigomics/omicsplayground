@@ -240,8 +240,8 @@
   )
 }
 
-.aicards_diagram_render <- function(result) {
-  omicsai::omicsai_diagram_render(result)
+.aicards_diagram_render <- function(result, style = NULL, layout = NULL, spread = 0.5) {
+  omicsai::omicsai_diagram_render(result, style = style, layout = layout, spread = spread)
 }
 
 #' AI text card server
@@ -405,6 +405,7 @@ AiTextCardServer <- function(id,
 #' @param config_reactive Reactive or scalar omicsai_diagram_config
 #' @param cache Optional omicsai cache object
 #' @param trigger_reactive Optional reactive trigger for external generation events
+#' @param style Optional style list passed to omicsai_diagram_render()
 #'
 #' @return Reactive returning omicsai_diagram_result (or NULL)
 AiDiagramCardServer <- function(id,
@@ -412,7 +413,8 @@ AiDiagramCardServer <- function(id,
                                 template_reactive,
                                 config_reactive,
                                 cache = NULL,
-                                trigger_reactive = NULL) {
+                                trigger_reactive = NULL,
+                                style = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     module_cache <- .aicards_coalesce(cache, omicsai::omicsai_cache_init("mem"))
 
@@ -456,12 +458,13 @@ AiDiagramCardServer <- function(id,
       shiny::req(config)
 
       tryCatch({
-        rv$result <- .aicards_gen_diagram(
+        result <- .aicards_gen_diagram(
           template = template,
           params = params,
           config = config,
           cache = module_cache
         )
+        rv$result <- omicsai::sanitise_diagram_result(result)
         rv$generate_requested <- FALSE
       }, error = function(e) {
         rv$error <- conditionMessage(e)
@@ -479,7 +482,49 @@ AiDiagramCardServer <- function(id,
         "Click 'Generate Diagram' to create an AI diagram."
       ))
 
-      .aicards_diagram_render(rv$result)
+      .aicards_diagram_render(rv$result, style = style, layout = input$layout, spread = input$spread)
+    }
+
+    diagram_csv_data <- function() {
+      res <- rv$result
+      if (is.null(res) || is.null(res$edgelist)) return(NULL)
+
+      nodes_list <- res$edgelist$nodes
+      edges_list <- res$edgelist$edges
+
+      if (length(nodes_list) == 0) {
+        nodes_df <- data.frame(id = character(), label = character(),
+                               type = character(), description = character(),
+                               stringsAsFactors = FALSE)
+      } else {
+        nodes_df <- do.call(rbind, lapply(nodes_list, function(n) {
+          data.frame(
+            id          = n$id %||% NA_character_,
+            label       = n$label %||% NA_character_,
+            type        = n$type %||% NA_character_,
+            description = n[["function"]] %||% NA_character_,
+            stringsAsFactors = FALSE
+          )
+        }))
+      }
+
+      if (length(edges_list) == 0) {
+        edges_df <- data.frame(from = character(), to = character(),
+                               regulation = character(), label = character(),
+                               stringsAsFactors = FALSE)
+      } else {
+        edges_df <- do.call(rbind, lapply(edges_list, function(e) {
+          data.frame(
+            from       = e$from %||% NA_character_,
+            to         = e$to %||% NA_character_,
+            regulation = e$regulation %||% NA_character_,
+            label      = e$label %||% NA_character_,
+            stringsAsFactors = FALSE
+          )
+        }))
+      }
+
+      list(nodes = nodes_df, edges = edges_df)
     }
 
     PlotModuleServer(
@@ -487,6 +532,7 @@ AiDiagramCardServer <- function(id,
       plotlib = "visnetwork",
       func = diagram_render,
       func2 = diagram_render,
+      csvFunc = diagram_csv_data,
       pdf.width = 10,
       pdf.height = 8,
       res = c(75, 100)

@@ -123,7 +123,6 @@ ai_report_layout_ui <- function(id,
 #'   Fed by parent: summary text in summary mode, report text in report mode.
 #' @param diagram_result_reactive Deprecated; unused
 #' @param infographic_reactive Deprecated; unused
-#' @param diagram_colors Deprecated; unused
 #' @param watermark Logical; add watermark to outputs
 #'
 #' @return NULL (no return values needed)
@@ -131,7 +130,6 @@ ai_report_layout_server <- function(id,
                                     text_reactive,
                                     diagram_result_reactive = NULL,
                                     infographic_reactive = NULL,
-                                    diagram_colors = NULL,
                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 

@@ -84,6 +84,27 @@ AiDiagramCardUI <- function(id,
       "Generate Diagram",
       icon = shiny::icon("refresh"),
       class = "btn-outline-primary"
+    ),
+    shiny::selectInput(
+      ns("layout"),
+      label = "Layout",
+      choices = c(
+        "Hierarchical" = "hierarchical",
+        "Force-directed (FR)" = "fr",
+        "Spring (KK)" = "kk",
+        "Auto" = "nicely"
+      ),
+      selected = "nicely",
+      width = "100%"
+    ),
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s'] !== 'hierarchical'", ns("layout")),
+      shiny::sliderInput(
+        ns("spread"),
+        label = "Node spread",
+        min = 0, max = 1, value = 0.5, step = 0.05,
+        width = "100%"
+      )
     )
   )
 
@@ -97,7 +118,7 @@ AiDiagramCardUI <- function(id,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "html")
+    download.fmt = c("png", "pdf", "html", "csv")
   )
 }
 
