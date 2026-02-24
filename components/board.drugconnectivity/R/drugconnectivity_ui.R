@@ -22,7 +22,8 @@ DrugConnectivityInputs <- function(id) {
         FALSE
       ),
       "Show only annotated drugs."
-    )
+    ),
+    drugconnectivity_report_inputs(ns("cmap_report"))
   )
 }
 
@@ -129,13 +130,48 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
+   
+
+  ## ----------------------------------------------------------------
+  panel3 <- shiny::tabPanel(
+    "AI Report",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      row_heights = c("auto", 1),
+      ##bs_alert( htmlOutput(ns("cmap_alert")), translate=FALSE),
+      ##htmlOutput(ns("cmap_alert")), 
+      div(class="alert alert-primary p-2", 
+        drugconnectivity_report_bullets_ui(ns("cmap_report"))),
+      bslib::layout_columns(
+        col_widths = c(7,5),
+        height = "calc(100vh - 180px)",            
+        drugconnectivity_report_summary_ui(
+          ns("cmap_report"),
+          title = "AI Report",
+          caption = "AI-generated summary report",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        ),                        
+        drugconnectivity_report_diagram_ui(
+          ns("cmap_diagram"),
+          title = "Infographic diagram",
+          caption = "AI-generated infographic diagram",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        )
+      )
+    )
+  )
+
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
     panel1 <- shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,
-      panel2
+      panel2,
+      panel3      
     )
   )
 }

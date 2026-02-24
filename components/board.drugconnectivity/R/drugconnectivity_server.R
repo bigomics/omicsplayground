@@ -50,22 +50,42 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## Shared Reactive functions
     ## =========================================================================
 
+    get_pgx_drugs <- eventReactive( pgx$drugs, {
+
+      ## check if we have precomputed MOA slots
+      if(!is.null(pgx$drugs[[1]]$moa)) {
+        return(pgx$drugs)
+      }
+      
+      ## need to recompute MOA (if not done), NOTE: should be done in
+      ## pgx computation
+      info("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
+      pgx.showSmallModal("Calculating MOA<br>Please wait...")
+
+      db=names(pgx$drugs)[1]
+      for(db in names(pgx$drugs)) {
+        res <- pgx$drugs[[db]]
+        moa <- metaLINCS::computeMoaEnrichment(res) 
+        names(moa)
+        pgx$drugs[[db]][['moa']] <- moa
+      }
+      
+      shiny::removeModal(session)
+      return(pgx$drugs)
+    })
+    
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-      shiny::req(pgx$drugs, input$dsea_contrast, input$dsea_method)
 
       contr <- input$dsea_contrast
-      if (is.null(contr)) {
-        return(NULL)
-      }
-
       dmethod <- input$dsea_method
-      if (is.null(dmethod)) {
-        return(NULL)
-      }
+      shiny::req(contr, dmethod)
 
-      dr <- pgx$drugs[[dmethod]]
+      ##pgxdrugs <- pgx$drugs
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)
 
+      dr <- pgxdrugs[[dmethod]]
       nes <- round(dr$X[, contr], 4)
       pv <- round(dr$P[, contr], 4)
       qv <- round(dr$Q[, contr], 4)
@@ -110,53 +130,76 @@ DrugConnectivityBoard <- function(id, pgx) {
     })
 
     getMOA.target <- shiny::reactive({
-      ## meta-GSEA on molecular targets
-      dsea <- getActiveDSEA()
-      dt <- dsea$table
-      shiny::req(dt)
-      targets.list <- lapply(
-        enc2utf8(as.character(dt$target)),
-        function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-      )
-      names(targets.list) <- rownames(dt)
-      targets <- setdiff(unique(unlist(targets.list)), c(NA, "", " "))
-      gmt <- lapply(targets, function(g) {
-        names(which(sapply(targets.list, function(t) (g %in% t))))
-      })
-      names(gmt) <- targets
-
-      rnk <- dt$NES
-      names(rnk) <- rownames(dt)
-      suppressWarnings(
-        moa.target <- fgsea::fgsea(gmt, rnk, nperm = 20000)
-      )
-      moa.target <- moa.target[order(-abs(moa.target$NES)), ]
-      return(moa.target)
+      contr <- input$dsea_contrast
+      db <- input$dsea_method
+      shiny::req(contr,db)
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)      
+      moa <- pgxdrugs[[db]]$moa[[contr]][['targetGene']]
+      moa <- moa[order(-abs(moa$NES)), ]
+      return(moa)
     })
-
 
     getMOA.class <- shiny::reactive({
-      ## meta-GSEA on MOA terms
-      dsea <- getActiveDSEA()
-      dt <- dsea$table
-      shiny::req(dt)
-      moa.list <- lapply(
-        enc2utf8(as.character(dt$moa)),
-        function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-      )
-      names(moa.list) <- rownames(dt)
-      moa <- setdiff(unlist(moa.list), c("", NA, " "))
-      gmt <- lapply(moa, function(g) names(which(sapply(moa.list, function(t) (g %in% t)))))
-      names(gmt) <- moa
-      rnk <- dt$NES
-      names(rnk) <- rownames(dt)
-      suppressWarnings(
-        #
-        moa.class <- fgsea::fgsea(gmt, rnk)
-      )
-      moa.class <- moa.class[order(-abs(moa.class$NES)), ]
-      return(moa.class)
+      contr <- input$dsea_contrast
+      db <- input$dsea_method
+      shiny::req(contr,db)
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)      
+      moa <- pgxdrugs[[db]]$moa[[contr]][['drugClass']]
+      moa <- moa[order(-abs(moa$NES)), ]
+      return(moa)
     })
+
+
+    ## getMOA.target.BAK <- shiny::reactive({      
+
+    ##   ## meta-GSEA on molecular targets
+    ##   dsea <- getActiveDSEA()
+    ##   dt <- dsea$table
+    ##   shiny::req(dt)
+    ##   targets.list <- lapply(
+    ##     enc2utf8(as.character(dt$target)),
+    ##     function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
+    ##   )
+    ##   names(targets.list) <- rownames(dt)
+    ##   targets <- setdiff(unique(unlist(targets.list)), c(NA, "", " "))
+    ##   gmt <- lapply(targets, function(g) {
+    ##     names(which(sapply(targets.list, function(t) (g %in% t))))
+    ##   })
+    ##   names(gmt) <- targets
+
+    ##   rnk <- dt$NES
+    ##   names(rnk) <- rownames(dt)
+    ##   suppressWarnings(
+    ##     moa.target <- fgsea::fgsea(gmt, rnk, nperm = 20000)
+    ##   )
+    ##   moa.target <- moa.target[order(-abs(moa.target$NES)), ]
+    ##   return(moa.target)
+    ## })
+
+
+    ## getMOA.class.BAK <- shiny::reactive({
+    ##   ## meta-GSEA on MOA terms
+    ##   dsea <- getActiveDSEA()
+    ##   dt <- dsea$table
+    ##   shiny::req(dt)
+    ##   moa.list <- lapply(
+    ##     enc2utf8(as.character(dt$moa)),
+    ##     function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
+    ##   )
+    ##   names(moa.list) <- rownames(dt)
+    ##   moa <- setdiff(unlist(moa.list), c("", NA, " "))
+    ##   gmt <- lapply(moa, function(g) names(which(sapply(moa.list, function(t) (g %in% t)))))
+    ##   names(gmt) <- moa
+    ##   rnk <- dt$NES
+    ##   names(rnk) <- rownames(dt)
+    ##   suppressWarnings(
+    ##     moa.class <- fgsea::fgsea(gmt, rnk)
+    ##   )
+    ##   moa.class <- moa.class[order(-abs(moa.class$NES)), ]
+    ##   return(moa.class)
+    ## })
 
     ## =========================================================================
     ## DRUG CONNECTIVITY TAB
@@ -200,11 +243,10 @@ DrugConnectivityBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-
-    ## =======================================================================================
-    ## CONNECTIVITY MAP TAB
-    ## =======================================================================================
-
+    ## ==================================================================================
+    ## Module servers
+    ## ==================================================================================
+    
     drugconnectivity_plot_cmap_enplot_server(
       "cmap_enplot",
       pgx,
@@ -229,5 +271,14 @@ DrugConnectivityBoard <- function(id, pgx) {
       "cmap_table",
       getActiveDSEA
     )
+
+    drugconnectivity_report_server(
+      "cmap_report",
+      pgx = pgx,
+      drugs = get_pgx_drugs
+    )
+    
+
+
   })
 }
