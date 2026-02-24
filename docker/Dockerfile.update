@@ -72,6 +72,7 @@ RUN R -e "devtools::install_github('alastairrushworth/inspectdf@bugfix/cran-dply
 RUN R -e "install.packages('quarto')"
 RUN R -e "devtools::install_github('bigomics/visNetwork')"
 RUN R -e "install.packages('svglite')"
+RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
     
 #------------------------------------------------------------
 # Add supporting R libraries
