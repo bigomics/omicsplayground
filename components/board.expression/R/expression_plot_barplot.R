@@ -4,14 +4,11 @@
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param heightt
 #' @param width
-#'
 #' @export
 expression_plot_barplot_ui <- function(
   id,
@@ -57,18 +54,13 @@ expression_plot_barplot_ui <- function(
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
 #' @param comp
 #' @param pgx
 #' @param sel
 #' @param res
 #' @param watermark
-#'
-#'
-#'
 #' @export
 expression_plot_barplot_server <- function(id,
                                            comp,
@@ -76,8 +68,8 @@ expression_plot_barplot_server <- function(id,
                                            sel,
                                            res,
                                            watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
-    # #calculate required inputs for plotting ---------------------------------
 
     ## Editor: rank list for custom drag-and-drop ordering
     output$rank_list <- renderUI({
@@ -122,7 +114,7 @@ expression_plot_barplot_server <- function(id,
       res <- res()
 
       shiny::validate(shiny::need(!is.null(sel) && length(sel) > 0, tspan("Please select gene in the table.", js = FALSE)))
-      psel <- sel # rownames(res)[sel]
+      psel <- sel
       gene <- psel
       srt <- ifelse(grouped, 0, 35)
       main <- pgx$genes[psel, "gene_name"]
@@ -218,5 +210,7 @@ expression_plot_barplot_server <- function(id,
       add.watermark = watermark,
       parent_session = session
     )
-  }) ## end of moduleServer
+
+  })
+
 }

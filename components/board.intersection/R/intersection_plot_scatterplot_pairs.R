@@ -22,6 +22,14 @@ intersection_scatterplot_pairs_ui <- function(
         TRUE
       ),
       "Annotate top 50 features"
+    ),
+    withTooltip(
+      shiny::checkboxInput(
+        ns("corr_line"),
+        tspan("Show correlation (r=1) line"),
+        FALSE
+      ),
+      "Show correlation (r=1) line."
     )
   )
 
@@ -214,6 +222,12 @@ intersection_scatterplot_pairs_server <- function(id,
               ay = -40
             )
         }
+        if (input$corr_line) {
+          rng <- range(c(df[, 1], df[, 2]), na.rm = TRUE)
+          p <- p %>% plotly::add_lines(x = rng, y = rng,
+            line = list(color = "black", dash = "dash", width = 1),
+            showlegend = FALSE, inherit = FALSE)
+        }
         p <- p %>%
           plotly::layout(
             annotations = annot.rho,
@@ -319,6 +333,14 @@ intersection_scatterplot_pairs_server <- function(id,
                 ax = 20,
                 ay = -40
               )
+          }
+          if (input$corr_line) {
+            rng <- range(c(df1[, 1], df1[, 2]), na.rm = TRUE)
+            p <- p %>% plotly::add_lines(
+              x = rng, y = rng,
+              line = list(color = "black", dash = "dash", width = 2),
+              showlegend = FALSE, inherit = FALSE
+            )
           }
           p <- p %>%
             plotly::layout(
