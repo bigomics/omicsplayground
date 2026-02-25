@@ -13,15 +13,12 @@ upload_module_normalizationSC_server <- function(id,
                                                  upload_datatype,
                                                  is.count = FALSE,
                                                  height = 720) {
-
   shiny::moduleServer(
     id,
-
     function(input, output, session) {
       ns <- session$ns
 
       output$normalization <- shiny::renderUI({
-
         shiny::req(r_counts())
         counts <- r_counts()
         nFeature_RNA <- Matrix::colSums(counts > 0, na.rm = TRUE)
@@ -288,9 +285,7 @@ upload_module_normalizationSC_server <- function(id,
           )
           rm(counts, samples)
           return(NULL)
-
         }
-
       })
 
       plot1 <- function() {
@@ -299,12 +294,16 @@ upload_module_normalizationSC_server <- function(id,
         SO <- ds_norm_Counts()$SO
         meta <- SO@meta.data
         vars <- input$clusterBy
-        
-        shiny::validate(shiny::need(!is.null(vars),
-          "For QC, please select a QC variable from the options."))
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Please select up to 4 QC variables for visualization."))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For QC, please select a QC variable from the options."
+        ))
+
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Please select up to 4 QC variables for visualization."
+        ))
 
         if ("seurat_clusters" %in% colnames(meta)) {
           meta$seurat_clusters <- as.character(meta$seurat_clusters)
@@ -319,8 +318,10 @@ upload_module_normalizationSC_server <- function(id,
             x <- x + theme(axis.text.x = element_text(size = 13))
             x <- x + theme(axis.text.y = element_text(size = 13))
             x <- x + Seurat::RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black",
-              fill = NA, size = 1, linewidth = 2))
+            x <- x + theme(panel.border = element_rect(
+              color = "black",
+              fill = NA, size = 1, linewidth = 2
+            ))
           })
           return(plist1)
         }
@@ -437,14 +438,18 @@ upload_module_normalizationSC_server <- function(id,
         samples <- res$samples
         vars <- input$clusterBy
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Select up to 4 metadata variables to visualize clusters."))
-        shiny::validate(shiny::need(!is.null(vars),
-          "For clustering, select a metadata variable from the menu on the left."))
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Select up to 4 metadata variables to visualize clusters."
+        ))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For clustering, select a metadata variable from the menu on the left."
+        ))
 
         m <- tolower(input$dimred_plottype)
         nr <- if (length(vars) <= 2) 1 else 2
-        if (length(vars) > 6 & length(vars) <= 8) nr = 3;
+        if (length(vars) > 6 & length(vars) <= 8) nr <- 3
         nc <- ceiling(length(vars) / nr)
         par(mfrow = c(nr, nc))
 
@@ -508,9 +513,6 @@ upload_module_normalizationSC_server <- function(id,
         hb_threshold = hb_thr,
         norm_method = shiny::reactive("CPM")
       ))
-
     } ## end-of-server
-
   )
-
 }

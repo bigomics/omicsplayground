@@ -55,9 +55,7 @@ TimeSeriesBoard.enrichment_server <- function(id,
                                               data,
                                               select_module,
                                               watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     gset_data <- function() {
       k <- select_module()
       shiny::req(k)
@@ -146,7 +144,5 @@ TimeSeriesBoard.enrichment_server <- function(id,
       func = render_table,
       selector = "none"
     )
-
   })
-
 }

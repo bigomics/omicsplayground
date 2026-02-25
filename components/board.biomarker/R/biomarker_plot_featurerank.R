@@ -150,12 +150,11 @@ biomarker_plot_featurerank_server <- function(id,
       }
 
       for (i in 1:ncol(Y)) {
-
         if (!interactive()) progress$inc(1 / ncol(Y))
         grp <- as.character(Y[, i])
         score <- rep(NA, length(features))
         names(score) <- names(features)
-        
+
         for (j in 1:length(features)) {
           pp <- features[[j]]
           if (gene.level) pp <- playbase::filterProbes(annot, features[[j]])
@@ -209,20 +208,23 @@ biomarker_plot_featurerank_server <- function(id,
       S[is.na(S)] <- 0
 
       return(S)
-
     })
 
     render_featureRank <- function() {
       S <- calcFeatureRanking()
       c1 <- (is.null(S) || nrow(S) == 0 || ncol(S) == 0)
-      if (c1) return(NULL)
+      if (c1) {
+        return(NULL)
+      }
 
       ## top scoring
       S <- tail(S[order(rowSums(S, na.rm = TRUE)), , drop = FALSE], 25)
       rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
-      playbase::pgx.stackedBarplot(x = t(S), showlegend = TRUE,
-        xlab = "Discriminant score", ylab = "", horiz = TRUE)
+      playbase::pgx.stackedBarplot(
+        x = t(S), showlegend = TRUE,
+        xlab = "Discriminant score", ylab = "", horiz = TRUE
+      )
     }
 
     clust_featureRank.RENDER <- function() {

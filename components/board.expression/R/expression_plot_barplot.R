@@ -64,9 +64,7 @@ expression_plot_barplot_server <- function(id,
                                            sel,
                                            res,
                                            watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       comp <- comp()
       grouped <- input$barplot_grouped
@@ -133,7 +131,5 @@ expression_plot_barplot_server <- function(id,
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark
     )
-
   })
-
 }

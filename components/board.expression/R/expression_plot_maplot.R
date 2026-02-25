@@ -63,9 +63,7 @@ expression_plot_maplot_server <- function(id,
                                           genes_selected,
                                           labeltype = reactive("symbol"),
                                           watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
       comp1 <- gx_contrast()
       if (length(comp1) == 0) {
@@ -183,7 +181,5 @@ expression_plot_maplot_server <- function(id,
       add.watermark = watermark,
       download.contrast.name = gx_contrast
     )
-
   })
-
 }

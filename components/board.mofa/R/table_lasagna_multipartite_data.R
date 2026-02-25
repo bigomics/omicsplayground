@@ -68,7 +68,6 @@ lasagna_multipartite_nodes_table_server <- function(id,
       rm(res, G, layers)
 
       return(N)
-
     })
 
     table.RENDER <- function(full = TRUE) {

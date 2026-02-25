@@ -40,9 +40,7 @@ mofa_plot_lasagna_network_server <- function(id,
                                              data,
                                              pgx,
                                              watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-  
     plot.RENDER <- function() {
       res <- data()
       shiny::req(res)

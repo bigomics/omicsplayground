@@ -60,7 +60,9 @@ MofaBoard <- function(id, pgx) {
       {
         shiny::req(pgx$X, input$kernel, input$numfactors)
 
-        if (input$compute == 0) return(NULL)
+        if (input$compute == 0) {
+          return(NULL)
+        }
 
         if (!is.null(pgx$datatype) && pgx$datatype != "multi-omics") {
           shinyalert::shinyalert("Error", "This is not a multi-omics dataset.")
@@ -307,6 +309,5 @@ MofaBoard <- function(id, pgx) {
     )
 
     return(NULL)
-
   })
 } ## end of Board

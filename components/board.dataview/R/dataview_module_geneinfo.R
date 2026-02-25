@@ -45,9 +45,7 @@ dataview_module_geneinfo_server <- function(id,
                                             r.gene = reactive(""),
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     geneinfo_data <- shiny::reactive({
-
       feature <- r.gene()
       shiny::req(feature %in% rownames(pgx$genes))
 
@@ -100,7 +98,6 @@ dataview_module_geneinfo_server <- function(id,
       )
 
       return(res)
-
     })
 
 

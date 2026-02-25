@@ -47,20 +47,18 @@ biomarker_plot_boxplots_server <- function(id,
                                            calcVariableImportance,
                                            is_computed,
                                            watermark = FALSE) {
-
   moduleServer(
-
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
-
         res <- calcVariableImportance()
         shiny::req(res, is_computed())
 
         ## get variables used in the tree solution
         leafs <- setdiff(res$rf$frame$var, "<leaf>")
         vars <- res$rf$orig.names[leafs]
-        if (length(vars) == 0) return(NULL)
+        if (length(vars) == 0) {
+          return(NULL)
+        }
         vars <- intersect(vars, rownames(res$X))
 
         ## add some other variables
@@ -76,13 +74,11 @@ biomarker_plot_boxplots_server <- function(id,
           y <- paste0("N", res$rf$where)
           names(y) <- colnames(res$X)
         }
-        
-        return(list(X = res$X, vars = vars, y = y))
 
+        return(list(X = res$X, vars = vars, y = y))
       })
 
       plot.RENDER <- function() {
-
         pdata <- plot_data()
         shiny::req(pdata)
 
@@ -100,8 +96,10 @@ biomarker_plot_boxplots_server <- function(id,
           g <- vars[i]
           gx <- X[g, ]
           g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
-          boxplot(gx ~ y, col = "grey85", ylim = range(gx),
-            ylab = "expression", xlab = "", cex.axis = 0.001)
+          boxplot(gx ~ y,
+            col = "grey85", ylim = range(gx),
+            ylab = "expression", xlab = "", cex.axis = 0.001
+          )
           axis(2, cex.axis = 0.9)
 
           cex1 <- ifelse(ny >= 8, 0.65, 0.8)
@@ -112,14 +110,15 @@ biomarker_plot_boxplots_server <- function(id,
           if (too.big) {
             dy <- min(gx) - 0.12 * diff(range(gx))
             text(1:ny, dy, levels(factor(y)),
-              xpd = NA, cex = cex1, srt = 30, adj = 1)
+              xpd = NA, cex = cex1, srt = 30, adj = 1
+            )
           } else {
             mtext(levels(factor(y)),
               side = 1, line = 0.7,
-              cex = cex1 * 0.85, las = 1, at = 1:ny)
+              cex = cex1 * 0.85, las = 1, at = 1:ny
+            )
           }
         }
-
       }
 
       plot_data_csv <- function() {

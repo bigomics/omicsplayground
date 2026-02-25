@@ -44,9 +44,7 @@ expression_plot_fc_fc_server <- function(id,
                                          comp,
                                          labeltype = reactive("symbol"),
                                          watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-  
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(comp())

@@ -118,9 +118,13 @@ BiomarkerBoard <- function(id, pgx) {
 
     input_pdx_select <- shiny::reactive({
       gg <- input$pdx_select
-      if (is.null(gg)) return(NULL)
+      if (is.null(gg)) {
+        return(NULL)
+      }
       gg <- strsplit(as.character(gg), split = "[, \n\t]")[[1]]
-      if (length(gg) == 0) return(NULL)
+      if (length(gg) == 0) {
+        return(NULL)
+      }
       if (length(gg) == 1 && gg[1] != "") gg <- c(gg, gg) ## hack to allow single gene....
       return(gg)
     })
@@ -149,13 +153,19 @@ BiomarkerBoard <- function(id, pgx) {
       shiny::req(pgx$X, input$pdx_target)
       shiny::isolate(ph <- input$pdx_target)
       do.survival <- grepl("survival", ph, ignore.case = TRUE)
-      if (is.null(ph)) return(NULL)
+      if (is.null(ph)) {
+        return(NULL)
+      }
       progress <- shiny::Progress$new()
       on.exit(progress$close())
       progress$set(message = "", value = 0)
-      if (!(ph %in% colnames(pgx$Y))) return(NULL)
+      if (!(ph %in% colnames(pgx$Y))) {
+        return(NULL)
+      }
       ft <- shiny::isolate(input$pdx_filter)
-      if (is.null(ft)) return(NULL)
+      if (is.null(ft)) {
+        return(NULL)
+      }
       shiny::isolate(sel <- input_pdx_select())
       progress$inc(0.33, detail = "Calculating variable importance. Please wait...")
 
@@ -184,7 +194,6 @@ BiomarkerBoard <- function(id, pgx) {
 
       is_computed(TRUE)
       return(res)
-
     })
 
     ## ===========================================================================

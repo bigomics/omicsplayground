@@ -69,7 +69,7 @@ mofa_table_genetable_server <- function(id,
           scroller = TRUE,
           scrollResize = TRUE,
           deferRender = TRUE
-        ) 
+        )
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%
