@@ -51,8 +51,8 @@ mofa_build_ai_params <- function(mofa,
             sprintf(
               "| %s | %s | %s | %s |",
               pathways,
-              omicsai::format_num(top_gse$NES, 2),
-              omicsai::format_num(top_gse$padj, 3),
+              omicsai::omicsai_format_num(top_gse$NES, 2),
+              omicsai::omicsai_format_num(top_gse$padj, 3),
               sizes
             ),
             collapse = "\n"
@@ -108,8 +108,8 @@ mofa_build_ai_params <- function(mofa,
           "| %s | %s | %s | %s |",
           sub(";.*", ";[...]", top_features),
           symbols,
-          omicsai::format_num(top_weights, 3),
-          omicsai::format_num(centrality_vals, 2)
+          omicsai::omicsai_format_num(top_weights, 3),
+          omicsai::omicsai_format_num(centrality_vals, 2)
         ),
         collapse = "\n"
       )
@@ -149,14 +149,14 @@ mofa_build_ai_params <- function(mofa,
         if (length(sig_traits) > 0) {
           sig_traits <- sort(abs(sig_traits), decreasing = TRUE)
           traits <- paste(
-            sprintf("%s (r=%s)", names(sig_traits), omicsai::format_num(sig_traits, 2)),
+            sprintf("%s (r=%s)", names(sig_traits), omicsai::omicsai_format_num(sig_traits, 2)),
             collapse = ", "
           )
         } else {
           # If no strong correlations, show top 3
           top_cors <- head(sort(abs(cors), decreasing = TRUE), 3)
           traits <- paste(
-            sprintf("%s (r=%s)", names(top_cors), omicsai::format_num(top_cors, 2)),
+            sprintf("%s (r=%s)", names(top_cors), omicsai::omicsai_format_num(top_cors, 2)),
             collapse = ", "
           )
         }

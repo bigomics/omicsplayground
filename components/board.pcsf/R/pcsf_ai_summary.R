@@ -85,8 +85,8 @@ pcsf_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s |",
           sym_col,
-          omicsai::format_num(tbl$logFC, 3),
-          omicsai::format_num(tbl$centrality, 4),
+          omicsai::omicsai_format_num(tbl$logFC, 3),
+          omicsai::omicsai_format_num(tbl$centrality, 4),
           substr(title_col, 1, 50)
         ),
         collapse = "\n"
@@ -140,7 +140,7 @@ pcsf_build_ai_params <- function(pgx,
                 sprintf(
                   "| %s | %s | %s |",
                   pathway_names,
-                  omicsai::format_num(gs_sub, 3),
+                  omicsai::omicsai_format_num(gs_sub, 3),
                   overlap_n
                 ),
                 collapse = "\n"

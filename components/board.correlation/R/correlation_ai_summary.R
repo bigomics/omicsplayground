@@ -81,9 +81,9 @@ correlation_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s |",
           symbols,
-          omicsai::format_num(tbl[, "cor"]),
-          omicsai::format_num(pcor_vals),
-          omicsai::format_num(tbl[, "cov"])
+          omicsai::omicsai_format_num(tbl[, "cor"]),
+          omicsai::omicsai_format_num(pcor_vals),
+          omicsai::omicsai_format_num(tbl[, "cov"])
         ),
         collapse = "\n"
       )
@@ -131,8 +131,8 @@ correlation_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s |",
           symbols,
-          omicsai::format_num(pcor_tbl$pcor),
-          omicsai::format_num(pcor_tbl$cor)
+          omicsai::omicsai_format_num(pcor_tbl$pcor),
+          omicsai::omicsai_format_num(pcor_tbl$cor)
         ),
         collapse = "\n"
       )

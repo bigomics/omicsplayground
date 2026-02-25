@@ -45,9 +45,9 @@ signature_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s | %s | %s |",
             pathway_names,
-            omicsai::format_num(top_ov$score, 2),
-            omicsai::format_num(top_ov$odds.ratio, 2),
-            omicsai::format_num(top_ov$q.fisher, 3),
+            omicsai::omicsai_format_num(top_ov$score, 2),
+            omicsai::omicsai_format_num(top_ov$odds.ratio, 2),
+            omicsai::omicsai_format_num(top_ov$q.fisher, 3),
             top_ov[["k/K"]]
           ),
           collapse = "\n"
@@ -84,8 +84,8 @@ signature_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s |",
           top_g$symbol,
-          omicsai::format_num(top_g$log2FC, 2),
-          omicsai::format_num(top_g$q.value, 3)
+          omicsai::omicsai_format_num(top_g$log2FC, 2),
+          omicsai::omicsai_format_num(top_g$q.value, 3)
         ),
         collapse = "\n"
       )

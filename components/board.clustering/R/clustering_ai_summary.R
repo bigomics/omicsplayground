@@ -100,7 +100,7 @@ clustering_build_ai_params <- function(pgx,
         "| Annotation term | Correlation (R) |\n",
         "|----------------|----------------|\n",
         paste(
-          sprintf("| %s | %s |", top_terms, omicsai::format_num(top_vals, 3)),
+          sprintf("| %s | %s |", top_terms, omicsai::omicsai_format_num(top_vals, 3)),
           collapse = "\n"
         )
       )
@@ -147,8 +147,8 @@ clustering_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s |",
             top_g,
-            omicsai::format_num(gene_mean[top_g], 2),
-            omicsai::format_num(gene_sd[top_g], 2)
+            omicsai::omicsai_format_num(gene_mean[top_g], 2),
+            omicsai::omicsai_format_num(gene_sd[top_g], 2)
           ),
           collapse = "\n"
         )

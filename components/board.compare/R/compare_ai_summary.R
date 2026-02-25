@@ -87,8 +87,8 @@ compare_build_ai_params <- function(pgx,
         "**Fold-change correlation between contrasts:**\n\n",
         "| Metric | Value |\n",
         "|--------|-------|\n",
-        "| Pearson r | ", omicsai::format_num(pearson_r, 3), " |\n",
-        "| Spearman rho | ", omicsai::format_num(spearman_r, 3), " |\n",
+        "| Pearson r | ", omicsai::omicsai_format_num(pearson_r, 3), " |\n",
+        "| Spearman rho | ", omicsai::omicsai_format_num(spearman_r, 3), " |\n",
         "| Total shared genes | ", length(f1_valid), " |\n",
         "| Significant in contrast 1 (|logFC| > ", sig_threshold, ") | ", n_sig1, " |\n",
         "| Significant in contrast 2 (|logFC| > ", sig_threshold, ") | ", n_sig2, " |\n",
@@ -141,8 +141,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s | %s |",
               symbols,
-              omicsai::format_num(f1_valid[top_idx], 3),
-              omicsai::format_num(f2_valid[top_idx], 3),
+              omicsai::omicsai_format_num(f1_valid[top_idx], 3),
+              omicsai::omicsai_format_num(f2_valid[top_idx], 3),
               direction
             ),
             collapse = "\n"
@@ -203,8 +203,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s |",
               sym1,
-              omicsai::format_num(f1_valid[top1], 3),
-              omicsai::format_num(f2_valid[top1], 3)
+              omicsai::omicsai_format_num(f1_valid[top1], 3),
+              omicsai::omicsai_format_num(f2_valid[top1], 3)
             ),
             collapse = "\n"
           ),
@@ -231,8 +231,8 @@ compare_build_ai_params <- function(pgx,
             sprintf(
               "| %s | %s | %s |",
               sym2,
-              omicsai::format_num(f1_valid[top2], 3),
-              omicsai::format_num(f2_valid[top2], 3)
+              omicsai::omicsai_format_num(f1_valid[top2], 3),
+              omicsai::omicsai_format_num(f2_valid[top2], 3)
             ),
             collapse = "\n"
           ),

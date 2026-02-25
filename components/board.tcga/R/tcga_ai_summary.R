@@ -86,7 +86,7 @@ tcga_build_ai_params <- function(pgx,
             "| Gene | logFC |\n",
             "|------|-------|\n",
             paste(
-              sprintf("| %s | %s |", df$symbol, omicsai::format_num(df$fc, 3)),
+              sprintf("| %s | %s |", df$symbol, omicsai::omicsai_format_num(df$fc, 3)),
               collapse = "\n"
             )
           )

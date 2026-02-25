@@ -92,8 +92,8 @@ expression_build_ai_params <- function(pgx, contrast, ntop = 20) {
           sprintf(
             "| %s | %s | %s |",
             df$symbol,
-            omicsai::format_num(df$logFC, 3),
-            omicsai::format_num(df$meta.q, 4)
+            omicsai::omicsai_format_num(df$logFC, 3),
+            omicsai::omicsai_format_num(df$meta.q, 4)
           ),
           collapse = "\n"
         )

@@ -114,7 +114,7 @@ intersection_build_ai_params <- function(pgx,
         "|---------|", paste(rep("------", ncol(FC)), collapse = "|"), "|\n"
       )
       rows <- vapply(seq_len(nrow(FC)), function(i) {
-        vals <- paste(omicsai::format_num(FC[i, ], 3), collapse = " | ")
+        vals <- paste(omicsai::omicsai_format_num(FC[i, ], 3), collapse = " | ")
         sprintf("| %s | %s |", row_labels[i], vals)
       }, character(1))
 
@@ -146,7 +146,7 @@ intersection_build_ai_params <- function(pgx,
         "|----------|", paste(rep("------", ncol(R)), collapse = "|"), "|\n"
       )
       rows <- vapply(seq_len(nrow(R)), function(i) {
-        vals <- paste(omicsai::format_num(R[i, ], 2), collapse = " | ")
+        vals <- paste(omicsai::omicsai_format_num(R[i, ], 2), collapse = " | ")
         sprintf("| %s | %s |", rownames(R)[i], vals)
       }, character(1))
 

@@ -84,8 +84,8 @@ featuremap_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s |",
             display_names,
-            omicsai::format_num(rms_fc[top_names], 3),
-            omicsai::format_num(fc_vals, 3)
+            omicsai::omicsai_format_num(rms_fc[top_names], 3),
+            omicsai::omicsai_format_num(fc_vals, 3)
           ),
           collapse = "\n"
         )
@@ -98,7 +98,7 @@ featuremap_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s |",
             display_names,
-            omicsai::format_num(rms_fc[top_names], 3)
+            omicsai::omicsai_format_num(rms_fc[top_names], 3)
           ),
           collapse = "\n"
         )
@@ -155,7 +155,7 @@ featuremap_build_ai_params <- function(pgx,
       neigh_fc <- ""
       if (!is.null(contrast_fc)) {
         fc_vals <- contrast_fc[neighbors]
-        neigh_fc <- paste0(" (logFC: ", paste(omicsai::format_num(fc_vals, 3), collapse = ", "), ")")
+        neigh_fc <- paste0(" (logFC: ", paste(omicsai::omicsai_format_num(fc_vals, 3), collapse = ", "), ")")
       }
 
       nearby_lines <- c(

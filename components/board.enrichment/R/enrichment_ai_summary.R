@@ -56,8 +56,8 @@ enrichment_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           pathways,
-          omicsai::format_num(tbl$logFC, 3),
-          omicsai::format_num(tbl$meta.q, 4),
+          omicsai::omicsai_format_num(tbl$logFC, 3),
+          omicsai::omicsai_format_num(tbl$meta.q, 4),
           sizes,
           stars_col
         ),
@@ -132,7 +132,7 @@ enrichment_build_ai_params <- function(pgx,
             "| Gene | logFC |\n",
             "|------|-------|\n",
             paste(
-              sprintf("| %s | %s |", df$symbol, omicsai::format_num(df$fc, 3)),
+              sprintf("| %s | %s |", df$symbol, omicsai::omicsai_format_num(df$fc, 3)),
               collapse = "\n"
             )
           )

@@ -53,8 +53,8 @@ biomarker_build_ai_params <- function(pgx,
     )
 
     rows <- vapply(seq_len(nrow(R)), function(i) {
-      scores <- paste(omicsai::format_num(R[i, ], 3), collapse = " | ")
-      cum_score <- omicsai::format_num(sum(R[i, ], na.rm = TRUE), 3)
+      scores <- paste(omicsai::omicsai_format_num(R[i, ], 3), collapse = " | ")
+      cum_score <- omicsai::omicsai_format_num(sum(R[i, ], na.rm = TRUE), 3)
       sprintf("| %s | %s | %s |", symbols[i], scores, cum_score)
     }, character(1))
 

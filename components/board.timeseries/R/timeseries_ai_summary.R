@@ -54,7 +54,7 @@ timeseries_build_ai_params <- function(data,
 
     ## Format time profile
     profile_str <- paste(
-      sprintf("%s: %s", time_points, omicsai::format_num(avg_profile, 2)),
+      sprintf("%s: %s", time_points, omicsai::omicsai_format_num(avg_profile, 2)),
       collapse = ", "
     )
     cluster_lines <- c(cluster_lines, paste0("- **Mean expression profile (scaled):** ", profile_str))
@@ -62,7 +62,7 @@ timeseries_build_ai_params <- function(data,
     ## Expression range
     sd_vals <- matrixStats::rowSds(module_expr, na.rm = TRUE)
     cluster_lines <- c(cluster_lines, paste0(
-      "- **Mean SD across time:** ", omicsai::format_num(mean(sd_vals, na.rm = TRUE), 2)
+      "- **Mean SD across time:** ", omicsai::omicsai_format_num(mean(sd_vals, na.rm = TRUE), 2)
     ))
   }
 
@@ -129,8 +129,8 @@ timeseries_build_ai_params <- function(data,
           sprintf(
             "| %s | %s | %s |",
             pathways,
-            omicsai::format_num(rho[top_gsets], 3),
-            omicsai::format_num(pv[top_gsets], 4)
+            omicsai::omicsai_format_num(rho[top_gsets], 3),
+            omicsai::omicsai_format_num(pv[top_gsets], 4)
           ),
           collapse = "\n"
         )

@@ -45,9 +45,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s | %s |",
           tbl$drug,
-          omicsai::format_num(tbl$NES, 3),
-          omicsai::format_num(tbl$pval, 4),
-          omicsai::format_num(tbl$padj, 4),
+          omicsai::omicsai_format_num(tbl$NES, 3),
+          omicsai::omicsai_format_num(tbl$pval, 4),
+          omicsai::omicsai_format_num(tbl$padj, 4),
           ifelse(is.na(tbl$moa) | tbl$moa == "", "-", tbl$moa),
           ifelse(is.na(tbl$target) | tbl$target == "", "-", tbl$target)
         ),
@@ -84,9 +84,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           mc$pathway,
-          omicsai::format_num(mc$NES, 3),
-          omicsai::format_num(mc$pval, 4),
-          omicsai::format_num(mc$padj, 4),
+          omicsai::omicsai_format_num(mc$NES, 3),
+          omicsai::omicsai_format_num(mc$pval, 4),
+          omicsai::omicsai_format_num(mc$padj, 4),
           mc$size
         ),
         collapse = "\n"
@@ -106,9 +106,9 @@ drugconnectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s |",
           mt$pathway,
-          omicsai::format_num(mt$NES, 3),
-          omicsai::format_num(mt$pval, 4),
-          omicsai::format_num(mt$padj, 4),
+          omicsai::omicsai_format_num(mt$NES, 3),
+          omicsai::omicsai_format_num(mt$pval, 4),
+          omicsai::omicsai_format_num(mt$padj, 4),
           mt$size
         ),
         collapse = "\n"

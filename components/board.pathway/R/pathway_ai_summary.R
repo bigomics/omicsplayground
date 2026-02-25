@@ -84,9 +84,9 @@ pathway_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s | %s |",
             pathway_names,
-            omicsai::format_num(score, 2),
-            omicsai::format_num(logfc, 2),
-            omicsai::format_num(qval, 4)
+            omicsai::omicsai_format_num(score, 2),
+            omicsai::omicsai_format_num(logfc, 2),
+            omicsai::omicsai_format_num(qval, 4)
           ),
           collapse = "\n"
         )
@@ -99,8 +99,8 @@ pathway_build_ai_params <- function(pgx,
           sprintf(
             "| %s | %s | %s |",
             pathway_names,
-            omicsai::format_num(logfc, 2),
-            omicsai::format_num(qval, 4)
+            omicsai::omicsai_format_num(logfc, 2),
+            omicsai::omicsai_format_num(qval, 4)
           ),
           collapse = "\n"
         )

@@ -31,8 +31,8 @@ wordcloud_build_ai_params <- function(word_enrichment,
       sprintf(
         "| %s | %s | %s | %s |",
         top_df$word,
-        omicsai::format_num(top_df$NES, 2),
-        omicsai::format_num(top_df$padj, 3),
+        omicsai::omicsai_format_num(top_df$NES, 2),
+        omicsai::omicsai_format_num(top_df$padj, 3),
         top_df$size
       ),
       collapse = "\n"
@@ -48,9 +48,9 @@ wordcloud_build_ai_params <- function(word_enrichment,
   nes_vals <- df$NES[!is.na(df$NES)]
   nes_range <- if (length(nes_vals) > 0) {
     paste0(
-      omicsai::format_num(min(nes_vals), 2), " to ",
-      omicsai::format_num(max(nes_vals), 2),
-      " (median: ", omicsai::format_num(median(nes_vals), 2), ")"
+      omicsai::omicsai_format_num(min(nes_vals), 2), " to ",
+      omicsai::omicsai_format_num(max(nes_vals), 2),
+      " (median: ", omicsai::omicsai_format_num(median(nes_vals), 2), ")"
     )
   } else {
     "NA"

@@ -47,11 +47,11 @@ connectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s | %s | %s | %s |",
           playbase::shortstring(tbl$pathway, 80),
-          if ("score" %in% sig_cols) omicsai::format_num(tbl$score, 3) else rep("NA", nrow(tbl)),
-          if ("rho" %in% sig_cols) omicsai::format_num(tbl$rho, 3) else rep("NA", nrow(tbl)),
-          if ("NES" %in% sig_cols) omicsai::format_num(tbl$NES, 3) else rep("NA", nrow(tbl)),
-          if ("odd.ratio" %in% sig_cols) omicsai::format_num(tbl$odd.ratio, 3) else rep("NA", nrow(tbl)),
-          if ("tau" %in% sig_cols) omicsai::format_num(tbl$tau, 3) else rep("NA", nrow(tbl))
+          if ("score" %in% sig_cols) omicsai::omicsai_format_num(tbl$score, 3) else rep("NA", nrow(tbl)),
+          if ("rho" %in% sig_cols) omicsai::omicsai_format_num(tbl$rho, 3) else rep("NA", nrow(tbl)),
+          if ("NES" %in% sig_cols) omicsai::omicsai_format_num(tbl$NES, 3) else rep("NA", nrow(tbl)),
+          if ("odd.ratio" %in% sig_cols) omicsai::omicsai_format_num(tbl$odd.ratio, 3) else rep("NA", nrow(tbl)),
+          if ("tau" %in% sig_cols) omicsai::omicsai_format_num(tbl$tau, 3) else rep("NA", nrow(tbl))
         ),
         collapse = "\n"
       )
@@ -107,7 +107,7 @@ connectivity_build_ai_params <- function(pgx,
             "| %s | %s | %s |",
             names(top_le),
             as.integer(top_le),
-            omicsai::format_num(fc_vals, 3)
+            omicsai::omicsai_format_num(fc_vals, 3)
           ),
           collapse = "\n"
         )
@@ -154,8 +154,8 @@ connectivity_build_ai_params <- function(pgx,
         sprintf(
           "| %s | %s | %s |",
           pathway_names,
-          omicsai::format_num(top_values, 3),
-          omicsai::format_num(query_values, 3)
+          omicsai::omicsai_format_num(top_values, 3),
+          omicsai::omicsai_format_num(query_values, 3)
         ),
         collapse = "\n"
       )

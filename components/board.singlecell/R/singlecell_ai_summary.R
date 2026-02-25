@@ -64,9 +64,9 @@ singlecell_build_ai_params <- function(pgx,
         )
         rows <- vapply(seq_along(top_types), function(i) {
           ct <- top_types[i]
-          overall <- omicsai::format_num(mean_props[ct] * 100, 1)
+          overall <- omicsai::omicsai_format_num(mean_props[ct] * 100, 1)
           per_grp <- vapply(grp_levels, function(g) {
-            omicsai::format_num(grp_means[g, ct] * 100, 1)
+            omicsai::omicsai_format_num(grp_means[g, ct] * 100, 1)
           }, character(1))
           paste0("| ", ct, " | ", overall, "% |",
             paste(paste0(per_grp, "%"), collapse = " | "), " |")
@@ -88,7 +88,7 @@ singlecell_build_ai_params <- function(pgx,
       "| Cell Type | Mean Proportion |\n",
       "|-----------|----------------|\n",
       paste(
-        sprintf("| %s | %s%% |", names(mean_props), omicsai::format_num(mean_props * 100, 1)),
+        sprintf("| %s | %s%% |", names(mean_props), omicsai::omicsai_format_num(mean_props * 100, 1)),
         collapse = "\n"
       ), "\n\n",
       "**Cell types with >1% mean proportion:** ", n_detected,
@@ -124,7 +124,7 @@ singlecell_build_ai_params <- function(pgx,
       "| Gene | Mean Expression | SD |\n",
       "|------|----------------|----|\n",
       paste(
-        sprintf("| %s | %s | %s |", symbols, omicsai::format_num(mean_vals, 2), omicsai::format_num(sd_vals, 2)),
+        sprintf("| %s | %s | %s |", symbols, omicsai::omicsai_format_num(mean_vals, 2), omicsai::omicsai_format_num(sd_vals, 2)),
         collapse = "\n"
       )
     )
