@@ -7,6 +7,36 @@
   if (is.null(x)) y else x
 }
 
+# Translate raw API/HTTP error messages into user-friendly strings.
+# Follows the shiny::validate convention used across boards: callers store
+# the result in rv$error, then surface it with shiny::validate(shiny::need()).
+.aicards_friendly_error <- function(msg) {
+  if (grepl("503|Service Unavailable|high demand", msg, ignore.case = TRUE)) {
+    return(paste0(
+      "The AI service is temporarily unavailable due to high demand. ",
+      "This is usually short-lived \u2014 please try again in a few minutes."
+    ))
+  }
+  if (grepl("429|Too Many Requests|rate.?limit", msg, ignore.case = TRUE)) {
+    return("API rate limit reached. Please wait a moment before generating again.")
+  }
+  if (grepl("timeout|timed.?out", msg, ignore.case = TRUE)) {
+    return(paste0(
+      "The request timed out. The service may be under load. ",
+      "Please try again."
+    ))
+  }
+  if (grepl("No image data", msg, ignore.case = TRUE)) {
+    return("The model returned no image. The prompt may have been blocked or the model is unavailable. Please try again.")
+  }
+  if (grepl("_API_KEY|API.?key|401|Unauthorized", msg, ignore.case = TRUE)) {
+    return("The AI service is not configured or the API key is invalid. Please contact your administrator.")
+  }
+  # Fallback: strip noisy httr2/ellmer call-stack prefixes and keep the message
+  msg <- sub("^Error in [^\n]+:\n\\s*", "", msg)
+  paste0("Generation failed: ", msg)
+}
+
 .aicards_as_reactive_template <- function(template_input) {
   if (shiny::is.reactive(template_input)) {
     return(template_input)
@@ -318,7 +348,7 @@ AiTextCardServer <- function(id,
         )
         rv$status <- "done"
       }, error = function(e) {
-        rv$error <- conditionMessage(e)
+        rv$error <- .aicards_friendly_error(conditionMessage(e))
         rv$status <- "error"
       })
     })
@@ -339,12 +369,7 @@ AiTextCardServer <- function(id,
       }
 
       if (rv$status == "error") {
-        return(shiny::div(
-          class = "text-danger",
-          shiny::icon("exclamation-triangle"),
-          " Error: ",
-          rv$error
-        ))
+        shiny::validate(shiny::need(FALSE, rv$error))
       }
 
       if (rv$status == "done" && !is.null(rv$result)) {
@@ -448,14 +473,22 @@ AiDiagramCardServer <- function(id,
     shiny::observe({
       shiny::req(isTRUE(rv$generate_requested))
       rv$error <- NULL
+
+      # params_reactive may be NULL while upstream text is still generating;
+      # shiny::req() here is intentional — the observer stays subscribed and
+      # re-fires automatically once the text reactive becomes available.
       params <- params_reactive()
       shiny::req(params)
 
+      # template and config are structurally fixed; if they are NULL something
+      # is mis-configured — surface an error rather than leaving the spinner up.
       template <- get_template()
-      shiny::req(template)
-
       config <- get_config()
-      shiny::req(config)
+      if (is.null(template) || is.null(config)) {
+        rv$error <- "Diagram card misconfigured: template or config is NULL."
+        rv$generate_requested <- FALSE
+        return()
+      }
 
       tryCatch({
         result <- .aicards_gen_diagram(
@@ -467,14 +500,14 @@ AiDiagramCardServer <- function(id,
         rv$result <- omicsai::sanitise_diagram_result(result)
         rv$generate_requested <- FALSE
       }, error = function(e) {
-        rv$error <- conditionMessage(e)
+        rv$error <- .aicards_friendly_error(conditionMessage(e))
         rv$generate_requested <- FALSE
       })
     })
 
     diagram_render <- function() {
       if (!is.null(rv$error)) {
-        shiny::validate(shiny::need(FALSE, paste("Diagram generation failed:", rv$error)))
+        shiny::validate(shiny::need(FALSE, rv$error))
       }
 
       shiny::validate(shiny::need(
@@ -596,14 +629,22 @@ AiImageCardServer <- function(id,
     shiny::observe({
       shiny::req(isTRUE(rv$generate_requested))
       rv$error <- NULL
+
+      # params_reactive may be NULL while upstream text is still generating;
+      # shiny::req() here is intentional — the observer stays subscribed and
+      # re-fires automatically once the text reactive becomes available.
       params <- params_reactive()
       shiny::req(params)
 
+      # template and config are structurally fixed; if they are NULL something
+      # is mis-configured — surface an error rather than leaving the spinner up.
       template <- get_template()
-      shiny::req(template)
-
       config <- get_config()
-      shiny::req(config)
+      if (is.null(template) || is.null(config)) {
+        rv$error <- "Image card misconfigured: template or config is NULL."
+        rv$generate_requested <- FALSE
+        return()
+      }
 
       tryCatch({
         rv$result <- .aicards_gen_infographic(
@@ -614,19 +655,14 @@ AiImageCardServer <- function(id,
         )
         rv$generate_requested <- FALSE
       }, error = function(e) {
-        rv$error <- conditionMessage(e)
+        rv$error <- .aicards_friendly_error(conditionMessage(e))
         rv$generate_requested <- FALSE
       })
     })
 
     image_render <- function() {
       if (!is.null(rv$error)) {
-        return(shiny::div(
-          class = "text-danger",
-          shiny::icon("exclamation-triangle"),
-          " Error: ",
-          rv$error
-        ))
+        shiny::validate(shiny::need(FALSE, rv$error))
       }
 
       shiny::validate(shiny::need(
