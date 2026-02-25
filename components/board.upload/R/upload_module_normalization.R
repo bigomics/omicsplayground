@@ -680,7 +680,7 @@ upload_module_normalization_server <- function(
         cex1 <- cut(xdim, breaks, labs)
         cex1 <- 2.5 * as.numeric(as.character(cex1))
         if (is.na(cex1)) cex1 <- 1
-        
+
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
@@ -702,7 +702,7 @@ upload_module_normalization_server <- function(
           cex.lab <- 1
           cex.main <- 1.2
         }
-        
+
         for (m in methods) {
           if (m %in% names(pos.list)) {
             plot(pos.list[[m]],
