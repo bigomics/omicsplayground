@@ -1,3 +1,12 @@
+### v4.1.4+master260225 (2026-02-25)
+
+-  feat: single board launch; update global and enable upload board [view](https://github.com/bigomics/omicsplayground/commit/0fe246e7e491c1a8a891aa3a5b1a7d7cf10e5af7)
+-  feat: add priority flag to HubSpot crash tickets [view](https://github.com/bigomics/omicsplayground/commit/8f3bf32e7a372a07c26620d46e69b11256b436f5)
+-  feat: include p and q cols in diff expr downloaded table [view](https://github.com/bigomics/omicsplayground/commit/2f1d7bc8dcd142d23909712424f784443cd362a5)
+-  feat: skip annotation table for scRNA-seq during computePGX [view](https://github.com/bigomics/omicsplayground/commit/a1ccc479ab7c88b723c0cbc394108ec9d1c0385e)
+-  feat: use new svgSave for non-raster svg output [view](https://github.com/bigomics/omicsplayground/commit/21737f463841cace2e841f226fbb6bbd22deac49)
+
+
 ### v4.1.3+master260205 (2026-02-05)
 
 -  feat: add datatype on multiomics [view](https://github.com/bigomics/omicsplayground/commit/0c8962328ae5f2deae464a73d264cac262325b59)
@@ -18,13 +27,5 @@
 -  feat: add tabpane active, certain screenshots require it [view](https://github.com/bigomics/omicsplayground/commit/5ffae22194c169b0ba096f0bbe2c32bef171869a)
 -  feat: extend expression and featmap snapshot coverage [view](https://github.com/bigomics/omicsplayground/commit/c4aad85440ff413ae6116e7f95105f127a401896)
 -  feat: add pgx argument to board.launch [view](https://github.com/bigomics/omicsplayground/commit/2ba3d5a2a869e33ec5988bf7cdee2e1cc36c0ec3)
-
-
-### v4.1.2+master260108 (2026-01-08)
-
--  feat: make biomarker work with 1 feature [view](https://github.com/bigomics/omicsplayground/commit/8fa1cf454c02c918c53e4c05290128121565dd84)
--  feat: move computeok email to main thread [view](https://github.com/bigomics/omicsplayground/commit/c990ee5eac6ea936f6b2c74f502b557bfa16c099)
--  feat: samples table use names instead of -1/1 [view](https://github.com/bigomics/omicsplayground/commit/3127f969191c069cfbdb74b76bc9f49ff179ad62)
--  feat: global label type on lasagna module [view](https://github.com/bigomics/omicsplayground/commit/07a8103d08b89a2671e154225abd28d6419718c0)
 
 
