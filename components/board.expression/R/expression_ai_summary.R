@@ -202,8 +202,9 @@ expression_ai_summary_server <- function(id,
 
     omicsai::omicsai_config(
       model = ai_model,
-      context = context_template,
-      context_params = context_params
+      system_prompt = omicsai::omicsai_substitute_template(
+        context_template, context_params
+      )
     )
   })
 
