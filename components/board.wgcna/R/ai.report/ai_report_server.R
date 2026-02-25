@@ -32,7 +32,7 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
 
     # Card servers
     text_result <- wgcna_ai_text_server("text", wgcna, pgx, controls, parent_session)
-    AiDiagramCardServer(
+    diagram_result <- AiDiagramCardServer(
       "layout-diagram",
       params_reactive = shiny::reactive({
         txt <- text_result$report_text() %||% ""
@@ -61,16 +61,32 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       "layout-infographic",
       params_reactive = shiny::reactive({
         txt <- text_result$report_text() %||% ""
-        txt <- gsub("\\bME(\\w+)\\b", "Module \\1", txt)
         shiny::req(nzchar(txt))
-        list(report = txt)
+        organism <- pgx$organism %||% "human"
+        diag <- diagram_result()
+        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
+        prompt <- wgcna_build_image_prompt(txt, organism, edgelist)
+        list(content = prompt)
       }),
-      template_reactive = shiny::reactive("{{report}}"),
+      template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         img_model <- getUserOption(parent_session, "image_model")
-        omicsai::omicsai_image_config(model = img_model %||% "gemini-2.5-flash-image")
+        omicsai::omicsai_image_config(
+          model = img_model %||% "gemini-3-pro-image-preview",
+          style = controls$image_style() %||% "bigomics",
+          n_blocks = as.integer(controls$image_blocks() %||% 1L),
+          image_size = "1K"
+        )
       }),
-      cache = cache
+      cache = cache,
+      trigger_reactive = shiny::reactive({
+        if (controls$mode() == "report" && isTRUE(controls$include_infographic())) {
+          controls$trigger()
+        } else {
+          0
+        }
+      }),
+      watermark = watermark
     )
 
     # Layout rendering

@@ -50,6 +50,31 @@ ai_report_controls_ui <- function(id) {
         selected = "short",
         inline = FALSE
       )
+    ),
+
+    # Report-only controls (hidden when in Summary mode)
+    shinyjs::hidden(
+      shiny::div(
+        id = ns("image_controls"),
+        shiny::checkboxInput(
+          ns("include_infographic"),
+          "Include infographic",
+          value = FALSE
+        ),
+        shiny::selectInput(
+          ns("image_style"),
+          "Infographic Style:",
+          choices = NULL,
+          width = "100%"
+        ),
+        shiny::radioButtons(
+          ns("image_blocks"),
+          "Layout:",
+          choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
+          selected = "1",
+          inline = TRUE
+        )
+      )
     )
     ## NOTE: "Show Prompt" checkbox is rendered in the text card's hamburger
     ## menu (see ai_report_ui.R). It is namespaced to this controls module
@@ -70,14 +95,29 @@ ai_report_controls_ui <- function(id) {
 ai_report_controls_server <- function(id, module_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
-    # Toggle summary-only controls based on mode
+    # Toggle mode-specific controls based on mode selection
     shiny::observe({
       mode <- input$mode %||% "summary"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
+        shinyjs::hide("image_controls")
       } else {
         shinyjs::hide("summary_controls")
+        shinyjs::show("image_controls")
       }
+    })
+
+    # Populate image style choices on init (deferred from UI to avoid startup crash)
+    shiny::observe({
+      styles <- tryCatch(
+        omicsai::omicsai_available_image_styles(),
+        error = function(e) "bigomics"
+      )
+      shiny::updateSelectInput(
+        session, "image_style",
+        choices = styles,
+        selected = if ("bigomics" %in% styles) "bigomics" else styles[1]
+      )
     })
 
     # Update module selector when choices change
@@ -104,7 +144,10 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
       mode = reactive(input$mode %||% "summary"),
       summary_style = reactive(input$summary_style),
       show_prompt = reactive(input$show_prompt),
-      selected_module = reactive(input$summary_module)
+      selected_module = reactive(input$summary_module),
+      include_infographic = reactive(isTRUE(input$include_infographic)),
+      image_style = reactive(input$image_style %||% "bigomics"),
+      image_blocks = reactive(input$image_blocks %||% "1")
     )
   })
 }

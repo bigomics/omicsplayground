@@ -61,3 +61,43 @@ wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
   layers <- layers[nzchar(layers)]
   paste(layers, collapse = "\n\n---\n\n")
 }
+
+#' Build layered WGCNA image prompt
+#'
+#' Assembles the full prompt for infographic generation by layering:
+#' species visual context, cleaned report text, and optional diagram
+#' edgelist. Parallel to \code{wgcna_build_diagram_prompt()} but
+#' targets the image model rather than the diagram LLM.
+#'
+#' @param report_text Character string with the AI report text
+#' @param organism Character string identifying the organism (e.g. "human", "mouse")
+#' @param diagram_edgelist List with \code{$nodes} and \code{$edges} from diagram
+#'   result, or \code{NULL} if no diagram has been generated
+#'
+#' @return Single character string with all prompt layers joined
+wgcna_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
+  layers <- list()
+
+  ## Layer 1: species visual context
+  layers[[1]] <- omicsai::omicsai_image_species_visual(organism)
+
+  ## Layer 2: cleaned report — strip noise, humanise module names
+  clean <- omicsai::omicsai_strip_report_noise(report_text)
+  clean <- gsub("\\bME(\\w+)\\b", "Module \\1", clean)
+  layers[[2]] <- paste("<report>", clean, "</report>", sep = "\n")
+
+  ## Layer 3: diagram edgelist (if available)
+  if (!is.null(diagram_edgelist)) {
+    dot <- omicsai::omicsai_edgelist_to_text(diagram_edgelist)
+    if (nzchar(dot)) {
+      layers[[3]] <- paste("<diagram>", dot, "</diagram>", sep = "\n")
+    }
+  }
+
+  ## Drop empty layers and join — no markdown separator (unlike the diagram
+
+  ## prompt) because the image model ignores markdown structure; XML tags
+  ## on each layer provide sufficient delimitation.
+  layers <- layers[nzchar(layers)]
+  paste(layers, collapse = "\n\n")
+}

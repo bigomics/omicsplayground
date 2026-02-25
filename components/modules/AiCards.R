@@ -441,7 +441,7 @@ AiDiagramCardServer <- function(id,
 
     if (!is.null(trigger_reactive)) {
       shiny::observeEvent(trigger_reactive(), {
-        request_generation()
+        if (isTRUE(trigger_reactive() > 0)) request_generation()
       }, ignoreInit = TRUE)
     }
 
@@ -553,6 +553,7 @@ AiDiagramCardServer <- function(id,
 #' @param config_reactive Reactive or scalar omicsai_image_config
 #' @param cache Optional omicsai cache object
 #' @param trigger_reactive Optional reactive trigger for external generation events
+#' @param watermark Logical; if TRUE, adds watermark logo to PNG/PDF downloads. Default FALSE.
 #'
 #' @return Reactive returning omicsai_image_result (or NULL)
 AiImageCardServer <- function(id,
@@ -560,7 +561,8 @@ AiImageCardServer <- function(id,
                               template_reactive,
                               config_reactive,
                               cache = NULL,
-                              trigger_reactive = NULL) {
+                              trigger_reactive = NULL,
+                              watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     module_cache <- .aicards_coalesce(cache, omicsai::omicsai_cache_init("mem"))
 
@@ -587,7 +589,7 @@ AiImageCardServer <- function(id,
 
     if (!is.null(trigger_reactive)) {
       shiny::observeEvent(trigger_reactive(), {
-        request_generation()
+        if (isTRUE(trigger_reactive() > 0)) request_generation()
       }, ignoreInit = TRUE)
     }
 
@@ -671,7 +673,8 @@ AiImageCardServer <- function(id,
       renderFunc2 = shiny::renderUI,
       pdf.width = 8,
       pdf.height = 5,
-      res = c(75, 100)
+      res = c(75, 100),
+      add.watermark = watermark
     )
 
     result_reactive <- shiny::reactive(rv$result)
