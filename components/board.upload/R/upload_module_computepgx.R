@@ -1003,7 +1003,11 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
-        annot_table <- annotRT()
+        if (upload_datatype() != "scRNA-seq") {
+          annot_table <- annotRT()
+        } else {
+          annot_table <- NULL
+        }
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters

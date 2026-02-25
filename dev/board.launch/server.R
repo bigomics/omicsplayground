@@ -10,7 +10,6 @@ app_server <- function(input, output, session) {
   
   board = options()$board
   authentication = options()$authentication
-
   server_fn_name <- glue::glue("{board}board")
   board_server <- grep(server_fn_name, ls(envir = .GlobalEnv), value = TRUE, ignore.case = TRUE)
   length <- nchar(board) + nchar("board")
@@ -89,7 +88,22 @@ app_server <- function(input, output, session) {
         pgx <- playbase::pgx.load(input$pgx_path)
         pgx <- playbase::pgx.initialize(pgx)
         DATATYPEPGX <<- tolower(pgx$datatype)
-        server <- board_server_fn(board, pgx = pgx)
+        if (board == "upload") {
+          server <- board_server_fn(
+            board,
+            pgx = pgx,
+            auth = auth,
+            pgx_dir = NULL,
+            reload_pgxdir = shiny::reactiveVal(0),
+            load_uploaded_data = shiny::reactiveVal(NULL),
+            recompute_pgx = shiny::reactiveVal(NULL),
+            inactivityCounter = shiny::reactiveVal(0),
+            new_upload = shiny::reactiveVal(0)
+            )
+        } else {
+            server <- board_server_fn(board, pgx = pgx)
+        }
+        
 
   })
   

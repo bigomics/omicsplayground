@@ -4,13 +4,10 @@
 ##
 
 #' Boxplots plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
-#'
 #' @export
 biomarker_plot_boxplots_ui <- function(
   id,
@@ -24,16 +21,6 @@ biomarker_plot_boxplots_ui <- function(
   width
 ) {
   ns <- shiny::NS(id)
-
-  plot_options <- tagList(
-    withTooltip(
-      shiny::checkboxInput(
-        ns("show_all"), "show all samples",
-        value = FALSE
-      ), "Show all samples or only selected.",
-      placement = "right", options = list(container = "body")
-    )
-  )
 
   PlotModuleUI(ns("plot"),
     title = title,
@@ -51,11 +38,8 @@ biomarker_plot_boxplots_ui <- function(
 }
 
 #' Boxplots plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 biomarker_plot_boxplots_server <- function(id,
@@ -63,20 +47,20 @@ biomarker_plot_boxplots_server <- function(id,
                                            calcVariableImportance,
                                            is_computed,
                                            watermark = FALSE) {
+
   moduleServer(
+
     id, function(input, output, session) {
+
       plot_data <- shiny::reactive({
+
         res <- calcVariableImportance()
-        shiny::req(res)
-        shiny::req(is_computed())
+        shiny::req(res, is_computed())
 
         ## get variables used in the tree solution
         leafs <- setdiff(res$rf$frame$var, "<leaf>")
         vars <- res$rf$orig.names[leafs]
-
-        if (length(vars) == 0) {
-          return(NULL)
-        }
+        if (length(vars) == 0) return(NULL)
         vars <- intersect(vars, rownames(res$X))
 
         ## add some other variables
@@ -88,28 +72,20 @@ biomarker_plot_boxplots_server <- function(id,
 
         y <- res$y
         is.surv <- grepl("Surv", res$rf$call)[2]
-        is.surv
         if (is.surv) {
           y <- paste0("N", res$rf$where)
           names(y) <- colnames(res$X)
-          table(y)
         }
+        
+        return(list(X = res$X, vars = vars, y = y))
 
-        ## vars, X, y
-        pdata <- list(
-          X = res$X,
-          vars = vars,
-          y = y
-        )
-        return(pdata)
       })
 
       plot.RENDER <- function() {
-        pdata <- plot_data()
 
+        pdata <- plot_data()
         shiny::req(pdata)
 
-        ## vars, X, y
         X <- pdata$X
         vars <- pdata$vars
         y <- pdata$y
@@ -120,46 +96,35 @@ biomarker_plot_boxplots_server <- function(id,
           mgp = c(1.6, 0.6, 0), oma = c(0.5, 0.5, 0.5, 0.5) * 0
         )
         if (length(vars) > 8) par(mfrow = c(3, 4), mar = c(2.8, 3, 2, 0.3) * 0.7)
-        i <- 1
         for (i in 1:min(12, length(vars))) {
           g <- vars[i]
           gx <- X[g, ]
           g <- playbase::probe2symbol(g, pgx$genes, "gene_name", fill_na = TRUE)
-          boxplot(
-            gx ~ y,
-            col = "grey85",
-            ylim = range(gx),
-            ylab = "expression",
-            xlab = "",
-            cex.axis = 0.001
-          )
+          boxplot(gx ~ y, col = "grey85", ylim = range(gx),
+            ylab = "expression", xlab = "", cex.axis = 0.001)
           axis(2, cex.axis = 0.9)
 
           cex1 <- ifelse(ny >= 8, 0.65, 0.8)
           title(g, cex.main = ifelse(nchar(g) > 20, 0.85, 1))
-          nchar(y)
           too.big <- (max(nchar(y)) >= 8 && ny == 2) ||
             (max(nchar(y)) >= 5 && ny %in% c(3, 4) ||
               ny >= 5)
           if (too.big) {
             dy <- min(gx) - 0.12 * diff(range(gx))
             text(1:ny, dy, levels(factor(y)),
-              xpd = NA,
-              cex = cex1, srt = 30, adj = 1
-            )
+              xpd = NA, cex = cex1, srt = 30, adj = 1)
           } else {
             mtext(levels(factor(y)),
               side = 1, line = 0.7,
-              cex = cex1 * 0.85, las = 1, at = 1:ny
-            )
+              cex = cex1 * 0.85, las = 1, at = 1:ny)
           }
         }
+
       }
 
       plot_data_csv <- function() {
         pdata <- plot_data()
-        df <- rbind(pdata$y, pdata$X)
-        return(df)
+        return(rbind(pdata$y, pdata$X))
       }
 
       PlotModuleServer(

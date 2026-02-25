@@ -23,7 +23,6 @@ mofa_plot_lasagna_network_ui <- function(
     ns("plotmodule"),
     plotlib = "visnetwork",
     title = title,
-    # options = options,
     label = "",
     caption = caption,
     info.text = info.text,
@@ -41,25 +40,17 @@ mofa_plot_lasagna_network_server <- function(id,
                                              data,
                                              pgx,
                                              watermark = FALSE) {
-  moduleServer(id, function(input, output, session) {
-    ## ------------------------------------------------------------------
-    ## ------------------------------------------------------------------
-    ## ------------------------------------------------------------------
 
+  moduleServer(id, function(input, output, session) {
+  
     plot.RENDER <- function() {
       res <- data()
       shiny::req(res)
-
       graph <- res$graph
       dbg("[mofa_plot_lasagna_network_server] layers=", graph$layers)
-
       min_rho <- 0.0
-      prune <- TRUE
-
-      if (prune) {
-        ewt <- igraph::E(graph)$weight
-        graph <- igraph::subgraph_from_edges(graph, which(abs(ewt) > 0))
-      }
+      ewt <- igraph::E(graph)$weight
+      graph <- igraph::subgraph_from_edges(graph, which(abs(ewt) > 0))
 
       vis <- playbase::lasagna.plot_visgraph(
         graph,
@@ -77,7 +68,6 @@ mofa_plot_lasagna_network_server <- function(id,
     PlotModuleServer(
       "plotmodule",
       func = plot.RENDER,
-      # csvFunc = plot_data,
       plotlib = "visnetwork",
       pdf.width = 12, pdf.height = 6,
       res = c(75, 90),
