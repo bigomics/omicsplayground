@@ -3,6 +3,10 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+for (f in list.files(file.path(OPG, "components/board.pcsf/R/ai.report"),
+  pattern = "\\.R$", full.names = TRUE
+)) source(f)
+
 PcsfInputs <- function(id) {
   ns <- NS(id)
 
@@ -32,6 +36,17 @@ PcsfInputs <- function(id) {
         "Options",
         icon = icon("cog", lib = "glyphicon"),
         pcsf_gsetpanel_settings_ui(ns("gsetpanel"))
+      )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("ai_report_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "AI Report Options",
+          icon = icon("robot", lib = "font-awesome"),
+          pcsf_ai_report_inputs_ui(ns("ai_report"))
+        )
       )
     )
   )
@@ -144,7 +159,15 @@ PcsfUI <- function(id) {
             width = c("auto", "100%")
           )
         )
-      ) ## end AI Summary tabpanel
+      ), ## end AI Summary tabpanel
+      shiny::tabPanel(
+        "AI Report",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          pcsf_ai_report_ui(ns("ai_report"))
+        )
+      )
     ) ## end tabsetpanel
   )
 }

@@ -46,6 +46,16 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
 
+    tab_elements <- list(
+      "Drug enrichment" = list(disable = c("ai_report_accordion")),
+      "Connectivity map (beta)" = list(disable = c("ai_report_accordion")),
+      "AI Report" = list(disable = character(0))
+    )
+
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
@@ -231,18 +241,16 @@ DrugConnectivityBoard <- function(id, pgx) {
     )
 
     ## =======================================================================================
-    ## AI SUMMARY TAB
+    ## AI REPORT TAB
     ## =======================================================================================
 
-    drugconnectivity_ai_summary_server(
-      "drugconnectivityAISummary",
+    drugconnectivity_ai_report_server(
+      "ai_report",
       pgx = pgx,
-      getActiveDSEA = getActiveDSEA,
-      getMOA.class = getMOA.class,
-      getMOA.target = getMOA.target,
-      dsea_contrast = shiny::reactive(input$dsea_contrast),
-      dsea_method = shiny::reactive(input$dsea_method),
-      session = session,
+      method_reactive = shiny::reactive(input$dsea_method),
+      contrast_reactive = shiny::reactive(input$dsea_contrast),
+      annotated_only_reactive = shiny::reactive(input$dseatable_filter),
+      parent_session = session,
       watermark = WATERMARK
     )
   })
