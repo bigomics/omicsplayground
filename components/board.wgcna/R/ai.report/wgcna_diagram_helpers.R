@@ -9,18 +9,20 @@
 #' Encodes the WGCNA board aesthetic choices: green/red solid edges,
 #' box-shaped process nodes, and genes in tooltip only.
 #'
-#' @return A named list of style parameters
+#' @return A named list with \code{node_styles}, \code{edge_styles},
+#'   and \code{show_genes_in_label}
 wgcna_diagram_style <- function() {
   list(
-    edge_colors = list(positive = "#2E8B57", negative = "#C0392B", association = "#94A3B8"),
-    edge_dashes = list(positive = FALSE, negative = FALSE, association = TRUE),
-    module_bg        = "#ADD8E6",
-    module_border    = "#222222",
-    phenotype_bg     = "#FFFFE0",
-    phenotype_border = "#222222",
-    process_bg       = "#AFEEEE",
-    process_border   = "#222222",
-    process_shape    = "box",
+    node_styles = list(
+      module    = list(bg = "#ADD8E6", border = "#222222", shape = "box"),
+      phenotype = list(bg = "#FFFFE0", border = "#222222", shape = "ellipse"),
+      process   = list(bg = "#AFEEEE", border = "#222222", shape = "box")
+    ),
+    edge_styles = list(
+      positive    = list(color = "#2E8B57", dashes = FALSE, arrows = "arrow", arrow_on = TRUE,  width = 2),
+      negative    = list(color = "#C0392B", dashes = FALSE, arrows = "bar",   arrow_on = TRUE,  width = 2),
+      association = list(color = "#94A3B8", dashes = TRUE,  arrows = "arrow", arrow_on = FALSE, width = 1.5)
+    ),
     show_genes_in_label = FALSE
   )
 }
@@ -29,7 +31,8 @@ wgcna_diagram_style <- function() {
 #'
 #' Assembles the full prompt for diagram generation by layering:
 #' generic schema instructions, board-specific WGCNA rules, species
-#' context, and the AI report text.
+#' context, and the AI report text. Node and link type names are
+#' derived from the style registry and substituted into the template.
 #'
 #' @param report_text Character string with the AI report text
 #' @param organism Character string identifying the organism (e.g. "human", "mouse")
@@ -37,16 +40,21 @@ wgcna_diagram_style <- function() {
 #'
 #' @return Single character string with all prompt layers joined
 wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
+  style <- wgcna_diagram_style()
+  fmt_names <- function(nms) paste(sprintf("- `%s`", nms), collapse = "\n")
+  node_names <- fmt_names(names(style$node_styles))
+  link_names <- fmt_names(names(style$edge_styles))
+
   layers <- list()
 
   ## Layer 1: generic diagram JSON schema instructions
   layers[[1]] <- omicsai::omicsai_instructions("diagram_network")
 
-  ## Layer 2: board-specific WGCNA rules
-  layers[[2]] <- tryCatch(
-    omicsai::omicsai_load_template("prompts/diagram_wgcna_rules.md", root = board_root),
-    error = function(e) ""
-  )
+  ## Layer 2: board-specific WGCNA rules with node/link names injected
+  layers[[2]] <- tryCatch({
+    tpl <- omicsai::omicsai_load_template("prompts/diagram_wgcna_rules.md", root = board_root)
+    omicsai::omicsai_substitute_template(tpl, list(node_names = node_names, link_names = link_names))
+  }, error = function(e) "")
 
   ## Layer 3: species-aware context
   layers[[3]] <- tryCatch(

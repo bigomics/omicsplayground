@@ -29,3 +29,6 @@ enrichments at q < 0.05), or weak (no significant enrichment).
 | Features used | {{n_features_wgcna}} {{feature_type}} |
 | Samples | {{n_samples}} |
 | Gene sets tested | {{n_genesets_tested}} |
+
+_This report was generated with OmicsPlayground (BigOmics, {{date}})._  
+_Note: AI-generated interpretation may contain inaccuracies and must be independently verified._

@@ -801,7 +801,8 @@ wgcna_build_methods <- function(wgcna, pgx) {
     min_kme = as.character(min_kme),
     n_modules = as.character(n_modules),
     grey_size = as.character(grey_size),
-    n_genesets_tested = as.character(n_genesets)
+    n_genesets_tested = as.character(n_genesets),
+    date = format(Sys.Date(), "%Y-%m-%d")
   )
 
   omicsai::omicsai_substitute_template(template, params)
