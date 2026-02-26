@@ -46,6 +46,17 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Drug enrichment" = list(disable = c("selected_module", "selected_trait")),
+      "Connectivity map (beta)" = list(disable = c("selected_module", "selected_trait")),
+      "AI Summary" = list(disable = c("dseatable_filter"))
+    )
+
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+    
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
