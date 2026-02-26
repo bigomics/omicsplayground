@@ -41,6 +41,17 @@ MofaInputs <- function(id) {
           shiny::actionButton(ns("compute"), "Compute!")
         )
       )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("ai_report_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "AI Report Options",
+          icon = icon("robot", lib = "font-awesome"),
+          mofa_ai_report_inputs_ui(ns("ai_report"))
+        )
+      )
     )
   )
 }
@@ -298,7 +309,16 @@ MofaUI <- function(id) {
             )
           )
         )
-      ) ## tabPanel
+      ), ## tabPanel
+
+      shiny::tabPanel(
+        "AI Report",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          mofa_ai_report_ui(ns("ai_report"))
+        )
+      )
     )
   )
 }

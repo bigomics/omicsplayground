@@ -1,6 +1,10 @@
 ## make as R6 class?? e.g. add documentation, initialize object,
 ## object id.
 
+for (f in list.files(file.path(OPG, "components/board.mofa/R/ai.report"),
+  pattern = "\\.R$", full.names = TRUE
+)) source(f)
+
 MODULE.multiomics <- list(
   module_menu = function() {
     c(
