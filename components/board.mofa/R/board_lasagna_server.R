@@ -40,8 +40,9 @@ LasagnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter")),
-      "Multi-partite graph" = list(disable = c("clust_options"))
+      "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter", "ai_report_accordion")),
+      "Multi-partite graph" = list(disable = c("clust_options", "ai_report_accordion")),
+      "AI Report" = list(disable = c("clust_options", "mpartite_options", "gsfilter"))
       # "Multi-type network" = list(disable = c("clust_options"))
     )
 
@@ -260,6 +261,16 @@ LasagnaBoard <- function(id, pgx) {
       "multipartite_edges_table",
       data = pruned_data,
       scrollY = "calc(100vh - (240px + 140px))"
+    )
+
+    lasagna_ai_report_server(
+      "ai_report",
+      graph_data_reactive = pruned_data,
+      contrast_reactive = reactive(input$contrast),
+      contrast_choices_reactive = reactive(lasagna_get_contrasts(pgx)),
+      pgx = pgx,
+      parent_session = session,
+      watermark = WATERMARK
     )
 
     return(NULL)

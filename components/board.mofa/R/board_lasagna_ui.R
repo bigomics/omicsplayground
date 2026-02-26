@@ -49,6 +49,17 @@ LasagnaInputs <- function(id) {
           shiny::radioButtons(ns("ntop"), "Number of nodes:", c(50, 1000), inline = TRUE)
         )
       )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("ai_report_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "AI Report Options",
+          icon = icon("robot", lib = "font-awesome"),
+          lasagna_ai_report_inputs_ui(ns("ai_report"))
+        )
+      )
     )
   )
 }
@@ -156,6 +167,15 @@ LasagnaUI <- function(id) {
               )
             )
           )
+        )
+      ),
+
+      shiny::tabPanel(
+        "AI Report",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 181px)",
+          lasagna_ai_report_ui(ns("ai_report"))
         )
       )
     ) ## end tabsetPanel
