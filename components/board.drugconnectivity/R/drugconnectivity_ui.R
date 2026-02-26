@@ -14,7 +14,6 @@ DrugConnectivityInputs <- function(id) {
       "Select type of drug enrichment analysis: activity or sensitivity (if available).",
       placement = "top"
     ),
-    shiny::hr(),
     withTooltip(
       shiny::checkboxInput(
         ns("dseatable_filter"),
@@ -23,6 +22,7 @@ DrugConnectivityInputs <- function(id) {
       ),
       "Show only annotated drugs."
     ),
+    shiny::br(),
     drugconnectivity_report_inputs(ns("cmap_report"))
   )
 }
@@ -134,7 +134,7 @@ DrugConnectivityUI <- function(id) {
 
   ## ----------------------------------------------------------------
   panel3 <- shiny::tabPanel(
-    "AI Report",
+    "AI Summary",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
@@ -148,22 +148,21 @@ DrugConnectivityUI <- function(id) {
         height = "calc(100vh - 180px)",            
         drugconnectivity_report_summary_ui(
           ns("cmap_report"),
-          title = "AI Report",
-          caption = "AI-generated summary report",
+          title = "Summary",
+          caption = "AI-generated summary",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto","100%")
         ),                        
-        drugconnectivity_report_diagram_ui(
-          ns("cmap_diagram"),
-          title = "Infographic diagram",
-          caption = "AI-generated infographic diagram",
+        drugconnectivity_report_infographic_ui(
+          ns("cmap_report"),
+          title = "Infographic",
+          caption = "AI-generated infographic",
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto","100%")
         )
       )
     )
   )
-
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),

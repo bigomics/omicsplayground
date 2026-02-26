@@ -83,7 +83,6 @@ drugconnectivity_plot_enplots_server <- function(id,
         }
 
         res <- list(
-          pgx = pgx,
           dsea_contrast = dsea_contrast,
           dsea_method = dsea_method,
           dt = dt,
@@ -98,7 +97,6 @@ drugconnectivity_plot_enplots_server <- function(id,
       ## plot.RENDER <- shiny::reactive({
       plot.RENDER <- function() {
         res <- plot_data()
-        pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
         dt <- res$dt

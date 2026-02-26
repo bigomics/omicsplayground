@@ -46,6 +46,17 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
     })
 
+    # Observe tabPanel change to update Settings visibility
+    tab_elements <- list(
+      "Drug enrichment" = list(disable = c("selected_module", "selected_trait")),
+      "Connectivity map (beta)" = list(disable = c("selected_module", "selected_trait")),
+      "AI Summary" = list(disable = c("dseatable_filter"))
+    )
+
+    shiny::observeEvent(input$tabs, {
+      bigdash::update_tab_elements(input$tabs, tab_elements)
+    })
+    
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
@@ -85,46 +96,56 @@ DrugConnectivityBoard <- function(id, pgx) {
       pgxdrugs <- get_pgx_drugs()
       shiny::req(pgxdrugs)
 
-      dr <- pgxdrugs[[dmethod]]
-      nes <- round(dr$X[, contr], 4)
-      pv <- round(dr$P[, contr], 4)
-      qv <- round(dr$Q[, contr], 4)
-      drug <- rownames(dr$X)
-      if (is.null(ncol(dr$stats))) {
-        stats <- dr$stats
-      } else {
-        stats <- dr$stats[, contr]
-      }
-      annot <- dr$annot
-      nes[is.na(nes)] <- 0
-      qv[is.na(qv)] <- 1
-      pv[is.na(pv)] <- 1
-
-      ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
-      if (is.null(annot)) {
-        warning("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
-        annot <- read.csv(file.path(FILESX, "cmap/L1000_repurposing_drugs.txt"),
-          sep = "\t", comment.char = "#"
-        )
-        rownames(annot) <- annot$pert_iname
-      }
-
-      ## compile results matrix
-      jj <- match(toupper(drug), toupper(rownames(annot)))
-      annot <- annot[jj, c("moa", "target")]
-      dt <- data.frame(drug = drug, NES = nes, pval = pv, padj = qv, annot)
-      dt <- dt[order(-dt$NES), ]
-
       ## sometimes UI is not ready
       if (length(input$dseatable_filter) == 0) {
         return(NULL)
       }
+      do.filter <- input$dseatable_filter
 
-      if (input$dseatable_filter) {
-        sel <- which(dt$moa != "" | dt$target != "")
-        dt <- dt[sel, , drop = FALSE]
-      }
-      dsea <- list(table = dt, clust = dr$clust, stats = stats)
+      dsea <- playbase::pgx.getDrugConnectivityTable(
+        pgx=NULL, contrast=contr, db=dmethod,
+        drugs=pgxdrugs, filter=do.filter) 
+      
+      ## dr <- pgxdrugs[[dmethod]]
+      ## nes <- round(dr$X[, contr], 4)
+      ## pv <- round(dr$P[, contr], 4)
+      ## qv <- round(dr$Q[, contr], 4)
+      ## drug <- rownames(dr$X)
+      ## if (is.null(ncol(dr$stats))) {
+      ##   stats <- dr$stats
+      ## } else {
+      ##   stats <- dr$stats[, contr]
+      ## }
+      ## annot <- dr$annot
+      ## nes[is.na(nes)] <- 0
+      ## qv[is.na(qv)] <- 1
+      ## pv[is.na(pv)] <- 1
+
+      ## ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
+      ## if (is.null(annot)) {
+      ##   warning("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
+      ##   annot <- read.csv(file.path(FILESX, "cmap/L1000_repurposing_drugs.txt"),
+      ##     sep = "\t", comment.char = "#"
+      ##   )
+      ##   rownames(annot) <- annot$pert_iname
+      ## }
+
+      ## ## compile results matrix
+      ## jj <- match(toupper(drug), toupper(rownames(annot)))
+      ## annot <- annot[jj, c("moa", "target")]
+      ## dt <- data.frame(drug = drug, NES = nes, pval = pv, padj = qv, annot)
+      ## dt <- dt[order(-dt$NES), ]
+
+      ## ## sometimes UI is not ready
+      ## if (length(input$dseatable_filter) == 0) {
+      ##   return(NULL)
+      ## }
+
+      ## if (input$dseatable_filter) {
+      ##   sel <- which(dt$moa != "" | dt$target != "")
+      ##   dt <- dt[sel, , drop = FALSE]
+      ## }
+      ## dsea <- list(table = dt, clust = dr$clust, stats = stats)
 
       return(dsea)
     })
@@ -134,9 +155,11 @@ DrugConnectivityBoard <- function(id, pgx) {
       db <- input$dsea_method
       shiny::req(contr,db)
       pgxdrugs <- get_pgx_drugs()
-      shiny::req(pgxdrugs)      
-      moa <- pgxdrugs[[db]]$moa[[contr]][['targetGene']]
-      moa <- moa[order(-abs(moa$NES)), ]
+      shiny::req(pgxdrugs)
+      moa <- playbase::pgx.getMOATargetGeneTable(
+        pgx=NULL, contrast=contr, db=db, drugs=pgxdrugs)       
+      # moa <- pgxdrugs[[db]]$moa[[contr]][['targetGene']]
+      # moa <- moa[order(-abs(moa$NES)), ]
       return(moa)
     })
 
@@ -146,8 +169,10 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::req(contr,db)
       pgxdrugs <- get_pgx_drugs()
       shiny::req(pgxdrugs)      
-      moa <- pgxdrugs[[db]]$moa[[contr]][['drugClass']]
-      moa <- moa[order(-abs(moa$NES)), ]
+      moa <- playbase::pgx.getMOADrugClassTable(
+        pgx=NULL, contrast=contr, db=db, drugs=pgxdrugs)       
+      #moa <- pgxdrugs[[db]]$moa[[contr]][['drugClass']]
+      #moa <- moa[order(-abs(moa$NES)), ]
       return(moa)
     })
 

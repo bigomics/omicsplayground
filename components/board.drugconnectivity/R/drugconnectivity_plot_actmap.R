@@ -170,8 +170,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
-
-        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 20)
+        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 40, nfc = 20)
       })
 
       plot.RENDER2 <- shiny::reactive({
@@ -179,8 +178,8 @@ drugconnectivity_plot_actmap_server <- function(id,
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
-
-        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 100, colorbar = TRUE)
+        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 40, nfc = 100,
+          colorbar = TRUE)
       })
 
       plot_data_csv <- function() {
