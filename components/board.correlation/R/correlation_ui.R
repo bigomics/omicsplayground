@@ -6,7 +6,6 @@
 CorrelationInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ## data set parameters
     withTooltip(shiny::selectInput(ns("gene"), tspan("Gene:"), choices = NULL),
       "Choose a gene for the correlation analysis.",
       placement = "top"
@@ -94,7 +93,7 @@ CorrelationUI <- function(id) {
         correlation_plot_scattercorr_ui(
           ns("cor_scatter"),
           title = "Correlation scatter plots",
-          info.text = "Scatter plots of log2-transformed (and normalized, by default) expression values of the selected {Gene} and the top correlated features across samples. Top correlated features are also displayed in the 'Top correlated features' barplot. In each scatter plot, each dot corresponds to a sample. The straight line corresponds to the linear regression fit. The samples can be colored using the {Color by} plot setting. The layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings.",
+          info.text = "Scatter plots of log2-transformed (and normalized, by default) expression values of the selected {Gene} and the top correlated features across samples. Top correlated features are also displayed in the 'Top correlated features' barplot. In each scatter plot, each dot corresponds to a sample. The straight line corresponds to the linear regression fit. The samples can be colored using the {Color by} plot setting. The layout of the scatter plots can be configured by using the {Layout} and {Swap XY-axes} plot settings. Optionally, a correlation line (r=1) can also be displayed in the plot.",
           info.methods = "For details on how top correlated features are inferred, please refer to the information provided for the 'Top correlated features' barplot.",
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#correlation-analyses",
           caption = "Scatter plots of log2-transformed (and normalized, by default) expression values of the selected {Gene} and the top correlated features across samples",

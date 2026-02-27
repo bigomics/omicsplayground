@@ -991,8 +991,7 @@ PlotModuleServer <- function(id,
                   cat(p$x$svg, file = file)
                 } else if (plotlib == "visnetwork") {
                   p <- func()
-                  # Export visnetwork to SVG using visSave
-                  visNetwork::visSave(p, file = file, background = "white", style = "width:100%;height:100%;")
+                  visNetwork::visSvgSave(p, file = file, delay = vis.delay)
                 } else {
                   # For unsupported plot types, create a simple SVG with error message
                   svglite::svglite(file)

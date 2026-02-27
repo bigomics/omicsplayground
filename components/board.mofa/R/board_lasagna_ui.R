@@ -64,37 +64,20 @@ LasagnaInputs <- function(id) {
   )
 }
 
-my_navset_card_tab <- function(...) {
-  htmltools::tagAppendAttributes(
-    bslib::navset_card_tab(
-      ...,
-      tags$style(HTML("@media (min-width: 1200px) {.root_navset { height: calc(100vh - 36px); }}"))
-    ),
-    class = "root_navset border-0"
-  )
-}
-
 MPARTITE_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
-NETWORK_INFO <- "Multi-type network"
-
 LasagnaUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
+  ns <- shiny::NS(id)
 
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
+  fullH <- 700
+  rowH1 <- 250
+  rowH2 <- 440
 
   shiny::div(
     boardHeader(title = "LASAGNA", info_link = ns("info")),
     shiny::tabsetPanel(
-      # my_navset_card_tab(
       id = ns("tabs"),
-      # title = "LASAGNA",
-
-      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ## bslib::nav_panel(
         "Multi-layer model",
         bslib::layout_columns(
           col_widths = 12,

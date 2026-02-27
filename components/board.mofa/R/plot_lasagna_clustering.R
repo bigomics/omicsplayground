@@ -29,20 +29,15 @@ mofa_plot_lasagna_clustering_server <- function(id,
     plot.RENDER <- function() {
       res <- data()
       k <- input_contrast()
-      shiny::req(res$posx)
-      shiny::req(res$posf)
-      shiny::req(res$Y)
+      shiny::req(res$posx, res$posf, res$Y)
       if (!is.null(k)) shiny::req(k %in% colnames(res$Y))
 
       col1 <- "black"
-      y <- as.numeric(res$Y[, k])
-      y <- sign(y)
+      y <- sign(as.numeric(res$Y[, k]))
       y[y == 0] <- NA
       if (input$colorby == "correlation") {
-        ## color by contrast correlation
         rho <- cor(t(res$X), y, use = "pairwise")[, 1]
       } else {
-        ## color by fold-change
         m1 <- rowMeans(res$X[, which(y == 1)], na.rm = TRUE)
         m0 <- rowMeans(res$X[, which(y == -1)], na.rm = TRUE)
         rho <- m1 - m0

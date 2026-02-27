@@ -42,15 +42,12 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types", "ai_report_accordion")),
-      "Response" = list(disable = c("show_types", "selected_module", "selected_trait", "ai_report_accordion")),
-      "Weights" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
-      "Enrichment" = list(disable = c(
-        "selected_module", "selected_trait",
-        "show_types", "ai_report_accordion"
-      )),
+      "Overview" = list(disable = c("selected_factor", "show_types", "ai_report_accordion")),
+      "Response" = list(disable = c("show_types", "ai_report_accordion")),
+      "Weights" = list(disable = c("ai_report_accordion")),
+      "Enrichment" = list(disable = c("show_types", "ai_report_accordion")),
       "gsetMOFA" = list(disable = c("show_types", "ai_report_accordion")),
-      "AI Report" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types", "data_type_accordion"))
+      "AI Report" = list(disable = c("selected_factor", "show_types", "data_type_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -120,16 +117,9 @@ MofaBoard <- function(id, pgx) {
         factors <- colnames(mofa$W)
         dtypes <- names(mofa$ww)
         sel.dtypes <- grep("^gset", dtypes, value = TRUE, invert = TRUE)
-        contrasts <- colnames(mofa$contrasts)
-        phenotypes <- colnames(mofa$samples)
-        traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor",
           choices = factors,
           selected = factors[1]
-        )
-        updateSelectInput(session, "selected_trait",
-          choices = traits,
-          selected = traits[1]
         )
         updateSelectInput(session, "show_types",
           choices = dtypes,
@@ -166,7 +156,6 @@ MofaBoard <- function(id, pgx) {
     ## =========================== MODULES ====================================
     ## ========================================================================
 
-    # Gene dendrogram and gene modules
     mofa_plot_variance_server(
       "factorxview",
       type = "factorxview",
@@ -299,9 +288,6 @@ MofaBoard <- function(id, pgx) {
       show_types = reactive(input$show_types),
       watermark = WATERMARK
     )
-
-
-    ## ------------- Table Modules --------------------------
 
     mofa_table_genetable_server(
       "mofa_genetable",

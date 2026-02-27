@@ -65,8 +65,7 @@ lasagna_multipartite_nodes_table_server <- function(id,
       kk <- intersect(kk, colnames(N))
       N <- N[, kk, drop = FALSE]
 
-      rm(res, G, layers, LL)
-      gc()
+      rm(res, G, layers)
 
       return(N)
     })

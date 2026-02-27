@@ -4,14 +4,11 @@
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 TimeSeriesBoard.features_plot <- function(
   id,
@@ -40,7 +37,6 @@ TimeSeriesBoard.features_plot <- function(
   PlotModuleUI(ns("plot"),
     title = title,
     label = label,
-    ## plotlib = "plotly",
     options = options,
     info.text = info.text,
     info.methods = info.methods,
@@ -88,18 +84,13 @@ TimeSeriesBoard.features_table <- function(
 
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
 #' @param comp
 #' @param pgx
 #' @param res
 #' @param ii
 #' @param watermark
-#'
-#'
-#'
 #' @export
 TimeSeriesBoard.features_server <- function(id,
                                             pgx,
@@ -110,10 +101,7 @@ TimeSeriesBoard.features_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       sel.timevar <- timevar()
-      genes <- rownames(pgx$X)
-      genes <- table_module$rownames_all()
-      genes <- head(genes, 16)
-
+      genes <- head(table_module$rownames_all(), 16)
       expr <- pgx$X
       is.mox <- playbase::is.multiomics(rownames(expr))
       if (sum(is.na(expr)) > 0) {
@@ -123,7 +111,6 @@ TimeSeriesBoard.features_server <- function(id,
           expr <- playbase::imputeMissing(expr, method = "SVD2")
         }
       }
-
 
       expr <- expr[genes, , drop = FALSE]
       time <- pgx$samples[, sel.timevar]
@@ -145,7 +132,6 @@ TimeSeriesBoard.features_server <- function(id,
       xtime <- rep(time, ngenes)
       xgroup <- rep(group, ngenes)
 
-      ## long format
       df <- data.frame(gene = xgenes, expr = xexpr, time = xtime, group = xgroup)
       df
     })
@@ -206,18 +192,10 @@ TimeSeriesBoard.features_server <- function(id,
       return(kstats)
     })
 
-    ## -----------------------------------------------------
-    ## ----------------------- Plot -----------------------
-    ## -----------------------------------------------------
-
     render_plot <- function() {
-      library(ggplot2)
-      library(plotly)
       df <- plot_data()
       shiny::req(df)
-
       timevar <- timevar()
-
       par(mfrow = c(3, 3), mar = c(5, 4, 2, 1))
       genes <- head(unique(df$gene), 9)
       for (g in genes) {
@@ -237,16 +215,11 @@ TimeSeriesBoard.features_server <- function(id,
       "plot",
       func = render_plot,
       plotlib = "base",
-      ## csvFunc = plot_data, ##  *** downloadable data as CSV
-      res = c(90, 110), ## resolution of plots
+      res = c(90, 110),
       pdf.width = 14,
       pdf.height = 3.5,
       add.watermark = watermark
     )
-
-    ## -----------------------------------------------------
-    ## ----------------------- Table -----------------------
-    ## -----------------------------------------------------
 
     render_table <- function(full = FALSE) {
       df <- stats_data()

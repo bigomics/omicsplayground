@@ -760,18 +760,18 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       parent = ns
     )
 
-    clustering_plot_table_parcoord_server(
-      id = "parcoord",
-      getTopMatrix = getTopMatrixGrouped,
-      pgx = pgx,
-      watermark = WATERMARK
-    )
+    # clustering_plot_table_parcoord_server(
+    #   id = "parcoord",
+    #   getTopMatrix = getTopMatrixGrouped,
+    #   pgx = pgx,
+    #   watermark = WATERMARK
+    # )
 
-    clustering_plot_genemodule_server(
-      id = "genemodule",
-      getTopMatrix = getTopMatrixGrouped,
-      watermark = WATERMARK
-    )
+    # clustering_plot_genemodule_server(
+    #   id = "genemodule",
+    #   getTopMatrix = getTopMatrixGrouped,
+    #   watermark = WATERMARK
+    # )
 
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",

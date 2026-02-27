@@ -101,9 +101,12 @@ mem.vmrss <- function(digits = 0) {
     mem <- paste0(round(rss, digits), "MB")
   } else if (sysname == "Darwin") {
     # macOS: use ps command to get RSS in KB
-    rss <- tryCatch({
-      system(paste("ps -o rss= -p", Sys.getpid()), intern = TRUE)
-    }, error = function(e) NULL)
+    rss <- tryCatch(
+      {
+        system(paste("ps -o rss= -p", Sys.getpid()), intern = TRUE)
+      },
+      error = function(e) NULL
+    )
     if (!is.null(rss) && nzchar(rss)) {
       rss <- as.numeric(trimws(rss)) / 1024 ## Convert KB to MB
       mem <- paste0(round(rss, digits), "MB")
@@ -125,9 +128,12 @@ mem.proc <- function(digits = 0) {
     mem <- paste0(round(vsz, digits), "MB")
   } else if (sysname == "Darwin") {
     # macOS: use ps command to get VSZ in KB
-    vsz <- tryCatch({
-      system(paste("ps -o vsz= -p", Sys.getpid()), intern = TRUE)
-    }, error = function(e) NULL)
+    vsz <- tryCatch(
+      {
+        system(paste("ps -o vsz= -p", Sys.getpid()), intern = TRUE)
+      },
+      error = function(e) NULL
+    )
     if (!is.null(vsz) && nzchar(vsz)) {
       vsz <- as.numeric(trimws(vsz)) / 1024 ## Convert KB to MB
       mem <- paste0(round(vsz, digits), "MB")

@@ -52,7 +52,6 @@ mofa_table_factorenrichment_server <- function(id,
       }
       df <- data.frame(factor = k, df, check.names = FALSE)
       if (!full) {
-        ## filter out pvalue columns
         df <- df[, grep("pval|leadingEdge", colnames(df), invert = TRUE)]
       }
 
@@ -68,7 +67,6 @@ mofa_table_factorenrichment_server <- function(id,
         plugins = "scrollResize",
         options = list(
           dom = "lfrtip", #
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
           scrollX = TRUE, #
           scrollY = "70vh",
           scroller = TRUE,
