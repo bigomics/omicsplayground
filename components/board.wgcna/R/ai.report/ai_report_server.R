@@ -72,7 +72,7 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       config_reactive = shiny::reactive({
         img_model <- getUserOption(parent_session, "image_model")
         omicsai::omicsai_image_config(
-          model = img_model %||% "gemini-3-pro-image-preview",
+          model = img_model %||% "gemini-3.1-flash-image-preview",
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
           image_size = "1K"
