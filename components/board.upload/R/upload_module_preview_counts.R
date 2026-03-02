@@ -637,7 +637,6 @@ upload_table_preview_counts_server <- function(id,
               NULL
             }
           )
-          browser()
           if (is.null(df)) {
             shinyalert::shinyalert(
               title = "Error",
