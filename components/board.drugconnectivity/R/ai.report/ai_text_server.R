@@ -57,7 +57,7 @@ drugconnectivity_ai_text_server <- function(id,
           )
         )
         params$style_instructions <- omicsai::omicsai_instructions(
-          paste0("format_", controls$summary_style() %||% "short")
+          paste0("text/", controls$summary_style() %||% "short_summary")
         )
 
         prompt <- omicsai::omicsai_substitute_template(summary_template, params)
@@ -93,10 +93,10 @@ drugconnectivity_ai_text_server <- function(id,
       species_text <- omicsai::omicsai_species_prompt(pgx$organism %||% NULL)
 
       sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("report_format.md")
+        fp <- omicsai::omicsai_prompt_path("text/report.md")
         txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
         omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(report_format.md not found)")
+      }, error = function(e) "(text/report.md not found)")
 
       analysis_type_block <- omicsai::omicsai_substitute_template(
         "ANALYSIS TYPE: {{analysis_type}}\n{{analysis_type_description}}",

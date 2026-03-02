@@ -12,8 +12,8 @@ drugconnectivity_diagram_style <- function() {
       target   = list(bg = "#90EE90", border = "#1E8449", shape = "box")
     ),
     edge_styles = list(
-      opposes     = list(color = "#2E8B57", dashes = FALSE, arrows = "arrow", arrow_on = TRUE,  width = 2),
-      mimics      = list(color = "#C0392B", dashes = FALSE, arrows = "arrow", arrow_on = TRUE,  width = 2),
+      opposes     = list(color = "#C0392B", dashes = FALSE, arrows = "arrow", arrow_on = TRUE,  width = 2),
+      mimics      = list(color = "#2E8B57", dashes = FALSE, arrows = "arrow", arrow_on = TRUE,  width = 2),
       has_moa     = list(color = "#6C3483", dashes = TRUE,  arrows = "arrow", arrow_on = TRUE,  width = 1.5),
       hits        = list(color = "#1E8449", dashes = TRUE,  arrows = "arrow", arrow_on = TRUE,  width = 1.5),
       association = list(color = "#94A3B8", dashes = TRUE,  arrows = "arrow", arrow_on = FALSE, width = 1.5)
@@ -29,11 +29,10 @@ drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_r
   link_names <- fmt_names(names(style$edge_styles))
 
   layers <- list()
-  base_tpl <- omicsai::omicsai_instructions("diagram_network")
-  example_json <- omicsai::omicsai_diagram_example_json(style$node_styles, style$edge_styles)
+  base_tpl <- omicsai::omicsai_instructions("diagram/network")
   layers[[1]] <- omicsai::omicsai_substitute_template(
     base_tpl,
-    list(node_names = node_names, link_names = link_names, example_json = example_json),
+    list(node_names = node_names, link_names = link_names),
     strict = FALSE
   )
   layers[[2]] <- tryCatch({

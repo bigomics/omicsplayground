@@ -35,8 +35,8 @@ drugconnectivity_ai_report_controls_ui <- function(id) {
       shiny::radioButtons(
         ns("summary_style"),
         "Summary Style:",
-        choices = c("Short Summary" = "short", "Long Summary" = "long"),
-        selected = "short",
+        choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
+        selected = "short_summary",
         inline = FALSE
       )
     ),

@@ -19,3 +19,8 @@ Constraints:
 - Use only entities present in the report text.
 - Do not invent mechanisms, targets, or causal claims.
 - Keep node labels short and legible.
+
+## Detail Fields
+
+- `detail_1`: Hub or Steiner genes, comma-separated (e.g. "TP53, AKT1")
+- `detail_2`: Biological process or pathway name (e.g. "apoptosis signaling")

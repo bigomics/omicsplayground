@@ -28,3 +28,8 @@ Constraints:
 - Use only entities present in the report text.
 - Do not invent mechanisms, targets, or causal claims.
 - All text fields must use plain ASCII characters only.
+
+## Detail Fields
+
+- `detail_1`: Top 3-5 hub genes, comma-separated (e.g. "TP53, BRCA1, MYC")
+- `detail_2`: Module biological function in 2-5 words (e.g. "cell cycle regulation")

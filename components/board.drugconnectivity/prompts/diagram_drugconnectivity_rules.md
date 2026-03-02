@@ -19,3 +19,8 @@ Prioritization:
 Constraints:
 - Use only entities present in the report text.
 - Do not invent mechanisms, targets, or causal claims.
+
+## Detail Fields
+
+- `detail_1`: Target genes or key biomarkers, comma-separated. Leave empty for non-gene nodes.
+- `detail_2`: Mechanism of action or drug class (e.g. "HDAC inhibitor", "kinase pathway")

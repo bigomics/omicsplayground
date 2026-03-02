@@ -45,7 +45,11 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         llm <- get_ai_model(parent_session)
-        make_llm_diagram_config(llm, default_regulation = "positive")
+        make_llm_diagram_config(llm,
+          default_regulation = "positive",
+          node_styles = wgcna_diagram_style()$node_styles,
+          edge_styles = wgcna_diagram_style()$edge_styles
+        )
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({

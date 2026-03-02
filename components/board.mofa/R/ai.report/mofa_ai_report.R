@@ -46,18 +46,19 @@ mofa_diagram_style <- function() {
 mofa_build_diagram_prompt <- function(report_text, organism, board_root) {
   style <- mofa_diagram_style()
   fmt_names <- function(nms) paste(sprintf("- `%s`", nms), collapse = "\n")
+  node_names <- fmt_names(names(style$node_styles))
+  link_names <- fmt_names(names(style$edge_styles))
 
   layers <- list()
-  layers[[1]] <- omicsai::omicsai_instructions("diagram_network")
+  base_tpl <- omicsai::omicsai_instructions("diagram/network")
+  layers[[1]] <- omicsai::omicsai_substitute_template(
+    base_tpl,
+    list(node_names = node_names, link_names = link_names),
+    strict = FALSE
+  )
   layers[[2]] <- tryCatch({
     tpl <- omicsai::omicsai_load_template("prompts/mofa/diagram_mofa_rules.md", root = board_root)
-    omicsai::omicsai_substitute_template(
-      tpl,
-      list(
-        node_names = fmt_names(names(style$node_styles)),
-        link_names = fmt_names(names(style$edge_styles))
-      )
-    )
+    omicsai::omicsai_substitute_template(tpl, list(node_names = node_names, link_names = link_names))
   }, error = function(e) "")
   layers[[3]] <- tryCatch(omicsai::omicsai_species_prompt(organism), error = function(e) "")
   layers[[4]] <- paste("## AI Report\n\n", report_text)
@@ -119,7 +120,7 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
           list(experiment = params$experiment)
         )
         params$style_instructions <- omicsai::omicsai_instructions(
-          paste0("format_", controls$summary_style() %||% "short")
+          paste0("text/", controls$summary_style() %||% "short_summary")
         )
 
         prompt <- omicsai::omicsai_substitute_template(summary_template, params)
@@ -145,10 +146,10 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
       tables <- mofa_ai_build_report_tables(m, pgx, max_contexts = 8L, ntop = 10L)
 
       sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("report_format.md")
+        fp <- omicsai::omicsai_prompt_path("text/report.md")
         txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
         omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(report_format.md not found)")
+      }, error = function(e) "(text/report.md not found)")
 
       user_message <- omicsai::collapse_lines(
         omicsai::omicsai_substitute_template(
@@ -236,7 +237,11 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         llm <- get_ai_model(parent_session)
-        make_llm_diagram_config(llm, default_regulation = "association")
+        make_llm_diagram_config(llm,
+          default_regulation = "associates",
+          node_styles = mofa_diagram_style()$node_styles,
+          edge_styles = mofa_diagram_style()$edge_styles
+        )
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({

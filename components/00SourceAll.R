@@ -336,6 +336,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.wgcna/R/preservationWGCNA/preservationwgcna_table_enrichment.R',encoding='UTF-8')
   source('board.wgcna/R/preservationWGCNA/preservationwgcna_table_modulegenes.R',encoding='UTF-8')
   source('board.wgcna/R/preservationWGCNA/preservationwgcna_ui.R',encoding='UTF-8')
+  source('board.wgcna/R/wgcna_microsummary.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_plot_correlation_network.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_plot_eigengene_clustering.R',encoding='UTF-8')
   source('board.wgcna/R/wgcna_plot_eigengene_heatmap.R',encoding='UTF-8')

@@ -64,6 +64,9 @@ get_ai_model <- function(parent_session) {
 }
 
 #' Create omicsai_diagram_config with profile defaults
+#' @param model_id Character; key into LLM_MODEL_PROFILES
+#' @param ... Extra args forwarded to omicsai_diagram_config()
+#' @return An omicsai_diagram_config object
 make_llm_diagram_config <- function(model_id, ...) {
   d <- LLM_MODEL_PROFILES[[model_id]]$defaults
   omicsai::omicsai_diagram_config(
@@ -73,13 +76,17 @@ make_llm_diagram_config <- function(model_id, ...) {
   )
 }
 
+#' Return x if non-NULL, else y
+#' @param x Primary value
+#' @param y Fallback value
+#' @return x or y
 .aicards_coalesce <- function(x, y) {
   if (is.null(x)) y else x
 }
 
-# Translate raw API/HTTP error messages into user-friendly strings.
-# Follows the shiny::validate convention used across boards: callers store
-# the result in rv$error, then surface it with shiny::validate(shiny::need()).
+#' Translate raw API/HTTP error into a user-friendly string
+#' @param msg Character; raw error message from tryCatch
+#' @return Character; sanitised message for shiny::validate display
 .aicards_friendly_error <- function(msg) {
   if (grepl("503|Service Unavailable|high demand", msg, ignore.case = TRUE)) {
     return(paste0(
@@ -107,6 +114,9 @@ make_llm_diagram_config <- function(model_id, ...) {
   paste0("Generation failed: ", msg)
 }
 
+#' Coerce a reactive, file path, or string into a reactive returning template text
+#' @param template_input Reactive, file path, or template string
+#' @return A reactive returning the template string
 .aicards_as_reactive_template <- function(template_input) {
   if (shiny::is.reactive(template_input)) {
     return(template_input)
@@ -127,6 +137,11 @@ make_llm_diagram_config <- function(model_id, ...) {
   stop("template must be a reactive, file path, or template string")
 }
 
+#' Coerce a reactive, config object, or NULL into a reactive returning a config
+#' @param config_input Reactive, config object, or NULL (uses default_fn)
+#' @param config_class Character; expected S3 class name for validation
+#' @param default_fn Function; called to create default config when input is NULL
+#' @return A reactive returning the config object
 .aicards_as_reactive_config <- function(config_input, config_class, default_fn) {
   if (is.null(config_input)) {
     return(shiny::reactive(default_fn()))
@@ -140,15 +155,10 @@ make_llm_diagram_config <- function(model_id, ...) {
   stop("config must be a reactive, ", config_class, " object, or NULL")
 }
 
-.aicards_markdown_html <- function(text) {
-  opg_markdown_to_html(text)
-}
-
+#' Build Quarto YAML frontmatter for PDF export (lualatex + Lato font)
+#' @param title Character; document title
+#' @return Character vector of YAML frontmatter lines
 .aicards_pdf_frontmatter <- function(title = "AI Report") {
-  # pdf-engine: lualatex requires TeX Live with lualatex installed.
-  # mainfont: Lato requires the Lato font package (texlive-fonts-extra on Debian/Ubuntu).
-  # On systems without these, .aicards_markdown_to_pdf() returns FALSE and the caller
-  # falls back to .aicards_plain_text_to_pdf() automatically.
   safe_title <- gsub('"', '\\"', title, fixed = TRUE)
   c(
     "---",
@@ -169,6 +179,11 @@ make_llm_diagram_config <- function(model_id, ...) {
   )
 }
 
+#' Render markdown text to PDF via Quarto; returns FALSE on failure
+#' @param text Character; markdown content
+#' @param file Character; output PDF path
+#' @param title Character; document title
+#' @return TRUE (invisibly) on success, FALSE on failure
 .aicards_markdown_to_pdf <- function(text, file, title = "AI Report") {
   txt <- gsub(intToUtf8(8209), "-", as.character(text), fixed = TRUE)
   txt <- trimws(txt)
@@ -238,6 +253,11 @@ make_llm_diagram_config <- function(model_id, ...) {
   file.copy(out_file, file, overwrite = TRUE)
 }
 
+#' Fallback PDF renderer using base R graphics (no Quarto dependency)
+#' @param text Character; plain text content
+#' @param file Character; output PDF path
+#' @param title Character; document title
+#' @return NULL (writes PDF as side effect)
 .aicards_plain_text_to_pdf <- function(text, file, title = "AI Report") {
   txt <- gsub(intToUtf8(8209), "-", as.character(text), fixed = TRUE)
   lines <- unlist(strsplit(txt, "\n", fixed = TRUE), use.names = FALSE)
@@ -260,6 +280,11 @@ make_llm_diagram_config <- function(model_id, ...) {
   }
 }
 
+#' Create a Shiny downloadHandler for markdown-to-PDF export
+#' @param text_reactive Reactive returning markdown text
+#' @param filename Character; base filename (without .pdf)
+#' @param title Character; PDF document title
+#' @return A shiny::downloadHandler
 .aicards_markdown_pdf_download <- function(text_reactive,
                                            filename = "ai-report",
                                            title = "AI Report") {
@@ -277,11 +302,20 @@ make_llm_diagram_config <- function(model_id, ...) {
   )
 }
 
+#' Escape triple backticks so text can safely nest inside a fenced code block
+#' @param text Character; raw text (NULL coerced to "")
+#' @return Character with ``` replaced by ` ` `
 .aicards_safe_fenced_block <- function(text) {
   txt <- .aicards_coalesce(text, "")
   gsub("```", "` ` `", txt, fixed = TRUE)
 }
 
+#' Assemble final markdown: AI text + disclaimer + optional prompt debug sections
+#' @param text Character; AI-generated text
+#' @param show_prompt Logical; if TRUE, append system/user prompt sections
+#' @param system_prompt Character or NULL; system prompt to display
+#' @param user_prompt Character or NULL; user prompt to display
+#' @return Character; complete markdown string
 .aicards_text_markdown <- function(text,
                                    show_prompt = FALSE,
                                    system_prompt = NULL,
@@ -311,37 +345,6 @@ make_llm_diagram_config <- function(model_id, ...) {
   }
 
   out
-}
-
-.aicards_gen_text <- function(template, params, config, cache) {
-  omicsai::omicsai_gen_text(
-    template = template,
-    params = params,
-    config = config,
-    cache = cache
-  )
-}
-
-.aicards_gen_diagram <- function(template, params, config, cache) {
-  omicsai::omicsai_gen_diagram(
-    template = template,
-    params = params,
-    config = config,
-    cache = cache
-  )
-}
-
-.aicards_gen_infographic <- function(template, params, config, cache) {
-  omicsai::omicsai_gen_image(
-    template = template,
-    params = params,
-    config = config,
-    cache = cache
-  )
-}
-
-.aicards_diagram_render <- function(result, style = NULL, layout = NULL, spread = 0.5) {
-  omicsai::omicsai_diagram_render(result, style = style, layout = layout, spread = spread)
 }
 
 #' AI text card server
@@ -400,8 +403,8 @@ AiTextCardServer <- function(id,
       rv$status <- "thinking"
       rv$error <- NULL
 
-      selected_style <- .aicards_coalesce(input$style, "short")
-      format_instr <- omicsai::omicsai_instructions(paste0("format_", selected_style))
+      selected_style <- .aicards_coalesce(input$style, "short_summary")
+      format_instr <- omicsai::omicsai_instructions(paste0("text/", selected_style))
       config <- base_config
       config$system_prompt <- format_instr
 
@@ -413,7 +416,7 @@ AiTextCardServer <- function(id,
       )
 
       tryCatch({
-        rv$result <- .aicards_gen_text(
+        rv$result <- omicsai::omicsai_gen_text(
           template = template,
           params = params,
           config = config,
@@ -452,7 +455,7 @@ AiTextCardServer <- function(id,
           system_prompt = rv$system_prompt,
           user_prompt = rv$prompt
         )
-        txt <- .aicards_markdown_html(txt)
+        txt <- opg_markdown_to_html(txt)
         return(shiny::div(class = "ai-summary-content", shiny::HTML(txt)))
       }
 
@@ -526,20 +529,17 @@ AiDiagramCardServer <- function(id,
     rv <- shiny::reactiveValues(
       result = NULL,
       error = NULL,
+      prompt = NULL,
       generate_requested = FALSE
     )
 
-    request_generation <- function() {
-      rv$generate_requested <- TRUE
-    }
-
     shiny::observeEvent(input$generate, {
-      request_generation()
+      rv$generate_requested <- TRUE
     })
 
     if (!is.null(trigger_reactive)) {
       shiny::observeEvent(trigger_reactive(), {
-        if (isTRUE(trigger_reactive() > 0)) request_generation()
+        if (isTRUE(trigger_reactive() > 0)) rv$generate_requested <- TRUE
       }, ignoreInit = TRUE)
     }
 
@@ -563,8 +563,13 @@ AiDiagramCardServer <- function(id,
         return()
       }
 
+      rv$prompt <- tryCatch(
+        paste(config$instructions, omicsai::omicsai_substitute_template(template, params), sep = "\n\n"),
+        error = function(e) conditionMessage(e)
+      )
+
       tryCatch({
-        result <- .aicards_gen_diagram(
+        result <- omicsai::omicsai_gen_diagram(
           template = template,
           params = params,
           config = config,
@@ -583,12 +588,16 @@ AiDiagramCardServer <- function(id,
         shiny::validate(shiny::need(FALSE, rv$error))
       }
 
+      if (isTRUE(input$show_prompt) && !is.null(rv$prompt)) {
+        shiny::validate(shiny::need(FALSE, paste0("--- Diagram Prompt ---\n\n", rv$prompt)))
+      }
+
       shiny::validate(shiny::need(
         !is.null(rv$result),
         "Click 'Generate Diagram' to create an AI diagram."
       ))
 
-      .aicards_diagram_render(rv$result, style = style, layout = input$layout, spread = input$spread)
+      omicsai::omicsai_diagram_render(rv$result, style = style, layout = input$layout, spread = input$spread)
     }
 
     diagram_csv_data <- function() {
@@ -682,20 +691,17 @@ AiImageCardServer <- function(id,
     rv <- shiny::reactiveValues(
       result = NULL,
       error = NULL,
+      prompt = NULL,
       generate_requested = FALSE
     )
 
-    request_generation <- function() {
-      rv$generate_requested <- TRUE
-    }
-
     shiny::observeEvent(input$generate, {
-      request_generation()
+      rv$generate_requested <- TRUE
     })
 
     if (!is.null(trigger_reactive)) {
       shiny::observeEvent(trigger_reactive(), {
-        if (isTRUE(trigger_reactive() > 0)) request_generation()
+        if (isTRUE(trigger_reactive() > 0)) rv$generate_requested <- TRUE
       }, ignoreInit = TRUE)
     }
 
@@ -719,8 +725,13 @@ AiImageCardServer <- function(id,
         return()
       }
 
+      rv$prompt <- tryCatch(
+        paste(config$instructions, omicsai::omicsai_substitute_template(template, params), sep = "\n\n"),
+        error = function(e) conditionMessage(e)
+      )
+
       tryCatch({
-        rv$result <- .aicards_gen_infographic(
+        rv$result <- omicsai::omicsai_gen_image(
           template = template,
           params = params,
           config = config,
@@ -736,6 +747,17 @@ AiImageCardServer <- function(id,
     image_render <- function() {
       if (!is.null(rv$error)) {
         shiny::validate(shiny::need(FALSE, rv$error))
+      }
+
+      if (isTRUE(input$show_prompt) && !is.null(rv$prompt)) {
+        txt <- paste0("## Image Prompt\n\n```text\n",
+                      .aicards_safe_fenced_block(rv$prompt),
+                      "\n```")
+        return(shiny::div(
+          class = "ai-prompt-view",
+          style = "overflow-y:auto;max-height:100%;padding:1em;",
+          shiny::HTML(opg_markdown_to_html(txt))
+        ))
       }
 
       shiny::validate(shiny::need(
@@ -788,5 +810,166 @@ AiImageCardServer <- function(id,
 
     result_reactive <- shiny::reactive(rv$result)
     result_reactive
+  })
+}
+
+# ── Microsummary ───────────────────────────────────────────────────
+# Lightweight per-tab bullet-point LLM takeaways via omicsai_extract().
+# UI layer: MicrosummaryUI() and .microsummary_render_alert() in ui/ui-AiCards.R.
+
+# ellmer type spec for structured extraction — guarantees parsed output.
+# Uses type_from_schema() instead of type_object() because ellmer 0.4.0's
+# as_json() omits additionalProperties:false, which Groq's API requires.
+MICROSUMMARY_TYPE_SPEC <- ellmer::type_from_schema(text = '{
+  "type": "object",
+  "description": "Microsummary bullet points extracted from analysis data",
+  "properties": {
+    "bullet1": {
+      "type": "string",
+      "description": "First key finding — one specific sentence with numbers/names"
+    },
+    "bullet2": {
+      "type": "string",
+      "description": "Second key finding — one specific sentence with numbers/names"
+    },
+    "bullet3": {
+      "type": "string",
+      "description": "Optional third finding, or empty string if only 2 takeaways"
+    }
+  },
+  "required": ["bullet1", "bullet2", "bullet3"],
+  "additionalProperties": false
+}')
+
+MICROSUMMARY_USER_TEMPLATE <- omicsai::omicsai_instructions("text/microsummary_data")
+
+#' Microsummary Server
+#'
+#' Renders a unified bs_alert() box per tab: static description text on top,
+#' AI-generated bullet takeaways appended below (or a spinner while loading).
+#'
+#' @param id Module namespace ID (must match MicrosummaryUI id)
+#' @param tab_reactive Reactive returning the current tab name
+#' @param params_fn Function(tab) returning a named list with dataset_name
+#'   and tab_context, or NULL if data is not ready
+#' @param model Character; LLM model identifier for microsummary generation
+#' @param cache Optional omicsai cache object; defaults to in-memory cache
+#' @param board_name Character; board name for prompt context (e.g. "WGCNA")
+#' @param tab_names Character vector of tab names with microsummaries
+#' @param static_texts Named list of static HTML strings per tab (the original
+#'   bs_alert descriptions). Names must match tab_names.
+#' @param invalidate_reactive Optional reactive; when it fires, clears the
+#'   in-session results cache
+MicrosummaryServer <- function(id,
+                               tab_reactive,
+                               params_fn,
+                               model = "groq:openai/gpt-oss-20b",
+                               cache = NULL,
+                               board_name = "WGCNA",
+                               tab_names = character(0),
+                               static_texts = list(),
+                               invalidate_reactive = NULL) {
+  shiny::moduleServer(id, function(input, output, session) {
+    module_cache <- .aicards_coalesce(cache, omicsai::omicsai_cache_init("mem"))
+
+    # Pre-register all outputs — render static-only alert immediately
+    for (tn in tab_names) {
+      local({
+        tab_name <- tn
+        oid <- paste0("micro_", gsub(" ", "_", tab_name))
+        output[[oid]] <- shiny::renderUI({
+          .microsummary_render_alert(static_texts[[tab_name]], bullets = NULL)
+        })
+      })
+    }
+
+    # Track which tabs have been generated (in-session result cache)
+    results <- shiny::reactiveValues()
+
+    # Clear session cache when upstream data changes (e.g. WGCNA recomputation)
+    if (!is.null(invalidate_reactive)) {
+      shiny::observeEvent(invalidate_reactive(), {
+        for (nm in names(results)) results[[nm]] <- NULL
+      }, ignoreInit = TRUE)
+    }
+
+    shiny::observe({
+      tab <- tab_reactive()
+      shiny::req(tab)
+
+      output_id <- paste0("micro_", gsub(" ", "_", tab))
+      static_html <- static_texts[[tab]]
+
+      # If already generated for this tab, render cached result and stop
+      if (!is.null(shiny::isolate(results[[tab]]))) {
+        output[[output_id]] <- shiny::renderUI({
+          .microsummary_render_alert(static_html, shiny::isolate(results[[tab]]))
+        })
+        return()
+      }
+
+      # Extract params — params_fn reads reactives, so this observe
+      # re-fires when data becomes available
+      params <- tryCatch(params_fn(tab), error = function(e) NULL)
+      if (is.null(params)) {
+        output[[output_id]] <- shiny::renderUI({
+          .microsummary_render_alert(static_html, bullets = NULL)
+        })
+        return()
+      }
+
+      # Show loading state — static text + spinner
+      output[[output_id]] <- shiny::renderUI({
+        .microsummary_render_alert(static_html, bullets = "loading")
+      })
+
+      # Build the user prompt
+      prompt_params <- list(
+        board_name = board_name,
+        tab_name = tab,
+        dataset_name = params$dataset_name %||% "unknown dataset",
+        tab_context = params$tab_context %||% ""
+      )
+      rendered_prompt <- omicsai::omicsai_substitute_template(
+        MICROSUMMARY_USER_TEMPLATE, prompt_params
+      )
+
+      config <- omicsai::omicsai_config(
+        model = model,
+        system_prompt = omicsai::omicsai_instructions("text/microsummary"),
+        temperature = 0.3,
+        max_tokens = 1024L
+      )
+
+      message("[microsummary] generating for tab '", tab, "'...")
+
+      extracted <- tryCatch({
+        omicsai::omicsai_extract(rendered_prompt, type_spec = MICROSUMMARY_TYPE_SPEC, config = config, cache = module_cache)$data
+      }, error = function(e) {
+        message("[microsummary] error for tab '", tab, "': ", conditionMessage(e))
+        NULL
+      })
+
+      if (is.null(extracted)) {
+        output[[output_id]] <- shiny::renderUI({
+          .microsummary_render_alert(static_html, bullets = NULL)
+        })
+        return()
+      }
+
+      # Collect non-empty bullets from the structured response
+      bullets <- c(extracted$bullet1, extracted$bullet2, extracted$bullet3)
+      bullets <- bullets[nzchar(trimws(bullets))]
+      bullets <- head(bullets, 3L)
+      message("[microsummary] tab '", tab, "' done: ", length(bullets), " bullets")
+
+      results[[tab]] <- bullets
+
+      output[[output_id]] <- shiny::renderUI({
+        .microsummary_render_alert(static_html, bullets)
+      })
+    })
+
+    invisible(NULL)
   })
 }

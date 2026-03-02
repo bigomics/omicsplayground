@@ -12,3 +12,8 @@ Diagram constraints:
 - Add only top representative features as supporting nodes.
 - Keep labels concise.
 - Avoid speculative nodes not present in the report.
+
+## Detail Fields
+
+- `detail_1`: Top loading features, comma-separated (e.g. "BRCA1, ESR1, PGR")
+- `detail_2`: Factor interpretation in 2-5 words (e.g. "hormone receptor signaling")

@@ -57,8 +57,8 @@ AiTextCardUI <- function(id,
     shiny::radioButtons(
       ns("style"),
       "AI summary:",
-      choices = c("short", "long"),
-      selected = "short",
+      choices = c("Short" = "short_summary", "Long" = "long_summary"),
+      selected = "short_summary",
       inline = TRUE
     ),
     shiny::checkboxInput(
@@ -109,6 +109,11 @@ AiDiagramCardUI <- function(id,
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
+    shiny::checkboxInput(
+      ns("show_prompt"),
+      "Show prompt",
+      FALSE
+    ),
     shiny::actionButton(
       ns("generate"),
       "Generate Diagram",
@@ -173,6 +178,11 @@ AiImageCardUI <- function(id,
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
+    shiny::checkboxInput(
+      ns("show_prompt"),
+      "Show prompt",
+      FALSE
+    ),
     shiny::actionButton(
       ns("generate"),
       "Generate Image",
@@ -191,5 +201,74 @@ AiImageCardUI <- function(id,
     caption = caption,
     height = height,
     width = width
+  )
+}
+
+# ── Microsummary UI ─────────────────────────────────────────────────
+# Presentation layer for AI microsummary module.
+# MicrosummaryUI()             — Shiny module UI (one uiOutput per tab)
+# .microsummary_render_alert() — stateless HTML builder (static text + bullets)
+
+#' Microsummary UI
+#'
+#' Creates one uiOutput per tab. Each output renders the complete alert box
+#' (static description + AI bullets) as a single visual unit.
+#'
+#' @param id Module namespace ID
+#' @param tab_names Character vector of tab names to create outputs for
+#' @return A named list of uiOutput tags (one per tab)
+MicrosummaryUI <- function(id, tab_names) {
+  ns <- shiny::NS(id)
+  outputs <- lapply(tab_names, function(tab) {
+    shiny::uiOutput(ns(paste0("micro_", gsub(" ", "_", tab))))
+  })
+  names(outputs) <- tab_names
+  outputs
+}
+
+#' Render unified alert box: static description + optional AI bullets
+#'
+#' @param static_html HTML string for the static tab description (or NULL)
+#' @param bullets Character vector of bullet strings, "loading" for spinner,
+#'   or NULL for static-only
+#' @return A bs_alert-style Shiny tag
+#' @keywords internal
+.microsummary_render_alert <- function(static_html, bullets = NULL) {
+  # Build the static part
+  parts <- list()
+  if (!is.null(static_html) && nzchar(static_html)) {
+    parts <- list(shiny::HTML(static_html))
+  }
+
+  # Append bullets or spinner
+  if (identical(bullets, "loading")) {
+    parts <- c(parts, list(
+      shiny::tags$hr(style = "margin: 8px 0; border-color: rgba(0,0,0,0.1);"),
+      shiny::div(
+        style = "font-size: 0.85em; color: #224164;",
+        shiny::icon("spinner", class = "fa-spin fa-xs"),
+        " Summarizing..."
+      )
+    ))
+  } else if (!is.null(bullets) && length(bullets) > 0) {
+    li_html <- paste0("<li>", htmltools::htmlEscape(bullets), "</li>", collapse = "\n")
+    parts <- c(parts, list(
+      shiny::tags$hr(style = "margin: 8px 0; border-color: rgba(0,0,0,0.1);"),
+      shiny::HTML(paste0(
+        "<ul style='margin:0; padding-left:1.2em; font-size:0.85em;'>",
+        li_html,
+        "</ul>"
+      ))
+    ))
+  }
+
+  # Render as a single bs_alert
+  bs_alert(
+    shiny::tagList(parts),
+    conditional = TRUE,
+    style = "primary",
+    closable = TRUE,
+    translate = FALSE,
+    html = FALSE
   )
 }

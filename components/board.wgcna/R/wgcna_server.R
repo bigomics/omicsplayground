@@ -300,6 +300,29 @@ WgcnaBoard <- function(id, pgx) {
     ## TODO: bring back AI summary card in Modules tab if requested
     ## AI summary moved to AI Report tab (Summary mode)
 
+    ## ===== AI MICROSUMMARY =====
+    micro_cache <- omicsai::omicsai_cache_init("mem")
+    wgcna_micro_tabs <- c("WGCNA", "Eigengenes", "Modules", "Enrichment")
+    MicrosummaryServer(
+      "micro",
+      tab_reactive = shiny::reactive(input$tabs),
+      params_fn = function(tab) {
+        w <- wgcna()
+        if (is.null(w)) return(NULL)
+        wgcna_microsummary_params(
+          tab = tab,
+          wgcna = w,
+          pgx = pgx,
+          selected_module = input$selected_module
+        )
+      },
+      cache = micro_cache,
+      board_name = "WGCNA",
+      tab_names = wgcna_micro_tabs,
+      static_texts = WGCNA_STATIC_TEXTS,
+      invalidate_reactive = wgcna
+    )
+
     ## ===== AI REPORT =====
     wgcna_ai_report_server("ai_report",
       wgcna = wgcna, pgx = pgx,

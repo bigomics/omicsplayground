@@ -65,7 +65,7 @@ pcsf_ai_text_server <- function(id,
           list(experiment = params$experiment)
         )
         params$style_instructions <- omicsai::omicsai_instructions(
-          paste0("format_", controls$summary_style() %||% "short")
+          paste0("text/", controls$summary_style() %||% "short_summary")
         )
 
         prompt <- omicsai::omicsai_substitute_template(summary_template, params)
@@ -108,10 +108,10 @@ pcsf_ai_text_server <- function(id,
       )
 
       sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("report_format.md")
+        fp <- omicsai::omicsai_prompt_path("text/report.md")
         txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
         omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(report_format.md not found)")
+      }, error = function(e) "(text/report.md not found)")
 
       report_prompt_cache(paste0(
         "# SYSTEM PROMPT\n\n", sys_prompt,

@@ -67,6 +67,8 @@ WgcnaUI <- function(id) {
   rowH1 <- 250 ## row 1 height
   rowH2 <- 440 ## row 2 height
 
+  micro_ui <- MicrosummaryUI(ns("micro"), c("WGCNA", "Eigengenes", "Modules", "Enrichment"))
+
   shiny::div(
     boardHeader(title = "WGCNA", info_link = ns("info")),
     shiny::tabsetPanel(
@@ -76,7 +78,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction map of features colored by module. <b>(e)</b> Size of WGCNA modules.")),
+          micro_ui[["WGCNA"]],
           bslib::layout_columns(
             col_widths = 12,
             height = "calc(100vh - 181px)",
@@ -152,7 +154,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Eigengene analysis.</b> The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(a)</b> Module-trait correlation identifies modules that are significantly associated with the measured traits. <b>(b)</b> Clustering of eigengenes. <b>(c)</b> Clustering of trait vectors. <b>(d)</b> Correlation of eigengene and traits as heatmap, <b>(e)</b> as dendrogram and <b>(f)</b> as graph.")),
+          micro_ui[["Eigengenes"]],
           bslib::layout_columns(
             col_widths = c(4, 4, 4, 4, 4, 4),
             height = "calc(100vh - 181px)",
@@ -213,9 +215,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Correlation of module eigengene with traits. <b>(b)</b> Circle network of top hub genes. <b>(c)</b> Table of importance score to identify 'driver genes' of the module. <b>(d)</b> Plot of gene significance parameters.")),
-          ## TODO: bring back AI summary card in Modules tab if requested
-          ## AI summary moved to AI Report tab (Summary mode)
+          micro_ui[["Modules"]],
           bslib::layout_columns(
             col_widths = c(6, 6, 6, 6),
             height = "calc(100vh - 181px)",
@@ -263,7 +263,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),
+          micro_ui[["Enrichment"]],
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",

@@ -58,10 +58,10 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       shiny::req(w, module)
       model <- get_ai_model(parent_session)
 
-      style <- controls$summary_style() %||% "short"
+      style <- controls$summary_style() %||% "short_summary"
       params <- wgcna_build_summary_params(w, module, pgx)
       params$methods_context <- ai_context()
-      params$style_instructions <- omicsai::omicsai_instructions(paste0("format_", style))
+      params$style_instructions <- omicsai::omicsai_instructions(paste0("text/", style))
 
       ## Cache the prompt for instant toggle
       prompt <- omicsai::omicsai_substitute_template(ai_summary_template, params)
@@ -121,10 +121,10 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
 
       ## Cache the full prompt for instant toggle
       sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("report_format.md")
+        fp <- omicsai::omicsai_prompt_path("text/report.md")
         txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
         omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(report_format.md not found)")
+      }, error = function(e) "(text/report.md not found)")
 
       report_prompt_cache(paste0(
         "# SYSTEM PROMPT\n\n", sys_prompt,

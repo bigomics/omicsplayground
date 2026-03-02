@@ -11,3 +11,8 @@ Constraints:
 - Include layer hubs and bridge features.
 - Prefer edges with highest absolute correlation/weight.
 - Avoid clutter; keep to the most informative subgraph.
+
+## Detail Fields
+
+- `detail_1`: Bridge features or shared genes, comma-separated
+- `detail_2`: Cross-layer relationship in 2-5 words
