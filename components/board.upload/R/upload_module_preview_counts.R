@@ -574,12 +574,12 @@ upload_table_preview_counts_server <- function(id,
       ext <- tools::file_ext(input$counts_csv$name)
       dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
-      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
+      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
       if (c1 & c2 & c3) {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please upload a .csv file. For scRNA-seq, h5 format is allowed. For Olink NPX data, parquet format is allowed.",
+          text = "Please upload a .csv file. For scRNA-seq, h5 and h5ad formats are allowed. For Olink NPX data, parquet format is allowed.",
           type = "error"
         )
         return()
@@ -620,7 +620,7 @@ upload_table_preview_counts_server <- function(id,
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
-        if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
+        if (upload_datatype() == "scRNA-seq" && file.ext %in% c("h5", "h5ad")) {
           df <- tryCatch(
             {
               playbase::read_h5_counts(datafile)
@@ -722,7 +722,7 @@ upload_table_preview_counts_server <- function(id,
       } else {
         uploaded$counts.csv <- df
         if (is.null(uploaded$annot.csv)) {
-          ann.data <- if (!file.ext %in% c("h5", "parquet")) playbase::read_annot(datafile) else NULL
+          ann.data <- if (!file.ext %in% c("h5", "h5ad", "parquet")) playbase::read_annot(datafile) else NULL
           uploaded$annot.csv <- ann.data
         }
       }
