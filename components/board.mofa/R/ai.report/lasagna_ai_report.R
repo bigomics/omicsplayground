@@ -91,7 +91,7 @@ lasagna_ai_text_server <- function(id,
                                    parent_session) {
   moduleServer(id, function(input, output, session) {
     summary_template <- omicsai::omicsai_load_template(
-      file.path(LASAGNA_PROMPTS_DIR, "lasagna_ai_report_summary_template.md")
+      file.path(LASAGNA_PROMPTS_DIR, "lasagna_ai_report_results.md")
     )
 
     report_rules <- omicsai::omicsai_load_template(
@@ -276,7 +276,8 @@ lasagna_ai_report_server <- function(id,
           model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K"
+          image_size = "1K",
+          board_name = "LASAGNA"
         )
       }),
       cache = cache,

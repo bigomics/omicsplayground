@@ -302,7 +302,7 @@ compare_ai_summary_server <- function(id,
   # Load template from board.compare prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.compare/prompts/compare_summary_template.md"
+    "components/board.compare/prompts/compare_results.md"
   )
 
   template_reactive <- shiny::reactive({

@@ -203,7 +203,7 @@ drugconnectivity_ai_summary_server <- function(id,
   # Load template from board.drugconnectivity prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.drugconnectivity/prompts/drugconnectivity_summary_template.md"
+    "components/board.drugconnectivity/prompts/drugconnectivity_results.md"
   )
 
   template_reactive <- shiny::reactive({

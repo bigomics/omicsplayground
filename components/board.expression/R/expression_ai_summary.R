@@ -174,7 +174,7 @@ expression_ai_summary_server <- function(id,
   # Load template from board.expression prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.expression/prompts/expression_summary_template.md"
+    "components/board.expression/prompts/expression_results.md"
   )
 
   template_reactive <- shiny::reactive({

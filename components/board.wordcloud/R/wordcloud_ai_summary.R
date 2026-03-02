@@ -128,7 +128,7 @@ wordcloud_ai_summary_server <- function(id,
   # Load template from board.wordcloud prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.wordcloud/prompts/wordcloud_summary_template.md"
+    "components/board.wordcloud/prompts/wordcloud_results.md"
   )
 
   template_reactive <- shiny::reactive({

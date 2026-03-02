@@ -83,7 +83,8 @@ pcsf_ai_report_server <- function(id,
           model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K"
+          image_size = "1K",
+          board_name = "PCSF"
         )
       }),
       cache = cache,

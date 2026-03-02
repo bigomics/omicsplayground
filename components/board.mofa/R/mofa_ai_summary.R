@@ -239,7 +239,7 @@ mofa_ai_summary_server <- function(id,
   # Load template from board.mofa prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.mofa/prompts/mofa_summary_template.md"
+    "components/board.mofa/prompts/mofa_results.md"
   )
 
   template_reactive <- shiny::reactive({

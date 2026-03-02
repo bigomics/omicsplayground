@@ -1,8 +1,5 @@
 ## Diagram Rules
 
-> **Node types for this board** (override base instructions):
-> Do NOT use `module`, `phenotype`, or `process`.
-
 Classify nodes into:
 {{node_names}}
 

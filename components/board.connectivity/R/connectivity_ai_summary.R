@@ -234,7 +234,7 @@ connectivity_ai_summary_server <- function(id,
   # Load template from board.connectivity prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.connectivity/prompts/connectivity_summary_template.md"
+    "components/board.connectivity/prompts/connectivity_results.md"
   )
 
   template_reactive <- shiny::reactive({

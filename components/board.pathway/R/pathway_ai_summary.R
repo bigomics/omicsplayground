@@ -192,7 +192,7 @@ pathway_ai_summary_server <- function(id,
   # Load template from board.pathway prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.pathway/prompts/pathway_summary_template.md"
+    "components/board.pathway/prompts/pathway_results.md"
   )
 
   template_reactive <- shiny::reactive({

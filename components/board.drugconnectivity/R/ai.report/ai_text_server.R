@@ -13,7 +13,7 @@ drugconnectivity_ai_text_server <- function(id,
                                             parent_session) {
   moduleServer(id, function(input, output, session) {
     summary_template <- omicsai::omicsai_load_template(
-      file.path(DRUGCONNECTIVITY_PROMPTS_DIR, "drugconnectivity_ai_report_summary_template.md")
+      file.path(DRUGCONNECTIVITY_PROMPTS_DIR, "drugconnectivity_ai_report_results.md")
     )
 
     report_rules <- omicsai::omicsai_load_template(

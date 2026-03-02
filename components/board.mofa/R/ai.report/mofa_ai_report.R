@@ -87,7 +87,7 @@ mofa_build_image_prompt <- function(report_text, organism, diagram_edgelist = NU
 mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session) {
   moduleServer(id, function(input, output, session) {
     summary_template <- omicsai::omicsai_load_template(
-      file.path(MOFA_PROMPTS_DIR, "mofa_ai_report_summary_template.md")
+      file.path(MOFA_PROMPTS_DIR, "mofa_ai_report_results.md")
     )
 
     report_rules <- omicsai::omicsai_load_template(
@@ -270,7 +270,8 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
           model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K"
+          image_size = "1K",
+          board_name = "MOFA"
         )
       }),
       cache = cache,

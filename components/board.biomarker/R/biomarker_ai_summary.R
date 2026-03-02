@@ -171,7 +171,7 @@ biomarker_ai_summary_server <- function(id,
   # Load template from board.biomarker prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.biomarker/prompts/biomarker_summary_template.md"
+    "components/board.biomarker/prompts/biomarker_results.md"
   )
 
   template_reactive <- shiny::reactive({

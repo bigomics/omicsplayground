@@ -229,7 +229,7 @@ timeseries_ai_summary_server <- function(id,
   # Load template from board.timeseries prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.timeseries/prompts/timeseries_summary_template.md"
+    "components/board.timeseries/prompts/timeseries_results.md"
   )
 
   template_reactive <- shiny::reactive({

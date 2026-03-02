@@ -25,7 +25,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
     # ---- Shared: templates, context, model ----
 
     ai_summary_template <- omicsai::omicsai_load_template(
-      file.path(OPG, "components/board.wgcna/prompts/wgcna_summary_template.md")
+      file.path(OPG, "components/board.wgcna/prompts/wgcna_results.md")
     )
 
     ai_context_template <- omicsai::omicsai_load_template(

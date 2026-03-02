@@ -245,7 +245,7 @@ featuremap_ai_summary_server <- function(id,
   # Load template from board.featuremap prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.featuremap/prompts/featuremap_summary_template.md"
+    "components/board.featuremap/prompts/featuremap_results.md"
   )
 
   template_reactive <- shiny::reactive({

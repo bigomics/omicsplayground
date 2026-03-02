@@ -180,7 +180,7 @@ signature_ai_summary_server <- function(id,
   # Load template from board.signature prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.signature/prompts/signature_summary_template.md"
+    "components/board.signature/prompts/signature_results.md"
   )
 
   template_reactive <- shiny::reactive({

@@ -29,7 +29,13 @@ drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_r
   link_names <- fmt_names(names(style$edge_styles))
 
   layers <- list()
-  layers[[1]] <- omicsai::omicsai_instructions("diagram_network")
+  base_tpl <- omicsai::omicsai_instructions("diagram_network")
+  example_json <- omicsai::omicsai_diagram_example_json(style$node_styles, style$edge_styles)
+  layers[[1]] <- omicsai::omicsai_substitute_template(
+    base_tpl,
+    list(node_names = node_names, link_names = link_names, example_json = example_json),
+    strict = FALSE
+  )
   layers[[2]] <- tryCatch({
     tpl <- omicsai::omicsai_load_template("prompts/diagram_drugconnectivity_rules.md", root = board_root)
     omicsai::omicsai_substitute_template(tpl, list(node_names = node_names, link_names = link_names))

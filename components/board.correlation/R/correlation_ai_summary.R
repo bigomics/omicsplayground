@@ -211,7 +211,7 @@ correlation_ai_summary_server <- function(id,
   # Load template from board.correlation prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.correlation/prompts/correlation_summary_template.md"
+    "components/board.correlation/prompts/correlation_results.md"
   )
 
   template_reactive <- shiny::reactive({
