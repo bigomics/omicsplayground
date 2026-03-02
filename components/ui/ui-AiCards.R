@@ -3,6 +3,36 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+# ── Model Choice Builders ─────────────────────────────────────────────
+# Build grouped selectInput choices from profile registries
+# (LLM_MODEL_PROFILES / IMAGE_MODEL_PROFILES defined in modules/AiCards.R).
+# Accepts either a semicolon-separated string (from etc/OPTIONS) or a
+# character vector. Only models whose API-key env var is set are offered.
+
+.build_model_choices <- function(profiles, selected_ids = NULL) {
+  if (is.character(selected_ids) && length(selected_ids) == 1 && grepl(";", selected_ids)) {
+    selected_ids <- trimws(strsplit(selected_ids, ";")[[1]])
+    selected_ids <- selected_ids[nzchar(selected_ids)]
+  }
+  if (!is.null(selected_ids) && length(selected_ids)) {
+    profiles <- profiles[intersect(selected_ids, names(profiles))]
+  }
+  available <- Filter(function(p) nzchar(Sys.getenv(p$env_var)), profiles)
+  if (!length(available)) return(character(0))
+  split(
+    setNames(names(available), vapply(available, `[[`, "", "label")),
+    vapply(available, `[[`, "", "group")
+  )
+}
+
+llm_model_choices <- function(selected_ids = NULL) {
+  .build_model_choices(LLM_MODEL_PROFILES, selected_ids)
+}
+
+image_model_choices <- function(selected_ids = NULL) {
+  .build_model_choices(IMAGE_MODEL_PROFILES, selected_ids)
+}
+
 #' AI text card UI
 #'
 #' PlotModule wrapper for text-only AI output.

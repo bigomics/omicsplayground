@@ -349,9 +349,18 @@ app_ui <- function(x) {
                         width = "100%"
                       )
                     ),
+                    bigdash::navbarDropdownItem(
+                      shiny::selectInput(
+                        inputId = "image_model",
+                        label = "Image Model:",
+                        choices = opt$LLM_IMAGE_MODELS,
+                        selected = 1,
+                        width = "100%"
+                      )
+                    ),
                     shiny::helpText(
                       "Set API keys in environment variables: ",
-                      "OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY"
+                      "OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, XAI_API_KEY"
                     )
                   )
                 )

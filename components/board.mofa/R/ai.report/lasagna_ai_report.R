@@ -102,12 +102,6 @@ lasagna_ai_text_server <- function(id,
       file.path(LASAGNA_PROMPTS_DIR, "LASAGNA_methods.md")
     )
 
-    ai_model <- shiny::reactive({
-      m <- getUserOption(parent_session, "llm_model")
-      shiny::req(m, m != "")
-      m
-    })
-
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
 
@@ -116,10 +110,10 @@ lasagna_ai_text_server <- function(id,
       {
         if (controls$mode() != "summary" || controls$trigger() < 1) return(NULL)
 
-        model <- ai_model()
+        model <- get_ai_model(parent_session)
         contrast <- controls$selected_module() %||% contrast_reactive()
         res <- graph_data_reactive()
-        shiny::req(model, contrast, res)
+        shiny::req(contrast, res)
 
         params <- lasagna_ai_build_summary_params(res, contrast, pgx, ntop = 12L)
         shiny::req(params)
@@ -148,10 +142,10 @@ lasagna_ai_text_server <- function(id,
     ai_report <- shiny::eventReactive(controls$trigger(), {
       if (controls$mode() != "report" || controls$trigger() < 1) return(NULL)
 
-      model <- ai_model()
+      model <- get_ai_model(parent_session)
       contrast <- contrast_reactive()
       res <- graph_data_reactive()
-      shiny::req(model, contrast, res)
+      shiny::req(contrast, res)
 
       tables <- lasagna_ai_build_report_tables(res, contrast, pgx, ntop = 12L)
 
@@ -247,11 +241,8 @@ lasagna_ai_report_server <- function(id,
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        llm <- getUserOption(parent_session, "llm_model")
-        omicsai::omicsai_diagram_config(
-          model = llm %||% "ollama:llama3.2",
-          default_regulation = "association"
-        )
+        llm <- get_ai_model(parent_session)
+        make_llm_diagram_config(llm, default_regulation = "association")
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
@@ -277,8 +268,12 @@ lasagna_ai_report_server <- function(id,
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         img_model <- getUserOption(parent_session, "image_model")
+        shiny::validate(shiny::need(
+          !is.null(img_model) && nzchar(img_model),
+          "No image model configured. Please select a model in Settings."
+        ))
         omicsai::omicsai_image_config(
-          model = img_model %||% "gemini-3.1-flash-image-preview",
+          model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
           image_size = "1K"

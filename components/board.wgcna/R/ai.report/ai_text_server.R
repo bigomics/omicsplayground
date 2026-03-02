@@ -41,12 +41,6 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       )
     })
 
-    ai_model <- shiny::reactive({
-      m <- getUserOption(parent_session, "llm_model")
-      shiny::req(m, m != "")
-      m
-    })
-
     # ---- Prompt caches (for instant toggle without regeneration) ----
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
@@ -62,8 +56,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       w <- wgcna()
       module <- controls$selected_module()
       shiny::req(w, module)
-      model <- ai_model()
-      shiny::req(model)
+      model <- get_ai_model(parent_session)
 
       style <- controls$summary_style() %||% "short"
       params <- wgcna_build_summary_params(w, module, pgx)
@@ -77,7 +70,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       result <- omicsai::omicsai_gen_text(
         template = ai_summary_template,
         params = params,
-        config = omicsai::omicsai_config(model = model %||% Sys.getenv("OMICS_AI_MODEL", "ollama:llama3.2"))
+        config = omicsai::omicsai_config(model = model)
       )
       result$text
     }, ignoreNULL = FALSE)
@@ -90,8 +83,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
 
       w <- wgcna()
       shiny::req(w)
-      model <- ai_model()
-      shiny::req(model)
+      model <- get_ai_model(parent_session)
 
       progress <- shiny::Progress$new()
       on.exit(progress$close())

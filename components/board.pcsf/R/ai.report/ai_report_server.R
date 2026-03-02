@@ -51,11 +51,8 @@ pcsf_ai_report_server <- function(id,
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        llm <- getUserOption(parent_session, "llm_model")
-        omicsai::omicsai_diagram_config(
-          model = llm %||% "ollama:llama3.2",
-          default_regulation = "association"
-        )
+        llm <- get_ai_model(parent_session)
+        make_llm_diagram_config(llm, default_regulation = "association")
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
@@ -78,8 +75,12 @@ pcsf_ai_report_server <- function(id,
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         img_model <- getUserOption(parent_session, "image_model")
+        shiny::validate(shiny::need(
+          !is.null(img_model) && nzchar(img_model),
+          "No image model configured. Please select a model in Settings."
+        ))
         omicsai::omicsai_image_config(
-          model = img_model %||% "gemini-3.1-flash-image-preview",
+          model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
           image_size = "1K"

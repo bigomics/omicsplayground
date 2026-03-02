@@ -22,7 +22,6 @@ PcsfBoard <- function(id, pgx) {
     tab_elements <- list(
       "Gene PCSF" = list(disable = c("gset_accordion", "ai_report_accordion")),
       "Geneset PCSF" = list(disable = c("pcsf_accordion", "ai_report_accordion")),
-      "AI Summary" = list(disable = c("pcsf_accordion", "gset_accordion", "ai_report_accordion")),
       "AI Report" = list(disable = c("pcsf_accordion", "gset_accordion"))
     )
 
@@ -75,21 +74,6 @@ PcsfBoard <- function(id, pgx) {
       "gsetpanel",
       pgx,
       r_contrast = shiny::reactive(input$contrast),
-      watermark = WATERMARK
-    )
-
-    # AI PCSF summary
-    pcsf_ai_summary_server(
-      "pcsfAISummary",
-      pgx = pgx,
-      getCentralityTable = genepanel_out$table_data,
-      getPcsfGraph = shiny::reactive({
-        res <- genepanel_out$gene_pcsf()
-        shiny::req(res)
-        res$graph
-      }),
-      r_contrast = shiny::reactive(input$contrast),
-      session = session,
       watermark = WATERMARK
     )
 

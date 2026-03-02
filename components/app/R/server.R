@@ -193,35 +193,22 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # Populate LLM models when AI is enabled
-  observe({
-    shiny::req(input$enable_beta, input$enable_ai)
-    if (isTRUE(input$enable_beta) && isTRUE(input$enable_ai)) {
-      models <- tryCatch({
-        all_models <- playbase::ai.get_models()
-        # Combine local and remote
-        c(all_models$local, all_models$remote)
-      }, error = function(e) {
-        c("No models available")
-      })
-
-      updateSelectInput(session, "llm_model", choices = models)
-    }
-  })
-
+  # Sync LLM and image model user options when AI is toggled
   shiny::observeEvent(
     {
-      list(input$enable_ai, input$llm_model)
+      list(input$enable_ai, input$llm_model, input$image_model)
     },
     {
       shiny::req(input$enable_ai)
       if (isTRUE(input$enable_ai)) {
         dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
         setUserOption(session, "llm_model", input$llm_model)
+        setUserOption(session, "image_model", input$image_model)
         setUserOption(session, "enable_ai", TRUE)
       } else {
         dbg("[MAIN] AI/LLM disabled")
         setUserOption(session, "llm_model", "")
+        setUserOption(session, "image_model", "")
         setUserOption(session, "enable_ai", FALSE)
       }
     }
@@ -841,24 +828,26 @@ app_server <- function(input, output, session) {
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
 
-    ## hide AI summary tabs
-    toggleTab("bio-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("clustersamples-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("comp-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("cmap-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("corr-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("drug-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("enrich-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("diffexpr-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("clusterfeatures-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("isect-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("pathway-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("sig-tabs2", "AI Summary", show.ai && show.beta)
-    toggleTab("cell-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("timeseries-tabs1", "AI Summary", show.ai && show.beta)
-    toggleTab("wordcloud-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("pcsf-tabs", "AI Summary", show.ai && show.beta)
-    toggleTab("wgcna-tabs", "AI Report", show.ai && show.beta)
+    ## hide AI tabs
+    show.ai.tabs <- isTRUE(show.ai) && isTRUE(show.beta)
+    ai.summary.tabsets <- c(
+      "bio-tabs1", "clustersamples-tabs1", "comp-tabs1", "cmap-tabs1",
+      "corr-tabs", "enrich-tabs1", "diffexpr-tabs1", "clusterfeatures-tabs",
+      "isect-tabs1", "pathway-tabs", "sig-tabs2", "cell-tabs",
+      "timeseries-tabs1", "wordcloud-tabs"
+    )
+    ai.report.tabsets <- c(
+      "drug-tabs", "pcsf-tabs", "wgcna-tabs", "mofa-tabs", "lasagna-tabs"
+    )
+
+    toggle_tabs_by_label <- function(tabset.ids, tab.label, visible) {
+      for (tabset.id in tabset.ids) {
+        toggleTab(tabset.id, tab.label, visible)
+      }
+    }
+
+    toggle_tabs_by_label(ai.summary.tabsets, "AI Summary", show.ai.tabs)
+    toggle_tabs_by_label(ai.report.tabsets, "AI Report", show.ai.tabs)
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)

@@ -3,6 +3,76 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+# ── LLM Model Profiles ───────────────────────────────────────────────
+# Master registry of supported text/diagram models.
+# etc/OPTIONS LLM_MODELS selects which of these to offer.
+# Only models whose API-key env var is set appear in the dropdown.
+
+LLM_MODEL_PROFILES <- list(
+  "google:gemini-2.5-flash" = list(
+    label = "Gemini 2.5 Flash", group = "Google",
+    env_var = "GEMINI_API_KEY",
+    defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 90L)
+  ),
+  "groq:openai/gpt-oss-20b" = list(
+    label = "GPT-oss 20B", group = "Groq",
+    env_var = "GROQ_API_KEY",
+    defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 30L)
+  ),
+  "groq:openai/gpt-oss-120b" = list(
+    label = "GPT-oss 120B", group = "Groq",
+    env_var = "GROQ_API_KEY",
+    defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 60L)
+  ),
+  "xai:grok-4-1-fast-non-reasoning" = list(
+    label = "Grok 4 Fast", group = "xAI",
+    env_var = "XAI_API_KEY",
+    defaults = list(temperature = 0.5, max_tokens = 4096L, timeout_seconds = 60L)
+  )
+)
+
+# ── Image Model Profiles ─────────────────────────────────────────────
+# Image-capable models for infographic generation.
+# etc/OPTIONS LLM_IMAGE_MODELS selects which to offer.
+
+IMAGE_MODEL_PROFILES <- list(
+  "gemini-3.1-flash-image-preview" = list(
+    label = "Gemini 3.1 Flash Image", group = "Google",
+    env_var = "GEMINI_API_KEY"
+  ),
+  "gemini-3.1-pro-image-preview" = list(
+    label = "Gemini 3.1 Pro Image", group = "Google",
+    env_var = "GEMINI_API_KEY"
+  )
+)
+
+#' Get the current AI model from user options
+#'
+#' Reads the LLM model from session userData (set by the root app server).
+#' Uses validate/need so the message propagates through the render chain
+#' to the UI when no model is configured.
+#'
+#' @param parent_session The parent Shiny session passed from the board server
+#' @return Model ID string
+get_ai_model <- function(parent_session) {
+  m <- getUserOption(parent_session, "llm_model")
+  shiny::validate(shiny::need(
+    !is.null(m) && nzchar(m),
+    "No AI model configured. Please enable AI and select a model in Settings."
+  ))
+  m
+}
+
+#' Create omicsai_diagram_config with profile defaults
+make_llm_diagram_config <- function(model_id, ...) {
+  d <- LLM_MODEL_PROFILES[[model_id]]$defaults
+  omicsai::omicsai_diagram_config(
+    model = model_id,
+    temperature = d$temperature,
+    ...
+  )
+}
+
 .aicards_coalesce <- function(x, y) {
   if (is.null(x)) y else x
 }
@@ -300,9 +370,12 @@ AiTextCardServer <- function(id,
       config_reactive,
       config_class = "omicsai_config",
       default_fn = function() {
-        omicsai::omicsai_config(
-          model = Sys.getenv("OMICS_AI_MODEL", "ollama:llama3.2")
-        )
+        model <- Sys.getenv("OMICS_AI_MODEL", "")
+        shiny::validate(shiny::need(
+          nzchar(model),
+          "No AI model configured. Please select a model in Settings."
+        ))
+        omicsai::omicsai_config(model = model)
       }
     )
 
@@ -315,9 +388,6 @@ AiTextCardServer <- function(id,
     )
 
     shiny::observeEvent(input$generate, {
-      rv$status <- "thinking"
-      rv$error <- NULL
-
       params <- params_reactive()
       shiny::req(params)
 
@@ -326,6 +396,9 @@ AiTextCardServer <- function(id,
 
       base_config <- get_config()
       shiny::req(base_config)
+
+      rv$status <- "thinking"
+      rv$error <- NULL
 
       selected_style <- .aicards_coalesce(input$style, "short")
       format_instr <- omicsai::omicsai_instructions(paste0("format_", selected_style))

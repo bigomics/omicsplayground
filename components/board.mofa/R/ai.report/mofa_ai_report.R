@@ -98,12 +98,6 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
       file.path(MOFA_PROMPTS_DIR, "MOFA_methods.md")
     )
 
-    ai_model <- shiny::reactive({
-      m <- getUserOption(parent_session, "llm_model")
-      shiny::req(m, m != "")
-      m
-    })
-
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
 
@@ -112,10 +106,10 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
       {
         if (controls$mode() != "summary" || controls$trigger() < 1) return(NULL)
 
-        model <- ai_model()
+        model <- get_ai_model(parent_session)
         m <- mofa_reactive()
         factor_name <- controls$selected_module()
-        shiny::req(model, m, factor_name)
+        shiny::req(m, factor_name)
 
         params <- mofa_ai_build_summary_params(m, pgx, factor_name, ntop = 12L)
         shiny::req(params)
@@ -144,9 +138,9 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
     ai_report <- shiny::eventReactive(controls$trigger(), {
       if (controls$mode() != "report" || controls$trigger() < 1) return(NULL)
 
-      model <- ai_model()
+      model <- get_ai_model(parent_session)
       m <- mofa_reactive()
-      shiny::req(model, m)
+      shiny::req(m)
 
       tables <- mofa_ai_build_report_tables(m, pgx, max_contexts = 8L, ntop = 10L)
 
@@ -241,11 +235,8 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        llm <- getUserOption(parent_session, "llm_model")
-        omicsai::omicsai_diagram_config(
-          model = llm %||% "ollama:llama3.2",
-          default_regulation = "association"
-        )
+        llm <- get_ai_model(parent_session)
+        make_llm_diagram_config(llm, default_regulation = "association")
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
@@ -271,8 +262,12 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
         img_model <- getUserOption(parent_session, "image_model")
+        shiny::validate(shiny::need(
+          !is.null(img_model) && nzchar(img_model),
+          "No image model configured. Please select a model in Settings."
+        ))
         omicsai::omicsai_image_config(
-          model = img_model %||% "gemini-3.1-flash-image-preview",
+          model = img_model,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
           image_size = "1K"

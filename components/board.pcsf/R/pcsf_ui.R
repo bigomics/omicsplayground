@@ -146,21 +146,6 @@ PcsfUI <- function(id) {
       ), ## end tabpanel2
 
       shiny::tabPanel(
-        "AI Summary",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 181px)",
-          AiTextCardUI(
-            ns("pcsfAISummary"),
-            title = "AI PCSF Summary",
-            info.text = "AI-generated summary of the PCSF network analysis results for the selected contrast.",
-            caption = "AI-generated PCSF network summary.",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          )
-        )
-      ), ## end AI Summary tabpanel
-      shiny::tabPanel(
         "AI Report",
         bslib::layout_columns(
           col_widths = 12,

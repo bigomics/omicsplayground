@@ -25,12 +25,6 @@ pcsf_ai_text_server <- function(id,
       file.path(PCSF_PROMPTS_DIR, "PCSF_methods.md")
     )
 
-    ai_model <- shiny::reactive({
-      m <- getUserOption(parent_session, "llm_model")
-      shiny::req(m, m != "")
-      m
-    })
-
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
 
@@ -39,10 +33,10 @@ pcsf_ai_text_server <- function(id,
       {
         if (controls$mode() != "summary" || controls$trigger() < 1) return(NULL)
 
-        model <- ai_model()
+        model <- get_ai_model(parent_session)
         fallback_contrast <- contrast_reactive()
         contrast <- controls$selected_module() %||% fallback_contrast
-        shiny::req(model, contrast)
+        shiny::req(contrast)
 
         active_contrast <- fallback_contrast %||% ""
         params <- if (!is.null(active_contrast) && nzchar(active_contrast) && identical(contrast, active_contrast)) {
@@ -90,8 +84,7 @@ pcsf_ai_text_server <- function(id,
     ai_report <- shiny::eventReactive(controls$trigger(), {
       if (controls$mode() != "report" || controls$trigger() < 1) return(NULL)
 
-      model <- ai_model()
-      shiny::req(model)
+      model <- get_ai_model(parent_session)
 
       tables <- pcsf_build_report_tables(
         pgx = pgx,

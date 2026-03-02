@@ -24,12 +24,6 @@ drugconnectivity_ai_text_server <- function(id,
       file.path(DRUGCONNECTIVITY_PROMPTS_DIR, "DrugConnectivity_methods.md")
     )
 
-    ai_model <- shiny::reactive({
-      m <- getUserOption(parent_session, "llm_model")
-      shiny::req(m, m != "")
-      m
-    })
-
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
 
@@ -37,12 +31,12 @@ drugconnectivity_ai_text_server <- function(id,
       list(controls$trigger(), controls$selected_module(), method_reactive(), contrast_reactive()),
       {
         if (controls$mode() != "summary" || controls$trigger() < 1) return(NULL)
-        model <- ai_model()
+        model <- get_ai_model(parent_session)
         method <- method_reactive()
         fallback_contrast <- contrast_reactive()
         contrast <- controls$selected_module() %||% fallback_contrast
         only_annotated <- isTRUE(annotated_only_reactive())
-        shiny::req(model, method, contrast)
+        shiny::req(method, contrast)
         at <- dc_analysis_type_info(method)
 
         params <- drugconnectivity_build_summary_params(
@@ -82,10 +76,10 @@ drugconnectivity_ai_text_server <- function(id,
     ai_report <- shiny::eventReactive(controls$trigger(), {
       if (controls$mode() != "report" || controls$trigger() < 1) return(NULL)
 
-      model <- ai_model()
+      model <- get_ai_model(parent_session)
       method <- method_reactive()
       only_annotated <- isTRUE(annotated_only_reactive())
-      shiny::req(model, method)
+      shiny::req(method)
       at <- dc_analysis_type_info(method)
 
       tables <- drugconnectivity_build_report_tables(

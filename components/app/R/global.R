@@ -333,11 +333,14 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## Filter LLM models with available models, add all local models(?)
-opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-LOCAL_MODELS <- playbase::ai.get_ollama_models()
-# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+## LLM model setup (profiles defined in components/modules/AiCards.R)
+opt$LLM_MODELS <- llm_model_choices(opt$LLM_MODELS)
 opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
+
+## Image model setup
+opt$LLM_IMAGE_MODELS <- image_model_choices(opt$LLM_IMAGE_MODELS)
+dbg("[global] Image model choices:", paste(unlist(opt$LLM_IMAGE_MODELS), collapse = ", "))
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
