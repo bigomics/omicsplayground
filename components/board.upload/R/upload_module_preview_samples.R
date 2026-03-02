@@ -359,6 +359,17 @@ upload_table_preview_samples_server <- function(
           y <- Y[, non_na_cols[1]]
         }
       }
+      ## Subsample cells before densifying to avoid allocating a huge dense matrix
+      MAX_CELLS <- 500
+      if (ncol(X) > MAX_CELLS) {
+        set.seed(42)
+        ss <- sample(ncol(X), MAX_CELLS)
+        X <- X[, ss, drop = FALSE]
+        Y <- Y[colnames(X), , drop = FALSE]
+        y <- Y[, sel]
+      }
+      if (inherits(X, "sparseMatrix")) X <- as.matrix(X)
+
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
