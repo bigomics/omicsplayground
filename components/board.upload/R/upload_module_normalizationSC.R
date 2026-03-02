@@ -265,13 +265,28 @@ upload_module_normalizationSC_server <- function(id,
 
           dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
           options(Seurat.object.assay.calcn = TRUE)
-          getOption("Seurat.object.assay.calcn")
+          ## Free Azimuth + dim-reduction intermediates before Seurat pipeline.
+          ## Large h5ad files (100k+ cells) cause ~15 GB peak allocation that leaves
+          ## glibc's heap in a fragmented state, crashing all subsequent Seurat C++ calls
+          ## (ScaleData, FindNeighbors, RunPCA...) inside the same process. Running
+          ## pgx.createSeuratObject + seurat.preprocess in a fresh callr subprocess
+          ## gives them a clean heap regardless of what happened in the parent.
+          rm(nX, nX1, azm)
+          gc()
           counts <- as(counts, "dgCMatrix")
           shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
-            SO <- playbase::pgx.createSeuratObject(counts, samples,
-              batch = NULL, filter = FALSE, preprocess = FALSE
+            SO <- callr::r(
+              function(counts, samples, lib) {
+                .libPaths(lib)
+                options(Seurat.object.assay.calcn = TRUE)
+                SO <- playbase::pgx.createSeuratObject(counts, samples,
+                  batch = NULL, filter = FALSE, preprocess = FALSE
+                )
+                SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+                SO
+              },
+              args = list(counts = counts, samples = samples, lib = .libPaths())
             )
-            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           })
           dbg("[normalizationSC_server] Seurat object created & preprocessed.")
           kk <- setdiff(colnames(samples), colnames(SO@meta.data))
