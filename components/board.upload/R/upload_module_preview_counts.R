@@ -40,17 +40,17 @@ upload_table_preview_counts_server <- function(id,
       ncol0 <- ncol(dt)
       MAXROW <- 1000
       MAXCOL <- 20
-      if (nrow(dt) > MAXROW) {
-        dt <- head(dt, MAXROW)
+      if (nrow(dt) > MAXROW) dt <- dt[seq_len(MAXROW), , drop = FALSE]
+      if (ncol(dt) > MAXCOL) dt <- dt[, seq_len(MAXCOL), drop = FALSE]
+      ## Densify the small subset before adding indicator rows/cols and passing to DT::datatable.
+      if (inherits(dt, "sparseMatrix")) dt <- as.matrix(dt)
+      if (nrow0 > MAXROW) {
         dt <- rbind(dt, rep(NA, ncol(dt)))
-        n1 <- nrow0 - MAXROW
-        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+        rownames(dt)[nrow(dt)] <- paste0("[+", nrow0 - MAXROW, " rows]")
       }
-      if (ncol(dt) > MAXCOL) {
-        dt <- dt[, 1:MAXCOL]
+      if (ncol0 > MAXCOL) {
         dt <- cbind(dt, rep(NA, nrow(dt)))
-        n1 <- ncol0 - MAXCOL
-        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+        colnames(dt)[ncol(dt)] <- paste0("[+", ncol0 - MAXCOL, " columns]")
       }
       dt
     })
@@ -521,16 +521,23 @@ upload_table_preview_counts_server <- function(id,
     output$histogram <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(counts)
+      n_genes <- nrow(counts)
+      n_samples <- ncol(counts)
+      ## Subsample both genes and cells before densifying.
+      ## Adding a scalar (prior + sparseMatrix) fills all structural zeros, breaking sparsity.
+      ## For a density plot 500 cells is more than sufficient for visual purposes.
+      set.seed(123)
+      if (nrow(counts) > 1000) counts <- counts[sample(nrow(counts), 1000), , drop = FALSE]
+      if (ncol(counts) > 500) counts <- counts[, sample(ncol(counts), 500), drop = FALSE]
+      if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
       if (!is_logscale()) {
-        prior <- min(counts[counts > 0], na.rm = TRUE)
-        xx <- log2(prior + counts)
+        prior <- min(xx[xx > 0], na.rm = TRUE)
+        xx <- log2(prior + xx)
       }
-      set.seed(123)
-      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- reshape2::melt(xx))
       dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
+      tt2 <- paste(n_genes, tspan("genes x", js = FALSE), n_samples, "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
         ggplot2::xlab(tspan("counts (log2)", js = FALSE)) +
@@ -541,13 +548,14 @@ upload_table_preview_counts_server <- function(id,
     output$boxplots <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(counts)
+      ## Subsample columns before densifying to avoid a full sparse->dense coercion.
+      if (ncol(counts) > 40) counts <- counts[, sample(ncol(counts), 40), drop = FALSE]
+      if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
       if (!is_logscale()) {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(pmax(xx, 0) + prior)
       }
-      # Downsample to 40 columns as we do on qc/bc tab
-      if (ncol(xx) > 40) xx <- xx[, sample(1:ncol(xx), 40)]
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
@@ -629,6 +637,7 @@ upload_table_preview_counts_server <- function(id,
               NULL
             }
           )
+          browser()
           if (is.null(df)) {
             shinyalert::shinyalert(
               title = "Error",

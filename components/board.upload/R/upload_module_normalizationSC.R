@@ -177,7 +177,6 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
@@ -187,7 +186,9 @@ upload_module_normalizationSC_server <- function(id,
         if (ncol(counts) > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
-          counts <- counts[, kk, drop = FALSE]
+          ## Character subsetting on a large dgCMatrix can hit Matrix dispatch issues;
+          ## use integer indices (via match) which always work reliably for sparse matrices.
+          counts <- counts[, match(kk, colnames(counts)), drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
         }
 
@@ -196,7 +197,13 @@ upload_module_normalizationSC_server <- function(id,
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
           shiny::withProgress(message = "Inferring cell types with Azimuth...", value = 0.1, {
-            azm <- playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas)
+            azm <- tryCatch(
+              playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas),
+              error = function(e) {
+                message("[normalizationSC_server:ds_norm_Counts:] pgx.runAzimuth failed: ", conditionMessage(e))
+                NULL
+              }
+            )
             dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
           })
 
@@ -232,9 +239,13 @@ upload_module_normalizationSC_server <- function(id,
             samples <- cbind(samples, celltype.azimuth = azm)
           }
 
-          ## Normalization & Dimensional reduction
+          ## Normalization & Dimensional reduction.
+          ## counts is already ≤500 cells here; densify before logCPM to avoid
+          ## sparse-path issues inside logCPM (e.g. cpm[is.na(cpm)] S4 dispatch)
+          ## and to satisfy matrixStats::rowSds which requires a dense matrix.
           dbg("[normalizationSC_server] Performing logCPM normalization...")
-          nX <- playbase::logCPM(as.matrix(counts), prior = 1, total = 1e4)
+          if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
+          nX <- playbase::logCPM(counts, prior = 1, total = 1e4)
           jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
           nX1 <- nX[jj, , drop = FALSE]
           nX1 <- nX1 - rowMeans(nX1, na.rm = TRUE)
@@ -484,7 +495,7 @@ upload_module_normalizationSC_server <- function(id,
 
       X <- shiny::reactive({
         shiny::req(r_counts())
-        X <- playbase::logCPM(as.matrix(r_counts()), total = 1e4, prior = 1)
+        X <- playbase::logCPM(r_counts(), total = 1e4, prior = 1)
         return(X)
       })
 
