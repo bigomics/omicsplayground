@@ -197,9 +197,11 @@ intersection_scatterplot_pairs_server <- function(id,
         }
         if (input$corr_line) {
           rng <- range(c(df[, 1], df[, 2]), na.rm = TRUE)
-          p <- p %>% plotly::add_lines(x = rng, y = rng,
+          p <- p %>% plotly::add_lines(
+            x = rng, y = rng,
             line = list(color = "black", dash = "dash", width = 1),
-            showlegend = FALSE, inherit = FALSE)
+            showlegend = FALSE, inherit = FALSE
+          )
         }
         p <- p %>%
           plotly::layout(

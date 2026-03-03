@@ -44,13 +44,9 @@ mofa_plot_pathbank_server <- function(id,
                                       sel_pathway = reactive(NULL),
                                       sel_contrast = reactive(NULL),
                                       watermark = FALSE) {
-
   moduleServer(
-
     id, function(input, output, session) {
-
       getPathwayImage <- shiny::reactive({
-
         wp.name <- sel_pathway()
         if (length(wp.name) == 0 || length(wp.name) > 1) {
           return(NULL)
@@ -80,10 +76,11 @@ mofa_plot_pathbank_server <- function(id,
         sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
         sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
         ## wp = "SMP0080852"
-        img <- playbase::getPathwayImage(wp, val = val,
-          sbgn.dir = sbgn.dir, as.img = TRUE)
+        img <- playbase::getPathwayImage(wp,
+          val = val,
+          sbgn.dir = sbgn.dir, as.img = TRUE
+        )
         return(img)
-
       })
 
       plot_RENDER <- function() {
