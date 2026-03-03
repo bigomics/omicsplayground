@@ -193,59 +193,15 @@ upload_module_normalizationSC_server <- function(id,
         }
 
         if (input$ref_atlas != "<select>") {
-          dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Inferring cell types with Azimuth...", value = 0.1, {
-            azm <- tryCatch(
-              playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas),
-              error = function(e) {
-                message("[normalizationSC_server:ds_norm_Counts:] pgx.runAzimuth failed: ", conditionMessage(e))
-                NULL
-              }
-            )
-            dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
-          })
 
-          if (is.null(azm)) {
-            message_text <- paste(
-              "Please select the Azimuth reference atlas that fits your data.",
-              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
-            )
-            shiny::validate(
-              shiny::need(FALSE, message_text)
-            )
-          }
-
-          if (class(azm) %in% c("matrix", "data.frame")) {
-            kk <- grep("^predicted.*l*2$", colnames(azm))
-            if (any(kk)) {
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                kk <- grep("^predicted.*l*1$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            } else {
-              kk <- grep("^predicted.*subclass*$", colnames(azm))
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                kk <- grep("^predicted.class*$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            }
-            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
-          } else if (is.vector(azm)) {
-            dbg("[normalizationSC_server:ds_norm_Counts] Azimuth atlas might be incorrect. Please double check.")
-            samples <- cbind(samples, celltype.azimuth = azm)
-          }
-
-          ## Normalization & Dimensional reduction.
-          ## counts is already ≤500 cells here; densify before logCPM to avoid
-          ## sparse-path issues inside logCPM (e.g. cpm[is.na(cpm)] S4 dispatch)
-          ## and to satisfy matrixStats::rowSds which requires a dense matrix.
+          ## logCPM + dim-reduction first: these run fine in the main process and
+          ## their intermediates are freed before the subprocess starts.
           dbg("[normalizationSC_server] Performing logCPM normalization...")
-          if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
-          nX <- playbase::logCPM(counts, prior = 1, total = 1e4)
+          counts_dense <- as.matrix(counts)
+          nX <- playbase::logCPM(counts_dense, prior = 1, total = 1e4)
+          rm(counts_dense)
           jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
           nX1 <- nX[jj, , drop = FALSE]
           nX1 <- nX1 - rowMeans(nX1, na.rm = TRUE)
@@ -258,36 +214,77 @@ upload_module_normalizationSC_server <- function(id,
             pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
             pos.list <- lapply(pos.list, function(x) {
               rownames(x) <- colnames(nX1)
-              return(x)
+              x
             })
           })
+          rm(nX, nX1)
+          gc()
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
 
-          dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
-          options(Seurat.object.assay.calcn = TRUE)
-          ## Free Azimuth + dim-reduction intermediates before Seurat pipeline.
-          ## Large h5ad files (100k+ cells) cause ~15 GB peak allocation that leaves
-          ## glibc's heap in a fragmented state, crashing all subsequent Seurat C++ calls
-          ## (ScaleData, FindNeighbors, RunPCA...) inside the same process. Running
-          ## pgx.createSeuratObject + seurat.preprocess in a fresh callr subprocess
-          ## gives them a clean heap regardless of what happened in the parent.
-          rm(nX, nX1, azm)
-          gc()
-          counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
-            SO <- callr::r(
-              function(counts, samples, lib) {
+          ## Run Azimuth + Seurat in a single fresh subprocess.
+          ## Large h5ad uploads leave glibc's heap fragmented after deallocation;
+          ## any subsequent Seurat C++ call (ScaleData, FindNeighbors, RunPCA) then
+          ## crashes. One callr subprocess isolates both Azimuth and the Seurat
+          ## pipeline from the main process heap.
+          dbg("[normalizationSC_server] Running Azimuth + Seurat in subprocess...")
+          shiny::withProgress(message = "Inferring cell types & building Seurat object...", value = 0.7, {
+            result <- callr::r(
+              function(counts, samples, reference, lib) {
                 .libPaths(lib)
                 options(Seurat.object.assay.calcn = TRUE)
+
+                ## Azimuth cell type annotation
+                azm <- tryCatch(
+                  playbase::pgx.runAzimuth(counts = counts, reference = reference),
+                  error = function(e) {
+                    message("[callr] pgx.runAzimuth failed: ", conditionMessage(e))
+                    NULL
+                  }
+                )
+
+                ## Add cell type column to samples metadata
+                if (!is.null(azm)) {
+                  if (is.data.frame(azm) || is.matrix(azm)) {
+                    kk <- grep("^predicted.*l*2$", colnames(azm))
+                    if (any(kk)) {
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.*l*1$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    } else {
+                      kk <- grep("^predicted.*subclass*$", colnames(azm))
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.class*$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    }
+                    samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
+                  } else if (is.vector(azm)) {
+                    samples <- cbind(samples, celltype.azimuth = azm)
+                  }
+                }
+
                 SO <- playbase::pgx.createSeuratObject(counts, samples,
                   batch = NULL, filter = FALSE, preprocess = FALSE
                 )
                 SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
-                SO
+                list(SO = SO, azm_ok = !is.null(azm))
               },
-              args = list(counts = counts, samples = samples, lib = .libPaths())
+              args = list(counts = counts, samples = samples, reference = input$ref_atlas, lib = .libPaths())
             )
           })
+
+          if (!result$azm_ok) {
+            message_text <- paste(
+              "Please select the Azimuth reference atlas that fits your data.",
+              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
+            )
+            shiny::validate(shiny::need(FALSE, message_text))
+          }
+
+          SO <- result$SO
           dbg("[normalizationSC_server] Seurat object created & preprocessed.")
           kk <- setdiff(colnames(samples), colnames(SO@meta.data))
           if (length(kk) > 1) {
@@ -300,7 +297,7 @@ upload_module_normalizationSC_server <- function(id,
             pos.tsne = pos.list[["tsne"]],
             pos.umap = pos.list[["umap"]]
           )
-          rm(counts, nX, nX1, samples, SO)
+          rm(counts, samples, SO)
           return(LL)
         } else {
           shinyalert::shinyalert(
