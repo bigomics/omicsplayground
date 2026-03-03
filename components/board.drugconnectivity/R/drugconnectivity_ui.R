@@ -6,24 +6,28 @@
 DrugConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
+    withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("dsea_method"), "Analysis type:", choices = ""),
+    withTooltip(shiny::selectInput(ns("method"), "Analysis type:", choices = ""),
       "Select type of drug enrichment analysis: activity or sensitivity (if available).",
       placement = "top"
     ),
     withTooltip(
       shiny::checkboxInput(
-        ns("dseatable_filter"),
+        ns("filter_table"),
         "only annotated drugs",
         FALSE
       ),
       "Show only annotated drugs."
     ),
     shiny::br(),
-    drugconnectivity_report_inputs(ns("cmap_report"))
+    shinyjs::hidden( shiny::div(
+      id = ns("aiui"),
+      drugconnectivity_report_inputs(ns("cmap_report"))
+    ))
+
   )
 }
 

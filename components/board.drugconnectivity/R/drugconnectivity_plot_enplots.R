@@ -55,7 +55,6 @@ drugconnectivity_plot_enplots_server <- function(id,
                                                  dsea_contrast,
                                                  dsea_method,
                                                  dsea_table,
-                                                 getActiveDSEA,
                                                  watermark = FALSE) {
   moduleServer(
     id, function(input, output, session) {
@@ -63,7 +62,6 @@ drugconnectivity_plot_enplots_server <- function(id,
         dsea_contrast <- dsea_contrast()
         dsea_method <- dsea_method()
         shiny::req(pgx$X, dsea_contrast, dsea_method)
-        dsea <- getActiveDSEA()
 
         dt <- dsea_table$data()
         ii <- dsea_table$rows_selected()
@@ -72,7 +70,7 @@ drugconnectivity_plot_enplots_server <- function(id,
 
         shiny::validate(shiny::need(
           "drugs" %in% names(pgx),
-          "no 'drugs' in object."
+          "missing 'drugs' in object."
         ))
         if (is.null(pgx$drugs)) {
           return(NULL)
@@ -81,30 +79,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         if (is.null(dsea_contrast)) {
           return(NULL)
         }
-
-        res <- list(
-          dsea_contrast = dsea_contrast,
-          dsea_method = dsea_method,
-          dt = dt,
-          ii = ii,
-          jj = jj,
-          dsea = getActiveDSEA()
-        )
-
-        return(res)
-      })
-
-      ## plot.RENDER <- shiny::reactive({
-      plot.RENDER <- function() {
-        res <- plot_data()
-        dsea_contrast <- res$dsea_contrast
-        dsea_method <- res$dsea_method
-        dt <- res$dt
+        
         ## filter with table selection/search
-        ii <- res$ii
-        jj <- res$jj
-        dsea <- res$dsea
-
         if (length(ii) > 0) {
           dt <- dt[ii, , drop = FALSE]
         }
@@ -112,6 +88,37 @@ drugconnectivity_plot_enplots_server <- function(id,
           dt <- dt[jj, , drop = FALSE]
         }
 
+        return(dt)
+      })
+
+      ## plot.RENDER <- shiny::reactive({
+      plot.RENDER <- function() {
+        dt <- plot_data()
+        if (nrow(dt) == 0) {
+          return(NULL)
+        }
+        sel.drugs <- rownames(dt)
+        
+        dcontrast <- dsea_contrast()
+        dmethod <- dsea_method()
+        nplots <- min(nrow(dt), 16)
+        
+        playbase::pgx.plotDrugConnectivity(
+          pgx,
+          contrast = dcontrast,
+          db = dmethod,
+          drugs = sel.drugs,
+          nplots = nplots)
+
+      }
+
+      ## plot.RENDER <- shiny::reactive({
+      plot.RENDER.BAK <- function() {
+        res <- plot_data()
+        dsea_contrast <- res$dsea_contrast
+        dsea_method <- res$dsea_method
+        dt <- res$dt
+        
         if (nrow(dt) == 0) {
           return(NULL)
         }
@@ -165,7 +172,7 @@ drugconnectivity_plot_enplots_server <- function(id,
         ## This is needed for base plots as reactive to return something
         #
       }
-
+      
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly

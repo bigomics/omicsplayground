@@ -105,10 +105,12 @@ drugconnectivity_plot_actmap_server <- function(id,
         }
         score <- sign(score) * abs(score)**3 ## fudging
         score <- score / (1e-8 + max(abs(score), na.rm = TRUE))
-
+        
         if (NCOL(score) > 1) {
           d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
           d2 <- as.dist(1 - cor(score, use = "pairwise"))
+          d1 <- dist(score) ## euclidean
+          d2 <- dist(t(score))
           d1[is.na(d1)] <- 1
           d2[is.na(d2)] <- 1
           ii <- hclust(d1)$order

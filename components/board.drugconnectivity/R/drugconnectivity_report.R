@@ -22,9 +22,11 @@ drugconnectivity_report_summary_ui <- function(
   width
 ) {
   ns <- shiny::NS(id)
-
+  
   options <- tagList(
-    shiny::radioButtons(ns("format"),"format",c("html","PDF"), inline=TRUE)
+    ##shiny::radioButtons(ns("format"),"format",c("html","PDF"), inline=TRUE)
+    shiny::checkboxInput(ns("as_html"),"as html",TRUE),
+    shiny::downloadButton(ns("downloadPDF"), label = "PDF", class = NULL)
   )
   
   PlotModuleUI(
@@ -80,8 +82,14 @@ drugconnectivity_report_infographic_ui <- function(
 drugconnectivity_report_inputs <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
+    shiny::textAreaInput(
+      ns("ai_prompt"),
+      label = "User prompt:",
+      value = "Be concise. Do not use tables. Use prose. Include a discussion.",
+      rows = 5
+    ),
     shiny::actionButton(
-      ns("generate_btn"), "Generate!",
+      ns("ai_generate"), "Generate!",
       icon = icon("refresh"),
       class = "btn-outline-primary"
     )
@@ -99,6 +107,7 @@ drugconnectivity_report_inputs <- function(id) {
 drugconnectivity_report_server <- function(id,
                                            pgx,
                                            drugs,
+                                           rdb,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -106,9 +115,10 @@ drugconnectivity_report_server <- function(id,
     
     observeEvent( drugs(), {
       btn_count(runif(1))
+      infographic_info(" ")      
     })
 
-    observeEvent(input$generate_btn, {
+    observeEvent(input$ai_generate, {
       btn_count( btn_count() + 1)
     })
     
@@ -127,22 +137,38 @@ drugconnectivity_report_server <- function(id,
       progress$set(message = "creating AI report...", value = 0)
 
       pgx$drugs <- drugs()
-      rpt <- playbase::ai.summarize_drug_connectivity(pgx, ct=1, db=1, model=llm_model)
-      
+      db <- rdb()
+      rpt <- playbase::ai.create_report_drug_connectivity(
+        pgx, model=llm_model, db=db,
+        user.prompt = input$ai_prompt)
+        
       return(rpt)
     },
     ignoreNULL = FALSE,
     ignoreInit = FALSE
     )
 
+    output$downloadPDF <- shiny::downloadHandler(
+      filename = function() {
+        "drugcmap-report.pdf"
+      },
+      content = function(file) {
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message = "exporting to PDF...", value = 0.33)
+        rpt <- get_report()
+        playbase::markdownToPDF(rpt$report, file) 
+      }
+    )    
+    
     ##----------------------------------------------------------------------
-    ##------------------------- summary module --------------------------------
+    ##------------------------- summary module -----------------------------
     ##----------------------------------------------------------------------
 
     output$report_bullets <- shiny::renderUI({
       rpt <- get_report()
       ##shiny::req(rpt$bullets)
-      txt <- "Summarize this report"
+      txt <- "Summarize this report..."
       if(!is.null(rpt$bullets) && rpt$bullets!="") txt <- rpt$bullets
       tagList(
         shiny::HTML(markdown::markdownToHTML(txt, fragment.only=TRUE))
@@ -151,14 +177,17 @@ drugconnectivity_report_server <- function(id,
         
     text.RENDER <- function() {
       rpt <- get_report()
-      txt <- rpt$summary
+      txt <- rpt$report
       shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
-      res <- markdown::markdownToHTML(rpt$summary, fragment.only=TRUE)
       bb  <- markdown::markdownToHTML(rpt$bullets, fragment.only=TRUE)
+      if(input$as_html) {
+        txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+        txt <- shiny::HTML(txt)
+      }
       shiny::tagList(
         ##bs_alert(shiny::HTML(bb), translate=FALSE, closable=FALSE),
         ##shiny::br(),
-        shiny::div(shiny::HTML(res))
+        shiny::div(txt)
       )
     }
 
@@ -191,43 +220,20 @@ drugconnectivity_report_server <- function(id,
       infographic_path(outfile)
     }
     
-    cmap_create_infographic <- function(report, model, filename,
-                                        add.fallback = TRUE)
-    {
-      prompt <- paste("**Instructions**: Create an infographic for the following pharmacological mechanism-of-action analysis report.\n\n**summary**:", report)
-      out <- playbase::ai.create_image_gemini(
-        prompt,
-        model = model,
-        #model = "gemini-2.5-flash-image",
-        #model = "gemini-3-pro-image-preview",
-        api_key = Sys.getenv("GEMINI_API_KEY"),
-        format = "file",
-        filename = filename,
-        aspectRatio = "3:4",
-        imageSize = "1K"
-      )
-      dbg("[cmap_create_infographic] 2: filename = ",filename)
-      dbg("[cmap_create_infographic] 2: out = ",out)      
-      if(is.null(out) || !file.exists(out)) return(NULL)
-      dbg("[cmap_create_infographic] x:")
-      return(out)
-    }
-
     # Create ExtendedTask for background image generation
     infographic_task <- ExtendedTask$new(function(report, model, outfile) {
-      ##infographic_info("starting...")
       future_promise({
-        #outfile <- tempfile(fileext = '.jpg')
-        outfile <- try(cmap_create_infographic(
+        outfile <- try( playbase::ai.cmap_create_infographic(
           report = report,
           model = model,
           filename = outfile,
+          aspectRatio = c("4:3","16:9","3:4")[2],          
           add.fallback = TRUE
         ))
-        ##if(inherits(outfile,"try-error")) return(NULL)
+        if(inherits(outfile,"try-error")) return(NULL)
         outfile
       })
-    }) ## |> bslib::bind_task_button("generate_infographic")
+    }) 
     
     # Trigger the ExtendedTask when button is clicked
     observeEvent({
@@ -237,13 +243,10 @@ drugconnectivity_report_server <- function(id,
       if(is.null(rpt)) return(NULL)
       has.model <- length(input$img_model)>0 && input$img_model[1]!=""
       shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
-      report <- rpt$summary
+      report <- rpt$report
       model <- input$img_model
-      dbg("start infographic task...")
       infographic_info("starting...")
       outfile <- tempfile(fileext = '.jpg')
-      dbg("outfile = ", outfile)
-      dbg("model = ", model)
       infographic_task$invoke(report, model, outfile)
     })
     
@@ -251,22 +254,19 @@ drugconnectivity_report_server <- function(id,
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
-      dbg("[observe:infographic_task$status] status = ", status)
       if(status != "success") {
-        msg <- "..."
-        if(status == "initial") msg <- "..."
+        msg <- " "
+        if(status == "initial") msg <- " "
         if(status == "running") msg <- "generating image ..."
         infographic_info(msg)
       } else {
         task_result <- infographic_task$result()
-        dbg("[drugconnectivity_report_server] 1: task_result = ", task_result)        
       }
     })
 
     # Update reactive value when task completes
     observeEvent(infographic_task$result(), {
       task_result <- infographic_task$result()
-      dbg("[drugconnectivity_report_server] 2: task_result = ", task_result)
       infographic_path(task_result)
     })
 
