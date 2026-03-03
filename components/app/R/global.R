@@ -446,7 +446,10 @@ if (requireNamespace("omicsagentovi", quietly = TRUE)) {
 }
 
 ## Setup reticulate
-## reticulate::use_virtualenv()
+tryCatch(
+  reticulate::use_miniconda("r-reticulate"),
+  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
+)
 
 ## ------------------------------------------------------------------
 ## bigdash hooks
