@@ -150,7 +150,6 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
-            write.csv(X, "~/Desktop/XX.csv")
             nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
             if (!is.null(nX)) X=nX; rm(nX)
           } else {
