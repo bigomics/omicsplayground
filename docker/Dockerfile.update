@@ -73,6 +73,7 @@ RUN R -e "install.packages('quarto')"
 RUN R -e "devtools::install_github('bigomics/visNetwork')"
 RUN R -e "install.packages('svglite')"
 RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
+RUN R -e "devtools::install_github('bigomics/metaLINCS')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
