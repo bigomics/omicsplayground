@@ -172,7 +172,6 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       if (input$show_statdetails) {
-        # browser()
         sel.p <- grep("^p(\\.|$)", colnames(kstats.full))
         sel.q <- grep("^q(\\.|$)", colnames(kstats.full))
         pq.tables <- kstats.full[, c(sel.p, sel.q), drop = FALSE]
