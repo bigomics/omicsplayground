@@ -109,16 +109,6 @@ The grey module contains unassigned genes. Mention its size once in the
 introduction or summary (e.g., "149 genes were not assigned to any
 module"). Do not interpret it as a biological program.
 
-### Enrichment References
-
-- Reference enrichment terms via [n] brackets in the narrative
-- Use plain-English descriptions in prose: "DNA replication [1,2]"
-  not "REACTOME_DNA_REPLICATION [1]"
-- The Data References section at the end maps [n] to exact term names
-- When >100 terms are significant, summarize by theme — do not attempt
-  to reference them all
-- When 0 terms are significant, state it explicitly
-
 ### Cross-Module Patterns
 
 After all module subsections (before ## Discussion), include one paragraph

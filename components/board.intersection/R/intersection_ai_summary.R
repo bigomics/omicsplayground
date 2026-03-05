@@ -246,7 +246,7 @@ intersection_ai_summary_server <- function(id,
   # Load intersection methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.intersection/prompts/Intersection_methods.md"
+    "components/board.intersection/prompts/intersection_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

@@ -65,12 +65,14 @@ get_ai_model <- function(parent_session) {
 
 #' Create omicsai_diagram_config with profile defaults
 #' @param model_id Character; key into LLM_MODEL_PROFILES
+#' @param system_prompt Character; system prompt for diagram generation
 #' @param ... Extra args forwarded to omicsai_diagram_config()
 #' @return An omicsai_diagram_config object
-make_llm_diagram_config <- function(model_id, ...) {
+make_llm_diagram_config <- function(model_id, system_prompt, ...) {
   d <- LLM_MODEL_PROFILES[[model_id]]$defaults
   omicsai::omicsai_diagram_config(
     model = model_id,
+    system_prompt = system_prompt,
     temperature = d$temperature,
     ...
   )
@@ -102,6 +104,9 @@ make_llm_diagram_config <- function(model_id, ...) {
       "The request timed out. The service may be under load. ",
       "Please try again."
     ))
+  }
+  if (grepl("Empty response", msg, ignore.case = TRUE)) {
+    return("No response received from the AI model (this can happen during high demand). Please try again.")
   }
   if (grepl("No image data", msg, ignore.case = TRUE)) {
     return("The model returned no image. The prompt may have been blocked or the model is unavailable. Please try again.")
@@ -406,7 +411,14 @@ AiTextCardServer <- function(id,
       selected_style <- .aicards_coalesce(input$style, "short_summary")
       format_instr <- omicsai::omicsai_instructions(paste0("text/", selected_style))
       config <- base_config
-      config$system_prompt <- format_instr
+      ## Compose format instructions with board-supplied system prompt
+      ## (board's system_prompt contains methods context; do not overwrite it)
+      existing_sys <- base_config$system_prompt %||% ""
+      config$system_prompt <- if (nzchar(existing_sys)) {
+        paste(format_instr, existing_sys, sep = "\n\n")
+      } else {
+        format_instr
+      }
 
       params$style <- selected_style
       rv$system_prompt <- config$system_prompt
@@ -523,7 +535,9 @@ AiDiagramCardServer <- function(id,
     get_config <- .aicards_as_reactive_config(
       config_reactive,
       config_class = "omicsai_diagram_config",
-      default_fn = omicsai::omicsai_diagram_config
+      default_fn = function() {
+        stop("Diagram config is required and must include system_prompt from build_prompt(... )$system")
+      }
     )
 
     rv <- shiny::reactiveValues(
@@ -563,10 +577,18 @@ AiDiagramCardServer <- function(id,
         return()
       }
 
-      rv$prompt <- tryCatch(
-        paste(config$instructions, omicsai::omicsai_substitute_template(template, params), sep = "\n\n"),
-        error = function(e) conditionMessage(e)
-      )
+      rv$prompt <- tryCatch({
+        user_prompt <- omicsai::omicsai_substitute_template(template, params)
+        sys_prompt <- config$system_prompt %||% ""
+        if (nzchar(sys_prompt)) {
+          paste0(
+            "## System Prompt\n\n", sys_prompt,
+            "\n\n## User Prompt\n\n", user_prompt
+          )
+        } else {
+          user_prompt
+        }
+      }, error = function(e) conditionMessage(e))
 
       tryCatch({
         result <- omicsai::omicsai_gen_diagram(
@@ -685,7 +707,9 @@ AiImageCardServer <- function(id,
     get_config <- .aicards_as_reactive_config(
       config_reactive,
       config_class = "omicsai_image_config",
-      default_fn = omicsai::omicsai_image_config
+      default_fn = function() {
+        stop("Image config is required and must include system_prompt from build_prompt(... )$system")
+      }
     )
 
     rv <- shiny::reactiveValues(
@@ -725,10 +749,18 @@ AiImageCardServer <- function(id,
         return()
       }
 
-      rv$prompt <- tryCatch(
-        paste(config$instructions, omicsai::omicsai_substitute_template(template, params), sep = "\n\n"),
-        error = function(e) conditionMessage(e)
-      )
+      rv$prompt <- tryCatch({
+        user_prompt <- omicsai::omicsai_substitute_template(template, params)
+        sys_prompt <- config$system_prompt %||% ""
+        if (nzchar(sys_prompt)) {
+          paste0(
+            "## System Prompt\n\n", sys_prompt,
+            "\n\n## User Prompt\n\n", user_prompt
+          )
+        } else {
+          user_prompt
+        }
+      }, error = function(e) conditionMessage(e))
 
       tryCatch({
         rv$result <- omicsai::omicsai_gen_image(

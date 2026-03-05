@@ -90,9 +90,12 @@ pcsf_build_pathway_overlap <- function(pgx,
   network_genes <- intersect(network_genes, gmt_genes)
   if (length(network_genes) < 5) return(NULL)
 
-  gs_fc <- tryCatch(playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc,
+  gs_meta <- tryCatch(
+    playbase::pgx.getMetaMatrix(pgx, level = "geneset"),
     error = function(e) NULL
   )
+  gs_fc <- gs_meta$fc %||% NULL
+  gs_qv <- gs_meta$qv %||% NULL
   if (is.null(gs_fc) || !contrast %in% colnames(gs_fc)) return(NULL)
 
   gs_vals <- gs_fc[, contrast]
@@ -122,10 +125,17 @@ pcsf_build_pathway_overlap <- function(pgx,
   gs_sub <- gs_vals[relevant]
   gs_sub <- gs_sub[order(-abs(gs_sub))]
   gs_sub <- head(gs_sub, as.integer(n_top))
+  qv_sub <- rep(NA_real_, length(gs_sub))
+  if (!is.null(gs_qv) && contrast %in% colnames(gs_qv)) {
+    qv_vals <- tryCatch(gs_qv[names(gs_sub), contrast], error = function(e) NULL)
+    if (!is.null(qv_vals)) qv_sub <- as.numeric(qv_vals)
+  }
 
   data.frame(
+    pathway_id = names(gs_sub),
     pathway = sub(".*:", "", names(gs_sub)),
     logFC = as.numeric(gs_sub),
+    qv = qv_sub,
     network_genes = as.integer(overlap_counts[names(gs_sub)]),
     stringsAsFactors = FALSE,
     check.names = FALSE
@@ -213,6 +223,9 @@ extract_pcsf_context_data <- function(pgx,
   if (n_nodes < 20) caveats <- c(caveats, "Small inferred network; biological interpretation may be unstable.")
   if (nrow(hubs) < 5) caveats <- c(caveats, "Few hub genes passed ranking filters.")
   if (is.null(pathways) || nrow(pathways) == 0) caveats <- c(caveats, "No strong pathway overlap found for current network genes.")
+  hub_abs_logfc <- if (nrow(hubs) > 0 && "logFC" %in% colnames(hubs)) abs(hubs$logFC) else numeric(0)
+  hubs_have_modest_effects <- length(hub_abs_logfc) > 0 && all(hub_abs_logfc < 0.5, na.rm = TRUE)
+  max_abs_hub_logfc <- if (length(hub_abs_logfc) > 0) max(hub_abs_logfc, na.rm = TRUE) else NA_real_
 
   list(
     contrast = contrast,
@@ -234,6 +247,8 @@ extract_pcsf_context_data <- function(pgx,
       n_hubs_reportable = nrow(hubs),
       frac_steiner = if (n_nodes > 0) n_steiner / n_nodes else 0,
       has_pathway_signal = !is.null(pathways) && nrow(pathways) > 0,
+      hubs_have_modest_effects = hubs_have_modest_effects,
+      max_abs_hub_logfc = max_abs_hub_logfc,
       caveats = caveats
     )
   )

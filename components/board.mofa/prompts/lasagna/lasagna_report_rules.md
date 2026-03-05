@@ -1,5 +1,3 @@
-You are writing a LASAGNA multi-omics network report.
-
 Rules:
 - Prioritize concrete graph evidence: node/edge counts, layer participation, and top cross-layer links.
 - Distinguish inter-layer signals from intra-layer structure.

@@ -27,90 +27,74 @@ wgcna_diagram_style <- function() {
   )
 }
 
-#' Build layered WGCNA diagram prompt
+#' Build structured WGCNA diagram prompt
 #'
-#' Assembles the full prompt for diagram generation by layering:
-#' generic schema instructions, board-specific WGCNA rules, species
-#' context, and the AI report text. Node and link type names are
-#' derived from the style registry and substituted into the template.
+#' Assembles a structured prompt for diagram generation using
+#' \code{omicsai::diagram_prompt()} and \code{omicsai::build_prompt()}.
+#' The schema (diagram/network) goes in the system section; board-specific
+#' WGCNA rules, species context, and the AI report go in the board section.
+#'
+#' Node and link type names are derived from the style registry and
+#' substituted into the board rules template via \code{frag()}.
 #'
 #' @param report_text Character string with the AI report text
 #' @param organism Character string identifying the organism (e.g. "human", "mouse")
 #' @param board_root Character string path to the board.wgcna root directory
 #'
-#' @return Single character string with all prompt layers joined
+#' @return Named list with \code{system} and \code{board} character elements
 wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
   style <- wgcna_diagram_style()
   fmt_names <- function(nms) paste(sprintf("- `%s`", nms), collapse = "\n")
   node_names <- fmt_names(names(style$node_styles))
   link_names <- fmt_names(names(style$edge_styles))
 
-  layers <- list()
+  rules_path <- file.path(board_root, "prompts/wgcna_diagram_rules.md")
 
-  ## Layer 1: generic diagram JSON schema instructions (board-specific types injected)
-  base_tpl <- omicsai::omicsai_instructions("diagram/network")
-  layers[[1]] <- omicsai::omicsai_substitute_template(
-    base_tpl,
-    list(node_names = node_names, link_names = link_names),
-    strict = FALSE
+  p <- omicsai::diagram_prompt(
+    role        = omicsai::frag("system_base"),
+    task        = omicsai::frag("diagram/network"),
+    species     = omicsai::omicsai_species_prompt(organism),
+    board_rules = omicsai::frag(rules_path, list(node_names = node_names, link_names = link_names)),
+    report      = paste("## AI Report\n\n", report_text)
   )
-
-  ## Layer 2: board-specific WGCNA rules with node/link names injected
-  layers[[2]] <- tryCatch({
-    tpl <- omicsai::omicsai_load_template("prompts/diagram_wgcna_rules.md", root = board_root)
-    omicsai::omicsai_substitute_template(tpl, list(node_names = node_names, link_names = link_names))
-  }, error = function(e) "")
-
-  ## Layer 3: species-aware context
-  layers[[3]] <- tryCatch(
-    omicsai::omicsai_species_prompt(organism),
-    error = function(e) ""
-  )
-
-  ## Layer 4: the AI report itself (this is the data for the LLM)
-  layers[[4]] <- paste("## AI Report\n\n", report_text)
-
-  ## Drop empty layers and join with separator
-  layers <- layers[nzchar(layers)]
-  paste(layers, collapse = "\n\n---\n\n")
+  omicsai::build_prompt(p)
 }
 
-#' Build layered WGCNA image prompt
+#' Build structured WGCNA image prompt
 #'
-#' Assembles the full prompt for infographic generation by layering:
-#' species visual context, cleaned report text, and optional diagram
-#' edgelist. Parallel to \code{wgcna_build_diagram_prompt()} but
-#' targets the image model rather than the diagram LLM.
+#' Assembles a structured prompt for infographic generation using
+#' \code{omicsai::image_prompt()} and \code{omicsai::build_prompt()}.
+#' Returns a system prompt built from role + task and a board prompt
+#' built from species visual context, cleaned report text, and optional
+#' diagram edgelist.
 #'
 #' @param report_text Character string with the AI report text
 #' @param organism Character string identifying the organism (e.g. "human", "mouse")
 #' @param diagram_edgelist List with \code{$nodes} and \code{$edges} from diagram
 #'   result, or \code{NULL} if no diagram has been generated
 #'
-#' @return Single character string with all prompt layers joined
+#' @return Named list with \code{system} and \code{board} character elements
 wgcna_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
-  layers <- list()
+  ## Species visual context
+  species_img <- omicsai::omicsai_image_species_visual(organism)
 
-  ## Layer 1: species visual context
-  layers[[1]] <- omicsai::omicsai_image_species_visual(organism)
-
-  ## Layer 2: cleaned report — strip noise, humanise module names
+  ## Cleaned report — strip noise, humanise module names
   clean <- omicsai::omicsai_strip_report_noise(report_text)
   clean <- gsub("\\bME(\\w+)\\b", "Module \\1", clean)
-  layers[[2]] <- paste("<report>", clean, "</report>", sep = "\n")
 
-  ## Layer 3: diagram edgelist (if available)
+  ## Diagram edgelist (optional)
+  edge_text <- NULL
   if (!is.null(diagram_edgelist)) {
     dot <- omicsai::omicsai_edgelist_to_text(diagram_edgelist)
-    if (nzchar(dot)) {
-      layers[[3]] <- paste("<diagram>", dot, "</diagram>", sep = "\n")
-    }
+    if (nzchar(dot)) edge_text <- dot
   }
 
-  ## Drop empty layers and join — no markdown separator (unlike the diagram
-
-  ## prompt) because the image model ignores markdown structure; XML tags
-  ## on each layer provide sufficient delimitation.
-  layers <- layers[nzchar(layers)]
-  paste(layers, collapse = "\n\n")
+  p <- omicsai::image_prompt(
+    role             = omicsai::frag("system_base"),
+    task             = omicsai::frag("image/infographic", params = list(board_name = "WGCNA")),
+    species          = species_img,
+    report           = clean,
+    diagram_edgelist = edge_text
+  )
+  omicsai::build_prompt(p)
 }

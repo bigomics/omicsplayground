@@ -1,10 +1,12 @@
+## EXPERIMENT CONTEXT
+
+This analysis uses LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Associations) to summarize cross-layer structure in multi-omics data.
+
+Experiment: {{experiment}}
+
 ## Task
 
 Interpret the LASAGNA multipartite graph for contrast **{{contrast}}**.
-
-## Experiment
-
-{{experiment}}
 
 ## Quantitative Snapshot
 
@@ -26,13 +28,7 @@ Interpret the LASAGNA multipartite graph for contrast **{{contrast}}**.
 
 {{reliability_notes}}
 
-## Methods Context
-
-{{methods_context}}
-
 ## Output Requirements
-
-{{style_instructions}}
 
 Write a practical summary with these sections:
 1. `Executive Summary`

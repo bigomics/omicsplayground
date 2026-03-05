@@ -26,13 +26,7 @@ Interpret the MOFA factor **{{factor}}** using the quantitative evidence below.
 
 {{top_genes}}
 
-## Methods Context
-
-{{methods_context}}
-
 ## Output Requirements
-
-{{style_instructions}}
 
 Write a structured interpretation with these sections:
 1. `Executive Summary`
@@ -40,5 +34,3 @@ Write a structured interpretation with these sections:
 3. `Trait Relevance`
 4. `Cross-Omics Interpretation`
 5. `Caveats`
-
-Use quantitative values from the tables and avoid causal overclaims.

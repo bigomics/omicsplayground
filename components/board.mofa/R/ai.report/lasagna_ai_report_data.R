@@ -13,7 +13,7 @@ lasagna_ai_md_table <- function(dt) {
     function(v) omicsai::omicsai_format_num(v, 3)
   })
 
-  omicsai::omicsai_format_mdtable(dt, formatters = formatters)
+  paste(omicsai::omicsai_format_mdtable(dt, formatters = formatters), collapse = "\n")
 }
 
 lasagna_ai_build_summary_params <- function(res, contrast, pgx, ntop = 12L) {
@@ -88,7 +88,7 @@ lasagna_ai_build_report_tables <- function(res, contrast, pgx, ntop = 12L) {
 
 lasagna_ai_build_methods <- function(pgx, contrast) {
   template <- omicsai::omicsai_load_template(
-    file.path(LASAGNA_PROMPTS_DIR, "lasagna_report_methods.md")
+    file.path(LASAGNA_PROMPTS_DIR, "lasagna_methods.md")
   )
 
   report_date <- format(Sys.Date(), "%Y-%m-%d")

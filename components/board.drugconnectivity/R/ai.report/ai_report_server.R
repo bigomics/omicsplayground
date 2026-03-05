@@ -47,13 +47,19 @@ drugconnectivity_ai_report_server <- function(id,
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.drugconnectivity")
-        prompt <- drugconnectivity_build_diagram_prompt(txt, organism, board_root)
-        list(content = prompt)
+        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        organism <- pgx$organism %||% "human"
+        board_root <- file.path(OPG, "components/board.drugconnectivity")
+        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root)
         llm <- get_ai_model(parent_session)
         make_llm_diagram_config(llm,
+          system_prompt = bp$system,
           default_regulation = "association",
           node_styles = drugconnectivity_diagram_style()$node_styles,
           edge_styles = drugconnectivity_diagram_style()$edge_styles
@@ -74,11 +80,17 @@ drugconnectivity_ai_report_server <- function(id,
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        prompt <- drugconnectivity_build_image_prompt(txt, organism, edgelist)
-        list(content = prompt)
+        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        organism <- pgx$organism %||% "human"
+        diag <- diagram_result()
+        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
+        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -86,10 +98,10 @@ drugconnectivity_ai_report_server <- function(id,
         ))
         omicsai::omicsai_image_config(
           model = img_model,
+          system_prompt = bp$system,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K",
-          board_name = "Drug Connectivity"
+          image_size = "1K"
         )
       }),
       cache = cache,

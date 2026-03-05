@@ -221,7 +221,7 @@ correlation_ai_summary_server <- function(id,
   # Load correlation methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.correlation/prompts/Correlation_methods.md"
+    "components/board.correlation/prompts/correlation_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

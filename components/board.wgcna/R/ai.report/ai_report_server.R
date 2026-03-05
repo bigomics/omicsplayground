@@ -39,13 +39,19 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.wgcna")
-        prompt <- wgcna_build_diagram_prompt(txt, organism, board_root)
-        list(content = prompt)
+        bp <- wgcna_build_diagram_prompt(txt, organism, board_root)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        organism <- pgx$organism %||% "human"
+        board_root <- file.path(OPG, "components/board.wgcna")
+        bp <- wgcna_build_diagram_prompt(txt, organism, board_root)
         llm <- get_ai_model(parent_session)
         make_llm_diagram_config(llm,
+          system_prompt = bp$system,
           default_regulation = "positive",
           node_styles = wgcna_diagram_style()$node_styles,
           edge_styles = wgcna_diagram_style()$edge_styles
@@ -66,11 +72,17 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        prompt <- wgcna_build_image_prompt(txt, organism, edgelist)
-        list(content = prompt)
+        bp <- wgcna_build_image_prompt(txt, organism, edgelist)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        organism <- pgx$organism %||% "human"
+        diag <- diagram_result()
+        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
+        bp <- wgcna_build_image_prompt(txt, organism, edgelist)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -78,10 +90,10 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         ))
         omicsai::omicsai_image_config(
           model = img_model,
+          system_prompt = bp$system,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K",
-          board_name = "WGCNA"
+          image_size = "1K"
         )
       }),
       cache = cache,

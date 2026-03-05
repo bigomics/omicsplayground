@@ -48,40 +48,36 @@ lasagna_build_diagram_prompt <- function(report_text, organism, board_root) {
   node_names <- fmt_names(names(style$node_styles))
   link_names <- fmt_names(names(style$edge_styles))
 
-  layers <- list()
-  base_tpl <- omicsai::omicsai_instructions("diagram/network")
-  layers[[1]] <- omicsai::omicsai_substitute_template(
-    base_tpl,
-    list(node_names = node_names, link_names = link_names),
-    strict = FALSE
+  rules_path <- file.path(board_root, "prompts/lasagna/lasagna_diagram_rules.md")
+
+  p <- omicsai::diagram_prompt(
+    role        = omicsai::frag("system_base"),
+    task        = omicsai::frag("diagram/network"),
+    species     = omicsai::omicsai_species_prompt(organism),
+    board_rules = omicsai::frag(rules_path, list(node_names = node_names, link_names = link_names)),
+    report      = paste("## AI Report\n\n", report_text)
   )
-  layers[[2]] <- tryCatch({
-    tpl <- omicsai::omicsai_load_template("prompts/lasagna/diagram_lasagna_rules.md", root = board_root)
-    omicsai::omicsai_substitute_template(tpl, list(node_names = node_names, link_names = link_names))
-  }, error = function(e) "")
-  layers[[3]] <- tryCatch(omicsai::omicsai_species_prompt(organism), error = function(e) "")
-  layers[[4]] <- paste("## AI Report\n\n", report_text)
-  layers <- layers[nzchar(layers)]
-  paste(layers, collapse = "\n\n---\n\n")
+  omicsai::build_prompt(p)
 }
 
 lasagna_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
-  layers <- list()
-  layers[[1]] <- omicsai::omicsai_image_species_visual(organism)
-  layers[[2]] <- paste(
-    "<report>",
-    omicsai::omicsai_strip_report_noise(report_text),
-    "</report>",
-    sep = "\n"
-  )
+  species_img <- omicsai::omicsai_image_species_visual(organism)
+  clean <- omicsai::omicsai_strip_report_noise(report_text)
 
+  edge_text <- NULL
   if (!is.null(diagram_edgelist)) {
-    edges <- omicsai::omicsai_edgelist_to_text(diagram_edgelist)
-    if (nzchar(edges)) layers[[3]] <- paste("<diagram>", edges, "</diagram>", sep = "\n")
+    dot <- omicsai::omicsai_edgelist_to_text(diagram_edgelist)
+    if (nzchar(dot)) edge_text <- dot
   }
 
-  layers <- layers[nzchar(layers)]
-  paste(layers, collapse = "\n\n")
+  p <- omicsai::image_prompt(
+    role             = omicsai::frag("system_base"),
+    task             = omicsai::frag("image/infographic", params = list(board_name = "LASAGNA")),
+    species          = species_img,
+    report           = clean,
+    diagram_edgelist = edge_text
+  )
+  omicsai::build_prompt(p)
 }
 
 lasagna_ai_text_server <- function(id,
@@ -91,20 +87,17 @@ lasagna_ai_text_server <- function(id,
                                    controls,
                                    parent_session) {
   moduleServer(id, function(input, output, session) {
-    summary_template <- omicsai::omicsai_load_template(
-      file.path(LASAGNA_PROMPTS_DIR, "lasagna_ai_report_results.md")
-    )
 
-    report_rules <- omicsai::omicsai_load_template(
-      file.path(LASAGNA_PROMPTS_DIR, "lasagna_report_rules.md")
-    )
+    # ---- Shared: prompt template paths ----
 
-    methods_context <- omicsai::omicsai_load_template(
-      file.path(LASAGNA_PROMPTS_DIR, "LASAGNA_methods.md")
-    )
+    summary_data_path   <- file.path(LASAGNA_PROMPTS_DIR, "lasagna_summary_data.md")
+    interpretation_path <- file.path(LASAGNA_PROMPTS_DIR, "lasagna_interpretation.md")
 
+    # ---- Prompt caches (for instant toggle without regeneration) ----
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
+
+    # ---- SUMMARY MODE: per-contrast summary ----
 
     ai_summary <- shiny::eventReactive(
       list(controls$trigger(), controls$selected_module(), contrast_reactive()),
@@ -119,26 +112,37 @@ lasagna_ai_text_server <- function(id,
         params <- lasagna_ai_build_summary_params(res, contrast, pgx, ntop = 12L)
         shiny::req(params)
 
-        params$methods_context <- omicsai::omicsai_substitute_template(
-          methods_context,
-          list(experiment = params$experiment)
-        )
-        params$style_instructions <- omicsai::omicsai_instructions(
-          paste0("text/", controls$summary_style() %||% "short_summary")
-        )
+        organism <- pgx$organism %||% NULL
+        style <- controls$summary_style() %||% "short_summary"
 
-        prompt <- omicsai::omicsai_substitute_template(summary_template, params)
-        summary_prompt_cache(paste0("# Summary Prompt\n\n", prompt))
-
-        out <- omicsai::omicsai_gen_text(
-          template = summary_template,
-          params = params,
-          config = omicsai::omicsai_config(model = model)
+        p <- omicsai::summary_prompt(
+          role    = omicsai::frag("system_base"),
+          task    = omicsai::frag(paste0("text/", style)),
+          species = omicsai::omicsai_species_prompt(organism),
+          context = omicsai::frag(interpretation_path),
+          data    = omicsai::frag(summary_data_path, params)
         )
-        out$text
+        bp <- omicsai::build_prompt(p)
+
+        summary_prompt_cache(paste0(
+          "# SYSTEM PROMPT\n\n", bp$system,
+          "\n\n---\n\n",
+          "# USER MESSAGE\n\n", bp$board
+        ))
+
+        cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system)
+        result <- tryCatch(
+          omicsai::omicsai_gen_text(bp$board, config = cfg),
+          error = function(e) {
+            shiny::validate(shiny::need(FALSE, .aicards_friendly_error(conditionMessage(e))))
+          }
+        )
+        result$text
       },
       ignoreNULL = FALSE
     )
+
+    # ---- REPORT MODE: single-shot integrated report ----
 
     ai_report <- shiny::eventReactive(controls$trigger(), {
       if (controls$mode() != "report" || controls$trigger() < 1) return(NULL)
@@ -148,48 +152,63 @@ lasagna_ai_text_server <- function(id,
       res <- graph_data_reactive()
       shiny::req(contrast, res)
 
-      tables <- lasagna_ai_build_report_tables(res, contrast, pgx, ntop = 12L)
+      progress <- shiny::Progress$new()
+      on.exit(progress$close())
 
-      sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("text/report.md")
-        txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
-        omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(text/report.md not found)")
+      ## Step 1: Build structured data tables
+      ## Note: lasagna_ai_build_report_tables returns a string directly (not list$text)
+      progress$set(message = "Extracting contrast data...", value = 0.1)
+      data_content <- lasagna_ai_build_report_tables(res, contrast, pgx, ntop = 12L)
 
-      user_message <- omicsai::collapse_lines(
-        omicsai::omicsai_substitute_template(
-          methods_context,
-          list(experiment = pgx$name %||% pgx$description %||% "omics experiment")
-        ),
-        report_rules,
-        omicsai::omicsai_species_prompt(pgx$organism %||% NULL),
-        "---",
-        tables,
-        sep = "\n\n"
+      ## Step 2: Build structured prompt
+      board_rules_path <- file.path(LASAGNA_PROMPTS_DIR, "lasagna_report_rules.md")
+      organism <- pgx$organism %||% NULL
+
+      ## Pre-render methods/context (reused in Step 4 as deterministic appendix)
+      methods_context <- lasagna_ai_build_methods(pgx, contrast)
+
+      p <- omicsai::report_prompt(
+        role        = omicsai::frag("system_base"),
+        task        = omicsai::frag("text/report"),
+        species     = omicsai::omicsai_species_prompt(organism),
+        context     = omicsai::frag(interpretation_path),
+        board_rules = omicsai::frag(board_rules_path),
+        data        = data_content
       )
+      bp <- omicsai::build_prompt(p)
 
       report_prompt_cache(paste0(
-        "# SYSTEM PROMPT\n\n", sys_prompt,
+        "# SYSTEM PROMPT\n\n", bp$system,
         "\n\n---\n\n",
-        "# USER MESSAGE\n\n", user_message
+        "# USER MESSAGE\n\n", bp$board
       ))
 
-      report_input <- omicsai::collapse_lines(
-        sys_prompt,
-        "---",
-        user_message,
-        sep = "\n\n"
+      ## Step 3: Generate report via single LLM call
+      ## Use omicsai_gen_text (NOT gen_report — that would double-load text/report.md)
+      progress$set(message = "Generating report...", value = 0.3)
+
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
+      cache <- omicsai::omicsai_cache_init("mem")
+      result <- tryCatch(
+        omicsai::omicsai_gen_text(bp$board, config = cfg, cache = cache),
+        error = function(e) {
+          shiny::validate(shiny::need(FALSE, .aicards_friendly_error(conditionMessage(e))))
+        }
       )
 
-      result <- omicsai::omicsai_gen_report(
-        template = report_input,
-        model = model,
-        max_words = 1500L
-      )
+      ## Safety net: prepend H1 if missing
+      if (!grepl("^# ", result$text)) {
+        result$text <- paste0("# Analysis Report\n\n", result$text)
+      }
 
-      methods <- lasagna_ai_build_methods(pgx, contrast)
-      paste(result$text, methods, sep = "\n\n")
+      ## Step 4: Append deterministic methods section
+      full_report <- paste(result$text, methods_context, sep = "\n\n")
+
+      progress$set(message = "Done!", value = 1)
+      full_report
     }, ignoreNULL = FALSE)
+
+    # ---- Unified text content (instant toggle between result and prompt) ----
 
     ai_text <- shiny::reactive({
       show <- isTRUE(controls$show_prompt())
@@ -233,17 +252,21 @@ lasagna_ai_report_server <- function(id,
       params_reactive = shiny::reactive({
         txt <- text_result$report_text() %||% ""
         shiny::req(nzchar(txt))
-        prompt <- lasagna_build_diagram_prompt(
-          report_text = txt,
-          organism = pgx$organism %||% "human",
-          board_root = file.path(OPG, "components/board.mofa")
-        )
-        list(content = prompt)
+        organism <- pgx$organism %||% "human"
+        board_root <- file.path(OPG, "components/board.mofa")
+        bp <- lasagna_build_diagram_prompt(txt, organism, board_root)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        organism <- pgx$organism %||% "human"
+        board_root <- file.path(OPG, "components/board.mofa")
+        bp <- lasagna_build_diagram_prompt(txt, organism, board_root)
         llm <- get_ai_model(parent_session)
         make_llm_diagram_config(llm,
+          system_prompt = bp$system,
           default_regulation = "cross_layer",
           node_styles = lasagna_diagram_style()$node_styles,
           edge_styles = lasagna_diagram_style()$edge_styles
@@ -263,15 +286,18 @@ lasagna_ai_report_server <- function(id,
         shiny::req(nzchar(txt))
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        prompt <- lasagna_build_image_prompt(
-          report_text = txt,
-          organism = pgx$organism %||% "human",
-          diagram_edgelist = edgelist
-        )
-        list(content = prompt)
+        organism <- pgx$organism %||% "human"
+        bp <- lasagna_build_image_prompt(txt, organism, edgelist)
+        list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
+        txt <- text_result$report_text() %||% ""
+        shiny::req(nzchar(txt))
+        diag <- diagram_result()
+        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
+        organism <- pgx$organism %||% "human"
+        bp <- lasagna_build_image_prompt(txt, organism, edgelist)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -279,10 +305,10 @@ lasagna_ai_report_server <- function(id,
         ))
         omicsai::omicsai_image_config(
           model = img_model,
+          system_prompt = bp$system,
           style = controls$image_style() %||% "bigomics",
           n_blocks = as.integer(controls$image_blocks() %||% 1L),
-          image_size = "1K",
-          board_name = "LASAGNA"
+          image_size = "1K"
         )
       }),
       cache = cache,

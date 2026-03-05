@@ -239,7 +239,7 @@ mofa_ai_summary_server <- function(id,
   # Load template from board.mofa prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.mofa/prompts/mofa_results.md"
+    "components/board.mofa/prompts/mofa/mofa_summary_data.md"
   )
 
   template_reactive <- shiny::reactive({
@@ -249,7 +249,7 @@ mofa_ai_summary_server <- function(id,
   # Load MOFA methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.mofa/prompts/MOFA_methods.md"
+    "components/board.mofa/prompts/mofa/mofa_interpretation.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

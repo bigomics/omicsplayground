@@ -184,7 +184,7 @@ expression_ai_summary_server <- function(id,
   # Load expression methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.expression/prompts/Expression_methods.md"
+    "components/board.expression/prompts/expression_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

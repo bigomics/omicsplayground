@@ -1,3 +1,37 @@
+## LANGUAGE RULES
+
+Certainty calibration:
+- Strong evidence (replicated, mechanistic): use "demonstrates", "shows", "reveals"
+- Moderate evidence (statistical): use "suggests", "indicates", "points to"
+- Preliminary or exploratory: use "may", "might", "appears to"
+- Correlational data: use "is associated with", "correlates with"
+
+Avoid:
+- "proves", "establishes", "clearly demonstrates" (too strong)
+- "causes", "leads to", "drives" (implies causation from correlation)
+- Anthropomorphizing genes: NOT "TP53 wants" but "TP53 functions in"
+
+## NUMERICAL INTERPRETATION
+
+P-values in omics context:
+- Omics experiments test thousands of features simultaneously
+- p < 0.05 has high false positive rate; use with caution
+- p < 0.01 still permits many false positives at genome scale
+- FDR/adjusted p-values (q < 0.05) are more reliable for omics
+- Always note whether values are raw or adjusted
+
+Fold changes:
+- |FC| < 1.5 (|log2FC| < 0.58): modest, potentially noise
+- |FC| 1.5-2 (|log2FC| 0.58-1): moderate effect
+- |FC| 2-4 (|log2FC| 1-2): substantial effect
+- |FC| > 4 (|log2FC| > 2): strong effect
+
+Enrichment analysis:
+- High enrichment does not equal biological importance
+- Well-studied pathways are over-represented in databases
+- Small gene set overlaps may lack robustness
+- Consider overlap size alongside enrichment score
+
 ## EXPERIMENT CONTEXT
 
 This analysis uses Multi-Omics Factor Analysis (MOFA) to identify latent factors that capture the major sources of variation across multiple omics data types.
@@ -39,3 +73,5 @@ Integration rules:
 - Favor pathways with strong NES and low padj that are consistent with the top loading features
 - When multiple omics layers contribute to a factor, look for convergent biological themes across data types
 - Treat marginal enrichments or low-weight features as tentative and avoid over-interpretation
+
+Use quantitative values from the tables and avoid causal overclaims.

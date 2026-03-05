@@ -255,7 +255,7 @@ featuremap_ai_summary_server <- function(id,
   # Load feature map methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.featuremap/prompts/FeatureMap_methods.md"
+    "components/board.featuremap/prompts/featuremap_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

@@ -230,7 +230,7 @@ tcga_ai_summary_server <- function(id,
   # Load TCGA methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.tcga/prompts/TCGA_methods.md"
+    "components/board.tcga/prompts/tcga_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

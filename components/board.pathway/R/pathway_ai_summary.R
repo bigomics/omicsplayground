@@ -202,7 +202,7 @@ pathway_ai_summary_server <- function(id,
   # Load Pathway methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.pathway/prompts/Pathway_methods.md"
+    "components/board.pathway/prompts/pathway_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

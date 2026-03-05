@@ -17,13 +17,13 @@ mofa_ai_compact_feature_table <- function(dt) {
     stringsAsFactors = FALSE
   )
 
-  omicsai::omicsai_format_mdtable(
+  paste(omicsai::omicsai_format_mdtable(
     fmt,
     formatters = list(
       Weight = function(x) omicsai::omicsai_format_num(x, 3),
       Centrality = function(x) omicsai::omicsai_format_num(x, 3)
     )
-  )
+  ), collapse = "\n")
 }
 
 mofa_ai_compact_pathway_table <- function(dt) {
@@ -34,13 +34,13 @@ mofa_ai_compact_pathway_table <- function(dt) {
   dt$pathway <- sub(".*:", "", dt$pathway)
   if ("padj" %in% colnames(dt)) colnames(dt)[colnames(dt) == "padj"] <- "q-value"
 
-  omicsai::omicsai_format_mdtable(
+  paste(omicsai::omicsai_format_mdtable(
     dt,
     formatters = list(
       NES = function(x) omicsai::omicsai_format_num(x, 3),
       `q-value` = omicsai::omicsai_format_pvalue
     )
-  )
+  ), collapse = "\n")
 }
 
 mofa_ai_build_summary_params <- function(mofa, pgx, factor_name, ntop = 12L) {
@@ -167,7 +167,7 @@ mofa_ai_build_report_tables <- function(mofa, pgx, max_contexts = 8L, ntop = 10L
 
 mofa_ai_build_methods <- function(mofa, pgx) {
   template <- omicsai::omicsai_load_template(
-    file.path(MOFA_PROMPTS_DIR, "mofa_report_methods.md")
+    file.path(MOFA_PROMPTS_DIR, "mofa_methods.md")
   )
 
   report_date <- format(Sys.Date(), "%Y-%m-%d")

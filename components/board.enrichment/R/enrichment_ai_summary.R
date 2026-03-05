@@ -235,7 +235,7 @@ enrichment_ai_summary_server <- function(id,
   # Load enrichment methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.enrichment/prompts/Enrichment_methods.md"
+    "components/board.enrichment/prompts/enrichment_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

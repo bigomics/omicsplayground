@@ -190,7 +190,7 @@ signature_ai_summary_server <- function(id,
   # Load Signature methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.signature/prompts/Signature_methods.md"
+    "components/board.signature/prompts/signature_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

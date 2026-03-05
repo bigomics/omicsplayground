@@ -203,7 +203,7 @@ drugconnectivity_ai_summary_server <- function(id,
   # Load template from board.drugconnectivity prompts directory
   board_template_path <- file.path(
     OPG,
-    "components/board.drugconnectivity/prompts/drugconnectivity_results.md"
+    "components/board.drugconnectivity/prompts/drugconnectivity_summary_data.md"
   )
 
   template_reactive <- shiny::reactive({
@@ -213,7 +213,7 @@ drugconnectivity_ai_summary_server <- function(id,
   # Load drug connectivity methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.drugconnectivity/prompts/DrugConnectivity_methods.md"
+    "components/board.drugconnectivity/prompts/drugconnectivity_interpretation.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

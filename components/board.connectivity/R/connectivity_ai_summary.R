@@ -244,7 +244,7 @@ connectivity_ai_summary_server <- function(id,
   # Load connectivity methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.connectivity/prompts/Connectivity_methods.md"
+    "components/board.connectivity/prompts/connectivity_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

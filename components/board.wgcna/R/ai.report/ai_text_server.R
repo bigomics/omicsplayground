@@ -5,12 +5,16 @@
 # =============================================================================
 # Shiny module that handles text generation for both summary and report modes.
 # All pure data extraction lives in ai_report_data.R.
+#
+# Prompt assembly uses omicsai structured prompt classes (summary_prompt,
+# report_prompt) with frag() for deferred template loading.
 
 #' WGCNA AI Text Server
 #'
 #' Handles text generation for both summary and report modes.
 #' In summary mode, generates a single-module summary via omicsai_gen_text().
-#' In report mode, generates multi-module summaries then integrates via omicsai_create_report().
+#' In report mode, generates a full integrated report via omicsai_gen_text()
+#' with structured prompt assembly.
 #'
 #' @param id Module namespace ID
 #' @param wgcna Reactive returning WGCNA results object
@@ -22,24 +26,10 @@
 wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
   moduleServer(id, function(input, output, session) {
 
-    # ---- Shared: templates, context, model ----
+    # ---- Shared: prompt template paths ----
 
-    ai_summary_template <- omicsai::omicsai_load_template(
-      file.path(OPG, "components/board.wgcna/prompts/wgcna_results.md")
-    )
-
-    ai_context_template <- omicsai::omicsai_load_template(
-      file.path(OPG, "components/board.wgcna/prompts/WGCNA_methods.md")
-    )
-
-    ai_context <- shiny::reactive({
-      w <- wgcna()
-      shiny::req(w)
-      omicsai::omicsai_substitute_template(
-        ai_context_template,
-        list(experiment = w$experiment %||% "omics experiment")
-      )
-    })
+    summary_data_path   <- file.path(BOARD_PROMPTS_DIR, "wgcna_summary_data.md")
+    interpretation_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_interpretation.md")
 
     # ---- Prompt caches (for instant toggle without regeneration) ----
     summary_prompt_cache <- shiny::reactiveVal(NULL)
@@ -59,18 +49,31 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       model <- get_ai_model(parent_session)
 
       style <- controls$summary_style() %||% "short_summary"
-      params <- wgcna_build_summary_params(w, module, pgx)
-      params$methods_context <- ai_context()
-      params$style_instructions <- omicsai::omicsai_instructions(paste0("text/", style))
+      data_params <- wgcna_build_summary_params(w, module, pgx)
+      organism <- pgx$organism %||% NULL
+
+      p <- omicsai::summary_prompt(
+        role    = omicsai::frag("system_base"),
+        task    = omicsai::frag(paste0("text/", style)),
+        species = omicsai::omicsai_species_prompt(organism),
+        context = omicsai::frag(interpretation_path),
+        data    = omicsai::frag(summary_data_path, data_params)
+      )
+      bp <- omicsai::build_prompt(p)
 
       ## Cache the prompt for instant toggle
-      prompt <- omicsai::omicsai_substitute_template(ai_summary_template, params)
-      summary_prompt_cache(paste0("# Summary Prompt\n\n", prompt))
+      summary_prompt_cache(paste0(
+        "# SYSTEM PROMPT\n\n", bp$system,
+        "\n\n---\n\n",
+        "# USER MESSAGE\n\n", bp$board
+      ))
 
-      result <- omicsai::omicsai_gen_text(
-        template = ai_summary_template,
-        params = params,
-        config = omicsai::omicsai_config(model = model)
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system)
+      result <- tryCatch(
+        omicsai::omicsai_gen_text(bp$board, config = cfg),
+        error = function(e) {
+          shiny::validate(shiny::need(FALSE, .aicards_friendly_error(conditionMessage(e))))
+        }
       )
       result$text
     }, ignoreNULL = FALSE)
@@ -96,21 +99,8 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       progress$set(message = "Classifying modules...", value = 0.2)
       ranking <- wgcna_rank_modules(w)
 
-      ## Step 3: Load board rules
-      board_rules <- paste(readLines(
-        file.path(BOARD_PROMPTS_DIR, "wgcna_report_rules.md"),
-        warn = FALSE
-      ), collapse = "\n")
-
-      ## Step 4: Species context (graceful: empty string if unknown)
-      organism <- pgx$organism %||% NULL
-      species_text <- omicsai::omicsai_species_prompt(organism)
-
-      ## Step 5: Assemble user message (board owns all domain logic)
-      user_message <- omicsai::collapse_lines(
-        board_rules,
-        species_text,
-        "---",
+      ## Step 3: Assemble data content (domain data only, no instructions)
+      data_content <- omicsai::collapse_lines(
         "## Module Signal Classification",
         omicsai::omicsai_format_ranking(ranking),
         "---",
@@ -119,30 +109,50 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
         sep = "\n\n"
       )
 
-      ## Cache the full prompt for instant toggle
-      sys_prompt <- tryCatch({
-        fp <- omicsai::omicsai_prompt_path("text/report.md")
-        txt <- paste(readLines(fp, warn = FALSE), collapse = "\n")
-        omicsai::omicsai_substitute_template(txt, list(max_words = "1500"))
-      }, error = function(e) "(text/report.md not found)")
+      ## Step 4: Build structured prompt
+      board_rules_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_report_rules.md")
+      organism <- pgx$organism %||% NULL
 
+      ## Pre-render methods/context (reused in Step 6 as deterministic appendix)
+      methods_text <- wgcna_build_methods(w, pgx)
+
+      p <- omicsai::report_prompt(
+        role        = omicsai::frag("system_base"),
+        task        = omicsai::frag("text/report"),
+        species     = omicsai::omicsai_species_prompt(organism),
+        context     = omicsai::frag(interpretation_path),
+        board_rules = omicsai::frag(board_rules_path),
+        data        = data_content
+      )
+      bp <- omicsai::build_prompt(p)
+
+      ## Cache the full prompt for instant toggle
       report_prompt_cache(paste0(
-        "# SYSTEM PROMPT\n\n", sys_prompt,
+        "# SYSTEM PROMPT\n\n", bp$system,
         "\n\n---\n\n",
-        "# USER MESSAGE\n\n", user_message
+        "# USER MESSAGE\n\n", bp$board
       ))
 
-      ## Step 6: Generate report via single LLM call
+      ## Step 5: Generate report via single LLM call
+      ## Use omicsai_gen_text (NOT gen_report — that would double-load text/report.md)
       progress$set(message = "Generating report...", value = 0.3)
 
-      result <- omicsai::omicsai_gen_report(
-        template = user_message,
-        model = model
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
+      cache <- omicsai::omicsai_cache_init("mem")
+      result <- tryCatch(
+        omicsai::omicsai_gen_text(bp$board, config = cfg, cache = cache),
+        error = function(e) {
+          shiny::validate(shiny::need(FALSE, .aicards_friendly_error(conditionMessage(e))))
+        }
       )
 
-      ## Step 7: Append deterministic methods section
-      methods <- wgcna_build_methods(w, pgx)
-      full_report <- paste(result$text, methods, sep = "\n\n")
+      ## Safety net: prepend H1 if missing (same as gen_report does)
+      if (!grepl("^# ", result$text)) {
+        result$text <- paste0("# Analysis Report\n\n", result$text)
+      }
+
+      ## Step 6: Append deterministic methods section
+      full_report <- paste(result$text, methods_text, sep = "\n\n")
 
       progress$set(message = "Done!", value = 1)
       full_report

@@ -11,6 +11,15 @@ Required edge semantics:
 - `drug -> moa` with relation `has_moa`
 - `drug -> target` with relation `hits`
 
+Primary extraction rule for sample-to-drug edges:
+- Prioritize explicit polarity phrases in the report text such as
+  `<sample/contrast> is opposed by <drug>` and `<sample/contrast> is mimicked by
+  <drug>`.
+- Create `contrast -> drug` edges only from explicit polarity statements in the
+  report text.
+- Do not infer `contrast -> drug` polarity from MOA links, target links, or
+  general narrative context alone.
+
 Prioritization:
 - Include the strongest opposing drugs first.
 - Include mimicking drugs only when they add mechanistic context.

@@ -239,7 +239,7 @@ timeseries_ai_summary_server <- function(id,
   # Load TimeSeries methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.timeseries/prompts/TimeSeries_methods.md"
+    "components/board.timeseries/prompts/timeseries_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

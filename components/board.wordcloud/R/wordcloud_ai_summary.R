@@ -138,7 +138,7 @@ wordcloud_ai_summary_server <- function(id,
   # Load WordCloud methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.wordcloud/prompts/WordCloud_methods.md"
+    "components/board.wordcloud/prompts/wordcloud_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

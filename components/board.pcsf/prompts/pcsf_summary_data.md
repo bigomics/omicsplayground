@@ -2,12 +2,6 @@
 
 Generate a concise, evidence-grounded summary for a PCSF network result.
 
-{{style_instructions}}
-
-## Methods Context
-
-{{methods_context}}
-
 ## Input Context
 
 **Contrast:** {{contrast}}

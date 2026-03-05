@@ -1,8 +1,36 @@
-## EXPERIMENT CONTEXT
+## LANGUAGE RULES
 
-This analysis uses the Prize-Collecting Steiner Forest (PCSF) algorithm to reconstruct biological networks from differential expression data.
+Certainty calibration:
+- Strong evidence (replicated, mechanistic): use "demonstrates", "shows", "reveals"
+- Moderate evidence (statistical): use "suggests", "indicates", "points to"
+- Preliminary or exploratory: use "may", "might", "appears to"
+- Correlational data: use "is associated with", "correlates with"
 
-Experiment: {{experiment}}
+Avoid:
+- "proves", "establishes", "clearly demonstrates" (too strong)
+- "causes", "leads to", "drives" (implies causation from correlation)
+- Anthropomorphizing genes: NOT "TP53 wants" but "TP53 functions in"
+
+## NUMERICAL INTERPRETATION
+
+P-values in omics context:
+- Omics experiments test thousands of features simultaneously
+- p < 0.05 has high false positive rate; use with caution
+- p < 0.01 still permits many false positives at genome scale
+- FDR/adjusted p-values (q < 0.05) are more reliable for omics
+- Always note whether values are raw or adjusted
+
+Fold changes:
+- |FC| < 1.5 (|log2FC| < 0.58): modest, potentially noise
+- |FC| 1.5-2 (|log2FC| 0.58-1): moderate effect
+- |FC| 2-4 (|log2FC| 1-2): substantial effect
+- |FC| > 4 (|log2FC| > 2): strong effect
+
+Enrichment analysis:
+- High enrichment does not equal biological importance
+- Well-studied pathways are over-represented in databases
+- Small gene set overlaps may lack robustness
+- Consider overlap size alongside enrichment score
 
 ## PCSF-SPECIFIC GUIDANCE
 
@@ -29,3 +57,14 @@ Interpretation rules:
 - The ratio of Steiner to terminal nodes indicates how much the algorithm relied on known interactions to connect the network
 - Enriched pathways identified among network nodes provide functional context for the network modules
 - Consider both the direction (up/down) and magnitude of fold changes when interpreting network modules
+
+## Language Rules
+
+- Use language like "suggests", "is consistent with", and "prioritizes for follow-up".
+- Do not claim proven causality or clinical efficacy.
+- Keep uncertainty explicit when evidence is sparse.
+
+## Actionability Rules
+
+- Recommend concrete, feasible follow-ups tied to reported hubs/pathways.
+- Include at least one orthogonal validation strategy.

@@ -312,7 +312,7 @@ compare_ai_summary_server <- function(id,
   # Load compare methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.compare/prompts/Compare_methods.md"
+    "components/board.compare/prompts/compare_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

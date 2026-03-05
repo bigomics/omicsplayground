@@ -181,7 +181,7 @@ biomarker_ai_summary_server <- function(id,
   # Load biomarker methods context template
   context_template_path <- file.path(
     OPG,
-    "components/board.biomarker/prompts/Biomarker_methods.md"
+    "components/board.biomarker/prompts/biomarker_context.md"
   )
   context_template <- omicsai::omicsai_load_template(context_template_path)
 

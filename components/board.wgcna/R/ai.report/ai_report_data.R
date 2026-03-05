@@ -257,26 +257,12 @@ wgcna_build_report_tables <- function(wgcna, pgx,
     }
   }
 
-  # --- Format text output ---
-  lines <- character(0)
+  # --- Build computed sub-blocks for template substitution ---
 
-  # Header
-  lines <- c(lines,
-    paste0("EXPERIMENT: ", experiment),
-    paste0("ORGANISM: ", organism),
-    paste0("SAMPLES: ", n_samples, " (", sample_groups, ")"),
-    paste0("FEATURES: ", n_features, " (", n_wgcna_features, " used for WGCNA)"),
-    paste0("WGCNA PARAMETERS: ", network_type,
-           ", power=", power,
-           ", minModSize=", min_mod_size,
-           ", mergeCutHeight=", merge_cut_height),
-    ""
-  )
-
-  # Overview table sorted by sig enrichments descending
   overview_order <- names(sort(vapply(overview_rows, function(x) x$n_sig, integer(1)),
                                decreasing = TRUE))
 
+  # Overview table
   grey_size <- length(wgcna$me.genes[["MEgrey"]])
   ov_rows <- lapply(overview_order, function(m) {
     ov <- overview_rows[[m]]
@@ -298,15 +284,12 @@ wgcna_build_report_tables <- function(wgcna, pgx,
     stringsAsFactors = FALSE
   )
   overview_df <- do.call(rbind, ov_rows)
-  lines <- c(lines, "MODULE OVERVIEW:")
-  lines <- c(lines, omicsai::omicsai_format_mdtable(overview_df))
-  lines <- c(lines, "")
+  overview_table <- paste(omicsai::omicsai_format_mdtable(overview_df), collapse = "\n")
 
-  # Per-module detail
-  lines <- c(lines, "PER-MODULE DETAIL:")
-
-  for (mod in overview_order) {
+  # Per-module detail blocks
+  module_blocks <- vapply(overview_order, function(mod) {
     mdat <- module_data[[mod]]
+    lines <- character(0)
     lines <- c(lines, sprintf("### %s (%d genes)", mod, mdat$size))
 
     # Eigengene profile
@@ -368,7 +351,7 @@ wgcna_build_report_tables <- function(wgcna, pgx,
       )
     }
 
-    # Enrichment overlap (within per-module block)
+    # Enrichment overlap
     if (include_overlap && !is.null(module_data[[mod]]$enrichment_overlap)) {
       ov <- module_data[[mod]]$enrichment_overlap
       gl <- module_data[[mod]]$enrichment_genes
@@ -385,29 +368,51 @@ wgcna_build_report_tables <- function(wgcna, pgx,
       }
     }
 
-    # Gene families (within per-module block)
+    # Gene families
     if (include_families && !is.null(families_text[[mod]])) {
       lines <- c(lines, sprintf("Gene family enrichment: %s",
                                 paste(families_text[[mod]], collapse = "; ")))
     }
 
-    lines <- c(lines, "")
+    paste(lines, collapse = "\n")
+  }, character(1))
+
+  module_detail <- paste(module_blocks, collapse = "\n\n")
+
+  # Optional sections
+  contrasts_str <- if (!is.null(contrasts_text)) {
+    paste(contrasts_text, collapse = "\n")
+  } else {
+    "(no contrasts available)"
   }
 
-  # --- Optional sections (NULL-safe via collapse_lines) ---
-  contrasts_section <- if (!is.null(contrasts_text)) {
-    c("EXPERIMENTAL CONTRASTS:", contrasts_text)
-  }
-  module_cors_section <- if (!is.null(module_cors_text) && length(module_cors_text) > 0) {
-    c("MODULE-MODULE EIGENGENE CORRELATIONS (|r| >= 0.70):", module_cors_text)
+  module_cors_str <- if (!is.null(module_cors_text) && length(module_cors_text) > 0) {
+    paste(module_cors_text, collapse = "\n")
+  } else {
+    "(no strong correlations detected)"
   }
 
-  text <- omicsai::collapse_lines(
-    paste(lines, collapse = "\n"),
-    contrasts_section,
-    module_cors_section,
-    sep = "\n\n"
+  # --- Render template ---
+  report_data_tmpl <- omicsai::omicsai_load_template(
+    file.path(BOARD_PROMPTS_DIR, "wgcna_report_data.md")
   )
+
+  text <- omicsai::omicsai_substitute_template(report_data_tmpl, list(
+    experiment       = experiment,
+    organism         = organism,
+    n_samples        = as.character(n_samples),
+    sample_groups    = sample_groups,
+    n_features       = as.character(n_features),
+    n_wgcna_features = as.character(n_wgcna_features),
+    wgcna_params     = paste0(network_type,
+                              ", power=", power,
+                              ", minModSize=", min_mod_size,
+                              ", mergeCutHeight=", merge_cut_height),
+    overview_table   = overview_table,
+    module_detail    = module_detail,
+    contrasts        = contrasts_str,
+    module_cors      = module_cors_str
+  ))
 
   list(
     text = text,
@@ -753,7 +758,7 @@ wgcna_rank_modules <- function(wgcna) {
 #'
 #' @return Character string with the rendered methods section
 wgcna_build_methods <- function(wgcna, pgx) {
-  template_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_report_methods.md")
+  template_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_methods.md")
   template <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
 
   # Extract values (same logic as prompt_optim/pipeline/build_methods.R)
