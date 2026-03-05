@@ -181,23 +181,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
           #        register_mcp(chat)
         }
 
-        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
-        prompt <- input$prompt
-        prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say creating images is not supported yet.")
-        prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
-
-        ai_model <- getUserOption(session, "llm_model")
-        req(ai_model)
-
-        message("Creating new chat model ", ai_model)
-        chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = prompt)
-
-        if (!is.null(chat)) {
-          ## ------------ still experimential --------
-          #        register_tools(chat)
-          #        register_mcp(chat)
-        }
-
         if (n_turns() == 0) {
           ask_copilot("Describe this experiment. Then ask 'how can I help?'",
             showq = FALSE, suggest = TRUE

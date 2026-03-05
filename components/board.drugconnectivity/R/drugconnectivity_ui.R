@@ -6,23 +6,28 @@
 DrugConnectivityInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    withTooltip(shiny::selectInput(ns("dsea_contrast"), "Contrast:", choices = NULL),
+    withTooltip(shiny::selectInput(ns("contrast"), "Contrast:", choices = NULL),
       "Select the contrast corresponding to the comparison of interest.",
       placement = "top"
     ),
-    withTooltip(shiny::selectInput(ns("dsea_method"), "Analysis type:", choices = ""),
+    withTooltip(shiny::selectInput(ns("method"), "Analysis type:", choices = ""),
       "Select type of drug enrichment analysis: activity or sensitivity (if available).",
       placement = "top"
     ),
-    shiny::hr(),
     withTooltip(
       shiny::checkboxInput(
-        ns("dseatable_filter"),
+        ns("filter_table"),
         "only annotated drugs",
         FALSE
       ),
       "Show only annotated drugs."
-    )
+    ),
+    shiny::br(),
+    shinyjs::hidden( shiny::div(
+      id = ns("aiui"),
+      drugconnectivity_report_inputs(ns("cmap_report"))
+    ))
+
   )
 }
 
@@ -129,13 +134,47 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
+   
+
+  ## ----------------------------------------------------------------
+  panel3 <- shiny::tabPanel(
+    "AI Summary",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 180px)",
+      row_heights = c("auto", 1),
+      ##bs_alert( htmlOutput(ns("cmap_alert")), translate=FALSE),
+      ##htmlOutput(ns("cmap_alert")), 
+      div(class="alert alert-primary p-2", 
+        drugconnectivity_report_bullets_ui(ns("cmap_report"))),
+      bslib::layout_columns(
+        col_widths = c(7,5),
+        height = "calc(100vh - 180px)",            
+        drugconnectivity_report_summary_ui(
+          ns("cmap_report"),
+          title = "Summary",
+          caption = "AI-generated summary",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        ),                        
+        drugconnectivity_report_infographic_ui(
+          ns("cmap_report"),
+          title = "Infographic",
+          caption = "AI-generated infographic",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        )
+      )
+    )
+  )
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
     panel1 <- shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,
-      panel2
+      panel2,
+      panel3      
     )
   )
 }
