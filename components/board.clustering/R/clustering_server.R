@@ -184,6 +184,17 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
     })
 
+    ## update split radio button label to match current level
+    shiny::observeEvent(input$hm_level, {
+      shiny::req(input$hm_level)
+      level_label <- tspan(input$hm_level, js = FALSE)
+      choices <- c("none", "phenotype", "contrast", "gene")
+      choices_names <- c("none", "phenotype", "contrast", level_label)
+      names(choices) <- choices_names
+      sel <- input$hm_splitby
+      shiny::updateRadioButtons(session, "hm_splitby", choices = choices, selected = sel)
+    })
+
     shiny::observeEvent(pgx, {
       shiny::req(pgx$datatype)
       datatype <- pgx$datatype
