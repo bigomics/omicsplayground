@@ -63,15 +63,14 @@ biomarker_plot_heatmap_server <- function(id,
                                           pdx_predicted,
                                           is_computed,
                                           watermark = FALSE) {
-
   moduleServer(
-
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         shiny::req(pgx$X, is_computed())
         res <- calcVariableImportance()
-        if (is.null(res)) return(NULL)
+        if (is.null(res)) {
+          return(NULL)
+        }
         gg <- rownames(res$X)
         gg <- intersect(gg, rownames(pgx$X))
         kk <- colnames(res$X)
@@ -93,7 +92,6 @@ biomarker_plot_heatmap_server <- function(id,
         ii <- which(rownames(X) %in% tree.vars)
         if (length(ii)) rownames(X)[ii] <- paste(rownames(X)[ii], "*****")
         res <- list(X = X, splitx = splitx)
-
       })
 
       plot.RENDER <- function() {
@@ -120,7 +118,9 @@ biomarker_plot_heatmap_server <- function(id,
       }
       plot_data_output <- function() {
         res <- plot_data()
-        if (is.null(res)) return(NULL)
+        if (is.null(res)) {
+          return(NULL)
+        }
         # average duplicated columns in the data, keep only one entry for duplicates
         res$X <- t(do.call(rbind, by(t(res$X), row.names(t(res$X)), FUN = colMeans)))
         return(res$X)

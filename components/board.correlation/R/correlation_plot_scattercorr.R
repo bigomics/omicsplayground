@@ -35,7 +35,7 @@ correlation_plot_scattercorr_ui <- function(
         selected = "3x3", inline = TRUE
       ),
       "Choose the layout for correlation plots.",
-      ),
+    ),
     withTooltip(
       shiny::checkboxInput(ns("swapaxis"), "Swap XY-axes"),
       "Transpose plot, i.e. swap X-axis and Y-axis."
@@ -43,9 +43,9 @@ correlation_plot_scattercorr_ui <- function(
     withTooltip(
       shiny::checkboxInput(ns("corr_line"), "Show correlation (r=1) line"),
       "Show correlation (r=1) line."
-      )    
+    )
   )
-  
+
   PlotModuleUI(ns("plot"),
     title = title,
     plotlib = "plotly",
@@ -118,7 +118,6 @@ correlation_plot_scattercorr_server <- function(id,
 
     plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.07, -0.06),
                                margin_l = 50, margin_b = 10, interplot_margin = 0.03) {
-
       dt <- cor_scatter.DATA()
 
       shiny::req(dt)
@@ -194,20 +193,20 @@ correlation_plot_scattercorr_server <- function(id,
             line = list(color = "rgb(22, 96, 167)", dash = "dot"),
             mode = "lines",
             inherit = FALSE
-          );
+          )
         # Add diagonal line (x=y, r=1).
         if (input$corr_line) {
-          plt <- plt %>%  
+          plt <- plt %>%
             plotly::add_trace(
-              x = range(c(x,y)),
-              y = range(c(x,y)),
+              x = range(c(x, y)),
+              y = range(c(x, y)),
               showlegend = FALSE,
               type = "scatter",
               line = list(color = "black", dash = "dash", width = 0.3),
               mode = "lines",
               inherit = FALSE
             )
-        };
+        }
         plt %>%
           # Legend
           plotly::layout(

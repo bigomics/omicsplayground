@@ -49,11 +49,8 @@ biomarker_plot_importance_server <- function(id,
                                              calcVariableImportance,
                                              is_computed,
                                              watermark = FALSE) {
-
   moduleServer(
-
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         out <- tryCatch(
           {
@@ -63,7 +60,9 @@ biomarker_plot_importance_server <- function(id,
             NULL
           }
         )
-        if (is.null(out)) return(NULL)
+        if (is.null(out)) {
+          return(NULL)
+        }
         return(list(R = out$R))
       })
 
@@ -77,13 +76,16 @@ biomarker_plot_importance_server <- function(id,
         rownames(R) <- playbase::probe2symbol(rownames(R), pgx$genes, "gene_name", fill_na = TRUE)
         par(mfrow = c(1, 1), oma = c(1, 1, 1, 1) * 0.2)
         par(mar = c(8, 4, 1, 0.2), mgp = c(2.5, 0.8, 0))
-        barplot(t(R), las = 3, horiz = FALSE,
-          cex.names = 0.8, ylab = "cumulative rank")
+        barplot(t(R),
+          las = 3, horiz = FALSE,
+          cex.names = 0.8, ylab = "cumulative rank"
+        )
         klr <- grey.colors(ncol(R))
         legend("topright",
           legend = rev(colnames(R)), fill = rev(klr),
           cex = 0.75, y.intersp = 0.75,
-          inset = c(0.03, -0.03), xpd = TRUE)
+          inset = c(0.03, -0.03), xpd = TRUE
+        )
       }
 
       PlotModuleServer(

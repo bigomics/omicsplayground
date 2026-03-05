@@ -98,11 +98,8 @@ TimeSeriesBoard.features_server <- function(id,
                                             timevar,
                                             contrast,
                                             watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       sel.timevar <- timevar()
       genes <- head(table_module$rownames_all(), 16)
       expr <- pgx$X
@@ -137,7 +134,6 @@ TimeSeriesBoard.features_server <- function(id,
 
       df <- data.frame(gene = xgenes, expr = xexpr, time = xtime, group = xgroup)
       df
-
     })
 
     stats_data <- shiny::reactive({
@@ -194,7 +190,6 @@ TimeSeriesBoard.features_server <- function(id,
       kstats <- kstats[order(-kstats$log2FC), ]
 
       return(kstats)
-
     })
 
     render_plot <- function() {
