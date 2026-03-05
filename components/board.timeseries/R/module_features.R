@@ -172,12 +172,13 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       if (input$show_statdetails) {
-        sel.p <- grep("^p[.]", colnames(kstats.full))
-        sel.q <- grep("^q[.]", colnames(kstats.full))
+        # browser()
+        sel.p <- grep("^p(\\.|$)", colnames(kstats.full))
+        sel.q <- grep("^q(\\.|$)", colnames(kstats.full))
         pq.tables <- kstats.full[, c(sel.p, sel.q), drop = FALSE]
         if (ik %in% names(pgx$gx.meta$meta)) {
-          sel.p <- grep("^p[.]", colnames(ikstats.full))
-          sel.q <- grep("^q[.]", colnames(ikstats.full))
+          sel.p <- grep("^p(\\.|$)", colnames(ikstats.full))
+          sel.q <- grep("^q(\\.|$)", colnames(ikstats.full))
           ik.pq.tables <- ikstats.full[, c(sel.p, sel.q), drop = FALSE]
           colnames(ik.pq.tables) <- paste0(colnames(ik.pq.tables), ".interaction")
           pq.tables <- cbind(pq.tables, ik.pq.tables)
