@@ -812,12 +812,13 @@ app_server <- function(input, output, session) {
     ## Hide beta main tabs
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
-    bigdash.toggleTab(session, "preservation-tab", show.beta)
+    bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
     bigdash.toggleTab(session, "mwgcna-tab", show.beta)
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    toggleTab("wgcna-tabs", "AI Report", show.beta) 
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)

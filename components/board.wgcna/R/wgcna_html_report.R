@@ -137,16 +137,20 @@ wgcna_report_bullets_ui <- function(id) {
 wgcna_report_inputs <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::sliderInput(
-      ns("topratio"),
-      "Top ratio:", 0.6, 0.9, 0.8, 0.1
-    ),
-    shiny::textAreaInput(
-      ns("userprompt"),
-      label = "User prompt:",
-      value = "Be concise. Do not use tables. Use prose. Conclude with a discussion.",
-      rows = 5
-    ),
+    if(opt$DEVMODE) {
+      shiny::sliderInput(
+        ns("topratio"),
+        "Top ratio:", 0.6, 0.95, 0.85, 0.05
+      )
+    },
+    if(opt$DEVMODE) {
+      shiny::textAreaInput(
+        ns("userprompt"),
+        label = "User prompt:",
+        value = "Be concise. Do not use tables. Use prose. Conclude with a discussion.",
+        rows = 5
+      )
+    },
     shiny::actionButton(
       ns("generate_btn"), "Generate!",
       icon = icon("refresh"),
@@ -196,7 +200,7 @@ wgcna_html_report_server <- function(id,
       if(is.null(annot) && !is.null(wgcna$annot)) {
         annot <- wgcna$annot
       }
-
+      
       rpt <- playbase::wgcna.create_report(
         wgcna,
         ai_model = llm_model,
