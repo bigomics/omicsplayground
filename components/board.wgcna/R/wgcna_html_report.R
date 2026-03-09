@@ -36,30 +36,6 @@ wgcna_html_report_ui <- function(
   )
 }
 
-## wgcna_report_pdf_ui <- function(
-##   id,
-##   label = "",
-##   title = "",
-##   info.text = "",
-##   caption = "",
-##   height,
-##   width
-## ) {
-##   ns <- shiny::NS(id)
-  
-##   PlotModuleUI(
-##     ns("pdfview"),
-##     outputFunc = uiOutput,
-##     title = title,
-##     label = label,
-##     info.text = info.text,
-##     caption = caption,
-##     height = height,
-##     width = width,
-##     download.fmt = c()
-##   )
-## }
-
 wgcna_report_diagram_ui <- function(
   id,
   title = "",
