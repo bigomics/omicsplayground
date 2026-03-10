@@ -46,6 +46,13 @@ IMAGE_MODEL_PROFILES <- list(
   )
 )
 
+# ── Mirai daemon for async image generation ────────────────────────
+# Start one background worker and pre-load omicsai so the first
+# image request doesn't time out waiting for daemon + package startup.
+mirai::daemons(1)
+mirai::mirai({ library(omicsai); "ready" })  # warm up daemon, prevents coldstart timeout
+options(omicsai_image_timeout_s = 90)  # fail fast, retry handles cold starts
+
 #' Get the current AI model from user options
 #'
 #' Reads the LLM model from session userData (set by the root app server).
@@ -682,7 +689,9 @@ AiDiagramCardServer <- function(id,
 
 #' AI image card server
 #'
-#' Synchronous image generation module replacing omicsai_image_server wiring.
+#' Async image generation module using ExtendedTask + mirai.
+#' Runs omicsai_gen_image() in a background worker so the Shiny app
+#' stays interactive during the 30-60s image generation.
 #'
 #' @param id Shiny module namespace ID
 #' @param params_reactive Reactive returning template params list
@@ -713,11 +722,42 @@ AiImageCardServer <- function(id,
     )
 
     rv <- shiny::reactiveValues(
+      status = "idle",
       result = NULL,
       error = NULL,
       prompt = NULL,
-      generate_requested = FALSE
+      generate_requested = FALSE,
+      retry = FALSE,
+      last_invoke_args = NULL
     )
+
+    # ── ExtendedTask: runs omicsai_gen_image in a background mirai worker ──
+    image_task <- shiny::ExtendedTask$new(function(full_prompt, config_list, filename) {
+      mirai::mirai(
+        {
+          tryCatch({
+            options(omicsai_image_timeout_s = 90)  # fail fast, retry handles cold starts
+            cfg <- omicsai::omicsai_image_config(
+              model = config_list$model,
+              system_prompt = config_list$system_prompt,
+              style = config_list$style,
+              n_blocks = config_list$n_blocks,
+              aspect_ratio = config_list$aspect_ratio,
+              image_size = config_list$image_size
+            )
+            omicsai::omicsai_gen_image(
+              template = full_prompt,
+              params = NULL,
+              config = cfg,
+              filename = filename
+            )
+          }, error = function(e) e)
+        },
+        full_prompt = full_prompt,
+        config_list = config_list,
+        filename = filename
+      )
+    })
 
     shiny::observeEvent(input$generate, {
       rv$generate_requested <- TRUE
@@ -729,18 +769,14 @@ AiImageCardServer <- function(id,
       }, ignoreInit = TRUE)
     }
 
+    # Validate inputs and launch background task
     shiny::observe({
       shiny::req(isTRUE(rv$generate_requested))
       rv$error <- NULL
 
-      # params_reactive may be NULL while upstream text is still generating;
-      # shiny::req() here is intentional — the observer stays subscribed and
-      # re-fires automatically once the text reactive becomes available.
       params <- params_reactive()
       shiny::req(params)
 
-      # template and config are structurally fixed; if they are NULL something
-      # is mis-configured — surface an error rather than leaving the spinner up.
       template <- get_template()
       config <- get_config()
       if (is.null(template) || is.null(config)) {
@@ -749,31 +785,94 @@ AiImageCardServer <- function(id,
         return()
       }
 
-      rv$prompt <- tryCatch({
-        user_prompt <- omicsai::omicsai_substitute_template(template, params)
-        sys_prompt <- config$system_prompt %||% ""
-        if (nzchar(sys_prompt)) {
-          paste0(
-            "## System Prompt\n\n", sys_prompt,
-            "\n\n## User Prompt\n\n", user_prompt
-          )
-        } else {
-          user_prompt
-        }
-      }, error = function(e) conditionMessage(e))
+      # Pre-substitute template in the main thread (params may contain reactives)
+      full_prompt <- tryCatch(
+        omicsai::omicsai_substitute_template(template, params),
+        error = function(e) NULL
+      )
+      if (is.null(full_prompt)) {
+        rv$error <- "Failed to assemble image prompt."
+        rv$generate_requested <- FALSE
+        return()
+      }
 
-      tryCatch({
-        rv$result <- omicsai::omicsai_gen_image(
-          template = template,
-          params = params,
-          config = config,
-          cache = module_cache
-        )
-        rv$generate_requested <- FALSE
-      }, error = function(e) {
-        rv$error <- .aicards_friendly_error(conditionMessage(e))
-        rv$generate_requested <- FALSE
-      })
+      # Store prompt for show_prompt toggle
+      sys_prompt <- config$system_prompt %||% ""
+      rv$prompt <- if (nzchar(sys_prompt)) {
+        paste0("## System Prompt\n\n", sys_prompt,
+               "\n\n## User Prompt\n\n", full_prompt)
+      } else {
+        full_prompt
+      }
+
+      # Serialize config as a plain list (S7/S3 objects don't survive mirai transport)
+      config_list <- list(
+        model = config$model,
+        system_prompt = config$system_prompt,
+        style = config$style,
+        n_blocks = config$n_blocks,
+        aspect_ratio = config$aspect_ratio,
+        image_size = config$image_size
+      )
+
+      filename <- tempfile(fileext = ".png")
+      rv$generate_requested <- FALSE
+      rv$status <- "running"
+      rv$error <- NULL
+      rv$result <- NULL
+      rv$retry <- FALSE
+      rv$last_invoke_args <- list(
+        full_prompt = full_prompt,
+        config_list = config_list,
+        filename = filename
+      )
+      message(sprintf("[INFO][%s] --- [AI-IMAGE] starting background generation (model: %s)",
+                      format(Sys.time(), "%Y-%m-%d %H:%M:%S"), config_list$model))
+      image_task$invoke(full_prompt, config_list, filename)
+    })
+
+    # Collect result when background task completes
+    shiny::observeEvent(image_task$result(), {
+      task_result <- image_task$result()
+      if (inherits(task_result, "error") || inherits(task_result, "errorValue")) {
+        msg <- if (inherits(task_result, "error")) {
+          conditionMessage(task_result)
+        } else {
+          as.character(task_result)
+        }
+        message(sprintf("[WARN][%s] --- [AI-IMAGE] generation failed: %s",
+                        format(Sys.time(), "%Y-%m-%d %H:%M:%S"), msg))
+        # HTTP 500: server overloaded — skip retry, show friendly message
+        is_500 <- inherits(task_result, "httr2_http_500")
+        if (is_500) {
+          rv$error <- "Image generation server is temporarily overloaded. Please try again \u2014 click 'Generate!'."
+          rv$status <- "error"
+          rv$retry <- FALSE
+          rv$last_invoke_args <- NULL
+          return()
+        }
+        # Retry once on first failure (timeouts, transient errors)
+        if (!isTRUE(rv$retry) && !is.null(rv$last_invoke_args)) {
+          message(sprintf("[INFO][%s] --- [AI-IMAGE] retrying (attempt 2 of 2)...",
+                          format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+          rv$retry <- TRUE
+          args <- rv$last_invoke_args
+          image_task$invoke(args$full_prompt, args$config_list, args$filename)
+        } else {
+          rv$error <- .aicards_friendly_error(msg)
+          rv$status <- "error"
+          rv$retry <- FALSE
+          rv$last_invoke_args <- NULL
+        }
+      } else {
+        message(sprintf("[INFO][%s] --- [AI-IMAGE] generation complete (model: %s)",
+                        format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+                        task_result$metadata$model %||% "unknown"))
+        rv$result <- task_result
+        rv$status <- "done"
+        rv$retry <- FALSE
+        rv$last_invoke_args <- NULL
+      }
     })
 
     image_render <- function() {
@@ -789,6 +888,21 @@ AiImageCardServer <- function(id,
           class = "ai-prompt-view",
           style = "overflow-y:auto;max-height:100%;padding:1em;",
           shiny::HTML(opg_markdown_to_html(txt))
+        ))
+      }
+
+      # Show status while background task is running
+      if (rv$status == "running") {
+        msg <- if (isTRUE(rv$retry)) {
+          "This is taking longer than usual\u2026"
+        } else {
+          "Generating infographic (this can take 60\u2013120s)\u2026"
+        }
+        return(shiny::div(
+          class = "text-muted",
+          style = "display:flex;align-items:center;justify-content:center;height:100%;font-size:1.1em;",
+          shiny::icon("spinner", class = "fa-spin me-2"),
+          msg
         ))
       }
 

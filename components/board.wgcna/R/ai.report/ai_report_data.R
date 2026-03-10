@@ -37,8 +37,8 @@ BOARD_PROMPTS_DIR <- file.path(OPG, "components/board.wgcna/prompts")
 #' @return List with \code{text} (character) and \code{data} (structured list)
 wgcna_build_report_tables <- function(wgcna, pgx,
                                       n_modules = 8L,
-                                      ntop_enrichment = 5L,
-                                      ntop_genes = 5L,
+                                      ntop_enrichment = 20L,
+                                      ntop_genes = 50L,
                                       include_module_cors = TRUE,
                                       include_overlap = TRUE,
                                       include_families = TRUE,
@@ -214,9 +214,9 @@ wgcna_build_report_tables <- function(wgcna, pgx,
         if ("genes" %in% colnames(te)) {
           gene_lists <- vapply(te$genes, function(g) {
             genes <- strsplit(as.character(g), "\\|")[[1]]
-            if (length(genes) > 10) {
-              paste0(paste(head(genes, 10), collapse = "|"),
-                     sprintf(" (+%d more)", length(genes) - 10))
+            if (length(genes) > 25) {
+              paste0(paste(head(genes, 25), collapse = "|"),
+                     sprintf(" (+%d more)", length(genes) - 25))
             } else {
               paste(genes, collapse = "|")
             }
@@ -451,7 +451,7 @@ wgcna_build_summary_params <- function(wgcna, module, pgx) {
     all(c("geneset", "score", "q.value", "overlap") %in% colnames(gse))) {
     gse <- gse[order(gse$q.value, gse$score, na.last = TRUE), , drop = FALSE]
     sig <- gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
-    top_gse <- head(sig, 8)
+    top_gse <- head(sig, 20)
     if (nrow(top_gse) > 0) {
       gset_df <- data.frame(
         Pathway = top_gse$geneset,
@@ -516,7 +516,7 @@ wgcna_build_summary_params <- function(wgcna, module, pgx) {
       base_stats <- base_stats[order(-base_stats$score), , drop = FALSE]
     }
 
-    top_genes <- head(base_stats, 8)
+    top_genes <- head(base_stats, 50)
     features <- top_genes$feature
     symbols <- resolve_symbols(features, annot)
 

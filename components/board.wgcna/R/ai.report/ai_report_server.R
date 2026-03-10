@@ -30,8 +30,34 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
     # Controls
     controls <- ai_report_controls_server("controls", module_choices = ai_module_choices)
 
+    # ── Coordinator-owned progress bar (spans text + diagram) ──
+    report_progress <- shiny::reactiveVal(NULL)
+
+    shiny::observeEvent(controls$trigger(), {
+      if (controls$mode() != "report" || controls$trigger() < 1) return()
+      old <- report_progress()
+      if (!is.null(old)) try(old$close(), silent = TRUE)
+      p <- shiny::Progress$new(session)
+      p$set(message = "Starting report generation...", value = 0)
+      report_progress(p)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] starting report generation...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+    })
+
     # Card servers
-    text_result <- wgcna_ai_text_server("text", wgcna, pgx, controls, parent_session)
+    text_result <- wgcna_ai_text_server(
+      "text", wgcna, pgx, controls, parent_session,
+      progress_reactive = report_progress
+    )
+
+    # Update progress when text completes → diagram starts
+    shiny::observeEvent(text_result$report_text(), {
+      txt <- text_result$report_text()
+      shiny::req(txt)
+      p <- report_progress()
+      message(sprintf("[INFO][%s] --- [AI-REPORT] generating network diagram...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) p$set(message = "Generating network diagram...", value = 0.7)
+    })
+
     diagram_result <- AiDiagramCardServer(
       "layout-diagram",
       params_reactive = shiny::reactive({
@@ -72,7 +98,10 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        bp <- wgcna_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- wgcna_build_image_prompt(txt, organism, edgelist,
+                                       style_name = img_style, n_blocks = img_blocks)
         list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
@@ -82,7 +111,10 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        bp <- wgcna_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- wgcna_build_image_prompt(txt, organism, edgelist,
+                                       style_name = img_style, n_blocks = img_blocks)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -91,8 +123,8 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         omicsai::omicsai_image_config(
           model = img_model,
           system_prompt = bp$system,
-          style = controls$image_style() %||% "bigomics",
-          n_blocks = as.integer(controls$image_blocks() %||% 1L),
+          style = img_style,
+          n_blocks = img_blocks,
           image_size = "1K"
         )
       }),
@@ -106,6 +138,19 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       }),
       watermark = watermark
     )
+
+    # Close progress when diagram completes
+    shiny::observeEvent(diagram_result(), {
+      diag <- diagram_result()
+      shiny::req(diag)
+      p <- report_progress()
+      message(sprintf("[INFO][%s] --- [AI-REPORT] diagram complete, closing progress", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) {
+        p$set(message = "Done! Infographic generating in background...", value = 1)
+        p$close()
+        report_progress(NULL)
+      }
+    })
 
     # Layout rendering
     ai_report_layout_server(

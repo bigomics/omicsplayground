@@ -32,16 +32,12 @@ opg_markdown_to_html <- function(text) {
     return("")
   }
 
-  safe <- gsub("&", "&amp;", txt, fixed = TRUE)
-  safe <- gsub("<", "&lt;", safe, fixed = TRUE)
-  safe <- gsub(">", "&gt;", safe, fixed = TRUE)
-
   if (requireNamespace("commonmark", quietly = TRUE)) {
-    html <- commonmark::markdown_html(safe, hardbreaks = TRUE, extensions = TRUE)
+    html <- commonmark::markdown_html(txt, hardbreaks = TRUE, extensions = TRUE)
     return(sub("\\n$", "", html))
   }
 
-  markdown::markdownToHTML(text = safe, fragment.only = TRUE)
+  markdown::markdownToHTML(text = txt, fragment.only = TRUE)
 }
 
 setUserOption <- function(session, var, value) {

@@ -78,7 +78,10 @@ drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_r
 #'   result, or \code{NULL} if no diagram has been generated
 #'
 #' @return Named list with \code{system} and \code{board} character elements
-drugconnectivity_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
+drugconnectivity_build_image_prompt <- function(report_text, organism,
+                                                diagram_edgelist = NULL,
+                                                style_name = NULL,
+                                                n_blocks = 1L) {
   species_img <- omicsai::omicsai_image_species_visual(organism)
 
   clean <- omicsai::omicsai_strip_report_noise(report_text)
@@ -89,10 +92,17 @@ drugconnectivity_build_image_prompt <- function(report_text, organism, diagram_e
     if (nzchar(dot)) edge_text <- dot
   }
 
+  style_frag  <- if (!is.null(style_name) && nzchar(style_name)) {
+    omicsai::frag(paste0("image/styles/", style_name))
+  }
+  blocks_frag <- omicsai::frag(paste0("image/blocks/blocks_", as.integer(n_blocks)))
+
   p <- omicsai::image_prompt(
     role             = omicsai::frag("system_base"),
     task             = omicsai::frag("image/infographic", params = list(board_name = "Drug Connectivity")),
     species          = species_img,
+    style            = style_frag,
+    blocks           = blocks_frag,
     report           = clean,
     diagram_edgelist = edge_text
   )

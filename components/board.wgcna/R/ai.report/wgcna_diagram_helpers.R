@@ -74,7 +74,10 @@ wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
 #'   result, or \code{NULL} if no diagram has been generated
 #'
 #' @return Named list with \code{system} and \code{board} character elements
-wgcna_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
+wgcna_build_image_prompt <- function(report_text, organism,
+                                     diagram_edgelist = NULL,
+                                     style_name = NULL,
+                                     n_blocks = 1L) {
   ## Species visual context
   species_img <- omicsai::omicsai_image_species_visual(organism)
 
@@ -89,10 +92,18 @@ wgcna_build_image_prompt <- function(report_text, organism, diagram_edgelist = N
     if (nzchar(dot)) edge_text <- dot
   }
 
+  ## Style and blocks fragments (resolved by build_prompt via .resolve_slot)
+  style_frag  <- if (!is.null(style_name) && nzchar(style_name)) {
+    omicsai::frag(paste0("image/styles/", style_name))
+  }
+  blocks_frag <- omicsai::frag(paste0("image/blocks/blocks_", as.integer(n_blocks)))
+
   p <- omicsai::image_prompt(
     role             = omicsai::frag("system_base"),
     task             = omicsai::frag("image/infographic", params = list(board_name = "WGCNA")),
     species          = species_img,
+    style            = style_frag,
+    blocks           = blocks_frag,
     report           = clean,
     diagram_edgelist = edge_text
   )

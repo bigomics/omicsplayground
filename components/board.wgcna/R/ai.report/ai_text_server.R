@@ -23,7 +23,8 @@
 #' @param parent_session Parent Shiny session (for getUserOption)
 #'
 #' @return List with reactives: text (current mode), report_text (report-only)
-wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
+wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
+                                  progress_reactive = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ---- Shared: prompt template paths ----
@@ -88,18 +89,26 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       shiny::req(w)
       model <- get_ai_model(parent_session)
 
-      progress <- shiny::Progress$new()
-      on.exit(progress$close())
+      # Use coordinator progress if available, otherwise create local
+      p <- if (!is.null(progress_reactive)) progress_reactive() else NULL
+      local_progress <- is.null(p)
+      if (local_progress) {
+        p <- shiny::Progress$new()
+      }
 
       ## Step 1: Build structured data tables
-      progress$set(message = "Extracting module data...", value = 0.1)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] extracting module data...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) p$set(message = "Extracting module data...", value = 0.05)
       tables <- wgcna_build_report_tables(w, pgx)
 
       ## Step 2: Classify module signal strength
-      progress$set(message = "Classifying modules...", value = 0.2)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] classifying modules...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) p$set(message = "Classifying modules...", value = 0.10)
       ranking <- wgcna_rank_modules(w)
 
       ## Step 3: Assemble data content (domain data only, no instructions)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] assembling prompt...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) p$set(message = "Assembling prompt...", value = 0.15)
       data_content <- omicsai::collapse_lines(
         "## Module Signal Classification",
         omicsai::omicsai_format_ranking(ranking),
@@ -116,7 +125,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       ## Pre-render methods/context (reused in Step 6 as deterministic appendix)
       methods_text <- wgcna_build_methods(w, pgx)
 
-      p <- omicsai::report_prompt(
+      rp <- omicsai::report_prompt(
         role        = omicsai::frag("system_base"),
         task        = omicsai::frag("text/report"),
         species     = omicsai::omicsai_species_prompt(organism),
@@ -124,7 +133,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
         board_rules = omicsai::frag(board_rules_path),
         data        = data_content
       )
-      bp <- omicsai::build_prompt(p)
+      bp <- omicsai::build_prompt(rp)
 
       ## Cache the full prompt for instant toggle
       report_prompt_cache(paste0(
@@ -135,7 +144,8 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
 
       ## Step 5: Generate report via single LLM call
       ## Use omicsai_gen_text (NOT gen_report — that would double-load text/report.md)
-      progress$set(message = "Generating report...", value = 0.3)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] generating AI report (model: %s)...", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), model))
+      if (!is.null(p)) p$set(message = "Generating AI report...", value = 0.20)
 
       cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
       cache <- omicsai::omicsai_cache_init("mem")
@@ -154,7 +164,10 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session) {
       ## Step 6: Append deterministic methods section
       full_report <- paste(result$text, methods_text, sep = "\n\n")
 
-      progress$set(message = "Done!", value = 1)
+      message(sprintf("[INFO][%s] --- [AI-REPORT] report text complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+      if (!is.null(p)) p$set(message = "Report text complete!", value = 0.65)
+      # Don't close progress — coordinator closes after diagram completes
+      if (local_progress && !is.null(p)) p$close()
       full_report
     }, ignoreNULL = FALSE)
 

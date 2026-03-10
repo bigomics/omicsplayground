@@ -80,7 +80,10 @@ drugconnectivity_ai_report_server <- function(id,
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist,
+                                                  style_name = img_style, n_blocks = img_blocks)
         list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
@@ -90,7 +93,10 @@ drugconnectivity_ai_report_server <- function(id,
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- drugconnectivity_build_image_prompt(txt, organism, edgelist,
+                                                  style_name = img_style, n_blocks = img_blocks)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -99,8 +105,8 @@ drugconnectivity_ai_report_server <- function(id,
         omicsai::omicsai_image_config(
           model = img_model,
           system_prompt = bp$system,
-          style = controls$image_style() %||% "bigomics",
-          n_blocks = as.integer(controls$image_blocks() %||% 1L),
+          style = img_style,
+          n_blocks = img_blocks,
           image_size = "1K"
         )
       }),

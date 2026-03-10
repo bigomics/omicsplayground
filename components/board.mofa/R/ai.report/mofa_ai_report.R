@@ -61,7 +61,10 @@ mofa_build_diagram_prompt <- function(report_text, organism, board_root) {
   omicsai::build_prompt(p)
 }
 
-mofa_build_image_prompt <- function(report_text, organism, diagram_edgelist = NULL) {
+mofa_build_image_prompt <- function(report_text, organism,
+                                    diagram_edgelist = NULL,
+                                    style_name = NULL,
+                                    n_blocks = 1L) {
   species_img <- omicsai::omicsai_image_species_visual(organism)
   clean <- omicsai::omicsai_strip_report_noise(report_text)
 
@@ -71,10 +74,17 @@ mofa_build_image_prompt <- function(report_text, organism, diagram_edgelist = NU
     if (nzchar(dot)) edge_text <- dot
   }
 
+  style_frag  <- if (!is.null(style_name) && nzchar(style_name)) {
+    omicsai::frag(paste0("image/styles/", style_name))
+  }
+  blocks_frag <- omicsai::frag(paste0("image/blocks/blocks_", as.integer(n_blocks)))
+
   p <- omicsai::image_prompt(
     role             = omicsai::frag("system_base"),
     task             = omicsai::frag("image/infographic", params = list(board_name = "MOFA")),
     species          = species_img,
+    style            = style_frag,
+    blocks           = blocks_frag,
     report           = clean,
     diagram_edgelist = edge_text
   )
@@ -286,7 +296,10 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
         organism <- pgx$organism %||% "human"
-        bp <- mofa_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- mofa_build_image_prompt(txt, organism, edgelist,
+                                      style_name = img_style, n_blocks = img_blocks)
         list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
@@ -296,7 +309,10 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
         diag <- diagram_result()
         edgelist <- if (!is.null(diag)) diag$edgelist else NULL
         organism <- pgx$organism %||% "human"
-        bp <- mofa_build_image_prompt(txt, organism, edgelist)
+        img_style <- controls$image_style() %||% "bigomics"
+        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+        bp <- mofa_build_image_prompt(txt, organism, edgelist,
+                                      style_name = img_style, n_blocks = img_blocks)
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -305,8 +321,8 @@ mofa_ai_report_server <- function(id, mofa_reactive, pgx, parent_session, waterm
         omicsai::omicsai_image_config(
           model = img_model,
           system_prompt = bp$system,
-          style = controls$image_style() %||% "bigomics",
-          n_blocks = as.integer(controls$image_blocks() %||% 1L),
+          style = img_style,
+          n_blocks = img_blocks,
           image_size = "1K"
         )
       }),
