@@ -176,6 +176,9 @@ wgcna_html_report_server <- function(id,
       if(is.null(annot) && !is.null(wgcna$annot)) {
         annot <- wgcna$annot
       }
+
+      userprompt <- ifelse(is.null(input$userprompt),"",input$userprompt)
+      topratio <- ifelse(is.null(input$topratio),0.85,input$topratio)
       
       rpt <- playbase::wgcna.create_report(
         wgcna,
@@ -183,9 +186,9 @@ wgcna_html_report_server <- function(id,
         annot = annot, 
         graph = wgcna$graph,
         multi = multi,
-        userprompt = input$userprompt,
+        userprompt = userprompt,
         ntop = 100,
-        topratio = input$topratio,
+        topratio = topratio,
         psig = 0.05,
         format = "markdown",
         verbose = 1,
