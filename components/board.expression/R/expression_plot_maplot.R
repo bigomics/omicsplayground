@@ -144,7 +144,7 @@ expression_plot_maplot_server <- function(id,
 
       lab.genes <- pd[["lab.genes"]]
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
-        lab.genes <- trimws(strsplit(input$label_features, "[,\n]+")[[1]])
+        lab.genes <- trimws(strsplit(input$label_features, "[, \n]+")[[1]])
         lab.genes <- lab.genes[lab.genes != ""]
       }
 
