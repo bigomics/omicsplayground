@@ -83,6 +83,16 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.names <- pgx$genes[mx.features, "gene_title"]
       label.names <- playbase::probe2symbol(mx.features, pgx$genes, labeltype(), fill_na = TRUE)
 
+      ## Position data for click-to-label (all methods, so nearest-neighbor
+      ## matches the actual plotted point regardless of which facet is clicked)
+      fc_cols <- mx[, "fc", drop = FALSE]
+      q_cols <- mx[, "q", drop = FALSE]
+      click_df <- data.frame(
+        x = as.vector(as.matrix(fc_cols)),
+        y = as.vector(-log10(pmax(as.matrix(q_cols), 1e-99))),
+        feature_name = rep(mx.features, ncol(fc_cols))
+      )
+
       pd <- list(
         mx = mx,
         pgx = pgx,
@@ -94,7 +104,8 @@ expression_plot_volcanoMethods_server <- function(id,
         names = mx.names,
         symbols = mx.symbols,
         features = mx.features,
-        label.names = label.names
+        label.names = label.names,
+        df = click_df
       )
 
       return(pd)

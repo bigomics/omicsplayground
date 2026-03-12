@@ -549,12 +549,44 @@ PlotModuleServer <- function(id,
         click_y <- input$plot_click$y
         plot_data <- csvFunc()
         if (inherits(plot_data, "list") && !is.data.frame(plot_data)) {
-          plot_data <- plot_data$df
+          if (!is.null(plot_data$df)) {
+            plot_data <- plot_data$df
+          } else {
+            ## Find the position matrix: prefer named $pos, else last 2-col matrix
+            pos_mat <- plot_data$pos
+            if (is.null(pos_mat)) {
+              pos_idx <- which(sapply(plot_data, function(x) {
+                (is.matrix(x) || is.data.frame(x)) && ncol(x) == 2 && !is.null(rownames(x))
+              }))
+              if (length(pos_idx) > 0) {
+                pos_mat <- plot_data[[tail(pos_idx, 1)]]
+              }
+            }
+            if (!is.null(pos_mat)) {
+              plot_data <- data.frame(x = pos_mat[, 1], y = pos_mat[, 2], row.names = rownames(pos_mat))
+            } else {
+              plot_data <- NULL
+            }
+          }
         }
-        if (is.null(plot_data) || !all(c("x", "y") %in% colnames(plot_data))) return()
+        if (is.null(plot_data)) return()
+        ## Use first two columns as x/y if "x"/"y" not present
+        if (!all(c("x", "y") %in% colnames(plot_data))) {
+          if (ncol(plot_data) >= 2) {
+            colnames(plot_data)[1:2] <- c("x", "y")
+          } else {
+            return()
+          }
+        }
         distances <- sqrt((plot_data$x - click_x)^2 + (plot_data$y - click_y)^2)
         nearest_idx <- which.min(distances)
-        clicked_feature <- rownames(plot_data)[nearest_idx]
+        ## Use feature_name column if available (for faceted/multi-panel plots
+        ## where the same feature appears multiple times with different coords)
+        clicked_feature <- if ("feature_name" %in% colnames(plot_data)) {
+          plot_data$feature_name[nearest_idx]
+        } else {
+          rownames(plot_data)[nearest_idx]
+        }
         current_features <- parent_session$input$label_features
         if (is.null(current_features) || current_features == "") {
           new_features <- clicked_feature
@@ -1254,7 +1286,7 @@ PlotModuleServer <- function(id,
       if (is.null(card)) {
         output$renderfigure <- render
         output$renderpopup <- render2
-        output$renderfigure_2 <- render
+        output$renderfigure_2 <- render2
       } else {
         output[[paste0(
           "renderfigure",

@@ -8,6 +8,16 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   ## modules start with the colours the user has already chosen.
   ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
 
+  ## Helper: wrap outputFunc with click support when the function accepts it
+  ## (shiny::plotOutput supports click, plotly::plotlyOutput does not)
+  outputFuncWithClick <- function(func, ...) {
+    if ("click" %in% names(formals(func))) {
+      func(..., click = ns("plot_click"))
+    } else {
+      func(...)
+    }
+  }
+
   ## Per-plot-type bar colour: correlation and expression_barplot use
   ## scatter_color (→ secondary theme); all other bar plots use bar_color.
   bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
@@ -181,7 +191,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
+            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           }
         )
@@ -407,10 +417,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2, click = ns("plot_click")) %>%
+            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -643,10 +653,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -686,10 +696,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )
@@ -769,10 +779,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         shiny::div(
           class = "popup-plot",
           if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
               bigLoaders::useSpinner()
           } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
               bigLoaders::useSpinner()
           }
         )

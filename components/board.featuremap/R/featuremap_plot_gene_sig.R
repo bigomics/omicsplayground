@@ -69,18 +69,21 @@ featuremap_plot_gene_sig_server <- function(id,
       if (nrow(F) == 0 || NCOL(F) == 0) {
         return(NULL)
       }
-      return(list(F, pos))
+      ## Click-to-label data: all panels share the same UMAP positions
+      gg <- intersect(rownames(pos), rownames(F))
+      click_df <- data.frame(
+        x = pos[gg, 1],
+        y = pos[gg, 2],
+        feature_name = gg
+      )
+      return(list(F, pos = pos, df = click_df))
     })
 
-    renderPlots <- function() {
+    renderPlots_ggplot <- function() {
       dt <- plot_data()
-
       F <- dt[[1]]
-      pos <- dt[[2]]
+      pos <- dt$pos
       shiny::req(F, pos)
-
-      nc <- ceiling(sqrt(1.33 * ncol(F)))
-      nr <- ceiling(ncol(F) / nc)
 
       ## Editor: custom colors
       low_color <- if (!is.null(input$color_low)) input$color_low else "#3181de"
@@ -97,21 +100,58 @@ featuremap_plot_gene_sig_server <- function(id,
       ## Editor: color just selected
       color_sel <- is.null(input$color_selection) || isTRUE(input$color_selection)
 
-      par(mfrow = c(nr, nc), mar = c(2, 1, 1, 0), mgp = c(1.6, 0.55, 0), las = 0)
-      progress <- NULL
-      if (!interactive()) {
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message = "Computing feature plots...", value = 0)
-      }
-      plotFeaturesPanel(pos, F, ntop = ntop, nr, nc, sel = sel, progress, col = custom_col,
-                        dim_others = color_sel)
+      gg <- intersect(rownames(pos), rownames(F))
+      pos1 <- pos[gg, ]
+      F1 <- F[gg, , drop = FALSE]
+      qq <- quantile(F1, probs = c(0.002, 0.998), na.rm = TRUE)
+      zsym <- ifelse(min(F1, na.rm = TRUE) >= 0, FALSE, TRUE)
+
+      ## Build long-format data for faceted plot
+      long_pos <- pos1[rep(seq_len(nrow(pos1)), ncol(F1)), , drop = FALSE]
+      long_var <- as.vector(F1)
+      names(long_var) <- rownames(long_pos)
+      long_facet <- rep(colnames(F1), each = nrow(F1))
+
+      hilight_scatter <- if (color_sel) sel else NULL
+      opacity <- ifelse(is.null(sel), 0.9, 0.4)
+      if (!color_sel) opacity <- 0.9
+
+      playbase::pgx.scatterPlotXY(
+        long_pos,
+        var = long_var,
+        col = custom_col,
+        zsym = zsym,
+        zlim = qq,
+        softmax = 1,
+        cex = 0.8,
+        cex.legend = 0.9,
+        cex.lab = 1.2,
+        hilight = hilight_scatter,
+        hilight2 = sel,
+        hilight.col = NULL,
+        opacity = opacity,
+        xlab = "UMAP-x",
+        ylab = "UMAP-y",
+        hilight.lwd = 0.5,
+        hilight.cex = 1.3,
+        set.par = FALSE,
+        legend = FALSE,
+        box = FALSE,
+        theme = ggplot2::theme_minimal(base_size = 11) +
+          ggplot2::theme(
+            panel.grid = ggplot2::element_blank(),
+            strip.text = ggplot2::element_text(size = 11, margin = ggplot2::margin(b = 4))
+          ),
+        facet = long_facet,
+        plotlib = "ggplot"
+      )
     }
 
     PlotModuleServer(
       "gene_sig",
-      plotlib = "base",
-      func = renderPlots,
+      plotlib = "ggplot",
+      func = renderPlots_ggplot,
+      func2 = renderPlots_ggplot,
       csvFunc = plot_data,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),

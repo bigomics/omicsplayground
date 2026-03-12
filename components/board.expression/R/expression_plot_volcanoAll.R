@@ -106,6 +106,14 @@ expression_plot_volcanoAll_server <- function(id,
       }
 
       ## ps: FQ contains log2FC+q-value or log2FC+p-value. Depends on show_pv option.
+      ## Position data for click-to-label (all facets, so nearest-neighbor
+      ## matches the actual plotted point regardless of which facet is clicked)
+      click_df <- data.frame(
+        x = as.vector(F),
+        y = as.vector(-log10(P)),
+        feature_name = rep(features, ncol(F))
+      )
+
       pd <- list(
         FQ = FQ, ## Remember: the first element is returned as downloadable CSV
         comp = comp,
@@ -119,7 +127,8 @@ expression_plot_volcanoAll_server <- function(id,
         names = names,
         label.names = label.names,
         sel.genes = genes_selected()$sel.genes,
-        lab.genes = genes_selected()$lab.genes
+        lab.genes = genes_selected()$lab.genes,
+        df = click_df
       )
 
       return(pd)
