@@ -591,11 +591,14 @@ PlotModuleServer <- function(id,
         if (is.null(current_features) || current_features == "") {
           new_features <- clicked_feature
         } else {
-          current_features_vec <- strsplit(current_features, " ")[[1]]
+          current_features_vec <- strsplit(current_features, "\n")[[1]]
+          current_features_vec <- trimws(current_features_vec)
+          current_features_vec <- current_features_vec[current_features_vec != ""]
           if (!clicked_feature %in% current_features_vec) {
-            new_features <- paste(current_features, clicked_feature, sep = " ")
+            new_features <- paste(current_features_vec, collapse = "\n")
+            new_features <- paste0(new_features, "\n", clicked_feature)
           } else {
-            new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = " ")
+            new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = "\n")
           }
         }
 

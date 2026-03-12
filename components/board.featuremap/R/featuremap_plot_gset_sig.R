@@ -31,7 +31,9 @@ featuremap_plot_gset_sig_ui <- function(
     download.fmt = c("png", "pdf", "svg"),
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "featuremap"
+    plot_type = "featuremap",
+    color_selection = TRUE,
+    color_selection_default = TRUE
   )
 }
 
@@ -99,11 +101,20 @@ featuremap_plot_gset_sig_server <- function(id,
       ## Editor: custom labels
       sel <- NULL
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_features <- strsplit(input$label_features, "\\s+")[[1]]
+        custom_features <- trimws(strsplit(input$label_features, "\n")[[1]])
+        custom_features <- custom_features[custom_features != ""]
+        ## Exact match first, fall back to grep for partial/keyword matching
         sel <- unlist(lapply(custom_features, function(f) {
-          grep(f, rownames(pos), value = TRUE, ignore.case = TRUE, fixed = TRUE)
+          if (f %in% rownames(pos)) {
+            f
+          } else {
+            grep(f, rownames(pos), value = TRUE, ignore.case = TRUE)
+          }
         }))
       }
+
+      ## Editor: color just selected
+      color_sel <- is.null(input$color_selection) || isTRUE(input$color_selection)
 
       qq <- quantile(F, probs = c(0.002, 0.998), na.rm = TRUE)
       zsym <- ifelse(min(F, na.rm = TRUE) >= 0, FALSE, TRUE)
@@ -114,7 +125,9 @@ featuremap_plot_gset_sig_server <- function(id,
       names(long_var) <- rownames(long_pos)
       long_facet <- rep(colnames(F), each = nrow(F))
 
+      hilight_scatter <- if (color_sel) sel else NULL
       opacity <- ifelse(is.null(sel), 0.9, 0.4)
+      if (!color_sel) opacity <- 0.9
 
       playbase::pgx.scatterPlotXY(
         long_pos,
@@ -126,7 +139,7 @@ featuremap_plot_gset_sig_server <- function(id,
         cex = 0.8,
         cex.legend = 0.9,
         cex.lab = 1.2,
-        hilight = sel,
+        hilight = hilight_scatter,
         hilight2 = sel,
         hilight.col = NULL,
         opacity = opacity,
