@@ -40,17 +40,17 @@ upload_table_preview_counts_server <- function(id,
       ncol0 <- ncol(dt)
       MAXROW <- 1000
       MAXCOL <- 20
-      if (nrow(dt) > MAXROW) {
-        dt <- head(dt, MAXROW)
+      if (nrow(dt) > MAXROW) dt <- dt[seq_len(MAXROW), , drop = FALSE]
+      if (ncol(dt) > MAXCOL) dt <- dt[, seq_len(MAXCOL), drop = FALSE]
+      ## Densify the small subset before adding indicator rows/cols and passing to DT::datatable.
+      if (inherits(dt, "sparseMatrix")) dt <- as.matrix(dt)
+      if (nrow0 > MAXROW) {
         dt <- rbind(dt, rep(NA, ncol(dt)))
-        n1 <- nrow0 - MAXROW
-        rownames(dt)[nrow(dt)] <- paste0("[+", n1, " rows]")
+        rownames(dt)[nrow(dt)] <- paste0("[+", nrow0 - MAXROW, " rows]")
       }
-      if (ncol(dt) > MAXCOL) {
-        dt <- dt[, 1:MAXCOL]
+      if (ncol0 > MAXCOL) {
         dt <- cbind(dt, rep(NA, nrow(dt)))
-        n1 <- ncol0 - MAXCOL
-        colnames(dt)[ncol(dt)] <- paste0("[+", n1, " columns]")
+        colnames(dt)[ncol(dt)] <- paste0("[+", ncol0 - MAXCOL, " columns]")
       }
       dt
     })
@@ -521,16 +521,23 @@ upload_table_preview_counts_server <- function(id,
     output$histogram <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(counts)
+      n_genes <- nrow(counts)
+      n_samples <- ncol(counts)
+      ## Subsample both genes and cells before densifying.
+      ## Adding a scalar (prior + sparseMatrix) fills all structural zeros, breaking sparsity.
+      ## For a density plot 500 cells is more than sufficient for visual purposes.
+      set.seed(123)
+      if (nrow(counts) > 1000) counts <- counts[sample(nrow(counts), 1000), , drop = FALSE]
+      if (ncol(counts) > 500) counts <- counts[, sample(ncol(counts), 500), drop = FALSE]
+      if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
       if (!is_logscale()) {
-        prior <- min(counts[counts > 0], na.rm = TRUE)
-        xx <- log2(prior + counts)
+        prior <- min(xx[xx > 0], na.rm = TRUE)
+        xx <- log2(prior + xx)
       }
-      set.seed(123)
-      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- reshape2::melt(xx))
       dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
+      tt2 <- paste(n_genes, tspan("genes x", js = FALSE), n_samples, "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
         ggplot2::xlab(tspan("counts (log2)", js = FALSE)) +
@@ -541,13 +548,14 @@ upload_table_preview_counts_server <- function(id,
     output$boxplots <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(counts)
+      ## Subsample columns before densifying to avoid a full sparse->dense coercion.
+      if (ncol(counts) > 40) counts <- counts[, sample(ncol(counts), 40), drop = FALSE]
+      if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
       if (!is_logscale()) {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(pmax(xx, 0) + prior)
       }
-      # Downsample to 40 columns as we do on qc/bc tab
-      if (ncol(xx) > 40) xx <- xx[, sample(1:ncol(xx), 40)]
       boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
     })
 
@@ -574,12 +582,12 @@ upload_table_preview_counts_server <- function(id,
       ext <- tools::file_ext(input$counts_csv$name)
       dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
-      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5")))
+      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
       if (c1 & c2 & c3) {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please upload a .csv file. For scRNA-seq, h5 format is allowed. For Olink NPX data, parquet format is allowed.",
+          text = "Please upload a .csv file. For scRNA-seq, h5 and h5ad formats are allowed. For Olink NPX data, parquet format is allowed.",
           type = "error"
         )
         return()
@@ -620,7 +628,7 @@ upload_table_preview_counts_server <- function(id,
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
-        if (upload_datatype() == "scRNA-seq" && file.ext == "h5") {
+        if (upload_datatype() == "scRNA-seq" && file.ext %in% c("h5", "h5ad")) {
           df <- tryCatch(
             {
               playbase::read_h5_counts(datafile)
@@ -722,7 +730,7 @@ upload_table_preview_counts_server <- function(id,
       } else {
         uploaded$counts.csv <- df
         if (is.null(uploaded$annot.csv)) {
-          ann.data <- if (!file.ext %in% c("h5", "parquet")) playbase::read_annot(datafile) else NULL
+          ann.data <- if (!file.ext %in% c("h5", "h5ad", "parquet")) playbase::read_annot(datafile) else NULL
           uploaded$annot.csv <- ann.data
         }
       }

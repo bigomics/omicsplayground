@@ -334,9 +334,15 @@ upload_table_preview_samples_server <- function(
     output$umap <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
-      counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
-      prior <- min(counts[which(counts > 0)], na.rm = TRUE)
-      X <- log2(counts + prior)
+      if (inherits(counts, "sparseMatrix")) {
+        ## pgx.countNormalization uses apply() which densifies sparse matrices.
+        ## log1p(x)/log(2) == log2(1+x) but sparse-preserving since log1p(0)=0.
+        X <- log1p(counts) / log(2)
+      } else {
+        counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
+        prior <- min(counts[which(counts > 0)], na.rm = TRUE)
+        X <- log2(counts + prior)
+      }
       Y <- uploaded$samples.csv
       cm <- intersect(colnames(X), rownames(Y))
       X <- X[, cm, drop = FALSE]
@@ -353,6 +359,17 @@ upload_table_preview_samples_server <- function(
           y <- Y[, non_na_cols[1]]
         }
       }
+      ## Subsample cells before densifying to avoid allocating a huge dense matrix
+      MAX_CELLS <- 500
+      if (ncol(X) > MAX_CELLS) {
+        set.seed(42)
+        ss <- sample(ncol(X), MAX_CELLS)
+        X <- X[, ss, drop = FALSE]
+        Y <- Y[colnames(X), , drop = FALSE]
+        y <- Y[, sel]
+      }
+      if (inherits(X, "sparseMatrix")) X <- as.matrix(X)
+
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(

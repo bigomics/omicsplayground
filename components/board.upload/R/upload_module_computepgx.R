@@ -1165,18 +1165,6 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
-        path_to_params <- file.path(raw_dir(), "params.RData")
-        saveRDS(params, file = path_to_params)
-
-        # Normalize paths
-        script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
-        tmpdir <- normalizePath(raw_dir())
-
-        # Remove global variables
-        try(rm(annot_table))
-        try(rm(custom_geneset))
-
-        # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
           text = stringr::str_squish("Your dataset will be computed in the background.
@@ -1190,6 +1178,17 @@ upload_module_computepgx_server <- function(
           session,
           selected = "load-tab"
         )
+
+        path_to_params <- file.path(raw_dir(), "params.RData")
+        saveRDS(params, file = path_to_params)
+
+        # Normalize paths
+        script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
+        tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         process_counter(process_counter() + 1)
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
