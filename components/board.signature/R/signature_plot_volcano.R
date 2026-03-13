@@ -118,13 +118,21 @@ signature_plot_volcano_server <- function(id,
         sel.gene <- gsea$gset
       }
 
+      ## Click-to-label data (per-facet coordinates)
+      click_df <- data.frame(
+        x = as.vector(as.matrix(fc)),
+        y = as.vector(-log10(as.matrix(qv) + 1e-12)),
+        feature_name = rep(features, ncol(fc))
+      )
+
       pd <- list(
         fc = fc,
         qv = qv,
         features = features,
         symbols = symbols,
         gsea = gsea,
-        sel.gene = sel.gene
+        sel.gene = sel.gene,
+        df = click_df
       )
 
       return(pd)
@@ -254,7 +262,7 @@ signature_plot_volcano_server <- function(id,
         label_features <- if (is.null(input$label_features) || input$label_features == "") {
           NULL
         } else {
-          strsplit(input$label_features, "\\s+")[[1]]
+          trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
         }
       } else {
         label_features <- label
@@ -386,7 +394,7 @@ signature_plot_volcano_server <- function(id,
         plotlib = x$plotlib,
         func = x$func,
         func2 = x$func2,
-        # csvFunc = plot_data_csv,
+        csvFunc = plot_data,
         res = c(80, 95), # resolution of plots
         pdf.width = 10,
         pdf.height = 6,
