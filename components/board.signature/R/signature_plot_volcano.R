@@ -309,13 +309,13 @@ signature_plot_volcano_server <- function(id,
       ggprism_legend_y <- if (is.null(input$ggprism_legend_y) || is.na(input$ggprism_legend_y)) 0.95 else input$ggprism_legend_y
       ggprism_legend_border <- isTRUE(input$ggprism_legend_border)
 
-      pivot.fc <- data.frame(fc) %>%
+      pivot.fc <- data.frame(fc, check.names = FALSE) %>%
         tidyr::pivot_longer(
           cols = everything(),
           names_to = "facet",
           values_to = "fc"
         )
-      pivot.qv <- data.frame(qv) %>%
+      pivot.qv <- data.frame(qv, check.names = FALSE) %>%
         tidyr::pivot_longer(
           cols = everything(),
           names_to = "facet",
