@@ -86,7 +86,27 @@ intersection_scatterplot_pairs_server <- function(id,
       cm <- intersect(rownames(df), rownames(qv))
       df <- df[cm, , drop = FALSE]
       qv <- qv[cm, , drop = FALSE]
-      list(df, qv, sel.genes)
+
+      ## Click-to-label data
+      if (ncol(df) == 2) {
+        click_df <- data.frame(
+          x = df[, 1], y = df[, 2],
+          feature_name = rownames(df)
+        )
+      } else {
+        ## All pairwise combinations as facets
+        pairs <- combn(colnames(df), 2)
+        click_dfs <- lapply(seq_len(ncol(pairs)), function(i) {
+          data.frame(
+            x = df[, pairs[1, i]],
+            y = df[, pairs[2, i]],
+            feature_name = rownames(df)
+          )
+        })
+        click_df <- do.call(rbind, click_dfs)
+      }
+
+      list(df, qv, sel.genes, df = click_df)
     })
 
     scatterPlotMatrix.PLOT <- function() {
@@ -108,7 +128,7 @@ intersection_scatterplot_pairs_server <- function(id,
 
       ## Labels for top 50 (or custom from editor)
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_genes <- strsplit(input$label_features, "\\s+")[[1]]
+        custom_genes <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
         ## match custom genes to rownames (by symbol or rowname)
         all_symbols <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
         idx <- which(rownames(df) %in% custom_genes | all_symbols %in% custom_genes)
@@ -311,6 +331,7 @@ intersection_scatterplot_pairs_server <- function(id,
           p <- plotly::plot_ly(
             data = df1, x = df1[, c1], y = df1[, c2],
             type = "scattergl", mode = "markers",
+            key = rownames(df1),
             marker = list(
               color = df.color1, size = 8 * scale_factor, opacity = opacity,
               line = list(width = 0.3, color = "rgb(0,0,0)")
