@@ -86,7 +86,7 @@ compare_plot_compare1_server <- function(id,
 
       ## Editor: custom labels
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_genes <- strsplit(input$label_features, "\\s+")[[1]]
+        custom_genes <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
         higenes <- custom_genes
       }
 

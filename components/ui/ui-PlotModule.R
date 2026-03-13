@@ -544,28 +544,30 @@ PlotModuleServer <- function(id,
       ## ------------------------ Click-to-label handler --------------------------------
       ## --------------------------------------------------------------------------------
       ## Plotly click handler (for plotly editor popups)
-      observeEvent(plotly::event_data("plotly_click"), {
-        shiny::req(parent_session)
-        click_data <- plotly::event_data("plotly_click")
-        shiny::req(click_data)
-        clicked_feature <- click_data$key
-        if (is.null(clicked_feature) || is.na(clicked_feature) || clicked_feature == "") return()
+      if (requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
+        observeEvent(plotly::event_data("plotly_click"), {
+          shiny::req(parent_session)
+          click_data <- plotly::event_data("plotly_click")
+          shiny::req(click_data)
+          clicked_feature <- click_data$key
+          if (is.null(clicked_feature) || is.na(clicked_feature) || clicked_feature == "") return()
 
-        current_features <- parent_session$input$label_features
-        if (is.null(current_features) || current_features == "") {
-          new_features <- clicked_feature
-        } else {
-          current_features_vec <- strsplit(current_features, "\n")[[1]]
-          current_features_vec <- trimws(current_features_vec)
-          current_features_vec <- current_features_vec[current_features_vec != ""]
-          if (!clicked_feature %in% current_features_vec) {
-            new_features <- paste0(paste(current_features_vec, collapse = "\n"), "\n", clicked_feature)
+          current_features <- parent_session$input$label_features
+          if (is.null(current_features) || current_features == "") {
+            new_features <- clicked_feature
           } else {
-            new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = "\n")
+            current_features_vec <- strsplit(current_features, "\n")[[1]]
+            current_features_vec <- trimws(current_features_vec)
+            current_features_vec <- current_features_vec[current_features_vec != ""]
+            if (!clicked_feature %in% current_features_vec) {
+              new_features <- paste0(paste(current_features_vec, collapse = "\n"), "\n", clicked_feature)
+            } else {
+              new_features <- paste(setdiff(current_features_vec, clicked_feature), collapse = "\n")
+            }
           }
-        }
-        updateTextAreaInput(parent_session, "label_features", value = new_features)
-      })
+          updateTextAreaInput(parent_session, "label_features", value = new_features)
+        })
+      }
 
       ## Shiny plot click handler (for ggplot/base editor popups)
       observeEvent(input$plot_click, {
@@ -595,6 +597,10 @@ PlotModuleServer <- function(id,
           }
         }
         if (is.null(plot_data)) return()
+        ## Ensure data.frame for $ access
+        if (is.matrix(plot_data)) {
+          plot_data <- data.frame(plot_data, row.names = rownames(plot_data), check.names = FALSE)
+        }
         ## Use first two columns as x/y if "x"/"y" not present
         if (!all(c("x", "y") %in% colnames(plot_data))) {
           if (ncol(plot_data) >= 2) {
