@@ -167,7 +167,8 @@ featuremap_plot_gene_map_server <- function(id,
 
         custom_hilight2 <- NULL
         if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-          custom_features <- strsplit(input$label_features, "\\s+")[[1]]
+          custom_features <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
+          custom_features <- custom_features[custom_features != ""]
           custom_hilight2 <- playbase::map_probes(pgx$genes, custom_features)
         }
 

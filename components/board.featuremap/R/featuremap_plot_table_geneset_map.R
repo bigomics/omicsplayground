@@ -178,9 +178,11 @@ featuremap_plot_table_geneset_map_server <- function(id,
 
         custom_hilight2 <- NULL
         if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-          custom_features <- strsplit(input$label_features, "\\s+")[[1]]
+          custom_features <- trimws(strsplit(input$label_features, "\n")[[1]])
+          custom_features <- custom_features[custom_features != ""]
+          ## Exact match first, grep fallback for keyword search
           custom_hilight2 <- unlist(lapply(custom_features, function(f) {
-            grep(f, rownames(pos), value = TRUE, ignore.case = TRUE, fixed = TRUE)
+            if (f %in% rownames(pos)) f else grep(f, rownames(pos), value = TRUE, ignore.case = TRUE)
           }))
         }
 
