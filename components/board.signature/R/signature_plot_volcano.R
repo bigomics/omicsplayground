@@ -259,11 +259,7 @@ signature_plot_volcano_server <- function(id,
 
       ## Editor: custom labels
       if (isTRUE(input$custom_labels)) {
-        label_features <- if (is.null(input$label_features) || input$label_features == "") {
-          NULL
-        } else {
-          trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
-        }
+        label_features <- parse_label_features(input$label_features, pd[["features"]])
       } else {
         label_features <- label
       }

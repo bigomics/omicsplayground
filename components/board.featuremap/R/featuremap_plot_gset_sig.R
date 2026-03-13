@@ -101,16 +101,7 @@ featuremap_plot_gset_sig_server <- function(id,
       ## Editor: custom labels
       sel <- NULL
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_features <- trimws(strsplit(input$label_features, "\n")[[1]])
-        custom_features <- custom_features[custom_features != ""]
-        ## Exact match first, fall back to grep for partial/keyword matching
-        sel <- unlist(lapply(custom_features, function(f) {
-          if (f %in% rownames(pos)) {
-            f
-          } else {
-            grep(f, rownames(pos), value = TRUE, ignore.case = TRUE)
-          }
-        }))
+        sel <- parse_label_features(input$label_features, rownames(pos))
       }
 
       ## Editor: color just selected

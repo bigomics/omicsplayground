@@ -127,8 +127,9 @@ intersection_scatterplot_pairs_server <- function(id,
       ##  df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]
 
       ## Labels for top 50 (or custom from editor)
-      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_genes <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
+      if (isTRUE(input$custom_labels)) {
+        custom_genes <- parse_label_features(input$label_features, rownames(df))
+        if (is.null(custom_genes)) custom_genes <- character(0)
         ## match custom genes to rownames (by symbol or rowname)
         all_symbols <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
         idx <- which(rownames(df) %in% custom_genes | all_symbols %in% custom_genes)

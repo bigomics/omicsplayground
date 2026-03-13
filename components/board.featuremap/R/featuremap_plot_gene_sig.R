@@ -93,9 +93,8 @@ featuremap_plot_gene_sig_server <- function(id,
       ## Editor: custom labels
       sel <- NULL
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_features <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
-        custom_features <- custom_features[custom_features != ""]
-        sel <- playbase::map_probes(pgx$genes, custom_features)
+        sel <- parse_label_features(input$label_features, rownames(pos))
+        sel <- playbase::map_probes(pgx$genes, sel)
       }
 
       ## Editor: color just selected

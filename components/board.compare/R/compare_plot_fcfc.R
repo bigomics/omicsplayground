@@ -196,9 +196,9 @@ compare_plot_fcfc_server <- function(id,
       clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#f23451"
 
       ## Editor: custom labels
-      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        custom_genes <- trimws(strsplit(input$label_features, "[\\s\n]+")[[1]])
-        higenes <- custom_genes
+      if (isTRUE(input$custom_labels)) {
+        custom_genes <- parse_label_features(input$label_features, rownames(plot_data()))
+        if (!is.null(custom_genes)) higenes <- custom_genes
       }
 
       p <- interactive_fcfc(

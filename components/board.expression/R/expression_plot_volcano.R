@@ -180,12 +180,7 @@ expression_plot_volcano_server <- function(id,
       names <- pd$features
 
       if (input$custom_labels) {
-        label_features <- if (input$label_features == "") {
-          NULL
-        } else {
-          strsplit(input$label_features, "\\s+")[[1]]
-        }
-        label_features <- label_features
+        label_features <- parse_label_features(input$label_features, pd[["features"]])
       } else {
         label_features <- pd[["lab.genes"]]
       }

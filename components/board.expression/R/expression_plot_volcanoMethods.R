@@ -219,11 +219,7 @@ expression_plot_volcanoMethods_server <- function(id,
 
       ## Editor: custom labels
       if (isTRUE(input$custom_labels)) {
-        label_features <- if (is.null(input$label_features) || input$label_features == "") {
-          NULL
-        } else {
-          strsplit(input$label_features, "\\s+")[[1]]
-        }
+        label_features <- parse_label_features(input$label_features, pd[["features"]])
       } else {
         label_features <- lab.genes
       }

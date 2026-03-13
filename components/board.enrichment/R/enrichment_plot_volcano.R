@@ -171,17 +171,7 @@ enrichment_plot_volcano_server <- function(id,
 
       ## Editor: custom labels
       if (isTRUE(input$custom_labels)) {
-        label_features <- if (is.null(input$label_features) || input$label_features == "") {
-          NULL
-        } else {
-          all_names <- pd[["fc.genes"]]
-          custom <- trimws(strsplit(input$label_features, "\n")[[1]])
-          custom <- custom[custom != ""]
-          ## Exact match first, grep fallback for keyword search
-          unlist(lapply(custom, function(f) {
-            if (f %in% all_names) f else grep(f, all_names, value = TRUE, ignore.case = TRUE)
-          }))
-        }
+        label_features <- parse_label_features(input$label_features, pd[["fc.genes"]])
       } else {
         label_features <- pd[["sel.genes"]]
       }

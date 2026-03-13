@@ -121,8 +121,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
       ## Editor: custom labels override
       if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
-        lab_genes <- trimws(strsplit(input$label_features, "[, \n]+")[[1]])
-        higenes <- lab_genes[lab_genes != ""]
+        higenes <- parse_label_features(input$label_features, rownames(pgx$X))
       }
 
       ## Editor: up/down colors → diverging gradient

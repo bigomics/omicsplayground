@@ -143,9 +143,9 @@ expression_plot_maplot_server <- function(id,
       col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
 
       lab.genes <- pd[["lab.genes"]]
-      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
-        lab.genes <- trimws(strsplit(input$label_features, "[, \n]+")[[1]])
-        lab.genes <- lab.genes[lab.genes != ""]
+      if (isTRUE(input$custom_labels)) {
+        custom <- parse_label_features(input$label_features, pd[["features"]])
+        if (!is.null(custom)) lab.genes <- custom
       }
 
       highlight <- pd[["sel.genes"]]
