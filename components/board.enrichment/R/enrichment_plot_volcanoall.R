@@ -121,6 +121,13 @@ enrichment_plot_volcanoall_server <- function(id,
         title_y <- "Significance (-log10p)"
       }
 
+      ## Click-to-label data (per-facet coordinates)
+      click_df <- data.frame(
+        x = as.vector(matF),
+        y = as.vector(-log10(S + 1e-12)),
+        feature_name = rep(rownames(matF), ncol(matF))
+      )
+
       pd <- list(
         FC = matF,
         S = S,
@@ -128,7 +135,8 @@ enrichment_plot_volcanoall_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         title_y = title_y,
-        gset_selected = gset_selected()
+        gset_selected = gset_selected(),
+        df = click_df
       )
       pd
     })
@@ -220,7 +228,13 @@ enrichment_plot_volcanoall_server <- function(id,
         label_features <- if (is.null(input$label_features) || input$label_features == "") {
           NULL
         } else {
-          strsplit(input$label_features, "\\s+")[[1]]
+          all_names <- rownames(pd[["FC"]])
+          custom <- trimws(strsplit(input$label_features, "\n")[[1]])
+          custom <- custom[custom != ""]
+          ## Exact match first, grep fallback for keyword search
+          unlist(lapply(custom, function(f) {
+            if (f %in% all_names) f else grep(f, all_names, value = TRUE, ignore.case = TRUE)
+          }))
         }
       } else {
         label_features <- pd[["gset_selected"]]

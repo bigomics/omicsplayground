@@ -106,6 +106,13 @@ enrichment_plot_volcano_server <- function(id,
         ylim <- c(0, max(12, 1.1 * max(-log10(pval), na.rm = TRUE)))
       }
 
+      ## Click-to-label data
+      click_df <- data.frame(
+        x = fx,
+        y = y,
+        feature_name = fc.genes
+      )
+
       return(list(
         x = fx,
         y = y,
@@ -114,7 +121,8 @@ enrichment_plot_volcano_server <- function(id,
         lab.cex = 1,
         fdr = fdr,
         lfc = lfc,
-        ylab = ylab
+        ylab = ylab,
+        df = click_df
       ))
     })
 
@@ -166,7 +174,13 @@ enrichment_plot_volcano_server <- function(id,
         label_features <- if (is.null(input$label_features) || input$label_features == "") {
           NULL
         } else {
-          strsplit(input$label_features, "\\s+")[[1]]
+          all_names <- pd[["fc.genes"]]
+          custom <- trimws(strsplit(input$label_features, "\n")[[1]])
+          custom <- custom[custom != ""]
+          ## Exact match first, grep fallback for keyword search
+          unlist(lapply(custom, function(f) {
+            if (f %in% all_names) f else grep(f, all_names, value = TRUE, ignore.case = TRUE)
+          }))
         }
       } else {
         label_features <- pd[["sel.genes"]]
@@ -304,6 +318,7 @@ enrichment_plot_volcano_server <- function(id,
         plotlib = x$plotlib,
         func = x$func,
         func2 = x$func2,
+        csvFunc = plot_data,
         res = c(80, 95), # resolution of plots
         pdf.width = 10,
         pdf.height = 8,
