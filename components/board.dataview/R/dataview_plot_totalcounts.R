@@ -87,15 +87,7 @@ dataview_plot_totalcounts_server <- function(id,
     output$rank_list <- shiny::renderUI({
       res <- plot_data()
       shiny::req(res)
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = session$ns("rank_list_basic"),
-          text = NULL,
-          labels = as.character(res$df$sample)
-        )
-      )
+      rank_list_ui(as.character(res$df$sample), session$ns)
     })
 
     plotly.RENDER <- function() {

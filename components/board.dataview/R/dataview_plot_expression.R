@@ -113,26 +113,11 @@ dataview_plot_expression_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
       if (pd$groupby != "<ungrouped>") {
-        sortable::bucket_list(
-          header = NULL,
-          class = "default-sortable custom-sortable",
-          sortable::add_rank_list(
-            input_id = session$ns("rank_list_basic"),
-            text = NULL,
-            labels = unique(pd[["df"]]$group),
-          )
-        )
+        labels <- unique(pd[["df"]]$group)
       } else {
-        sortable::bucket_list(
-          header = NULL,
-          class = "default-sortable custom-sortable",
-          sortable::add_rank_list(
-            input_id = session$ns("rank_list_basic"),
-            text = NULL,
-            labels = unique(pd[["df"]]$samples),
-          )
-        )
+        labels <- unique(pd[["df"]]$samples)
       }
+      rank_list_ui(labels, session$ns)
     })
 
     plotly.RENDER <- function() {

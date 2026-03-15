@@ -141,15 +141,7 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       ## "descending" keeps the default order
 
       labels <- as.character(df$tissue)
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = ns("rank_list_order"),
-          text = NULL,
-          labels = labels
-        )
-      )
+      rank_list_ui(labels, ns, input_id = "rank_list_order")
     })
 
     plot.RENDER <- function() {

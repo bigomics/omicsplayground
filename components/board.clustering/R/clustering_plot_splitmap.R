@@ -139,15 +139,7 @@ clustering_plot_splitmap_server <- function(id,
         return(shiny::tags$em("Split the heatmap by a variable to reorder groups."))
       }
       grp_levels <- unique(splitx)
-      sortable::bucket_list(
-        header = "Shuffle to reorder groups:",
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = ns("hm_group_order"),
-          text = NULL,
-          labels = grp_levels
-        )
-      )
+      rank_list_ui(grp_levels, ns, input_id = "hm_group_order")
     })
 
     plot_data <- shiny::reactive({

@@ -96,15 +96,7 @@ compare_plot_expression_server <- function(id,
       shiny::req(gd$contrast_names)
       labels <- gsub("_vs_", " vs ", gd$contrast_names)
       names(labels) <- gd$contrast_names
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = ns("rank_list_order"),
-          text = NULL,
-          labels = labels
-        )
-      )
+      rank_list_ui(labels, ns, input_id = "rank_list_order")
     })
 
     plotly_multibarplot.RENDER <- shiny::reactive({

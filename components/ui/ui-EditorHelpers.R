@@ -274,3 +274,31 @@ get_custom_palette_colors <- function(input, n, fallback_colors = NULL) {
     if (is.null(val)) fallback_colors[j] else val
   })
 }
+
+
+## ---------------------------------------------------------------
+## 7. Sortable rank list UI
+## ---------------------------------------------------------------
+
+#' Create a sortable bucket list for drag-and-drop ordering.
+#'
+#' Wraps \code{sortable::bucket_list} + \code{sortable::add_rank_list}
+#' with the standard editor styling.  Call inside
+#' \code{output$rank_list <- renderUI(...)}.
+#'
+#' @param labels   Character vector of items to display / reorder.
+#' @param ns_func  Namespace function (\code{ns} or \code{session$ns}).
+#' @param input_id Character input ID for the rank list result
+#'   (default \code{"rank_list_basic"}).
+#' @return A \code{sortable::bucket_list} tag.
+rank_list_ui <- function(labels, ns_func, input_id = "rank_list_basic") {
+  sortable::bucket_list(
+    header = NULL,
+    class = "default-sortable custom-sortable",
+    sortable::add_rank_list(
+      input_id = ns_func(input_id),
+      text = NULL,
+      labels = labels
+    )
+  )
+}

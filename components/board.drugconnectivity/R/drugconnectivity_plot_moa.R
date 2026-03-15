@@ -89,15 +89,7 @@ drugconnectivity_plot_moa_server <- function(id,
         }
         jj <- unique(c(head(order(-res$score), 14), tail(order(-res$score), 14)))
         bar_names <- res$pathway[jj]
-        sortable::bucket_list(
-          header = NULL,
-          class = "default-sortable custom-sortable",
-          sortable::add_rank_list(
-            input_id = session$ns("rank_list_basic"),
-            text = NULL,
-            labels = bar_names
-          )
-        )
+        rank_list_ui(bar_names, session$ns)
       })
 
       shiny::observeEvent(pgx$X, {

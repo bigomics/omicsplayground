@@ -83,15 +83,7 @@ dataview_plot_variationcoefficient_server <- function(id,
     output$rank_list <- shiny::renderUI({
       res <- plot_data()
       shiny::req(res)
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = session$ns("rank_list_basic"),
-          text = NULL,
-          labels = colnames(res)
-        )
-      )
+      rank_list_ui(colnames(res), session$ns)
     })
 
     plotly.RENDER <- function() {

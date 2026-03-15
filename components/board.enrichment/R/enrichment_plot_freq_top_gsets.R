@@ -164,14 +164,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       shiny::req(bm)
       labels <- rownames(bm$F)
       shiny::req(length(labels) > 0)
-      sortable::bucket_list(
-        header = NULL,
-        sortable::add_rank_list(
-          text = "Drag to reorder",
-          labels = labels,
-          input_id = session$ns("rank_list_basic")
-        )
-      )
+      rank_list_ui(labels, session$ns)
     })
 
     topEnrichedFreq.RENDER <- function() {

@@ -124,14 +124,7 @@ correlation_plot_barplot_server <- function(id,
       shiny::req(pd)
       labels <- rownames(pd)
       shiny::req(length(labels) > 0)
-      sortable::bucket_list(
-        header = NULL,
-        sortable::add_rank_list(
-          text = "Drag to reorder",
-          labels = labels,
-          input_id = session$ns("rank_list_basic")
-        )
-      )
+      rank_list_ui(labels, session$ns)
     })
 
     render_barplot <- function() {

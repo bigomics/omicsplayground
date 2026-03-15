@@ -78,15 +78,7 @@ compare_plot_cum_fc1_server <- function(id,
         rownames(F1) <- make.names(playbase::probe2symbol(rownames(F1), pgx$genes, labeltype(), fill_na = TRUE), unique = TRUE)
       }
       labels <- rownames(F1)
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = ns("rank_list_order"),
-          text = NULL,
-          labels = labels
-        )
-      )
+      rank_list_ui(labels, ns, input_id = "rank_list_order")
     })
 
     plot.RENDER <- shiny::reactive({

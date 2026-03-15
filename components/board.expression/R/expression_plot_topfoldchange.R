@@ -69,15 +69,7 @@ expression_plot_topfoldchange_server <- function(id,
       labels <- names(pd[["fc.top"]])
       labels <- labels[!is.na(pd[["fc.top"]])]
 
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = session$ns("rank_list_basic"),
-          text = NULL,
-          labels = labels
-        )
-      )
+      rank_list_ui(labels, session$ns)
     })
 
     plot_data <- shiny::reactive({

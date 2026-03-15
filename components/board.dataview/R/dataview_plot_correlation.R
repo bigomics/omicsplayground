@@ -123,15 +123,7 @@ dataview_plot_correlation_server <- function(id,
       df <- pd[[1]]
       gene_labels <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
       gene_labels <- unique(gene_labels)
-      sortable::bucket_list(
-        header = NULL,
-        class = "default-sortable custom-sortable",
-        sortable::add_rank_list(
-          input_id = session$ns("rank_list_basic"),
-          text = NULL,
-          labels = gene_labels
-        )
-      )
+      rank_list_ui(gene_labels, session$ns)
     })
 
     plotly_render <- function() {
