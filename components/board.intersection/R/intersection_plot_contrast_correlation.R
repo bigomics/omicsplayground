@@ -104,14 +104,13 @@ contrast_correlation_server <- function(id,
       R <- plot_data()
       res <- getFoldChangeMatrix()
 
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+      hm_colors <- extract_heatmap_colors(input)
 
-      col <- gplots::colorpanel(64, col_down, "grey90", col_up)
+      col <- gplots::colorpanel(64, hm_colors[1], hm_colors[2], hm_colors[3])
       if (min(R, na.rm = TRUE) >= 0) col <- tail(col, 32)
       if (max(R, na.rm = TRUE) <= 0) col <- head(col, 32)
 
-      bluered.pal <- colorRampPalette(colors = c(col_down, "grey90", col_up))
+      bluered.pal <- colorRampPalette(colors = hm_colors)
       cellnote <- NULL
 
       if (is.null(R) && !is.null(res)) {

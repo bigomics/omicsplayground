@@ -161,15 +161,11 @@ featuremap_plot_gene_map_server <- function(id,
         p
       } else if (plotlib == "ggplot") {
         ## Editor inputs
-        low_color <- if (!is.null(input$color_low)) input$color_low else "#3181de"
-        high_color <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+        low_color <- get_editor_color(input, "color_low", "#3181de")
+        high_color <- get_editor_color(input, "color_high", "#f23451")
         custom_col <- c(low_color, "#f8f8f8", high_color)
 
-        custom_hilight2 <- NULL
-        if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-          custom_hilight2 <- parse_label_features(input$label_features, rownames(pos))
-          custom_hilight2 <- playbase::map_probes(pgx$genes, custom_hilight2)
-        }
+        custom_hilight2 <- get_custom_labels(input, rownames(pos), defaults = NULL, pgx = pgx)
 
         p <- plotUMAP(
           pos,

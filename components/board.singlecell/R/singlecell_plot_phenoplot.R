@@ -90,17 +90,11 @@ singlecell_plot_phenoplot_server <- function(id,
       }
       max_levels <- min(max(max_levels, 1), 8)
 
-      default_clrs <- omics_pal_d(palette = "muted_light")(8)
-      pickers <- lapply(seq_len(max_levels), function(i) {
+      labels <- sapply(seq_len(max_levels), function(i) {
         nms <- level_names[[i]]
-        group_label <- if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = group_label,
-          value = default_clrs[i]
-        )
+        if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
       })
-      shiny::tagList(pickers)
+      custom_palette_pickers(labels, ns)
     })
 
     plot_data <- shiny::reactive({
@@ -141,10 +135,7 @@ singlecell_plot_phenoplot_server <- function(id,
       palette <- if (!is.null(input$palette)) input$palette else "muted_light"
       if (palette %in% c("original", "default")) palette <- "muted_light"
       if (palette == "custom") {
-        base_clrs <- sapply(1:8, function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) omics_pal_d(palette = "muted_light")(8)[j] else val
-        })
+        base_clrs <- get_custom_palette_colors(input, 8)
       } else {
         base_clrs <- omics_pal_d(palette = palette)(8)
       }

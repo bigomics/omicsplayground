@@ -93,9 +93,6 @@ foldchange_heatmap_server <- function(id,
       par(mfrow = c(1, 1), mar = c(0, 0, 0, 0), oma = c(0, 0, 3, 0))
       rownames(F1) <- playbase::probe2symbol(rownames(F1), pgx$genes, "gene_name", fill_na = TRUE)
 
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
-
       plt <- grid::grid.grabExpr({
         frame()
         playbase::heatmapWithAnnot(
@@ -106,7 +103,7 @@ foldchange_heatmap_server <- function(id,
           mar = c(bm, 0.5, 0.5, 1),
           cluster_columns = cclust,
           inset = c(0.01, 0.01),
-          heatmap_colors = c(col_down, "grey90", col_up)
+          heatmap_colors = extract_heatmap_colors(input)
         )
       })
 

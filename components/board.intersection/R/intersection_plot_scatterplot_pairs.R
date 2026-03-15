@@ -117,9 +117,9 @@ intersection_scatterplot_pairs_server <- function(id,
       shiny::req(sel.genes)
 
       ## Editor: significance colors
-      clr_ns <- if (!is.null(input$color_ns)) input$color_ns else omics_colors("grey")
-      clr_both <- if (!is.null(input$color_both)) input$color_both else omics_colors("green")
-      clr_one <- if (!is.null(input$color_one)) input$color_one else omics_colors("orange")
+      clr_ns <- get_editor_color(input, "color_ns", omics_colors("grey"))
+      clr_both <- get_editor_color(input, "color_both", omics_colors("green"))
+      clr_one <- get_editor_color(input, "color_one", omics_colors("orange"))
 
       is.sel <- (rownames(df) %in% sel.genes)
       df.color <- rep(clr_ns, nrow(df))
@@ -127,9 +127,8 @@ intersection_scatterplot_pairs_server <- function(id,
       ##  df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]
 
       ## Labels for top 50 (or custom from editor)
-      if (isTRUE(input$custom_labels)) {
-        custom_genes <- parse_label_features(input$label_features, rownames(df))
-        if (is.null(custom_genes)) custom_genes <- character(0)
+      custom_genes <- get_custom_labels(input, rownames(df))
+      if (!is.null(custom_genes)) {
         ## match custom genes to rownames (by symbol or rowname)
         all_symbols <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
         idx <- which(rownames(df) %in% custom_genes | all_symbols %in% custom_genes)

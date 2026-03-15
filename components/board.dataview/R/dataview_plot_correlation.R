@@ -143,7 +143,7 @@ dataview_plot_correlation_server <- function(id,
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
 
-      bar_col <- if (!is.null(input$scatter_color)) input$scatter_color else get_color_theme()$secondary
+      bar_col <- get_editor_color(input, "scatter_color", "secondary")
       light_end <- colorRampPalette(c("#FFFFFF", bar_col))(10)[4]
       pal <- colorRampPalette(c(light_end, bar_col))(16)
       df$color <- pal[1 + round(15 * df$value)]

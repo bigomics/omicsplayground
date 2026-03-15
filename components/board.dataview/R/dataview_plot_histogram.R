@@ -88,14 +88,7 @@ dataview_plot_histogram_server <- function(id,
       shiny::req(pd)
       samples <- colnames(pd$histogram)[-c(1, 2)]
       default_clrs <- rep(omics_pal_d(palette = "expanded")(8), ceiling(length(samples) / 8))
-      pickers <- lapply(seq_along(samples), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = samples[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(samples, session$ns, default_clrs)
     })
 
     plotly.RENDER <- function() {
@@ -126,10 +119,8 @@ dataview_plot_histogram_server <- function(id,
       if (palette %in% c("default", "original")) {
         line_colors <- omics_pal_d(palette = "expanded")(n_samples)
       } else if (palette == "custom") {
-        line_colors <- sapply(seq_len(n_samples), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) omics_pal_d(palette = "expanded")(8)[(j - 1) %% 8 + 1] else val
-        })
+        fallback <- omics_pal_d(palette = "expanded")(n_samples)
+        line_colors <- get_custom_palette_colors(input, n_samples, fallback)
       } else {
         line_colors <- omics_pal_d(palette = palette)(n_samples)
       }

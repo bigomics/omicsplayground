@@ -79,14 +79,7 @@ dataview_plot_abundance_server <- function(id,
       shiny::req(res)
       genes <- rownames(head(res$prop.counts, 5))
       default_clrs <- omics_pal_d(palette = "expanded")(length(genes))
-      pickers <- lapply(seq_along(genes), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = genes[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(genes, session$ns, default_clrs)
     })
 
     plotly.RENDER <- function(return_csv = FALSE) {
@@ -124,10 +117,8 @@ dataview_plot_abundance_server <- function(id,
         if (palette %in% c("default", "original")) {
           colors_vec <- omics_pal_d(palette = "expanded")(n_genes)
         } else if (palette == "custom") {
-          colors_vec <- sapply(seq_len(n_genes), function(j) {
-            val <- input[[paste0("custom_color_", j)]]
-            if (is.null(val)) omics_pal_d(palette = "expanded")(8)[(j - 1) %% 8 + 1] else val
-          })
+          fallback <- omics_pal_d(palette = "expanded")(n_genes)
+          colors_vec <- get_custom_palette_colors(input, n_genes, fallback)
         } else {
           colors_vec <- omics_pal_d(palette = palette)(n_genes)
         }

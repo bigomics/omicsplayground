@@ -104,9 +104,6 @@ functional_plot_go_actmap_server <- function(id,
         res <- plot_data()
         shiny::req(res)
 
-        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
-
         playbase::pgx.plotActivation(
           pgx,
           contrasts = input$selected_contrasts,
@@ -123,16 +120,13 @@ functional_plot_go_actmap_server <- function(id,
           mar = c(15, 30),
           tl.cex = 1.05,
           row.nchar = 60,
-          heatmap_colors = c(col_down, "grey90", col_up)
+          heatmap_colors = extract_heatmap_colors(input)
         )
       }
 
       plot_RENDER2 <- function() {
         res <- plot_data()
         shiny::req(res)
-
-        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
 
         playbase::pgx.plotActivation(
           pgx,
@@ -150,7 +144,7 @@ functional_plot_go_actmap_server <- function(id,
           mar = c(15, 30),
           tl.cex = 1.1,
           row.nchar = ifelse(input$rotate, 60, 200),
-          heatmap_colors = c(col_down, "grey90", col_up)
+          heatmap_colors = extract_heatmap_colors(input)
         )
       }
 

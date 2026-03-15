@@ -103,7 +103,7 @@ dataview_plot_totalcounts_server <- function(id,
       shiny::req(res)
       df <- res[[1]]
 
-      bar_color <- if (is.null(input$scatter_color)) get_color_theme()$secondary else input$scatter_color
+      bar_color <- get_editor_color(input, "scatter_color", "secondary")
       bars_order <- input$bars_order
 
       is_total <- res$sampleqc_plottype == "Total abundance"

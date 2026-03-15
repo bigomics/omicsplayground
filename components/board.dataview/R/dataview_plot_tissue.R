@@ -120,14 +120,9 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       grp_indices <- sort(unique(pdat$df$group))
       shiny::req(length(grp_indices) > 0)
       default_pal <- omics_pal_d()(8)
-      pickers <- lapply(seq_along(grp_indices), function(i) {
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", grp_indices[i])),
-          label = paste("Group", grp_indices[i]),
-          value = default_pal[grp_indices[i]]
-        )
-      })
-      shiny::tagList(pickers)
+      labels <- paste("Group", grp_indices)
+      default_colors <- default_pal[grp_indices]
+      custom_palette_pickers(labels, ns, default_colors)
     })
 
     ## Editor: rank list for custom drag-and-drop ordering
@@ -194,10 +189,9 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
         ## Custom per-group colors
         grp_indices <- sort(unique(df$group))
         default_pal <- omics_pal_d()(8)
-        bar_colors <- sapply(df$group, function(g) {
-          val <- input[[paste0("custom_color_", g)]]
-          if (is.null(val)) default_pal[g] else val
-        })
+        custom_colors <- get_custom_palette_colors(input, length(grp_indices), default_pal[grp_indices])
+        names(custom_colors) <- grp_indices
+        bar_colors <- unname(custom_colors[as.character(df$group)])
         p <- plotly::plot_ly(
           data = df,
           y = ~tissue,

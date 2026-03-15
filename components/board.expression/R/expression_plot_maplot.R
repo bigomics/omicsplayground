@@ -139,14 +139,10 @@ expression_plot_maplot_server <- function(id,
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
 
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+      col_up   <- get_editor_color(input, "color_up",   "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
 
-      lab.genes <- pd[["lab.genes"]]
-      if (isTRUE(input$custom_labels)) {
-        custom <- parse_label_features(input$label_features, pd[["features"]])
-        if (!is.null(custom)) lab.genes <- custom
-      }
+      lab.genes <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]])
 
       highlight <- pd[["sel.genes"]]
       if (isTRUE(input$color_selection) && length(lab.genes) > 0) {

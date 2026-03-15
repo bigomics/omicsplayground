@@ -85,16 +85,7 @@ clustering_plot_clustpca_server <- function(id,
       shiny::req(colvar)
       samples <- selected_samples()
       groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
-      ## use muted_light as default colors for the pickers
-      default_clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(length(groups) / 8))
-      pickers <- lapply(seq_along(groups), function(i) {
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = groups[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(groups, ns)
     })
 
     plot_data <- shiny::reactive({
@@ -289,10 +280,7 @@ clustering_plot_clustpca_server <- function(id,
       custom_colors <- NULL
       if (palette == "custom") {
         groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
-        custom_colors <- sapply(seq_along(groups), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) omics_pal_d(palette = "muted_light")(8)[(j - 1) %% 8 + 1] else val
-        })
+        custom_colors <- get_custom_palette_colors(input, length(groups))
       }
 
       plist <- list()

@@ -200,12 +200,9 @@ dataview_plot_tsne_server <- function(id,
       gene <- data[[2]]
 
       ## dynamic color palette from editor
-      if (!is.null(input$scatter_color)) {
-        light_end <- colorRampPalette(c("#FFFFFF", input$scatter_color))(10)[4]
-        pal <- colorRampPalette(c(light_end, input$scatter_color))(100)
-      } else {
-        pal <- omics_pal_c(palette = "brand_blue")(100)
-      }
+      scatter_col <- get_editor_color(input, "scatter_color", "secondary")
+      light_end <- colorRampPalette(c("#FFFFFF", scatter_col))(10)[4]
+      pal <- colorRampPalette(c(light_end, scatter_col))(100)
 
       symbols <- c(
         "circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",

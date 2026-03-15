@@ -203,7 +203,7 @@ singlecell_plot_mappingplot_server <- function(id,
       }
 
       ## Editor: color palette (white → user color)
-      color_low <- if (!is.null(input$color_low)) input$color_low else get_color_theme()$secondary
+      color_low <- get_editor_color(input, "color_low", "secondary")
       col_pal <- grDevices::colorRampPalette(c("white", "grey90", color_low))
 
       final_data <- pd$final_data

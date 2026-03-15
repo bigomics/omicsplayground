@@ -192,14 +192,11 @@ compare_plot_fcfc_server <- function(id,
       higenes <- hilightgenes()
 
       ## Editor: custom colors
-      clr_point <- if (!is.null(input$color_point)) input$color_point else "#222222"
-      clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#f23451"
+      clr_point <- get_editor_color(input, "color_point", "#222222")
+      clr_highlight <- get_editor_color(input, "color_highlight", "#f23451")
 
       ## Editor: custom labels
-      if (isTRUE(input$custom_labels)) {
-        custom_genes <- parse_label_features(input$label_features, rownames(plot_data()))
-        if (!is.null(custom_genes)) higenes <- custom_genes
-      }
+      higenes <- get_custom_labels(input, rownames(plot_data()), defaults = higenes)
 
       p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,

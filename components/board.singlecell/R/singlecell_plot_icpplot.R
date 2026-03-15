@@ -146,7 +146,7 @@ singlecell_plot_icpplot_server <- function(id,
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      color_high <- get_editor_color(input, "color_high", "primary")
       klrpal <- colorRampPalette(c("grey95", "grey65", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
 
@@ -211,7 +211,7 @@ singlecell_plot_icpplot_server <- function(id,
       cex1 <- 1.2
       cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
       cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      color_high <- get_editor_color(input, "color_high", "primary")
       klrpal <- colorRampPalette(c("grey95", "grey65", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 

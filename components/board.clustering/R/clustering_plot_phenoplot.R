@@ -74,17 +74,11 @@ clustering_plot_phenoplot_server <- function(id,
       }
       max_levels <- min(max(max_levels, 1), 8)
 
-      default_clrs <- omics_pal_d(palette = "muted_light")(8)
-      pickers <- lapply(seq_len(max_levels), function(i) {
+      picker_labels <- sapply(seq_len(max_levels), function(i) {
         nms <- level_names[[i]]
-        group_label <- if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = group_label,
-          value = default_clrs[i]
-        )
+        if (length(nms) > 0) paste(unique(nms), collapse = ", ") else paste("Color", i)
       })
-      shiny::tagList(pickers)
+      custom_palette_pickers(picker_labels, ns)
     })
 
     plot_data <- reactive({

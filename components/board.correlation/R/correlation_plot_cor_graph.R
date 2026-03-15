@@ -112,8 +112,8 @@ correlation_plot_cor_graph_server <- function(
       }
 
       ## Editor: up/down colors for positive/negative correlation edges
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+      col_up   <- get_editor_color(input, "color_up", "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
 
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
       visdata$edges$width <- 2 * visdata$edges$width

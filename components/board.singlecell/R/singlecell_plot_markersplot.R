@@ -201,7 +201,7 @@ singlecell_plot_markersplot_server <- function(id,
       cex1 <- 0.95 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
-      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      color_high <- get_editor_color(input, "color_high", "primary")
       klrpal <- colorRampPalette(c("grey90", "grey60", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 
@@ -263,7 +263,7 @@ singlecell_plot_markersplot_server <- function(id,
       cex1 <- 0.6 * c(2.2, 1.1, 0.6, 0.3)[cut(nrow(pos), breaks = c(-1, 40, 200, 1000, 1e10))]
 
       ## grey to red colorpalette for absolute expression
-      color_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
+      color_high <- get_editor_color(input, "color_high", "primary")
       klrpal <- colorRampPalette(c("grey90", "grey60", color_high))(16)
       klrpal <- paste0(gplots::col2hex(klrpal), "66")
 

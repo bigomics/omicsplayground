@@ -112,14 +112,7 @@ signature_plot_overlap_server <- function(id,
       db_levels <- levels(df1$db)
       shiny::req(length(db_levels) > 0)
       default_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[seq_along(db_levels)]
-      pickers <- lapply(seq_along(db_levels), function(i) {
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = db_levels[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(db_levels, ns, default_clrs)
     })
 
     overlapScorePlot.RENDER <- shiny::reactive({
@@ -153,10 +146,8 @@ signature_plot_overlap_server <- function(id,
       n_groups <- length(db_levels)
       palette <- input$palette
       if (!is.null(palette) && palette == "custom") {
-        grp_clrs <- sapply(seq_len(n_groups), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[j] else val
-        })
+        fallback_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[seq_len(n_groups)]
+        grp_clrs <- get_custom_palette_colors(input, n_groups, fallback_clrs)
       } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
         grp_clrs <- rep(omics_pal_d(palette = palette)(8), ceiling(n_groups / 8))[1:n_groups]
       } else {

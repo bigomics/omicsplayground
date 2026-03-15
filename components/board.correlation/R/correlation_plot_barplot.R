@@ -115,14 +115,7 @@ correlation_plot_barplot_server <- function(id,
       shiny::req(input$palette == "custom")
       series <- c("correlation", "partial correlation")
       default_clrs <- c("#A6CEE3", "#1F78B4")
-      pickers <- lapply(seq_along(series), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = series[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(series, session$ns, default_colors = default_clrs)
     })
 
     ## Editor: rank list for custom bar ordering
@@ -173,10 +166,7 @@ correlation_plot_barplot_server <- function(id,
         fig <- plotly::plotly_build(fig)
         n_series <- 2
         if (palette == "custom") {
-          COL <- sapply(seq_len(n_series), function(j) {
-            val <- input[[paste0("custom_color_", j)]]
-            if (is.null(val)) c("#A6CEE3", "#1F78B4")[j] else val
-          })
+          COL <- get_custom_palette_colors(input, n_series, fallback_colors = c("#A6CEE3", "#1F78B4"))
         } else {
           COL <- omics_pal_d(palette = palette)(8)[1:n_series]
         }

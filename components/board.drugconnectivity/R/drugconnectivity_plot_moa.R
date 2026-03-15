@@ -142,7 +142,7 @@ drugconnectivity_plot_moa_server <- function(id,
         )
 
         ## Editor: bar color
-        bar_color <- if (!is.null(input$bar_color)) input$bar_color else get_color_theme()$bar_color
+        bar_color <- get_editor_color(input, "bar_color", "bar_color")
         p <- plotly::plotly_build(p)
         for (i in seq_along(p$x$data)) {
           if (!is.null(p$x$data[[i]]$type) && p$x$data[[i]]$type == "bar") {

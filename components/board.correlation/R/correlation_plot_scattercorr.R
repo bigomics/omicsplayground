@@ -97,15 +97,7 @@ correlation_plot_scattercorr_server <- function(id,
       groups <- sort(unique(as.character(pgx$samples[, colorby])))
       groups <- groups[!groups %in% c(NA, "", " ", "NA", "na")]
       shiny::req(length(groups) > 0)
-      default_clrs <- rep(DEFAULT_COL, ceiling(length(groups) / length(DEFAULT_COL)))
-      pickers <- lapply(seq_along(groups), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = groups[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(groups, session$ns, default_colors = DEFAULT_COL)
     })
 
     cor_scatter.DATA <- shiny::reactive({
@@ -161,10 +153,7 @@ correlation_plot_scattercorr_server <- function(id,
       palette <- input$palette
       if (!is.null(palette) && palette == "default") palette <- "muted_light"
       if (!is.null(palette) && palette == "custom") {
-        COL <- sapply(seq_len(clrs.length), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) DEFAULT_COL[(j - 1) %% length(DEFAULT_COL) + 1] else val
-        })
+        COL <- get_custom_palette_colors(input, clrs.length, fallback_colors = DEFAULT_COL)
       } else if (!is.null(palette) && palette != "original") {
         COL <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))[1:clrs.length]
       } else {

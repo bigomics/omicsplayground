@@ -101,7 +101,7 @@ dataview_plot_variationcoefficient_server <- function(id,
       colnames(long.df) <- c("gene", "sample", "value")
       long.df$sample <- as.character(long.df$sample)
 
-      bar_color <- if (is.null(input$scatter_color)) get_color_theme()$secondary else input$scatter_color
+      bar_color <- get_editor_color(input, "scatter_color", "secondary")
       fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
       bars_order <- input$bars_order
       samples <- colnames(res)

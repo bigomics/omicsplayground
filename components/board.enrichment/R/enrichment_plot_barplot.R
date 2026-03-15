@@ -150,9 +150,9 @@ enrichment_plot_barplot_server <- function(id,
       )
 
       ## Editor: bar color (only override when user changed from default #A6CEE3)
-      bar_color <- input$bar_color
-      effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
-      if (!is.null(bar_color) && bar_color != "#A6CEE3" && !is.null(fig)) {
+      bar_color <- get_editor_color(input, "bar_color", "#A6CEE3")
+      effective_color <- bar_color
+      if (bar_color != "#A6CEE3" && !is.null(fig)) {
         fig <- plotly::plotly_build(fig)
         for (i in seq_along(fig$x$data)) {
           if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {

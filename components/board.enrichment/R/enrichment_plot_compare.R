@@ -71,9 +71,9 @@ enrichment_plot_compare_server <- function(id,
 
       gsmethods <- selected_gsetmethods()
 
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
-      col_line <- if (!is.null(input$color_line)) input$color_line else get_color_theme()$line
+      col_up   <- get_editor_color(input, "color_up",   "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
+      col_line <- get_editor_color(input, "color_line", "line")
 
       par(mfrow = c(2, 5), mar = c(0.5, 3.2, 2.6, 0.5), mgp = c(2, 0.8, 0))
       i <- 1

@@ -155,14 +155,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
         "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52",
         "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A"
       )
-      pickers <- lapply(seq_along(series), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = series[i],
-          value = plotly_colors[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(series, session$ns, plotly_colors)
     })
 
     ## Editor: rank list for custom bar ordering
@@ -214,10 +207,7 @@ enrichment_plot_freq_top_gsets_server <- function(id,
         fig <- plotly::plotly_build(fig)
         n_series <- ncol(F)
         if (palette == "custom") {
-          COL <- sapply(seq_len(n_series), function(j) {
-            val <- input[[paste0("custom_color_", j)]]
-            if (is.null(val)) "#636EFA" else val
-          })
+          COL <- get_custom_palette_colors(input, n_series, rep("#636EFA", n_series))
         } else {
           COL <- rep(omics_pal_d(palette = palette)(8), ceiling(n_series / 8))[1:n_series]
         }

@@ -79,8 +79,8 @@ dataview_plot_phenoassociation_server <- function(id, pgx, r.samples, watermark 
         ## TODO: reimplement in plotly (not me as code is complex and not intuitive at all)
         ## TODO: use na.omit to prevent plot error. This removes all rows where any value is NA. shall we use imputation?
         clean_annot <- na.omit(res$annot)
-        color_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-        color_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+        color_up   <- get_editor_color(input, "color_up", "primary")
+        color_down <- get_editor_color(input, "color_down", "secondary")
         pq <- playbase::pgx.testPhenoCorrelation(
           df = clean_annot,
           plot = TRUE,

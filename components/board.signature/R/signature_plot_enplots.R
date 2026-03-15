@@ -147,9 +147,9 @@ signature_plot_enplots_server <- function(id,
           )
 
         ## Editor: color overrides via plotly_build post-processing
-        color_up <- if (!is.null(input$color_up)) input$color_up else "#f23451"
-        color_down <- if (!is.null(input$color_down)) input$color_down else "#3181de"
-        color_line <- if (!is.null(input$color_line)) input$color_line else "#00EE00"
+        color_up <- get_editor_color(input, "color_up", "#f23451")
+        color_down <- get_editor_color(input, "color_down", "#3181de")
+        color_line <- get_editor_color(input, "color_line", "#00EE00")
         colors_changed <- (!is.null(input$color_up) && input$color_up != "#f23451") ||
           (!is.null(input$color_down) && input$color_down != "#3181de") ||
           (!is.null(input$color_line) && input$color_line != "#00EE00")

@@ -94,15 +94,12 @@ featuremap_plot_gset_sig_server <- function(id,
       pos <- pos[kk, , drop = FALSE]
 
       ## Editor: custom colors
-      low_color <- if (!is.null(input$color_low)) input$color_low else "#3181de"
-      high_color <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+      low_color <- get_editor_color(input, "color_low", "#3181de")
+      high_color <- get_editor_color(input, "color_high", "#f23451")
       custom_col <- c(low_color, "#f8f8f8", high_color)
 
       ## Editor: custom labels
-      sel <- NULL
-      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && input$label_features != "") {
-        sel <- parse_label_features(input$label_features, rownames(pos))
-      }
+      sel <- get_custom_labels(input, rownames(pos))
 
       ## Editor: color just selected
       color_sel <- is.null(input$color_selection) || isTRUE(input$color_selection)

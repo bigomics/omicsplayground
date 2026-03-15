@@ -120,12 +120,8 @@ compare_plot_cum_fc2_server <- function(id,
       ## "ascending" is already the default order
 
       ## Editor: bar color
-      bar_color <- input$bar_color
-      if (!is.null(bar_color)) {
-        fillcolor <- rep(bar_color, ncol(F2))
-      } else {
-        fillcolor <- c(RColorBrewer::brewer.pal(6, "Set2"), RColorBrewer::brewer.pal(9, "Set1"))
-      }
+      bar_color <- get_editor_color(input, "bar_color", "#66C2A5")
+      fillcolor <- rep(bar_color, ncol(F2))
 
       # Prepare input for the plot
       d <- data.frame(

@@ -148,14 +148,7 @@ enrichment_plot_scatter_server <- function(id,
       klrs <- getcolors(pgx, comp0)
       groups <- names(klrs$group)
       shiny::req(length(groups) > 0)
-      pickers <- lapply(seq_along(groups), function(i) {
-        colourpicker::colourInput(
-          session$ns(paste0("custom_color_", i)),
-          label = groups[i],
-          value = klrs$group[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(groups, session$ns, unname(klrs$group))
     })
 
     plotlysubplot_scatter <- function() {
@@ -185,10 +178,7 @@ enrichment_plot_scatter_server <- function(id,
       ## Editor: palette override
       palette <- input$palette
       if (!is.null(palette) && palette == "custom") {
-        COL <- sapply(seq_len(clrs.length), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) grp.klr[j] else val
-        })
+        COL <- get_custom_palette_colors(input, clrs.length, unname(grp.klr))
         names(COL) <- groups
       } else if (!is.null(palette) && palette != "original") {
         pal_colors <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))

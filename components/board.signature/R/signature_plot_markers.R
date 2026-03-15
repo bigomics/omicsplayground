@@ -268,8 +268,8 @@ signature_plot_markers_server <- function(id,
       }
 
       ## Editor: gradient colors
-      color_low <- if (!is.null(input$color_low)) input$color_low else omics_colors("brand_blue")
-      color_high <- if (!is.null(input$color_high)) input$color_high else omics_colors("red")
+      color_low <- get_editor_color(input, "color_low", "#3181de")
+      color_high <- get_editor_color(input, "color_high", "#f23451")
 
       plt <- list()
       i <- 0

@@ -162,9 +162,9 @@ expression_plot_topgenes_server <- function(id,
       }
 
       ## Editor: effective bar color and title color
-      bar_color <- input$bar_color
-      effective_color <- if (!is.null(bar_color)) bar_color else "#A6CEE3"
-      color_changed <- !is.null(bar_color) && bar_color != "#A6CEE3"
+      bar_color <- get_editor_color(input, "bar_color", "#A6CEE3")
+      effective_color <- bar_color
+      color_changed <- bar_color != "#A6CEE3"
 
       ## Editor: bars order
       bars_order <- input$bars_order

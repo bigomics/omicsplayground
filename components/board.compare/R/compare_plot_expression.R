@@ -87,16 +87,7 @@ compare_plot_expression_server <- function(id,
       shiny::req(input$palette == "custom")
       gd <- gene_data()
       shiny::req(gd$rn)
-      rn <- gd$rn
-      default_pal <- omics_pal_d()(length(rn))
-      pickers <- lapply(seq_along(rn), function(i) {
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = rn[i],
-          value = default_pal[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(gd$rn, ns, default_colors = omics_pal_d()(length(gd$rn)))
     })
 
     ## Editor: rank list for custom drag-and-drop contrast ordering

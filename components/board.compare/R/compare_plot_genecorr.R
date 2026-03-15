@@ -60,15 +60,7 @@ compare_plot_genecorr_server <- function(id,
       shiny::req(colorby)
       grp <- playbase::pgx.getContrastGroups(pgx, colorby, as.factor = FALSE)
       groups <- sort(unique(na.omit(as.character(grp))))
-      default_clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(length(groups) / 8))
-      pickers <- lapply(seq_along(groups), function(i) {
-        colourpicker::colourInput(
-          ns(paste0("custom_color_", i)),
-          label = groups[i],
-          value = default_clrs[i]
-        )
-      })
-      shiny::tagList(pickers)
+      custom_palette_pickers(groups, ns)
     })
 
     shiny::observeEvent(contrast1(), {
@@ -209,11 +201,7 @@ compare_plot_genecorr_server <- function(id,
         paired_pal <- rep(RColorBrewer::brewer.pal(12, "Paired"), ceiling(n_groups / 12))
         klr_colors <- setNames(paired_pal[seq_len(n_groups)], levels(grp))
       } else if (palette == "custom") {
-        default_clrs <- omics_pal_d("muted_light")(8)
-        klr_colors <- sapply(seq_len(n_groups), function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) default_clrs[(j - 1) %% 8 + 1] else val
-        })
+        klr_colors <- get_custom_palette_colors(input, n_groups)
         klr_colors <- setNames(klr_colors, levels(grp))
       } else {
         klr_colors <- setNames(omics_pal_d(palette)(n_groups), levels(grp))

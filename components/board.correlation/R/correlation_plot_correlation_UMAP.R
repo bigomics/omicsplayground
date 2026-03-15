@@ -120,13 +120,11 @@ correlation_plot_correlation_UMAP_server <- function(id,
       cexlab <- ifelse(length(higenes) == 1, 2.2, 1.3)
 
       ## Editor: custom labels override
-      if (isTRUE(input$custom_labels) && !is.null(input$label_features) && nchar(trimws(input$label_features)) > 0) {
-        higenes <- parse_label_features(input$label_features, rownames(pgx$X))
-      }
+      higenes <- get_custom_labels(input, rownames(pgx$X), defaults = higenes)
 
       ## Editor: up/down colors → diverging gradient
-      col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-      col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
+      col_up   <- get_editor_color(input, "color_up", "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
 
       ## Editor: color just selected — collapse non-highlighted genes to 0 (neutral midpoint)
       rho0_plot <- rho0

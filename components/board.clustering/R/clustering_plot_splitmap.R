@@ -401,9 +401,6 @@ clustering_plot_splitmap_server <- function(id,
         zlim <- NULL
         symm <- FALSE
       }
-      col_low  <- if (!is.null(input$color_low))  input$color_low  else get_color_theme()$secondary
-      col_mid  <- if (!is.null(input$color_mid))  input$color_mid  else get_color_theme()$neutral
-      col_high <- if (!is.null(input$color_high)) input$color_high else get_color_theme()$primary
       plt <- playbase::pgx.splitHeatmapFromMatrix(
         X = X,
         annot = annotF,
@@ -419,7 +416,7 @@ clustering_plot_splitmap_server <- function(id,
         colcex = col_cex,
         show_legend = input$show_legend,
         return_x_matrix = TRUE,
-        heatmap_colors = c(col_low, col_mid, col_high)
+        heatmap_colors = extract_heatmap_lmh_colors(input)
       )
       return(plt)
     }

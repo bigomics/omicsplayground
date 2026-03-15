@@ -80,15 +80,12 @@ compare_plot_compare1_server <- function(id,
       target_col <- mat$target_col
 
       ## Editor: custom gradient colors
-      color_low <- if (!is.null(input$color_low)) input$color_low else "#3181de"
-      color_high <- if (!is.null(input$color_high)) input$color_high else "#f23451"
+      color_low <- get_editor_color(input, "color_low", "#3181de")
+      color_high <- get_editor_color(input, "color_high", "#f23451")
       custom_col <- c(color_low, "#f8f8f8", color_high)
 
       ## Editor: custom labels
-      if (isTRUE(input$custom_labels)) {
-        custom_genes <- parse_label_features(input$label_features, rownames(pgx$X))
-        if (!is.null(custom_genes)) higenes <- custom_genes
-      }
+      higenes <- get_custom_labels(input, rownames(pgx$X), defaults = higenes)
 
       ## Editor: color just selected
       color_sel <- isTRUE(input$color_selection)

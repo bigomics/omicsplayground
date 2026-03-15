@@ -148,9 +148,9 @@ drugconnectivity_plot_enplots_server <- function(id,
           par(mfrow = c(nc, nc), mar = c(0.3, 1.0, 1.3, 0), mgp = c(1.9, 0.6, 0))
         }
 
-        col_up   <- if (!is.null(input$color_up))   input$color_up   else get_color_theme()$primary
-        col_down <- if (!is.null(input$color_down)) input$color_down else get_color_theme()$secondary
-        col_line <- if (!is.null(input$color_line)) input$color_line else get_color_theme()$line
+        col_up   <- get_editor_color(input, "color_up", "primary")
+        col_down <- get_editor_color(input, "color_down", "secondary")
+        col_line <- get_editor_color(input, "color_line", "line")
 
         for (i in 1:nrow(dt)) {
           dx <- rownames(dt)[i]

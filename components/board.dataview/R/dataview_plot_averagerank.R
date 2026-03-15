@@ -110,9 +110,9 @@ dataview_plot_averagerank_server <- function(id,
       xanchor <- "center"
 
       ## Editor: custom colors
-      clr_fill <- if (!is.null(input$color_fill)) input$color_fill else "#b8d4f0"
-      clr_line <- if (!is.null(input$rank_color_line)) input$rank_color_line else get_color_theme()$secondary
-      clr_highlight <- if (!is.null(input$color_highlight)) input$color_highlight else "#e3a45a"
+      clr_fill <- get_editor_color(input, "color_fill", "#b8d4f0")
+      clr_line <- get_editor_color(input, "rank_color_line", "secondary")
+      clr_highlight <- get_editor_color(input, "color_highlight", "#e3a45a")
 
       # subsample for speed
       ii <- 1:length(mean.fc)
