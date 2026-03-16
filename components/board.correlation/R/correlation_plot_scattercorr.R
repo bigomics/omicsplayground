@@ -150,15 +150,7 @@ correlation_plot_scattercorr_server <- function(id,
 
       ## Editor: palette override (default "original" uses Paired palette)
       clrs.length <- length(levels(pheno))
-      palette <- input$palette
-      if (!is.null(palette) && palette == "default") palette <- "muted_light"
-      if (!is.null(palette) && palette == "custom") {
-        COL <- get_custom_palette_colors(input, clrs.length, fallback_colors = DEFAULT_COL)
-      } else if (!is.null(palette) && palette != "original") {
-        COL <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))[1:clrs.length]
-      } else {
-        COL <- rep(DEFAULT_COL, ceiling(clrs.length / length(DEFAULT_COL)))[1:clrs.length]
-      }
+      COL <- resolve_palette_colors(input, clrs.length, fallback_colors = DEFAULT_COL)
 
       nplots <- n_row * n_cols
       rho <- head(rho, nplots)

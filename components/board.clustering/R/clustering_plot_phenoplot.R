@@ -128,13 +128,7 @@ clustering_plot_phenoplot_server <- function(id,
       cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
 
       ## Editor: palette
-      palette <- if (!is.null(input$palette)) input$palette else "muted_light"
-      if (palette %in% c("original", "default")) palette <- "muted_light"
-      if (palette == "custom") {
-        base_clrs <- get_custom_palette_colors(input, 8)
-      } else {
-        base_clrs <- omics_pal_d(palette = palette)(8)
-      }
+      base_clrs <- resolve_palette_colors(input, 8, fallback_colors = omics_pal_d("muted_light")(8))
 
       plt <- list()
       for (i in 1:min(20, length(pheno))) {

@@ -114,16 +114,7 @@ dataview_plot_histogram_server <- function(id,
       }
 
       n_samples <- length(unique(df$sample))
-      palette <- if (!is.null(input$palette)) input$palette else "default"
-
-      if (palette %in% c("default", "original")) {
-        line_colors <- omics_pal_d(palette = "expanded")(n_samples)
-      } else if (palette == "custom") {
-        fallback <- omics_pal_d(palette = "expanded")(n_samples)
-        line_colors <- get_custom_palette_colors(input, n_samples, fallback)
-      } else {
-        line_colors <- omics_pal_d(palette = palette)(n_samples)
-      }
+      line_colors <- resolve_palette_colors(input, n_samples, fallback_colors = omics_pal_d("expanded")(n_samples))
 
       fig <-
         plotly::plot_ly(

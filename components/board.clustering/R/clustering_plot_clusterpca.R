@@ -275,13 +275,11 @@ clustering_plot_clustpca_server <- function(id,
       multiplot <- length(methods) > 1
 
       ## Editor: palette and custom colors
+      groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
+      n_groups <- length(groups)
+      custom_colors <- resolve_palette_colors(input, n_groups, fallback_colors = omics_pal_d("muted_light")(n_groups))
       palette <- if (!is.null(input$palette)) input$palette else "muted_light"
-      if (palette %in% c("original", "default")) palette <- "muted_light"
-      custom_colors <- NULL
-      if (palette == "custom") {
-        groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
-        custom_colors <- get_custom_palette_colors(input, length(groups))
-      }
+      if (palette %in% c("original", "default", "custom", "")) palette <- "muted_light"
 
       plist <- list()
       for (i in 1:length(methods)) {

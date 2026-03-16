@@ -144,15 +144,8 @@ signature_plot_overlap_server <- function(id,
       ## Editor: palette override
       db_levels <- levels(df1$db)
       n_groups <- length(db_levels)
-      palette <- input$palette
-      if (!is.null(palette) && palette == "custom") {
-        fallback_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[seq_len(n_groups)]
-        grp_clrs <- get_custom_palette_colors(input, n_groups, fallback_clrs)
-      } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
-        grp_clrs <- rep(omics_pal_d(palette = palette)(8), ceiling(n_groups / 8))[1:n_groups]
-      } else {
-        grp_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[1:n_groups]
-      }
+      set2_clrs <- rep(RColorBrewer::brewer.pal(8, "Set2"), 10)[seq_len(n_groups)]
+      grp_clrs <- resolve_palette_colors(input, n_groups, fallback_colors = set2_clrs)
       klr <- grp_clrs[as.integer(df1$db)]
 
       plt <- plotly::plot_ly(

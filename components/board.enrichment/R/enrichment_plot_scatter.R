@@ -176,17 +176,8 @@ enrichment_plot_scatter_server <- function(id,
       clrs.length <- length(groups)
 
       ## Editor: palette override
-      palette <- input$palette
-      if (!is.null(palette) && palette == "custom") {
-        COL <- get_custom_palette_colors(input, clrs.length, unname(grp.klr))
-        names(COL) <- groups
-      } else if (!is.null(palette) && palette != "original") {
-        pal_colors <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))
-        COL <- c("grey90", pal_colors[1:(clrs.length - 1)])
-        names(COL) <- groups
-      } else {
-        COL <- grp.klr
-      }
+      COL <- resolve_palette_colors(input, clrs.length, fallback_colors = unname(grp.klr))
+      names(COL) <- groups
 
       pheno <- factor(xgroup, levels = groups)
       gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)

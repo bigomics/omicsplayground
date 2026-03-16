@@ -153,16 +153,10 @@ correlation_plot_barplot_server <- function(id,
       )
 
       ## Editor: palette override
-      palette <- input$palette
-      if (!is.null(palette) && palette == "default") palette <- "muted_light"
-      if (!is.null(palette) && palette != "original") {
+      n_series <- 2
+      COL <- resolve_palette_colors(input, n_series)
+      if (!is.null(COL)) {
         fig <- plotly::plotly_build(fig)
-        n_series <- 2
-        if (palette == "custom") {
-          COL <- get_custom_palette_colors(input, n_series, fallback_colors = c("#A6CEE3", "#1F78B4"))
-        } else {
-          COL <- omics_pal_d(palette = palette)(8)[1:n_series]
-        }
         bar_idx <- 1
         for (i in seq_along(fig$x$data)) {
           if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {

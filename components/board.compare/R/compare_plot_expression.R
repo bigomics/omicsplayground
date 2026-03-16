@@ -145,19 +145,9 @@ compare_plot_expression_server <- function(id,
       m1_first <- apply(e1, 2, function(y) tapply(x1_first, y, mean))
       rn <- rownames(m1_first)
 
-      ## Resolve group colors based on palette selection
-      group_colors <- NULL ## NULL means use plotly defaults (original)
-      if (!is.null(palette) && palette == "custom") {
-        default_pal <- omics_pal_d()(length(rn))
-        group_colors <- sapply(seq_along(rn), function(i) {
-          val <- input[[paste0("custom_color_", i)]]
-          if (is.null(val)) default_pal[i] else val
-        })
-        names(group_colors) <- rn
-      } else if (!is.null(palette) && !palette %in% c("original", "")) {
-        group_colors <- omics_pal_d(palette = palette)(length(rn))
-        names(group_colors) <- rn
-      }
+      ## Resolve group colors based on palette selection (NULL = plotly defaults)
+      group_colors <- resolve_palette_colors(input, length(rn))
+      if (!is.null(group_colors)) names(group_colors) <- rn
 
       # Build plots
       sub_plots <- vector("list", length(sel.genes))

@@ -156,14 +156,7 @@ clustering_plot_clusterannot_server <- function(id,
 
       ## Editor: palette override
       n_clusters <- ncol(rho)
-      palette <- input$palette
-      if (!is.null(palette) && palette == "custom") {
-        klrpal <- get_custom_palette_colors(input, n_clusters)
-      } else if (!is.null(palette) && !palette %in% c("muted_light", "original", "default")) {
-        klrpal <- rep(omics_pal_d(palette = palette)(8), ceiling(n_clusters / 8))[1:n_clusters]
-      } else {
-        klrpal <- omics_pal_d("muted_light")(n_clusters)
-      }
+      klrpal <- resolve_palette_colors(input, n_clusters, fallback_colors = omics_pal_d("muted_light")(n_clusters))
 
       plot_list <- list()
       i <- 1

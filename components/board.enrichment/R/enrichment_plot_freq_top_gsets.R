@@ -195,15 +195,10 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       )
 
       ## Editor: palette override
-      palette <- input$palette
-      if (!is.null(palette) && !palette %in% c("original", "default")) {
+      n_series <- ncol(F)
+      COL <- resolve_palette_colors(input, n_series)
+      if (!is.null(COL)) {
         fig <- plotly::plotly_build(fig)
-        n_series <- ncol(F)
-        if (palette == "custom") {
-          COL <- get_custom_palette_colors(input, n_series, rep("#636EFA", n_series))
-        } else {
-          COL <- rep(omics_pal_d(palette = palette)(8), ceiling(n_series / 8))[1:n_series]
-        }
         bar_idx <- 1
         for (i in seq_along(fig$x$data)) {
           if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {

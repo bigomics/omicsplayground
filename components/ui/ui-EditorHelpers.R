@@ -277,7 +277,38 @@ get_custom_palette_colors <- function(input, n, fallback_colors = NULL) {
 
 
 ## ---------------------------------------------------------------
-## 7. Sortable rank list UI
+## 7. Palette color resolution
+## ---------------------------------------------------------------
+
+#' Resolve palette colours from editor input.
+#'
+#' Handles the tri-state palette selection: "original"/"default" returns
+#' \code{NULL} (caller uses its own defaults), "custom" reads the
+#' colour pickers, anything else is a named \code{omics_pal_d} palette.
+#'
+#' @param input           Shiny input object.
+#' @param n               Number of colours needed.
+#' @param fallback_colors Fallback colours for "custom" when pickers
+#'   are not yet rendered. Also used for "original"/"default" when
+#'   non-NULL. Recycled to length \code{n}.
+#' @return Character vector of length \code{n}, or \code{NULL} when
+#'   palette is "original"/"default" and no \code{fallback_colors}
+#'   are provided.
+resolve_palette_colors <- function(input, n, fallback_colors = NULL) {
+  palette <- input$palette
+  if (is.null(palette) || palette %in% c("original", "default", "")) {
+    if (!is.null(fallback_colors)) return(rep_len(fallback_colors, n))
+    return(NULL)
+  }
+  if (palette == "custom") {
+    return(get_custom_palette_colors(input, n, fallback_colors))
+  }
+  rep_len(omics_pal_d(palette = palette)(min(n, 8)), n)
+}
+
+
+## ---------------------------------------------------------------
+## 8. Sortable rank list UI
 ## ---------------------------------------------------------------
 
 #' Create a sortable bucket list for drag-and-drop ordering.

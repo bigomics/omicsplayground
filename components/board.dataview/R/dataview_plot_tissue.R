@@ -176,48 +176,20 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       df$tissue <- factor(df$tissue, levels = df$tissue)
 
       ## Editor: palette override
-      palette <- input$palette
-      if (!is.null(palette) && palette == "custom") {
-        ## Custom per-group colors
-        grp_indices <- sort(unique(df$group))
-        default_pal <- omics_pal_d()(8)
-        custom_colors <- get_custom_palette_colors(input, length(grp_indices), default_pal[grp_indices])
-        names(custom_colors) <- grp_indices
-        bar_colors <- unname(custom_colors[as.character(df$group)])
-        p <- plotly::plot_ly(
-          data = df,
-          y = ~tissue,
-          x = ~x,
-          type = "bar",
-          orientation = "h",
-          marker = list(color = bar_colors),
-          hovertemplate = "%{y}: %{x}<extra></extra>"
-        )
-      } else if (!is.null(palette) && !palette %in% c("original", "default", "")) {
-        ## Named palette
-        bar_colors <- omics_pal_d(palette = palette)(8)[df$group]
-        p <- plotly::plot_ly(
-          data = df,
-          y = ~tissue,
-          x = ~x,
-          type = "bar",
-          orientation = "h",
-          marker = list(color = bar_colors),
-          hovertemplate = "%{y}: %{x}<extra></extra>"
-        )
-      } else {
-        ## Original behavior
-        p <- plotly::plot_ly(
-          data = df,
-          y = ~tissue,
-          x = ~x,
-          type = "bar",
-          orientation = "h",
-          color = ~color,
-          colors = omics_pal_d()(length(unique(df$color))),
-          hovertemplate = "%{y}: %{x}<extra></extra>"
-        )
-      }
+      grp_indices <- sort(unique(df$group))
+      default_pal <- omics_pal_d()(8)
+      grp_colors <- resolve_palette_colors(input, length(grp_indices), fallback_colors = default_pal[grp_indices])
+      names(grp_colors) <- grp_indices
+      bar_colors <- unname(grp_colors[as.character(df$group)])
+      p <- plotly::plot_ly(
+        data = df,
+        y = ~tissue,
+        x = ~x,
+        type = "bar",
+        orientation = "h",
+        marker = list(color = bar_colors),
+        hovertemplate = "%{y}: %{x}<extra></extra>"
+      )
 
       p %>%
         plotly::layout(

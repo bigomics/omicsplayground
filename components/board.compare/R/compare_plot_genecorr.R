@@ -194,18 +194,10 @@ compare_plot_genecorr_server <- function(id,
       grp <- factor(grp)
 
       ## Editor: palette and custom colors
-      palette <- if (!is.null(input$palette)) input$palette else "default"
       n_groups <- nlevels(grp)
-      if (palette %in% c("original", "default")) {
-        ## preserve the original RColorBrewer "Paired" palette
-        paired_pal <- rep(RColorBrewer::brewer.pal(12, "Paired"), ceiling(n_groups / 12))
-        klr_colors <- setNames(paired_pal[seq_len(n_groups)], levels(grp))
-      } else if (palette == "custom") {
-        klr_colors <- get_custom_palette_colors(input, n_groups)
-        klr_colors <- setNames(klr_colors, levels(grp))
-      } else {
-        klr_colors <- setNames(omics_pal_d(palette)(n_groups), levels(grp))
-      }
+      paired_pal <- rep(RColorBrewer::brewer.pal(12, "Paired"), ceiling(n_groups / 12))
+      klr_colors <- resolve_palette_colors(input, n_groups, fallback_colors = paired_pal[seq_len(n_groups)])
+      names(klr_colors) <- levels(grp)
 
       # Assemble subplots
       sub_plots <- vector("list", length(higenes))

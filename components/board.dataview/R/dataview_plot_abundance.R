@@ -105,15 +105,7 @@ dataview_plot_abundance_server <- function(id,
 
         ## Resolve palette
         n_genes <- length(unique(long.data$gene))
-        palette <- if (!is.null(input$palette)) input$palette else "default"
-        if (palette %in% c("default", "original")) {
-          colors_vec <- omics_pal_d(palette = "expanded")(n_genes)
-        } else if (palette == "custom") {
-          fallback <- omics_pal_d(palette = "expanded")(n_genes)
-          colors_vec <- get_custom_palette_colors(input, n_genes, fallback)
-        } else {
-          colors_vec <- omics_pal_d(palette = palette)(n_genes)
-        }
+        colors_vec <- resolve_palette_colors(input, n_genes, fallback_colors = omics_pal_d("expanded")(n_genes))
 
         ## stacked barchart
         fig <-
