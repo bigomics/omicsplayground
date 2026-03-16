@@ -76,6 +76,7 @@ upload_table_preview_samples_server <- function(
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      shiny::req(!is.null(dt))
       if (sum_techreps()) dt <- uploaded$samples.csv
       vars_selected <- vars_selected()
       vars_selected <- intersect(vars_selected, colnames(dt))
@@ -567,6 +568,7 @@ upload_table_preview_samples_server <- function(
       } else {
         delete_all_files_samples(TRUE)
       }
+      uploaded$samples.csv <- NULL
       loaded_samples(FALSE)
       vars_selected(NULL)
       orig_sample_matrix(NULL)

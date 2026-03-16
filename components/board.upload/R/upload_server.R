@@ -575,7 +575,7 @@ UploadBoard <- function(id,
           }
         }
 
-        if (!is.null(checked)) {
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
           checked <- playbase::contrasts.convertToLabelMatrix(
             contrasts = checked, samples = cc$SAMPLES
           )
