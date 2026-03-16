@@ -131,10 +131,7 @@ clustering_plot_phenoplot_server <- function(id,
       palette <- if (!is.null(input$palette)) input$palette else "muted_light"
       if (palette %in% c("original", "default")) palette <- "muted_light"
       if (palette == "custom") {
-        base_clrs <- sapply(1:8, function(j) {
-          val <- input[[paste0("custom_color_", j)]]
-          if (is.null(val)) omics_pal_d(palette = "muted_light")(8)[j] else val
-        })
+        base_clrs <- get_custom_palette_colors(input, 8)
       } else {
         base_clrs <- omics_pal_d(palette = palette)(8)
       }
