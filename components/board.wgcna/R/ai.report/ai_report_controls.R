@@ -20,8 +20,8 @@ ai_report_controls_ui <- function(id) {
     shiny::radioButtons(
       ns("mode"),
       "Mode:",
-      choices = c("Summary" = "summary", "Report" = "report"),
-      selected = "summary",
+      choices = c("Report" = "report", "Summary" = "summary"),
+      selected = "report",
       inline = TRUE
     ),
 
@@ -35,45 +35,45 @@ ai_report_controls_ui <- function(id) {
     ),
 
     # Summary-only controls (hidden when in Report mode)
-    shiny::div(
-      id = ns("summary_controls"),
-      shiny::selectInput(
-        ns("summary_module"),
-        "Module:",
-        choices = NULL,
-        width = "100%"
-      ),
-      shiny::radioButtons(
-        ns("summary_style"),
-        "Summary Style:",
-        choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
-        selected = "short_summary",
-        inline = FALSE
-      )
-    ),
-
-    # Report-only controls (hidden when in Summary mode)
     shinyjs::hidden(
       shiny::div(
-        id = ns("image_controls"),
-        shiny::checkboxInput(
-          ns("include_infographic"),
-          "Include infographic",
-          value = FALSE
-        ),
+        id = ns("summary_controls"),
         shiny::selectInput(
-          ns("image_style"),
-          "Infographic Style:",
+          ns("summary_module"),
+          "Module:",
           choices = NULL,
           width = "100%"
         ),
         shiny::radioButtons(
-          ns("image_blocks"),
-          "Layout:",
-          choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
-          selected = "1",
-          inline = TRUE
+          ns("summary_style"),
+          "Summary Style:",
+          choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
+          selected = "short_summary",
+          inline = FALSE
         )
+      )
+    ),
+
+    # Report-only controls (visible by default when in Report mode)
+    shiny::div(
+      id = ns("image_controls"),
+      shiny::checkboxInput(
+        ns("include_infographic"),
+        "Include infographic",
+        value = FALSE
+      ),
+      shiny::selectInput(
+        ns("image_style"),
+        "Infographic Style:",
+        choices = NULL,
+        width = "100%"
+      ),
+      shiny::radioButtons(
+        ns("image_blocks"),
+        "Layout:",
+        choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
+        selected = "1",
+        inline = TRUE
       )
     )
     ## NOTE: "Show Prompt" checkbox is rendered in the text card's hamburger
@@ -97,7 +97,7 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
 
     # Toggle mode-specific controls based on mode selection
     shiny::observe({
-      mode <- input$mode %||% "summary"
+      mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
         shinyjs::hide("image_controls")
@@ -141,7 +141,7 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
     # Return reactive values
     list(
       trigger = reactive(trigger()),
-      mode = reactive(input$mode %||% "summary"),
+      mode = reactive(input$mode %||% "report"),
       summary_style = reactive(input$summary_style),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),

@@ -173,6 +173,7 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info),
     enable_ai = shiny::reactive(input$enable_ai)
   )
+  session$userData$enable_ai <- shiny::reactive(input$enable_ai)
 
   ## observe and set global User options
   shiny::observeEvent(input$enable_ai, {
@@ -848,6 +849,19 @@ app_server <- function(input, output, session) {
 
     toggle_tabs_by_label(ai.summary.tabsets, "AI Summary", show.ai.tabs)
     toggle_tabs_by_label(ai.report.tabsets, "AI Report", show.ai.tabs)
+
+    ## toggle microsummary containers (hidden by default, shown when AI enabled)
+    micro.containers <- c(
+      "wgcna-micro_WGCNA", "wgcna-micro_Eigengenes",
+      "wgcna-micro_Modules", "wgcna-micro_Enrichment"
+    )
+    for (cid in micro.containers) {
+      if (show.ai.tabs) {
+        shinyjs::show(id = cid)
+      } else {
+        shinyjs::hide(id = cid)
+      }
+    }
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)

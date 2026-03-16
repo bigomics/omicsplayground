@@ -320,7 +320,8 @@ WgcnaBoard <- function(id, pgx) {
       board_name = "WGCNA",
       tab_names = wgcna_micro_tabs,
       static_texts = WGCNA_STATIC_TEXTS,
-      invalidate_reactive = wgcna
+      invalidate_reactive = wgcna,
+      enabled_reactive = session$userData$enable_ai
     )
 
     ## ===== AI REPORT =====

@@ -623,7 +623,7 @@ AiDiagramCardServer <- function(id,
 
       shiny::validate(shiny::need(
         !is.null(rv$result),
-        "Click 'Generate Diagram' to create an AI diagram."
+        "Diagram generation requires an AI Report. Please generate an AI Report first."
       ))
 
       omicsai::omicsai_diagram_render(rv$result, style = style, layout = input$layout, spread = input$spread)
@@ -908,7 +908,7 @@ AiImageCardServer <- function(id,
 
       shiny::validate(shiny::need(
         !is.null(rv$result),
-        "Click 'Generate Image' to create an AI infographic."
+        "Infographic generation requires an AI Report. Please generate an AI Report first."
       ))
 
       image_path <- rv$result$path
@@ -1014,7 +1014,8 @@ MicrosummaryServer <- function(id,
                                board_name = "WGCNA",
                                tab_names = character(0),
                                static_texts = list(),
-                               invalidate_reactive = NULL) {
+                               invalidate_reactive = NULL,
+                               enabled_reactive = NULL) { # reactive gate: when FALSE, no LLM calls are made and bullets revert to static-only
   shiny::moduleServer(id, function(input, output, session) {
     module_cache <- .aicards_coalesce(cache, omicsai::omicsai_cache_init("mem"))
 
@@ -1039,7 +1040,31 @@ MicrosummaryServer <- function(id,
       }, ignoreInit = TRUE)
     }
 
+    # Revert all tabs to static-only when AI is disabled mid-session.
+    # NOTE: This intentionally resets the display only, not the results cache.
+    # Cached LLM bullets in `results[[tab]]` are preserved so that re-enabling
+    # AI restores content instantly without a new LLM call. If a fresh call is
+    # ever needed on re-enable, invalidate_reactive should be triggered instead.
+    if (!is.null(enabled_reactive)) {
+      shiny::observeEvent(enabled_reactive(), {
+        if (!isTRUE(enabled_reactive())) {
+          for (tn in tab_names) {
+            local({
+              tab_name <- tn
+              oid <- paste0("micro_", gsub(" ", "_", tab_name))
+              output[[oid]] <- shiny::renderUI({
+                .microsummary_render_alert(static_texts[[tab_name]], bullets = NULL)
+              })
+            })
+          }
+        }
+      }, ignoreInit = TRUE)
+    }
+
     shiny::observe({
+      # Guard: skip LLM call when AI is disabled. Re-enabling lifts this guard
+      # and serves cached bullets if available (no forced refresh on re-enable).
+      if (!is.null(enabled_reactive) && !isTRUE(enabled_reactive())) return()
       tab <- tab_reactive()
       shiny::req(tab)
 

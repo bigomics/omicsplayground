@@ -10,8 +10,8 @@ multiomics_ai_report_controls_ui <- function(id, module_label = "Item:") {
     shiny::radioButtons(
       ns("mode"),
       "Mode:",
-      choices = c("Summary" = "summary", "Report" = "report"),
-      selected = "summary",
+      choices = c("Report" = "report", "Summary" = "summary"),
+      selected = "report",
       inline = TRUE
     ),
     shiny::actionButton(
@@ -21,43 +21,43 @@ multiomics_ai_report_controls_ui <- function(id, module_label = "Item:") {
       class = "btn-outline-primary btn-block",
       style = "margin-bottom: 10px;"
     ),
-    shiny::div(
-      id = ns("summary_controls"),
-      shiny::selectInput(
-        ns("summary_module"),
-        module_label,
-        choices = NULL,
-        width = "100%"
-      ),
-      shiny::radioButtons(
-        ns("summary_style"),
-        "Summary Style:",
-        choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
-        selected = "short_summary",
-        inline = FALSE
-      )
-    ),
     shinyjs::hidden(
       shiny::div(
-        id = ns("image_controls"),
-        shiny::checkboxInput(
-          ns("include_infographic"),
-          "Include infographic",
-          value = FALSE
-        ),
+        id = ns("summary_controls"),
         shiny::selectInput(
-          ns("image_style"),
-          "Infographic Style:",
+          ns("summary_module"),
+          module_label,
           choices = NULL,
           width = "100%"
         ),
         shiny::radioButtons(
-          ns("image_blocks"),
-          "Layout:",
-          choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
-          selected = "1",
-          inline = TRUE
+          ns("summary_style"),
+          "Summary Style:",
+          choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
+          selected = "short_summary",
+          inline = FALSE
         )
+      )
+    ),
+    shiny::div(
+      id = ns("image_controls"),
+      shiny::checkboxInput(
+        ns("include_infographic"),
+        "Include infographic",
+        value = FALSE
+      ),
+      shiny::selectInput(
+        ns("image_style"),
+        "Infographic Style:",
+        choices = NULL,
+        width = "100%"
+      ),
+      shiny::radioButtons(
+        ns("image_blocks"),
+        "Layout:",
+        choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
+        selected = "1",
+        inline = TRUE
       )
     )
   )
@@ -66,7 +66,7 @@ multiomics_ai_report_controls_ui <- function(id, module_label = "Item:") {
 multiomics_ai_report_controls_server <- function(id, module_choices = NULL) {
   moduleServer(id, function(input, output, session) {
     shiny::observe({
-      mode <- input$mode %||% "summary"
+      mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
         shinyjs::hide("image_controls")
@@ -106,7 +106,7 @@ multiomics_ai_report_controls_server <- function(id, module_choices = NULL) {
 
     list(
       trigger = shiny::reactive(trigger()),
-      mode = shiny::reactive(input$mode %||% "summary"),
+      mode = shiny::reactive(input$mode %||% "report"),
       summary_style = shiny::reactive(input$summary_style),
       show_prompt = shiny::reactive(input$show_prompt),
       selected_module = shiny::reactive(input$summary_module),

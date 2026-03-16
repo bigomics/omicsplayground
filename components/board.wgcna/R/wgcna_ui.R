@@ -78,7 +78,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          micro_ui[["WGCNA"]],
+          shinyjs::hidden(shiny::div(id = ns("micro_WGCNA"), micro_ui[["WGCNA"]])),
           bslib::layout_columns(
             col_widths = 12,
             height = "calc(100vh - 181px)",
@@ -154,7 +154,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          micro_ui[["Eigengenes"]],
+          shinyjs::hidden(shiny::div(id = ns("micro_Eigengenes"), micro_ui[["Eigengenes"]])),
           bslib::layout_columns(
             col_widths = c(4, 4, 4, 4, 4, 4),
             height = "calc(100vh - 181px)",
@@ -215,7 +215,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          micro_ui[["Modules"]],
+          shinyjs::hidden(shiny::div(id = ns("micro_Modules"), micro_ui[["Modules"]])),
           bslib::layout_columns(
             col_widths = c(6, 6, 6, 6),
             height = "calc(100vh - 181px)",
@@ -263,7 +263,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          micro_ui[["Enrichment"]],
+          shinyjs::hidden(shiny::div(id = ns("micro_Enrichment"), micro_ui[["Enrichment"]])),
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",
