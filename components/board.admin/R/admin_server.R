@@ -55,6 +55,11 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
       credentials_file = credentials_file
     )
 
+    admin_table_datamanager_server(
+      "datamanager",
+      auth = auth
+    )
+
     ## ================================================================================
     ## =================================== END ========================================
     ## ================================================================================

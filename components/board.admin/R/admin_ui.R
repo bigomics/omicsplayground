@@ -66,7 +66,20 @@ AdminPanelUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "System Settings"
+      "Data Management",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = fullH,
+        row_heights = list("auto", 1),
+        bs_alert("Browse, move, copy or delete .pgx dataset files across user folders, shared and public directories."),
+        admin_table_datamanager_ui(
+          id = ns("datamanager"),
+          title = "Data Management",
+          info.text = "Manage .pgx files across user folders, data_shared, and data_public directories.",
+          caption = "Select files and use the action buttons to move, copy, or delete.",
+          height = c("100%", TABLE_HEIGHT_MODAL)
+        )
+      )
     )
   )
 

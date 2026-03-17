@@ -63,32 +63,13 @@ admin_table_users_server <- function(id, auth,
         if (!is.null(cred)) n_registered <- nrow(cred)
       }
 
-      ## Disk usage (best effort)
-      dir_size_mb <- function(d) {
-        if (!dir.exists(d)) return("N/A")
-        sz <- tryCatch(
-          sum(file.info(list.files(d, recursive = TRUE, full.names = TRUE))$size, na.rm = TRUE),
-          error = function(e) NA
-        )
-        if (is.na(sz)) return("N/A")
-        if (sz > 1e9) return(paste0(round(sz / 1e9, 1), " GB"))
-        paste0(round(sz / 1e6, 1), " MB")
-      }
-
-      ## System info
-      r_version <- paste0(R.version$major, ".", R.version$minor)
-
       ## Build stats table
       metrics <- c(
         "Registered users",
         "User directories",
         "User datasets (.pgx)",
         "Shared datasets",
-        "Public datasets",
-        "User data size",
-        "Shared data size",
-        "Public data size",
-        "R version"
+        "Public datasets"
       )
 
       values <- c(
@@ -96,11 +77,7 @@ admin_table_users_server <- function(id, auth,
         as.character(n_user_dirs),
         as.character(n_pgx_total),
         as.character(n_shared),
-        as.character(n_public),
-        dir_size_mb(PGX.DIR),
-        dir_size_mb(SHARE.DIR),
-        dir_size_mb(PUBLIC.DIR),
-        r_version
+        as.character(n_public)
       )
 
       dt <- data.frame(
