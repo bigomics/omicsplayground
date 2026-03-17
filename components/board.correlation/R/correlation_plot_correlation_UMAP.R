@@ -126,19 +126,18 @@ correlation_plot_correlation_UMAP_server <- function(id,
       col_up   <- get_editor_color(input, "color_up", "primary")
       col_down <- get_editor_color(input, "color_down", "secondary")
 
-      ## Editor: color just selected — collapse non-highlighted genes to 0 (neutral midpoint)
+      ## Editor: color just selected — NA-out non-selected so they render as grey
       rho0_plot <- rho0
+      plot_hilight <- higenes
       if (isTRUE(input$color_selection) && length(higenes) > 0) {
-        ## Convert probe IDs → gene symbols using the same method as pgx.plotGeneUMAP
-        ## (probe2symbol auto-detects the key column; make.names without unique=TRUE
-        ##  so all probes for a gene map to the same symbol and can be matched)
         probe_syms <- make.names(playbase::probe2symbol(
           names(rho0_plot), pgx$genes, "gene_name", fill_na = TRUE
         ))
         hi_syms <- make.names(playbase::probe2symbol(
           higenes, pgx$genes, "gene_name", fill_na = TRUE
         ))
-        rho0_plot[!probe_syms %in% hi_syms] <- 0
+        rho0_plot[!probe_syms %in% hi_syms] <- NA
+        plot_hilight <- NULL
       }
 
       p <- playbase::pgx.plotGeneUMAP(
@@ -148,7 +147,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
         title = "",
         cex = 0.9,
         cex.lab = cexlab,
-        hilight = higenes,
+        hilight = plot_hilight,
         ntop = 20,
         labeltype = "gene_name",
         plotlib = "plotly",
@@ -156,6 +155,10 @@ correlation_plot_correlation_UMAP_server <- function(id,
       )
 
       if (!is.null(p)) {
+        ## Set plotly source to "A" so the PlotModule click handler
+        ## (which uses event_data("plotly_click", source = "A")) can
+        ## capture click events for the label editor.
+        p$x$source <- "A"
         return(p)
       }
     })
