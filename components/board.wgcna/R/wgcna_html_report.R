@@ -86,14 +86,13 @@ wgcna_report_infographic_ui <- function(
 
   img_models <- playbase::ai.get_image_models(opt$IMAGE_MODELS)   
   options <- shiny::tagList(
+    shiny::checkboxInput(ns("use_diagram"),"Use diagram", TRUE),
     shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
-    shiny::actionButton(ns("generate_infographic"),"regenerate")
+    shiny::actionButton(ns("generate_infographic"),"Regenerate", icon=icon("refresh"))
   )
 
   PlotModuleUI(
     ns("infographic"),
-    #outputFunc = uiOutput,
-    #plotlib = "generic",
     plotlib = "image",
     title = title,
     label = label,
@@ -217,6 +216,7 @@ wgcna_html_report_server <- function(id,
           return()
         }
 
+        ## replace with updated report, infographic and diagram
         img <- infographic_path()
         if(img=='') img <- NULL
         if(!is.null(img) && file.exists(img)) {
@@ -225,9 +225,11 @@ wgcna_html_report_server <- function(id,
           dbg("Warning: missing infographic for downloaded PDF report")          
         }
         rpt$infographic <- img
+        rpt$diagram <- get_diagram()
         this_wgcna <- wgcna()
         this_wgcna$report <- rpt
-        
+
+        ## compile full report
         full_rpt <- playbase::rpt.compile_wgcna_report(
           this_wgcna, report = rpt)
         playbase::markdownToPDF(full_rpt, file=file) 
@@ -240,7 +242,7 @@ wgcna_html_report_server <- function(id,
 
     output$report_bullets <- shiny::renderUI({
       rpt <- get_report()
-      txt <- "Generate report highlights..."
+      txt <- "Generate highlights..."
       if(!is.null(rpt$bullets) && rpt$bullets!="") txt <- rpt$bullets
       txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)
       txt <- gsub("<p>|</p>","",txt) ## remove p
@@ -395,6 +397,7 @@ wgcna_html_report_server <- function(id,
       shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
       report <- rpt$report
       diagram <- rpt$diagram
+      if(!input$use_diagram) diagram <- NULL
       model <- input$img_model
       dbg("start infographic task...")
       infographic_task$invoke(report, diagram, model)
