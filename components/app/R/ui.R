@@ -154,7 +154,7 @@ app_ui <- function(x) {
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
-
+      
       dbg("names(menu_tree) = ", names(menu_tree))
       dbg("names.ENABLED = ", names(ENABLED))
       menu_tree <- menu_tree[MODULES_ENABLED]

@@ -18,8 +18,7 @@ wgcna_html_report_ui <- function(
     shiny::radioButtons(
       ns("what2show"), "Show:", c("report","prompt"),
       selected = "report", inline=TRUE
-    ),    
-    shiny::downloadButton(ns("downloadPDF"), "PDF")
+    )
   )
   
   PlotModuleUI(
@@ -51,11 +50,12 @@ wgcna_report_diagram_ui <- function(
     shiny::actionButton(
       ns("generate_diagram"), "Regenerate",
       icon = icon("refresh"),
-      class = "btn-outline-primary"
+      class = "btn-outline-primary",
+      width = "100%"
     ),
     shiny::radioButtons(
       ns("diagram_layout"), "Layout:", c("TB","LR"),
-      selected = "TB", inline=TRUE
+      selected = "TB", inline=TRUE, width = "100%"
     )        
   )
 
@@ -84,7 +84,7 @@ wgcna_report_infographic_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  img_models <- playbase::ai.get_image_models()   
+  img_models <- playbase::ai.get_image_models(opt$IMAGE_MODELS)   
   options <- shiny::tagList(
     shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
     shiny::actionButton(ns("generate_infographic"),"regenerate")
@@ -130,8 +130,13 @@ wgcna_report_inputs <- function(id) {
     shiny::actionButton(
       ns("generate_btn"), "Generate!",
       icon = icon("refresh"),
-      class = "btn-outline-primary"
-    )
+      class = "btn-outline-primary",
+      width = "100%"
+    ),
+    shiny::downloadButton(
+      ns("downloadPDF"),
+      label = "Download",
+      style = "width: 100%;")
   )
 }
 
@@ -158,13 +163,16 @@ wgcna_html_report_server <- function(id,
       btn_count()
     } ,{
 
-      wgcna <- wgcna()
       llm_model <- getUserOption(session,'llm_model')
-      if(btn_count() < 1 || llm_model == '') {
-        ## rpt <- wgcna$report
-        ## if(!is.null(rpt) && !is.null(rpt$diagram) ) {
-        ##   return(wgcna$report)
-        ## } 
+      if(is.null(llm_model) || llm_model == '') return(NULL)
+      
+      this_wgcna <- wgcna()
+      if(btn_count() < 1) {
+        rpt <- this_wgcna$report
+        if(is.null(rpt)) return(NULL)
+        dbg("*** found report in wgcna object")
+        dbg("*** names.rpt = ", names(rpt))
+        ##return(rpt)
         return(NULL)
       }
       
@@ -173,18 +181,18 @@ wgcna_html_report_server <- function(id,
       progress$set(message = "creating AI report...", value = 0)
 
       annot <- r_annot()
-      if(is.null(annot) && !is.null(wgcna$annot)) {
-        annot <- wgcna$annot
+      if(is.null(annot) && !is.null(this_wgcna$annot)) {
+        annot <- this_wgcna$annot
       }
 
       userprompt <- ifelse(is.null(input$userprompt),"",input$userprompt)
       topratio <- ifelse(is.null(input$topratio),0.85,input$topratio)
       
       rpt <- playbase::wgcna.create_report(
-        wgcna,
+        this_wgcna,
         ai_model = llm_model,
         annot = annot, 
-        graph = wgcna$graph,
+        graph = this_wgcna$graph,
         multi = multi,
         userprompt = userprompt,
         ntop = 100,
@@ -201,10 +209,28 @@ wgcna_html_report_server <- function(id,
     )
 
     output$downloadPDF <- downloadHandler(
-      filename = function() {"wgcna_report.pdf"},
+      filename = function() {"wgcna-report.pdf"},
       content = function(file) {
         rpt <- get_report()
-        playbase::markdownToPDF(rpt$report, file=file) 
+        if (is.null(rpt)) {
+          playbase::markdownToPDF("PDF report not ready", file=file)
+          return()
+        }
+
+        img <- infographic_path()
+        if(img=='') img <- NULL
+        if(!is.null(img) && file.exists(img)) {
+          dbg("using created infographic for downloaded PDF report")
+        } else {
+          dbg("Warning: missing infographic for downloaded PDF report")          
+        }
+        rpt$infographic <- img
+        this_wgcna <- wgcna()
+        this_wgcna$report <- rpt
+        
+        full_rpt <- playbase::rpt.compile_wgcna_report(
+          this_wgcna, report = rpt)
+        playbase::markdownToPDF(full_rpt, file=file) 
       }
     )
     
@@ -214,11 +240,11 @@ wgcna_html_report_server <- function(id,
 
     output$report_bullets <- shiny::renderUI({
       rpt <- get_report()
-      txt <- "Summarize this report..."
+      txt <- "Generate report highlights..."
       if(!is.null(rpt$bullets) && rpt$bullets!="") txt <- rpt$bullets
-      tagList(
-        shiny::HTML(markdown::markdownToHTML(txt, fragment.only=TRUE))
-      )
+      txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)
+      txt <- gsub("<p>|</p>","",txt) ## remove p
+      shiny::HTML(txt)
     })
     
     contents_text <- shiny::reactive({
@@ -281,10 +307,14 @@ wgcna_html_report_server <- function(id,
       rpt <- get_report()
       shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
       llm_model <- getUserOption(session,'llm_model')        
+      this_wgcna <- wgcna()
+      graph <- this_wgcna$graph
       if(diag_count() < 1) {
         dg <- rpt$diagram
       } else if(!is.null(llm_model) && llm_model!='') {
-        dg <- playbase::wgcna.create_diagram(rpt$report, llm_model, rankdir="LR") 
+        dg <- playbase::wgcna.create_diagram(
+          rpt$report, llm_model, graph = graph,
+          rankdir="LR") 
       } else {
         dg <- NULL
       }
@@ -312,7 +342,6 @@ wgcna_html_report_server <- function(id,
         )
       return(pz)
     }
-
     
     PlotModuleServer(
       "diagram",

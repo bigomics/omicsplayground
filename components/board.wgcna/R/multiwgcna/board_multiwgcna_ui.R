@@ -253,12 +253,13 @@ MultiWGCNA_UI <- function(id) {
 
       ## ----------------------------------------------------------------
       shiny::tabPanel(
-        "AI Report",
+        "AI Report✨",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
-          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          #bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          div(class="alert alert-primary p-2", wgcna_report_bullets_ui(ns("multiwgcnaReport"))),
           bslib::layout_columns(
             col_widths = c(6,6),
             height = "calc(100vh - 180px)",
