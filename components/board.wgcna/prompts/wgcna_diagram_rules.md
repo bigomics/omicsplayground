@@ -1,6 +1,6 @@
 ## Diagram Rules
 
-### The Story the Diagram Must Tell the Story
+### The Story the Diagram Must Tell
 
 A WGCNA diagram's value is in showing the INTERPLAY between co-expression programs, not in listing them. Follow this hierarchy:
 
@@ -34,7 +34,8 @@ Edge strength calibration:
 
 Prioritization:
 - Hub nodes (high connectivity) should be phenotype or key process nodes.
-- Prefer 6-12 edges total for readability.
+- Prefer 15-25 edges total for readability.
+- ALWAYS INCLUDE SOME NODES FOR BIOLOGICAL PROCESSES FOR EACH MODULE
 
 Constraints:
 - Use only entities present in the report text.

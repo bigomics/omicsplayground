@@ -108,7 +108,7 @@ ai_report_layout_ui <- function(id,
         caption = "AI-generated analysis content",
         height = c("100%", TABLE_HEIGHT_MODAL),
         width = c("auto", "100%"),
-        download.fmt = c("pdf")
+        download.fmt = c("pdf", "docx", "md")
       ),
 
       # RIGHT: Diagram + Infographic stacked
@@ -178,6 +178,12 @@ ai_report_layout_server <- function(id,
       )
     }
 
+    dl_text <- shiny::reactive({
+      txt <- text_reactive()
+      shiny::req(!is.null(txt))
+      .aicards_text_markdown(txt)
+    })
+
     PlotModuleServer(
       "report_text",
       plotlib = "generic",
@@ -186,15 +192,10 @@ ai_report_layout_server <- function(id,
       func2 = text.RENDER2,
       renderFunc = shiny::renderUI,
       renderFunc2 = shiny::renderUI,
-      download.pdf = .aicards_markdown_pdf_download(
-        text_reactive = shiny::reactive({
-          txt <- text_reactive()
-          shiny::req(!is.null(txt))
-          .aicards_text_markdown(txt)
-        }),
-        filename = "wgcna-ai-report",
-        title = "WGCNA AI Report"
-      ),
+      download.fmt = c("pdf", "docx", "md"),
+      download.pdf  = .aicards_download_handler(dl_text, "wgcna-ai-report", "WGCNA AI Report", "pdf"),
+      download.docx = .aicards_download_handler(dl_text, "wgcna-ai-report", "WGCNA AI Report", "docx"),
+      download.md   = .aicards_download_handler(dl_text, "wgcna-ai-report", "WGCNA AI Report", "md"),
       pdf.width = 8, pdf.height = 11,
       res = c(75, 100),
       add.watermark = watermark

@@ -78,7 +78,7 @@ drugconnectivity_ai_report_layout_ui <- function(id,
         caption = "AI-generated analysis content",
         height = c("100%", TABLE_HEIGHT_MODAL),
         width = c("auto", "100%"),
-        download.fmt = c("pdf")
+        download.fmt = c("pdf", "docx", "md")
       ),
       bslib::layout_columns(
         col_widths = 12,
@@ -117,6 +117,12 @@ drugconnectivity_ai_report_layout_server <- function(id, text_reactive, watermar
       shiny::div(style = "font-size: 18px;", shiny::HTML(opg_markdown_to_html(text)))
     }
 
+    dl_text <- shiny::reactive({
+      txt <- text_reactive()
+      shiny::req(!is.null(txt))
+      .aicards_text_markdown(txt)
+    })
+
     PlotModuleServer(
       "report_text",
       plotlib = "generic",
@@ -125,15 +131,10 @@ drugconnectivity_ai_report_layout_server <- function(id, text_reactive, watermar
       func2 = text.RENDER2,
       renderFunc = shiny::renderUI,
       renderFunc2 = shiny::renderUI,
-      download.pdf = .aicards_markdown_pdf_download(
-        text_reactive = shiny::reactive({
-          txt <- text_reactive()
-          shiny::req(!is.null(txt))
-          .aicards_text_markdown(txt)
-        }),
-        filename = "drugconnectivity-ai-report",
-        title = "Drug Connectivity AI Report"
-      ),
+      download.fmt = c("pdf", "docx", "md"),
+      download.pdf  = .aicards_download_handler(dl_text, "drugconnectivity-ai-report", "Drug Connectivity AI Report", "pdf"),
+      download.docx = .aicards_download_handler(dl_text, "drugconnectivity-ai-report", "Drug Connectivity AI Report", "docx"),
+      download.md   = .aicards_download_handler(dl_text, "drugconnectivity-ai-report", "Drug Connectivity AI Report", "md"),
       pdf.width = 8,
       pdf.height = 11,
       res = c(75, 100),

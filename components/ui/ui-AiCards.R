@@ -84,7 +84,7 @@ AiTextCardUI <- function(id,
     caption = caption,
     height = height,
     width = width,
-    download.fmt = c("pdf")
+    download.fmt = c("pdf", "docx", "md")
   )
 }
 

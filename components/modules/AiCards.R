@@ -167,53 +167,74 @@ make_llm_diagram_config <- function(model_id, system_prompt, ...) {
   stop("config must be a reactive, ", config_class, " object, or NULL")
 }
 
-#' Build Quarto YAML frontmatter for PDF export (lualatex + Lato font)
+#' Build Quarto YAML frontmatter for a given output format
 #' @param title Character; document title
+#' @param format Character; one of "pdf", "docx"
 #' @return Character vector of YAML frontmatter lines
-.aicards_pdf_frontmatter <- function(title = "AI Report") {
+.aicards_quarto_frontmatter <- function(title = "AI Report",
+                                        format = c("pdf", "docx")) {
+  format <- match.arg(format)
   safe_title <- gsub('"', '\\"', title, fixed = TRUE)
-  c(
-    "---",
-    paste0("title: \"", safe_title, "\""),
-    "format:",
-    "  pdf:",
-    "    pdf-engine: lualatex",
-    "    documentclass: article",
-    "    papersize: a4",
-    "    geometry:",
-    "      - left=25mm",
-    "      - right=20mm",
-    "      - top=25mm",
-    "      - bottom=25mm",
-    "    mainfont: Lato",
-    "---",
-    ""
+  header <- c("---", paste0("title: \"", safe_title, "\""), "format:")
+  body <- switch(format,
+    pdf = c(
+      "  pdf:",
+      "    pdf-engine: lualatex",
+      "    documentclass: article",
+      "    papersize: a4",
+      "    geometry:",
+      "      - left=25mm",
+      "      - right=20mm",
+      "      - top=25mm",
+      "      - bottom=25mm",
+      "    mainfont: Lato"
+    ),
+    docx = c(
+      "  docx:",
+      "    toc: false"
+    )
   )
+  c(header, body, "---", "")
 }
 
-#' Render markdown text to PDF via Quarto; returns FALSE on failure
+#' Render markdown text via Quarto to pdf, docx, or write raw markdown
+#'
+#' For "pdf" and "docx", renders through Quarto (R package or CLI).
+#' For "md", writes the raw markdown directly — no Quarto dependency.
+#' Returns FALSE on failure (caller decides fallback strategy).
+#'
 #' @param text Character; markdown content
-#' @param file Character; output PDF path
+#' @param file Character; output file path
 #' @param title Character; document title
+#' @param format Character; one of "pdf", "docx", "md"
 #' @return TRUE (invisibly) on success, FALSE on failure
-.aicards_markdown_to_pdf <- function(text, file, title = "AI Report") {
+.aicards_render_quarto <- function(text, file, title = "AI Report",
+                                   format = c("pdf", "docx", "md")) {
+  format <- match.arg(format)
   txt <- gsub(intToUtf8(8209), "-", as.character(text), fixed = TRUE)
   txt <- trimws(txt)
-  if (!nzchar(txt)) {
-    return(FALSE)
-  }
+  if (!nzchar(txt)) return(FALSE)
+
   if (!grepl("^\\s*#", txt)) {
     txt <- paste0("# ", title, "\n\n", txt)
   }
 
-  tmpdir <- tempfile(pattern = "aicards_pdf_")
+  # Markdown: just write the text, no Quarto needed
+
+  if (format == "md") {
+    writeLines(enc2utf8(txt), con = file, useBytes = TRUE)
+    return(TRUE)
+  }
+
+  # PDF / DOCX: render via Quarto
+  tmpdir <- tempfile(pattern = paste0("aicards_", format, "_"))
   dir.create(tmpdir, recursive = TRUE, showWarnings = FALSE)
   on.exit(unlink(tmpdir, recursive = TRUE, force = TRUE), add = TRUE)
 
-  md_file <- file.path(tmpdir, "report.qmd")
-  out_file <- file.path(tmpdir, "report.pdf")
+  md_file  <- file.path(tmpdir, "report.qmd")
+  out_file <- file.path(tmpdir, paste0("report.", format))
   writeLines(
-    enc2utf8(c(.aicards_pdf_frontmatter(title), txt)),
+    enc2utf8(c(.aicards_quarto_frontmatter(title, format), txt)),
     con = md_file,
     useBytes = TRUE
   )
@@ -222,7 +243,7 @@ make_llm_diagram_config <- function(model_id, system_prompt, ...) {
     ok <- tryCatch({
       quarto::quarto_render(
         input = md_file,
-        output_format = "pdf",
+        output_format = format,
         output_file = basename(out_file),
         quiet = TRUE
       )
@@ -234,34 +255,26 @@ make_llm_diagram_config <- function(model_id, system_prompt, ...) {
       }
       file.exists(out_file)
     }, error = function(e) FALSE)
-    if (!isTRUE(ok)) {
-      return(FALSE)
-    }
+    if (!isTRUE(ok)) return(FALSE)
   } else {
     quarto_bin <- Sys.which("quarto")
-    if (!nzchar(quarto_bin)) {
-      return(FALSE)
-    }
+    if (!nzchar(quarto_bin)) return(FALSE)
 
     cur_wd <- getwd()
     on.exit(setwd(cur_wd), add = TRUE)
     setwd(tmpdir)
 
-    args <- c("render", basename(md_file), "--to", "pdf", "--output", basename(out_file))
+    args <- c("render", basename(md_file), "--to", format,
+              "--output", basename(out_file))
     ret <- tryCatch(
       system2(quarto_bin, args = args, stdout = TRUE, stderr = TRUE),
       error = function(e) structure(conditionMessage(e), status = 1)
     )
     status <- attr(ret, "status")
-    if (!is.null(status) && status != 0) {
-      return(FALSE)
-    }
+    if (!is.null(status) && status != 0) return(FALSE)
   }
 
-  if (!file.exists(out_file)) {
-    return(FALSE)
-  }
-
+  if (!file.exists(out_file)) return(FALSE)
   file.copy(out_file, file, overwrite = TRUE)
 }
 
@@ -292,23 +305,32 @@ make_llm_diagram_config <- function(model_id, system_prompt, ...) {
   }
 }
 
-#' Create a Shiny downloadHandler for markdown-to-PDF export
+#' Create a Shiny downloadHandler for markdown export in any format
+#'
+#' Factory that returns a downloadHandler for pdf, docx, or md.
+#' PDF gets a plain-text fallback when Quarto fails; other formats error.
+#'
 #' @param text_reactive Reactive returning markdown text
-#' @param filename Character; base filename (without .pdf)
-#' @param title Character; PDF document title
+#' @param filename Character; base filename (without extension)
+#' @param title Character; document title
+#' @param format Character; one of "pdf", "docx", "md"
 #' @return A shiny::downloadHandler
-.aicards_markdown_pdf_download <- function(text_reactive,
-                                           filename = "ai-report",
-                                           title = "AI Report") {
+.aicards_download_handler <- function(text_reactive,
+                                      filename = "ai-report",
+                                      title = "AI Report",
+                                      format = c("pdf", "docx", "md")) {
+  format <- match.arg(format)
   shiny::downloadHandler(
-    filename = function() paste0(filename, ".pdf"),
+    filename = function() paste0(filename, "-", Sys.Date(), ".", format),
     content = function(file) {
       txt <- text_reactive()
       shiny::req(!is.null(txt), nzchar(trimws(as.character(txt))))
 
-      ok <- .aicards_markdown_to_pdf(txt, file = file, title = title)
-      if (!isTRUE(ok)) {
+      ok <- .aicards_render_quarto(txt, file = file, title = title, format = format)
+      if (!isTRUE(ok) && format == "pdf") {
         .aicards_plain_text_to_pdf(txt, file = file, title = title)
+      } else if (!isTRUE(ok)) {
+        stop(toupper(format), " rendering failed. Please ensure Quarto is installed.")
       }
     }
   )
@@ -481,6 +503,17 @@ AiTextCardServer <- function(id,
       NULL
     }
 
+    # Shared reactive for all download handlers
+    download_text <- shiny::reactive({
+      shiny::req(rv$status == "done", !is.null(rv$result))
+      .aicards_text_markdown(
+        text = rv$result$text,
+        show_prompt = isTRUE(input$show_prompt),
+        system_prompt = rv$system_prompt,
+        user_prompt = rv$prompt
+      )
+    })
+
     PlotModuleServer(
       "text",
       plotlib = "generic",
@@ -491,19 +524,10 @@ AiTextCardServer <- function(id,
       },
       renderFunc = shiny::renderUI,
       renderFunc2 = shiny::renderUI,
-      download.pdf = .aicards_markdown_pdf_download(
-        text_reactive = shiny::reactive({
-          shiny::req(rv$status == "done", !is.null(rv$result))
-          .aicards_text_markdown(
-            text = rv$result$text,
-            show_prompt = isTRUE(input$show_prompt),
-            system_prompt = rv$system_prompt,
-            user_prompt = rv$prompt
-          )
-        }),
-        filename = "ai-summary",
-        title = "AI Summary"
-      ),
+      download.fmt = c("pdf", "docx", "md"),
+      download.pdf  = .aicards_download_handler(download_text, "ai-summary", "AI Summary", "pdf"),
+      download.docx = .aicards_download_handler(download_text, "ai-summary", "AI Summary", "docx"),
+      download.md   = .aicards_download_handler(download_text, "ai-summary", "AI Summary", "md"),
       pdf.width = 8,
       pdf.height = 5,
       res = c(75, 100),

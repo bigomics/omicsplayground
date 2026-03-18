@@ -538,6 +538,8 @@ PlotModuleServer <- function(id,
                              download.html = NULL,
                              download.csv = NULL,
                              download.excel = NULL,
+                             download.docx = NULL,
+                             download.md = NULL,
                              download.obj = NULL,
                              download.contrast.name = NULL,
                              pdf.width = 8,
@@ -1174,6 +1176,12 @@ PlotModuleServer <- function(id,
           if (input$downloadOption == "html") {
             output$download <- download.html
           }
+          if (input$downloadOption == "docx") {
+            output$download <- download.docx
+          }
+          if (input$downloadOption == "md") {
+            output$download <- download.md
+          }
           if (input$downloadOption == "obj") {
             output$download <- download.obj
           }
@@ -1215,6 +1223,18 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.html
+          }
+          if (input$downloadOption == "docx") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.docx
+          }
+          if (input$downloadOption == "md") {
+            output[[paste0(
+              "download",
+              card
+            )]] <- download.md
           }
           if (input$downloadOption == "obj") {
             output[[paste0(
@@ -1457,6 +1477,8 @@ PlotModuleServer <- function(id,
         download.html = download.html,
         download.csv = download.csv,
         download.excel = download.excel,
+        download.docx = download.docx,
+        download.md = download.md,
         saveHTML = saveHTML,
         renderFunc = renderFunc
       )
