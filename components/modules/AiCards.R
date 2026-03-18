@@ -727,7 +727,7 @@ AiImageCardServer <- function(id,
       error = NULL,
       prompt = NULL,
       generate_requested = FALSE,
-      retry = FALSE,
+      attempt = 0L,
       last_invoke_args = NULL
     )
 
@@ -820,7 +820,7 @@ AiImageCardServer <- function(id,
       rv$status <- "running"
       rv$error <- NULL
       rv$result <- NULL
-      rv$retry <- FALSE
+      rv$attempt <- 1L
       rv$last_invoke_args <- list(
         full_prompt = full_prompt,
         config_list = config_list,
@@ -847,21 +847,21 @@ AiImageCardServer <- function(id,
         if (is_500) {
           rv$error <- "Image generation server is temporarily overloaded. Please try again \u2014 click 'Generate!'."
           rv$status <- "error"
-          rv$retry <- FALSE
+          rv$attempt <- 0L
           rv$last_invoke_args <- NULL
           return()
         }
-        # Retry once on first failure (timeouts, transient errors)
-        if (!isTRUE(rv$retry) && !is.null(rv$last_invoke_args)) {
-          message(sprintf("[INFO][%s] --- [AI-IMAGE] retrying (attempt 2 of 2)...",
-                          format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
-          rv$retry <- TRUE
+        # Retry up to 3 attempts on transient failures (timeouts, network errors)
+        if (rv$attempt < 3L && !is.null(rv$last_invoke_args)) {
+          rv$attempt <- rv$attempt + 1L
+          message(sprintf("[INFO][%s] --- [AI-IMAGE] retrying (attempt %d of 3)...",
+                          format(Sys.time(), "%Y-%m-%d %H:%M:%S"), rv$attempt))
           args <- rv$last_invoke_args
           image_task$invoke(args$full_prompt, args$config_list, args$filename)
         } else {
-          rv$error <- .aicards_friendly_error(msg)
+          rv$error <- "Image generation server seems overloaded. Please try again using the Generate! button in the Infographic card menu."
           rv$status <- "error"
-          rv$retry <- FALSE
+          rv$attempt <- 0L
           rv$last_invoke_args <- NULL
         }
       } else {
@@ -870,7 +870,7 @@ AiImageCardServer <- function(id,
                         task_result$metadata$model %||% "unknown"))
         rv$result <- task_result
         rv$status <- "done"
-        rv$retry <- FALSE
+        rv$attempt <- 0L
         rv$last_invoke_args <- NULL
       }
     })
@@ -893,11 +893,12 @@ AiImageCardServer <- function(id,
 
       # Show status while background task is running
       if (rv$status == "running") {
-        msg <- if (isTRUE(rv$retry)) {
-          "This is taking longer than usual\u2026"
-        } else {
-          "Generating infographic (this can take 60\u2013120s)\u2026"
-        }
+        spinner_msgs <- c(
+          "Generating infographic (this can take 60\u2013120s)\u2026",
+          "Almost there, hang tight\u2026",
+          "Taking longer than usual\u2026"
+        )
+        msg <- spinner_msgs[min(rv$attempt, length(spinner_msgs))]
         return(shiny::div(
           class = "text-muted",
           style = "display:flex;align-items:center;justify-content:center;height:100%;font-size:1.1em;",
