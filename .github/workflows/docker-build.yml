@@ -77,6 +77,7 @@ jobs:
             update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
             update_bigdash=${{ github.event.inputs.update_bigdash || 'true' }}
             update_playbase=${{ github.event.inputs.update_playbase || 'true' }}
+            GITHUB_PAT=${{ secrets.GH_PAT }}
           tags: |
             ${{ (github.event.inputs.branch || github.ref_name) == 'master' && format('{0}/omicsplayground:{1}, {0}/omicsplayground:latest, {0}/omicsplayground:master', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
             ${{ (github.event.inputs.branch || github.ref_name) != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch || github.ref_name) || '' }}

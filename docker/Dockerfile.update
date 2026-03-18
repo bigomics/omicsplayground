@@ -16,6 +16,8 @@ ARG BRANCH=master
 ARG update_playdata=false
 ARG update_bigdash=false
 ARG update_playbase=true
+ARG GITHUB_PAT=""
+ENV GITHUB_PAT=${GITHUB_PAT}
 RUN echo Building Docker image from branch '$BRANCH'
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -82,6 +84,19 @@ WORKDIR /
 COPY dev/Rprofil[e] /root/.Rprofile
 
 # RUN R -e "install.packages('plotly')"
+
+#------------------------------------------------------------
+# Configure git credentials for private repos
+#------------------------------------------------------------
+RUN if [ -n "$GITHUB_PAT" ]; then \
+      git config --global url."https://${GITHUB_PAT}@github.com/".insteadOf "https://github.com/"; \
+    fi
+
+#------------------------------------------------------------
+# Install omicsai (private repo)
+#------------------------------------------------------------
+RUN R -e "devtools::install_github('bigomics/omicsai')"
+
 
 #------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
@@ -174,6 +189,12 @@ RUN make sass
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f .Renviron; then mv .Renviron .Renviron.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
+
+#------------------------------------------------------------
+# Clean up GitHub token from image
+#------------------------------------------------------------
+RUN rm -f /root/.gitconfig; true
+ENV GITHUB_PAT=""
 
 #------------------------------------------------------------
 # Expose port and set entry CMD
