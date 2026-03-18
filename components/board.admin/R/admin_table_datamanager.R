@@ -51,7 +51,7 @@ admin_table_datamanager_ui <- function(
           4,
           shiny::selectInput(
             ns("filter_folder"),
-            label = "Filter by folder",
+            label = "Filter by user",
             choices = NULL,
             selected = NULL,
             width = "100%"
@@ -61,7 +61,7 @@ admin_table_datamanager_ui <- function(
           4,
           shiny::selectInput(
             ns("dest_folder"),
-            label = "Destination folder",
+            label = "Destination",
             choices = NULL,
             selected = NULL,
             width = "100%"
@@ -121,6 +121,20 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     ## Scan all folders for .pgx files
     ## -----------------------------------------------------------
+    ## Mapping from display label to internal folder path
+    folder_label <- function(path) {
+      if (path == "data/") return("(root)")
+      if (path == "data_shared/") return("shared")
+      if (path == "data_public/") {
+        pub_label <- auth$options$PUBLIC_DATASETS_LABEL
+        return(if (!is.null(pub_label) && nchar(pub_label) > 0) pub_label else "public")
+      }
+      ## User directories: "data/user@example.com/" -> "user@example.com"
+      lbl <- sub("^data/", "", path)
+      lbl <- sub("/$", "", lbl)
+      lbl
+    }
+
     folder_list <- shiny::reactive({
       refresh_trigger()
       shiny::req(isTRUE(auth$ADMIN))
@@ -146,12 +160,13 @@ admin_table_datamanager_server <- function(id, auth) {
     shiny::observe({
       fl <- folder_list()
       shiny::req(fl)
+      labels <- sapply(fl, folder_label)
       shiny::updateSelectInput(session, "filter_folder",
-        choices = c("(all)" = "__all__", stats::setNames(fl, fl)),
+        choices = c("(all)" = "__all__", stats::setNames(fl, labels)),
         selected = "__all__"
       )
       shiny::updateSelectInput(session, "dest_folder",
-        choices = stats::setNames(fl, fl)
+        choices = stats::setNames(fl, labels)
       )
     })
 
@@ -164,17 +179,13 @@ admin_table_datamanager_server <- function(id, auth) {
 
       opg <- dirname(PGX.DIR) ## project root
 
-      ## Helper: read creator info from datasets-info.csv in a directory
-      read_creators <- function(dir) {
+      ## Helper: read dataset info from datasets-info.csv in a directory
+      read_dataset_info <- function(dir) {
         info_file <- file.path(dir, "datasets-info.csv")
         if (!file.exists(info_file)) return(NULL)
         tryCatch({
           df <- read.csv(info_file, colClasses = "character", stringsAsFactors = FALSE)
-          if (all(c("dataset", "creator") %in% names(df))) {
-            stats::setNames(df$creator, df$dataset)
-          } else {
-            NULL
-          }
+          if ("dataset" %in% names(df)) df else NULL
         }, error = function(e) NULL)
       }
 
@@ -183,23 +194,34 @@ admin_table_datamanager_server <- function(id, auth) {
         if (!dir.exists(dir)) return(NULL)
         ff <- list.files(dir, pattern = "\\.pgx$", full.names = TRUE)
         if (length(ff) == 0) return(NULL)
-        ## Lookup creator from datasets-info.csv
-        creator_map <- read_creators(dir)
+        ## Lookup info from datasets-info.csv
+        info_df <- read_dataset_info(dir)
         datasets <- sub("\\.pgx$", "", basename(ff))
-        creators <- if (!is.null(creator_map)) {
-          ifelse(datasets %in% names(creator_map), creator_map[datasets], "")
-        } else {
-          rep("", length(ff))
+
+        creators <- rep("", length(ff))
+        descriptions <- rep("", length(ff))
+        if (!is.null(info_df)) {
+          idx <- match(datasets, info_df$dataset)
+          if ("creator" %in% names(info_df)) {
+            creators <- ifelse(!is.na(idx), info_df$creator[idx], "")
+          }
+          if ("description" %in% names(info_df)) {
+            descriptions <- ifelse(!is.na(idx), info_df$description[idx], "")
+          }
         }
-        ## Fallback: infer from user folder name
+
+        ## Fallback: infer creator from user folder name
         folder_email <- sub("^data/", "", label)
         folder_email <- sub("/$", "", folder_email)
         if (grepl("@", folder_email)) {
           creators <- ifelse(nchar(creators) == 0, folder_email, creators)
         }
+
         data.frame(
           folder = label,
-          file = basename(ff),
+          user = folder_label(label),
+          file = datasets,
+          description = descriptions,
           creator = unname(creators),
           full_path = ff,
           stringsAsFactors = FALSE
@@ -232,7 +254,9 @@ admin_table_datamanager_server <- function(id, auth) {
       if (is.null(df) || nrow(df) == 0) {
         df <- data.frame(
           folder = character(0),
+          user = character(0),
           file = character(0),
+          description = character(0),
           creator = character(0),
           full_path = character(0),
           stringsAsFactors = FALSE
@@ -259,8 +283,8 @@ admin_table_datamanager_server <- function(id, auth) {
       {
         df <- display_data()
         shiny::req(df)
-        show <- df[, c("folder", "file", "creator"), drop = FALSE]
-        names(show) <- c("Folder", "File", "Creator")
+        show <- df[, c("user", "file", "description", "creator"), drop = FALSE]
+        names(show) <- c("User", "File", "Description", "Creator")
         DT::datatable(
           show,
           class = "compact hover",
@@ -275,7 +299,7 @@ admin_table_datamanager_server <- function(id, auth) {
             order = list(list(0, "asc"), list(1, "asc"))
           )
         ) %>%
-          DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+          DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "1.3")
       },
       server = FALSE
     )

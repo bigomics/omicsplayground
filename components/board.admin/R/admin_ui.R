@@ -71,7 +71,7 @@ AdminPanelUI <- function(id) {
         col_widths = 12,
         height = fullH,
         row_heights = list("auto", 1),
-        bs_alert("Browse, move, copy or delete .pgx dataset files across user folders, shared and public directories."),
+        bs_alert("Browse, move or delete datasets across users, shared and public directories."),
         admin_table_datamanager_ui(
           id = ns("datamanager"),
           title = "Data Management",
