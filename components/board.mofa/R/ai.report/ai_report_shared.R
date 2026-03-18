@@ -39,27 +39,16 @@ multiomics_ai_report_controls_ui <- function(id, module_label = "Item:") {
         )
       )
     ),
-    shiny::div(
-      id = ns("image_controls"),
-      shiny::checkboxInput(
-        ns("include_infographic"),
-        "Include infographic",
-        value = FALSE
-      ),
-      shiny::selectInput(
-        ns("image_style"),
-        "Infographic Style:",
-        choices = NULL,
-        width = "100%"
-      ),
-      shiny::radioButtons(
-        ns("image_blocks"),
-        "Layout:",
-        choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
-        selected = "1",
-        inline = TRUE
-      )
+
+    # Infographic toggle: always visible in sidebar
+    shiny::checkboxInput(
+      ns("include_infographic"),
+      "Include infographic",
+      value = FALSE
     )
+    ## NOTE: Infographic style/blocks controls are rendered in the image card's
+    ## hamburger menu (see the board-specific *_ai_report_ui function).
+    ## All are namespaced to this controls module so input$* is still read here.
   )
 }
 
@@ -69,10 +58,8 @@ multiomics_ai_report_controls_server <- function(id, module_choices = NULL) {
       mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
-        shinyjs::hide("image_controls")
       } else {
         shinyjs::hide("summary_controls")
-        shinyjs::show("image_controls")
       }
     })
 
@@ -121,7 +108,8 @@ multiomics_ai_report_layout_ui <- function(id,
                                            text_title = "AI Report",
                                            diagram_title = "Board Diagram",
                                            infographic_title = "Graphical Abstract",
-                                           text_options = NULL) {
+                                           text_options = NULL,
+                                           infographic_options = NULL) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
@@ -163,7 +151,8 @@ multiomics_ai_report_layout_ui <- function(id,
           title = infographic_title,
           caption = "AI-generated graphical abstract",
           height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
+          width = c("auto", "100%"),
+          extra_options = infographic_options
         )
       )
     )

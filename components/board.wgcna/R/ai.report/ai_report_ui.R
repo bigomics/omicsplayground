@@ -10,13 +10,34 @@
 #' @return Shiny UI element
 wgcna_ai_report_ui <- function(id) {
   ns <- shiny::NS(id)
+  controls_ns <- shiny::NS(ns("controls"))
 
   ## "Show prompt" checkbox: namespaced to controls so the controls server
   ## can read it via input$show_prompt, but rendered in the card hamburger menu.
   show_prompt_input <- shiny::checkboxInput(
-    shiny::NS(ns("controls"), "show_prompt"),
+    controls_ns("show_prompt"),
     "Show prompt",
     FALSE
+  )
+
+  ## Infographic style/layout controls: namespaced to controls so the controls
+  ## server can read them, but rendered in the image card's hamburger menu.
+  ## The include_infographic checkbox lives in the sidebar (ai_report_controls.R).
+  infographic_options <- shiny::tagList(
+    shiny::tags$hr(),
+    shiny::selectInput(
+      controls_ns("image_style"),
+      "Infographic Style:",
+      choices = NULL,
+      width = "100%"
+    ),
+    shiny::radioButtons(
+      controls_ns("image_blocks"),
+      "Layout:",
+      choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
+      selected = "1",
+      inline = TRUE
+    )
   )
 
   ai_report_layout_ui(
@@ -24,7 +45,8 @@ wgcna_ai_report_ui <- function(id) {
     text_title = "AI Report",
     diagram_title = "Module Diagram",
     infographic_title = "Graphical Abstract",
-    text_options = show_prompt_input
+    text_options = show_prompt_input,
+    infographic_options = infographic_options
   )
 }
 
@@ -54,7 +76,8 @@ ai_report_layout_ui <- function(id,
                                 text_title = "AI Report",
                                 diagram_title = "Board Diagram",
                                 infographic_title = "Graphical Abstract",
-                                text_options = NULL) {
+                                text_options = NULL,
+                                infographic_options = NULL) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
@@ -106,7 +129,8 @@ ai_report_layout_ui <- function(id,
           title = infographic_title,
           caption = "AI-generated graphical abstract",
           height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
+          width = c("auto", "100%"),
+          extra_options = infographic_options
         )
       )
     )

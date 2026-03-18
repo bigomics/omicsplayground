@@ -167,6 +167,8 @@ AiDiagramCardUI <- function(id,
 #' @param info.text Help text
 #' @param height Card height vector c(default, fullscreen)
 #' @param width Card width vector c(default, fullscreen)
+#' @param extra_options Optional Shiny UI elements to append to the hamburger
+#'   menu (e.g. infographic style/blocks controls pre-namespaced by the caller)
 #'
 #' @return Shiny tagList
 AiImageCardUI <- function(id,
@@ -174,7 +176,8 @@ AiImageCardUI <- function(id,
                           caption = "AI-generated infographic.",
                           info.text = "",
                           height = c("100%", TABLE_HEIGHT_MODAL),
-                          width = c("auto", "100%")) {
+                          width = c("auto", "100%"),
+                          extra_options = NULL) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -188,7 +191,8 @@ AiImageCardUI <- function(id,
       "Generate Image",
       icon = shiny::icon("refresh"),
       class = "btn-outline-primary"
-    )
+    ),
+    extra_options
   )
 
   PlotModuleUI(

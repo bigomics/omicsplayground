@@ -43,27 +43,15 @@ pcsf_ai_report_controls_ui <- function(id) {
       )
     ),
 
-    shiny::div(
-      id = ns("image_controls"),
-      shiny::checkboxInput(
-        ns("include_infographic"),
-        "Include infographic",
-        value = FALSE
-      ),
-      shiny::selectInput(
-        ns("image_style"),
-        "Infographic Style:",
-        choices = NULL,
-        width = "100%"
-      ),
-      shiny::radioButtons(
-        ns("image_blocks"),
-        "Layout:",
-        choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
-        selected = "1",
-        inline = TRUE
-      )
+    # Infographic toggle: always visible in sidebar
+    shiny::checkboxInput(
+      ns("include_infographic"),
+      "Include infographic",
+      value = FALSE
     )
+    ## NOTE: Infographic style/blocks controls are rendered in the image card's
+    ## hamburger menu (see ai_report_ui.R). All are namespaced to this controls
+    ## module so input$* is still read here.
   )
 }
 
@@ -74,10 +62,8 @@ pcsf_ai_report_controls_server <- function(id, module_choices = NULL) {
       mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
-        shinyjs::hide("image_controls")
       } else {
         shinyjs::hide("summary_controls")
-        shinyjs::show("image_controls")
       }
     })
 

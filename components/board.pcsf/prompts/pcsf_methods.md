@@ -23,12 +23,11 @@ Although centrality-informed prioritization is useful for target nomination, hig
 centrality alone is insufficient to establish causal relevance. Consequently, orthogonal
 validation through perturbation assays, replication cohorts, or complementary multi-omics
 evidence remains necessary before translational decision-making. This methodological
-framework follows the original PCSF formulation [1].
+framework follows the original PCSF formulation (Tuncbag et al., 2013).
 
-[1] Tuncbag N, Braunstein A, Pagnani A, Huang SSC, Chayes J, Borgs C, Zecchina R,
-Fraenkel E. *Simultaneous reconstruction of multiple signaling pathways via the
-Prize-Collecting Steiner Forest problem*. Journal of Computational Biology.
-2013;20(2):124-136.
+### References
+
+- Tuncbag N, Braunstein A, Pagnani A, Huang SSC, Chayes J, Borgs C, Zecchina R, Fraenkel E. Simultaneous reconstruction of multiple signaling pathways via the Prize-Collecting Steiner Forest problem. *Journal of Computational Biology*. 2013;20(2):124-136.
 
 _This report was generated with OmicsPlayground (BigOmics, {{date}})._
 _Note: AI-generated interpretation may contain inaccuracies and must be independently verified._

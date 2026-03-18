@@ -5,11 +5,32 @@
 
 lasagna_ai_report_ui <- function(id) {
   ns <- shiny::NS(id)
+  controls_ns <- shiny::NS(ns("controls"))
 
   show_prompt_input <- shiny::checkboxInput(
-    shiny::NS(ns("controls"), "show_prompt"),
+    controls_ns("show_prompt"),
     "Show prompt",
     FALSE
+  )
+
+  ## Infographic style/layout controls: namespaced to controls so the controls
+  ## server can read them, but rendered in the image card's hamburger menu.
+  ## The include_infographic checkbox lives in the sidebar (ai_report_shared.R).
+  infographic_options <- shiny::tagList(
+    shiny::tags$hr(),
+    shiny::selectInput(
+      controls_ns("image_style"),
+      "Infographic Style:",
+      choices = NULL,
+      width = "100%"
+    ),
+    shiny::radioButtons(
+      controls_ns("image_blocks"),
+      "Layout:",
+      choices = c("1 Panel" = "1", "2 Panels" = "2", "3 Panels" = "3"),
+      selected = "1",
+      inline = TRUE
+    )
   )
 
   multiomics_ai_report_layout_ui(
@@ -17,7 +38,8 @@ lasagna_ai_report_ui <- function(id) {
     text_title = "AI LASAGNA Report",
     diagram_title = "Layer-Interaction Diagram",
     infographic_title = "Graphical Abstract",
-    text_options = show_prompt_input
+    text_options = show_prompt_input,
+    infographic_options = infographic_options
   )
 }
 
