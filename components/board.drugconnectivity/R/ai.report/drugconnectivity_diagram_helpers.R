@@ -44,9 +44,12 @@ drugconnectivity_diagram_style <- function() {
 #' @param report_text Character string with the AI report text
 #' @param organism Character string identifying the organism (e.g. "human", "mouse")
 #' @param board_root Character string path to the board.drugconnectivity root directory
+#' @param data_tables Character string with the structured data tables used to
+#'   generate the report, or NULL to omit
 #'
 #' @return Named list with \code{system} and \code{board} character elements
-drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_root) {
+drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_root,
+                                                  data_tables = NULL) {
   style <- drugconnectivity_diagram_style()
   fmt_names <- function(nms) paste(sprintf("- `%s`", nms), collapse = "\n")
   node_names <- fmt_names(names(style$node_styles))
@@ -59,7 +62,8 @@ drugconnectivity_build_diagram_prompt <- function(report_text, organism, board_r
     task        = omicsai::frag("diagram/network"),
     species     = omicsai::omicsai_species_prompt(organism),
     board_rules = omicsai::frag(rules_path, list(node_names = node_names, link_names = link_names)),
-    report      = paste("## AI Report\n\n", report_text)
+    report      = paste("## AI Report\n\n", report_text),
+    data        = data_tables
   )
   omicsai::build_prompt(p)
 }

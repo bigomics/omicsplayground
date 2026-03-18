@@ -36,6 +36,9 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache <- shiny::reactiveVal(NULL)
 
+    # ---- Data tables cache (passed to diagram for supporting context) ----
+    report_data_tables <- shiny::reactiveVal(NULL)
+
     # ---- SUMMARY MODE: per-module summary ----
 
     ai_summary <- shiny::eventReactive(
@@ -100,6 +103,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       message(sprintf("[INFO][%s] --- [AI-REPORT] extracting module data...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
       if (!is.null(p)) p$set(message = "Extracting module data...", value = 0.05)
       tables <- wgcna_build_report_tables(w, pgx)
+      report_data_tables(tables$text)
 
       ## Step 2: Classify module signal strength
       message(sprintf("[INFO][%s] --- [AI-REPORT] classifying modules...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
@@ -186,7 +190,8 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
 
     list(
       text = ai_text,
-      report_text = ai_report
+      report_text = ai_report,
+      report_data_tables = report_data_tables
     )
   })
 }

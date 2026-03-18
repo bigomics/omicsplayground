@@ -42,5 +42,20 @@ Constraints:
 
 ## Detail Fields
 
-- `detail_1`: Top 3-5 hub genes, comma-separated (e.g. "TP53, BRCA1, MYC")
-- `detail_2`: Module biological function in 2-5 words (e.g. "cell cycle regulation")
+Every node type should have informative detail fields that help a biologist
+interpret the diagram at a glance:
+
+- **module nodes**:
+  - `detail_1`: Top 3-5 hub genes, comma-separated (e.g. "TP53, BRCA1, MYC")
+  - `detail_2`: Module biological function in 2-5 words (e.g. "cell cycle regulation")
+- **phenotype nodes**:
+  - `detail_1`: Key sample groups or conditions (e.g. "treated, control, 48h")
+  - `detail_2`: Experimental context in 2-5 words (e.g. "T-cell activation time-course")
+- **process nodes**:
+  - `detail_1`: Top 2-3 genes driving this process, comma-separated
+  - `detail_2`: Pathway or GO category (e.g. "oxidative phosphorylation")
+
+All detail field content MUST come from the report text or supporting data
+tables. Do not fill detail fields with general biological knowledge — if a
+gene or condition is not mentioned in the report or data, leave the field
+empty rather than infer it.

@@ -48,6 +48,9 @@ drugconnectivity_ai_text_server <- function(id,
     summary_prompt_cache <- shiny::reactiveVal(NULL)
     report_prompt_cache  <- shiny::reactiveVal(NULL)
 
+    # ---- Data tables cache (passed to diagram for supporting context) ----
+    report_data_tables <- shiny::reactiveVal(NULL)
+
     # ---- SUMMARY MODE: per-contrast summary ----
 
     ai_summary <- shiny::eventReactive(
@@ -130,6 +133,7 @@ drugconnectivity_ai_text_server <- function(id,
         max_contexts = 8L,
         ntop = 6L
       )
+      report_data_tables(tables$text)
 
       ## Step 2: Assemble data content (domain data only, no instructions)
       data_content <- tables$text
@@ -197,6 +201,6 @@ drugconnectivity_ai_text_server <- function(id,
       }
     })
 
-    list(text = ai_text, report_text = ai_report)
+    list(text = ai_text, report_text = ai_report, report_data_tables = report_data_tables)
   })
 }

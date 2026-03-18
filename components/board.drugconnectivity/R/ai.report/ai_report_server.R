@@ -47,7 +47,8 @@ drugconnectivity_ai_report_server <- function(id,
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.drugconnectivity")
-        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root)
+        data_tables <- text_result$report_data_tables()
+        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root, data_tables = data_tables)
         list(content = bp$board)
       }),
       template_reactive = shiny::reactive("{{content}}"),
@@ -56,7 +57,8 @@ drugconnectivity_ai_report_server <- function(id,
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.drugconnectivity")
-        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root)
+        data_tables <- text_result$report_data_tables()
+        bp <- drugconnectivity_build_diagram_prompt(txt, organism, board_root, data_tables = data_tables)
         llm <- get_ai_model(parent_session)
         make_llm_diagram_config(llm,
           system_prompt = bp$system,

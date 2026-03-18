@@ -40,9 +40,12 @@ wgcna_diagram_style <- function() {
 #' @param report_text Character string with the AI report text
 #' @param organism Character string identifying the organism (e.g. "human", "mouse")
 #' @param board_root Character string path to the board.wgcna root directory
+#' @param data_tables Character string with the structured data tables used to
+#'   generate the report, or NULL to omit
 #'
 #' @return Named list with \code{system} and \code{board} character elements
-wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
+wgcna_build_diagram_prompt <- function(report_text, organism, board_root,
+                                       data_tables = NULL) {
   style <- wgcna_diagram_style()
   fmt_names <- function(nms) paste(sprintf("- `%s`", nms), collapse = "\n")
   node_names <- fmt_names(names(style$node_styles))
@@ -55,7 +58,8 @@ wgcna_build_diagram_prompt <- function(report_text, organism, board_root) {
     task        = omicsai::frag("diagram/network"),
     species     = omicsai::omicsai_species_prompt(organism),
     board_rules = omicsai::frag(rules_path, list(node_names = node_names, link_names = link_names)),
-    report      = paste("## AI Report\n\n", report_text)
+    report      = paste("## AI Report\n\n", report_text),
+    data        = data_tables
   )
   omicsai::build_prompt(p)
 }
