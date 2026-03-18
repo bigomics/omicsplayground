@@ -68,6 +68,11 @@ RUN R -e "install.packages('arrow')"
 RUN R -e "install.packages('DiagrammeRsvg')"
 RUN R -e "install.packages('shinychat')"
 RUN R -e "install.packages('ggprism')"
+RUN R -e "devtools::install_github('alastairrushworth/inspectdf@bugfix/cran-dplyr-failing')"
+RUN R -e "install.packages('quarto')"
+RUN R -e "devtools::install_github('bigomics/visNetwork')"
+RUN R -e "install.packages('svglite')"
+RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
     
 #------------------------------------------------------------
 # Add supporting R libraries

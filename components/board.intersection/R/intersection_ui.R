@@ -65,7 +65,7 @@ IntersectionUI <- function(id) {
           info.text = paste0(
             "For the selected contrasts, the Pairs panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. ",
             "The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. ",
-            "This module provides an interactive pairwise scatterplots for the differential expression profiles between the selected contrasts. ",
+            "This module provides an interactive pairwise scatterplots for the differential expression profiles between the selected contrasts. Optionally, a correlation line (r=1) can also be displayed in the plot. ",
             "All the possible comparisons between the selected contrasts are displayed.",
             "<ul>",
             "<li><span style='display:inline-block; width:12px; height:12px; background-color:#5B9B5B; border:1px solid #000; margin-right:5px;'></span> Features exhibiting absolute log2FC equal or above 1 and q value below or equal 0.05 in the two compared contrasts.</li>",

@@ -63,14 +63,13 @@ mofa_table_genetable_server <- function(id,
         fillContainer = TRUE,
         plugins = "scrollResize",
         options = list(
-          dom = "lfrtip", #
-          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-          scrollX = TRUE, #
+          dom = "lfrtip",
+          scrollX = TRUE,
           scrollY = "70vh",
           scroller = TRUE,
           scrollResize = TRUE,
           deferRender = TRUE
-        ) ## end of options.list
+        )
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") %>%

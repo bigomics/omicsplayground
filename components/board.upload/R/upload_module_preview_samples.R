@@ -35,7 +35,7 @@ upload_table_preview_samples_server <- function(
         orig_counts_matrix(uploaded$counts.csv)
       }
     })
-    
+
     shiny::observe({
       if (is.null(orig_sample_matrix()) && !is.null(uploaded$samples.csv)) {
         orig_sample_matrix(uploaded$samples.csv)
@@ -52,7 +52,7 @@ upload_table_preview_samples_server <- function(
       sel <- intersect(vars_selected_pending(), colnames(orig_sample_matrix()))
       if (length(sel) > 0) vars_selected(sel)
     })
-    
+
     observeEvent(input$sum_treps, {
       shiny::req(orig_sample_matrix(), orig_counts_matrix())
       shiny::req(length(input$treps_var) > 0)
@@ -67,7 +67,7 @@ upload_table_preview_samples_server <- function(
 
     observeEvent(input$sum_treps, {
       if (length(input$treps_var) == 0) {
-        uploaded$counts.csv  <- orig_counts_matrix()
+        uploaded$counts.csv <- orig_counts_matrix()
         uploaded$samples.csv <- orig_sample_matrix()
         sum_techreps(FALSE)
       }
@@ -76,6 +76,7 @@ upload_table_preview_samples_server <- function(
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      shiny::req(!is.null(dt))
       if (sum_techreps()) dt <- uploaded$samples.csv
       vars_selected <- vars_selected()
       vars_selected <- intersect(vars_selected, colnames(dt))
@@ -127,7 +128,7 @@ upload_table_preview_samples_server <- function(
         br()
       )
     })
-    
+
     output$tech_rep <- renderUI({
       tagList(
         checkboxGroupInput(
@@ -160,13 +161,16 @@ upload_table_preview_samples_server <- function(
         uiOutput(ns("metadata_upload_area"))
       )
     })
-    
+
     output$metadata_upload_area <- renderUI({
       shiny::req(input$add_metadata_button == TRUE)
-      bslib::card(fileInputArea(ns("metadata_csv"),
+      bslib::card(
+        fileInputArea(ns("metadata_csv"),
           shiny::h4("Expand Olink metadata: upload an additional file (.csv)", class = "mb-0"),
-          multiple = FALSE, accept = c(".csv"), width = "100%"),
-        style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;")
+          multiple = FALSE, accept = c(".csv"), width = "100%"
+        ),
+        style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;"
+      )
     })
 
     samples_options <- shiny::reactive({
@@ -331,9 +335,15 @@ upload_table_preview_samples_server <- function(
     output$umap <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
-      counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
-      prior <- min(counts[which(counts > 0)], na.rm = TRUE)
-      X <- log2(counts + prior)
+      if (inherits(counts, "sparseMatrix")) {
+        ## pgx.countNormalization uses apply() which densifies sparse matrices.
+        ## log1p(x)/log(2) == log2(1+x) but sparse-preserving since log1p(0)=0.
+        X <- log1p(counts) / log(2)
+      } else {
+        counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
+        prior <- min(counts[which(counts > 0)], na.rm = TRUE)
+        X <- log2(counts + prior)
+      }
       Y <- uploaded$samples.csv
       cm <- intersect(colnames(X), rownames(Y))
       X <- X[, cm, drop = FALSE]
@@ -350,6 +360,17 @@ upload_table_preview_samples_server <- function(
           y <- Y[, non_na_cols[1]]
         }
       }
+      ## Subsample cells before densifying to avoid allocating a huge dense matrix
+      MAX_CELLS <- 500
+      if (ncol(X) > MAX_CELLS) {
+        set.seed(42)
+        ss <- sample(ncol(X), MAX_CELLS)
+        X <- X[, ss, drop = FALSE]
+        Y <- Y[colnames(X), , drop = FALSE]
+        y <- Y[, sel]
+      }
+      if (inherits(X, "sparseMatrix")) X <- as.matrix(X)
+
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
@@ -433,8 +454,14 @@ upload_table_preview_samples_server <- function(
       # Save file
       datafile <- input$samples_csv$datapath
       file.copy(from = datafile, to = paste0(raw_dir(), "/samples.csv"), overwrite = TRUE)
-      df <- tryCatch({ playbase::read.as_matrix(datafile) },
-        error = function(w) { NULL })      
+      df <- tryCatch(
+        {
+          playbase::read.as_matrix(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
       if (is.null(df)) {
         data_error_modal(path = datafile, data_type = "samples")
       } else {
@@ -457,8 +484,14 @@ upload_table_preview_samples_server <- function(
         return()
       }
       datafile <- input$metadata_csv$datapath
-      new_samples <- tryCatch({ playbase::read.as_matrix(datafile) },
-        error = function(w) { NULL })
+      new_samples <- tryCatch(
+        {
+          playbase::read.as_matrix(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
       if (is.null(new_samples)) {
         data_error_modal(path = datafile, data_type = "metadata")
         return()
@@ -506,7 +539,7 @@ upload_table_preview_samples_server <- function(
         )
       }
     })
-      
+
     observeEvent(input$remove_samples, {
       delete_all_files_samples <- function(value) {
         if (value) {
@@ -535,6 +568,7 @@ upload_table_preview_samples_server <- function(
       } else {
         delete_all_files_samples(TRUE)
       }
+      uploaded$samples.csv <- NULL
       loaded_samples(FALSE)
       vars_selected(NULL)
       orig_sample_matrix(NULL)

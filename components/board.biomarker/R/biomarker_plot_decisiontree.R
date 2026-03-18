@@ -4,13 +4,10 @@
 ##
 
 #' Decisiontree plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
-#'
 #' @export
 biomarker_plot_decisiontree_ui <- function(
   id,
@@ -48,11 +45,8 @@ biomarker_plot_decisiontree_ui <- function(
 }
 
 #' Decisiontree plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 biomarker_plot_decisiontree_server <- function(id,
@@ -64,8 +58,7 @@ biomarker_plot_decisiontree_server <- function(id,
     id, function(input, output, session) {
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
-        shiny::req(res)
-        shiny::req(is_computed())
+        shiny::req(res, is_computed())
         return(res)
       })
 
@@ -73,9 +66,7 @@ biomarker_plot_decisiontree_server <- function(id,
         imp <- plot_data()
         shiny::req(imp)
         imp$rf$frame$var <- playbase::probe2symbol(imp$rf$frame$var, pgx$genes, "gene_name", fill_na = TRUE)
-        playbase::plotDecisionTreeFromImportance(
-          imp = NULL, rf = imp$rf, type = input$plottype
-        )
+        playbase::plotDecisionTreeFromImportance(imp = NULL, rf = imp$rf, type = input$plottype)
       }
 
       PlotModuleServer(
