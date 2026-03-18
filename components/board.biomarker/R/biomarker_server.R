@@ -192,6 +192,13 @@ BiomarkerBoard <- function(id, pgx) {
         )
       }
 
+      shiny::validate(
+        shiny::need(
+          !is.null(res),
+          "Biomarker analysis could not be computed. The current filter settings result in too few features or samples. Please broaden your feature filter or sample selection."
+        )
+      )
+
       is_computed(TRUE)
       return(res)
     })
