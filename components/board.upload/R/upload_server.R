@@ -145,6 +145,7 @@ UploadBoard <- function(id,
       }
     })
 
+    
     meth_type <- shiny::reactive({
       req(upload_datatype())
       if (upload_datatype() == "methylomics" && !is.null(input$methylomics_type)) {
@@ -153,6 +154,8 @@ UploadBoard <- function(id,
         return(NULL)
       }
     })
+
+    #dbg("--------meth_type=", meth_type) 
 
     observeEvent(input$start_search, {
       ID <- public_dataset_id()
@@ -1390,6 +1393,7 @@ UploadBoard <- function(id,
       upload_name = upload_name,
       upload_description = upload_description,
       upload_datatype = upload_datatype,
+      meth_type = meth_type,
       upload_organism = upload_organism,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,

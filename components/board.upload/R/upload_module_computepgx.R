@@ -30,6 +30,7 @@ upload_module_computepgx_server <- function(
   upload_name,
   upload_description,
   upload_datatype,
+  meth_type,
   upload_organism,
   upload_gx_methods,
   upload_gset_methods,
@@ -134,16 +135,16 @@ upload_module_computepgx_server <- function(
       EXTRA.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
-        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c(
-            "drug connectivity" = "drugs", "wordcloud",
-            "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
-          )
         } else {
-          mm <- c(
-            "celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
-            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
-          )
+          c1 <- grepl("methylomics", upload_datatype(), ignore.case = TRUE)
+          c2 <- grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)
+          if (c1 | c2) {
+            mm <- c("drug connectivity" = "drugs", "wordcloud",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          } else {
+            mm <- c("celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
+              "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          }
         }
         return(mm)
       }
@@ -1011,6 +1012,8 @@ upload_module_computepgx_server <- function(
         }
         shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
+        #dbg("------------meth_type=",meth_type)
+        
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
@@ -1152,6 +1155,7 @@ upload_module_computepgx_server <- function(
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
           remove.xy.probes = remove.xy.probes, ## NEW
+          meth_type = meth_type(), ## NEW
           only.known = remove.unknown,
           average.duplicated = average.duplicated,
           only.proteincoding = only.proteincoding,

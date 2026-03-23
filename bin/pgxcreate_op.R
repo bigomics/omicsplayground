@@ -41,6 +41,7 @@ pgx <- playbase::pgx.createPGX(
   covariates = params$covariates,
   dma = params$dma, ## new
   remove.xy.probes = params$remove.xy.probes, ## new
+  meth_type = params$meth_type, ## new
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
