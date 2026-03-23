@@ -13,15 +13,12 @@ upload_module_normalizationSC_server <- function(id,
                                                  upload_datatype,
                                                  is.count = FALSE,
                                                  height = 720) {
-
   shiny::moduleServer(
     id,
-
     function(input, output, session) {
       ns <- session$ns
 
       output$normalization <- shiny::renderUI({
-
         shiny::req(r_counts())
         counts <- r_counts()
         nFeature_RNA <- Matrix::colSums(counts > 0, na.rm = TRUE)
@@ -180,7 +177,6 @@ upload_module_normalizationSC_server <- function(id,
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
@@ -190,54 +186,22 @@ upload_module_normalizationSC_server <- function(id,
         if (ncol(counts) > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
-          counts <- counts[, kk, drop = FALSE]
+          ## Character subsetting on a large dgCMatrix can hit Matrix dispatch issues;
+          ## use integer indices (via match) which always work reliably for sparse matrices.
+          counts <- counts[, match(kk, colnames(counts)), drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
         }
 
         if (input$ref_atlas != "<select>") {
-          dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Inferring cell types with Azimuth...", value = 0.1, {
-            azm <- playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas)
-            dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
-          })
 
-          if (is.null(azm)) {
-            message_text <- paste(
-              "Please select the Azimuth reference atlas that fits your data.",
-              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
-            )
-            shiny::validate(
-              shiny::need(FALSE, message_text)
-            )
-          }
-
-          if (class(azm) %in% c("matrix", "data.frame")) {
-            kk <- grep("^predicted.*l*2$", colnames(azm))
-            if (any(kk)) {
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                kk <- grep("^predicted.*l*1$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            } else {
-              kk <- grep("^predicted.*subclass*$", colnames(azm))
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                kk <- grep("^predicted.class*$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            }
-            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
-          } else if (is.vector(azm)) {
-            dbg("[normalizationSC_server:ds_norm_Counts] Azimuth atlas might be incorrect. Please double check.")
-            samples <- cbind(samples, celltype.azimuth = azm)
-          }
-
-          ## Normalization & Dimensional reduction
+          ## logCPM + dim-reduction first: these run fine in the main process and
+          ## their intermediates are freed before the subprocess starts.
           dbg("[normalizationSC_server] Performing logCPM normalization...")
-          nX <- playbase::logCPM(as.matrix(counts), prior = 1, total = 1e4)
+          counts_dense <- as.matrix(counts)
+          nX <- playbase::logCPM(counts_dense, prior = 1, total = 1e4)
+          rm(counts_dense)
           jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
           nX1 <- nX[jj, , drop = FALSE]
           nX1 <- nX1 - rowMeans(nX1, na.rm = TRUE)
@@ -250,21 +214,77 @@ upload_module_normalizationSC_server <- function(id,
             pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
             pos.list <- lapply(pos.list, function(x) {
               rownames(x) <- colnames(nX1)
-              return(x)
+              x
             })
           })
+          rm(nX, nX1)
+          gc()
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
 
-          dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
-          options(Seurat.object.assay.calcn = TRUE)
-          getOption("Seurat.object.assay.calcn")
-          counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
-            SO <- playbase::pgx.createSeuratObject(counts, samples,
-              batch = NULL, filter = FALSE, preprocess = FALSE
+          ## Run Azimuth + Seurat in a single fresh subprocess.
+          ## Large h5ad uploads leave glibc's heap fragmented after deallocation;
+          ## any subsequent Seurat C++ call (ScaleData, FindNeighbors, RunPCA) then
+          ## crashes. One callr subprocess isolates both Azimuth and the Seurat
+          ## pipeline from the main process heap.
+          dbg("[normalizationSC_server] Running Azimuth + Seurat in subprocess...")
+          shiny::withProgress(message = "Inferring cell types & building Seurat object...", value = 0.7, {
+            result <- callr::r(
+              function(counts, samples, reference, lib) {
+                .libPaths(lib)
+                options(Seurat.object.assay.calcn = TRUE)
+
+                ## Azimuth cell type annotation
+                azm <- tryCatch(
+                  playbase::pgx.runAzimuth(counts = counts, reference = reference),
+                  error = function(e) {
+                    message("[callr] pgx.runAzimuth failed: ", conditionMessage(e))
+                    NULL
+                  }
+                )
+
+                ## Add cell type column to samples metadata
+                if (!is.null(azm)) {
+                  if (is.data.frame(azm) || is.matrix(azm)) {
+                    kk <- grep("^predicted.*l*2$", colnames(azm))
+                    if (any(kk)) {
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.*l*1$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    } else {
+                      kk <- grep("^predicted.*subclass*$", colnames(azm))
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.class*$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    }
+                    samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
+                  } else if (is.vector(azm)) {
+                    samples <- cbind(samples, celltype.azimuth = azm)
+                  }
+                }
+
+                SO <- playbase::pgx.createSeuratObject(counts, samples,
+                  batch = NULL, filter = FALSE, preprocess = FALSE
+                )
+                SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+                list(SO = SO, azm_ok = !is.null(azm))
+              },
+              args = list(counts = counts, samples = samples, reference = input$ref_atlas, lib = .libPaths())
             )
-            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           })
+
+          if (!result$azm_ok) {
+            message_text <- paste(
+              "Please select the Azimuth reference atlas that fits your data.",
+              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
+            )
+            shiny::validate(shiny::need(FALSE, message_text))
+          }
+
+          SO <- result$SO
           dbg("[normalizationSC_server] Seurat object created & preprocessed.")
           kk <- setdiff(colnames(samples), colnames(SO@meta.data))
           if (length(kk) > 1) {
@@ -277,7 +297,7 @@ upload_module_normalizationSC_server <- function(id,
             pos.tsne = pos.list[["tsne"]],
             pos.umap = pos.list[["umap"]]
           )
-          rm(counts, nX, nX1, samples, SO)
+          rm(counts, samples, SO)
           return(LL)
         } else {
           shinyalert::shinyalert(
@@ -288,9 +308,7 @@ upload_module_normalizationSC_server <- function(id,
           )
           rm(counts, samples)
           return(NULL)
-
         }
-
       })
 
       plot1 <- function() {
@@ -299,12 +317,16 @@ upload_module_normalizationSC_server <- function(id,
         SO <- ds_norm_Counts()$SO
         meta <- SO@meta.data
         vars <- input$clusterBy
-        
-        shiny::validate(shiny::need(!is.null(vars),
-          "For QC, please select a QC variable from the options."))
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Please select up to 4 QC variables for visualization."))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For QC, please select a QC variable from the options."
+        ))
+
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Please select up to 4 QC variables for visualization."
+        ))
 
         if ("seurat_clusters" %in% colnames(meta)) {
           meta$seurat_clusters <- as.character(meta$seurat_clusters)
@@ -319,8 +341,10 @@ upload_module_normalizationSC_server <- function(id,
             x <- x + theme(axis.text.x = element_text(size = 13))
             x <- x + theme(axis.text.y = element_text(size = 13))
             x <- x + Seurat::RotatedAxis() + xlab("")
-            x <- x + theme(panel.border = element_rect(color = "black",
-              fill = NA, size = 1, linewidth = 2))
+            x <- x + theme(panel.border = element_rect(
+              color = "black",
+              fill = NA, size = 1, linewidth = 2
+            ))
           })
           return(plist1)
         }
@@ -437,14 +461,18 @@ upload_module_normalizationSC_server <- function(id,
         samples <- res$samples
         vars <- input$clusterBy
 
-        shiny::validate(shiny::need(length(vars) <= 4,
-          "Select up to 4 metadata variables to visualize clusters."))
-        shiny::validate(shiny::need(!is.null(vars),
-          "For clustering, select a metadata variable from the menu on the left."))
+        shiny::validate(shiny::need(
+          length(vars) <= 4,
+          "Select up to 4 metadata variables to visualize clusters."
+        ))
+        shiny::validate(shiny::need(
+          !is.null(vars),
+          "For clustering, select a metadata variable from the menu on the left."
+        ))
 
         m <- tolower(input$dimred_plottype)
         nr <- if (length(vars) <= 2) 1 else 2
-        if (length(vars) > 6 & length(vars) <= 8) nr = 3;
+        if (length(vars) > 6 & length(vars) <= 8) nr <- 3
         nc <- ceiling(length(vars) / nr)
         par(mfrow = c(nr, nc))
 
@@ -479,7 +507,7 @@ upload_module_normalizationSC_server <- function(id,
 
       X <- shiny::reactive({
         shiny::req(r_counts())
-        X <- playbase::logCPM(as.matrix(r_counts()), total = 1e4, prior = 1)
+        X <- playbase::logCPM(r_counts(), total = 1e4, prior = 1)
         return(X)
       })
 
@@ -508,9 +536,6 @@ upload_module_normalizationSC_server <- function(id,
         hb_threshold = hb_thr,
         norm_method = shiny::reactive("CPM")
       ))
-
     } ## end-of-server
-
   )
-
 }

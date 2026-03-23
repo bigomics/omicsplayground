@@ -68,7 +68,6 @@ expression_plot_barplot_server <- function(id,
                                            sel,
                                            res,
                                            watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
 
     ## Editor: rank list for custom drag-and-drop ordering
@@ -202,7 +201,5 @@ expression_plot_barplot_server <- function(id,
       add.watermark = watermark,
       parent_session = session
     )
-
   })
-
 }

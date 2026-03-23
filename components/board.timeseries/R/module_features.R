@@ -98,11 +98,8 @@ TimeSeriesBoard.features_server <- function(id,
                                             timevar,
                                             contrast,
                                             watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     plot_data <- shiny::reactive({
-
       sel.timevar <- timevar()
       genes <- head(table_module$rownames_all(), 16)
       expr <- pgx$X
@@ -137,7 +134,6 @@ TimeSeriesBoard.features_server <- function(id,
 
       df <- data.frame(gene = xgenes, expr = xexpr, time = xtime, group = xgroup)
       df
-
     })
 
     stats_data <- shiny::reactive({
@@ -176,12 +172,12 @@ TimeSeriesBoard.features_server <- function(id,
       }
 
       if (input$show_statdetails) {
-        sel.p <- grep("^p[.]", colnames(kstats.full))
-        sel.q <- grep("^q[.]", colnames(kstats.full))
+        sel.p <- grep("^p(\\.|$)", colnames(kstats.full))
+        sel.q <- grep("^q(\\.|$)", colnames(kstats.full))
         pq.tables <- kstats.full[, c(sel.p, sel.q), drop = FALSE]
         if (ik %in% names(pgx$gx.meta$meta)) {
-          sel.p <- grep("^p[.]", colnames(ikstats.full))
-          sel.q <- grep("^q[.]", colnames(ikstats.full))
+          sel.p <- grep("^p(\\.|$)", colnames(ikstats.full))
+          sel.q <- grep("^q(\\.|$)", colnames(ikstats.full))
           ik.pq.tables <- ikstats.full[, c(sel.p, sel.q), drop = FALSE]
           colnames(ik.pq.tables) <- paste0(colnames(ik.pq.tables), ".interaction")
           pq.tables <- cbind(pq.tables, ik.pq.tables)
@@ -194,7 +190,6 @@ TimeSeriesBoard.features_server <- function(id,
       kstats <- kstats[order(-kstats$log2FC), ]
 
       return(kstats)
-
     })
 
     render_plot <- function() {

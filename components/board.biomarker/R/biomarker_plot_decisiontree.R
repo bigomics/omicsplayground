@@ -54,11 +54,8 @@ biomarker_plot_decisiontree_server <- function(id,
                                                pgx,
                                                is_computed,
                                                watermark = FALSE) {
-
   moduleServer(
-
     id, function(input, output, session) {
-
       plot_data <- shiny::reactive({
         res <- calcVariableImportance()
         shiny::req(res, is_computed())

@@ -14,9 +14,7 @@
 TimeSeriesBoard <- function(id,
                             pgx,
                             labeltype = shiny::reactive("feature")) {
-
   moduleServer(id, function(input, output, session) {
-
     ns <- session$ns
     fullH <- 850
 
@@ -180,7 +178,5 @@ TimeSeriesBoard <- function(id,
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK
     )
-
   })
-
 }

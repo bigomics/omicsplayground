@@ -92,6 +92,10 @@ featuremap_plot_table_geneset_map_server <- function(id,
     ns <- session$ns
     sel.row <- 1
     getUMAP <- function() {
+      shiny::validate(shiny::need( ## Custom species has this empty
+        !is.null(pgx$cluster.gsets),
+        "Cluster genesets are not available."
+      ))
       pos <- pgx$cluster.gsets$pos[["umap2d"]]
       colnames(pos) <- c("x", "y")
       pos
