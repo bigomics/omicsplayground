@@ -340,4 +340,7 @@ LOCAL_MODELS <- playbase::ai.get_ollama_models()
 opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
 
 ## Setup reticulate
-## reticulate::use_virtualenv("reticulate")
+tryCatch(
+  reticulate::use_miniconda("r-reticulate"),
+  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
+)

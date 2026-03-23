@@ -67,7 +67,8 @@ RUN R -e "install.packages('quarto')"
 RUN R -e "devtools::install_github('bigomics/visNetwork')"
 RUN R -e "install.packages('svglite')"
 RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
-
+RUN R -e "install.packages('mirai')"
+    
 #------------------------------------------------------------
 # Add supporting R libraries
 #------------------------------------------------------------
@@ -182,6 +183,12 @@ RUN make sass
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f .Renviron; then mv .Renviron .Renviron.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
+
+#------------------------------------------------------------
+# Clean up GitHub token from image
+#------------------------------------------------------------
+RUN rm -f /root/.gitconfig; true
+ENV GITHUB_PAT=""
 
 #------------------------------------------------------------
 # Expose port and set entry CMD
