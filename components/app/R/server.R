@@ -244,6 +244,34 @@ app_server <- function(input, output, session) {
     new_upload = new_upload
   )
 
+  if(opt$DEVMODE) {
+
+    env$load2 <- LoadingBoard(
+      id = "load2",
+      pgx = PGX,
+      auth = auth,
+      pgx_topdir = PGX.DIR,
+      load_example = load_example,
+      reload_pgxdir = reload_pgxdir,
+      current_page = reactive(input$nav),
+      load_uploaded_data = load_uploaded_data,
+      recompute_pgx = recompute_pgx,
+      new_upload = new_upload
+    )
+
+    upload_datatype2 <- UploadBoard(
+      id = "upload2",
+      pgx_dir = PGX.DIR,
+      pgx = PGX,
+      auth = auth,
+      reload_pgxdir = reload_pgxdir,
+      load_uploaded_data = load_uploaded_data,
+      recompute_pgx = recompute_pgx,
+      inactivityCounter = inactivityCounter,
+      new_upload = new_upload
+    )
+
+  }
 
   shiny::observeEvent(upload_datatype(), {
     if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
@@ -713,6 +741,7 @@ app_server <- function(input, output, session) {
     }
     return(ui)
   })
+
   CopilotServer("copilot",
     pgx = PGX, input.click = reactive({
       req(input$copilot_click > 0)
@@ -1409,7 +1438,21 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Other apps
   ## -------------------------------------------------------------
-  prism_server("prism")
+  if(opt$DEVMODE) {
+
+    WelcomeBoard2("welcome2",
+      auth = auth,
+      load_example = load_example,
+      new_upload = new_upload,
+      parent = session
+    )
+    prism_server("prism")
+    tools_server("tools", parent = session)
+    CopilotServer("copilot2", pgx = PGX, input.click = reactive(NULL),
+      layout = "fixed", maxturns = opt$LLM_MAXTURNS)
+    AppSettingsBoard("settings2", auth=auth, pgx=PGX) 
+  }
+
   
   ## -------------------------------------------------------------
   ## report server times

@@ -3,12 +3,18 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-InviteFriendUI <- function(id) {
+InviteFriendUI <- function(id, type=c("button","link")[1]) {
   ns <- shiny::NS(id)
-  shiny::actionButton(
-    ns("action"), "Invite!",
-    width = "auto", class = "quick-button"
-  )
+  if(type == 'button') {
+    ui <- shiny::actionButton(
+      ns("action"), "Invite!",
+      width = "auto", class = "quick-button"
+    )
+  }
+  if(type == 'link') {
+    ui <- shiny::actionLink(ns("action"), "Invite a friend")
+  }
+  return(ui)
 }
 
 InviteFriendModule <- function(

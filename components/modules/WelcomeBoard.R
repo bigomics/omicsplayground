@@ -186,3 +186,66 @@ WelcomeBoard <- function(id, auth, load_example, new_upload) {
     })
   })
 }
+
+WelcomeBoard2 <- function(id, auth, load_example, new_upload, parent) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns ## NAMESPACE
+
+    output$welcome <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+
+      name <- auth$username
+      if (is.null(name) || name %in% c("", NA)) name <- auth$email
+      dbg("[WelcomeBoard] name = ", name)
+      if (is.null(name) || name %in% c("", NA)) {
+        welcome <- paste0("Welcome back...")
+      } else {
+        first.name <- getFirstName(name) ## in app/R/utils.R
+        welcome <- paste0("Welcome back ", first.name, "...")
+      }
+      dbg("[WelcomeBoard] welcome = ", welcome)
+      welcome
+    })
+
+    output$welcome2 <- shiny::renderText({
+      shiny::req(auth$logged)
+      if (!auth$logged) {
+        return(NULL)
+      }
+      all.hello <- c(
+        "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+        "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+        "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+      )
+      hello1 <- sample(all.hello, 1)
+      paste0(hello1, "! What would you like to do today?")
+    })
+
+    observeEvent(input$btn_example_data, {
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
+      bslib::nav_select("app-sidebar", "Explore", session=parent)      
+    })
+
+    observeEvent(input$btn_upload_new, {
+      #bigdash.openSettings(lock = TRUE)
+      #bigdash.openSidebar()
+      #bigdash.selectTab(session, selected = "upload-tab")
+      bslib::nav_select("app-sidebar", "Upload", session=parent)
+    })
+
+    observeEvent(input$btn_load_data, {
+      #bigdash.openSettings(lock = TRUE)
+      #bigdash.openSidebar()
+      #bigdash.selectTab(session, "load-tab")
+      bslib::nav_select("app-sidebar", "Library", session=parent)
+    })
+
+  })
+}

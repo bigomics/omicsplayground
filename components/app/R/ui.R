@@ -44,7 +44,6 @@ app_ui <- function(x) {
         "(xs: 0, sm: 576px, md: 768px, lg: 1200px, xl: 1600px, xxl: 2000px)",
       .where = "declarations"
     )
-    iconstyle = "font-size: 20px;"
 
     header <- shiny::tagList(
       shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
@@ -70,36 +69,144 @@ app_ui <- function(x) {
       )
     )
 
-    app_ui <- bigdash::bigPage(
-      header,
-      navbar = NULL,
-      bslib::navset_pill_list(
-        id = "app-sidebar",
-        ##widths = c("50px","calc(100% - 50px)"),
-        widths = c(1,11),
-        selected = "Play",
-        well = TRUE,
-        bslib::nav_panel(title = "Play", icon=icon("flask", style=iconstyle),
-          opg_ui()
-        ),
-        bslib::nav_panel(title = "MOX", icon=icon("layer-group", style=iconstyle),
-          mox_ui("mox")
-        ),
-        bslib::nav_panel(title = "Chat", icon=icon("robot", style=iconstyle),
-          p("Chat content")
-        ),
-        bslib::nav_panel(title = "Prism", icon=icon("gem", style=iconstyle),
-          prism_ui("prism")
-        ),
-        bslib::nav_panel(title = "Settings", icon=icon("gear", style=iconstyle),
-          p("Settings content")
-        ),
-        bslib::nav_spacer()
-      )
+    nav_weblink <- function(title, href, onClick = NULL) {
+      bslib::nav_item(NULL, shiny::tags$a(
+        href = href, target = "_blank", onClick = onClick,
+        HTML(paste(title,"<i class='fa-solid fa-arrow-up-right-from-square weblink' style='font-size: 13px;'></i>"))
+      ))
+    }
+
+    nav_signout <- function(title, href, onClick = NULL) {
+      bslib::nav_item(NULL, shiny::tags$a(
+        href = href, target = "_blank", onClick = onClick,
+        HTML(paste(title,"<i class='fa-solid fa-right-from-bracket weblink' style='font-size: 15px;'></i>"))
+      ))
+    }
+
+    signout_link <- nav_signout(
+      "Sign out", href = NULL, onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
     )
+    if (opt$AUTHENTICATION == "shinyproxy") {
+      ## For ShinyProxy we need to redirect to /logout for clean session
+      ## logout. Then we need a redirect to the /login page.
+      signout_link <- nav_signout("Sign out", onClick = "shinyproxy_logout();", href = "/login")
+    } else if (opt$AUTHENTICATION == "apache-cookie") {
+      ## For apache SSO we need to redirect to /mellon/logout for SSO logout
+      signout_link <- nav_signout("Sign out", onClick = NULL,
+        href = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#"))
+    }
     
+    if(opt$DEVMODE) {
+      ## new multi-app UI
+
+      nav_page <- function(...) {
+        bslib::page_fluid(
+          theme = bigdash::big_theme(),
+          title = NULL,
+          style = "padding: 0px;",
+          bigdash::navbar(
+            title = tags$img(
+              src = "assets/img/bigomics.png",
+              width = "110"
+            ),
+            center = tags$div(
+              "title in navbar",
+              style = 'text-align:center;width: 100%;'
+            ),
+            left = NULL,
+            NULL
+          ),
+          ... 
+        )
+      }
+
+      nav_page <- function(p) {p}  ## dummy
+        
+      ui <- bigdash::bigPage(
+        header,
+        navbar = NULL,
+        bslib::navset_pill_list(
+          id = "app-sidebar",
+          ##widths = c("50px","calc(100% - 50px)"),
+          widths = c(1,11),
+          selected = "Home",
+          well = TRUE,
+          bslib::nav_panel(title = "Home", icon=icon("home"),
+            nav_page(WelcomeBoardUI("welcome2"))
+          ),
+          bslib::nav_panel(title = "Library", icon=icon("book"),
+            nav_page(
+              div(LoadingUI("load2"), class = "px-3 py-0")
+            )
+          ),
+#          bslib::nav_panel(title = "Runs", icon=icon("person-running"),
+#            p("Runs or batch processing")
+#          ),
+          bslib::nav_panel(title = "Explore", icon=icon("magnifying-glass-chart"),
+            opg_ui()
+          ),
+          ## bslib::nav_panel(title = "MOX", icon=icon("layer-group"),
+          ##   mox_ui("mox")
+          ## ),
+          bslib::nav_panel(
+            title = "Reports", icon=icon("file-lines"),
+            div( class = "px-3 py-0",
+              shiny::div(id = "navheader-current-section", HTML("Reports")),
+              #report_ui("report")
+              p("Reporting module")
+            )
+          ),
+          bslib::nav_panel(title = "Copilot", icon = icon("robot"),
+            div( class = "px-3 py-0",
+              shiny::div(id = "navheader-current-section", HTML("Copilot")),
+              CopilotUI("copilot2", layout = c("sidebar", "fixed")[2])
+            )
+          ),
+          bslib::nav_panel(title = "Tools", icon = icon("tools"),
+            tools_ui("tools")
+          ),
+          ## Hidden panels
+          bslib::nav_panel_hidden("Prism", prism_ui("prism")),
+          bslib::nav_panel_hidden("MOX",   mox_ui("mox")),          
+          bslib::nav_panel_hidden("Upload", UploadUI("upload2")),
+
+          ## lower settings buttons
+          bslib::nav_spacer(),
+          bslib::nav_panel("Settings", icon=icon("cog"),
+            div(AppSettingsUI2("settings2"), class='px-3 py-0') 
+          ),          
+          bslib::nav_menu(
+            title = "Help",
+            icon = icon("circle-question"),
+            nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
+            nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
+            nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
+            nav_weblink("Reddit r/omicsplayground", href="https://www.reddit.com/r/omicsplayground"),
+            nav_weblink("Submit a support ticket", href="https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t"),
+            nav_weblink("Github issues", href="https://github.com/bigomics/omicsplayground/issues/"),
+            nav_weblink("Case studies", href="https://bigomics.ch/case-studies/")
+          ),
+          bslib::nav_menu(
+            title = "",
+            icon = icon("user"),
+            bslib::nav_item(NULL, actionLink("app_profile", "My profile")),
+            bslib::nav_item(NULL, actionLink("navbar_about", "About")),
+            bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),            
+            nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
+            nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            
+            signout_link
+          )
+        )
+      )
+    } else {
+      ## old style
+      ui <- opg_ui()
+    }
+
+    return(ui)
   }
 }
+
 
 opg_ui <- function() {
 
@@ -125,7 +232,6 @@ opg_ui <- function() {
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     id <- "maintabs"
     
-
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
       onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
@@ -243,20 +349,83 @@ opg_ui <- function() {
       .where = "declarations"
     )
 
-    ## offcanvas chatbox
-    div.chirpbutton <- NULL
-    if (opt$ENABLE_CHIRP) {
-      div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-        width = "auto", class = "quick-button",
-        onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-      )
-    }
 
-    div.invitebutton <- InviteFriendUI("invite")
-    div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
-      UpgradeModuleUI("upgrade")
-    } else {
-      NULL
+    div.chirpbutton <- NULL
+    div.invitebutton <- NULL
+    div.upgradebutton <- NULL
+    div.helpmenu <- NULL
+    div.usermenu <- NULL            
+    if(TRUE) {
+      if (opt$ENABLE_CHIRP) {
+        div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
+          width = "auto", class = "quick-button",
+          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
+        )
+      }
+      div.invitebutton <- InviteFriendUI("invite")
+      div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
+        UpgradeModuleUI("upgrade")
+      } else {
+        NULL
+      }
+
+      div.helpmenu <- div(
+        id = "mainmenu_help",
+        bigdash::navbarDropdown(
+          "Help",
+          bigdash::navbarDropdownItem(
+            "Documentation",
+            link = "https://omicsplayground.readthedocs.io",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Video tutorials",
+            link = "https://bigomics.ch/tutorials/",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Google forum",
+            link = "https://groups.google.com/d/forum/omicsplayground",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Submit a support ticket",
+            link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Github issues",
+            link = "https://github.com/bigomics/omicsplayground/issues",
+            target = "_blank"
+          ),
+          bigdash::navbarDropdownItem(
+            "Case studies",
+            link = "https://bigomics.ch/case-studies/",
+            target = "_blank"
+          )
+        )
+      )
+      div.usermenu <- div(
+        id = "mainmenu_user",
+        bigdash::navbarDropdown(
+          ## "User",
+          shiny::textOutput("current_user", inline = TRUE),
+          bigdash::navbarDropdownTab(
+            "User profile",
+            "userprofile-tab"
+          ),
+          bigdash::navbarDropdownTab(
+            "App settings",
+            "usersettings-tab"
+          ),
+          upgrade.tab,
+          tags$li(
+            actionLink("navbar_about", "About")
+          ),
+          logout.tab
+        )
+      )
+      
     }
 
     ## ------------------------- bigPage ----------------------------------
@@ -304,62 +473,8 @@ opg_ui <- function() {
         div.upgradebutton,
         div.invitebutton,
         div.chirpbutton,
-        div(
-          id = "mainmenu_help",
-          bigdash::navbarDropdown(
-            "Help",
-            bigdash::navbarDropdownItem(
-              "Documentation",
-              link = "https://omicsplayground.readthedocs.io",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Video tutorials",
-              link = "https://bigomics.ch/tutorials/",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Google forum",
-              link = "https://groups.google.com/d/forum/omicsplayground",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Submit a support ticket",
-              link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Github issues",
-              link = "https://github.com/bigomics/omicsplayground/issues",
-              target = "_blank"
-            ),
-            bigdash::navbarDropdownItem(
-              "Case studies",
-              link = "https://bigomics.ch/case-studies/",
-              target = "_blank"
-            )
-          )
-        ),
-        div(
-          id = "mainmenu_user",
-          bigdash::navbarDropdown(
-            ## "User",
-            shiny::textOutput("current_user", inline = TRUE),
-            bigdash::navbarDropdownTab(
-              "User profile",
-              "userprofile-tab"
-            ),
-            bigdash::navbarDropdownTab(
-              "App settings",
-              "usersettings-tab"
-            ),
-            upgrade.tab,
-            tags$li(
-              actionLink("navbar_about", "About")
-            ),
-            logout.tab
-          )
-        ),
+        div.helpmenu,
+        div.usermenu,
         div(
           id = "mainmenu_appsettings",
           bigdash::navbarDropdown(

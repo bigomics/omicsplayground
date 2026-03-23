@@ -9,7 +9,7 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @export
-mox_server <- function(input, output, session) {
+mox_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
