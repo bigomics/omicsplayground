@@ -120,7 +120,7 @@ upload_module_normalization_server <- function(
         }
 
         ## Impute if required
-        if (any(is.na(X)) & input$impute) {
+        if (any(is.na(X)) & isTRUE(input$impute)) {
           if (is.mox) {
             X <- playbase::imputeMissing.mox(X, method = input$impute_method)
           } else {
@@ -150,7 +150,7 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
-            nX <- try(playbase::normalizeMethylation(X, m), silent = TRUE)
+            nX <- try(playbase::normalizeMethylation(X, m, meth_type()), silent = TRUE)
             if (!is.null(nX)) X=nX; rm(nX)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
@@ -968,7 +968,7 @@ upload_module_normalization_server <- function(
               multiple = FALSE,
               style = "background-color: #F7FAFD99;",
               bslib::accordion_panel(
-                title = "1. Missing values",
+                title = "Missing values",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Handle missing values:\n"),
@@ -990,18 +990,19 @@ upload_module_normalization_server <- function(
                     selected = 0.2
                   )
                 ),
-                shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
-                shiny::conditionalPanel("input.impute == true",
-                  ns = ns,
-                  shiny::selectInput(ns("impute_method"), NULL,
-                    choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
-                    selected = default_impute_method
+                if (upload_datatype() != "methylomics") tagList(
+                  shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
+                  shiny::conditionalPanel("input.impute == true", ns = ns,
+                    shiny::selectInput(ns("impute_method"), NULL,
+                      choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
+                      selected = default_impute_method
+                    )
                   )
                 ),
                 br()
               ),
               bslib::accordion_panel(
-                title = "2. Normalization",
+                title = "Normalization",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Normalize the data using one of the following methods:"),
@@ -1056,7 +1057,7 @@ upload_module_normalization_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "3. Remove outliers",
+                title = "Remove outliers",
                 shiny::p("Detect and remove outlier samples."),
                 shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = default_remove_outliers),
                 shiny::conditionalPanel("input.remove_outliers == true",
@@ -1066,7 +1067,7 @@ upload_module_normalization_server <- function(
                 br()
               ),
               bslib::accordion_panel(
-                title = "4. Batch-effect correction",
+                title = "Batch-effect correction",
                 shiny::div(
                   style = "display: flex; align-items: center; justify-content: space-between;",
                   shiny::p("Remove unwanted variation from your data."),
@@ -1221,7 +1222,7 @@ upload_module_normalization_server <- function(
 
       imputation_method <- reactive({
         ll <- list(zero_as_na = zero_as_na(), imputation = input$impute_method)
-        if (!input$impute) {
+        if (!isTRUE(input$impute)) {
           ll <- list(zero_as_na = zero_as_na(), imputation = "no_imputation")
         }
         return(ll)

@@ -155,8 +155,6 @@ UploadBoard <- function(id,
       }
     })
 
-    #dbg("--------meth_type=", meth_type) 
-
     observeEvent(input$start_search, {
       ID <- public_dataset_id()
       if (ID != "") {

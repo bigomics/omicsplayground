@@ -1012,8 +1012,6 @@ upload_module_computepgx_server <- function(
         }
         shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
-        #dbg("------------meth_type=",meth_type)
-        
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
