@@ -14,23 +14,24 @@ QA <- list(
 )
 
 qa_items <- list()
-for(i in 1:length(QA)) {
+for (i in 1:length(QA)) {
   q <- names(QA)[i]
   p <- bslib::accordion_panel(
-    HTML(paste0("<b>",q,"</b>")),
+    HTML(paste0("<b>", q, "</b>")),
     QA[[q]],
-    value = paste0("qa_",i) )
+    value = paste0("qa_", i)
+  )
   qa_items <- c(qa_items, list(p))
 }
 
-SearchWidgetUI <- function(id, label="FAQ", class="") {
+SearchWidgetUI <- function(id, label = "FAQ", class = "") {
   ns <- shiny::NS(id)
   tagList(
     shiny::actionButton(
       ns("show_faq"),
       label = label,
-##      icon = icon("search"),
-      class = paste("btn btn-outline-secondary search_btn",class),
+      ##      icon = icon("search"),
+      class = paste("btn btn-outline-secondary search_btn", class),
       width = NULL
     ),
     uiOutput(ns("modalUI")),
@@ -39,7 +40,8 @@ SearchWidgetUI <- function(id, label="FAQ", class="") {
 }
 
 SearchWidgetServer <- function(
-    id, pgx ) {
+  id, pgx
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -48,56 +50,67 @@ SearchWidgetServer <- function(
         id = ns("modal"),
         size = "lg",
         bsutils::modalHeader(
-          shiny::div( style = "display: inline-block; font-size: 1.7em; padding: 0 15px 15px 0;",
-            icon("search")),
-          shiny::div( style = "display: inline-block; width: 100%;", 
-            shiny::textInput(ns("question"), label=NULL,
-              placeholder="Ask a question...",
-              width = "100%"))
+          shiny::div(
+            style = "display: inline-block; font-size: 1.7em; padding: 0 15px 15px 0;",
+            icon("search")
+          ),
+          shiny::div(
+            style = "display: inline-block; width: 100%;",
+            shiny::textInput(ns("question"),
+              label = NULL,
+              placeholder = "Ask a question...",
+              width = "100%"
+            )
+          )
         ),
         bsutils::modalBody(
           # First shown by default
-          bslib::accordion(id = ns("accordion"), !!!qa_items, multiple=FALSE)
+          bslib::accordion(id = ns("accordion"), !!!qa_items, multiple = FALSE)
         )
       )
     })
-        
+
     observeEvent(input$show_faq, {
       bsutils::modal_show(ns("modal"))
     })
-    
-    score.order <- eventReactive( input$question, {
+
+    score.order <- eventReactive(input$question, {
       q <- input$question
-      q <- gsub("['?]","",q)
-      q <- gsub("[-_;]"," ",q)
-      keywords <- tolower(strsplit(q, split=' ')[[1]])
-      score_question <- function(q) sum(unlist(sapply(keywords, agrep, q,
-        ignore.case = TRUE, fixed=FALSE)))
-      score <- sapply(tolower(names(QA)), score_question )
-      order(score, decreasing=TRUE)
+      q <- gsub("['?]", "", q)
+      q <- gsub("[-_;]", " ", q)
+      keywords <- tolower(strsplit(q, split = " ")[[1]])
+      score_question <- function(q) {
+        sum(unlist(sapply(keywords, agrep, q,
+          ignore.case = TRUE, fixed = FALSE
+        )))
+      }
+      score <- sapply(tolower(names(QA)), score_question)
+      order(score, decreasing = TRUE)
     })
-    
+
     prepare_answer <- function(a) {
       markers <- playbase::pgx.getMarkerGenes(pgx)
       top.markers <- paste(head(names(sort(table(unlist(markers)),
-        decreasing=TRUE))),collapse=" ")
+        decreasing = TRUE
+      ))), collapse = " ")
       a <- sub("\\{topgenes\\}", top.markers, a)
       a
     }
-    
-    observeEvent( score.order(), {
+
+    observeEvent(score.order(), {
       req(score.order())
       nn <- score.order()
-      nn <- head(nn,8)
-      for(i in 1:length(nn)) {
+      nn <- head(nn, 8)
+      for (i in 1:length(nn)) {
         j <- nn[i]
-        answer <- prepare_answer(QA[[j]])      
+        answer <- prepare_answer(QA[[j]])
         bslib::accordion_panel_update(
-          id = "accordion", target=paste0("qa_",i),
-          title = names(QA)[j], answer )
+          id = "accordion", target = paste0("qa_", i),
+          title = names(QA)[j], answer
+        )
       }
     })
-    
+
     # observe dataset and
   }) ## end of moduleServer
 }

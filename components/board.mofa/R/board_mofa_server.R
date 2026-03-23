@@ -42,13 +42,10 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types")),
-      "Response" = list(disable = c("show_types", "selected_module", "selected_trait")),
-      "Weights" = list(disable = c("selected_module", "selected_trait")),
-      "Enrichment" = list(disable = c(
-        "selected_module", "selected_trait",
-        "show_types"
-      )),
+      "Overview" = list(disable = c("selected_factor", "show_types")),
+      "Response" = list(disable = c("show_types")),
+      "Weights" = list(disable = c()),
+      "Enrichment" = list(disable = c("show_types")),
       "gsetMOFA" = list(disable = c("show_types"))
     )
 
@@ -119,16 +116,9 @@ MofaBoard <- function(id, pgx) {
         factors <- colnames(mofa$W)
         dtypes <- names(mofa$ww)
         sel.dtypes <- grep("^gset", dtypes, value = TRUE, invert = TRUE)
-        contrasts <- colnames(mofa$contrasts)
-        phenotypes <- colnames(mofa$samples)
-        traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor",
           choices = factors,
           selected = factors[1]
-        )
-        updateSelectInput(session, "selected_trait",
-          choices = traits,
-          selected = traits[1]
         )
         updateSelectInput(session, "show_types",
           choices = dtypes,
@@ -165,7 +155,6 @@ MofaBoard <- function(id, pgx) {
     ## =========================== MODULES ====================================
     ## ========================================================================
 
-    # Gene dendrogram and gene modules
     mofa_plot_variance_server(
       "factorxview",
       type = "factorxview",
@@ -299,9 +288,6 @@ MofaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-
-    ## ------------- Table Modules --------------------------
-
     mofa_table_genetable_server(
       "mofa_genetable",
       mofa = mofa,
@@ -321,7 +307,6 @@ MofaBoard <- function(id, pgx) {
       selected_factor = reactive(input$selected_factor),
       selected_pathway = enrichmentTable_selected
     )
-
 
     return(NULL)
   })

@@ -16,10 +16,6 @@ plot_deepnet_biomarkerheatmap_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  options <- shiny::tagList(
-    selectInput(ns("ntop"), "Number of features:", c(20, 30, 50, 100, 200))
-  )
-
   PlotModuleUI(
     ns("plot"),
     title = title,
@@ -47,7 +43,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot.RENDER <- function(n = 12) {
-      update() ## react on updates
+      update()
       net <- net()
       annot <- NULL
       if (add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]), ]

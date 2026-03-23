@@ -522,7 +522,7 @@ upload_module_computepgx_server <- function(
                   GENESET.METHODS(),
                   selected = GENESET.SELECTED()
                 ),
-                ),
+              ),
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
                 div(
@@ -544,7 +544,7 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
-                ),
+              ),
               bslib::card(
                 fileInput2(
                   ns("upload_gmt"),
@@ -677,7 +677,9 @@ upload_module_computepgx_server <- function(
       metadata_validators_added <- reactiveVal(FALSE)
       shiny::observe({
         ## Only run once when auth becomes available
-        if (metadata_validators_added()) return()
+        if (metadata_validators_added()) {
+          return()
+        }
         shiny::req(auth$options)
 
         if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
@@ -1018,7 +1020,11 @@ upload_module_computepgx_server <- function(
         samples <- samplesRT()
         samples <- data.frame(samples, stringsAsFactors = FALSE, check.names = FALSE)
         contrasts <- as.matrix(contrastsRT())
-        annot_table <- annotRT()
+        if (upload_datatype() != "scRNA-seq") {
+          annot_table <- annotRT()
+        } else {
+          annot_table <- NULL
+        }
 
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
@@ -1071,7 +1077,7 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
-        
+
         ## -----------------------------------------------
         ## Collect user-defined metadata from inputs
         ## -----------------------------------------------
@@ -1118,7 +1124,7 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
-        
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1179,19 +1185,7 @@ upload_module_computepgx_server <- function(
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
-        
-        path_to_params <- file.path(raw_dir(), "params.RData")
-        saveRDS(params, file = path_to_params)
 
-        # Normalize paths
-        script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
-        tmpdir <- normalizePath(raw_dir())
-
-        # Remove global variables
-        try(rm(annot_table))
-        try(rm(custom_geneset))
-
-        # Start the process and store it in the reactive value
         shinyalert::shinyalert(
           title = "Crunching your data!",
           text = stringr::str_squish("Your dataset will be computed in the background.
@@ -1205,6 +1199,17 @@ upload_module_computepgx_server <- function(
           session,
           selected = "load-tab"
         )
+
+        path_to_params <- file.path(raw_dir(), "params.RData")
+        saveRDS(params, file = path_to_params)
+
+        # Normalize paths
+        script_path <- normalizePath(file.path(get_opg_root(), "bin", "pgxcreate_op.R"))
+        tmpdir <- normalizePath(raw_dir())
+
+        # Remove global variables
+        try(rm(annot_table))
+        try(rm(custom_geneset))
 
         process_counter(process_counter() + 1)
         dbg("[compute PGX process] : starting processx nr: ", process_counter())

@@ -9,24 +9,12 @@ TimeSeriesBoard.parcoord_plot_ui <- function(
   title = "title",
   info.text = "Parallel line plot displaying the average expression per time point of features mapped within the selected gene module. ",
   info.methods = "The normalized and log2-transformed expression data are scaled and centered. Per each feature, the average expression across samples is calculated per each time point. The plot displays the average expression per time point of features mapped within the selected gene module.",
-  # info.references = list(),
   info.extra_link = "extra.link",
   caption = "caption",
   height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
   width = c("auto", "100%")
 ) {
   ns <- shiny::NS(id)
-
-  parcoord_opts <- shiny::tagList(
-    withTooltip(
-      shiny::checkboxInput(ns("average"), tspan("Average by gene module"), FALSE),
-      "Average gene by gene module"
-    ),
-    withTooltip(
-      shiny::checkboxInput(ns("scale"), "Scale values", TRUE),
-      "Scale expression values to mean=0 and SD=1."
-    )
-  )
 
   PlotModuleUI(
     ns("pltmod"),
@@ -35,10 +23,8 @@ TimeSeriesBoard.parcoord_plot_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     info.methods = info.methods,
-    # info.references = info.references,
     info.extra_link = info.extra_link,
     caption = caption,
-    options = parcoord_opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
     height = height
@@ -143,9 +129,6 @@ TimeSeriesBoard.parcoord_server <- function(id,
       add.watermark = watermark
     )
 
-    ## -----------------------------------------------------
-    ## ------------------- gene table ----------------------
-    ## -----------------------------------------------------
     table.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
@@ -188,7 +171,7 @@ TimeSeriesBoard.parcoord_server <- function(id,
           scrollResize = TRUE,
           scroller = TRUE,
           deferRender = TRUE
-        ) ## end of options.list
+        )
       ) %>%
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")

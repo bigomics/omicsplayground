@@ -68,7 +68,7 @@ expression_table_genetable_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    table_data <- function() {
+    table_data <- function(full_table = FALSE) {
       res <- res()
       req(res)
 
@@ -79,10 +79,12 @@ expression_table_genetable_server <- function(id,
       na.fc <- which(is.na(res$logFC))
       if (any(na.fc)) res$logFC[na.fc] <- 999
 
-      if (show_pv()) {
-        res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
-      } else {
-        res <- res[, -grep(".p$", colnames(res)), drop = FALSE]
+      if (!full_table) {
+        if (show_pv()) {
+          res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
+        } else {
+          res <- res[, -grep("\\.p$", colnames(res)), drop = FALSE]
+        }
       }
 
       if (input$gx_top10) {
@@ -96,7 +98,8 @@ expression_table_genetable_server <- function(id,
           if (pos && neg) res <- rbind(res[res$logFC > 0, ], res[res$logFC < 0, ])
         }
       }
-      res
+
+      return(res)
     }
 
     table.RENDER <- function(showdetails = FALSE) {
@@ -132,7 +135,7 @@ expression_table_genetable_server <- function(id,
       meta.covs <- pgx$gx.meta$meta.covs
       if (!is.null(meta.covs) & input$show_cov_pvalues) {
         M <- lapply(meta.covs, function(x) do.call(cbind, x))
-        for(i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
+        for (i in 1:length(M)) colnames(M[[i]]) <- paste0(names(M)[i], ".", colnames(M[[i]]))
         M <- do.call(cbind, M)
         M <- M[which(rownames(M) %in% rownames(df)), ]
         M <- M[match(rownames(df), rownames(M)), ]
@@ -142,9 +145,9 @@ expression_table_genetable_server <- function(id,
         hh <- grep(paste0(mm, collapse = "|"), colnames(M))
         if (length(hh) > 0) {
           M <- M[, hh, drop = FALSE]
-          for(i in 1:ncol(M)) M[,i] <- formatC(M[,i], format = "e", digits = 2)
-          for(m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
-          df <- cbind(df,  M)
+          for (i in 1:ncol(M)) M[, i] <- formatC(M[, i], format = "e", digits = 2)
+          for (m in mm) colnames(M) <- sub(paste0("^(.*?", m, ").*", m), "\\1", colnames(M))
+          df <- cbind(df, M)
         }
       }
 
@@ -183,7 +186,7 @@ expression_table_genetable_server <- function(id,
     }
 
     table_csv <- function() {
-      dt <- table_data()
+      dt <- table_data(full_table = TRUE)
       dt$stars <- NULL
       return(dt)
     }

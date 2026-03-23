@@ -6,9 +6,6 @@
 MofaInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    ## data set parameters
-    shiny::selectInput(ns("selected_trait"), "Select trait:", choices = NULL),
-    shiny::selectInput(ns("selected_module"), "Select module:", choices = NULL),
     shiny::selectInput(ns("selected_factor"), "Select factor:", choices = NULL),
     shiny::selectizeInput(ns("show_types"), "Show datatypes:",
       choices = NULL, multiple = TRUE

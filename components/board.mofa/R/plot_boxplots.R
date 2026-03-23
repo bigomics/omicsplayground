@@ -73,7 +73,6 @@ mofa_plot_boxplots_server <- function(id,
       nc <- ceiling(nph / nr)
       par(mfrow = c(nr, nc), mar = c(3, 4, 2.8, 0.5))
 
-      i <- 1
       for (i in 1:length(pheno)) {
         jj <- which(colnames(samples) == pheno[i])
         if (!any(jj)) next
