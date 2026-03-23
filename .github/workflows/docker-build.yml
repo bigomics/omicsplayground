@@ -70,8 +70,11 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.update
-          push: true          
-          no-cache: true
+          push: true
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:buildcache,mode=max
+          secrets: |
+            GITHUB_PAT=${{ secrets.GH_PAT }}
           build-args: |
             BRANCH=${{ github.event.inputs.branch || github.ref_name }}
             update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
