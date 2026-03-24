@@ -175,7 +175,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
           #        register_mcp(chat)
         }
         
-        if (!is.null(chat)) shinychat::chat_clear("chat")
+        #if (!is.null(chat)) shinychat::chat_clear("chat")
         shinychat::chat_append("chat", "How can I help you?")
     }
 
@@ -186,6 +186,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
         list(input$reset, input.click())
       },
       {
+        if (!is.null(chat)) shinychat::chat_clear("chat")        
         new_chatbot()
       },
       ignoreNULL = FALSE
