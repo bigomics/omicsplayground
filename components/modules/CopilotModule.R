@@ -156,14 +156,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       ))
     })
 
-    ## On modal open or reset, create new chatbot
-    observeEvent(
-      {
-        list(input$reset, input.click())
-      },
-      {
-        req(dim(pgx$X))
-
+    new_chatbot <- function() {
+        req(dim(pgx$X))        
         content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
         prompt <- input$prompt
         prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say creating images is not supported yet.")
@@ -172,7 +166,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
         ai_model <- getUserOption(session, "llm_model")
         req(ai_model)
 
-        message("Creating new chat model ", ai_model)
+        dbg("Creating new chatbot ", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = prompt)
 
         if (!is.null(chat)) {
@@ -206,6 +200,17 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
           if (!is.null(chat)) shinychat::chat_clear("chat")
           shinychat::chat_append("chat", "How can I help you?")
         }
+        return(chat)
+    }
+
+
+    ## On modal open or reset, create new chatbot
+    observeEvent(
+      {
+        list(input$reset, input.click())
+      },
+      {
+        new_chatbot()
       },
       ignoreNULL = FALSE
     )
@@ -215,15 +220,19 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       qq <- sub("1. ", "", strsplit(ff, split = "\n[2-9][.] ")[[1]])
       qq <- trimws(qq)
       qq <- paste("  <li class='suggestion submit'>", qq, "</li>")
-      qq <- paste("<ul>\n", paste(qq, collapse = "\n"), "\n</ul>")
+      qq <- paste("<p><ul>\n", paste(qq, collapse = "\n"), "\n</ul>")
       msg <- list(role = "assistant", content = qq)
       shinychat::chat_append_message("chat", msg, chunk = TRUE, operation = "append")
     }
 
     ask_copilot <- function(question, showq = TRUE, suggest = TRUE) {
+      is.new = FALSE
       if (is.null(chat)) {
-        return(NULL)
+        ##return(NULL)
+        new_chatbot()
+        is.new = TRUE
       }
+      shiny::req(chat)
       if (n_turns() > maxturns) {
         shinyalert::shinyalert(
           title = "Sorry...",
@@ -240,7 +249,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       }
       response <- chat$chat_async(question)
       shinychat::chat_append("chat", response) %...>% {
-        if (suggest) {
+        if (suggest && !is.new) {
           append_suggestions(chat, num = 2)
         }
         n_turns(n_turns() + 1)
@@ -271,39 +280,32 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
 
     ## ---------------------- examples -----------------------------
     observeEvent(input$ask_describe, {
-      req(chat)
       ask_copilot("Describe my experiment", suggest = input$followup)
     })
 
     observeEvent(input$ask_findings, {
-      req(chat)
       ask_copilot("Summarize main findings of this experiment", suggest = input$followup)
     })
 
     observeEvent(input$ask_pathways, {
-      req(chat)
       ask_copilot("List the top enriched pathways and elaborate how they make sense in light of the experiment",
         suggest = input$followup
       )
     })
 
     observeEvent(input$show_biomarkers, {
-      req(chat)
       ask_copilot("Show the top 3-5 candidate biomarkers (up and down) for this experiment", suggest = input$followup)
     })
 
     observeEvent(input$find_references, {
-      req(chat)
       ask_copilot("Find literature references that are relevant to my experiment", suggest = input$followup)
     })
 
     observeEvent(input$get_expression, {
-      req(chat)
       ask_copilot("Get the expression values of MTOR", suggest = input$followup)
     })
 
     observeEvent(input$plot_volcano, {
-      req(chat)
       ask_copilot("Using the tools, create a volcano plot for contrast=1. Return one-line code",
         suggest = FALSE
       )
