@@ -401,8 +401,8 @@ UploadBoard <- function(id,
             )
           }
           # Hard stop for scRNA-seq
-          if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+          if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 200.000 cells allowed for scRNA-seq")
             checked <- NULL
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
@@ -413,7 +413,7 @@ UploadBoard <- function(id,
               text = paste(
                 "You have reached the maximum number of cells allowed. Please",
                 tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
+                "200.000 cells."
               ),
               type = "error"
             )
@@ -575,7 +575,7 @@ UploadBoard <- function(id,
           }
         }
 
-        if (!is.null(checked)) {
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
           checked <- playbase::contrasts.convertToLabelMatrix(
             contrasts = checked, samples = cc$SAMPLES
           )

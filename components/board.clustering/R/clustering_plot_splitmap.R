@@ -208,12 +208,16 @@ clustering_plot_splitmap_server <- function(id,
       if (!input$show_colnames) cex1 <- 0
       show_colnames <- (cex1 > 0)
 
+      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE, check.names = FALSE)
+      rownames(annotF) <- rownames(annot)
+
       # Select annot to display (user input)
       sel <- selected_phenotypes()
+      sel <- intersect(sel, colnames(annotF))
       if (length(sel) == 0) {
         annot <- NULL
       } else {
-        annot <- annot[, sel, drop = FALSE]
+        annot <- annotF[, sel, drop = FALSE]
       }
 
       if (hm_level() == "gene") {
