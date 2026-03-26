@@ -95,7 +95,8 @@ RUN --mount=type=secret,id=GITHUB_PAT \
 #  any of the package install layers above)
 #------------------------------------------------------------
 ARG BRANCH=master
-RUN echo Downloading $BRANCH branch
+ARG CACHEBUST_CODE
+RUN echo Downloading $BRANCH branch \(cache key: $CACHEBUST_CODE\)
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
     https://github.com/bigomics/omicsplayground.git \

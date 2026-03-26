@@ -77,6 +77,7 @@ jobs:
             GITHUB_PAT=${{ secrets.GH_PAT }}
           build-args: |
             BRANCH=${{ github.event.inputs.branch || github.ref_name }}
+            CACHEBUST_CODE=${{ github.run_id }}
             update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
             update_bigdash=${{ github.event.inputs.update_bigdash || 'true' }}
             update_playbase=${{ github.event.inputs.update_playbase || 'true' }}
