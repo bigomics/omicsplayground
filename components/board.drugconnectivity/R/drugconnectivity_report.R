@@ -25,8 +25,7 @@ drugconnectivity_report_summary_ui <- function(
   
   options <- tagList(
     ##shiny::radioButtons(ns("format"),"format",c("html","PDF"), inline=TRUE)
-    shiny::checkboxInput(ns("as_html"),"as html",TRUE),
-    shiny::downloadButton(ns("downloadPDF"), label = "PDF", class = NULL)
+    shiny::checkboxInput(ns("as_html"),"as html",TRUE)
   )
   
   PlotModuleUI(
@@ -61,7 +60,7 @@ drugconnectivity_report_infographic_ui <- function(
   img_models <- playbase::ai.get_image_models()   
   options <- shiny::tagList(
     shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
-    shiny::actionButton(ns("generate_infographic"),"regenerate")
+    shiny::actionButton(ns("generate_infographic"),"Generate")
   )
 
   PlotModuleUI(
@@ -91,8 +90,14 @@ drugconnectivity_report_inputs <- function(id) {
     shiny::actionButton(
       ns("ai_generate"), "Generate!",
       icon = icon("refresh"),
-      class = "btn-outline-primary"
-    )
+      class = "btn-outline-primary",
+      width = '100%'
+    ),
+    shiny::downloadButton(
+      ns("downloadPDF"),
+      label = "Download PDF",
+      class = "btn-outline-primary",      
+      width = '100%')
   )
 }
 
@@ -157,7 +162,12 @@ drugconnectivity_report_server <- function(id,
         on.exit(progress$close())
         progress$set(message = "exporting to PDF...", value = 0.33)
         rpt <- get_report()
-        playbase::markdownToPDF(rpt$report, file) 
+        rpt$infographic <- infographic_path()
+        db <- rdb()
+        full_rpt <- playbase::rpt.compile_drugconnectivity_report(
+          obj=NULL, which.db=db, report=rpt,
+          pgx=pgx, model=NULL, hlevel=2, shift=TRUE)
+        playbase::markdownToPDF(full_rpt, file) 
       }
     )    
     
@@ -213,7 +223,7 @@ drugconnectivity_report_server <- function(id,
 
     infographic_info <- function(msg) {
       outfile <- tempfile(fileext = '.png')
-      png(outfile,w=450,h=600)
+      png(outfile,w=600,h=600)
       plot.new()
       text(0.5,0.5, msg, cex=2.5)
       dev.off()
@@ -237,12 +247,13 @@ drugconnectivity_report_server <- function(id,
     
     # Trigger the ExtendedTask when button is clicked
     observeEvent({
+      #c(input$generate_infographic, get_report())
       c(input$generate_infographic, get_report())
     }, {
       rpt <- get_report()      
       if(is.null(rpt)) return(NULL)
       has.model <- length(input$img_model)>0 && input$img_model[1]!=""
-      shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
+      shiny::validate(shiny::need(has.model, "Please set your GEMINI_API_KEY"))      
       report <- rpt$report
       model <- input$img_model
       infographic_info("starting...")
@@ -254,24 +265,27 @@ drugconnectivity_report_server <- function(id,
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
+      dbg("[generate_infographic] task$status = ",status)
       if(status != "success") {
         msg <- " "
         if(status == "initial") msg <- " "
-        if(status == "running") msg <- "generating image ..."
+        if(status == "running") msg <- "generating..."
         infographic_info(msg)
       } else {
         task_result <- infographic_task$result()
+        infographic_path(task_result)        
       }
     })
 
-    # Update reactive value when task completes
-    observeEvent(infographic_task$result(), {
-      task_result <- infographic_task$result()
-      infographic_path(task_result)
-    })
+    ## # Update reactive value when task completes
+    ## observeEvent(infographic_task$result(), {
+    ##   task_result <- infographic_task$result()
+    ##   infographic_path(task_result)
+    ## })
 
     infographic.RENDER <- function() {
-      shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
+      #shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
+      shiny::req(infographic_path())
       # Return a list containing the filename
       list(src = infographic_path(),
         width = "100%",
