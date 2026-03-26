@@ -250,7 +250,7 @@ upload_table_preview_counts_server <- function(id,
                   if (upload_datatype() == "scRNA-seq") {
                     fileInputArea(
                       ns("counts_csv"),
-                      shiny::h4(tspan("Upload counts.csv/.h5", js = FALSE), class = "mb-0"),
+                      shiny::h4(tspan("Upload counts.csv/ .h5 / Cell Ranger folder (compressed) ", js = FALSE), class = "mb-0"),
                       multiple = FALSE,
                       accept = c(".csv", ".h5"),
                       width = "100%"
@@ -582,7 +582,7 @@ upload_table_preview_counts_server <- function(id,
       ext <- tools::file_ext(input$counts_csv$name)
       dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
-      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad")))
+      c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad", "gz", "zip")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
       if (c1 & c2 & c3) {
         shinyalert::shinyalert(
@@ -628,21 +628,39 @@ upload_table_preview_counts_server <- function(id,
         datafile.name <- input$counts_csv$name
         file.ext <- tools::file_ext(datafile.name)
 
-        if (upload_datatype() == "scRNA-seq" && file.ext %in% c("h5", "h5ad")) {
-          df <- tryCatch(
+        if (upload_datatype() == "scRNA-seq") {
+          if (file.ext %in% c("h5", "h5ad")) {
+            df <- tryCatch(
             {
               playbase::read_h5_counts(datafile)
             },
             error = function(w) {
               NULL
             }
-          )
-          if (is.null(df)) {
-            shinyalert::shinyalert(
-              title = "Error",
-              text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
-              type = "error"
             )
+            if (is.null(df)) {
+              shinyalert::shinyalert(
+                title = "Error",
+                text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
+                type = "error"
+              )
+            }
+          } else if (file.ext %in% c("gz", "zip")) {
+            df <- tryCatch(
+            {
+              playbase::read_cellranger_output(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+            )
+            if (is.null(df)) {
+              shinyalert::shinyalert(
+                title = "Error",
+                text = "Error: there may be an issue with the uploaded Cell Ranger output format. Please fix it & re-upload.",
+                type = "error"
+              )
+            }
           }
         } else {
           df.samples <- NULL
@@ -723,14 +741,15 @@ upload_table_preview_counts_server <- function(id,
         )
       }
 
-
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
       } else {
         uploaded$counts.csv <- df
         if (is.null(uploaded$annot.csv)) {
-          ann.data <- if (!file.ext %in% c("h5", "h5ad", "parquet")) playbase::read_annot(datafile) else NULL
+          c1 <- (upload_datatype() != "scRNA-seq")
+          c2 <- (!file.ext %in% c("h5", "h5ad", "parquet"))
+          ann.data <- if (c1 & c2) playbase::read_annot(datafile) else NULL
           uploaded$annot.csv <- ann.data
         }
       }
