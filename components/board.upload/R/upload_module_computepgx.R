@@ -1033,6 +1033,11 @@ upload_module_computepgx_server <- function(
         max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
 
+        ## Methylomics (EPIC array) can have up to 850K probes
+        if (upload_datatype() == "methylomics") {
+          max.genes <- as.integer(auth$options$MAX_METH_FEATURES)
+        }
+
         ## get selected methods from input
         gx.methods <- input$gene_methods
         dotimeseries <- FALSE

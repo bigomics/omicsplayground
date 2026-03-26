@@ -37,7 +37,7 @@ read_user_options <- function(user_dir) {
       "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
-      "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
+      "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
       "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
@@ -63,7 +63,7 @@ read_user_options_db <- function(email, user_database = NULL) {
       "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
-      "MAX_GENES", "MAX_GENESETS", "MAX_SHARED_QUEUE",
+      "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
       "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
