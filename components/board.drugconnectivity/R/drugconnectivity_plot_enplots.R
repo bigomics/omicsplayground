@@ -111,67 +111,6 @@ drugconnectivity_plot_enplots_server <- function(id,
           nplots = nplots)
 
       }
-
-      ## plot.RENDER <- shiny::reactive({
-      plot.RENDER.BAK <- function() {
-        res <- plot_data()
-        dsea_contrast <- res$dsea_contrast
-        dsea_method <- res$dsea_method
-        dt <- res$dt
-        
-        if (nrow(dt) == 0) {
-          return(NULL)
-        }
-
-        ## rank vector for enrichment plots
-        dmethod <- dsea_method
-        rnk <- dsea$stats
-        if (length(rnk) == 0) {
-          return(NULL)
-        }
-
-        ## ENPLOT TYPE
-        if (nrow(dt) == 1) {
-          par(oma = c(1, 1, 1, 1))
-          par(mfrow = c(1, 1), mar = c(4, 4, 1.1, 2), mgp = c(2.3, 0.9, 0))
-          lab.cex <- 1
-          xlab <- "Rank in ordered dataset"
-          ylab <- "Rank metric"
-          nc <- 1
-        } else {
-          dt <- head(dt, 16)
-          lab.cex <- 0.75
-          xlab <- ""
-          ylab <- ""
-          nc <- ceiling(sqrt(nrow(dt)))
-          par(oma = c(0, 1.6, 0, 0))
-          par(mfrow = c(nc, nc), mar = c(0.3, 1.0, 1.3, 0), mgp = c(1.9, 0.6, 0))
-        }
-
-        for (i in 1:nrow(dt)) {
-          dx <- rownames(dt)[i]
-          gmtdx <- grep(dx, names(rnk), fixed = TRUE, value = TRUE) ## L1000 naming
-          dx1 <- substring(dx, 1, 26)
-          par(cex.axis = 0.001)
-          if (i %% nc == 1) par(cex.axis = 0.98)
-          suppressWarnings(
-            playbase::gsea.enplot(rnk, gmtdx,
-              main = dx1, cex.main = 1.2,
-              xlab = xlab, ylab = ylab
-            )
-          )
-          nes <- round(dt$NES[i], 2)
-          qv <- round(dt$padj[i], 3)
-          tt <- c(paste("NES=", nes), paste("q=", qv))
-          legend("topright", legend = tt, cex = 0.8, y.intersp = 0.85, bty = "n")
-          if (i %% nc == 1 && nrow(dt) > 1) {
-            mtext("rank metric", side = 2, line = 1.8, cex = lab.cex)
-          }
-        }
-
-        ## This is needed for base plots as reactive to return something
-        #
-      }
       
       PlotModuleServer(
         "plot",
