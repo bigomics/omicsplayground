@@ -68,6 +68,8 @@ RUN R -e "devtools::install_github('bigomics/visNetwork')"
 RUN R -e "install.packages('svglite')"
 RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
 RUN R -e "install.packages('mirai')"
+RUN R -e "BiocManager::install('minfi')"
+RUN R -e "BiocManager::install('wateRmelon')"
     
 #------------------------------------------------------------
 # Add supporting R libraries
