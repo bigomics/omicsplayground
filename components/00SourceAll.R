@@ -5,10 +5,6 @@ if(!file.exists('00SourceAll.R')) {
   message('WARNING: not in source folder. skipping.')
 } else {
   message('Note: sourcing all code...')
-  source('app_mox/R/mox_server.R',encoding='UTF-8')
-  source('app_mox/R/mox_ui.R',encoding='UTF-8')
-  source('app_prism/R/prism_server.R',encoding='UTF-8')
-  source('app_prism/R/prism_ui.R',encoding='UTF-8')
   source('app/R/utils/auth.R',encoding='UTF-8')
   source('app/R/utils/database.R',encoding='UTF-8')
   source('app/R/utils/open_url.R',encoding='UTF-8')
@@ -240,6 +236,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.timeseries/R/module_parcoord.R',encoding='UTF-8')
   source('board.upload/R/upload_module_batchcorrect.R',encoding='UTF-8')
   source('board.upload/R/upload_module_computepgx.R',encoding='UTF-8')
+  source('board.upload/R/upload_module_initial_settings.R',encoding='UTF-8')
   source('board.upload/R/upload_module_makecontrast.R',encoding='UTF-8')
   source('board.upload/R/upload_module_normalization.R',encoding='UTF-8')
   source('board.upload/R/upload_module_normalizationSC.R',encoding='UTF-8')
