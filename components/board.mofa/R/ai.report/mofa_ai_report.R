@@ -186,8 +186,12 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
       progress$set(message = "Extracting factor data...", value = 0.1)
       tables <- mofa_ai_build_report_tables(m, pgx, max_contexts = 8L, ntop = 10L)
 
-      ## Step 2: Assemble data content
-      data_content <- tables$text
+      ## Step 2: Build template parameters from structured data tables
+      report_data_path <- file.path(MOFA_PROMPTS_DIR, "mofa_report_data.md")
+      data_tables <- tables[c(
+        "experiment", "organism", "n_factors",
+        "factor_ranking", "factor_details"
+      )]
 
       ## Step 3: Build structured prompt
       board_rules_path <- file.path(MOFA_PROMPTS_DIR, "mofa_report_rules.md")
@@ -205,7 +209,7 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
         species     = omicsai::omicsai_species_prompt(organism),
         context     = omicsai::frag(interpretation_path, list(experiment = experiment_label)),
         board_rules = omicsai::frag(board_rules_path),
-        data        = data_content
+        data        = omicsai::frag(report_data_path, data_tables)
       )
       bp <- omicsai::build_prompt(p)
 

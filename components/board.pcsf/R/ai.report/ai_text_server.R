@@ -135,8 +135,12 @@ pcsf_ai_text_server <- function(id,
         pcsf_params = pcsf_params_reactive()
       )
 
-      ## Step 2: Assemble data content (domain data only, no instructions)
-      data_content <- tables$text
+      ## Step 2: Build template parameters from structured data tables
+      data_tables <- tables[c(
+        "experiment", "organism", "datatype", "n_contrasts",
+        "contrast_list", "sample_info", "fact_constraints",
+        "reference_catalog", "contrast_ranking", "contrast_details"
+      )]
 
       ## Step 3: Build structured prompt
       board_rules_path <- file.path(PCSF_PROMPTS_DIR, "pcsf_report_rules.md")
@@ -151,7 +155,7 @@ pcsf_ai_text_server <- function(id,
         species     = omicsai::omicsai_species_prompt(organism),
         context     = omicsai::frag(interpretation_path),
         board_rules = omicsai::frag(board_rules_path),
-        data        = omicsai::frag(report_data_path, list(report_tables = data_content))
+        data        = omicsai::frag(report_data_path, data_tables)
       )
       bp <- omicsai::build_prompt(p)
 

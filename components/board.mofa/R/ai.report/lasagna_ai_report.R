@@ -188,15 +188,22 @@ lasagna_ai_text_server <- function(id,
       on.exit(progress$close())
 
       ## Step 1: Build structured data tables
-      ## Note: lasagna_ai_build_report_tables returns a string directly (not list$text)
       progress$set(message = "Extracting contrast data...", value = 0.1)
-      data_content <- lasagna_ai_build_report_tables(res, contrast, pgx, ntop = 12L)
+      tables <- lasagna_ai_build_report_tables(res, contrast, pgx, ntop = 12L)
 
-      ## Step 2: Build structured prompt
+      ## Step 2: Build template parameters from structured data tables
+      report_data_path <- file.path(LASAGNA_PROMPTS_DIR, "lasagna_report_data.md")
+      data_tables <- tables[c(
+        "experiment", "contrast", "network_snapshot",
+        "layer_participation", "top_nodes_table",
+        "top_edges_table", "caveats"
+      )]
+
+      ## Step 3: Build structured prompt
       board_rules_path <- file.path(LASAGNA_PROMPTS_DIR, "lasagna_report_rules.md")
       organism <- pgx$organism %||% NULL
 
-      ## Pre-render methods/context (reused in Step 4 as deterministic appendix)
+      ## Pre-render methods/context (reused as deterministic appendix)
       methods_context <- lasagna_ai_build_methods(pgx, contrast)
 
       p <- omicsai::report_prompt(
@@ -205,7 +212,7 @@ lasagna_ai_text_server <- function(id,
         species     = omicsai::omicsai_species_prompt(organism),
         context     = omicsai::frag(interpretation_path),
         board_rules = omicsai::frag(board_rules_path),
-        data        = data_content
+        data        = omicsai::frag(report_data_path, data_tables)
       )
       bp <- omicsai::build_prompt(p)
 

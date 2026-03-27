@@ -392,7 +392,14 @@ pcsf_build_report_tables <- function(pgx,
 
   all_contrasts <- contrasts %||% pcsf_get_contrasts(pgx)
   if (length(all_contrasts) == 0) {
-    return(list(text = "No contrasts available.", data = list(), ranking = data.frame()))
+    empty <- list(
+      experiment = pgx$name %||% "omics experiment", organism = pgx$organism %||% "unknown",
+      datatype = pgx$datatype %||% "unknown", n_contrasts = "0", contrast_list = "",
+      sample_info = "not available", fact_constraints = "", reference_catalog = "",
+      contrast_ranking = "", contrast_details = "No contrasts available.",
+      data = list(), ranking = data.frame()
+    )
+    return(empty)
   }
 
   contexts <- list()
@@ -417,7 +424,14 @@ pcsf_build_report_tables <- function(pgx,
   }
 
   if (length(contexts) == 0) {
-    return(list(text = "No reportable PCSF contexts.", data = list(), ranking = data.frame()))
+    empty <- list(
+      experiment = pgx$name %||% "omics experiment", organism = pgx$organism %||% "unknown",
+      datatype = pgx$datatype %||% "unknown", n_contrasts = "0", contrast_list = "",
+      sample_info = "not available", fact_constraints = "", reference_catalog = "",
+      contrast_ranking = "", contrast_details = "No reportable PCSF contexts.",
+      data = list(), ranking = data.frame()
+    )
+    return(empty)
   }
 
   ranking <- pcsf_rank_contexts(contexts)
@@ -425,38 +439,60 @@ pcsf_build_report_tables <- function(pgx,
   contexts <- contexts[keep]
   ref_catalog <- pcsf_build_reference_catalog(contexts, max_refs = 15L)
 
-  rank_table <- omicsai::omicsai_format_mdtable(
+  ## ---- Header metadata ----
+  sample_cols <- if (!is.null(pgx$samples) && is.data.frame(pgx$samples)) {
+    paste(colnames(pgx$samples), collapse = ", ")
+  } else {
+    ""
+  }
+  order_col <- pcsf_detect_order_column(pgx$samples)
+  sample_info_parts <- character(0)
+  if (nzchar(sample_cols)) sample_info_parts <- c(sample_info_parts, paste0("annotation columns: ", sample_cols))
+  if (!is.null(order_col)) sample_info_parts <- c(sample_info_parts, paste0("ordered-condition hint: ", order_col))
+  sample_info <- if (length(sample_info_parts) > 0) paste(sample_info_parts, collapse = "; ") else "not available"
+
+  ## ---- Fact constraints (body only, no header) ----
+  fact_lines <- character(0)
+  for (ct in names(contexts)) {
+    ctx <- contexts[[ct]]
+    rel <- ctx$reliability
+    fact_lines <- c(
+      fact_lines,
+      paste0(
+        "- ", ct,
+        ": steiner nodes = ", ctx$network$n_steiner,
+        "; steiner fraction = ", pcsf_percent(rel$frac_steiner),
+        "; pathway signal = ", pcsf_yes_no(rel$has_pathway_signal),
+        "; top-hub effects all |logFC| < 0.5 = ", pcsf_yes_no(rel$hubs_have_modest_effects)
+      )
+    )
+  }
+
+  ## ---- Reference catalog (body only, no header) ----
+  ref_lines <- if (is.null(ref_catalog) || !is.data.frame(ref_catalog) || nrow(ref_catalog) == 0) {
+    "No referenceable evidence catalog available."
+  } else {
+    paste(paste0("- [", ref_catalog$ref_no, "] ", ref_catalog$text), collapse = "\n")
+  }
+
+  ## ---- Contrast ranking table ----
+  rank_table <- paste(omicsai::omicsai_format_mdtable(
     head(ranking, as.integer(max_contexts)),
     formatters = list(
       score = function(x) omicsai::omicsai_format_num(x, 2),
       max_centrality = function(x) omicsai::omicsai_format_num(x, 4)
     )
-  )
+  ), collapse = "\n")
 
-  lines <- c(
-    pcsf_build_dataset_context_md(pgx, keep),
-    "",
-    pcsf_build_fact_constraints_md(contexts),
-    "",
-    pcsf_render_reference_catalog_md(ref_catalog),
-    "",
-    "## Raw Report Data",
-    paste0("EXPERIMENT: ", pgx$name %||% pgx$description %||% "omics experiment"),
-    "BOARD: PCSF",
-    "",
-    "## Contrast Ranking",
-    rank_table,
-    "",
-    "## Contrast Detail"
-  )
-
+  ## ---- Per-contrast detail blocks ----
+  detail_lines <- character(0)
   for (ct in keep) {
     ctx <- contexts[[ct]]
     n <- ctx$network
     rel <- ctx$reliability
 
-    lines <- c(
-      lines,
+    detail_lines <- c(
+      detail_lines,
       paste0("### ", ct),
       paste0("- Nodes: ", n$n_nodes,
              " | edges: ", n$n_edges,
@@ -479,9 +515,18 @@ pcsf_build_report_tables <- function(pgx,
   }
 
   list(
-    text = paste(lines, collapse = "\n"),
-    data = contexts,
-    ranking = ranking
+    experiment       = pgx$name %||% pgx$description %||% "omics experiment",
+    organism         = pgx$organism %||% "unknown",
+    datatype         = pgx$datatype %||% "unknown",
+    n_contrasts      = as.character(length(keep)),
+    contrast_list    = paste(keep, collapse = ", "),
+    sample_info      = sample_info,
+    fact_constraints = paste(fact_lines, collapse = "\n"),
+    reference_catalog = ref_lines,
+    contrast_ranking = rank_table,
+    contrast_details = paste(detail_lines, collapse = "\n"),
+    data             = contexts,
+    ranking          = ranking
   )
 }
 

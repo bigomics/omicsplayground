@@ -48,42 +48,51 @@ lasagna_ai_build_summary_params <- function(res, contrast, pgx, ntop = 12L) {
 }
 
 lasagna_ai_build_report_tables <- function(res, contrast, pgx, ntop = 12L) {
-  ctx <- lasagna_ai_extract_context(res, contrast, pgx, ntop = ntop)
-  if (is.null(ctx)) return("No LASAGNA context available for the selected contrast.")
+  experiment <- pgx$name %||% pgx$description %||% "omics experiment"
 
-  lines <- c(
-    paste0("EXPERIMENT: ", ctx$experiment),
-    "BOARD: LASAGNA",
-    paste0("CONTRAST: ", ctx$contrast),
-    "",
-    "## Network Snapshot",
+  ctx <- lasagna_ai_extract_context(res, contrast, pgx, ntop = ntop)
+  if (is.null(ctx)) {
+    return(list(
+      experiment = experiment, contrast = contrast %||% "N/A",
+      network_snapshot = "", layer_participation = "",
+      top_nodes_table = "", top_edges_table = "",
+      caveats = "No LASAGNA context available for the selected contrast."
+    ))
+  }
+
+  ## ---- Network snapshot ----
+  network_snapshot <- paste(
     paste0("- Nodes: ", ctx$network$n_nodes),
     paste0("- Edges: ", ctx$network$n_edges),
     paste0("- Layers: ", ctx$network$n_layers),
     paste0("- Inter-layer edges: ", ctx$network$n_inter_edges),
     paste0("- Intra-layer edges: ", ctx$network$n_intra_edges),
-    "",
-    "## Layer Participation",
-    if (length(ctx$layer_counts) > 0) {
-      paste(sprintf("- %s: %s", names(ctx$layer_counts), as.integer(ctx$layer_counts)), collapse = "\n")
-    } else {
-      "No layer labels found in graph."
-    },
-    "",
-    "## Top Nodes",
-    lasagna_ai_md_table(ctx$top_nodes),
-    "",
-    "## Top Edges",
-    lasagna_ai_md_table(ctx$top_edges),
-    "",
-    if (length(ctx$caveats) > 0) {
-      paste0("Caveats: ", paste(ctx$caveats, collapse = " "))
-    } else {
-      "Caveats: none flagged."
-    }
+    sep = "\n"
   )
 
-  paste(lines, collapse = "\n")
+  ## ---- Layer participation ----
+  layer_participation <- if (length(ctx$layer_counts) > 0) {
+    paste(sprintf("- %s: %s", names(ctx$layer_counts), as.integer(ctx$layer_counts)), collapse = "\n")
+  } else {
+    "No layer labels found in graph."
+  }
+
+  ## ---- Caveats ----
+  caveats_text <- if (length(ctx$caveats) > 0) {
+    paste0("Caveats: ", paste(ctx$caveats, collapse = " "))
+  } else {
+    "Caveats: none flagged."
+  }
+
+  list(
+    experiment         = ctx$experiment,
+    contrast           = ctx$contrast,
+    network_snapshot   = network_snapshot,
+    layer_participation = layer_participation,
+    top_nodes_table    = lasagna_ai_md_table(ctx$top_nodes),
+    top_edges_table    = lasagna_ai_md_table(ctx$top_edges),
+    caveats            = caveats_text
+  )
 }
 
 lasagna_ai_build_methods <- function(pgx, contrast) {

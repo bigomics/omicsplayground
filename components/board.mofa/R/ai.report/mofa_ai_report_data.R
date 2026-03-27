@@ -101,9 +101,16 @@ mofa_ai_rank_factors <- function(factor_contexts) {
 }
 
 mofa_ai_build_report_tables <- function(mofa, pgx, max_contexts = 8L, ntop = 10L) {
+  experiment <- mofa$experiment %||% pgx$name %||% pgx$description %||% "omics experiment"
+  organism <- pgx$organism %||% "unknown"
+
   factors <- mofa_ai_factor_choices(mofa)
   if (length(factors) == 0) {
-    return(list(text = "No MOFA factors available.", data = list(), ranking = data.frame()))
+    return(list(
+      experiment = experiment, organism = organism, n_factors = "0",
+      factor_ranking = "", factor_details = "No MOFA factors available.",
+      data = list(), ranking = data.frame()
+    ))
   }
 
   contexts <- list()
@@ -113,35 +120,32 @@ mofa_ai_build_report_tables <- function(mofa, pgx, max_contexts = 8L, ntop = 10L
   }
 
   if (length(contexts) == 0) {
-    return(list(text = "No reportable MOFA factor contexts.", data = list(), ranking = data.frame()))
+    return(list(
+      experiment = experiment, organism = organism, n_factors = "0",
+      factor_ranking = "", factor_details = "No reportable MOFA factor contexts.",
+      data = list(), ranking = data.frame()
+    ))
   }
 
   ranking <- mofa_ai_rank_factors(contexts)
   keep <- head(ranking$factor, as.integer(max_contexts))
 
-  rank_table <- omicsai::omicsai_format_mdtable(
+  ## ---- Factor ranking table ----
+  rank_table <- paste(omicsai::omicsai_format_mdtable(
     head(ranking, as.integer(max_contexts)),
     formatters = list(
       score = function(x) omicsai::omicsai_format_num(x, 2),
       max_abs_nes = function(x) omicsai::omicsai_format_num(x, 2),
       max_abs_weight = function(x) omicsai::omicsai_format_num(x, 3)
     )
-  )
+  ), collapse = "\n")
 
-  lines <- c(
-    paste0("EXPERIMENT: ", mofa$experiment %||% pgx$name %||% pgx$description %||% "omics experiment"),
-    "BOARD: MOFA",
-    "",
-    "## Factor Ranking",
-    rank_table,
-    "",
-    "## Factor Detail"
-  )
-
+  ## ---- Per-factor detail blocks ----
+  detail_lines <- character(0)
   for (k in keep) {
     ctx <- contexts[[k]]
-    lines <- c(
-      lines,
+    detail_lines <- c(
+      detail_lines,
       paste0("### ", ctx$factor),
       paste0("- Traits: ", ctx$traits),
       paste0("- Significant pathways: ", ctx$metrics$n_sig_pathways,
@@ -159,9 +163,13 @@ mofa_ai_build_report_tables <- function(mofa, pgx, max_contexts = 8L, ntop = 10L
   }
 
   list(
-    text = paste(lines, collapse = "\n"),
-    data = contexts,
-    ranking = ranking
+    experiment      = experiment,
+    organism        = organism,
+    n_factors       = as.character(length(keep)),
+    factor_ranking  = rank_table,
+    factor_details  = paste(detail_lines, collapse = "\n"),
+    data            = contexts,
+    ranking         = ranking
   )
 }
 
