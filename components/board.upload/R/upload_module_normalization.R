@@ -10,18 +10,18 @@ upload_module_normalization_ui <- function(id, height = "100%") {
 
 
 upload_module_normalization_server <- function(
-  id,
-  r_counts,
-  r_samples,
-  r_contrasts,
-  r_annot,
-  upload_datatype,
-  is.olink,
-  meth_type,
-  is.count = FALSE,
-  height = 720,
-  recompute_pgx = NULL
-) {
+                                               id,
+                                               r_counts,
+                                               r_samples,
+                                               r_contrasts,
+                                               r_annot,
+                                               upload_datatype,
+                                               is.olink,
+                                               meth_type,
+                                               is.count = FALSE,
+                                               height = 720,
+                                               recompute_pgx = NULL
+                                               ) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -91,7 +91,7 @@ upload_module_normalization_server <- function(
         dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
 
         ## Filter probes for maximum missingness as required
-        if (sum(is.na(X)) > 0 && input$filtermissing) {
+        if (sum(is.na(X)) > 0 && isTRUE(input$filtermissing)) {
           f <- input$filterthreshold
           dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
           sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts, samples)
@@ -276,43 +276,43 @@ upload_module_normalization_server <- function(
 
       ## Remove?
       results_outlier_methods <- eventReactive(
-        {
-          list(normalizedX())
-        },
-        {
-          X <- normalizedX()
-          shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
-          shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
+      {
+        list(normalizedX())
+      },
+      {
+        X <- normalizedX()
+        shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
+        shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          is.mox <- playbase::is.multiomics(rownames(X))
+        is.mox <- playbase::is.multiomics(rownames(X))
 
-          if (sum(is.na(X)) > 0) {
-            if (is.mox) {
-              X <- playbase::imputeMissing.mox(X, method = "SVD2")
-            } else {
-              X <- playbase::imputeMissing(X, method = "SVD2")
-            }
+        if (sum(is.na(X)) > 0) {
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X, method = "SVD2")
+          } else {
+            X <- playbase::imputeMissing(X, method = "SVD2")
           }
-
-          out <- playbase::detectOutlierSamples(X, plot = FALSE)
-
-          scaledX <- playbase::double_center_scale_fast(X)
-          corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
-
-          ## standard dim reduction methods
-          pos <- list()
-          set.seed(1234)
-          pca <- irlba::irlba(scaledX, nu = 2, nv = 0)
-          pos[["pca"]] <- pca$u
-          for (i in 1:length(pos)) {
-            rownames(pos[[i]]) <- rownames(scaledX)
-            colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
-          }
-          pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
-          out$pos <- pos
-          out$corX <- corX
-          out
         }
+
+        out <- playbase::detectOutlierSamples(X, plot = FALSE)
+
+        scaledX <- playbase::double_center_scale_fast(X)
+        corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
+
+        ## standard dim reduction methods
+        pos <- list()
+        set.seed(1234)
+        pca <- irlba::irlba(scaledX, nu = 2, nv = 0)
+        pos[["pca"]] <- pca$u
+        for (i in 1:length(pos)) {
+          rownames(pos[[i]]) <- rownames(scaledX)
+          colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
+        }
+        pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
+        out$pos <- pos
+        out$corX <- corX
+        out
+      }
       )
 
       ## ------------------------------------------------------------------
@@ -631,7 +631,7 @@ upload_module_normalization_server <- function(
           barplot(zscore,
             main = "outlier score", ylab = "z-score",
             las = 1, ylim = c(0, max(7, 1.2 * max(Z, na.rm = TRUE))),
-          )
+            )
           abline(h = z0, lty = 3, lwd = 1.5, col = "red")
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
         }
@@ -820,37 +820,37 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
 
       getBatchParams <- eventReactive(
-        {
-          list(r_counts(), r_samples(), r_contrasts())
-        },
-        {
-          shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
-          X <- r_counts()
-          samples <- r_samples()
-          contrasts <- r_contrasts()
-          if (nrow(samples) < 3) {
-            return(NULL)
-          }
-          pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
-          all.pars <- setdiff(colnames(samples), pars$pheno.pars)
-          all.pars <- union(all.pars, pars$batch.pars)
-          names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
-            paste(all.pars, "*"), all.pars
-          )
-          all.pars <- c("<autodetect>", all.pars)
-          return(all.pars)
+      {
+        list(r_counts(), r_samples(), r_contrasts())
+      },
+      {
+        shiny::req(dim(r_counts()), dim(r_samples()), dim(r_contrasts()))
+        X <- r_counts()
+        samples <- r_samples()
+        contrasts <- r_contrasts()
+        if (nrow(samples) < 3) {
+          return(NULL)
         }
+        pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
+        all.pars <- setdiff(colnames(samples), pars$pheno.pars)
+        all.pars <- union(all.pars, pars$batch.pars)
+        names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
+          paste(all.pars, "*"), all.pars
+        )
+        all.pars <- c("<autodetect>", all.pars)
+        return(all.pars)
+      }
       )
 
       getMetadataVars <- eventReactive(
-        {
-          list(r_samples())
-        },
-        {
-          shiny::req(dim(r_samples()))
-          samples <- r_samples()
-          return(colnames(samples))
-        }
+      {
+        list(r_samples())
+      },
+      {
+        shiny::req(dim(r_samples()))
+        samples <- r_samples()
+        return(colnames(samples))
+      }
       )
 
       output$normalization <- shiny::renderUI({
@@ -936,7 +936,7 @@ upload_module_normalization_server <- function(
             ),
             selected = "heatmap", inline = TRUE
           ),
-        )
+          )
 
         norm.options <- tagList(
           shiny::radioButtons(
@@ -964,148 +964,140 @@ upload_module_normalization_server <- function(
         navmenu <- tagList(
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
-            bslib::accordion(
-              multiple = FALSE,
-              style = "background-color: #F7FAFD99;",
-              bslib::accordion_panel(
-                title = "Missing values",
-                shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Handle missing values:\n"),
-                  shiny::HTML("<a href='https://bigomics.ch/blog/imputation-of-missing-values-in-proteomics' target='_blank' class='info-link' style='margin-left: 15px;'>
+            do.call(bslib::accordion, c(
+              list(multiple = FALSE, style = "background-color: #F7FAFD99;"),
+              Filter(Negate(is.null), list(
+                if (upload_datatype() != "methylomics") bslib::accordion_panel(
+                  title = "Missing values",
+                  shiny::div(
+                    style = "display: flex; align-items: center; justify-content: space-between;",
+                    shiny::p("Handle missing values:\n"),
+                    shiny::HTML("<a href='https://bigomics.ch/blog/imputation-of-missing-values-in-proteomics' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                ),
-                if (upload_datatype() != "methylomics") {
-                  shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na)
-                },
-                shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
-                shiny::conditionalPanel("input.filtermissing == true",
-                  ns = ns,
-                  shiny::selectInput(ns("filterthreshold"), NULL,
-                    choices = c(
-                      ">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
-                      "<=3 valid in any group" = 3, "<=50% valid in any group" = -0.5
-                    ),
-                    selected = 0.2
-                  )
-                ),
-                if (upload_datatype() != "methylomics") tagList(
+                  ),
+                  shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
+                  shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
+                  shiny::conditionalPanel("input.filtermissing == true", ns = ns,
+                    shiny::selectInput(ns("filterthreshold"), NULL,
+                      choices = c(">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
+                        "<=3 valid in any group" = 3, "<=50% valid in any group" = -0.5),
+                      selected = 0.2
+                    )
+                  ),
                   shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
                   shiny::conditionalPanel("input.impute == true", ns = ns,
                     shiny::selectInput(ns("impute_method"), NULL,
                       choices = c("SVDimpute" = "SVD2", "QRILC", "MinProb", "Perseus-like" = "Perseus"),
-                      selected = default_impute_method
-                    )
-                  )
+                      selected = default_impute_method)
+                  ),
+                  br()
                 ),
-                br()
-              ),
-              bslib::accordion_panel(
-                title = "Normalization",
-                shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Normalize the data using one of the following methods:"),
-                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#normalization' target='_blank' class='info-link' style='margin-left: 15px;'>
+                bslib::accordion_panel(
+                  title = "Normalization",
+                  shiny::div(
+                    style = "display: flex; align-items: center; justify-content: space-between;",
+                    shiny::p("Normalize the data using one of the following methods:"),
+                    shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#normalization' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                ),
-                shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
-                shiny::conditionalPanel(
-                  "input.normalize == true",
-                  ns = ns,
-                  shiny::selectInput(
-                    ns("normalization_method"), NULL,
-                    choices = if (grepl("proteomics|metabolomics", upload_datatype(),
-                      ignore.case = TRUE
-                    )) {
-                      c("maxMedian", "maxSum", "quantile", "reference")
-                    } else if (grepl("methylomics", upload_datatype(),
-                      ignore.case = TRUE
-                    )) {
-                      c(
-                        "BMIQ", "quantile"
-                      )
-                    } else if (grepl("multi-omics", upload_datatype(),
-                      ignore.case = TRUE
-                    )) {
-                      c(
-                        "multi-omics median" = "median"
-                        ## "multi-omics combat" = "combat"
-                      )
-                    } else {
-                      c(
-                        "CPM", "CPM+quantile", "TMM", "quantile",
-                        "maxMedian", "maxSum", "reference"
-                      )
-                    },
-                    selected = default_norm_method
                   ),
+                  shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
                   shiny::conditionalPanel(
-                    "input.normalization_method == 'reference'",
+                    "input.normalize == true",
                     ns = ns,
-                    shiny::selectizeInput(
-                      ns("ref_gene"), NULL,
-                      choices = NULL,
-                      multiple = FALSE,
-                      options = list(
-                        placeholder = tspan("Choose gene...", js = FALSE)
-                      )
-                    )
-                  )
-                ),
-                br()
-              ),
-              bslib::accordion_panel(
-                title = "Remove outliers",
-                shiny::p("Detect and remove outlier samples."),
-                shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = default_remove_outliers),
-                shiny::conditionalPanel("input.remove_outliers == true",
-                  ns = ns,
-                  shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, default_outlier_threshold, 1)
-                ),
-                br()
-              ),
-              bslib::accordion_panel(
-                title = "Batch-effect correction",
-                shiny::div(
-                  style = "display: flex; align-items: center; justify-content: space-between;",
-                  shiny::p("Remove unwanted variation from your data."),
-                  shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
-                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
-                      </a>")
-                ),
-                shiny::checkboxInput(ns("batchcorrect"),
-                  label = "Remove batch effects",
-                  value = default_batchcorrect
-                ),
-                shiny::conditionalPanel(
-                  "input.batchcorrect == true",
-                  ns = ns,
-                  shiny::selectInput(
-                    ns("bec_method"),
-                    label = "Select method:",
-                    choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
-                    selected = default_bec_method
-                  ),
-                  shiny::conditionalPanel(
-                    "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
-                    ns = ns,
-                    shiny::selectizeInput(
-                      ns("bec_param"),
-                      label = "Batch parameter:",
-                      choices = batch_params, ## reactive
-                      selected = default_bec_param,
-                      multiple = TRUE,
-                      options = list(placeholder = "Select...")
+                    shiny::selectInput(
+                      ns("normalization_method"), NULL,
+                      choices = if (grepl("proteomics|metabolomics", upload_datatype(),
+                        ignore.case = TRUE
+                      )) {
+                        c("maxMedian", "maxSum", "quantile", "reference")
+                      } else if (grepl("methylomics", upload_datatype(),
+                        ignore.case = TRUE
+                      )) {
+                        c(
+                          "BMIQ", "quantile"
+                        )
+                      } else if (grepl("multi-omics", upload_datatype(),
+                        ignore.case = TRUE
+                      )) {
+                        c(
+                          "multi-omics median" = "median"
+                        )
+                      } else {
+                        c(
+                          "CPM", "CPM+quantile", "TMM", "quantile",
+                          "maxMedian", "maxSum", "reference"
+                        )
+                      },
+                      selected = default_norm_method
                     ),
-                    shiny::br()
-                  )
+                    shiny::conditionalPanel(
+                      "input.normalization_method == 'reference'",
+                      ns = ns,
+                      shiny::selectizeInput(
+                        ns("ref_gene"), NULL,
+                        choices = NULL,
+                        multiple = FALSE,
+                        options = list(
+                          placeholder = tspan("Choose gene...", js = FALSE)
+                        )
+                      )
+                    )
+                  ),
+                  br()
                 ),
-                br(),
-                shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
-              )
-            ),
+                bslib::accordion_panel(
+                  title = "Remove outliers",
+                  shiny::p("Detect and remove outlier samples."),
+                  shiny::checkboxInput(ns("remove_outliers"), "remove outliers", value = default_remove_outliers),
+                  shiny::conditionalPanel("input.remove_outliers == true",
+                    ns = ns,
+                    shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, default_outlier_threshold, 1)
+                  ),
+                  br()
+                ),
+                bslib::accordion_panel(
+                  title = "Batch-effect correction",
+                  shiny::div(
+                    style = "display: flex; align-items: center; justify-content: space-between;",
+                    shiny::p("Remove unwanted variation from your data."),
+                    shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
+                      <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
+                      </a>")
+                  ),
+                  shiny::checkboxInput(ns("batchcorrect"),
+                    label = "Remove batch effects",
+                    value = default_batchcorrect
+                  ),
+                  shiny::conditionalPanel(
+                    "input.batchcorrect == true",
+                    ns = ns,
+                    shiny::selectInput(
+                      ns("bec_method"),
+                      label = "Select method:",
+                      choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
+                      selected = default_bec_method
+                    ),
+                    shiny::conditionalPanel(
+                      "input.bec_method == 'ComBat' || input.bec_method == 'limma'",
+                      ns = ns,
+                      shiny::selectizeInput(
+                        ns("bec_param"),
+                        label = "Batch parameter:",
+                        choices = batch_params, ## reactive
+                        selected = default_bec_param,
+                        multiple = TRUE,
+                        options = list(placeholder = "Select...")
+                      ),
+                      shiny::br()
+                    )
+                  ),
+                  br(),
+                  shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
+                )
+              ))
+            )),
             br()
           ))
         )
@@ -1265,3 +1257,4 @@ upload_module_normalization_server <- function(
     } ## end-of-server
   )
 }
+
