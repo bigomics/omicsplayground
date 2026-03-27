@@ -173,7 +173,8 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info),
     enable_ai = shiny::reactive(input$enable_ai)
   )
-  session$userData$enable_ai <- shiny::reactive(input$enable_ai)
+  #session$userData$enable_ai <- shiny::reactive(input$enable_ai)
+  session$userData$enable_ai_reactive <- shiny::reactive(input$enable_ai)
 
   ## observe and set global User options
   shiny::observeEvent(input$enable_ai, {
@@ -205,12 +206,12 @@ app_server <- function(input, output, session) {
         dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
         setUserOption(session, "llm_model", input$llm_model)
         setUserOption(session, "image_model", input$image_model)
-        setUserOption(session, "enable_ai", TRUE)
+        #setUserOption(session, "enable_ai", TRUE)
       } else {
         dbg("[MAIN] AI/LLM disabled")
         setUserOption(session, "llm_model", "")
         setUserOption(session, "image_model", "")
-        setUserOption(session, "enable_ai", FALSE)
+        #setUserOption(session, "enable_ai", FALSE)
       }
     }
   )
