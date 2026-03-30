@@ -38,8 +38,7 @@ mofa_plot_loadingheatmap_server <- function(id,
       k <- input_factor()
       factors <- colnames(res$F)
       shiny::req(k %in% factors)
-      playbase::mofa.plot_heatmap(
-        res,
+      playbase::mofa.plot_heatmap(res,
         k = k, ntop = ntop, type = "splitmap", annot = "scores",
         mar = c(5, 5, 0, 3), annot.ht = 3.5, cexRow = 0.9
       )

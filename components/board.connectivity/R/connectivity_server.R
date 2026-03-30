@@ -232,7 +232,9 @@ ConnectivityBoard <- function(
         }
 
         has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
-        if (need_update || !has.user_sigdb || any(unlist(pgx$connectivity) == "NaN")) {
+        any.nan <- any(unlist(pgx$connectivity) == "NaN", na.rm = TRUE)
+
+        if (need_update || !has.user_sigdb || any.nan) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
             info("[compute_connectivity] re-computing connectivity scores...")

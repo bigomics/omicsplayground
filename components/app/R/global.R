@@ -25,7 +25,7 @@ if (Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-options(shiny.maxRequestSize = 999 * 1024^2) ## max 999Mb upload
+options(shiny.maxRequestSize = 2048 * 1024^2) ## max 2GB (previously 999Mb) upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
 # 1. The header scrolls with the X scroll bar
@@ -171,6 +171,7 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
@@ -219,6 +220,16 @@ if (file.exists(defaults.file)) {
       impute = TRUE
     )
   )
+}
+
+## Load metadata options configuration
+metadata.file <- file.path(ETC, "metadata_options.yml")
+if (file.exists(metadata.file)) {
+  METADATA_OPTIONS <<- yaml::read_yaml(metadata.file)
+  message("[GLOBAL] Loaded metadata_options.yml")
+} else {
+  message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
+  METADATA_OPTIONS <<- list(fields = list())
 }
 
 ## Check and set authentication method
@@ -327,6 +338,7 @@ i18n$set_translation_language("RNA-seq")
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
 # opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")

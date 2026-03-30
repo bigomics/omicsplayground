@@ -26,6 +26,23 @@ html {
         margin: auto;
         }
 
+    .xbtn {
+	background-color: rgba(0,127,192,0.07);
+	border-radius: 10px;
+	margin: 5px;
+	border: 0px;
+    }
+    
+    .xbtn:hover {
+	background-color: rgba(0,127,192,0.15);
+	color: black;    
+    }
+    
+    .modal-dialog.modal-ai {
+	--bs-modal-width: 95vw;
+	height: 90vh;
+    }
+    
     .modal-dialog.modal-lg {
         width: 640px;
         justify-content: center;

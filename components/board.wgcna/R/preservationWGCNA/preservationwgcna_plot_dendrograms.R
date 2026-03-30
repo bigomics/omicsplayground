@@ -54,7 +54,6 @@ preservationWGCNA_plot_dendrograms_server <- function(id,
         marAll = c(1, 10, 3, 0.2),
         colorHeightMax = 0.75
       )
-      
     }
 
     PlotModuleServer(

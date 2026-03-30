@@ -1,12 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
-
-
-## =========================================================================
-## ===================== NORMALIZATION UI/SERVER ===========================
-## =========================================================================
 
 upload_module_normalizationSC_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -24,10 +17,6 @@ upload_module_normalizationSC_server <- function(id,
     id,
     function(input, output, session) {
       ns <- session$ns
-
-      ## ------------------------------------------------------------------
-      ## Plot UI
-      ## ------------------------------------------------------------------
 
       output$normalization <- shiny::renderUI({
         shiny::req(r_counts())
@@ -148,9 +137,7 @@ upload_module_normalizationSC_server <- function(id,
             col_widths = c(2, 10),
             style = "margin-bottom: 20px;",
             heights_equal = "row",
-            ## ----------- menu ------------
             navmenu,
-            ## ----------- canvas ------------
             bslib::layout_columns(
               col_widths = c(6, 6),
               row_heights = c(3, 3),
@@ -183,19 +170,13 @@ upload_module_normalizationSC_server <- function(id,
       })
 
 
-      ## ------------------------------------------------------------------
-      ## Object reactive chain
-      ## ------------------------------------------------------------------
-
-      ## Downsampled & normalized data.
-      ## Downsample 1000 cells.
+      ## Downsampled (1K) & normalized data.
       ds_norm_Counts <- shiny::reactive({
         options(future.globals.maxSize = 4 * 1024^100)
         shiny::req(r_counts())
         shiny::req(r_samples())
         counts <- r_counts()
         samples <- r_samples()
-
         kk <- intersect(colnames(counts), rownames(samples))
         counts <- counts[, kk, drop = FALSE]
         samples <- samples[kk, , drop = FALSE]
@@ -205,56 +186,22 @@ upload_module_normalizationSC_server <- function(id,
         if (ncol(counts) > cells_trs) {
           dbg("[normalizationSC_server:ds_norm_Counts:] Random sampling of:", cells_trs, "cells.")
           kk <- sample(colnames(counts), cells_trs)
-          counts <- counts[, kk, drop = FALSE]
+          ## Character subsetting on a large dgCMatrix can hit Matrix dispatch issues;
+          ## use integer indices (via match) which always work reliably for sparse matrices.
+          counts <- counts[, match(kk, colnames(counts)), drop = FALSE]
           samples <- samples[kk, , drop = FALSE]
         }
 
         if (input$ref_atlas != "<select>") {
-          dbg("[normalizationSC_server:ds_norm_Counts:] Inferring cell types with Azimuth!")
           dbg("[normalizationSC_server:ds_norm_Counts:] Reference atlas:", input$ref_atlas)
           counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Inferring cell types with Azimuth...", value = 0.1, {
-            azm <- playbase::pgx.runAzimuth(counts = counts, reference = input$ref_atlas)
-            dbg("[normalizationSC_server:ds_norm_Counts:] Cell types inferred.")
-          })
 
-          if (is.null(azm)) {
-            message_text <- paste(
-              "Please select the Azimuth reference atlas that fits your data.",
-              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
-            )
-            shiny::validate(
-              shiny::need(FALSE, message_text)
-            )
-          }
-
-          if (class(azm) %in% c("matrix", "data.frame")) {
-            kk <- grep("^predicted.*l*2$", colnames(azm))
-            if (any(kk)) {
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                ## allows better representation
-                kk <- grep("^predicted.*l*1$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            } else {
-              kk <- grep("^predicted.*subclass*$", colnames(azm))
-              celltype.azimuth <- azm[, kk]
-              if (length(unique(celltype.azimuth)) > 15) {
-                ## allows better representation
-                kk <- grep("^predicted.class*$", colnames(azm))
-                celltype.azimuth <- azm[, kk]
-              }
-            }
-            samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
-          } else if (is.vector(azm)) {
-            dbg("[normalizationSC_server:ds_norm_Counts:] Your selected Azimuth atlas *might* be incorrect. Please double check.")
-            samples <- cbind(samples, celltype.azimuth = azm)
-          }
-
-          ## Normalization & Dimensional reduction
+          ## logCPM + dim-reduction first: these run fine in the main process and
+          ## their intermediates are freed before the subprocess starts.
           dbg("[normalizationSC_server] Performing logCPM normalization...")
-          nX <- playbase::logCPM(as.matrix(counts), prior = 1, total = 1e4)
+          counts_dense <- as.matrix(counts)
+          nX <- playbase::logCPM(counts_dense, prior = 1, total = 1e4)
+          rm(counts_dense)
           jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
           nX1 <- nX[jj, , drop = FALSE]
           nX1 <- nX1 - rowMeans(nX1, na.rm = TRUE)
@@ -267,21 +214,77 @@ upload_module_normalizationSC_server <- function(id,
             pos.list[["umap"]] <- uwot::umap(t(nX1), n_neighbors = max(2, nb))
             pos.list <- lapply(pos.list, function(x) {
               rownames(x) <- colnames(nX1)
-              return(x)
+              x
             })
           })
+          rm(nX, nX1)
+          gc()
           dbg("[normalizationSC_server] PCA, tSNE & UMAP completed.")
 
-          dbg("[normalizationSC_server] Creating & preprocessing Seurat object..")
-          options(Seurat.object.assay.calcn = TRUE)
-          getOption("Seurat.object.assay.calcn")
-          counts <- as(counts, "dgCMatrix")
-          shiny::withProgress(message = "Creating & preprocessing Seurat object...", value = 0.9, {
-            SO <- playbase::pgx.createSeuratObject(counts, samples,
-              batch = NULL, filter = FALSE, preprocess = FALSE
+          ## Run Azimuth + Seurat in a single fresh subprocess.
+          ## Large h5ad uploads leave glibc's heap fragmented after deallocation;
+          ## any subsequent Seurat C++ call (ScaleData, FindNeighbors, RunPCA) then
+          ## crashes. One callr subprocess isolates both Azimuth and the Seurat
+          ## pipeline from the main process heap.
+          dbg("[normalizationSC_server] Running Azimuth + Seurat in subprocess...")
+          shiny::withProgress(message = "Inferring cell types & building Seurat object...", value = 0.7, {
+            result <- callr::r(
+              function(counts, samples, reference, lib) {
+                .libPaths(lib)
+                options(Seurat.object.assay.calcn = TRUE)
+
+                ## Azimuth cell type annotation
+                azm <- tryCatch(
+                  playbase::pgx.runAzimuth(counts = counts, reference = reference),
+                  error = function(e) {
+                    message("[callr] pgx.runAzimuth failed: ", conditionMessage(e))
+                    NULL
+                  }
+                )
+
+                ## Add cell type column to samples metadata
+                if (!is.null(azm)) {
+                  if (is.data.frame(azm) || is.matrix(azm)) {
+                    kk <- grep("^predicted.*l*2$", colnames(azm))
+                    if (any(kk)) {
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.*l*1$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    } else {
+                      kk <- grep("^predicted.*subclass*$", colnames(azm))
+                      celltype.azimuth <- azm[, kk]
+                      if (length(unique(celltype.azimuth)) > 15) {
+                        kk <- grep("^predicted.class*$", colnames(azm))
+                        celltype.azimuth <- azm[, kk]
+                      }
+                    }
+                    samples <- cbind(samples, celltype.azimuth = celltype.azimuth)
+                  } else if (is.vector(azm)) {
+                    samples <- cbind(samples, celltype.azimuth = azm)
+                  }
+                }
+
+                SO <- playbase::pgx.createSeuratObject(counts, samples,
+                  batch = NULL, filter = FALSE, preprocess = FALSE
+                )
+                SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
+                list(SO = SO, azm_ok = !is.null(azm))
+              },
+              args = list(counts = counts, samples = samples, reference = input$ref_atlas, lib = .libPaths())
             )
-            SO <- playbase::seurat.preprocess(SO, sct = FALSE, tsne = FALSE, umap = FALSE)
           })
+
+          if (!result$azm_ok) {
+            message_text <- paste(
+              "Please select the Azimuth reference atlas that fits your data.",
+              "NOTE: The uploaded data might NOT be single cell data. Please check your input matrix."
+            )
+            shiny::validate(shiny::need(FALSE, message_text))
+          }
+
+          SO <- result$SO
           dbg("[normalizationSC_server] Seurat object created & preprocessed.")
           kk <- setdiff(colnames(samples), colnames(SO@meta.data))
           if (length(kk) > 1) {
@@ -294,7 +297,7 @@ upload_module_normalizationSC_server <- function(id,
             pos.tsne = pos.list[["tsne"]],
             pos.umap = pos.list[["umap"]]
           )
-          rm(counts, nX, nX1, samples, SO)
+          rm(counts, samples, SO)
           return(LL)
         } else {
           shinyalert::shinyalert(
@@ -308,17 +311,11 @@ upload_module_normalizationSC_server <- function(id,
         }
       })
 
-      ## ------------------------------------------------------------------
-      ## Plot functions
-      ## ------------------------------------------------------------------
       plot1 <- function() {
         shiny::req(dim(ds_norm_Counts()$SO))
+        require(ggplot2)
         SO <- ds_norm_Counts()$SO
         meta <- SO@meta.data
-        require(scplotter)
-        require(ggplot2)
-        library(ggpubr)
-        require(vioplot)
         vars <- input$clusterBy
 
         shiny::validate(shiny::need(
@@ -335,12 +332,7 @@ upload_module_normalizationSC_server <- function(id,
           meta$seurat_clusters <- as.character(meta$seurat_clusters)
         }
 
-        i <- 1
-        class.vars <- c()
-        for (i in 1:length(vars)) {
-          class.vars <- c(class.vars, class(meta[, vars[i]]))
-        }
-        names(class.vars) <- vars
+        class.vars <- sapply(vars, function(v) class(meta[, v]))
         num.vars <- vars[which(class.vars %in% c("numeric", "integer"))]
         char.vars <- vars[which(class.vars %in% c("character"))]
 
@@ -348,7 +340,7 @@ upload_module_normalizationSC_server <- function(id,
           plist1 <- lapply(plist, function(x) {
             x <- x + theme(axis.text.x = element_text(size = 13))
             x <- x + theme(axis.text.y = element_text(size = 13))
-            x <- x + RotatedAxis() + xlab("")
+            x <- x + Seurat::RotatedAxis() + xlab("")
             x <- x + theme(panel.border = element_rect(
               color = "black",
               fill = NA, size = 1, linewidth = 2
@@ -359,7 +351,6 @@ upload_module_normalizationSC_server <- function(id,
 
         if (!input$groupby_celltype) {
           meta$IDENT0 <- "IDENT"
-          i <- 1
           plist <- list()
           for (i in 1:length(vars)) {
             v <- vars[i]
@@ -378,7 +369,7 @@ upload_module_normalizationSC_server <- function(id,
                   pp <- pp + scale_y_continuous(limits = c(0, NA))
                 }
               }
-              ## yint from reactive values
+
               if (v == "percent.mt") {
                 pp <- pp + geom_hline(yintercept = input$mt_threshold, col = "firebrick2")
               } else if (v == "percent.hb") {
@@ -405,19 +396,17 @@ upload_module_normalizationSC_server <- function(id,
             (plist[[1]] + plist[[2]]) / (plist[[3]] + patchwork::plot_spacer())
           } else if (length(plist) == 4) {
             (plist[[1]] + plist[[2]]) / (plist[[3]] + plist[[4]])
-            # ggpubr::ggarrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow = 2, ncol = 2)
           }
         } else {
           grp <- "celltype.azimuth"
           legend.idx <- 0
-          i <- 1
           plist <- list()
           for (i in 1:length(vars)) {
             v <- vars[i]
             if (v %in% num.vars) {
               pp <- ggplot(meta, aes_string(y = v, x = grp)) +
                 geom_boxplot()
-              pp <- pp + RotatedAxis() + xlab("") + theme(legend.position = "none")
+              pp <- pp + Seurat::RotatedAxis() + xlab("") + theme(legend.position = "none")
               ylab <- v
               if (grepl("percent", v)) {
                 pp <- pp + ylim(0, 100)
@@ -452,9 +441,6 @@ upload_module_normalizationSC_server <- function(id,
               }
             }
           }
-          # jj1 <- which(!names(plist) %in% char.vars)
-          # jj2 <- which(names(plist) %in% char.vars)
-          # plist <- plist[c(jj1, jj2)]
           plist <- gen.pars(plist)
           if (length(plist) == 1) {
             plist[[1]]
@@ -469,56 +455,37 @@ upload_module_normalizationSC_server <- function(id,
       }
 
       plot2 <- function() {
-        shiny::req(
-          dim(ds_norm_Counts()$samples),
-          dim(ds_norm_Counts()$pos.pca),
-          dim(ds_norm_Counts()$pos.tsne),
-          dim(ds_norm_Counts()$pos.umap)
-        )
-        pos.list <- list(
-          pca = ds_norm_Counts()$pos.pca,
-          tsne = ds_norm_Counts()$pos.tsne,
-          umap = ds_norm_Counts()$pos.umap
-        )
-
-        samples <- ds_norm_Counts()$samples
+        res <- ds_norm_Counts()
+        shiny::req(dim(res$samples), dim(res$pos.pca), dim(res$pos.tsne), dim(res$pos.umap))
+        pos.list <- list(pca = res$pos.pca, tsne = res$pos.tsne, umap = res$pos.umap)
+        samples <- res$samples
         vars <- input$clusterBy
 
         shiny::validate(shiny::need(
           length(vars) <= 4,
-          "Please select up to 4 metadata variables for clusters visualization."
+          "Select up to 4 metadata variables to visualize clusters."
         ))
-
         shiny::validate(shiny::need(
           !is.null(vars),
-          "For clustering, please select a metadata variable from the menu on the left."
+          "For clustering, select a metadata variable from the menu on the left."
         ))
 
         m <- tolower(input$dimred_plottype)
-        if (length(vars) <= 2) {
-          par(mfrow = c(1, length(vars)))
-        } else if (length(vars) > 2 & length(vars) <= 4) {
-          par(mfrow = c(2, 2))
-        } else if (length(vars) > 4 & length(vars) <= 6) {
-          par(mfrow = c(2, 3))
-        } else if (length(vars) > 6 & length(vars) <= 8) {
-          par(mfrow = c(3, 3))
-        }
-        i <- 1
+        nr <- if (length(vars) <= 2) 1 else 2
+        if (length(vars) > 6 & length(vars) <= 8) nr <- 3
+        nc <- ceiling(length(vars) / nr)
+        par(mfrow = c(nr, nc))
+
         for (i in 1:length(vars)) {
-          v <- samples[, vars[i]]
-          ss <- c("nFeature_RNA", "nCount_RNA")
-          ## if (vars[i] %in% ss) { v <- log2(v + 1) }
           playbase::pgx.scatterPlotXY.BASE(
-            pos = pos.list[[m]], var = v, title = vars[i],
+            pos = pos.list[[m]],
+            var = samples[, vars[i]],
+            title = vars[i],
             xlab = "Dim1", ylab = "Dim2"
           )
         }
       }
 
-      ## ------------------------------------------------------------------
-      ## Plot modules
-      ## ------------------------------------------------------------------
       PlotModuleServer(
         "plot1",
         plotlib = "base",
@@ -538,29 +505,10 @@ upload_module_normalizationSC_server <- function(id,
         add.watermark = FALSE
       )
 
-      ## counts
-      counts <- shiny::reactive({
-        shiny::req(r_counts())
-        counts <- r_counts()
-        return(counts)
-      })
-
-      ## Normalized counts
       X <- shiny::reactive({
         shiny::req(r_counts())
-        counts <- r_counts()
-        X <- playbase::logCPM(as.matrix(counts), total = 1e4, prior = 1)
+        X <- playbase::logCPM(r_counts(), total = 1e4, prior = 1)
         return(X)
-      })
-
-      ## samples
-      samples <- shiny::reactive({
-        shiny::req(r_samples())
-        return(r_samples())
-      })
-
-      azimuth_ref <- shiny::reactive({
-        return(input$ref_atlas)
       })
 
       nfeat_thr <- shiny::reactive({
@@ -578,18 +526,16 @@ upload_module_normalizationSC_server <- function(id,
         return(input$hb_threshold)
       })
 
-      LL <- list(
-        counts = counts,
-        samples = samples,
+      return(list(
+        counts = r_counts,
+        samples = r_samples,
         X = X,
-        azimuth_ref = shiny::reactive(azimuth_ref()),
-        nfeature_threshold = shiny::reactive(nfeat_thr()),
-        mt_threshold = shiny::reactive(mt_thr()),
-        hb_threshold = shiny::reactive(hb_thr()),
+        azimuth_ref = shiny::reactive(input$ref_atlas),
+        nfeature_threshold = nfeat_thr,
+        mt_threshold = mt_thr,
+        hb_threshold = hb_thr,
         norm_method = shiny::reactive("CPM")
-      )
-
-      return(LL) ## pointing to reactive
+      ))
     } ## end-of-server
   )
 }

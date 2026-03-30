@@ -182,34 +182,39 @@ app_server <- function(input, output, session) {
   )
 
   ## observe and set global User options
-  shiny::observeEvent( input$enable_llm, {
+  shiny::observeEvent(input$enable_llm, {
     model <- input$llm_model
-    if(input$enable_llm) {
-      if(is.null(model) || model=="") {
-        shinyalert::shinyalert("ERROR",
-          "No LLM server available. Please check your settings.")
+    if (input$enable_llm) {
+      if (is.null(model) || model == "") {
+        shinyalert::shinyalert(
+          "ERROR",
+          "No LLM server available. Please check your settings."
+        )
         return(NULL)
       }
       shinyalert::shinyalert("WARNING",
         "Using LLM might expose some of your data to external LLM servers.",
         closeOnClickOutside = TRUE
-        #showCancelButton = TRUE
+        # showCancelButton = TRUE
       )
     }
   })
 
-  shiny::observeEvent({
-    list( input$enable_llm, input$llm_model)
-  }, {
-    if(input$enable_llm) {
-      dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
-      setUserOption(session,'llm_model', input$llm_model)
-    } else {
-      dbg("[MAIN] AI/LLM diabled")
-      setUserOption(session,'llm_model', '')      
+  shiny::observeEvent(
+    {
+      list(input$enable_llm, input$llm_model)
+    },
+    {
+      if (input$enable_llm) {
+        dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
+        setUserOption(session, "llm_model", input$llm_model)
+      } else {
+        dbg("[MAIN] AI/LLM diabled")
+        setUserOption(session, "llm_model", "")
+      }
     }
-  })
-  
+  )
+
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
   ## Hide admin tab by default (will be shown for admin users after login)
@@ -237,30 +242,30 @@ app_server <- function(input, output, session) {
   )
 
   ## Modules needed from the start
-  if (opt$ENABLE_UPLOAD) {
-    upload_datatype <- UploadBoard(
-      id = "upload",
-      pgx_dir = PGX.DIR,
-      pgx = PGX,
-      auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx,
-      inactivityCounter = inactivityCounter,
-      new_upload = new_upload
-    )
+  ## NOTE: UploadBoard is always loaded to allow per-user ENABLE_UPLOAD options
+  ## The upload tab visibility is controlled after login based on user/global options
+  upload_datatype <- UploadBoard(
+    id = "upload",
+    pgx_dir = PGX.DIR,
+    pgx = PGX,
+    auth = auth,
+    reload_pgxdir = reload_pgxdir,
+    load_uploaded_data = load_uploaded_data,
+    recompute_pgx = recompute_pgx,
+    inactivityCounter = inactivityCounter,
+    new_upload = new_upload
+  )
 
 
-    shiny::observeEvent(upload_datatype(), {
-      if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
-        shiny.i18n::update_lang("proteomics", session)
-      } else if (tolower(upload_datatype()) == "metabolomics") {
-        shiny.i18n::update_lang("metabolomics", session)
-      } else {
-        shiny.i18n::update_lang("RNA-seq", session)
-      }
-    })
-  }
+  shiny::observeEvent(upload_datatype(), {
+    if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
+      shiny.i18n::update_lang("proteomics", session)
+    } else if (tolower(upload_datatype()) == "metabolomics") {
+      shiny.i18n::update_lang("metabolomics", session)
+    } else {
+      shiny.i18n::update_lang("RNA-seq", session)
+    }
+  })
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
@@ -704,6 +709,29 @@ app_server <- function(input, output, session) {
     ))
   })
 
+  ## Copilot button
+  output$copilot_button <- renderUI({
+    if (is.null(PGX$X)) {
+      return(NULL)
+    }
+    show.beta <- env$user_settings$enable_beta()
+    if (show.beta) {
+      ui <- shiny::actionButton(
+        "copilot_click", "Copilot",
+        width = "auto", class = "quick-button"
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
+  })
+  CopilotServer("copilot",
+    pgx = PGX, input.click = reactive({
+      req(input$copilot_click > 0)
+      input$copilot_click
+    }),
+    layout = "fixed", maxturns = opt$LLM_MAXTURNS
+  )
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -1118,6 +1146,7 @@ app_server <- function(input, output, session) {
       }
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
+<<<<<<< admin-wip
 
       ## Show/hide admin tab based on user's ADMIN status AND global ENABLE_ADMIN option
       if (isTRUE(opt$ENABLE_ADMIN)) {
@@ -1125,15 +1154,20 @@ app_server <- function(input, output, session) {
         bigdash.toggleMenuItem(session, "admin-tab", is_admin)
         dbg("[SERVER] ADMIN status for user = ", is_admin)
       }
+=======
+>>>>>>> devel
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
       ## Hide upload tab when logged out (will be re-evaluated on next login)
       bigdash.hideMenuItem(session, "upload-tab")
+<<<<<<< admin-wip
       ## Hide admin tab when logged out (only if admin is enabled globally)
       if (isTRUE(opt$ENABLE_ADMIN)) {
         bigdash.hideMenuItem(session, "admin-tab")
       }
+=======
+>>>>>>> devel
     }
   })
 
@@ -1251,11 +1285,8 @@ app_server <- function(input, output, session) {
   # error will be shown on the app. Note that errors that are
   # not related to Shiny are not caught (e.g. an error on the
   # global.R file is not caught by this)
-  options(shiny.error = function() {
-    # The error message is on the parent environment, it is
-    # not passed to the function called on error
-    parent_env <- parent.frame()
-    error <- parent_env$e
+  shiny::onUnhandledError(function(err) {
+    error <- err
     err_traceback <- NULL
 
     if (!is.null(error)) {
@@ -1278,13 +1309,13 @@ app_server <- function(input, output, session) {
       return()
     }
     # Get inputs to reproduce state
-    board_inputs <- names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))]
+    board_inputs <- shiny::isolate(names(input)[grep(substr(input$nav, 1, nchar(input$nav) - 4), names(input))])
 
     # Remove pdf + download + card_selector + copy_info + unnecessary table inputs
-    board_inputs <- board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)]
+    board_inputs <- shiny::isolate(board_inputs[-grep("pdf_width|pdf_height|pdf_settings|downloadOption|card_selector|copy_info|_rows_current|_rows_all", board_inputs)])
 
     input_values <- lapply(board_inputs, function(x) {
-      value <- input[[x]]
+      value <- shiny::isolate(input[[x]])
       return(paste0(x, ": ", value))
     }) |> unlist()
 
@@ -1307,11 +1338,11 @@ app_server <- function(input, output, session) {
     err_prev <<- error$message
 
     pgx_name <- NULL
-    user_email <- auth$email
-    user_tab <- input$nav
-    raw_dir <- raw_dir()
+    user_email <- shiny::isolate(auth$email)
+    user_tab <- shiny::isolate(input$nav)
+    raw_dir <- shiny::isolate(raw_dir())
 
-    if (!is.null(PGX) && !is.null(PGX$name)) {
+    if (!is.null(PGX) && !is.null(shiny::isolate(PGX$name))) {
       pgx_name <- PGX$name
     } else {
       pgx_name <- "No PGX loaded when error occurred"
@@ -1326,7 +1357,13 @@ app_server <- function(input, output, session) {
     # write dbg statement
     dbg("[SERVER] shiny.error triggered")
 
-    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential)
+    if (inherits(error, "shiny.error.fatal")) {
+      full_app_crash <- TRUE
+    } else {
+      full_app_crash <- FALSE
+    }
+
+    sendErrorLogToCustomerSuport(user_email, pgx_name, raw_dir, error = err_traceback, path_to_creds = credential, full_app_crash = full_app_crash)
     sever::sever(sever_crash(error), bg_color = "#004c7d")
   })
 

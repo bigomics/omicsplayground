@@ -44,6 +44,10 @@ featuremap_plot_gset_sig_server <- function(id,
       shiny::req(pgx$X)
 
       pos <- pgx$cluster.gsets$pos[["umap2d"]]
+      shiny::validate(shiny::need( ## Custom species has this empty
+        !is.null(pgx$cluster.gsets),
+        "Cluster genesets are not available."
+      ))
       hilight <- NULL
       pheno <- "tissue"
       pheno <- sigvar()

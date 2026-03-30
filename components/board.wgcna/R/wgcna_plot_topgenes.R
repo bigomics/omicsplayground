@@ -14,12 +14,12 @@ wgcna_plot_topgenes_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  
+
   PlotModuleUI(
     ns("plot"),
     title = title,
     label = label,
-    #options = options,
+    # options = options,
     info.text = info.text,
     caption = caption,
     height = height,
@@ -29,12 +29,10 @@ wgcna_plot_topgenes_ui <- function(
 }
 
 wgcna_plot_topgenes_server <- function(id,
-                                         enrichTable,
-                                         watermark = FALSE) {
+                                       enrichTable,
+                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     get_data <- function() {
-
       df <- enrichTable$data()
       if (is.null(df) || nrow(df) == 0) {
         return(NULL)
@@ -43,24 +41,22 @@ wgcna_plot_topgenes_server <- function(id,
       shiny::req(ii)
       df <- df[ii, , drop = FALSE]
       df <- head(df, 20)
-      genes <- unlist(strsplit(df$genes,split="\\|"))
-      gtable <- sort(table(genes),decreasing=TRUE)
+      genes <- unlist(strsplit(df$genes, split = "\\|"))
+      gtable <- sort(table(genes), decreasing = TRUE)
       gtable
     }
-    
-    plot.RENDER <- function() {
 
+    plot.RENDER <- function() {
       gtable <- get_data()
-      
-      par(mar = c(8,4,2,0))
+
+      par(mar = c(8, 4, 2, 0))
       barplot(
-        head(gtable,35),
+        head(gtable, 35),
         las = 3,
         cex.names = 0.9,
         xlab = "",
         ylab = "Frequency in top"
       )
-      
     }
 
 

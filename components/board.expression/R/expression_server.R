@@ -585,7 +585,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (length(j) == 0) {
         return(NULL)
       } else {
-        gset <- names(which(pgx$GMT[j, ] != 0))
+        gmt_rows <- as.matrix(pgx$GMT[j, , drop = FALSE])
+        gset <- colnames(gmt_rows)[colSums(gmt_rows != 0, na.rm = TRUE) > 0]
         gset <- intersect(gset, rownames(pgx$gsetX))
       }
 
@@ -613,6 +614,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       id = "genetable",
       pgx = pgx,
       comp = shiny::reactive(input$gx_contrast),
+      gx_method = shiny::reactive(input$gx_statmethod),
       res = filteredDiffExprTable,
       organism = pgx$organism,
       show_pv = shiny::reactive(input$show_pv),

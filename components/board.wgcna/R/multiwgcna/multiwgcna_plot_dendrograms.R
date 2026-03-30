@@ -76,8 +76,8 @@ multiwgcna_plot_dendrograms_server <- function(id,
             main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
             show.traits = input$showtraits,
             show.contrasts = input$showtraits,
-            marAll = c(1,7,1,0),
-            #use.tree = input$clusterby,
+            marAll = c(1, 7, 1, 0),
+            # use.tree = input$clusterby,
             setLayout = FALSE
           )
         }

@@ -117,9 +117,10 @@ push.version:
 	docker push bigomics/omicsplayground:$(VERSION)
 
 auth=none
+pgx=
 
 board.launch:
-	R -e "options(board = '$(board)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
+	R -e "options(board = '$(board)', pgx_file = '$(if $(pgx),$(realpath $(pgx)),)', authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
 board.example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"

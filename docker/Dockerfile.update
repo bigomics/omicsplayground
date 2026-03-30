@@ -62,7 +62,17 @@ RUN R -e "remotes::install_github('bigomics/plaid')"
 RUN R -e "install.packages('ellmer')"
 RUN R -e "BiocManager::install('singscore')"
 RUN R -e "BiocManager::install('ArrayExpress')"
+RUN R -e "install.packages('tidyprompt')"
 RUN R -e "install.packages('xgboost')"
+RUN R -e "install.packages('arrow')"
+RUN R -e "install.packages('DiagrammeRsvg')"
+RUN R -e "install.packages('shinychat')"
+RUN R -e "install.packages('ggprism')"
+RUN R -e "devtools::install_github('alastairrushworth/inspectdf@bugfix/cran-dplyr-failing')"
+RUN R -e "install.packages('quarto')"
+RUN R -e "devtools::install_github('bigomics/visNetwork')"
+RUN R -e "install.packages('svglite')"
+RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
     
 #------------------------------------------------------------
 # Add supporting R libraries

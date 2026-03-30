@@ -84,17 +84,17 @@ MultiWGCNA_Board <- function(id, pgx) {
         } else {
           power <- as.numeric(input$power)
         }
-        
+
         ## setup progress bars
         progress <- shiny::Progress$new(session, min = 0, max = 1)
         on.exit(progress$close())
         progress$set(message = paste("computing multi-omics WGCNA..."), value = 0.33)
         pgx.showSmallModal("computing multi-omics WGCNA...")
-        
+
         dataX <- playbase::mofa.split_data(pgx$X)
         samples <- pgx$samples
         contrasts <- pgx$contrasts
-        
+
         wgcna <- playbase::wgcna.compute_multiomics(
           dataX = dataX,
           samples = samples,
@@ -110,17 +110,17 @@ MultiWGCNA_Board <- function(id, pgx) {
           minKME = 0.3,
           compute.enrichment = TRUE,
           gset.xtop = 100,
-          gset.ntop = 1000,        
-          gset.methods = c("gsetcor","xcor","fisher"),        
+          gset.ntop = 1000,
+          gset.methods = c("gsetcor", "xcor", "fisher"),
           annot = pgx$genes,
-          GMT = pgx$GMT,  
-          ##gsetX = pgx$gsetX,  ## ??
+          GMT = pgx$GMT,
+          ## gsetX = pgx$gsetX,  ## ??
           summary = TRUE,
           ai_model = NULL,
           ai_experiment = pgx$description,
           progress = progress
-        ) 
-        
+        )
+
         shiny::removeModal()
 
         phenotypes <- colnames(wgcna[[1]]$datTraits)
@@ -217,8 +217,8 @@ MultiWGCNA_Board <- function(id, pgx) {
       "multiwgcnaSummary",
       wgcna = r_multiwgcna,
       multi = TRUE,
-      r_annot = reactive(pgx$genes),      
-      r_module = shiny::reactive(input$module),      
+      r_annot = reactive(pgx$genes),
+      r_module = shiny::reactive(input$module),
       watermark = WATERMARK
     )
 

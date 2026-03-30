@@ -294,7 +294,6 @@ UploadBoard <- function(id,
 
         olink <- is.olink()
         if (olink) {
-          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
@@ -402,8 +401,8 @@ UploadBoard <- function(id,
             )
           }
           # Hard stop for scRNA-seq
-          if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+          if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 200.000 cells allowed for scRNA-seq")
             checked <- NULL
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
@@ -414,7 +413,7 @@ UploadBoard <- function(id,
               text = paste(
                 "You have reached the maximum number of cells allowed. Please",
                 tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
+                "200.000 cells."
               ),
               type = "error"
             )
@@ -576,7 +575,7 @@ UploadBoard <- function(id,
           }
         }
 
-        if (!is.null(checked)) {
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
           checked <- playbase::contrasts.convertToLabelMatrix(
             contrasts = checked, samples = cc$SAMPLES
           )
@@ -1041,6 +1040,11 @@ UploadBoard <- function(id,
     shiny::observeEvent(
       list(new_upload()),
       {
+        # skip upload trigger at first startup (must be first check!)
+        if (new_upload() == 0) {
+          return(NULL)
+        }
+
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (!enable_upload) {
@@ -1071,11 +1075,6 @@ UploadBoard <- function(id,
 
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
 
         if (input$selected_organism == "No organism") {
           shinyalert::shinyalert(
@@ -1279,6 +1278,7 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
       public_dataset_id = public_dataset_id ## accession ID
     )
 
@@ -1307,6 +1307,7 @@ UploadBoard <- function(id,
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.count = TRUE,
@@ -1363,7 +1364,7 @@ UploadBoard <- function(id,
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
+      annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       lib.dir = FILES,

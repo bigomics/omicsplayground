@@ -67,8 +67,10 @@ dataview_table_contrasts_server <- function(id,
       # for ctbygroup == "group" we need to do this conversion anyway,
       # so we do it for all cases.
       cm <- dt
-      result <- matrix("", nrow = nrow(cm), ncol = ncol(cm),
-                       dimnames = dimnames(cm))
+      result <- matrix("",
+        nrow = nrow(cm), ncol = ncol(cm),
+        dimnames = dimnames(cm)
+      )
       for (col in colnames(cm)) {
         treatment <- sub("_vs_.*", "", col)
         control <- sub(".*_vs_", "", col)
@@ -125,8 +127,9 @@ dataview_table_contrasts_server <- function(id,
               all_labels <- all_labels[all_labels != ""]
               controls <- unique(sub(".*\nvs ", "", colnames(dt)))
               ifelse(all_labels %in% controls,
-                     omics_colors("orange"),
-                     omics_colors("brand_blue"))
+                omics_colors("orange"),
+                omics_colors("brand_blue")
+              )
             }
           ),
           backgroundSize = "98% 88%",

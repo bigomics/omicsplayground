@@ -189,6 +189,36 @@ expression_plot_volcano_server <- function(id,
       } else {
         pd[["sel.genes"]]
       }
+      if (input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      # Custom colors (used when ggprism_colors is FALSE)
+      plot_colors <- c(
+        up = input$color_up,
+        notsig = "#707070AA",
+        notsel = "#cccccc88",
+        down = input$color_down
+      )
+
+      box_padding <- if (is.null(input$box_padding) || is.na(input$box_padding)) 0.1 else input$box_padding
+      min_segment_length <- if (is.null(input$min_segment_length) || is.na(input$min_segment_length)) 0 else input$min_segment_length
+      label_box <- if (is.null(input$label_box)) TRUE else input$label_box
+      segment_linetype <- if (is.null(input$segment_linetype)) 1 else as.integer(input$segment_linetype)
+      ## Hyperbolic cutoff settings
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+      hyperbola_k <- if (!is.null(input$hyperbola_k)) input$hyperbola_k else 1
+
+      ## ggprism settings
+      use_ggprism <- isTRUE(input$use_ggprism)
+      ggprism_palette <- if (is.null(input$ggprism_palette)) "black_and_white" else input$ggprism_palette
+      ggprism_colors <- isTRUE(input$ggprism_colors)
+      ggprism_border <- isTRUE(input$ggprism_border)
+      ggprism_axis_guide <- if (is.null(input$ggprism_axis_guide)) "default" else input$ggprism_axis_guide
+      ggprism_show_legend <- isTRUE(input$ggprism_show_legend)
+      ggprism_legend_x <- if (is.null(input$ggprism_legend_x) || is.na(input$ggprism_legend_x)) 0.95 else input$ggprism_legend_x
+      ggprism_legend_y <- if (is.null(input$ggprism_legend_y) || is.na(input$ggprism_legend_y)) 0.95 else input$ggprism_legend_y
+      ggprism_legend_border <- isTRUE(input$ggprism_legend_border)
 
       p <- playbase::ggVolcano(
         x = pd[["x"]],
@@ -206,12 +236,22 @@ expression_plot_volcano_server <- function(id,
         showlegend = FALSE,
         title = NULL,
         axis.text.size = input$axis_text_size,
-        colors = c(
-          up = input$color_up,
-          notsig = "#707070AA",
-          notsel = "#cccccc88",
-          down = input$color_down
-        )
+        colors = plot_colors,
+        box.padding = box_padding,
+        min.segment.length = min_segment_length,
+        label.box = label_box,
+        segment.linetype = segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = hyperbola_k,
+        use_ggprism = use_ggprism,
+        ggprism_palette = ggprism_palette,
+        ggprism_colors = ggprism_colors,
+        ggprism_border = ggprism_border,
+        ggprism_axis_guide = ggprism_axis_guide,
+        ggprism_show_legend = ggprism_show_legend,
+        ggprism_legend_x = ggprism_legend_x,
+        ggprism_legend_y = ggprism_legend_y,
+        ggprism_legend_border = ggprism_legend_border
       )
 
       if (input$margin_checkbox) {
@@ -250,6 +290,10 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
+      box_padding <- if (is.null(input$box_padding) || is.na(input$box_padding)) 0.1 else input$box_padding
+      min_segment_length <- if (is.null(input$min_segment_length) || is.na(input$min_segment_length)) 0 else input$min_segment_length
+      label_box <- if (is.null(input$label_box)) TRUE else input$label_box
+      segment_linetype <- if (is.null(input$segment_linetype)) 1 else as.integer(input$segment_linetype)
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -266,7 +310,11 @@ expression_plot_volcano_server <- function(id,
         ylab = pd[["ylab"]],
         marker.size = 1.8,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        box.padding = box_padding,
+        min.segment.length = min_segment_length,
+        label.box = label_box,
+        segment.linetype = segment_linetype
       )
     }
 
