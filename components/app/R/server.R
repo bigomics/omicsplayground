@@ -1146,7 +1146,6 @@ app_server <- function(input, output, session) {
       }
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
-<<<<<<< admin-wip
 
       ## Show/hide admin tab based on user's ADMIN status AND global ENABLE_ADMIN option
       if (isTRUE(opt$ENABLE_ADMIN)) {
@@ -1154,20 +1153,15 @@ app_server <- function(input, output, session) {
         bigdash.toggleMenuItem(session, "admin-tab", is_admin)
         dbg("[SERVER] ADMIN status for user = ", is_admin)
       }
-=======
->>>>>>> devel
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
       ## Hide upload tab when logged out (will be re-evaluated on next login)
       bigdash.hideMenuItem(session, "upload-tab")
-<<<<<<< admin-wip
       ## Hide admin tab when logged out (only if admin is enabled globally)
       if (isTRUE(opt$ENABLE_ADMIN)) {
         bigdash.hideMenuItem(session, "admin-tab")
       }
-=======
->>>>>>> devel
     }
   })
 
