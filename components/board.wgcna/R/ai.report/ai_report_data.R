@@ -66,7 +66,7 @@ wgcna_build_report_tables <- function(wgcna, pgx,
   }
 
   # WGCNA parameters
-  network_type <- wgcna$net$networkType %||% wgcna$networkType %||% "signed"
+  network_type <- wgcna$networktype %||% wgcna$net$networkType %||% "signed"
   power <- wgcna$power %||% wgcna$net$power %||% "NA"
   min_mod_size <- wgcna$minModSize %||% "20"
   merge_cut_height <- wgcna$mergeCutHeight %||% "0.15"
@@ -780,7 +780,7 @@ wgcna_build_methods <- function(wgcna, pgx) {
     tryCatch(nrow(pgx$samples), error = function(e2) NA)
   })
 
-  network_type <- wgcna$net$networkType %||% wgcna$networkType %||% "signed"
+  network_type <- wgcna$networktype %||% wgcna$net$networkType %||% "signed"
   power <- wgcna$power %||% wgcna$net$power %||% "NA"
   min_mod_size <- wgcna$minModSize %||% "20"
   merge_cut_height <- wgcna$mergeCutHeight %||% "0.15"
