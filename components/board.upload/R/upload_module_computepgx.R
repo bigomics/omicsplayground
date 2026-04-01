@@ -59,9 +59,6 @@ upload_module_computepgx_server <- function(
           if (nmissing.countsX > 0) mm <- c("ttest", "ttest.welch", "trend.limma")
         } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "ttest.welch", "wilcoxon.ranksum", "trend.limma")
-        } else if (dt == "methylomics") {
-          mm <- c("ttest", "ttest.welch", "trend.limma",
-            "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
