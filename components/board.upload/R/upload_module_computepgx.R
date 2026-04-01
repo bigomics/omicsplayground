@@ -489,15 +489,15 @@ upload_module_computepgx_server <- function(
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
                 if (upload_datatype() == "methylomics") {
-                  shiny::checkboxGroupInput(
-                    ns("diff_meth"),
-                    shiny::HTML("<h4>Methylomics analysis:</h4>"),
+                  shiny::radioButtons(
+                    inputId = ns("diff_meth"),
+                    label = shiny::HTML("<h4>Methylomics analysis:</h4>"),
                     choices = c(
                       "Differentially methylated positions",
                       "Differentially methylated regions"
                     ),
                     selected = "Differentially methylated positions",
-                    )
+                  )
                 },
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
