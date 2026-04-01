@@ -34,7 +34,7 @@ DEVMODE              = TRUE
 HUBSPOT_CHECK        = TRUE
 
 #LLM_MODELS           = llama3.2:1b;granite4:micro;granite4:micro-h;groq:openai/gpt-oss-120b;groq:openai/gpt-oss-20b;xai:grok-4-1-fast-non-reasoning;openai:gpt-5.4-nano;openai:gpt-5.4-nano
-LLM_MODELS           = groq:openai/gpt-oss-120b;xai:grok-4-1-fast-non-reasoning;openai:gpt-5.4-nano;openai:gpt-5.4-nano
+LLM_MODELS           = groq:openai/gpt-oss-120b;xai:grok-4-1-fast-non-reasoning;openai:gpt-5.4-nano;openai:gpt-5.4-mini
 IMAGE_MODELS         = google:gemini-3.1-flash-image-preview;google:gemini-3-pro-image-preview
 LLM_MAXTURNS         = 10
 

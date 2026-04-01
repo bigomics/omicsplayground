@@ -57,6 +57,12 @@ consensusWGCNA_table_modulegenes_server <- function(id,
         stats = cons$stats,
         trait = trait, module = module
       )
+      ## NULL is returned when the selected trait is absent from at least one layer's
+      ## traitSignificance (e.g. constant-within-group traits, sample-level IDs).
+      ## This is expected: modTraits (trait dropdown source) and per-layer gene stats
+      ## are built from different sample subsets, so not every dropdown trait maps
+      ## to computable gene statistics in all layers.
+      shiny::validate(shiny::need(!is.null(stats), "Selected trait has no gene statistics. Please select a different trait."))
 
       cm <- Reduce(intersect, lapply(stats, rownames))
       kk <- c(grep("score\\.", colnames(stats[["full"]]), value = TRUE), "consensus")
@@ -69,7 +75,7 @@ consensusWGCNA_table_modulegenes_server <- function(id,
       if (!is.null(annot)) {
         df$title <- playbase::probe2symbol(df$feature, annot, query = "gene_title")
         symbol <- playbase::probe2symbol(df$feature, annot, query = "symbol")
-        if (mean(df$feature == symbol) < 0.2) df$symbol <- symbol
+        if (mean(df$feature == symbol, na.rm = TRUE) < 0.2) df$symbol <- symbol
       }
 
       kk <- grep("score\\.", colnames(df), value = TRUE)
