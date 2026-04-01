@@ -25,7 +25,7 @@ if (Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-options(shiny.maxRequestSize = 999 * 1024^2) ## max 999Mb upload
+options(shiny.maxRequestSize = 2048 * 1024^2) ## max 2GB (previously 999Mb) upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
 # 1. The header scrolls with the X scroll bar
