@@ -39,11 +39,12 @@ MultiWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Dendrograms" = list(disable = c("phenotype", "module", "condition", "lasagna_options")),
-      "Module-Trait" = list(disable = c("phenotype", "module", "condition", "wgcna_options", "lasagna_options")),
-      "Module correlation" = list(disable = c("phenotype", "module", "wgcna_options", "lasagna_options")),
-      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options")),
-      "Feature Table" = list(disable = c("layers", "condition", "wgcna_options", "lasagna_options"))
+      "Dendrograms" = list(disable = c("phenotype", "module", "condition", "lasagna_options", "ai_report_accordion")),
+      "Module-Trait" = list(disable = c("phenotype", "module", "condition", "wgcna_options", "lasagna_options", "ai_report_accordion")),
+      "Module correlation" = list(disable = c("phenotype", "module", "wgcna_options", "lasagna_options", "ai_report_accordion")),
+      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "ai_report_accordion")),
+      "Feature Table" = list(disable = c("layers", "condition", "wgcna_options", "lasagna_options", "ai_report_accordion")),
+      "AI Report" = list(disable = c("phenotype", "module", "condition", "layers", "wgcna_options", "lasagna_options"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -212,12 +213,13 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    ## TODO: wire AI report for multiwgcna once main WGCNA AI report is finalized
-    ## May need specialized multi-omics report templates
-    # wgcna_ai_report_server("multiwgcnaSummary",
-    #   wgcna = r_multiwgcna, pgx = pgx,
-    #   parent_session = session, watermark = WATERMARK
-    # )
+    multiwgcna_ai_report_server(
+      "ai_report",
+      mwgcna = r_multiwgcna,
+      pgx = pgx,
+      parent_session = session,
+      watermark = WATERMARK
+    )
 
     return(NULL)
   })

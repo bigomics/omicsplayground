@@ -3,6 +3,9 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
+for (f in list.files(file.path(OPG, "components/board.wgcna/R/multiwgcna/ai.report"),
+                     pattern = "\\.R$", full.names = TRUE)) source(f)
+
 MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
@@ -53,6 +56,17 @@ MultiWGCNA_Inputs <- function(id) {
           "Lasagna options",
           icon = icon("cog", lib = "glyphicon"),
           multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna"))
+        )
+      )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("ai_report_accordion"),
+        open = FALSE,
+        bslib::accordion_panel(
+          "AI Report Options",
+          icon = icon("robot", lib = "font-awesome"),
+          multiwgcna_ai_report_inputs_ui(ns("ai_report"))
         )
       )
     )
@@ -231,6 +245,11 @@ MultiWGCNA_UI <- function(id) {
             )
           )
         )
+      ),
+
+      shiny::tabPanel(
+        "AI Report",
+        multiwgcna_ai_report_ui(ns("ai_report"))
       )
     ) ## end tabsetPanel
   ) ## end div
