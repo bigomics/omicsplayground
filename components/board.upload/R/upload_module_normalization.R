@@ -1,7 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
 
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -58,7 +56,9 @@ upload_module_normalization_server <- function(
           shiny::updateCheckboxInput(session, "normalize", value = FALSE)
         }
 
+        # if (upload_datatype() != "methylomics") {
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
+        # }
 
         #if (input$zero_as_na) {
         if (zero_as_na()) {
@@ -119,7 +119,7 @@ upload_module_normalization_server <- function(
           annot <- annot[which(sel), , drop = FALSE]
         }
 
-        ## Impute if required
+        ## Impute if required. Never runs for methylomics.
         if (any(is.na(X)) & isTRUE(input$impute)) {
           if (is.mox) {
             X <- playbase::imputeMissing.mox(X, method = input$impute_method)
@@ -169,6 +169,9 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
+        kk <- intersect(rownames(X), rownames(counts))
+        X <- X[kk, , drop = FALSE]
+        counts <- counts[kk, , drop = FALSE]
         is.mox <- playbase::is.multiomics(rownames(counts))
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
@@ -653,7 +656,7 @@ upload_module_normalization_server <- function(
           plot_all_methods()
         }
       }
-
+      
       plot_all_methods <- function() {
         out.res <- results_outlier_methods()
         res <- results_correction_methods()
@@ -786,6 +789,7 @@ upload_module_normalization_server <- function(
         if (is.num) {
           par(mar = c(3.4, 3.5, 2, 0.1), mgp = c(2.3, 0.4, 0), tcl = -0.1)
         }
+
         plot(pos0,
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
@@ -797,6 +801,7 @@ upload_module_normalization_server <- function(
         if (is.num) {
           par(mar = c(3.4, 4.5, 2, 0.1), mgp = c(2.4, 0.4, 0), tcl = -0.1)
         }
+
         plot(pos1,
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
@@ -813,6 +818,28 @@ upload_module_normalization_server <- function(
             legend.width = 4, axis.args = list(cex.axis = 1.3, las = 1)
           )
         }
+      }
+
+      plot_methyl <- function() {
+        X <- playbase::mToBeta(normalizedX())
+        par(mfrow = c(1, 1), mar = c(3.2, 4.6, 1.5, 0.5), las = 1, mgp = c(1.5, 0.5, 0), tcl = -0.1)
+        hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "", main = "", cex.lab = 1.3)
+        ## if (input$infer_sex) {
+        ##   S <- playbase::infer_sex_methyl(data = X, meth_type = meth_type())
+        ##   pred_sex <- S[["pred_sex"]]
+        ##   x_med <- S[["x_med"]]
+        ##   y_med <- S[["y_med"]]
+        ##   shiny::validate(shiny::need(is.null(pred_sex), "No X- or Y-linked probes found. Could not infer sex."))
+        ##   par(mfrow = c(1, 1), mar = c(5, 5, 1.5, 0.5), las = 1, mgp = c(2.5, 0.5, 0), tcl = -0.1)
+        ##   cols <- ifelse(pred_sex == "F", "red", "blue")
+        ##   plot(1:length(y_med), y_med, col = cols, ylim = c(0, max(y_med) + mean(y_med)),
+        ##     ylab = "Median Y-linked CpG beta value", pch = 15, xlab = "", xaxt = "n", cex = 1.5)
+        ##   axis(side = 1, at = 1:length(y_med), labels = FALSE)
+        ##   text(x = 1:length(y_med), y = par("usr")[3] - diff(par("usr")[3:4]) * 0.03,
+        ##     labels = names(y_med), srt = 45, adj = 1, xpd = TRUE, cex = 0.5)
+        ##   legend("topright", legend = c("F", "M"), fill = c("red", "blue"), cex = 1.2)
+        ##   grid()
+        ## }
       }
 
       ## ------------------------------------------------------------------
@@ -921,13 +948,15 @@ upload_module_normalization_server <- function(
 
         missing.infotext <-
           "Missing values (MVs) reduce the completeness of biological data and hinder preprocessing steps. MVs (i.e., NA), more often populate proteomics and metabolomics data. Here, MVs are identified and their patterns in your data is shown. PCA is also optionally performed on data imputed with all methods to aid comparison."
-
+        
         normalization.infotext <-
           "Normalization enables to standardize the data and improve their consistency, comparability and reproducibility. Boxplots of raw (unnormalized) and normalized data are shown. Normalization method can be selected on the left, under “Normalization”."
 
         batcheff.infotext <-
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
+        methyl.infotext <- "Histogram of beta values. Optionally, biological sex can be inferred from sex chromosome probes' methylation profiles (e.g., PMC8240370). The metadata variable 'predicted_sex' will be added."
+        
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:",
             c(
@@ -961,6 +990,14 @@ upload_module_normalization_server <- function(
           )
         )
 
+        ## methyl.options <- tagList(
+        ##   shiny::checkboxInput(
+        ##     ns("infer_sex"),
+        ##     label = "Infer biological sex",
+        ##     value = FALSE
+        ##   )
+        ## )
+        
         navmenu <- tagList(
           bslib::card(bslib::card_body(
             style = "padding: 0px;",
@@ -992,7 +1029,7 @@ upload_module_normalization_server <- function(
                       selected = default_impute_method)
                   ),
                   br()
-                ),
+                ),                
                 bslib::accordion_panel(
                   title = "Normalization",
                   shiny::div(
@@ -1117,15 +1154,29 @@ upload_module_normalization_server <- function(
               col_widths = c(6, 6),
               row_heights = c(3, 3),
               heights_equal = "row",
-              PlotModuleUI(
-                ns("plot2"),
-                title = "Missing values",
-                info.text = missing.infotext,
-                caption = missing.infotext,
-                options = missing.options,
-                height = c("auto", "100%"),
-                show.maximize = FALSE
-              ),
+              ##--------new
+              if (upload_datatype() == "methylomics") {
+                PlotModuleUI(
+                  ns("plot5"),
+                  title = "Distribution of Beta values",
+                  info.text = methyl.infotext,
+                  caption = methyl.infotext,
+                  # options = methyl.options,
+                  height = c("auto", "100%"),
+                  show.maximize = FALSE
+                )
+                ##--------new
+              } else {              
+                PlotModuleUI(
+                  ns("plot2"),
+                  title = "Missing values",
+                  info.text = missing.infotext,
+                  caption = missing.infotext,
+                  options = missing.options,
+                  height = c("auto", "100%"),
+                  show.maximize = FALSE
+                )
+              },
               PlotModuleUI(
                 ns("plot1"),
                 title = "Normalization",
@@ -1196,6 +1247,16 @@ upload_module_normalization_server <- function(
         "plot4",
         plotlib = "base",
         func = plot_correction,
+        res = c(75, 120),
+        pdf.width = 12,
+        pdf.height = 6,
+        add.watermark = FALSE
+      )
+
+      PlotModuleServer(
+        "plot5",
+        plotlib = "base",
+        func = plot_methyl,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
