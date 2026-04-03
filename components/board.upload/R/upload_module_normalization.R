@@ -407,7 +407,6 @@ upload_module_normalization_server <- function(
 
       ## missing values
       plot_missingvalues <- function() {
-        # X0 <- r_counts()
         X0 <- cleanX()$counts
         X1 <- imputedX()$X
 
@@ -419,7 +418,6 @@ upload_module_normalization_server <- function(
         X0 <- X0[rownames(X1), , drop = FALSE]
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
-        ## if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
         if (!any(is.na(X0)) && !(zero_as_na() && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
@@ -436,7 +434,6 @@ upload_module_normalization_server <- function(
           title("No missing values in imputed data", cex.main = 0.8)
         } else {
           ii <- which(is.na(X0))
-          ## if (isolate(input$zero_as_na)) {
           if (isolate(zero_as_na())) {
             ii <- which(is.na(X0) | X0 == 0)
           }
@@ -447,7 +444,6 @@ upload_module_normalization_server <- function(
 
           ## set zero value to 1, NA values to 2
           X2 <- 1 * is.na(X0)
-          ## if (input$zero_as_na) X2[X0 == 0] <- 1
           if (zero_as_na()) X2[X0 == 0] <- 1
           jj <- head(order(-apply(X2, 1, sd)), 200)
           X2 <- X2[jj, ]
@@ -591,7 +587,6 @@ upload_module_normalization_server <- function(
       plot.outlierPCA <- function(pos, z, z0, shownames) {
         is.outlier <- (z > z0)
         col1 <- "grey70"
-        ## col1 <- res.outliers$dbscan$cluster + 1
         cex1 <- cut(nrow(pos),
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
@@ -822,14 +817,26 @@ upload_module_normalization_server <- function(
 
       plot_methyl <- function() {
         X <- playbase::mToBeta(normalizedX())
-        par(mfrow = c(1, 1), mar = c(3.2, 4.6, 1.5, 0.5), las = 1, mgp = c(1.5, 0.5, 0), tcl = -0.1)
-        hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "", main = "", cex.lab = 1.3)
-        ## if (input$infer_sex) {
+        if (input$methyl_plottype == "histogram") {
+          par(mfrow = c(1, 1), mar = c(3.2, 4.6, 1.5, 0.5), las = 1, mgp = c(2.8, 0.5, 0), tcl = -0.1)
+          hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "Frequency", main = "", cex.lab = 1.3)
+        } else if (input$methyl_plottype == "beanplot") {
+          # minfi::densityPlot(X, r_samples()[,1], main = "", xlab = "Beta signal", add = TRUE, legend = TRUE)
+          # grid()
+          par(mfrow = c(1, 1), mar = c(5, 3.5, 0.3, 0.3), las = 2, tcl = -0.1, mgp = c(2.3, 0.5, 0))
+          x <- reshape2::melt(X, varnames = c("cpg", "sample"))
+          ww <- c(0, 1, 1, 0)
+          beanplot::beanplot(value ~ sample, data = x, horizontal = FALSE, what = ww, log = "",
+            ylim = c(0, 1), ylab = "Beta signal", method = "stack",  main = "", beanlinewd = 1,
+            cex.lab = 1.2, cex.axis = 0.8, border = "gray", frame.plot = FALSE)
+          grid()
+        }
+        ## if (input$infer_sex) { ## placeholder
         ##   S <- playbase::infer_sex_methyl(data = X, meth_type = meth_type())
         ##   pred_sex <- S[["pred_sex"]]
         ##   x_med <- S[["x_med"]]
         ##   y_med <- S[["y_med"]]
-        ##   shiny::validate(shiny::need(is.null(pred_sex), "No X- or Y-linked probes found. Could not infer sex."))
+        ##   shiny::validate(shiny::need(is.null(pred_sex), "No X or Y-linked probes found. Could not infer sex."))
         ##   par(mfrow = c(1, 1), mar = c(5, 5, 1.5, 0.5), las = 1, mgp = c(2.5, 0.5, 0), tcl = -0.1)
         ##   cols <- ifelse(pred_sex == "F", "red", "blue")
         ##   plot(1:length(y_med), y_med, col = cols, ylim = c(0, max(y_med) + mean(y_med)),
@@ -955,7 +962,7 @@ upload_module_normalization_server <- function(
         batcheff.infotext <-
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
-        methyl.infotext <- "Histogram of beta values. Optionally, biological sex can be inferred from sex chromosome probes' methylation profiles (e.g., PMC8240370). The metadata variable 'predicted_sex' will be added."
+        methyl.infotext <- "Histogram of beta values. Optionally, sample-specific beanplot of beta value distribution can be plotted."
         
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:",
@@ -990,13 +997,14 @@ upload_module_normalization_server <- function(
           )
         )
 
-        ## methyl.options <- tagList(
-        ##   shiny::checkboxInput(
-        ##     ns("infer_sex"),
-        ##     label = "Infer biological sex",
-        ##     value = FALSE
-        ##   )
-        ## )
+        methyl.options <- tagList(
+          shiny::radioButtons(
+            ns("methyl_plottype"),
+            label = "Plot type:",
+            choices = c("histogram", "beanplot"),
+            selected = "histogram", inline = FALSE
+          )
+        )
         
         navmenu <- tagList(
           bslib::card(bslib::card_body(
@@ -1161,7 +1169,7 @@ upload_module_normalization_server <- function(
                   title = "Distribution of Beta values",
                   info.text = methyl.infotext,
                   caption = methyl.infotext,
-                  # options = methyl.options,
+                  options = methyl.options,
                   height = c("auto", "100%"),
                   show.maximize = FALSE
                 )
