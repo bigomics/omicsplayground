@@ -818,12 +818,12 @@ upload_module_normalization_server <- function(
       plot_methyl <- function() {
         X <- playbase::mToBeta(normalizedX())
         if (input$methyl_plottype == "histogram") {
-          par(mfrow = c(1, 1), mar = c(3.2, 4.6, 1.5, 0.5), las = 1, mgp = c(2.8, 0.5, 0), tcl = -0.1)
-          hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "Frequency", main = "", cex.lab = 1.3)
+          par(mfrow = c(1, 1), mar = c(3, 3.2, 0.8, 0.5), las = 1, mgp = c(1.8, 0.4, 0), tcl = -0.1)
+          hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "", main = "", cex.lab = 1.3)
         } else if (input$methyl_plottype == "beanplot") {
           # minfi::densityPlot(X, r_samples()[,1], main = "", xlab = "Beta signal", add = TRUE, legend = TRUE)
           # grid()
-          par(mfrow = c(1, 1), mar = c(5, 3.5, 0.3, 0.3), las = 2, tcl = -0.1, mgp = c(2.3, 0.5, 0))
+          par(mfrow = c(1, 1), mar = c(4.5, 3.3, 0.8, 0.5), las = 2, tcl = -0.1, mgp = c(2.2, 0.5, 0))
           x <- reshape2::melt(X, varnames = c("cpg", "sample"))
           ww <- c(0, 1, 1, 0)
           beanplot::beanplot(value ~ sample, data = x, horizontal = FALSE, what = ww, log = "",
