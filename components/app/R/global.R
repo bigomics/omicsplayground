@@ -62,6 +62,14 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 APPDIR <- file.path(OPG, "components/app/R")
 PGX.DIR <- file.path(OPG, "data")
+## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
+options(omicspgxmcp.data_dir = PGX.DIR)
+## Persistent copilot chat sessions + uploaded docs — siblings of the pgx
+## files under data/. Anchored on OPG so they never depend on runtime cwd.
+CHAT.DIR <- file.path(OPG, "data", "chats")
+DOCS.DIR <- file.path(OPG, "data", "docs_sources")
+dir.create(CHAT.DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(DOCS.DIR, recursive = TRUE, showWarnings = FALSE)
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
@@ -277,7 +285,7 @@ BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics"
+  "multiomics", "copilot"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
@@ -285,12 +293,15 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Copilot"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
+if (!isTRUE(opt$ENABLE_CHIRP)) {
+  MODULES_ENABLED["Copilot"] <- FALSE
+}
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
@@ -338,6 +349,24 @@ opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
 opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
 opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+
+## Copilot tier selection — verify against the omicsagentovi registry
+if (is.null(opt$COPILOT_MODEL)) {
+  opt$COPILOT_MODEL <- "copilot-default"
+}
+if (requireNamespace("omicsagentovi", quietly = TRUE)) {
+  .valid_tiers <- omicsagentovi::ovi_copilot_tiers()
+  .bad_tiers <- setdiff(opt$COPILOT_MODEL, .valid_tiers)
+  if (length(.bad_tiers) > 0L) {
+    warning(sprintf(
+      "[global] COPILOT_MODEL has unknown tiers: %s. Valid: %s. Dropping unknown entries.",
+      paste(.bad_tiers, collapse = ", "), paste(.valid_tiers, collapse = ", ")
+    ))
+    opt$COPILOT_MODEL <- intersect(opt$COPILOT_MODEL, .valid_tiers)
+  }
+  if (length(opt$COPILOT_MODEL) == 0L) opt$COPILOT_MODEL <- "copilot-default"
+  rm(.valid_tiers, .bad_tiers)
+}
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")

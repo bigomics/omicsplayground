@@ -372,15 +372,7 @@ LoadingBoard <- function(id,
         ## Copying to pgx list to reactiveValues in
         ## session environment.
         info("[loading_server.R] copying pgx object to global environment")
-        empty.slots <- setdiff(names(pgx), names(loaded_pgx))
-        isolate({
-          for (e in empty.slots) {
-            pgx[[e]] <- NULL
-          }
-          for (i in 1:length(loaded_pgx)) {
-            pgx[[names(loaded_pgx)[i]]] <- loaded_pgx[[i]]
-          }
-        })
+        isolate(sync_rv_from_list(pgx, loaded_pgx))
       }) ## end of withProgress
 
       info("[loading_server.R] copying pgx done!")
