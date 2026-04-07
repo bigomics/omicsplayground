@@ -405,7 +405,6 @@ upload_module_normalization_server <- function(
         }
       }
 
-      ## missing values
       plot_missingvalues <- function() {
         X0 <- cleanX()$counts
         X1 <- imputedX()$X
@@ -421,7 +420,7 @@ upload_module_normalization_server <- function(
         if (!any(is.na(X0)) && !(zero_as_na() && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else {
+        } else { 
           ii <- which(is.na(X0))
           if (isolate(zero_as_na())) {
             ii <- which(is.na(X0) | X0 == 0)
@@ -603,7 +602,6 @@ upload_module_normalization_server <- function(
         }
       }
 
-      ## sample outlier scores
       plot_outliers <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Outlier detection requires at least 3 samples."))
         res <- results_outlier_methods()
@@ -621,14 +619,6 @@ upload_module_normalization_server <- function(
             )
           abline(h = z0, lty = 3, lwd = 1.5, col = "red")
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
-        }
-
-        if (plottype == "heatmap") {
-          par(mfrow = c(1, 2), mar = c(0, 3, 0, 1), mgp = c(2.1, 0.8, 0))
-          playbase::gx.heatmap(res$corX,
-            sym = TRUE, mar = c(1, 12), keysize = 0.4,
-            cexCol = 0.0001, scale = "none", key = FALSE
-          )
         }
       }
 
@@ -1035,8 +1025,8 @@ upload_module_normalization_server <- function(
                     shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#normalization' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                  ),
-                  shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
+                ),
+                 shiny::checkboxInput(ns("normalize"), label = "Normalize data", value = default_normalize),
                   shiny::conditionalPanel(
                     "input.normalize == true",
                     ns = ns,

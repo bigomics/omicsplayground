@@ -20,16 +20,12 @@ MofaInputs <- function(id) {
         shiny::tagList(
           shiny::selectInput(
             ns("kernel"), "Kernel",
-            choices = sort(c("DIABLO", "MOFA", "PCA", "MCIA", "WGCNA", "RGCCA")),
+            choices = sort(c("DIABLO", "MOFA", "PCA")),
             selected = "MOFA"
           ),
-          shiny::conditionalPanel(
-            "input.kernel != 'WGCNA'",
-            ns = ns,
-            shiny::selectInput(ns("numfactors"), "Number of factors",
-              choices = c(3, 5, 10, 15, 25),
-              selected = 10
-            ),
+          shiny::selectInput(ns("numfactors"), "Number of factors",
+            choices = c(3, 5, 10, 15, 25),
+            selected = 10
           ),
           shiny::checkboxInput(ns("add_gsets"), "Add gene set layers",
             value = FALSE

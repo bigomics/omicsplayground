@@ -54,7 +54,11 @@ correlation_plot_barplot_ui <- function(
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot",
+    palette_default = "default"
   )
 }
 
@@ -106,16 +110,63 @@ correlation_plot_barplot_server <- function(id,
       return(pd)
     })
 
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      series <- c("correlation", "partial correlation")
+      default_clrs <- c("#A6CEE3", "#1F78B4")
+      custom_palette_pickers(series, session$ns, default_colors = default_clrs)
+    })
+
+    ## Editor: rank list for custom bar ordering
+    output$rank_list <- shiny::renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      labels <- rownames(pd)
+      shiny::req(length(labels) > 0)
+      rank_list_ui(labels, session$ns)
+    })
+
     render_barplot <- function() {
       pd <- plot_data()
       shiny::req(pd)
 
-      playbase::pgx.stackedBarplot(
+      ## Editor: bar ordering
+      bars_order <- input$bars_order
+      if (!is.null(bars_order) && bars_order != "alphabetical") {
+        if (bars_order == "ascending") {
+          pd <- pd[order(pd[, 1]), , drop = FALSE]
+        } else if (bars_order == "descending") {
+          pd <- pd[order(-pd[, 1]), , drop = FALSE]
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          custom_order <- input$rank_list_basic
+          valid <- custom_order[custom_order %in% rownames(pd)]
+          if (length(valid) > 0) pd <- pd[valid, , drop = FALSE]
+        }
+      }
+
+      fig <- playbase::pgx.stackedBarplot(
         x = pd,
         ylab = "Correlation",
         xlab = "",
         showlegend = FALSE
       )
+
+      ## Editor: palette override
+      n_series <- 2
+      COL <- resolve_palette_colors(input, n_series)
+      if (!is.null(COL)) {
+        fig <- plotly::plotly_build(fig)
+        bar_idx <- 1
+        for (i in seq_along(fig$x$data)) {
+          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+            fig$x$data[[i]]$marker$color <- COL[bar_idx]
+            bar_idx <- min(bar_idx + 1, n_series)
+          }
+        }
+      }
+
+      fig
     }
 
     barplot.RENDER <- function() {
@@ -136,7 +187,8 @@ correlation_plot_barplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(63, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

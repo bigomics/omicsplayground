@@ -60,7 +60,10 @@ signature_plot_volcano_ui <- function(
     height = height,
     width = width,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
@@ -115,13 +118,21 @@ signature_plot_volcano_server <- function(id,
         sel.gene <- gsea$gset
       }
 
+      ## Click-to-label data (per-facet coordinates)
+      click_df <- data.frame(
+        x = as.vector(as.matrix(fc)),
+        y = as.vector(-log10(as.matrix(qv) + 1e-12)),
+        feature_name = rep(features, ncol(fc))
+      )
+
       pd <- list(
         fc = fc,
         qv = qv,
         features = features,
         symbols = symbols,
         gsea = gsea,
-        sel.gene = sel.gene
+        sel.gene = sel.gene,
+        df = click_df
       )
 
       return(pd)
@@ -170,7 +181,8 @@ signature_plot_volcano_server <- function(id,
         # Remove default titles
         title_y = "",
         title_x = "",
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = extract_volcano_colors(input)
       ) %>%
         plotly::layout(
           annotations = list(
@@ -240,39 +252,85 @@ signature_plot_volcano_server <- function(id,
         label <- head(label[order(-rr)], 10)
       }
 
-      pivot.fc <- data.frame(fc) %>%
+      ## Editor: custom labels
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = label)
+
+      highlight <- if (isTRUE(input$color_selection)) {
+        label_features
+      } else {
+        pd[["gsea"]]$gset
+      }
+      if (!is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      ## Editor: custom colors
+      plot_colors <- extract_volcano_colors(input)
+
+      ## Editor: label settings
+      ls <- extract_label_settings(input)
+
+      ## Editor: hyperbolic cutoff
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      ## Editor: ggprism settings
+      gp <- extract_ggprism_params(input)
+
+      pivot.fc <- data.frame(fc, check.names = FALSE) %>%
         tidyr::pivot_longer(
-          cols = everything(), # Select all columns to pivot
-          names_to = "facet", # Name of the new column for timepoints
+          cols = everything(),
+          names_to = "facet",
           values_to = "fc"
         )
-      pivot.qv <- data.frame(qv) %>%
+      pivot.qv <- data.frame(qv, check.names = FALSE) %>%
         tidyr::pivot_longer(
-          cols = everything(), # Select all columns to pivot
-          names_to = "facet", # Name of the new column for timepoints
+          cols = everything(),
+          names_to = "facet",
           values_to = "qv"
         )
       facet <- factor(pivot.fc$facet, levels = colnames(fc))
       x <- pivot.fc$fc
       y <- -log10(pivot.qv$qv + 1e-12)
 
-      playbase::ggVolcano(
+      p <- playbase::ggVolcano(
         x,
         y,
         gene_names,
         lfc = 1,
         psig = 0.05,
         facet = facet,
-        label = label,
-        highlight = pd[["gsea"]]$gset,
+        label = label_features,
+        highlight = highlight,
         label.names = label.names,
-        label.cex = 5,
+        label.cex = ls$label_size,
         xlab = "Effect size (log2FC)",
         ylab = "Significance (-log10p)",
-        marker.size = 1.2,
+        marker.size = ls$marker_size,
+        axis.text.size = ls$axis_text_size,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        colors = plot_colors,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_palette = gp$ggprism_palette,
+        ggprism_colors = gp$ggprism_colors,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
+
+      ## Editor: margins & aspect ratio
+      p <- apply_editor_theme(p, input)
+
+      p
     }
 
     plot_grid <- list(
@@ -286,12 +344,13 @@ signature_plot_volcano_server <- function(id,
         plotlib = x$plotlib,
         func = x$func,
         func2 = x$func2,
-        # csvFunc = plot_data_csv,
+        csvFunc = plot_data,
         res = c(80, 95), # resolution of plots
         pdf.width = 10,
         pdf.height = 6,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
   }) ## end of moduleServer

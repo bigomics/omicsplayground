@@ -51,7 +51,11 @@ enrichment_plot_freq_top_gsets_ui <- function(
     options = topEnrichedFreq.opts,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "csv", "svg")
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot",
+    palette_default = "default"
   )
 }
 
@@ -93,7 +97,8 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       )
     })
 
-    topEnrichedFreq.RENDER <- function(return_csv = FALSE) {
+    ## Compute bar matrix (used by render, custom_palette_ui, rank_list)
+    bar_matrix <- shiny::reactive({
       dt <- plot_data()
       shiny::req(dt)
       pgx <- dt[[1]]
@@ -134,21 +139,82 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       if (length(sel.zero)) F <- F[-sel.zero, , drop = FALSE]
       rownames(F) <- playbase::probe2symbol(rownames(F), pgx$genes, "gene_name", fill_na = TRUE)
 
-      if (return_csv) {
-        return(F)
+      list(F = F, wt = wt)
+    })
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      bm <- bar_matrix()
+      shiny::req(bm)
+      series <- colnames(bm$F)
+      shiny::req(length(series) > 0)
+      ## plotly default colorway as picker defaults
+      plotly_colors <- c(
+        "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A",
+        "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52",
+        "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A"
+      )
+      custom_palette_pickers(series, session$ns, plotly_colors)
+    })
+
+    ## Editor: rank list for custom bar ordering
+    output$rank_list <- shiny::renderUI({
+      bm <- bar_matrix()
+      shiny::req(bm)
+      labels <- rownames(bm$F)
+      shiny::req(length(labels) > 0)
+      rank_list_ui(labels, session$ns)
+    })
+
+    topEnrichedFreq.RENDER <- function() {
+      bm <- bar_matrix()
+      shiny::req(bm)
+      F <- bm$F
+      wt <- bm$wt
+
+      ## Editor: bar ordering
+      bars_order <- input$bars_order
+      if (!is.null(bars_order) && bars_order != "alphabetical") {
+        if (bars_order == "ascending") {
+          F <- F[order(rowSums(F)), , drop = FALSE]
+        } else if (bars_order == "descending") {
+          F <- F[order(-rowSums(F)), , drop = FALSE]
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          custom_order <- input$rank_list_basic
+          valid <- custom_order[custom_order %in% rownames(F)]
+          if (length(valid) > 0) F <- F[valid, , drop = FALSE]
+        }
       }
 
-      playbase::pgx.stackedBarplot(
+      fig <- playbase::pgx.stackedBarplot(
         x = F,
         ylab = ifelse(wt, "weighted frequency", "frequency"),
         xlab = tspan("genes", js = FALSE),
         showlegend = FALSE
       )
+
+      ## Editor: palette override
+      n_series <- ncol(F)
+      COL <- resolve_palette_colors(input, n_series)
+      if (!is.null(COL)) {
+        fig <- plotly::plotly_build(fig)
+        bar_idx <- 1
+        for (i in seq_along(fig$x$data)) {
+          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+            fig$x$data[[i]]$marker$color <- COL[bar_idx]
+            bar_idx <- min(bar_idx + 1, n_series)
+          }
+        }
+      }
+
+      fig
     }
 
     plot_data_csv <- function() {
-      df <- topEnrichedFreq.RENDER(return_csv = TRUE)
-      return(df)
+      bm <- bar_matrix()
+      shiny::req(bm)
+      return(bm$F)
     }
 
     PlotModuleServer(
@@ -159,7 +225,8 @@ enrichment_plot_freq_top_gsets_server <- function(id,
       pdf.height = 5,
       res = c(68, 100),
       csvFunc = plot_data_csv,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }
