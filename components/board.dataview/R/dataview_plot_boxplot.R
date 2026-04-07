@@ -22,7 +22,10 @@ dataview_plot_boxplot_ui <- function(
     caption = caption,
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "expression_barplot"
   )
 }
 
@@ -69,6 +72,12 @@ dataview_plot_boxplot_server <- function(id,
       )
     }
 
+    output$rank_list <- shiny::renderUI({
+      res <- plot_data()
+      shiny::req(res)
+      rank_list_ui(as.character(res$sample), session$ns)
+    })
+
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
@@ -89,13 +98,37 @@ dataview_plot_boxplot_server <- function(id,
       }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
+      long.df$sample <- as.character(long.df$sample)
+
+      bar_color <- get_editor_color(input, "scatter_color", "secondary")
+      fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
+      bars_order <- input$bars_order
+      samples <- res$sample
+
+      ## Apply sample ordering
+      if (!is.null(bars_order)) {
+        if (bars_order == "ascending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians))
+        } else if (bars_order == "descending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians, decreasing = TRUE))
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic) &&
+          all(input$rank_list_basic %in% res$sample)) {
+          samples <- input$rank_list_basic
+        }
+      }
+      long.df$sample <- factor(long.df$sample, levels = samples)
 
       ## boxplot
       fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
         y = "value",
-        yaxistitle = ylab
+        yaxistitle = ylab,
+        color = bar_color,
+        fillcolor = fill_color,
+        linecolor = bar_color
       ) %>%
         plotly_default()
 
@@ -119,7 +152,8 @@ dataview_plot_boxplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

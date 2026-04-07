@@ -17,6 +17,9 @@ app_server <- function(input, output, session) {
 
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
+  ## Initialise the global colour theme (in-session only)
+  init_color_theme()
+
   info("[SERVER] getwd = ", normalizePath(getwd()))
   info("[SERVER] SESSION = ", session$token)
 
