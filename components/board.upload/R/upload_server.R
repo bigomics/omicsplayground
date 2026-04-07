@@ -389,16 +389,8 @@ UploadBoard <- function(id,
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
             ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                MAXSAMPLES, "samples."
-              ),
-              type = "error"
-            )
+            # pop up telling user max sample reached (ui-alerts.R)
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "counts")
           }
           # Hard stop for scRNA-seq
           if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
@@ -469,12 +461,8 @@ UploadBoard <- function(id,
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
             ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
-            # pop up telling user max samples reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
-              type = "error"
-            )
+            # pop up telling user max samples reached (ui-alerts.R)
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "samples")
           }
         }
 
@@ -806,7 +794,7 @@ UploadBoard <- function(id,
         }
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         if (numpgx >= max.datasets) {
-          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+          shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
           return(NULL)
         }
         bigdash.selectTab(session, selected = "upload-tab")
@@ -826,7 +814,7 @@ UploadBoard <- function(id,
       }
       max.datasets <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
         return(NULL)
       }
 
