@@ -44,13 +44,7 @@ ai_report_controls_ui <- function(id) {
           choices = NULL,
           width = "100%"
         ),
-        shiny::radioButtons(
-          ns("summary_style"),
-          "Summary Style:",
-          choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
-          selected = "short_summary",
-          inline = FALSE
-        )
+
       )
     ),
 
@@ -76,7 +70,7 @@ ai_report_controls_ui <- function(id) {
 #' @param id Module namespace ID
 #' @param module_choices Reactive returning character vector of module names
 #'
-#' @return List with reactives: trigger, mode, summary_style, show_prompt, selected_module
+#' @return List with reactives: trigger, mode, show_prompt, selected_module
 ai_report_controls_server <- function(id, module_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
@@ -125,7 +119,6 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
     list(
       trigger = reactive(trigger()),
       mode = reactive(input$mode %||% "report"),
-      summary_style = reactive(input$summary_style),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),
       include_infographic = reactive(isTRUE(input$include_infographic)),

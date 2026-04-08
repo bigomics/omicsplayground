@@ -33,9 +33,7 @@ Focus on identifying:
 {{keygenes_section}}
 
 ## Output Instructions
-
-Always begin your summary with a heading in this exact format (maintain strict adherence):
-**{{module}} module** | Correlated phenotypes: {{phenotypes}}
+Always begin your summary with this heading: **{{module}} module**
 
 Then synthesize the above information to explain:
 - The primary biological function of this module

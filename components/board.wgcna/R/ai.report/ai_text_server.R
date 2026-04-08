@@ -52,7 +52,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       shiny::req(w, module)
       model <- get_ai_model(parent_session)
 
-      style <- controls$summary_style() %||% "short_summary"
+      style <- "short_summary"
       data_params <- wgcna_build_summary_params(w, module, pgx)
       organism <- pgx$organism %||% NULL
 
