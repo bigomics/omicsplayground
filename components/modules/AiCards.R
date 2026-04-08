@@ -40,10 +40,37 @@ IMAGE_MODEL_PROFILES <- list(
     label = "Gemini 3.1 Flash Image", group = "Google",
     env_var = "GEMINI_API_KEY"
   ),
-  "gemini-3.1-pro-image-preview" = list(
-    label = "Gemini 3.1 Pro Image", group = "Google",
+  "gemini-3-pro-image-preview" = list(
+    label = "Gemini 3 Pro Image", group = "Google",
     env_var = "GEMINI_API_KEY"
   )
+)
+
+# ── Token budgets per use case ──────────────────────────────────────
+# These are intentional per-use-case caps, not model limits. The budget
+# reflects "how much output this specific prompt type should be allowed
+# to produce," independent of which model is running. Three layers, three
+# concerns:
+#
+#   - Model capability (the hard ceiling)  -> omicsai's provider registry
+#   - Model UX label / env var / timeouts  -> LLM_MODEL_PROFILES above
+#   - Use-case intent (how long is this?)  -> AI_BUDGETS below
+#
+# Adding a new use case = add a row. Do not hard-code max_tokens at call
+# sites — read it from AI_BUDGETS so changing a budget is one diff hunk
+# instead of a grep across every board.
+#
+# Note on diagrams: omicsai_gen_diagram() currently bumps max_tokens to
+# 8192L internally for the structured-extraction call regardless of what
+# the diagram_config carries, so a `diagram` entry here would be ignored
+# at the wire today. Left out intentionally; revisit if/when omicsai
+# stops overriding the config-supplied limit.
+
+AI_BUDGETS <- list(
+  microsummary  = 1024L,    # short structured bullet extract (3-5 bullets)
+  short_summary = 2048L,    # 250-350 word summary card
+  long_summary  = 4096L,    # 500-600 word summary card
+  report        = 8192L     # full multi-section markdown report
 )
 
 # ── Mirai daemon for async image generation ────────────────────────
@@ -448,6 +475,10 @@ AiTextCardServer <- function(id,
       } else {
         format_instr
       }
+      # Apply use-case budget. The board's base_config doesn't know which
+      # style the user picked — we resolve that here, where selected_style
+      # is in scope. Falls back to short_summary for any unrecognised style.
+      config$max_tokens <- AI_BUDGETS[[selected_style]] %||% AI_BUDGETS$short_summary
 
       params$style <- selected_style
       rv$system_prompt <- config$system_prompt
@@ -756,19 +787,19 @@ AiImageCardServer <- function(id,
     )
 
     # ── ExtendedTask: runs omicsai_gen_image in a background mirai worker ──
-    image_task <- shiny::ExtendedTask$new(function(full_prompt, config_list, filename) {
+    # mirai uses base R serialization, which preserves S3 class attributes
+    # across the worker boundary — verified empirically against
+    # omicsai_image_config (a named list with class
+    # c("omicsai_image_config", "omicsai_config")). We pass the config
+    # object directly instead of decomposing it into a plain list, so the
+    # six-field hand-rolled serialization can no longer drift from the
+    # omicsai_image_config slot set when omicsai grows new slots (e.g. the
+    # `extra` slot added in omicsai 0.1.1).
+    image_task <- shiny::ExtendedTask$new(function(full_prompt, cfg, filename) {
       mirai::mirai(
         {
           tryCatch({
             options(omicsai_image_timeout_s = 90)  # fail fast, retry handles cold starts
-            cfg <- omicsai::omicsai_image_config(
-              model = config_list$model,
-              system_prompt = config_list$system_prompt,
-              style = config_list$style,
-              n_blocks = config_list$n_blocks,
-              aspect_ratio = config_list$aspect_ratio,
-              image_size = config_list$image_size
-            )
             omicsai::omicsai_gen_image(
               template = full_prompt,
               params = NULL,
@@ -778,7 +809,7 @@ AiImageCardServer <- function(id,
           }, error = function(e) e)
         },
         full_prompt = full_prompt,
-        config_list = config_list,
+        cfg = cfg,
         filename = filename
       )
     })
@@ -829,16 +860,8 @@ AiImageCardServer <- function(id,
         full_prompt
       }
 
-      # Serialize config as a plain list (S7/S3 objects don't survive mirai transport)
-      config_list <- list(
-        model = config$model,
-        system_prompt = config$system_prompt,
-        style = config$style,
-        n_blocks = config$n_blocks,
-        aspect_ratio = config$aspect_ratio,
-        image_size = config$image_size
-      )
-
+      # Pass the omicsai_image_config object straight through to the worker.
+      # mirai preserves S3 class attributes; no manual slot enumeration.
       filename <- tempfile(fileext = ".png")
       rv$generate_requested <- FALSE
       rv$status <- "running"
@@ -847,12 +870,12 @@ AiImageCardServer <- function(id,
       rv$attempt <- 1L
       rv$last_invoke_args <- list(
         full_prompt = full_prompt,
-        config_list = config_list,
+        cfg = config,
         filename = filename
       )
       message(sprintf("[INFO][%s] --- [AI-IMAGE] starting background generation (model: %s)",
-                      format(Sys.time(), "%Y-%m-%d %H:%M:%S"), config_list$model))
-      image_task$invoke(full_prompt, config_list, filename)
+                      format(Sys.time(), "%Y-%m-%d %H:%M:%S"), config$model))
+      image_task$invoke(full_prompt, config, filename)
     })
 
     # Collect result when background task completes
@@ -881,7 +904,7 @@ AiImageCardServer <- function(id,
           message(sprintf("[INFO][%s] --- [AI-IMAGE] retrying (attempt %d of 3)...",
                           format(Sys.time(), "%Y-%m-%d %H:%M:%S"), rv$attempt))
           args <- rv$last_invoke_args
-          image_task$invoke(args$full_prompt, args$config_list, args$filename)
+          image_task$invoke(args$full_prompt, args$cfg, args$filename)
         } else {
           rv$error <- "Image generation server seems overloaded. Please try again using the Generate! button in the Infographic card menu."
           rv$status <- "error"
@@ -1134,7 +1157,7 @@ MicrosummaryServer <- function(id,
         model = model,
         system_prompt = omicsai::omicsai_instructions("text/microsummary"),
         temperature = 0.3,
-        max_tokens = 1024L
+        max_tokens = AI_BUDGETS$microsummary
       )
 
       message("[microsummary] generating for tab '", tab, "'...")

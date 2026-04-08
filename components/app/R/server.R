@@ -204,6 +204,7 @@ app_server <- function(input, output, session) {
       shiny::req(input$enable_ai)
       if (isTRUE(input$enable_ai)) {
         dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
+        dbg("[MAIN] enable input$image_model -> ", input$image_model)
         setUserOption(session, "llm_model", input$llm_model)
         setUserOption(session, "image_model", input$image_model)
         #setUserOption(session, "enable_ai", TRUE)

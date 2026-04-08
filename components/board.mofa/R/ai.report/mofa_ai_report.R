@@ -223,7 +223,7 @@ mofa_ai_text_server <- function(id, mofa_reactive, pgx, controls, parent_session
       ## Use omicsai_gen_text (NOT gen_report — that would double-load text/report.md)
       progress$set(message = "Generating report...", value = 0.3)
 
-      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = AI_BUDGETS$report)
       cache <- omicsai::omicsai_cache_init("mem")
       result <- tryCatch(
         omicsai::omicsai_gen_text(bp$board, config = cfg, cache = cache),

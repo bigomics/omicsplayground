@@ -33,7 +33,7 @@ APACHE_COOKIE_PATH   = /app/omicsplayground/
 DEVMODE              = TRUE
 HUBSPOT_CHECK        = TRUE
 LLM_MODELS           = google:gemini-2.5-flash;groq:openai/gpt-oss-20b;groq:openai/gpt-oss-120b;xai:grok-4-1-fast-non-reasoning
-LLM_IMAGE_MODELS     = gemini-3.1-flash-image-preview;gemini-3.1-pro-image-preview
+LLM_IMAGE_MODELS     = gemini-3.1-flash-image-preview;gemini-3-pro-image-preview
 LLM_MAXTURNS         = 10
 PUBLIC_DATASETS_LABEL = Team Datasets
 

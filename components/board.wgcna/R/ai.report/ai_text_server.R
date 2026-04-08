@@ -151,7 +151,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       message(sprintf("[INFO][%s] --- [AI-REPORT] generating AI report (model: %s)...", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), model))
       if (!is.null(p)) p$set(message = "Generating AI report...", value = 0.20)
 
-      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = AI_BUDGETS$report)
       cache <- omicsai::omicsai_cache_init("mem")
       result <- tryCatch(
         omicsai::omicsai_gen_text(bp$board, config = cfg, cache = cache),

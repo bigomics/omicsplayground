@@ -101,7 +101,7 @@ multiwgcna_ai_text_server <- function(id, mwgcna, pgx, controls, parent_session)
       ))
 
       progress$set(message = "Generating AI report...", value = 0.25)
-      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = 8192L)
+      cfg <- omicsai::omicsai_config(model = model, system_prompt = bp$system, max_tokens = AI_BUDGETS$report)
       cache <- omicsai::omicsai_cache_init("mem")
       result <- tryCatch(
         omicsai::omicsai_gen_text(bp$board, config = cfg, cache = cache),
