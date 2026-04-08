@@ -797,7 +797,7 @@ upload_module_normalization_server <- function(
       plot_methyl <- function() {
         X <- playbase::mToBeta(normalizedX())
         if (input$methyl_plottype == "Density") {
-          par(mfrow = c(1, 1), mar = c(3.2, 3.2, 0.8, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
+          par(mfrow = c(1, 1), mar = c(3.3, 3.2, 0.8, 0.5), las = 1, mgp = c(2.1, 0.35, 0), tcl = -0.1)
           minfi::densityPlot(X, col = "gray60", xlab = "Beta signal", main = "", cex.lab = 1.4, cex.axis = 1.3)
           grid()
         } else if (input$methyl_plottype == "Beanplot") {
