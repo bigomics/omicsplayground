@@ -796,12 +796,11 @@ upload_module_normalization_server <- function(
 
       plot_methyl <- function() {
         X <- playbase::mToBeta(normalizedX())
-        if (input$methyl_plottype == "histogram") {
-          par(mfrow = c(1, 1), mar = c(3, 3.2, 0.8, 0.5), las = 1, mgp = c(1.8, 0.4, 0), tcl = -0.1)
-          hist(X, breaks = 100, col = "gray60", xlab = "Beta signal", ylab = "", main = "", cex.lab = 1.3)
-        } else if (input$methyl_plottype == "beanplot") {
-          # minfi::densityPlot(X, r_samples()[,1], main = "", xlab = "Beta signal", add = TRUE, legend = TRUE)
-          # grid()
+        if (input$methyl_plottype == "Density") {
+          par(mfrow = c(1, 1), mar = c(3.2, 3.2, 0.8, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
+          minfi::densityPlot(X, col = "gray60", xlab = "Beta signal", main = "", cex.lab = 1.4, cex.axis = 1.3)
+          grid()
+        } else if (input$methyl_plottype == "Beanplot") {
           par(mfrow = c(1, 1), mar = c(4.5, 3.3, 0.8, 0.5), las = 2, tcl = -0.1, mgp = c(2.2, 0.5, 0))
           x <- reshape2::melt(X, varnames = c("cpg", "sample"))
           ww <- c(0, 1, 1, 0)
@@ -941,7 +940,7 @@ upload_module_normalization_server <- function(
         batcheff.infotext <-
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
 
-        methyl.infotext <- "Histogram of beta values. Optionally, sample-specific beanplot of beta value distribution can be plotted."
+        methyl.infotext <- "Density plot of beta values. Optionally, sample-specific beanplot of beta value distribution can be plotted."
         
         missing.options <- tagList(
           shiny::radioButtons(ns("missing_plottype"), "Plot type:",
@@ -980,8 +979,8 @@ upload_module_normalization_server <- function(
           shiny::radioButtons(
             ns("methyl_plottype"),
             label = "Plot type:",
-            choices = c("histogram", "beanplot"),
-            selected = "histogram", inline = FALSE
+            choices = c("Density", "Beanplot"),
+            selected = "Density", inline = FALSE
           )
         )
         
