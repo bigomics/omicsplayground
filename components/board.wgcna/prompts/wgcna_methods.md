@@ -1,25 +1,16 @@
-## Methods
+## **Methods**
 
-Weighted gene co-expression network analysis (WGCNA) was performed on
-{{n_features_wgcna}} {{feature_type}} across {{n_samples}} samples using a
-{{network_type}} network with soft-thresholding power {{power}} and minimum
-module size {{min_mod_size}} (merge cut height: {{merge_cut_height}},
-minimum kME: {{min_kme}}), following the WGCNA framework (Langfelder & Horvath, 2008).
-The analysis identified {{n_modules}} co-expression modules (excluding the
-grey/unassigned bin of {{grey_size}} {{feature_type}}).
+WGCNA identified {{n_modules}} co-expression modules (excluding the grey/unassigned bin of {{grey_size}} {{feature_type}}).
+Module-trait correlations were computed using Pearson correlation between module eigengenes and each binary trait indicator.
+Pathway enrichment was tested against {{n_genesets_tested}} gene sets. Hub genes were ranked by module membership (MM).
+Module preservation analysis assessment follows the approach described in Langfelder et al. (2011).
 
-Module-trait correlations were computed using Pearson correlation between
-module eigengenes and binary trait indicators. Pathway enrichment was
-tested against {{n_genesets_tested}} gene sets. Hub genes were ranked by
-module membership (MM), defined as the correlation between a gene's
-expression profile and the module eigengene. Module preservation and
-reproducibility assessment follows the approach described in Langfelder et al. (2011).
+Module strength classification:
+strong: ≥10 significant enrichments at q < 0.05 & |trait r| > 0.7, ≥50 genes;
+moderate: 1-9 significant enrichments at q < 0.05;
+weak: no significant enrichment.
 
-Module signal strength was classified as strong (≥10 significant enrichments
-at q < 0.05, |trait r| > 0.7, ≥50 genes), moderate (1-9 significant
-enrichments at q < 0.05), or weak (no significant enrichment).
-
-### Compute Settings
+### **Compute Settings**
 
 | Parameter | Value |
 |-----------|-------|
@@ -32,11 +23,10 @@ enrichments at q < 0.05), or weak (no significant enrichment).
 | Samples | {{n_samples}} |
 | Gene sets tested | {{n_genesets_tested}} |
 
-### References
+## **Bibliography**
 
 - Langfelder P, Horvath S. WGCNA: an R package for weighted correlation network analysis. *BMC Bioinformatics*. 2008;9:559.
 - Langfelder P, Luo R, Oldham MC, Horvath S. Is my network module preserved and reproducible? *PLoS Computational Biology*. 2011;7(1):e1001057.
 - WGCNAplus R package: https://github.com/bigomics/WGCNAplus
 
-_This report was generated with OmicsPlayground (BigOmics, {{date}})._
-_Note: AI-generated interpretation may contain inaccuracies and must be independently verified._
+#### **Disclaimer**: AI-generated content. May contain inaccuracies. Independent verification advised.
