@@ -25,8 +25,8 @@ weak: no significant enrichment.
 
 ## **Bibliography**
 
+- https://omicsplayground.readthedocs.io/en/latest/methods/#weighted-gene-co-expression-network-analysis
 - Langfelder P, Horvath S. WGCNA: an R package for weighted correlation network analysis. *BMC Bioinformatics*. 2008;9:559.
 - Langfelder P, Luo R, Oldham MC, Horvath S. Is my network module preserved and reproducible? *PLoS Computational Biology*. 2011;7(1):e1001057.
-- WGCNAplus R package: https://github.com/bigomics/WGCNAplus
 
 #### **Disclaimer**: AI-generated content. May contain inaccuracies. Independent verification advised.
