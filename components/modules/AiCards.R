@@ -9,11 +9,11 @@
 # Only models whose API-key env var is set appear in the dropdown.
 
 LLM_MODEL_PROFILES <- list(
-  "google:gemini-2.5-flash" = list(
-    label = "Gemini 2.5 Flash", group = "Google",
-    env_var = "GEMINI_API_KEY",
-    defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 90L)
-  ),
+  ## "google:gemini-2.5-flash" = list(
+  ##   label = "Gemini 2.5 Flash", group = "Google",
+  ##   env_var = "GEMINI_API_KEY",
+  ##   defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 90L)
+  ## ),
   "groq:openai/gpt-oss-20b" = list(
     label = "GPT-oss 20B", group = "Groq",
     env_var = "GROQ_API_KEY",
@@ -24,11 +24,11 @@ LLM_MODEL_PROFILES <- list(
     env_var = "GROQ_API_KEY",
     defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 60L)
   ),
-  "xai:grok-4-1-fast-non-reasoning" = list(
-    label = "Grok 4 Fast", group = "xAI",
-    env_var = "XAI_API_KEY",
-    defaults = list(temperature = 0.5, max_tokens = 4096L, timeout_seconds = 60L)
-  )
+  ## "xai:grok-4-1-fast-non-reasoning" = list(
+  ##   label = "Grok 4 Fast", group = "xAI",
+  ##   env_var = "XAI_API_KEY",
+  ##   defaults = list(temperature = 0.5, max_tokens = 4096L, timeout_seconds = 60L)
+  ## )
 )
 
 # ── Image Model Profiles ─────────────────────────────────────────────
