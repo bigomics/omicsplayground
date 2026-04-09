@@ -135,6 +135,7 @@ wgcna_report_inputs <- function(id) {
     shiny::downloadButton(
       ns("downloadPDF"),
       label = "Download",
+      class = "btn-outline-primary",      
       style = "width: 100%;")
   )
 }
@@ -149,8 +150,7 @@ wgcna_html_report_server <- function(id,
     ns <- session$ns
     btn_count <- reactiveVal(0)
 
-    observe({
-      wgcna <- wgcna()
+    observeEvent( wgcna(), {
       btn_count(runif(1))
     })
 
@@ -161,17 +161,21 @@ wgcna_html_report_server <- function(id,
     get_report <- shiny::eventReactive({
       btn_count()
     } ,{
-
-      llm_model <- getUserOption(session,'llm_model')
-      if(is.null(llm_model) || llm_model == '') return(NULL)
-      
+      dbg("[wgcna_html_report_server:get_report] reacted!")
+            
       this_wgcna <- wgcna()
       if(btn_count() < 1) {
         rpt <- this_wgcna$report
         if(is.null(rpt)) return(NULL)
         dbg("*** found report in wgcna object")
         dbg("*** names.rpt = ", names(rpt))
-        ##return(rpt)
+        return(rpt)
+        ##return(NULL)
+      }
+
+      llm_model <- getUserOption(session,'llm_model')
+      if(is.null(llm_model) || llm_model == '') {
+        dbg("*** Error *** LLM not enabled")
         return(NULL)
       }
       
@@ -187,6 +191,7 @@ wgcna_html_report_server <- function(id,
       userprompt <- ifelse(is.null(input$userprompt),"",input$userprompt)
       topratio <- ifelse(is.null(input$topratio),0.85,input$topratio)
       
+      dbg("[wgcna_html_report_server:get_report] creating AI report...")
       rpt <- playbase::wgcna.create_report(
         this_wgcna,
         ai_model = llm_model,
@@ -295,9 +300,9 @@ wgcna_html_report_server <- function(id,
     ##----------------------------------------------------------------------
 
     diag_count <- reactiveVal(0)
-    
-    observe({
-      wgcna <- wgcna()
+
+    ## reset count on new data
+    observeEvent( wgcna(), {
       diag_count(runif(1))
     })
 
@@ -306,8 +311,14 @@ wgcna_html_report_server <- function(id,
     })
     
     get_diagram <- reactive({
+
       rpt <- get_report()
       shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
+
+      ## for the moment we need explicit user generate
+      #shiny::validate(shiny::need(diag_count() > 1, "Please generate diagram"))
+      shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
+      
       llm_model <- getUserOption(session,'llm_model')        
       this_wgcna <- wgcna()
       graph <- this_wgcna$graph
@@ -360,10 +371,15 @@ wgcna_html_report_server <- function(id,
 
     # Store and trigger the generated image path
     infographic_path <- reactiveVal(NULL)
+    
+    ## reset infographic upon new data
+    observeEvent( wgcna(), {
+      infographic_path(NULL)
+    })
 
     infographic_info <- function(msg) {
       outfile <- tempfile(fileext = '.png')
-      png(outfile,w=1600,h=800)
+      png(outfile, w=1600, h=800)
       plot.new()
       text(0.5,0.5, msg, cex=2.5)
       dev.off()
@@ -392,7 +408,10 @@ wgcna_html_report_server <- function(id,
       c(input$generate_infographic, get_report())
     }, {
       rpt <- get_report()      
-      if(is.null(rpt)) return(NULL)
+      if(is.null(rpt)) {
+        infographic_path(NULL)        
+        return(NULL)
+      }
       has.model <- length(input$img_model)>0 && input$img_model[1]!=""
       shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
       report <- rpt$report
@@ -400,6 +419,7 @@ wgcna_html_report_server <- function(id,
       if(!input$use_diagram) diagram <- NULL
       model <- input$img_model
       dbg("start infographic task...")
+      shinyjs::disable("downloadPDF")      
       infographic_task$invoke(report, diagram, model)
     })
     
@@ -425,6 +445,7 @@ wgcna_html_report_server <- function(id,
     infographic.RENDER <- function() {
       shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
       # Return a list containing the filename
+      shinyjs::enable("downloadPDF")
       list(src = infographic_path(),
         width = "100%",
         height = "100%",
