@@ -23,7 +23,7 @@ LLM_MODEL_PROFILES <- list(
     label = "GPT-oss 120B", group = "Groq",
     env_var = "GROQ_API_KEY",
     defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 60L)
-  ),
+  )
   ## "xai:grok-4-1-fast-non-reasoning" = list(
   ##   label = "Grok 4 Fast", group = "xAI",
   ##   env_var = "XAI_API_KEY",
