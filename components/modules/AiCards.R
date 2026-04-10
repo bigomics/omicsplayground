@@ -36,10 +36,10 @@ LLM_MODEL_PROFILES <- list(
 # etc/OPTIONS LLM_IMAGE_MODELS selects which to offer.
 
 IMAGE_MODEL_PROFILES <- list(
-  "gemini-3.1-flash-image-preview" = list(
-    label = "Gemini 3.1 Flash Image", group = "Google",
-    env_var = "GEMINI_API_KEY"
-  ),
+  ## "gemini-3.1-flash-image-preview" = list(
+  ##   label = "Gemini 3.1 Flash Image", group = "Google",
+  ##   env_var = "GEMINI_API_KEY"
+  ## ),
   "gemini-3-pro-image-preview" = list(
     label = "Gemini 3 Pro Image", group = "Google",
     env_var = "GEMINI_API_KEY"
