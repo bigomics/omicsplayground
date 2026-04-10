@@ -48,16 +48,11 @@ ai_report_controls_ui <- function(id) {
       )
     ),
 
-    # Infographic toggle: always visible in sidebar
-    shiny::checkboxInput(
-      ns("include_infographic"),
-      "Include infographic",
-      value = FALSE
-    )
     ## NOTE: "Show Prompt" checkbox is rendered in the text card's hamburger
     ## menu (see ai_report_ui.R). Infographic style/blocks controls are rendered
     ## in the image card's hamburger menu. All are namespaced to this controls
     ## module so input$* is read here.
+    ## Infographics are always computed (no toggle needed).
   )
 }
 
@@ -121,7 +116,7 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
       mode = reactive(input$mode %||% "report"),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),
-      include_infographic = reactive(isTRUE(input$include_infographic)),
+      include_infographic = reactive(TRUE),
       image_style = reactive(input$image_style %||% "bigomics"),
       image_blocks = reactive(input$image_blocks %||% "1")
     )
