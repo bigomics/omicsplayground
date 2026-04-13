@@ -126,7 +126,7 @@ dataview_plot_correlation_server <- function(id,
       rank_list_ui(gene_labels, session$ns)
     })
 
-    plotly_render <- function() {
+    plot_df_prepared <- function() {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -157,17 +157,19 @@ dataview_plot_correlation_server <- function(id,
       }
 
       df$genes <- factor(df$genes, levels = unique(df$genes))
+      df
+    }
 
+    plotly_render <- function(df) {
       ay <- list(overlaying = "y", side = "right", title = "")
 
-      ## plot as regular bar plot
       plotly::plot_ly(
         data = df,
         x = ~genes,
         y = ~rho,
         type = "bar",
         marker = list(
-          color = ~color # ,
+          color = ~color
         ),
         hovertemplate = ~annot
       ) %>%
@@ -189,20 +191,54 @@ dataview_plot_correlation_server <- function(id,
         )
     }
 
+    ggplot_render <- function(df, gp) {
+      p <- playbase::pgx.barplot.GGPLOT(
+        data = df, x = "genes", y = "rho", grouped = FALSE,
+        fillcolor = df$color,
+        yaxistitle = "Correlation (rho)"
+      )
+      p <- apply_ggprism_fill(p, gp)
+      p <- apply_ggprism_theme(p, gp, x_angle = 90)
+      p <- apply_editor_theme(p, input)
+      ggplot_as_plotly_image(p)
+    }
+
     plotly.RENDER <- function() {
-      plotly_render() %>%
-        plotly::layout(
-          xaxis = list(tickfont = list(size = 10))
-        ) %>%
-        plotly_default()
+      df <- plot_df_prepared()
+      shiny::req(df)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        fig <- ggplot_render(df, gp)
+      } else {
+        fig <- plotly_render(df) %>%
+          plotly::layout(
+            xaxis = list(tickfont = list(size = 10))
+          ) %>%
+          plotly_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+      fig
     }
 
     modal_plotly.RENDER <- function() {
-      plotly_render() %>%
-        plotly::layout(
-          xaxis = list(tickfont = list(size = 18))
-        ) %>%
-        plotly_modal_default()
+      df <- plot_df_prepared()
+      shiny::req(df)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        fig <- ggplot_render(df, gp)
+      } else {
+        fig <- plotly_render(df) %>%
+          plotly::layout(
+            xaxis = list(tickfont = list(size = 18))
+          ) %>%
+          plotly_modal_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+      fig
     }
 
     plot_data_csv <- function() {

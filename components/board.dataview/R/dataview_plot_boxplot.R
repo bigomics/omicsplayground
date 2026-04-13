@@ -120,18 +120,37 @@ dataview_plot_boxplot_server <- function(id,
       }
       long.df$sample <- factor(long.df$sample, levels = samples)
 
-      ## boxplot
-      fig <- playbase::pgx.boxplot.PLOTLY(
-        data = long.df,
-        x = "sample",
-        y = "value",
-        yaxistitle = ylab,
-        color = bar_color,
-        fillcolor = fill_color,
-        linecolor = bar_color
-      ) %>%
-        plotly_default()
+      gp <- extract_ggprism_params(input)
 
+      if (gp$use_ggprism) {
+        ## --- ggplot2 + ggprism path ---
+        p <- playbase::pgx.boxplot.GGPLOT(
+          data = long.df, x = "sample", y = "value",
+          yaxistitle = ylab,
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color
+        )
+        p <- apply_ggprism_fill(p, gp)
+        p <- apply_ggprism_theme(p, gp, x_angle = 90)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
+      } else {
+        ## --- existing plotly path ---
+        fig <- playbase::pgx.boxplot.PLOTLY(
+          data = long.df,
+          x = "sample",
+          y = "value",
+          yaxistitle = ylab,
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color
+        ) %>%
+          plotly_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
     }
 

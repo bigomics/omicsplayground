@@ -327,6 +327,76 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 shiny::uiOutput(ns_parent("rank_list"))
               )
             )
+          ),
+          # Aspect Ratio
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          # ggprism Theme
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              selectInput(
+                ns_parent("ggprism_palette"),
+                "Theme palette",
+                choices = c(
+                  "Black & White" = "black_and_white",
+                  "Colorblind Safe" = "colorblind_safe",
+                  "Office" = "office",
+                  "Floral" = "floral",
+                  "Earth Tones" = "earth_tones",
+                  "Pearl" = "pearl",
+                  "Muted Rainbow" = "muted_rainbow",
+                  "Candy Bright" = "candy_bright",
+                  "Prism Dark" = "prism_dark",
+                  "Prism Light" = "prism_light",
+                  "Winter Soft" = "winter_soft",
+                  "Starry" = "starry",
+                  "Viridis" = "viridis",
+                  "Plasma" = "plasma",
+                  "Inferno" = "inferno",
+                  "Magma" = "magma"
+                ),
+                selected = "black_and_white"
+              ),
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
           )
         ),
         shiny::div(
@@ -498,6 +568,115 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               selected = ct$palette
             ),
             shiny::uiOutput(ns_parent("custom_palette_ui"))
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
+  # Clustering scatterplot + Prism Theme panel (for PCA and phenoplot only)
+  clustering_prism_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::selectInput(
+              ns_parent("palette"), "Color palette",
+              choices = c(
+                "default", "muted_light", "light", "dark",
+                "super_light", "super_dark", "muted", "expanded",
+                "highlight_blue", "highlight_red", "highlight_orange",
+                "custom", "custom_gradient"
+              ),
+              selected = ct$palette
+            ),
+            shiny::uiOutput(ns_parent("custom_palette_ui"))
+          ),
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 1.0, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              selectInput(
+                ns_parent("ggprism_palette"),
+                "Theme palette",
+                choices = c(
+                  "Black & White" = "black_and_white",
+                  "Colorblind Safe" = "colorblind_safe",
+                  "Office" = "office",
+                  "Floral" = "floral",
+                  "Earth Tones" = "earth_tones",
+                  "Pearl" = "pearl",
+                  "Muted Rainbow" = "muted_rainbow",
+                  "Candy Bright" = "candy_bright",
+                  "Prism Dark" = "prism_dark",
+                  "Prism Light" = "prism_light",
+                  "Winter Soft" = "winter_soft",
+                  "Starry" = "starry",
+                  "Viridis" = "viridis",
+                  "Plasma" = "plasma",
+                  "Inferno" = "inferno",
+                  "Magma" = "magma"
+                ),
+                selected = "black_and_white"
+              ),
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
           )
         ),
         shiny::div(
@@ -836,6 +1015,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "featuremap" = featuremap_content,
     "enrichment" = enrichment_content,
     "clustering" = clustering_content,
+    "clustering_prism" = clustering_prism_content,
     "grouped_barplot" = grouped_barplot_content,
     "gradient" = gradient_content,
     "significance" = significance_content,

@@ -146,6 +146,43 @@ apply_editor_theme <- function(p, input,
 
 
 ## ---------------------------------------------------------------
+## 3b. Aspect ratio (plotly)
+## ---------------------------------------------------------------
+
+#' Apply editor aspect-ratio to a plotly figure.
+#'
+#' Uses JavaScript to dynamically resize the plotly figure based on
+#' the container width and the requested aspect ratio, so the result
+#' is responsive.
+#'
+#' @param fig   A plotly figure object.
+#' @param input Shiny input list.
+#' @param aspect_ratio_default Default aspect ratio (default 0.8).
+#' @return The (possibly modified) plotly figure.
+apply_plotly_editor_theme <- function(fig, input,
+                                      aspect_ratio_default = 0.8) {
+  if (!isTRUE(input$aspect_ratio_checkbox)) return(fig)
+  ar <- if (is.null(input$aspect_ratio) || is.na(input$aspect_ratio)) {
+    aspect_ratio_default
+  } else {
+    input$aspect_ratio
+  }
+  htmlwidgets::onRender(fig, sprintf("
+    function(el) {
+      var w = el.offsetWidth;
+      if (w > 0) {
+        var desired = Math.round(w * %f);
+        var container = el.closest('.popup-plot') || el.parentElement;
+        var maxH = container ? container.clientHeight : window.innerHeight * 0.8;
+        var h = Math.min(desired, maxH);
+        Plotly.relayout(el, {height: h, width: Math.round(h / %f)});
+      }
+    }
+  ", ar, ar))
+}
+
+
+## ---------------------------------------------------------------
 ## 4. ggprism settings extraction
 ## ---------------------------------------------------------------
 
@@ -168,6 +205,254 @@ extract_ggprism_params <- function(input) {
     ggprism_legend_y      = if (is.null(input$ggprism_legend_y) || is.na(input$ggprism_legend_y)) 0.95 else input$ggprism_legend_y,
     ggprism_legend_border = isTRUE(input$ggprism_legend_border)
   )
+}
+
+
+## ---------------------------------------------------------------
+## 4b. ggprism theme application (reusable for any ggplot)
+## ---------------------------------------------------------------
+
+#' Apply ggprism theme settings to a ggplot object.
+#'
+#' Takes a ggplot and the params list from \code{extract_ggprism_params()}
+#' and applies theme_prism, axis guides, and legend positioning.
+#'
+#' @param p  A ggplot2 plot object.
+#' @param gp Named list from \code{extract_ggprism_params()}.
+#' @param base_size Base font size for theme_prism (default 14).
+#' @return The (possibly modified) ggplot2 plot object.
+apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
+                                x_angle = NULL) {
+  if (!isTRUE(gp$use_ggprism)) return(p)
+
+  theme_palette <- if (isTRUE(gp$ggprism_colors)) gp$ggprism_palette else "black_and_white"
+
+  p <- p +
+    ggprism::theme_prism(
+      palette = theme_palette,
+      base_size = base_size,
+      base_family = base_family,
+      border = gp$ggprism_border
+    )
+
+  if (isTRUE(gp$ggprism_border)) {
+    p <- p + ggplot2::theme(
+      panel.border = ggplot2::element_rect(fill = NA, colour = "black", linewidth = 1)
+    )
+  }
+
+  if (!is.null(x_angle)) {
+    p <- p + ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = x_angle, hjust = 1, vjust = 0.5)
+    )
+  }
+
+  ## Axis guides -- minor-tick guides (prism_minor, prism_offset_minor)
+  ## require a continuous scale and crash on discrete/categorical x-axes
+  ## with "Cannot create zero-length unit vector".  Apply them to y only;
+  ## for x fall back to the safe offset guide.
+  if (gp$ggprism_axis_guide == "prism_minor") {
+    p <- p + ggplot2::guides(
+      y = ggprism::guide_prism_minor()
+    )
+  } else if (gp$ggprism_axis_guide == "prism_offset") {
+    p <- p + ggplot2::guides(
+      x = ggprism::guide_prism_offset(),
+      y = ggprism::guide_prism_offset()
+    )
+  } else if (gp$ggprism_axis_guide == "prism_offset_minor") {
+    p <- p + ggplot2::guides(
+      x = ggprism::guide_prism_offset(),
+      y = ggprism::guide_prism_offset_minor()
+    )
+  }
+
+  ## Legend positioning
+  if (isTRUE(gp$ggprism_show_legend)) {
+    just_x <- if (gp$ggprism_legend_x > 0.5) 1 else 0
+    just_y <- if (gp$ggprism_legend_y > 0.5) 1 else 0
+
+    legend_bg <- if (isTRUE(gp$ggprism_legend_border)) {
+      ggplot2::element_rect(fill = "white", colour = "black", linewidth = 0.5)
+    } else {
+      ggplot2::element_rect(fill = "white", colour = NA)
+    }
+
+    p <- p + ggplot2::theme(
+      legend.position = "inside",
+      legend.position.inside = c(gp$ggprism_legend_x, gp$ggprism_legend_y),
+      legend.justification = c(just_x, just_y),
+      legend.title = ggplot2::element_blank(),
+      legend.background = legend_bg
+    )
+  }
+
+  p
+}
+
+
+#' Apply ggprism fill and colour scales to a ggplot.
+#'
+#' When \code{ggprism_colors} is enabled in the editor, replaces the
+#' fill and colour scales with prism palette equivalents.
+#'
+#' @param p  A ggplot2 plot object.
+#' @param gp Named list from \code{extract_ggprism_params()}.
+#' @return The (possibly modified) ggplot2 plot object.
+apply_ggprism_fill <- function(p, gp) {
+  if (!isTRUE(gp$ggprism_colors)) return(p)
+
+  x_mapping <- p$mapping$x
+  if (!is.null(x_mapping)) {
+    p <- p + ggplot2::aes(fill = !!x_mapping)
+  }
+
+  suppressMessages(
+    p <- p +
+      ggprism::scale_fill_prism(palette = gp$ggprism_palette) +
+      ggprism::scale_colour_prism(palette = gp$ggprism_palette) +
+      ggplot2::guides(fill = "none")
+  )
+  p
+}
+
+
+## ---------------------------------------------------------------
+## 4c. Render ggplot as static image inside a plotly container
+## ---------------------------------------------------------------
+
+#' Render a ggplot2 plot as a static PNG image embedded in a plotly figure.
+#'
+#' Avoids \code{ggplotly()} conversion so that ggprism styling is
+#' preserved pixel-perfectly.  The result is a plotly object that
+#' displays the rasterised ggplot as a layout image.
+#'
+#' @param p  A ggplot2 plot object.
+#' @param width  Image width in inches.  Default 8.
+#' @param height Image height in inches. Default 5.
+#' @param dpi    Resolution.  Default 400.
+#' @return A plotly object suitable for \code{renderPlotly}.
+ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
+  tmpfile <- tempfile(fileext = ".png")
+  on.exit(unlink(tmpfile), add = TRUE)
+  ggplot2::ggsave(tmpfile, p, width = width, height = height, dpi = dpi, bg = "white")
+  encoded <- base64enc::base64encode(tmpfile)
+  src <- paste0("data:image/png;base64,", encoded)
+
+  plotly::plot_ly(type = "scatter", mode = "markers",
+                  x = 0, y = 0, marker = list(opacity = 0),
+                  hoverinfo = "none", showlegend = FALSE) %>%
+    plotly::layout(
+      images = list(list(
+        source = src,
+        xref = "paper", yref = "paper",
+        x = 0, y = 1,
+        sizex = 1, sizey = 1,
+        xanchor = "left", yanchor = "top",
+        layer = "below"
+      )),
+      xaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+                    range = c(0, 1), fixedrange = TRUE),
+      yaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+                    range = c(0, 1), fixedrange = TRUE),
+      margin = list(l = 0, r = 0, t = 0, b = 0),
+      plot_bgcolor = "white",
+      paper_bgcolor = "white"
+    ) %>%
+    plotly::config(displayModeBar = FALSE)
+}
+
+
+## ---------------------------------------------------------------
+## 4d. Prism-style plotly layout (no ggplot2 needed)
+## ---------------------------------------------------------------
+
+#' Apply prism-style layout to a plotly figure.
+#'
+#' Translates ggprism visual settings into plotly layout properties:
+#' clean white background, optional border, tick styles, legend
+#' positioning, and optional prism palette bar colors.
+#'
+#' @param fig A plotly figure object.
+#' @param gp  Named list from \code{extract_ggprism_params()}.
+#' @return The (possibly modified) plotly figure.
+apply_prism_plotly <- function(fig, gp) {
+  if (!isTRUE(gp$use_ggprism)) return(fig)
+
+  ## --- Base theme: clean white background, outside ticks ---
+  axis_base <- list(
+    showgrid = FALSE,
+    zeroline = FALSE,
+    ticks = "outside",
+    showline = TRUE,
+    linecolor = "#000000",
+    linewidth = 1
+  )
+
+  ## --- Border: mirror axes on all four sides ---
+  if (isTRUE(gp$ggprism_border)) {
+    axis_base$mirror <- TRUE
+  }
+
+  ## --- Axis guide styles ---
+  guide <- gp$ggprism_axis_guide
+  if (guide == "prism_minor") {
+    axis_base$minor <- list(ticks = "outside", showgrid = FALSE)
+  } else if (guide == "prism_offset") {
+    ## Offset: axis line doesn't extend to the plot edge
+    axis_base$showline <- TRUE
+    axis_base$mirror <- FALSE
+  } else if (guide == "prism_offset_minor") {
+    axis_base$showline <- TRUE
+    axis_base$mirror <- FALSE
+    axis_base$minor <- list(ticks = "outside", showgrid = FALSE)
+  }
+
+  ## --- Legend ---
+  legend_cfg <- list(visible = FALSE)
+  if (isTRUE(gp$ggprism_show_legend)) {
+    legend_cfg <- list(
+      visible = TRUE,
+      x = gp$ggprism_legend_x,
+      y = gp$ggprism_legend_y,
+      xanchor = if (gp$ggprism_legend_x > 0.5) "right" else "left",
+      yanchor = if (gp$ggprism_legend_y > 0.5) "top" else "bottom",
+      bgcolor = "rgba(255,255,255,0.9)",
+      bordercolor = if (isTRUE(gp$ggprism_legend_border)) "#000000" else "rgba(0,0,0,0)",
+      borderwidth = if (isTRUE(gp$ggprism_legend_border)) 1 else 0
+    )
+  }
+
+  fig <- plotly::layout(
+    fig,
+    plot_bgcolor = "#FFFFFF",
+    paper_bgcolor = "#FFFFFF",
+    xaxis = axis_base,
+    yaxis = axis_base,
+    legend = legend_cfg,
+    font = list(family = "Arial, Helvetica, sans-serif", color = "#000000")
+  )
+
+  ## --- Prism palette colors applied to bar traces ---
+  if (isTRUE(gp$ggprism_colors)) {
+    prism_cols <- tryCatch(
+      ggprism::prism_colour_pal(palette = gp$ggprism_palette)(8),
+      error = function(e) NULL
+    )
+    if (!is.null(prism_cols)) {
+      fig <- plotly::plotly_build(fig)
+      ci <- 1
+      for (i in seq_along(fig$x$data)) {
+        tr <- fig$x$data[[i]]
+        if (!is.null(tr$type) && tr$type == "bar") {
+          fig$x$data[[i]]$marker$color <- prism_cols[(ci - 1) %% length(prism_cols) + 1]
+          ci <- ci + 1
+        }
+      }
+    }
+  }
+
+  fig
 }
 
 

@@ -115,43 +115,61 @@ dataview_plot_totalcounts_server <- function(id,
       }
       df$sample <- factor(df$sample, levels = as.character(df$sample))
 
-      if (is_total) {
-        fig <-
-          plotly::plot_ly(
-            data = df, x = ~sample, y = ~counts, type = "bar",
-            marker = list(color = bar_color),
-            hovertemplate = ~ paste0(
-              "Sample: <b>", sample, "</b><br>",
-              res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
-              "<extra></extra>"
-            )
-          ) %>%
-          plotly_default() %>%
-          plotly::layout(
-            xaxis = list(title = FALSE),
-            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
-            margin = list(l = 30, r = 0, t = 0, b = 0)
-          )
-        fig
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        ## --- ggplot2 + ggprism path ---
+        p <- playbase::pgx.barplot.GGPLOT(
+          data = df, x = "sample", y = ycol, grouped = FALSE,
+          fillcolor = bar_color,
+          yaxistitle = res$ylab
+        )
+        p <- apply_ggprism_fill(p, gp)
+        p <- apply_ggprism_theme(p, gp, x_angle = 90)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
       } else {
-        fig <-
-          plotly::plot_ly(
-            data = df, x = ~sample, y = ~ndetectedfeat, type = "bar",
-            marker = list(color = bar_color),
-            hovertemplate = ~ paste0(
-              "Sample: <b>", sample, "</b><br>",
-              res$ylab, ": <b>", sprintf("%8.0f", ndetectedfeat), "</b>",
-              "<extra></extra>"
+        ## --- existing plotly path ---
+        if (is_total) {
+          fig <-
+            plotly::plot_ly(
+              data = df, x = ~sample, y = ~counts, type = "bar",
+              marker = list(color = bar_color),
+              hovertemplate = ~ paste0(
+                "Sample: <b>", sample, "</b><br>",
+                res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+                "<extra></extra>"
+              )
+            ) %>%
+            plotly_default() %>%
+            plotly::layout(
+              xaxis = list(title = FALSE),
+              yaxis = list(title = list(text = res$ylab, standoff = 25L)),
+              margin = list(l = 30, r = 0, t = 0, b = 0)
             )
-          ) %>%
-          plotly_default() %>%
-          plotly::layout(
-            xaxis = list(title = FALSE),
-            yaxis = list(title = list(text = res$ylab, standoff = 25L)),
-            margin = list(l = 30, r = 0, t = 0, b = 0)
-          )
-        fig
+        } else {
+          fig <-
+            plotly::plot_ly(
+              data = df, x = ~sample, y = ~ndetectedfeat, type = "bar",
+              marker = list(color = bar_color),
+              hovertemplate = ~ paste0(
+                "Sample: <b>", sample, "</b><br>",
+                res$ylab, ": <b>", sprintf("%8.0f", ndetectedfeat), "</b>",
+                "<extra></extra>"
+              )
+            ) %>%
+            plotly_default() %>%
+            plotly::layout(
+              xaxis = list(title = FALSE),
+              yaxis = list(title = list(text = res$ylab, standoff = 25L)),
+              margin = list(l = 30, r = 0, t = 0, b = 0)
+            )
+        }
+        fig <- apply_prism_plotly(fig, gp)
       }
+
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+      fig
     }
 
     modal_plotly.RENDER <- function() {

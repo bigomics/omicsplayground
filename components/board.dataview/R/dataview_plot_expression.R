@@ -139,6 +139,8 @@ dataview_plot_expression_server <- function(id,
         }
       }
 
+      gp <- extract_ggprism_params(input)
+
       if (pd$groupby != "<ungrouped>") {
         nnchar <- nchar(paste(unique(df$group), collapse = ""))
         srt <- ifelse(nnchar < 20, 0, 35)
@@ -167,46 +169,91 @@ dataview_plot_expression_server <- function(id,
         points.color <- points.color[match(df$samples, names(points.color))]
         df$points.color <- unname(points.color)
 
-        if (pd$geneplot_type == "barplot") {
-          fig <- plotly::plot_ly(
-            data = data, x = ~group, y = ~mean, type = "bar",
-            name = pd$gene, error_y = ~ list(array = sd, color = "#000000"),
-            marker = list(color = input$scatter_color)
-          )
-          fig <- fig %>% plotly::add_markers(
-            x = df$group, y = df$x,
-            type = "scatter", showlegend = FALSE,
-            marker = list(color = ~points.color, size = 8)
-          )
-          fig
-        } else if (pd$geneplot_type == "violin") {
-          fig <- df %>%
-            plotly::plot_ly(
-              x = ~group, y = ~x, split = ~group, type = "violin",
-              box = list(visible = TRUE), meanline = list(visible = TRUE),
-              points = FALSE, x0 = "", color = ~group,
-              colors = omics_pal_d()(length(unique(df$group)))
+        if (gp$use_ggprism) {
+          ## --- ggplot2 + ggprism path (grouped) ---
+          if (pd$geneplot_type == "barplot") {
+            p <- playbase::pgx.barplot.GGPLOT(
+              data = df, x = "group", y = "x", grouped = TRUE,
+              fillcolor = input$scatter_color,
+              yaxistitle = pd$ylab,
+              show_points = TRUE,
+              point_colors = df$points.color
             )
-          fig <- fig %>%
-            plotly::add_trace(
-              data = df, x = ~group, y = ~x,
+          } else if (pd$geneplot_type == "violin") {
+            violin_color <- adjustcolor(input$scatter_color, alpha.f = 0.35)
+            p <- playbase::plot_ggviolin(
+              x = df$group, y = df$x, add.dots = TRUE,
+              ylab = pd$ylab, col = violin_color
+            )
+          } else {
+            bar_color <- input$scatter_color
+            fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
+            p <- playbase::pgx.boxplot.GGPLOT(
+              data = df, x = "group", y = "x",
+              fillcolor = fill_color, linecolor = bar_color,
+              yaxistitle = pd$ylab
+            ) +
+              ggplot2::geom_jitter(
+                width = 0.15, size = 2,
+                color = df$points.color
+              )
+          }
+          p <- apply_ggprism_fill(p, gp)
+          p <- apply_ggprism_theme(p, gp, x_angle = 90)
+          p <- apply_editor_theme(p, input)
+          fig <- ggplot_as_plotly_image(p)
+        } else {
+          ## --- existing plotly path (grouped) ---
+          if (pd$geneplot_type == "barplot") {
+            fig <- plotly::plot_ly(
+              data = data, x = ~group, y = ~mean, type = "bar",
+              name = pd$gene, error_y = ~ list(array = sd, color = "#000000"),
+              marker = list(color = input$scatter_color)
+            )
+            fig <- fig %>% plotly::add_markers(
+              x = df$group, y = df$x,
+              type = "scatter", showlegend = FALSE,
+              marker = list(color = ~points.color, size = 8)
+            )
+            fig
+          } else if (pd$geneplot_type == "violin") {
+            fig <- df %>%
+              plotly::plot_ly(
+                x = ~group, y = ~x, split = ~group, type = "violin",
+                box = list(visible = TRUE), meanline = list(visible = TRUE),
+                points = FALSE, x0 = "", color = ~group,
+                colors = omics_pal_d()(length(unique(df$group)))
+              )
+            fig <- fig %>%
+              plotly::add_trace(
+                data = df, x = ~group, y = ~x,
+                type = "scatter", mode = "markers",
+                marker = list(color = ~points.color, size = 8),
+                showlegend = FALSE, inherit = FALSE
+              ) %>%
+              plotly::layout(yaxis = list(zeroline = FALSE))
+          } else {
+            fig <- plotly::plot_ly(df, y = ~x, x = ~group, type = "box", boxpoints = FALSE)
+            fig <- fig %>% plotly::add_trace(
+              data = df, y = ~x, x = ~group,
               type = "scatter", mode = "markers",
               marker = list(color = ~points.color, size = 8),
-              showlegend = FALSE, inherit = FALSE
+              showlegend = FALSE
+            )
+          }
+
+          fig <- fig %>%
+            plotly::layout(
+              xaxis = list(title = "", fixedrange = TRUE),
+              yaxis = list(title = pd$ylab, fixedrange = TRUE),
+              font = list(family = "Lato"),
+              showlegend = FALSE
             ) %>%
-            plotly::layout(yaxis = list(zeroline = FALSE))
-        } else {
-          ## boxplot
-          fig <- plotly::plot_ly(df, y = ~x, x = ~group, type = "box", boxpoints = FALSE)
-          fig <- fig %>% plotly::add_trace(
-            data = df, y = ~x, x = ~group,
-            type = "scatter", mode = "markers",
-            marker = list(color = ~points.color, size = 8),
-            showlegend = FALSE
-          )
+            plotly_default()
+          fig <- apply_prism_plotly(fig, gp)
         }
       } else {
-        ## plot as regular bar plot
+        ## --- ungrouped ---
         if (!is.null(input$bars_order)) {
           if (input$bars_order == "ascending") {
             df <- df[order(df$x), ]
@@ -221,24 +268,42 @@ dataview_plot_expression_server <- function(id,
         }
 
         points.color[which(points.color == "black")] <- input$scatter_color
-        fig <- plotly::plot_ly(
-          df,
-          x = ~samples, y = ~x,
-          type = "bar", name = pd$gene,
-          marker = list(color = points.color),
-          hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
-        )
-        pd$groupby <- ""
+
+        if (gp$use_ggprism) {
+          ## --- ggplot2 + ggprism path (ungrouped) ---
+          p <- playbase::pgx.barplot.GGPLOT(
+            data = df, x = "samples", y = "x", grouped = FALSE,
+            fillcolor = points.color,
+            yaxistitle = pd$ylab
+          )
+          p <- apply_ggprism_fill(p, gp)
+          p <- apply_ggprism_theme(p, gp, x_angle = 90)
+          p <- apply_editor_theme(p, input)
+          fig <- ggplot_as_plotly_image(p)
+        } else {
+          ## --- existing plotly path (ungrouped) ---
+          fig <- plotly::plot_ly(
+            df,
+            x = ~samples, y = ~x,
+            type = "bar", name = pd$gene,
+            marker = list(color = points.color),
+            hovertemplate = "<b>Sample: </b>%{x}<br><b>%{yaxis.title.text}:</b> %{y:.2f}<extra></extra>"
+          )
+          pd$groupby <- ""
+
+          fig <- fig %>%
+            plotly::layout(
+              xaxis = list(title = "", fixedrange = TRUE),
+              yaxis = list(title = pd$ylab, fixedrange = TRUE),
+              font = list(family = "Lato"),
+              showlegend = FALSE
+            ) %>%
+            plotly_default()
+          fig <- apply_prism_plotly(fig, gp)
+        }
       }
 
-      fig <- fig %>%
-        plotly::layout(
-          xaxis = list(title = "", fixedrange = TRUE),
-          yaxis = list(title = pd$ylab, fixedrange = TRUE),
-          font = list(family = "Lato"),
-          showlegend = FALSE
-        ) %>%
-        plotly_default()
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
     }
 
