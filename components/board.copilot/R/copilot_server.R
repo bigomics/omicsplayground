@@ -188,8 +188,25 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     evidence <- copilot_panel_evidence_server("evidence", local_pgx = local_pgx)
 
     ## --- Plot callback for evidence panel ---
+    ## Builds a plot record and appends it to the evidence history
+    ## instead of replacing a single plot.
     plot_callback <- function(pgx, plot_type, args) {
-      evidence$update_plot(copilot_build_plot(pgx, plot_type, args))
+      plot_obj <- copilot_build_plot(pgx, plot_type, args)
+      kind <- copilot_detect_plot_kind(plot_obj)
+      if (is.null(kind)) {
+        stop("Unsupported plot object for evidence panel.", call. = FALSE)
+      }
+      label <- gsub("_", " ", plot_type)
+      label <- paste0(toupper(substring(label, 1, 1)), substring(label, 2))
+      record <- list(
+        plot      = plot_obj,
+        kind      = kind,
+        plot_type = plot_type,
+        args      = args,
+        timestamp = Sys.time(),
+        label     = label
+      )
+      evidence$append_plot(record)
     }
 
     ## --- Greeting (shown once before any dataset) ---
@@ -226,7 +243,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         copilot(agent_wrapper)
         active_dataset_name(dataset_name)
         n_turns(0)
-        evidence$clear_plot()
+        evidence$clear_plots()
         evidence$clear_table()
         shinychat::chat_clear("chat")
         shinychat::chat_append("chat", omicsai::omicsai_substitute_template(
@@ -335,33 +352,42 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       }
 
       busy(TRUE)
-      on.exit(busy(FALSE), add = TRUE)
 
-      failed <- FALSE
-      response <- tryCatch(
-        agent_wrapper$prompt(question),
-        error = function(e) {
-          failed <<- TRUE
-          info("[CopilotBoard] prompt failed: ", conditionMessage(e))
-          paste("Copilot error:", conditionMessage(e))
-        }
-      )
+      ## Async path: stream_async returns a coro generator of Content objects.
+      ## shinychat::chat_append drives the generator via later(), yielding
+      ## each ContentText / ContentToolRequest / ContentToolResult to the
+      ## browser as it arrives — no manual callbacks needed.
+      tryCatch({
+        stream <- agent_wrapper$stream_async(question)
+        result <- shinychat::chat_append("chat", stream)
 
-      shinychat::chat_append("chat", response)
-      if (!failed) {
-        n_turns(n_turns() + 1)
-        tryCatch({
-          omicsagentovi::session_save(chat_store, agent_wrapper$agent)
-          info("[CopilotBoard] saved session turns=", n_turns())
-          tryCatch(
-            copilot_prune_sessions(chat_store),
-            error = function(e) info("[CopilotBoard] prune failed: ", conditionMessage(e))
-          )
-          history_refresh(history_refresh() + 1L)
-        }, error = function(e) {
-          info("[CopilotBoard] session_save failed: ", conditionMessage(e))
+        promises::then(result,
+          onFulfilled = function(value) {
+            n_turns(n_turns() + 1)
+            tryCatch({
+              omicsagentovi::session_save(chat_store, agent_wrapper$agent)
+              info("[CopilotBoard] saved session turns=", n_turns())
+              tryCatch(
+                copilot_prune_sessions(chat_store),
+                error = function(e) info("[CopilotBoard] prune failed: ", conditionMessage(e))
+              )
+              history_refresh(history_refresh() + 1L)
+            }, error = function(e) {
+              info("[CopilotBoard] session_save failed: ", conditionMessage(e))
+            })
+          },
+          onRejected = function(err) {
+            info("[CopilotBoard] prompt failed: ", conditionMessage(err))
+            shinychat::chat_append("chat", paste("Copilot error:", conditionMessage(err)))
+          }
+        ) |> promises::finally(function() {
+          busy(FALSE)
         })
-      }
+      }, error = function(e) {
+        info("[CopilotBoard] stream_async failed: ", conditionMessage(e))
+        shinychat::chat_append("chat", paste("Copilot error:", conditionMessage(e)))
+        busy(FALSE)
+      })
     }
 
     ## --- User chat input ---
@@ -397,7 +423,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         copilot(agent_wrapper)
       }
       n_turns(0)
-      evidence$clear_plot()
+      evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")
       shinychat::chat_append("chat",
@@ -435,7 +461,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         active_dataset_name(NULL)
       }
       n_turns(0)
-      evidence$clear_plot()
+      evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")
       shinychat::chat_append("chat", "New conversation started. Ask me anything about your data!")
@@ -470,6 +496,12 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       restored_agent <- restored
       wrapper <- list(
         prompt = function(text) omicsagentovi::agent_prompt(restored_agent, text),
+        prompt_stream = function(text, on_event = NULL) {
+          omicsagentovi::agent_prompt_stream(restored_agent, text, on_event = on_event)
+        },
+        stream_async = function(text) {
+          omicsagentovi::agent_prompt_async(restored_agent, text)
+        },
         agent = restored_agent,
         tier = current_tier(),
         set_pgx = function(new_pgx) {
@@ -482,7 +514,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       on.exit(restoring(FALSE), add = TRUE)
 
       copilot(wrapper)
-      evidence$clear_plot()
+      evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")
 

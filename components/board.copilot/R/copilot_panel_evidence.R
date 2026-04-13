@@ -1,6 +1,9 @@
 #' Evidence Panel Sub-module
 #'
-#' Right panel: dataset context + plot + table slots for agent output
+#' Right panel: dataset context + plot + table slots for agent output.
+#' The main plot viewer uses PlotModuleUI/PlotModuleServer for consistent
+#' download and enlarge behavior.  Plot history is kept in-memory for the
+#' current session and exposed as a compact carousel strip.
 
 copilot_panel_evidence_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -20,15 +23,60 @@ copilot_panel_evidence_ui <- function(id) {
       )
     ),
 
-    ## Plot card
+    ## Plot card — three PlotModuleUI instances, one per plotlib kind.
+    ## Only the instance matching the active plot kind is visible.
     shiny::conditionalPanel(
       condition = paste0("output['", ns("has_plot"), "']"),
-      bslib::card(
+      shiny::conditionalPanel(
+        condition = paste0("output['", ns("is_ggplot_active"), "']"),
+        PlotModuleUI(
+          ns("evidence_ggplot"),
+          plotlib = "ggplot",
+          height = c(350, 700),
+          caption = "Evidence Plot",
+          info.text = "Copilot-generated evidence plot",
+          download.fmt = c("png", "pdf"),
+          translate = FALSE
+        )
+      ),
+      shiny::conditionalPanel(
+        condition = paste0("output['", ns("is_plotly_active"), "']"),
+        PlotModuleUI(
+          ns("evidence_plotly"),
+          plotlib = "plotly",
+          height = c(350, 700),
+          caption = "Evidence Plot",
+          info.text = "Copilot-generated evidence plot",
+          download.fmt = c("png", "pdf"),
+          translate = FALSE
+        )
+      ),
+      shiny::conditionalPanel(
+        condition = paste0("output['", ns("is_iheatmapr_active"), "']"),
+        PlotModuleUI(
+          ns("evidence_iheatmapr"),
+          plotlib = "iheatmapr",
+          height = c(350, 700),
+          caption = "Evidence Plot",
+          info.text = "Copilot-generated evidence plot",
+          download.fmt = c("png"),
+          translate = FALSE
+        )
+      )
+    ),
+
+    ## Plot history carousel — visible only when 2+ plots in history
+    shiny::conditionalPanel(
+      condition = paste0("output['", ns("has_history"), "']"),
+      shiny::div(
         class = "mb-2",
-        bslib::card_header("Plot", class = "py-1 px-2"),
-        bslib::card_body(
-          class = "p-1",
-          shiny::uiOutput(ns("plot_container"))
+        shiny::div(
+          class = "d-flex align-items-center mb-1",
+          shiny::tags$small(class = "text-muted fw-bold", "Plot History")
+        ),
+        shiny::div(
+          style = "overflow-x: auto; white-space: nowrap; padding: 4px 0;",
+          shiny::uiOutput(ns("plot_carousel"))
         )
       )
     ),
@@ -60,30 +108,50 @@ copilot_panel_evidence_ui <- function(id) {
 }
 
 copilot_detect_plot_kind <- function(plot_obj) {
-  if (inherits(plot_obj, "plotly")) {
-    return("plotly")
-  }
-
-  if (inherits(plot_obj, "iheatmapr")) {
-    return("iheatmapr")
-  }
-
-  if (inherits(plot_obj, "ggplot")) {
-    return("ggplot")
-  }
-
+  if (inherits(plot_obj, "plotly")) return("plotly")
+  if (inherits(plot_obj, "iheatmapr")) return("iheatmapr")
+  if (inherits(plot_obj, "ggplot")) return("ggplot")
   NULL
 }
 
 copilot_panel_evidence_server <- function(id, local_pgx = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    plot_obj <- shiny::reactiveVal(NULL)
-    plot_kind <- shiny::reactiveVal(NULL)
+    ns <- session$ns
+
+    ## --- Plot history state ---
+    plot_history <- shiny::reactiveVal(list())
+    active_plot_idx <- shiny::reactiveVal(NULL)
+
+    active_record <- shiny::reactive({
+      idx <- active_plot_idx()
+      hist <- plot_history()
+      if (is.null(idx) || idx < 1L || idx > length(hist)) return(NULL)
+      hist[[idx]]
+    })
+
+    active_kind <- shiny::reactive({
+      rec <- active_record()
+      if (is.null(rec)) return(NULL)
+      rec$kind
+    })
+
     table_data <- shiny::reactiveVal(NULL)
 
-    ## Conditional panel flags
-    output$has_plot <- shiny::reactive({ !is.null(plot_obj()) })
+    ## --- Conditional panel flags ---
+    output$has_plot <- shiny::reactive({ !is.null(active_record()) })
     shiny::outputOptions(output, "has_plot", suspendWhenHidden = FALSE)
+
+    output$is_ggplot_active <- shiny::reactive({ identical(active_kind(), "ggplot") })
+    shiny::outputOptions(output, "is_ggplot_active", suspendWhenHidden = FALSE)
+
+    output$is_plotly_active <- shiny::reactive({ identical(active_kind(), "plotly") })
+    shiny::outputOptions(output, "is_plotly_active", suspendWhenHidden = FALSE)
+
+    output$is_iheatmapr_active <- shiny::reactive({ identical(active_kind(), "iheatmapr") })
+    shiny::outputOptions(output, "is_iheatmapr_active", suspendWhenHidden = FALSE)
+
+    output$has_history <- shiny::reactive({ length(plot_history()) > 1L })
+    shiny::outputOptions(output, "has_history", suspendWhenHidden = FALSE)
 
     output$has_table <- shiny::reactive({ !is.null(table_data()) })
     shiny::outputOptions(output, "has_table", suspendWhenHidden = FALSE)
@@ -93,52 +161,95 @@ copilot_panel_evidence_server <- function(id, local_pgx = NULL) {
     })
     shiny::outputOptions(output, "has_dataset", suspendWhenHidden = FALSE)
 
-    output$plot_container <- shiny::renderUI({
-      kind <- plot_kind()
-      shiny::validate(shiny::need(!is.null(kind), "No plot available yet."))
+    ## --- PlotModuleServer instances (one per plotlib) ---
+    PlotModuleServer(
+      "evidence_ggplot",
+      plotlib = "ggplot",
+      func = function() {
+        rec <- active_record()
+        shiny::validate(shiny::need(
+          !is.null(rec) && identical(rec$kind, "ggplot"), ""
+        ))
+        rec$plot
+      },
+      pdf.width = 8,
+      pdf.height = 6
+    )
 
-      if (identical(kind, "plotly")) {
-        return(plotly::plotlyOutput(session$ns("evidence_plotly"), height = "400px"))
+    PlotModuleServer(
+      "evidence_plotly",
+      plotlib = "plotly",
+      func = function() {
+        rec <- active_record()
+        shiny::validate(shiny::need(
+          !is.null(rec) && identical(rec$kind, "plotly"), ""
+        ))
+        rec$plot
+      },
+      pdf.width = 8,
+      pdf.height = 6
+    )
+
+    PlotModuleServer(
+      "evidence_iheatmapr",
+      plotlib = "iheatmapr",
+      func = function() {
+        rec <- active_record()
+        shiny::validate(shiny::need(
+          !is.null(rec) && identical(rec$kind, "iheatmapr"), ""
+        ))
+        rec$plot
       }
+    )
 
-      if (identical(kind, "iheatmapr")) {
-        return(iheatmapr::iheatmaprOutput(session$ns("evidence_iheatmap"), height = "400px"))
+    ## --- Carousel rendering ---
+    output$plot_carousel <- shiny::renderUI({
+      hist <- plot_history()
+      if (length(hist) <= 1L) return(NULL)
+      idx <- active_plot_idx()
+
+      items <- lapply(seq_along(hist), function(i) {
+        rec <- hist[[i]]
+        is_active <- identical(i, idx)
+        border_style <- if (is_active) "border-color: #0d6efd;" else "border-color: #dee2e6;"
+        bg_style <- if (is_active) "background: rgba(13,110,253,0.08);" else "background: #f8f9fa;"
+        time_label <- format(rec$timestamp, "%H:%M")
+
+        shiny::tags$div(
+          style = paste0(
+            "display: inline-block; cursor: pointer; padding: 4px 10px;",
+            "margin-right: 4px; border-radius: 6px; border: 2px solid;",
+            "min-width: 70px; text-align: center; vertical-align: top;",
+            border_style, bg_style
+          ),
+          onclick = sprintf(
+            "Shiny.setInputValue('%s', %d, {priority: 'event'})",
+            ns("select_plot"), i
+          ),
+          shiny::tags$div(
+            style = "font-size: 0.75em; font-weight: 600;",
+            rec$label
+          ),
+          shiny::tags$div(
+            style = "font-size: 0.65em; color: #888;",
+            time_label
+          )
+        )
+      })
+
+      shiny::tagList(items)
+    })
+
+    ## --- Carousel click handler ---
+    shiny::observeEvent(input$select_plot, {
+      idx <- input$select_plot
+      hist <- plot_history()
+      if (!is.null(idx) && idx >= 1L && idx <= length(hist)) {
+        active_plot_idx(idx)
       }
-
-      shiny::plotOutput(session$ns("evidence_plot"), height = "400px")
     })
 
-    output$evidence_plot <- shiny::renderPlot({
-      shiny::validate(shiny::need(
-        identical(plot_kind(), "ggplot"),
-        "This plot cannot be shown in the ggplot renderer."
-      ))
-      plot_value <- plot_obj()
-      shiny::validate(shiny::need(!is.null(plot_value), "No plot available yet."))
-      print(plot_value)
-    })
-
-    output$evidence_plotly <- plotly::renderPlotly({
-      shiny::validate(shiny::need(
-        identical(plot_kind(), "plotly"),
-        "This plot cannot be shown in the plotly renderer."
-      ))
-      plot_value <- plot_obj()
-      shiny::validate(shiny::need(!is.null(plot_value), "No plot available yet."))
-      plot_value
-    })
-
-    output$evidence_iheatmap <- iheatmapr::renderIheatmap({
-      shiny::validate(shiny::need(
-        identical(plot_kind(), "iheatmapr"),
-        "This plot cannot be shown in the iheatmap renderer."
-      ))
-      plot_value <- plot_obj()
-      shiny::validate(shiny::need(!is.null(plot_value), "No plot available yet."))
-      plot_value
-    })
-
-    ## Table output
+    ## --- Table output ---
     output$evidence_table <- DT::renderDataTable({
       df <- table_data()
       shiny::validate(shiny::need(!is.null(df), "No results to display yet."))
@@ -160,7 +271,6 @@ copilot_panel_evidence_server <- function(id, local_pgx = NULL) {
       n_genes <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
       organism <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
 
-      ## Get contrasts
       contrasts <- "none"
       if (!is.null(pgx$contrasts)) {
         ct <- colnames(pgx$contrasts)
@@ -180,19 +290,17 @@ copilot_panel_evidence_server <- function(id, local_pgx = NULL) {
       )
     })
 
-    ## Return update functions for the server to call
+    ## --- Return API for copilot_server.R ---
     list(
-      update_plot = function(value) {
-        kind <- copilot_detect_plot_kind(value)
-        if (is.null(kind)) {
-          stop("Unsupported plot object for evidence panel.", call. = FALSE)
-        }
-        plot_obj(value)
-        plot_kind(kind)
+      append_plot = function(record) {
+        hist <- plot_history()
+        hist[[length(hist) + 1L]] <- record
+        plot_history(hist)
+        active_plot_idx(length(hist))
       },
-      clear_plot = function() {
-        plot_obj(NULL)
-        plot_kind(NULL)
+      clear_plots = function() {
+        plot_history(list())
+        active_plot_idx(NULL)
       },
       update_table = function(df) { table_data(df) },
       clear_table = function() { table_data(NULL) }

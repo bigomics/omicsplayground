@@ -54,6 +54,12 @@ copilot_create_agent <- function(pgx = NULL, plot_callback = NULL,
     prompt = function(text) {
       omicsagentovi::agent_prompt(agent, text)
     },
+    prompt_stream = function(text, on_event = NULL) {
+      omicsagentovi::agent_prompt_stream(agent, text, on_event = on_event)
+    },
+    stream_async = function(text) {
+      omicsagentovi::agent_prompt_async(agent, text)
+    },
     agent = agent,
     tier = tier,
     set_pgx = function(new_pgx) {
