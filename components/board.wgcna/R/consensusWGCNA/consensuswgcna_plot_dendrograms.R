@@ -62,7 +62,7 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
       mytrees <- c(0, names(cons$layers))
       shiny::req(input$clusterby %in% mytrees)
 
-      playbase::wgcna.plotDendroAndTraitCorrelation(
+      playbase::wgcna.plotDendroAndColors(      
         cons,
         main = "",
         show.traits = input$showtraits,

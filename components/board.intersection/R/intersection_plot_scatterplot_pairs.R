@@ -43,7 +43,10 @@ intersection_scatterplot_pairs_ui <- function(
     options = scatterplot_pairs.opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "significance"
   )
 }
 
@@ -83,7 +86,27 @@ intersection_scatterplot_pairs_server <- function(id,
       cm <- intersect(rownames(df), rownames(qv))
       df <- df[cm, , drop = FALSE]
       qv <- qv[cm, , drop = FALSE]
-      list(df, qv, sel.genes)
+
+      ## Click-to-label data
+      if (ncol(df) == 2) {
+        click_df <- data.frame(
+          x = df[, 1], y = df[, 2],
+          feature_name = rownames(df)
+        )
+      } else {
+        ## All pairwise combinations as facets
+        pairs <- combn(colnames(df), 2)
+        click_dfs <- lapply(seq_len(ncol(pairs)), function(i) {
+          data.frame(
+            x = df[, pairs[1, i]],
+            y = df[, pairs[2, i]],
+            feature_name = rownames(df)
+          )
+        })
+        click_df <- do.call(rbind, click_dfs)
+      }
+
+      list(df, qv, sel.genes, df = click_df)
     })
 
     scatterPlotMatrix.PLOT <- function() {
@@ -93,16 +116,31 @@ intersection_scatterplot_pairs_server <- function(id,
       sel.genes <- data[[3]]
       shiny::req(sel.genes)
 
+      ## Editor: significance colors
+      clr_ns <- get_editor_color(input, "color_ns", omics_colors("grey"))
+      clr_both <- get_editor_color(input, "color_both", omics_colors("green"))
+      clr_one <- get_editor_color(input, "color_one", omics_colors("orange"))
+
       is.sel <- (rownames(df) %in% sel.genes)
-      df.color <- rep(omics_colors("grey"), nrow(df))
+      df.color <- rep(clr_ns, nrow(df))
       ## if (input$splom_highlight)
       ##  df.color <- c("#CCCCCC22", omics_colors("grey"))[1 + is.sel]
 
-      ## Labels for top 50
-      label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
-      label.text <- sub(".*[:]", "", label.text)
-      label.text <- playbase::probe2symbol(label.text, pgx$genes, "gene_name", fill_na = TRUE)
-      label.text <- playbase::shortstring(label.text, 30)
+      ## Labels for top 50 (or custom from editor)
+      custom_genes <- get_custom_labels(input, rownames(df))
+      if (!is.null(custom_genes)) {
+        ## match custom genes to rownames (by symbol or rowname)
+        all_symbols <- playbase::probe2symbol(rownames(df), pgx$genes, "gene_name", fill_na = TRUE)
+        idx <- which(rownames(df) %in% custom_genes | all_symbols %in% custom_genes)
+        label.text0 <- rownames(df)[idx]
+        label.text <- all_symbols[idx]
+        label.text <- playbase::shortstring(label.text, 30)
+      } else {
+        label.text <- label.text0 <- head(rownames(df)[which(is.sel)], 50)
+        label.text <- sub(".*[:]", "", label.text)
+        label.text <- playbase::probe2symbol(label.text, pgx$genes, "gene_name", fill_na = TRUE)
+        label.text <- playbase::shortstring(label.text, 30)
+      }
       if (sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
 
       ## reorder so the selected genes don't get overlapped
@@ -135,16 +173,25 @@ intersection_scatterplot_pairs_server <- function(id,
         sig.fc <- apply(df, 1, function(x) sum(abs(x) >= 1) == 2)
         sig.qv <- apply(qv, 1, function(x) sum(x <= 0.05) == 2)
         jj <- which(sig.fc & sig.qv)
-        if (any(jj)) df.color1[jj] <- omics_colors("green")
+        if (any(jj)) df.color1[jj] <- clr_both
 
         jj1 <- abs(df[, 1]) >= 1 & qv[, 1] <= 0.05
         jj2 <- abs(df[, 2]) >= 1 & qv[, 2] <= 0.05
         jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
-        if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
+        if (any(jj3)) df.color1[jj3] <- clr_one
+
+        ## color just selected: dim non-labeled points
+        if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+          is.labeled <- rownames(df) %in% label.text0
+          df.color1[!is.labeled] <- "#DDDDDD"
+        }
 
         ## make non-selected genes transparent
         opacity <- rep(1, nrow(df))
-        if (sum(is.sel) > 0) {
+        if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+          is.labeled <- rownames(df) %in% label.text0
+          opacity[!is.labeled] <- 0.15
+        } else if (sum(is.sel) > 0) {
           no.sel <- !rownames(df) %in% sel.genes
           opacity[no.sel] <- 0.1
         }
@@ -247,16 +294,25 @@ intersection_scatterplot_pairs_server <- function(id,
           sig.fc <- apply(df1, 1, function(x) sum(abs(x) >= 1) == 2)
           sig.qv <- apply(qv1, 1, function(x) sum(x <= 0.05) == 2)
           jj <- which(sig.fc & sig.qv)
-          if (any(jj)) df.color1[jj] <- omics_colors("green")
+          if (any(jj)) df.color1[jj] <- clr_both
 
           jj1 <- abs(df1[, 1]) >= 1 & qv1[, 1] <= 0.05
           jj2 <- abs(df1[, 2]) >= 1 & qv1[, 2] <= 0.05
           jj3 <- unique(c(which(jj1 & !jj2), which(!jj1 & jj2)))
-          if (any(jj3)) df.color1[jj3] <- omics_colors("orange")
+          if (any(jj3)) df.color1[jj3] <- clr_one
+
+          ## color just selected: dim non-labeled points
+          if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+            is.labeled <- rownames(df) %in% label.text0
+            df.color1[!is.labeled] <- "#DDDDDD"
+          }
 
           ## make non-selected genes transparent
           opacity <- rep(1, nrow(df))
-          if (sum(is.sel) > 0) {
+          if (isTRUE(input$color_selection) && length(label.text0) > 0) {
+            is.labeled <- rownames(df) %in% label.text0
+            opacity[!is.labeled] <- 0.15
+          } else if (sum(is.sel) > 0) {
             no.sel <- !rownames(df) %in% sel.genes
             opacity[no.sel] <- 0.1
           }
@@ -277,6 +333,7 @@ intersection_scatterplot_pairs_server <- function(id,
           p <- plotly::plot_ly(
             data = df1, x = df1[, c1], y = df1[, c2],
             type = "scattergl", mode = "markers",
+            key = rownames(df1),
             marker = list(
               color = df.color1, size = 8 * scale_factor, opacity = opacity,
               line = list(width = 0.3, color = "rgb(0,0,0)")
@@ -355,7 +412,8 @@ intersection_scatterplot_pairs_server <- function(id,
       csvFunc = plot_data,
       res = 95,
       pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

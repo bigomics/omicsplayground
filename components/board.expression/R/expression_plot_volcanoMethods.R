@@ -46,7 +46,10 @@ expression_plot_volcanoMethods_ui <- function(
     height = height,
     width = width,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
@@ -80,6 +83,16 @@ expression_plot_volcanoMethods_server <- function(id,
       mx.names <- pgx$genes[mx.features, "gene_title"]
       label.names <- playbase::probe2symbol(mx.features, pgx$genes, labeltype(), fill_na = TRUE)
 
+      ## Position data for click-to-label (all methods, so nearest-neighbor
+      ## matches the actual plotted point regardless of which facet is clicked)
+      fc_cols <- mx[, "fc", drop = FALSE]
+      q_cols <- mx[, "q", drop = FALSE]
+      click_df <- data.frame(
+        x = as.vector(as.matrix(fc_cols)),
+        y = as.vector(-log10(pmax(as.matrix(q_cols), 1e-99))),
+        feature_name = rep(mx.features, ncol(fc_cols))
+      )
+
       pd <- list(
         mx = mx,
         pgx = pgx,
@@ -91,7 +104,8 @@ expression_plot_volcanoMethods_server <- function(id,
         names = mx.names,
         symbols = mx.symbols,
         features = mx.features,
-        label.names = label.names
+        label.names = label.names,
+        df = click_df
       )
 
       return(pd)
@@ -142,6 +156,7 @@ expression_plot_volcanoMethods_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
+        colors = extract_volcano_colors(input),
         by_sig = FALSE,
         pval_cap = pval_cap
       )
@@ -197,7 +212,27 @@ expression_plot_volcanoMethods_server <- function(id,
       pval_cap <- pval_cap()
       y <- -log10(y + pval_cap)
 
-      playbase::ggVolcano(
+      ## Editor: custom labels
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = lab.genes)
+
+      highlight <- if (isTRUE(input$color_selection)) {
+        label_features
+      } else {
+        sel.genes
+      }
+      if (!is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      ## Editor: extract settings via helpers
+      plot_colors <- extract_volcano_colors(input)
+      ls <- extract_label_settings(input, defaults = list(label_size = label.cex))
+      gp <- extract_ggprism_params(input)
+
+      ## Editor: hyperbolic cutoff settings
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      p <- playbase::ggVolcano(
         x = x,
         y = y,
         psig = fdr,
@@ -205,15 +240,37 @@ expression_plot_volcanoMethods_server <- function(id,
         facet = facet,
         names = gene_names,
         label.names = label.names,
-        highlight = sel.genes,
-        label = lab.genes,
-        marker.size = 1.2,
-        label.cex = label.cex,
+        highlight = highlight,
+        label = label_features,
+        marker.size = ls$marker_size,
+        label.cex = ls$label_size,
         ylab = "Significance (-log10q)",
         xlab = "Effect size (log2FC)",
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        axis.text.size = ls$axis_text_size,
+        colors = plot_colors,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_palette = gp$ggprism_palette,
+        ggprism_colors = gp$ggprism_colors,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
+
+      ## Editor: margins & aspect ratio
+      p <- apply_editor_theme(p, input)
+
+      p
     }
 
     big_base.plots <- function(label.cex = 4) {
@@ -237,7 +294,8 @@ expression_plot_volcanoMethods_server <- function(id,
         pdf.height = 5,
         add.watermark = watermark,
         card = x$card,
-        download.contrast.name = comp
+        download.contrast.name = comp,
+        parent_session = session
       )
     })
   })

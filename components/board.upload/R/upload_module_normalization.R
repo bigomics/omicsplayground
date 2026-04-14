@@ -403,9 +403,7 @@ upload_module_normalization_server <- function(
         }
       }
 
-      ## missing values
       plot_missingvalues <- function() {
-        # X0 <- r_counts()
         X0 <- cleanX()$counts
         X1 <- imputedX()$X
 
@@ -420,18 +418,7 @@ upload_module_normalization_server <- function(
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else if (FALSE && any(is.na(X0)) && !any(is.na(X1))) {
-          X0[!is.na(X0)] <- 2
-          X0[is.na(X0)] <- 1
-          par(mfrow = c(1, 2), mar = c(3.2, 3.2, 1.5, 0.5), mgp = c(2.2, 0.85, 0))
-          playbase::gx.imagemap(X0, cex = -1)
-          title("Missing values patterns in raw data", cex.main = 0.8)
-
-          X1[!is.na(X1)] <- 2
-          X1[is.na(X1)] <- 1
-          playbase::gx.imagemap(X1, cex = -1)
-          title("No missing values in imputed data", cex.main = 0.8)
-        } else {
+        } else { 
           ii <- which(is.na(X0))
           if (isolate(input$zero_as_na)) {
             ii <- which(is.na(X0) | X0 == 0)
@@ -586,7 +573,6 @@ upload_module_normalization_server <- function(
       plot.outlierPCA <- function(pos, z, z0, shownames) {
         is.outlier <- (z > z0)
         col1 <- "grey70"
-        ## col1 <- res.outliers$dbscan$cluster + 1
         cex1 <- cut(nrow(pos),
           breaks = c(0, 40, 100, 250, 1000, 999999),
           c(1, 0.85, 0.7, 0.55, 0.4)
@@ -616,7 +602,6 @@ upload_module_normalization_server <- function(
         }
       }
 
-      ## sample outlier scores
       plot_outliers <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Outlier detection requires at least 3 samples."))
         res <- results_outlier_methods()
@@ -624,7 +609,6 @@ upload_module_normalization_server <- function(
         zscore <- res$z.outlier
         Z <- res$Z
         pos <- res$pos[["pca"]]
-        ## plottype <- input$outlier_plottype
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -635,14 +619,6 @@ upload_module_normalization_server <- function(
           )
           abline(h = z0, lty = 3, lwd = 1.5, col = "red")
           plot.outlierPCA(pos, zscore, z0, input$outlier_shownames)
-        }
-
-        if (plottype == "heatmap") {
-          par(mfrow = c(1, 2), mar = c(0, 3, 0, 1), mgp = c(2.1, 0.8, 0))
-          playbase::gx.heatmap(res$corX,
-            sym = TRUE, mar = c(1, 12), keysize = 0.4,
-            cexCol = 0.0001, scale = "none", key = FALSE
-          )
         }
       }
 
@@ -855,7 +831,6 @@ upload_module_normalization_server <- function(
       )
 
       output$normalization <- shiny::renderUI({
-        ## reactive
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
 
@@ -1024,7 +999,6 @@ upload_module_normalization_server <- function(
                     )) {
                       c(
                         "multi-omics median" = "median"
-                        ## "multi-omics combat" = "combat"
                       )
                     } else {
                       c(
@@ -1241,7 +1215,6 @@ upload_module_normalization_server <- function(
 
       bc_method <- reactive({
         param <- input$bec_param
-        ## Remove <autodetect> if other params are selected
         if ("<autodetect>" %in% param && length(param) > 1) {
           param <- setdiff(param, "<autodetect>")
           shiny::updateSelectizeInput(session, "bec_param", selected = param)

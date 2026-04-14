@@ -52,28 +52,30 @@ multiwgcna_plot_lasagna_server <- function(id,
                                            r_phenotype = reactive(NULL),
                                            r_layers = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
+
     lasagna_model <- reactive({
       wgcna <- mwgcna()
-
+      
+      ##obj <- wgcna$lasagna
+      
       ## Get eigengene matrices
-      ww <- lapply(wgcna, function(w) t(w$net$MEs))
+      ww <- lapply(wgcna$layers, function(w) t(w$net$MEs))
       ww <- lapply(ww, function(w) w[!grepl("[A-Z]{2}grey$", rownames(w)), , drop = FALSE])
-
       sel.layers <- r_layers()
       sel.layers <- intersect(sel.layers, names(ww))
       shiny::req(sel.layers)
       ww <- ww[sel.layers]
-
       data2 <- list(
         X = ww,
-        samples = wgcna[[1]]$datTraits
+        samples = wgcna$layers[[1]]$datTraits
       )
       progress <- shiny::Progress$new(session, min = 0, max = 1)
       on.exit(progress$close())
       progress$set(message = paste("creating Lasagna model..."), value = 0.33)
 
-      ## Create lasagna model
-      obj <- playbase::lasagna.create_model(
+      ## We need to recreate lasagna model if the order of layers is
+      ## changed.
+      model <- playbase::lasagna.create_model(
         data2,
         pheno = "expanded",
         ntop = 2000,
@@ -84,14 +86,14 @@ multiwgcna_plot_lasagna_server <- function(id,
         add.revpheno = TRUE
       )
 
-      obj
+      model
     })
 
 
     plot.RENDER <- function() {
-      obj <- lasagna_model()
+      model <- lasagna_model()
 
-      pheno <- colnames(obj$Y)[1]
+      pheno <- colnames(model$Y)[1]
       pheno <- r_phenotype()
       shiny::req(!is.null(pheno))
 
@@ -103,7 +105,7 @@ multiwgcna_plot_lasagna_server <- function(id,
 
       ## 'solve' model
       graph <- playbase::lasagna.solve(
-        obj, pheno,
+        model, pheno,
         min_rho = 0.01,
         max_edges = 1000,
         value = "logFC",
@@ -111,19 +113,7 @@ multiwgcna_plot_lasagna_server <- function(id,
         prune = input$prune
       )
 
-      ## prune graph for plotting
-      ## subgraph <- playbase::lasagna.prune_graph(
-      ##   graph,
-      ##   ntop = 50,
-      ##   layers = NULL,
-      ##   normalize.edges = normalize.edges,
-      ##   min.rho = min.rho,
-      ##   edge.sign = "both",
-      ##   edge.type = "both", ## inter or intra
-      ##   prune = FALSE
-      ## )
-      ## subgraph
-
+      ## pruning is done inside plotMultiPartiteGraph2
       par(mfrow = c(1, 1), mar = c(1, 1, 1, 1) * 0)
       playbase::plotMultiPartiteGraph2(
         graph,
@@ -151,5 +141,7 @@ multiwgcna_plot_lasagna_server <- function(id,
       res = c(80, 100),
       add.watermark = FALSE
     )
+
+    ##return(lasagna_model)
   })
 }

@@ -90,6 +90,22 @@ PreservationWGCNA_Board <- function(id, pgx) {
         group <- base::abbreviate(toupper(group), 2L)
         exprList <- tapply(1:ncol(pgx$X), group, function(ii) pgx$X[, ii, drop = FALSE])
 
+        min_n <- min(sapply(exprList, ncol))
+        shiny::validate(
+          shiny::need(
+            length(exprList) >= 2,
+            paste0("Grouping by '", pheno, "' produces only one group. Select a variable with at least 2 distinct values.")
+          ),
+          shiny::need(
+            min_n >= 3,
+            paste0(
+              "Grouping by '", pheno, "' creates groups with as few as ", min_n, " sample(s). ",
+              "WGCNA requires at least 3 samples per group. ",
+              "Select a grouping variable with fewer, larger groups."
+            )
+          )
+        )
+
         progress <- shiny::Progress$new(session, min = 0, max = 1)
         on.exit(progress$close())
         progress$set(message = paste("computing preservation WGCNA..."), value = 0.33)
