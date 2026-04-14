@@ -163,6 +163,7 @@ opt.default <- list(
   ENABLE_PUBLIC_LOAD = FALSE,
   ENABLE_PUBLIC_DELETE = FALSE,
   ENABLE_UPLOAD = TRUE,
+  ENABLE_ADMIN = FALSE,
   ENABLE_USERDIR = TRUE,
   ENABLE_USER_SHARE = TRUE,
   ENABLE_USER_LOCK = TRUE,
@@ -336,8 +337,11 @@ i18n$set_translation_language("RNA-seq")
 ## Filter LLM models with available models, add all local models(?)
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
-# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
 opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
 
 ## Setup reticulate
-## reticulate::use_virtualenv("reticulate")
+tryCatch(
+  reticulate::use_miniconda("r-reticulate"),
+  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
+)

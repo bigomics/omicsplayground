@@ -39,9 +39,14 @@ correlation_plot_correlation_UMAP_ui <- function(
     info.references = info.references,
     info.extra_link = info.extra_link,
     options = cor_umap.opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_updown"
   )
 }
 
@@ -104,31 +109,56 @@ correlation_plot_correlation_UMAP_server <- function(id,
 
     cor_umap.PLOTFUN <- shiny::reactive({
       dt <- cor_umap.DATA()
+      shiny::req(dt)
 
       pos <- dt[, 1:2]
       rho0 <- dt[, 3]
       rho1 <- dt[, 4]
 
       gene <- gene()
-      higenes <- c(gene)
-      higenes <- names(tail(sort(rho1**2), 20))
       higenes <- unique(names(c(head(sort(rho1), 10), tail(sort(rho1), 10))))
       cexlab <- ifelse(length(higenes) == 1, 2.2, 1.3)
+
+      ## Editor: custom labels override
+      higenes <- get_custom_labels(input, rownames(pgx$X), defaults = higenes)
+
+      ## Editor: up/down colors → diverging gradient
+      col_up   <- get_editor_color(input, "color_up", "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
+
+      ## Editor: color just selected — NA-out non-selected so they render as grey
+      rho0_plot <- rho0
+      plot_hilight <- higenes
+      if (isTRUE(input$color_selection) && length(higenes) > 0) {
+        probe_syms <- make.names(playbase::probe2symbol(
+          names(rho0_plot), pgx$genes, "gene_name", fill_na = TRUE
+        ))
+        hi_syms <- make.names(playbase::probe2symbol(
+          higenes, pgx$genes, "gene_name", fill_na = TRUE
+        ))
+        rho0_plot[!probe_syms %in% hi_syms] <- NA
+        plot_hilight <- NULL
+      }
 
       p <- playbase::pgx.plotGeneUMAP(
         pgx,
         pos = pos,
-        value = rho0,
+        value = rho0_plot,
         title = "",
         cex = 0.9,
         cex.lab = cexlab,
-        hilight = higenes,
+        hilight = plot_hilight,
         ntop = 20,
         labeltype = "gene_name",
-        plotlib = "plotly"
+        plotlib = "plotly",
+        col = c(col_down, "white", col_up)
       )
 
       if (!is.null(p)) {
+        ## Set plotly source to "A" so the PlotModule click handler
+        ## (which uses event_data("plotly_click", source = "A")) can
+        ## capture click events for the label editor.
+        p$x$source <- "A"
         return(p)
       }
     })
@@ -140,7 +170,8 @@ correlation_plot_correlation_UMAP_server <- function(id,
       csvFunc = cor_umap.DATA,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

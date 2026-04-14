@@ -20,7 +20,7 @@ wgcna_plot_gclustering_ui <- function(
       choices = c("umap", "mds"),
       selected = "umap", inline = TRUE
     ),
-    shiny::checkboxInput(ns("showhub"), "Show hubgenes", TRUE)
+    shiny::checkboxInput(ns("showhub"), "Show labels", TRUE)
   )
 
   PlotModuleUI(

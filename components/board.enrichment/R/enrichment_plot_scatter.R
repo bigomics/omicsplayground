@@ -42,7 +42,11 @@ enrichment_plot_scatter_ui <- function(
     info.extra_link = info.extra_link,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering",
+    palette_default = "original"
   )
 }
 
@@ -88,11 +92,11 @@ enrichment_plot_scatter_server <- function(id,
       grp.klr <- c("grey90", rep(RColorBrewer::brewer.pal(12, "Paired"), 99)[1:ngrp])
       names(grp.klr) <- c("other", as.character(sort(unique(xgroup1))))
 
-      xgroup2 <- as.character(xgroup)
+      xgroup2 <- xgroup
       xgroup2[which(!(xgroup %in% xgroup1))] <- "other"
-      sample.klr <- grp.klr[xgroup2]
+      sample.klr <- grp.klr[as.character(xgroup2)]
       names(sample.klr) <- rownames(pgx$samples)
-      list(samples = sample.klr, group = grp.klr)
+      list(samples = sample.klr, group = grp.klr, xgroup = xgroup2)
     }
 
     basesubplot_scatter.RENDER <- function() {
@@ -136,6 +140,17 @@ enrichment_plot_scatter_server <- function(id,
       abline(lm(sx ~ gx), lty = 2, lwd = 0.7, col = "black")
     }
 
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      comp0 <- gs_contrast()
+      shiny::req(comp0)
+      klrs <- getcolors(pgx, comp0)
+      groups <- names(klrs$group)
+      shiny::req(length(groups) > 0)
+      custom_palette_pickers(groups, session$ns, unname(klrs$group))
+    })
+
     plotlysubplot_scatter <- function() {
       shiny::req(pgx$X)
       gene <- rownames(pgx$X)[1]
@@ -152,13 +167,20 @@ enrichment_plot_scatter_server <- function(id,
         frame()
         return(NULL)
       }
-      ## get colors
+      ## get colors and group assignments
       comp0 <- gs_contrast()
       klrs <- getcolors(pgx, comp0)
-      klr <- klrs$samples[names(sx)]
-      klr <- paste0(gplots::col2hex(klr), "99")
+      xgroup <- klrs$xgroup[names(sx)]
+      grp.klr <- klrs$group
+      groups <- names(grp.klr)
+      clrs.length <- length(groups)
+
+      ## Editor: palette override
+      COL <- resolve_palette_colors(input, clrs.length, fallback_colors = unname(grp.klr))
+      names(COL) <- groups
+
+      pheno <- factor(xgroup, levels = groups)
       gset1 <- playbase::breakstring(substring(gset, 1, 80), 32)
-      comp0 <- playbase::breakstring(substring(comp0, 1, 80), 10)
       tt <- paste(playbase::breakstring(gset, 40, 80), " vs. ", gene)
 
       # Assemble Plot
@@ -186,7 +208,8 @@ enrichment_plot_scatter_server <- function(id,
         ) %>%
         # Add the points
         plotly::add_trace(
-          x = gx, y = sx, name = comp0, color = klr, type = "scatter", mode = "markers",
+          x = gx, y = sx, color = pheno, colors = COL,
+          type = "scatter", mode = "markers",
           marker = list(size = 5),
           showlegend = TRUE
         ) %>%
@@ -217,7 +240,8 @@ enrichment_plot_scatter_server <- function(id,
       func2 = subplotly_scatter.RENDER$expand,
       pdf.width = 5, pdf.height = 5,
       res = c(72, 100),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

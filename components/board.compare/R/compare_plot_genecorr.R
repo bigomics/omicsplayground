@@ -30,9 +30,14 @@ compare_plot_genecorr_ui <- function(
     label = "c",
     info.text = info.text,
     options = genecorr.opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     height = height,
     width = c("auto", "100%"),
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -46,6 +51,18 @@ compare_plot_genecorr_server <- function(id,
                                          selected,
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      colorby <- input$colorby
+      shiny::req(colorby)
+      grp <- playbase::pgx.getContrastGroups(pgx, colorby, as.factor = FALSE)
+      groups <- sort(unique(na.omit(as.character(grp))))
+      custom_palette_pickers(groups, ns)
+    })
+
     shiny::observeEvent(contrast1(), {
       shiny::req(contrast1())
       ct <- contrast1()
@@ -170,14 +187,17 @@ compare_plot_genecorr_server <- function(id,
       higenes <- head(selected(), 16)
 
       ## Set color for points
-      klrpal <- rep(1:7, 99)
-      klrpal <- rep(RColorBrewer::brewer.pal(12, "Paired"), 99)
       colorby <- input$colorby
       grp <- playbase::pgx.getContrastGroups(pgx1, colorby, as.factor = FALSE)
       grp <- grp[colnames(X1)]
       grp[is.na(grp)] <- "_"
       grp <- factor(grp)
-      klr1 <- klrpal[as.integer(grp)]
+
+      ## Editor: palette and custom colors
+      n_groups <- nlevels(grp)
+      paired_pal <- rep(RColorBrewer::brewer.pal(12, "Paired"), ceiling(n_groups / 12))
+      klr_colors <- resolve_palette_colors(input, n_groups, fallback_colors = paired_pal[seq_len(n_groups)])
+      names(klr_colors) <- levels(grp)
 
       # Assemble subplots
       sub_plots <- vector("list", length(higenes))
@@ -198,9 +218,9 @@ compare_plot_genecorr_server <- function(id,
           plotly::add_trace(
             x = X1[j, ],
             y = X2[j, ],
-            name = grp,
             text = colnames(X1),
-            color = klr1,
+            color = grp,
+            colors = klr_colors,
             type = "scatter",
             mode = "markers",
             marker = list(size = 6),
@@ -277,7 +297,8 @@ compare_plot_genecorr_server <- function(id,
       func = plotly.RENDER, # genecorr.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(80, 90),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

@@ -65,6 +65,12 @@ preservationWGCNA_table_modulegenes_server <- function(id,
         labels = pres$colors[, refname],
         plot = FALSE
       )
+      ## NULL is returned when the selected trait is not in traitSignificance.
+      ## This is expected: the trait dropdown is populated from modTraits (per-layer),
+      ## while gene stats use the global datTraits (all samples). Some traits visible
+      ## in the dropdown (sample-level IDs, constant-within-layer conditions, contrast
+      ## columns) are absent from the stats — no genes will ever match them.
+      shiny::validate(shiny::need(!is.null(df), "Selected trait has no gene statistics. Please select a different trait."))
 
       if (!is.null(annot)) {
         df$title <- playbase::probe2symbol(df$feature, annot, query = "gene_title")

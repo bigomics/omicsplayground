@@ -36,9 +36,14 @@ drugconnectivity_plot_enplots_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     options = plot_opts,
+    outputFunc = shiny::plotOutput,
+    outputFunc2 = shiny::plotOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
     width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -103,12 +108,64 @@ drugconnectivity_plot_enplots_server <- function(id,
         dmethod <- dsea_method()
         nplots <- min(nrow(dt), 16)
         
-        playbase::pgx.plotDrugConnectivity(
-          pgx,
-          contrast = dcontrast,
-          db = dmethod,
-          drugs = sel.drugs,
-          nplots = nplots)
+        ## playbase::pgx.plotDrugConnectivity(
+        ##   pgx,
+        ##   contrast = dcontrast,
+        ##   db = dmethod,
+        ##   drugs = sel.drugs,
+        ##   nplots = nplots)
+
+        ## rank vector for enrichment plots
+        dmethod <- dsea_method
+        rnk <- dsea$stats
+        if (length(rnk) == 0) {
+          return(NULL)
+        }
+
+        ## ENPLOT TYPE
+        if (nrow(dt) == 1) {
+          par(oma = c(1, 1, 1, 1))
+          par(mfrow = c(1, 1), mar = c(4, 4, 1.1, 2), mgp = c(2.3, 0.9, 0))
+          lab.cex <- 1
+          xlab <- "Rank in ordered dataset"
+          ylab <- "Rank metric"
+          nc <- 1
+        } else {
+          dt <- head(dt, 16)
+          lab.cex <- 0.75
+          xlab <- ""
+          ylab <- ""
+          nc <- ceiling(sqrt(nrow(dt)))
+          par(oma = c(0, 1.6, 0, 0))
+          par(mfrow = c(nc, nc), mar = c(0.3, 1.0, 1.3, 0), mgp = c(1.9, 0.6, 0))
+        }
+
+        col_up   <- get_editor_color(input, "color_up", "primary")
+        col_down <- get_editor_color(input, "color_down", "secondary")
+        col_line <- get_editor_color(input, "color_line", "line")
+
+        for (i in 1:nrow(dt)) {
+          dx <- rownames(dt)[i]
+          gmtdx <- grep(dx, names(rnk), fixed = TRUE, value = TRUE) ## L1000 naming
+          dx1 <- substring(dx, 1, 26)
+          par(cex.axis = 0.001)
+          if (i %% nc == 1) par(cex.axis = 0.98)
+          suppressWarnings(
+            playbase::gsea.enplot(rnk, gmtdx,
+              main = dx1, cex.main = 1.2,
+              xlab = xlab, ylab = ylab,
+              col_up = col_up, col_down = col_down, col_line = col_line
+            )
+          )
+          nes <- round(dt$NES[i], 2)
+          qv <- round(dt$padj[i], 3)
+          tt <- c(paste("NES=", nes), paste("q=", qv))
+          legend("topright", legend = tt, cex = 0.8, y.intersp = 0.85, bty = "n")
+          if (i %% nc == 1 && nrow(dt) > 1) {
+            mtext("rank metric", side = 2, line = 1.8, cex = lab.cex)
+          }
+        }
+
 
       }
       
@@ -120,7 +177,8 @@ drugconnectivity_plot_enplots_server <- function(id,
         csvFunc = plot_data,
         res = c(78, 110),
         pdf.width = 6.5, pdf.height = 12.8,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

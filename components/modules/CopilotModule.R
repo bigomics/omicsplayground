@@ -181,14 +181,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
           #        register_mcp(chat)
         }
 
-        if (n_turns() == 0) {
-          ask_copilot("Describe this experiment. Then ask 'how can I help?'",
-            showq = FALSE, suggest = TRUE
-          )
-        } else {
-          if (!is.null(chat)) shinychat::chat_clear("chat")
-          shinychat::chat_append("chat", "How can I help you?")
-        }
+        if (!is.null(chat)) shinychat::chat_clear("chat")
+        shinychat::chat_append("chat", "How can I help you?")
       },
       ignoreNULL = FALSE
     )
