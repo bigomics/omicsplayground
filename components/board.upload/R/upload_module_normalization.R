@@ -418,7 +418,7 @@ upload_module_normalization_server <- function(
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else { 
+        } else {
           ii <- which(is.na(X0))
           if (isolate(input$zero_as_na)) {
             ii <- which(is.na(X0) | X0 == 0)

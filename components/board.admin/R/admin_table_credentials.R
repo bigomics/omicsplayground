@@ -102,7 +102,7 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       display <- data.frame(
         email = df$email,
         password = sapply(seq_len(nrow(df)), function(i) {
-          pw_escaped <- gsub('"', '&quot;', df$password[i])
+          pw_escaped <- gsub('"', "&quot;", df$password[i])
           sprintf(
             paste0(
               '<input type="password" class="pw-input" data-row="%d" value="%s"',
@@ -121,7 +121,7 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
               '<select class="admin-select" data-row="%d" style="%s%s"%s>',
               '<option value="TRUE"%s>TRUE</option>',
               '<option value="FALSE"%s>FALSE</option>',
-              '</select>'
+              "</select>"
             ),
             i,
             input_style,

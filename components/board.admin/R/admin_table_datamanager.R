@@ -123,8 +123,12 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     ## Mapping from display label to internal folder path
     folder_label <- function(path) {
-      if (path == "data/") return("(root)")
-      if (path == "data_shared/") return("shared")
+      if (path == "data/") {
+        return("(root)")
+      }
+      if (path == "data_shared/") {
+        return("shared")
+      }
       if (path == "data_public/") {
         pub_label <- auth$options$PUBLIC_DATASETS_LABEL
         return(if (!is.null(pub_label) && nchar(pub_label) > 0) pub_label else "public")
@@ -182,18 +186,27 @@ admin_table_datamanager_server <- function(id, auth) {
       ## Helper: read dataset info from datasets-info.csv in a directory
       read_dataset_info <- function(dir) {
         info_file <- file.path(dir, "datasets-info.csv")
-        if (!file.exists(info_file)) return(NULL)
-        tryCatch({
-          df <- read.csv(info_file, colClasses = "character", stringsAsFactors = FALSE)
-          if ("dataset" %in% names(df)) df else NULL
-        }, error = function(e) NULL)
+        if (!file.exists(info_file)) {
+          return(NULL)
+        }
+        tryCatch(
+          {
+            df <- read.csv(info_file, colClasses = "character", stringsAsFactors = FALSE)
+            if ("dataset" %in% names(df)) df else NULL
+          },
+          error = function(e) NULL
+        )
       }
 
       ## Helper: scan a directory for .pgx (non-recursive)
       scan_pgx <- function(dir, label) {
-        if (!dir.exists(dir)) return(NULL)
+        if (!dir.exists(dir)) {
+          return(NULL)
+        }
         ff <- list.files(dir, pattern = "\\.pgx$", full.names = TRUE)
-        if (length(ff) == 0) return(NULL)
+        if (length(ff) == 0) {
+          return(NULL)
+        }
         ## Lookup info from datasets-info.csv
         info_df <- read_dataset_info(dir)
         datasets <- sub("\\.pgx$", "", basename(ff))
@@ -309,9 +322,15 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     resolve_dir <- function(label) {
       opg <- dirname(PGX.DIR)
-      if (label == "data/") return(PGX.DIR)
-      if (label == "data_shared/") return(SHARE.DIR)
-      if (label == "data_public/") return(PUBLIC.DIR)
+      if (label == "data/") {
+        return(PGX.DIR)
+      }
+      if (label == "data_shared/") {
+        return(SHARE.DIR)
+      }
+      if (label == "data_public/") {
+        return(PUBLIC.DIR)
+      }
       ## User directory e.g. "data/user@example.com/"
       sub_dir <- sub("^data/", "", label)
       sub_dir <- sub("/$", "", sub_dir)
@@ -323,7 +342,9 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     selected_files <- reactive({
       sel <- input$files_tbl_rows_selected
-      if (is.null(sel) || length(sel) == 0) return(NULL)
+      if (is.null(sel) || length(sel) == 0) {
+        return(NULL)
+      }
       df <- display_data()
       df$full_path[sel]
     })

@@ -50,7 +50,9 @@ preservationWGCNA_plot_eigenNetwork_server <- function(id,
       ## else (WGCNA internals can fail for subtle reasons in small groups).
       mes_valid <- sapply(res$net$multiMEs, function(me) {
         non_grey <- me$data[, substring(colnames(me$data), 3) != "grey", drop = FALSE]
-        if (ncol(non_grey) < 2) return(FALSE)
+        if (ncol(non_grey) < 2) {
+          return(FALSE)
+        }
         all(apply(non_grey, 2, function(x) var(x, na.rm = TRUE) > 1e-10))
       })
       shiny::validate(shiny::need(

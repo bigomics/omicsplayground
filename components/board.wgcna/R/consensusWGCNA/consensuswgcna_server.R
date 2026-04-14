@@ -212,7 +212,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         return(cons)
       },
       ignoreNULL = FALSE
-
     )
 
 

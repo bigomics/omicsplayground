@@ -92,7 +92,8 @@ compare_plot_compare2_server <- function(id,
       if (length(higenes) <= 3) cex.lab <- 1.3
       data <- createPlot(
         pgx2, pgx1, pgx2, ct, target_col, type, cex.lab,
-        higenes, ntop, get_data, labeltype, col = custom_col, color_selection = color_sel
+        higenes, ntop, get_data, labeltype,
+        col = custom_col, color_selection = color_sel
       )
       data
     }

@@ -21,7 +21,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   ## Per-plot-type bar colour: correlation and expression_barplot use
   ## scatter_color (→ secondary theme); all other bar plots use bar_color.
   bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
-  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary    else ct$bar_color
+  bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary else ct$bar_color
 
   # Default editor content
   volcano_content <- shiny::div(
