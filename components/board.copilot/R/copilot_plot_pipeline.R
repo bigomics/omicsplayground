@@ -123,7 +123,10 @@ copilot_prune_sessions <- function(store, max_sessions = 100L) {
   ord <- order(updated)  # oldest first
   n_drop <- length(ids) - max_sessions
   for (id in ids[ord[seq_len(n_drop)]]) {
-    try(unlink(file.path(session_dir, id), recursive = TRUE), silent = TRUE)
+    tryCatch(
+      omicsagentovi::ovi_session_delete(id, session_dir = session_dir),
+      error = function(e) NULL
+    )
   }
   invisible(NULL)
 }

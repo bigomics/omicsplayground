@@ -100,7 +100,7 @@ copilot_panel_history_server <- function(id, chat_store, refresh_trigger = NULL)
                              options = list(dom = "t", paging = FALSE)))
       }
       DT::datatable(
-        df[, c("Title", "Datasets", "Turns", "Updated"), drop = FALSE],
+        df[, c("Title", "Datasets", "Updated"), drop = FALSE],
         selection = "single",
         rownames = FALSE,
         options = list(

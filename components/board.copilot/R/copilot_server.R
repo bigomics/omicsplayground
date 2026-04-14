@@ -44,6 +44,16 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       })
     })
 
+    restore_task <- ExtendedTask$new(function(session_id, session_dir, pgx_to_inject) {
+      future_promise({
+        omicsagentovi::ovi_restore(
+          session_id  = session_id,
+          session_dir = session_dir,
+          pgx         = pgx_to_inject
+        )
+      })
+    })
+
     ## --- Persistent chat store (lazy: no dir is created per-session
     ## until the first successful turn triggers session_save) ---
     chat_store <- omicsagentovi::SessionStore(session_dir = chat_dir)
@@ -52,7 +62,20 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     session$onSessionEnded(function() {
       wrapper <- shiny::isolate(copilot())
       if (!is.null(wrapper) && shiny::isolate(n_turns()) > 0) {
-        try(omicsagentovi::session_save(chat_store, wrapper$agent), silent = TRUE)
+        ## Async save — avoid blocking session teardown with a 10-20s serialize.
+        payload <- tryCatch(
+          omicsagentovi::session_collect_payload(chat_store, wrapper$agent),
+          error = function(e) NULL
+        )
+        if (!is.null(payload)) {
+          tryCatch(
+            save_task$invoke(chat_store@state$session_dir, payload),
+            error = function(e) {
+              ## save_task may already be running; fall back to sync.
+              try(omicsagentovi::session_save(chat_store, wrapper$agent), silent = TRUE)
+            }
+          )
+        }
       }
     })
 
@@ -117,6 +140,13 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     }
 
     schedule_session_persist <- function(agent_wrapper, turns_used) {
+      ## Drop intermediate saves — only the latest session state matters.
+      ## ExtendedTask queues invocations, so stale saves would pile up
+      ## and each would run session_collect_payload synchronously in onFlushed.
+      if (identical(shiny::isolate(save_task$status()), "running")) {
+        dbg("[CopilotBoard] save already pending — skipping redundant persist")
+        return(invisible(NULL))
+      }
       session$onFlushed(function() {
         collect_start <- Sys.time()
         if (getOption("copilot.trace", FALSE)) {
@@ -500,10 +530,21 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         shinychat::chat_append("chat", "Please wait for the current response to finish.")
         return()
       }
-      ## Flush current session one last time.
+      ## Flush current session asynchronously before resetting.
       wrapper <- copilot()
       if (!is.null(wrapper) && n_turns() > 0) {
-        try(omicsagentovi::session_save(chat_store, wrapper$agent), silent = TRUE)
+        payload <- tryCatch(
+          omicsagentovi::session_collect_payload(chat_store, wrapper$agent),
+          error = function(e) NULL
+        )
+        if (!is.null(payload)) {
+          tryCatch(
+            save_task$invoke(chat_store@state$session_dir, payload),
+            error = function(e) {
+              info("[CopilotBoard] save_task busy on new-chat flush, dropping")
+            }
+          )
+        }
       }
       info("[CopilotBoard] new chat requested — turns so far=", n_turns())
       if (!is.null(pgx$X)) {
@@ -528,7 +569,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       history_refresh(history_refresh() + 1L)
     }, ignoreInit = TRUE)
 
-    ## --- Restore session ---
+    ## --- Restore session (async) ---
     shiny::observeEvent(history$restore_request(), {
       session_id <- history$restore_request()
       shiny::req(session_id)
@@ -536,23 +577,48 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         shinychat::chat_append("chat", "Please wait for the current response to finish.")
         return()
       }
+
+      ## Fast path: reuse already-loaded PGX when dataset matches
+      pgx_to_inject <- NULL
+      meta <- tryCatch(
+        omicsagentovi::ovi_session_meta(session_id, session_dir = chat_store@state$session_dir),
+        error = function(e) NULL
+      )
+      if (!is.null(meta) && !is.null(meta$dataset_name)) {
+        current_pgx <- tryCatch(local_pgx(), error = function(e) NULL)
+        if (!is.null(current_pgx) && identical(current_pgx$name, meta$dataset_name)) {
+          pgx_to_inject <- current_pgx
+          dbg("[CopilotBoard] restore fast path — reusing loaded PGX: ", meta$dataset_name)
+        }
+      }
+
       info("[CopilotBoard] restoring session: ", session_id)
-      restored <- tryCatch(
-        omicsagentovi::ovi_restore(
-          session_id = session_id,
-          session_dir = chat_store@state$session_dir
-        ),
+      restoring(TRUE)
+      shinychat::chat_clear("chat")
+      shinychat::chat_append("chat", "Restoring session...")
+
+      tryCatch(
+        restore_task$invoke(session_id, chat_store@state$session_dir, pgx_to_inject),
         error = function(e) {
-          info("[CopilotBoard] restore failed: ", conditionMessage(e))
-          NULL
+          info("[CopilotBoard] restore_task invoke failed: ", conditionMessage(e))
+          shinychat::chat_clear("chat")
+          shinychat::chat_append("chat", "Failed to restore session.")
+          restoring(FALSE)
         }
       )
+    }, ignoreNULL = TRUE)
+
+    ## --- Handle restore completion ---
+    shiny::observeEvent(restore_task$result(), {
+      restored <- tryCatch(restore_task$result(), error = function(e) NULL)
       if (is.null(restored)) {
+        shinychat::chat_clear("chat")
         shinychat::chat_append("chat", "Failed to restore session.")
+        restoring(FALSE)
         return()
       }
 
-      ## Wrap restored agent in the same shape copilot_create_agent returns.
+      ## Bind copilot-side state onto the restored agent
       restored_agent <- restored
       if (is.function(plot_callback)) {
         restored_agent@context@state$plot_callback <- plot_callback
@@ -581,9 +647,6 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         reset = function(...) invisible(NULL)
       )
 
-      restoring(TRUE)
-      on.exit(restoring(FALSE), add = TRUE)
-
       copilot(wrapper)
       clear_pending_plots()
       evidence$clear_plots()
@@ -593,8 +656,9 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       turns <- tryCatch(restored_agent@chat$get_turns(), error = function(e) list())
       n_user <- copilot_replay_turns("chat", turns)
       n_turns(n_user)
-      active_dataset_name(NULL)  # decoupled from current global pgx
+      active_dataset_name(NULL)
       history$restore_request(NULL)
+      restoring(FALSE)
       info("[CopilotBoard] session restored — user turns replayed=", n_user)
     }, ignoreNULL = TRUE)
 
@@ -603,10 +667,10 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       session_id <- history$delete_request()
       shiny::req(session_id)
       info("[CopilotBoard] deleting session: ", session_id)
-      try(unlink(
-        file.path(chat_store@state$session_dir, session_id),
-        recursive = TRUE
-      ), silent = TRUE)
+      tryCatch(
+        omicsagentovi::ovi_session_delete(session_id, session_dir = chat_store@state$session_dir),
+        error = function(e) warning("[CopilotBoard] session delete failed: ", conditionMessage(e))
+      )
       history$delete_request(NULL)
       history_refresh(history_refresh() + 1L)
     }, ignoreNULL = TRUE)
