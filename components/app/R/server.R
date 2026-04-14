@@ -253,6 +253,8 @@ app_server <- function(input, output, session) {
       shiny.i18n::update_lang("proteomics", session)
     } else if (tolower(upload_datatype()) == "metabolomics") {
       shiny.i18n::update_lang("metabolomics", session)
+    } else if (tolower(upload_datatype()) == "methylomics") {
+      shiny.i18n::update_lang("methylomics", session)
     } else {
       shiny.i18n::update_lang("RNA-seq", session)
     }
@@ -770,6 +772,8 @@ app_server <- function(input, output, session) {
         lang <- "proteomics"
       } else if (DATATYPEPGX == "metabolomics") {
         lang <- "metabolomics"
+      } else if (DATATYPEPGX == "methylomics") {
+        lang <- "methylomics"
       } else {
         lang <- "RNA-seq"
       }
