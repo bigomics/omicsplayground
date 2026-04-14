@@ -1,126 +1,16 @@
 #' Copilot Board Server
 #'
-#' Agent lifecycle, chat wiring, dataset/session management.
-#' Uses the GLOBAL PGX reactiveValues — loading a dataset in the copilot's
-#' left panel propagates to every other board, and selecting a dataset in
-#' DataView/Home propagates into the copilot chat.
-
-copilot_parse_features <- function(features) {
-  if (is.null(features) || !nzchar(trimws(features))) {
-    return(NULL)
-  }
-
-  out <- trimws(unlist(strsplit(features, ",")))
-  out[nzchar(out)]
-}
-
-copilot_build_plot <- function(pgx, plot_type, args) {
-  pgx <- copilot_as_pgx(pgx)
-  plot_type <- tolower(trimws(plot_type))
-  contrast <- if (!is.null(args$contrast)) args$contrast else NULL
-  features <- copilot_parse_features(if (!is.null(args$features)) args$features else NULL)
-  collection <- if (!is.null(args$collection)) args$collection else NULL
-
-  switch(plot_type,
-    pca = {
-      params <- omicspgxmcp:::new_plot_params("scatter", params = list(method = "pca"))
-      extracted <- omicspgxmcp:::.extract_scatter_data(pgx, params)
-      do.call(omicsplots::pgx.plot_scatter, extracted$renderer_args)
-    },
-    tsne = {
-      params <- omicspgxmcp:::new_plot_params("scatter", params = list(method = "tsne"))
-      extracted <- omicspgxmcp:::.extract_scatter_data(pgx, params)
-      do.call(omicsplots::pgx.plot_scatter, extracted$renderer_args)
-    },
-    volcano = {
-      params <- omicspgxmcp:::new_plot_params("volcano", contrast = contrast, params = list())
-      extracted <- omicspgxmcp:::.extract_volcano_data(pgx, params)
-      do.call(
-        omicsplots::pgx.plot_volcano,
-        c(extracted$renderer_args, list(show_sample_badge = FALSE))
-      )
-    },
-    heatmap = {
-      params <- omicspgxmcp:::new_plot_params(
-        "heatmap",
-        contrast = contrast,
-        params = list(genes = features)
-      )
-      extracted <- omicspgxmcp:::.extract_heatmap_data(pgx, params)
-      do.call(omicsplots::pgx.plot_heatmap, extracted$renderer_args)
-    },
-    ma = {
-      playbase::pgx.plotMA(
-        pgx,
-        contrast = contrast,
-        plotlib = "ggplot"
-      )
-    },
-    barplot_de = {
-      params <- omicspgxmcp:::new_plot_params(
-        "barplot",
-        contrast = contrast,
-        params = list(what = "de")
-      )
-      extracted <- omicspgxmcp:::.extract_barplot_data(pgx, params)
-      do.call(omicsplots::pgx.plot_barplot, extracted$renderer_args)
-    },
-    enrichment_dotplot = {
-      playbase::pgx.plotEnrichmentDotPlot(
-        pgx,
-        contrast = contrast,
-        filter = collection
-      )
-    },
-    stop(sprintf("Unsupported copilot plot type: %s", plot_type), call. = FALSE)
-  )
-}
-
-#' FIFO-prune persisted chat sessions to a maximum count.
-copilot_prune_sessions <- function(store, max_sessions = 100L) {
-  session_dir <- store@state$session_dir
-  ids <- omicsagentovi::ovi_sessions(session_dir = session_dir)
-  if (length(ids) <= max_sessions) return(invisible(NULL))
-  metas <- lapply(ids, function(i) {
-    tryCatch(
-      omicsagentovi::ovi_session_meta(i, session_dir = session_dir),
-      error = function(e) NULL
-    )
-  })
-  updated <- vapply(metas, function(m) m$updated_at %||% "", character(1L))
-  ord <- order(updated)  # oldest first
-  n_drop <- length(ids) - max_sessions
-  for (id in ids[ord[seq_len(n_drop)]]) {
-    try(unlink(file.path(session_dir, id), recursive = TRUE), silent = TRUE)
-  }
-  invisible(NULL)
-}
-
-#' Replay persisted user/assistant text turns into a shinychat instance.
-#' Tool turns are intentionally skipped per the no-tool-rendering policy.
-copilot_replay_turns <- function(chat_id, turns) {
-  n_user <- 0L
-  for (turn in turns) {
-    role <- tryCatch(turn@role, error = function(e) NULL)
-    if (is.null(role) || !(role %in% c("user", "assistant"))) next
-    contents <- tryCatch(turn@contents, error = function(e) list())
-    has_tool <- any(vapply(contents, function(c) {
-      S7::S7_inherits(c, ellmer::ContentToolRequest) ||
-      S7::S7_inherits(c, ellmer::ContentToolResult)
-    }, logical(1)))
-    if (has_tool) next
-    text_parts <- vapply(contents, function(c) {
-      if (S7::S7_inherits(c, ellmer::ContentText)) c@text %||% "" else ""
-    }, character(1))
-    text <- paste(text_parts[nzchar(text_parts)], collapse = "\n")
-    if (!nzchar(text)) next
-    shinychat::chat_append_message(
-      chat_id, list(role = role, content = text), chunk = FALSE
-    )
-    if (role == "user") n_user <- n_user + 1L
-  }
-  n_user
-}
+#' Orchestrates the AI copilot: agent lifecycle, async chat streaming,
+#' dataset/session management, and evidence panel wiring.
+#'
+#' @param id Module namespace id.
+#' @param pgx Global PGX reactiveValues shared across all boards.
+#' @param pgx_dir Path to the directory containing .pgx dataset files.
+#' @param chat_dir Path to the directory for persisting chat sessions.
+#' @param docs_dir Path to the directory for uploaded documents.
+#' @param maxturns Maximum number of user turns per session.
+#' @param tiers Character vector of copilot tier identifiers.
+#' @param is_data_loaded Optional reactiveVal signalling dataset loads.
 
 CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
                                chat_dir, docs_dir,
@@ -128,8 +18,8 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
                                tiers = "copilot-default",
                                is_data_loaded = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    info("[CopilotBoard] server initialised — tiers=",
-         paste(tiers, collapse = ","),
+    info("[CopilotBoard] server initialised —",
+         " tiers=", paste(tiers, collapse = ","),
          " chat_dir=", chat_dir,
          " docs_dir=", docs_dir)
 
@@ -140,6 +30,19 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     busy <- shiny::reactiveVal(FALSE)
     current_tier <- shiny::reactiveVal(tiers[1])
     restoring <- shiny::reactiveVal(FALSE)
+    pending_plot_requests <- shiny::reactiveVal(list())
+    plot_build_inflight <- shiny::reactiveVal(FALSE)
+
+    ## --- Session save backend ---
+    save_task <- ExtendedTask$new(function(session_dir, payload) {
+      future_promise({
+        turn_count <- payload$manifest$turn_count
+        if (is.null(turn_count)) turn_count <- 0L
+        store <- omicsagentovi::SessionStore(session_dir = session_dir)
+        omicsagentovi::session_write_payload(store, payload)
+        list(session_id = payload$session_id, turn_count = turn_count)
+      })
+    })
 
     ## --- Persistent chat store (lazy: no dir is created per-session
     ## until the first successful turn triggers session_save) ---
@@ -154,14 +57,6 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     })
 
     ## --- Populate tier selector once on first flush ---
-    copilot_tier_label <- function(t) {
-      switch(t,
-        `copilot-default` = "Balanced (Default)",
-        `copilot-fast`    = "Fast",
-        `copilot-deep`    = "Deep Think",
-        t
-      )
-    }
     session$onFlushed(function() {
       tier_choices <- setNames(tiers, vapply(tiers, copilot_tier_label, character(1)))
       shiny::updateSelectInput(session, "tier",
@@ -170,14 +65,19 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     }, once = TRUE)
 
     ## --- Reactive wrapper around global pgx for sub-modules ---
+    ## Depend on pgx$name only — avoids cascade invalidation from unrelated PGX slot changes.
     local_pgx <- shiny::reactive({
-      if (is.null(pgx$X)) return(NULL)
-      snapshot <- shiny::reactiveValuesToList(pgx)
-      copilot_as_pgx(snapshot)
+      name <- pgx$name
+      shiny::req(name)
+      shiny::isolate({
+        snapshot <- shiny::reactiveValuesToList(pgx)
+        copilot_as_pgx(snapshot)
+      })
     })
 
     ## --- Sub-module servers ---
     history_refresh <- shiny::reactiveVal(0)
+
     selected_dataset <- copilot_panel_datasets_server("datasets", pgx_dir = pgx_dir)
     history <- copilot_panel_history_server(
       "history",
@@ -185,28 +85,180 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       refresh_trigger = history_refresh
     )
     copilot_panel_docs_server("docs", docs_dir = docs_dir)
+
     evidence <- copilot_panel_evidence_server("evidence", local_pgx = local_pgx)
 
-    ## --- Plot callback for evidence panel ---
-    ## Builds a plot record and appends it to the evidence history
-    ## instead of replacing a single plot.
-    plot_callback <- function(pgx, plot_type, args) {
-      plot_obj <- copilot_build_plot(pgx, plot_type, args)
-      kind <- copilot_detect_plot_kind(plot_obj)
-      if (is.null(kind)) {
-        stop("Unsupported plot object for evidence panel.", call. = FALSE)
-      }
+    build_plot_label <- function(plot_type) {
       label <- gsub("_", " ", plot_type)
-      label <- paste0(toupper(substring(label, 1, 1)), substring(label, 2))
-      record <- list(
-        plot      = plot_obj,
-        kind      = kind,
+      paste0(toupper(substring(label, 1, 1)), substring(label, 2))
+    }
+
+    clear_pending_plots <- function() {
+      if (length(pending_plot_requests()) > 0L || isTRUE(plot_build_inflight())) {
+        if (getOption("copilot.trace", FALSE)) {
+          dbg("[CopilotBoard] clear_pending_plots",
+              " pending=", length(pending_plot_requests()),
+              " inflight=", isTRUE(plot_build_inflight()))
+        }
+      }
+      pending_plot_requests(list())
+      plot_build_inflight(FALSE)
+      invisible(NULL)
+    }
+
+    plot_request_key <- function(plot_type, args) {
+      relevant_args <- list(
+        plot_type = plot_type %||% "",
+        contrast = args$contrast %||% NULL,
+        features = args$features %||% NULL,
+        collection = args$collection %||% NULL
+      )
+      jsonlite::toJSON(relevant_args, auto_unbox = TRUE, null = "null")
+    }
+
+    schedule_session_persist <- function(agent_wrapper, turns_used) {
+      session$onFlushed(function() {
+        collect_start <- Sys.time()
+        if (getOption("copilot.trace", FALSE)) {
+          dbg("[CopilotBoard] session_save collect_start")
+        }
+        payload <- omicsagentovi::session_collect_payload(chat_store, agent_wrapper$agent)
+        payload$manifest$turn_count <- turns_used
+        collect_end <- Sys.time()
+
+        invoke_start <- Sys.time()
+        if (getOption("copilot.trace", FALSE)) {
+          dbg("[CopilotBoard] session_save invoke_start")
+        }
+        save_task$invoke(chat_store@state$session_dir, payload)
+        invoke_end <- Sys.time()
+
+        dbg("[CopilotBoard] session_save",
+            " collect_time=",
+            round(as.numeric(difftime(collect_end, collect_start, units = "secs")), 3), "s",
+            " invoke_time=",
+            round(as.numeric(difftime(invoke_end, invoke_start, units = "secs")), 3), "s")
+      }, once = TRUE)
+      invisible(NULL)
+    }
+
+    queue_plot_request <- function(pgx, plot_type, args) {
+      reqs <- pending_plot_requests()
+      queued_at <- Sys.time()
+      req_key <- plot_request_key(plot_type, args %||% list())
+      if (length(reqs) > 0L && any(vapply(reqs, function(x) identical(x$key, req_key), logical(1L)))) {
+        return(invisible(NULL))
+      }
+      reqs[[length(reqs) + 1L]] <- list(
+        pgx       = copilot_as_pgx(pgx),
         plot_type = plot_type,
         args      = args,
-        timestamp = Sys.time(),
-        label     = label
+        timestamp = queued_at,
+        queued_at = queued_at,
+        key       = req_key,
+        label     = build_plot_label(plot_type)
       )
-      evidence$append_plot(record)
+      pending_plot_requests(reqs)
+      dbg(
+        "[CopilotBoard] queued plot request",
+        " plot_type=", plot_type,
+        " pending=", length(reqs),
+        " args=", paste(names(args %||% list()), collapse = ",")
+      )
+      invisible(NULL)
+    }
+
+    flush_pending_plots <- function() {
+      if (isTRUE(plot_build_inflight())) return(invisible(NULL))
+      reqs <- pending_plot_requests()
+      if (!length(reqs)) return(invisible(NULL))
+
+      if (getOption("copilot.trace", FALSE)) {
+        dbg("[CopilotBoard] about to flush queued plots pending=", length(reqs))
+      }
+      pending_plot_requests(list())
+      plot_build_inflight(TRUE)
+      on.exit(plot_build_inflight(FALSE), add = TRUE)
+
+      for (req in reqs) {
+        build_started_at <- Sys.time()
+        tryCatch({
+          dbg("[CopilotBoard] build_plot start",
+              " plot_type=", req$plot_type)
+          plot_obj <- copilot_build_plot(req$pgx, req$plot_type, req$args)
+          kind <- copilot_detect_plot_kind(plot_obj)
+          if (is.null(kind)) {
+            stop("Unsupported plot object for evidence panel.", call. = FALSE)
+          }
+
+          ## Pre-render outside flushReact: ggplot -> PNG, plotly -> build
+          prerendered_path <- NULL
+          if (identical(kind, "ggplot")) {
+            prerendered_path <- copilot_prerender_ggplot(plot_obj)
+          }
+          if (identical(kind, "plotly")) {
+            plot_obj <- copilot_prerender_plotly(plot_obj)
+          }
+
+          built_at <- Sys.time()
+          dbg("[CopilotBoard] build_plot done",
+              " plot_type=", req$plot_type,
+              " build_time=",
+              round(as.numeric(difftime(built_at, build_started_at, units = "secs")), 3), "s")
+
+          evidence$append_plot(list(
+            plot      = plot_obj,
+            kind      = kind,
+            prerendered_path = prerendered_path,
+            plot_type = req$plot_type,
+            args      = req$args,
+            timestamp = req$timestamp,
+            queued_at = req$queued_at,
+            built_at  = built_at,
+            label     = req$label
+          ))
+          if (getOption("copilot.trace", FALSE)) {
+            dbg("[CopilotBoard] append_plot done plot_type=", req$plot_type)
+          }
+        }, error = function(e) {
+          info("[CopilotBoard] deferred plot build failed: ", conditionMessage(e))
+          shiny::showNotification(
+            paste0("Failed to render plot: ", conditionMessage(e)),
+            type = "error",
+            duration = 6
+          )
+        })
+      }
+      invisible(NULL)
+    }
+
+    shiny::observeEvent(save_task$result(), {
+      result <- save_task$result()
+      shiny::req(result)
+      info("[CopilotBoard] saved session turns=", result$turn_count %||% 0L)
+      tryCatch(
+        copilot_prune_sessions(chat_store),
+        error = function(e) info("[CopilotBoard] prune failed: ", conditionMessage(e))
+      )
+      history_refresh(history_refresh() + 1L)
+    }, ignoreNULL = TRUE)
+
+    shiny::observeEvent(save_task$status(), {
+      status <- save_task$status()
+      if (!identical(status, "error")) return()
+      err <- tryCatch(save_task$result(), error = function(e) e)
+      info("[CopilotBoard] session_save failed: ", conditionMessage(err))
+    }, ignoreInit = TRUE)
+
+    ## --- Plot callback for evidence panel ---
+    ## Queue plot requests during streaming and build them once the stream settles.
+    plot_callback_impl <- function(pgx, plot_type, args) {
+      queue_plot_request(pgx, plot_type, args)
+    }
+    plot_callback <- if (is.function(session$wrapFunction)) {
+      session$wrapFunction(plot_callback_impl)
+    } else {
+      function(...) shiny::withReactiveDomain(session, plot_callback_impl(...))
     }
 
     ## --- Greeting (shown once before any dataset) ---
@@ -218,16 +270,18 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
     ## --- Create/reset agent whenever the GLOBAL PGX changes ---
     ## This fires both when the user loads data via DataView/Home and when
     ## the copilot's own left panel writes into `pgx` below.
-    shiny::observeEvent(list(pgx$name, pgx$X), {
-      shiny::req(pgx$name, pgx$X)
+    shiny::observeEvent(pgx$name, {
+      shiny::req(pgx$name)
       if (isTRUE(restoring())) return()
       dataset_name <- as.character(pgx$name[[1]])
+      pgx_x <- shiny::isolate(pgx$X)
+      shiny::req(pgx_x)
       pgx_snapshot <- copilot_snapshot_pgx(pgx)
 
       params <- list(
         name  = dataset_name,
-        nsamp = omicsai::omicsai_format_num(ncol(pgx$X), digits = 0),
-        ngene = omicsai::omicsai_format_num(nrow(pgx$X), digits = 0)
+        nsamp = omicsai::omicsai_format_num(ncol(pgx_x), digits = 0),
+        ngene = omicsai::omicsai_format_num(nrow(pgx_x), digits = 0)
       )
 
       if (is.null(copilot())) {
@@ -277,13 +331,6 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       }
 
       info("[CopilotBoard] loading PGX into global state: ", dataset_path)
-      ## NOTE: this safe-load guard lives here for now because the Copilot
-      ## board is the only call-site that loads PGX files outside the normal
-      ## Loading wizard. Before merging to devel we will evaluate moving these
-      ## checks into playbase so pgx.load / pgx.initialize themselves fail
-      ## loudly on corrupt or non-PGX input (currently pgx.initialize silently
-      ## returns NULL for wrong-shape lists, and pgx.load surfaces raw R I/O
-      ## errors).
       load_result <- shiny::withProgress(message = "Loading dataset for Copilot...", {
         tryCatch({
           p <- playbase::pgx.load(dataset_path)
@@ -352,6 +399,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       }
 
       busy(TRUE)
+      dbg("[CopilotBoard] ask_copilot start question_nchar=", nchar(question))
 
       ## Async path: stream_async returns a coro generator of Content objects.
       ## shinychat::chat_append drives the generator via later(), yielding
@@ -363,27 +411,37 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
 
         promises::then(result,
           onFulfilled = function(value) {
-            n_turns(n_turns() + 1)
+            dbg("[CopilotBoard] stream fulfilled")
+            turns_used <- n_turns() + 1L
+            n_turns(turns_used)
             tryCatch({
-              omicsagentovi::session_save(chat_store, agent_wrapper$agent)
-              info("[CopilotBoard] saved session turns=", n_turns())
-              tryCatch(
-                copilot_prune_sessions(chat_store),
-                error = function(e) info("[CopilotBoard] prune failed: ", conditionMessage(e))
-              )
-              history_refresh(history_refresh() + 1L)
+              had_plots <- length(pending_plot_requests()) > 0L
+              flush_pending_plots()
+              if (had_plots && is.function(evidence$plot_rendered)) {
+                dbg("[CopilotBoard] plot_rendered — scheduling session_save")
+                shiny::observeEvent(evidence$plot_rendered(), {
+                  schedule_session_persist(agent_wrapper, turns_used = turns_used)
+                }, once = TRUE, ignoreInit = TRUE)
+              } else {
+                later::later(function() {
+                  schedule_session_persist(agent_wrapper, turns_used = turns_used)
+                }, delay = 0.5)
+              }
             }, error = function(e) {
               info("[CopilotBoard] session_save failed: ", conditionMessage(e))
             })
           },
           onRejected = function(err) {
+            clear_pending_plots()
             info("[CopilotBoard] prompt failed: ", conditionMessage(err))
             shinychat::chat_append("chat", paste("Copilot error:", conditionMessage(err)))
           }
         ) |> promises::finally(function() {
+          dbg("[CopilotBoard] ask_copilot finally busy=FALSE")
           busy(FALSE)
         })
       }, error = function(e) {
+        clear_pending_plots()
         info("[CopilotBoard] stream_async failed: ", conditionMessage(e))
         shinychat::chat_append("chat", paste("Copilot error:", conditionMessage(e)))
         busy(FALSE)
@@ -423,6 +481,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         copilot(agent_wrapper)
       }
       n_turns(0)
+      clear_pending_plots()
       evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")
@@ -461,6 +520,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
         active_dataset_name(NULL)
       }
       n_turns(0)
+      clear_pending_plots()
       evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")
@@ -494,6 +554,17 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
 
       ## Wrap restored agent in the same shape copilot_create_agent returns.
       restored_agent <- restored
+      if (is.function(plot_callback)) {
+        restored_agent@context@state$plot_callback <- plot_callback
+      }
+      if (!is.null(pgx_dir)) {
+        restored_agent@context@state$data_dir <- pgx_dir
+      }
+      dbg(
+        "[CopilotBoard] restored agent rebound",
+        " has_plot_callback=", is.function(restored_agent@context@state$plot_callback),
+        " has_data_dir=", !is.null(restored_agent@context@state$data_dir)
+      )
       wrapper <- list(
         prompt = function(text) omicsagentovi::agent_prompt(restored_agent, text),
         prompt_stream = function(text, on_event = NULL) {
@@ -514,6 +585,7 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
       on.exit(restoring(FALSE), add = TRUE)
 
       copilot(wrapper)
+      clear_pending_plots()
       evidence$clear_plots()
       evidence$clear_table()
       shinychat::chat_clear("chat")

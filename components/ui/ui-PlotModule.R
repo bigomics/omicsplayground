@@ -589,7 +589,7 @@ PlotModuleServer <- function(id,
       ## ------------------------ Click-to-label handler --------------------------------
       ## --------------------------------------------------------------------------------
       ## Plotly click handler (for plotly editor popups)
-      if (requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
+      if (!is.null(parent_session) && requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
         observeEvent(plotly::event_data("plotly_click"), {
           shiny::req(parent_session)
           click_data <- plotly::event_data("plotly_click")
