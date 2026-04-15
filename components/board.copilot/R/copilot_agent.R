@@ -37,6 +37,16 @@ copilot_create_context <- function(pgx = NULL, plot_callback = NULL, pgx_dir = N
   ctx
 }
 
+.format_tool_request <- function(item) {
+  args <- item@arguments
+  if (length(args) > 0) {
+    args_text <- paste(names(args), vapply(args, function(x) as.character(x)[1], character(1)), sep = " = ", collapse = "\n")
+  } else {
+    args_text <- "(no arguments)"
+  }
+  paste0("<details><summary>🔧 ", item@name, "</summary>\n\n```\n", args_text, "\n```\n\n</details>\n\n")
+}
+
 copilot_create_agent <- function(pgx = NULL, plot_callback = NULL,
                                   pgx_dir = NULL, tier = "copilot-default") {
   info("[copilot_create_agent] creating ovi_context; tier=", tier)
@@ -58,7 +68,16 @@ copilot_create_agent <- function(pgx = NULL, plot_callback = NULL,
       omicsagentovi::agent_prompt_stream(agent, text, on_event = on_event)
     },
     stream_async = function(text) {
-      omicsagentovi::agent_prompt_async(agent, text)
+      stream <- omicsagentovi::agent_prompt_async(agent, text)
+      coro::async_generator(function() {
+        for (item in coro::await_each(stream)) {
+          if (S7::S7_inherits(item, ellmer::ContentToolRequest)) {
+            coro::yield(ellmer::ContentText(.format_tool_request(item)))
+          } else if (!S7::S7_inherits(item, ellmer::ContentToolResult)) {
+            coro::yield(item)
+          }
+        }
+      })()
     },
     agent = agent,
     tier = tier,

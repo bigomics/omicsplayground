@@ -637,7 +637,16 @@ CopilotBoardServer <- function(id, pgx = NULL, pgx_dir = NULL,
           omicsagentovi::agent_prompt_stream(restored_agent, text, on_event = on_event)
         },
         stream_async = function(text) {
-          omicsagentovi::agent_prompt_async(restored_agent, text)
+          stream <- omicsagentovi::agent_prompt_async(restored_agent, text)
+          coro::async_generator(function() {
+            for (item in coro::await_each(stream)) {
+              if (S7::S7_inherits(item, ellmer::ContentToolRequest)) {
+                coro::yield(ellmer::ContentText(.format_tool_request(item)))
+              } else if (!S7::S7_inherits(item, ellmer::ContentToolResult)) {
+                coro::yield(item)
+              }
+            }
+          })()
         },
         agent = restored_agent,
         tier = current_tier(),
