@@ -24,7 +24,7 @@ copilot_panel_history_ui <- function(id) {
 
 copilot_format_relative_time <- function(iso) {
   if (is.null(iso) || !nzchar(iso)) return("")
-  t <- suppressWarnings(as.POSIXct(iso, tz = "UTC"))
+  t <- suppressWarnings(as.POSIXct(sub("Z$", "", iso), format = "%Y-%m-%dT%H:%M:%S", tz = "UTC"))
   if (is.na(t)) return(iso)
   secs <- as.numeric(difftime(Sys.time(), t, units = "secs"))
   if (secs < 60)      return("just now")
