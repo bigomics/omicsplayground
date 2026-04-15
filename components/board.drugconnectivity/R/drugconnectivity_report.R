@@ -97,6 +97,7 @@ drugconnectivity_report_inputs <- function(id) {
       ns("downloadPDF"),
       label = "Download PDF",
       class = "btn-outline-primary",      
+      style = "width: 100%;",
       width = '100%')
   )
 }

@@ -51,6 +51,7 @@ wgcna_html_module_summary_server <- function(id,
                                              r_module,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     get_summary <- function() {
       wgcna <- wgcna()
       module <- r_module()
@@ -80,13 +81,14 @@ wgcna_html_module_summary_server <- function(id,
     })
 
     get_report <- shiny::eventReactive({
-      btn_count()
+      list( btn_count(), r_module(), r_annot() )
     } ,{
       wgcna <- wgcna()
       module <- r_module()        
       ai_model <- getUserOption(session,'llm_model')
 
-      if( btn_count() < 1 || ai_model=='' ) {
+      ##if( btn_count() < 1 || ai_model=='' ) {
+      if( btn_count() < 0 || ai_model=='' ) {
         return(NULL)
       }
 
