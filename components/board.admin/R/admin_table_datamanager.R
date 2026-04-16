@@ -332,11 +332,10 @@ admin_table_datamanager_server <- function(id, auth) {
     })
 
     ## -----------------------------------------------------------
-    ## Move files
+    ## Move files (with confirmation)
     ## -----------------------------------------------------------
     shiny::observeEvent(input$move_btn, {
       shiny::req(isTRUE(auth$ADMIN))
-      shiny::req(!busy())
       files <- selected_files()
       if (is.null(files)) {
         status("No files selected.")
@@ -344,7 +343,30 @@ admin_table_datamanager_server <- function(id, auth) {
       }
       dest <- input$dest_folder
       shiny::req(dest)
+      dest_label <- folder_label(dest)
+      shiny::showModal(shiny::modalDialog(
+        title = "Confirm Move",
+        shiny::HTML(paste0(
+          "<p>Move <b>", length(files), "</b> file(s) to <b>", dest_label, "</b>?</p>",
+          "<ul>", paste0("<li>", basename(files), "</li>", collapse = ""), "</ul>"
+        )),
+        footer = shiny::tagList(
+          shiny::actionButton(ns("confirm_move"), "Move", class = "btn-warning"),
+          shiny::modalButton("Cancel")
+        ),
+        easyClose = TRUE
+      ))
+    })
+
+    shiny::observeEvent(input$confirm_move, {
+      shiny::req(isTRUE(auth$ADMIN))
+      shiny::req(!busy())
+      files <- selected_files()
+      shiny::req(files)
+      dest <- input$dest_folder
+      shiny::req(dest)
       dest_dir <- resolve_dir(dest)
+      shiny::removeModal()
 
       disable_actions()
       on.exit(enable_actions())
