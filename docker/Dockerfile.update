@@ -12,16 +12,10 @@
 
 FROM bigomics/omicsplayground:beta
 
-ARG BRANCH=master
-ARG update_playdata=false
-ARG update_bigdash=false
-ARG update_playbase=true
-RUN echo Building Docker image from branch '$BRANCH'
-
 ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
 #------------------------------------------------------------
 # Install any extra Ubuntu libs (should be moved to playbase)
@@ -29,7 +23,15 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # RUN apt update && apt install -y fonts-lato
 
 #------------------------------------------------------------
-# Install quarto tinytext, to be removed when new image is built  # NEEDS TO BE MOVED TO BASE
+# Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
+#------------------------------------------------------------
+RUN ARCH=$(dpkg --print-architecture) && \
+    wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-${ARCH}.deb && \
+    dpkg -i quarto-1.8.27-linux-${ARCH}.deb && \
+    rm quarto-1.8.27-linux-${ARCH}.deb
+
+#------------------------------------------------------------
+# Install extra R packages
 #------------------------------------------------------------
 #RUN R -e "install.packages('torch')"
 #RUN R -e "install.packages('GGally')"
@@ -73,7 +75,11 @@ RUN R -e "install.packages('quarto')"
 RUN R -e "devtools::install_github('bigomics/visNetwork')"
 RUN R -e "install.packages('svglite')"
 RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
-    
+RUN R -e "install.packages('mirai')"
+RUN R -e "BiocManager::install('minfi')"
+RUN R -e "BiocManager::install('wateRmelon')"
+RUN R -e "devtools::install_github('bigomics/metaLINCS')"
+
 #------------------------------------------------------------
 # Add supporting R libraries
 #------------------------------------------------------------
@@ -83,14 +89,27 @@ COPY dev/Rprofil[e] /root/.Rprofile
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
-# Download fresh omicsplayground code from GitHub
+# Install omicsai (private repo, using BuildKit secret mount)
 #------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      rm -f /root/.Rhistory; \
+    fi
 
-RUN echo Downloading $BRANCH branch
+#------------------------------------------------------------
+# Download fresh omicsplayground code from GitHub
+# (ARG BRANCH declared here so branch changes don't invalidate
+#  any of the package install layers above)
+#------------------------------------------------------------
+ARG BRANCH=master
+ARG CACHEBUST_CODE
+RUN echo Downloading $BRANCH branch \(cache key: $CACHEBUST_CODE\)
 RUN rm -fr /omicsplayground  \
     && git clone -b $BRANCH --single-branch --depth 1 \
-    https://github.com/bigomics/omicsplayground.git \   
-    && chmod -R ugo+rwX /omicsplayground 
+    https://github.com/bigomics/omicsplayground.git \
+    && chmod -R ugo+rwX /omicsplayground
 
 # Run auto-install script
 #WORKDIR /omicsplayground
@@ -104,6 +123,7 @@ RUN rm -fr /omicsplayground  \
 RUN R -e "install.packages('ggiraph')"
 RUN R -e "BiocManager::install('TileDBArray')"
 
+ARG update_playbase=true
 RUN if [ $update_playbase = true ]; then \
     echo "Checking playbase branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
@@ -129,6 +149,7 @@ RUN R -e "if (!require('playbase')) { quit(status=1) }"
 # Install fresh playdata (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+ARG update_playdata=false
 RUN if [ $update_playdata = true ]; then \
     echo "Checking playdata branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
@@ -143,6 +164,7 @@ fi
 # Install fresh bigdash (from same BRANCH)
 #------------------------------------------------------------
 # check if bigdash@{$BRANCH} exists, if it does, install.. otherwise install main
+ARG update_bigdash=false
 RUN if [ $update_bigdash = true ]; then \
     echo "Checking bigdash branch ${BRANCH}"; \
     BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BRANCH} | wc -l); \
@@ -169,10 +191,16 @@ WORKDIR /omicsplayground
 RUN make sass
 #RUN Rscript dev/init_annothub.R
 
-## disable Rprofile and Renv 
+## disable Rprofile and Renv
 RUN if test -f .Rprofile; then mv .Rprofile .Rprofile.DISABLED; fi
 RUN if test -f .Renviron; then mv .Renviron .Renviron.DISABLED; fi
 RUN if test -f renv.lock; then mv renv.lock renv.lock.DISABLED; fi
+
+#------------------------------------------------------------
+# Clean up GitHub token from image
+#------------------------------------------------------------
+RUN rm -f /root/.gitconfig; true
+ENV GITHUB_PAT=""
 
 #------------------------------------------------------------
 # Expose port and set entry CMD
