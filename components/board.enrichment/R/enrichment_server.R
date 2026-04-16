@@ -252,6 +252,7 @@ EnrichmentBoard <- function(id, pgx,
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
+            meta.p = meta[gs, "pv"],
             matched.genes = gset.size[gs],
             stars = stars[gs],
             AveExpr0 = AveExpr0[gs],
@@ -263,6 +264,7 @@ EnrichmentBoard <- function(id, pgx,
           rpt <- data.frame(
             logFC = meta.fc[gs],
             meta.q = meta[gs, "qv"],
+            meta.p = meta[gs, "pv"],
             matched.genes = pgx$gset.meta$info[gs, "gset.size"],
             total.genes = pgx$gset.meta$info[gs, "gset.size.raw"],
             fraction.genes.covered = pgx$gset.meta$info[gs, "gset.fraction"],
@@ -331,7 +333,9 @@ EnrichmentBoard <- function(id, pgx,
       }
 
       if (!input$show_pv) {
-        res <- res[, -grep("^p.", colnames(res)), drop = FALSE]
+        res <- res[, -grep("^p.|^meta\\.p$", colnames(res)), drop = FALSE]
+      } else {
+        res <- res[, -grep("^meta\\.q$", colnames(res)), drop = FALSE]
       }
 
       res <- data.frame(res)
