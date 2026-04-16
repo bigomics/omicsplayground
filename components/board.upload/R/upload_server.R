@@ -201,10 +201,12 @@ UploadBoard <- function(id,
             update.sigdb = FALSE
           )
           ## Update TileDB for cross-dataset queries (Across Datasets module)
-          playbase::tiledb.updateDatasetFolder(
-            pgxdir,
-            new_pgx = pgxfile
-          )
+          if (isTRUE(opt$ENABLE_ACROSS)) {
+            playbase::tiledb.updateDatasetFolder(
+              pgxdir,
+              new_pgx = pgxfile
+            )
+          }
         }
       )
 

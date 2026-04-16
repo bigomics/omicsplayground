@@ -250,26 +250,8 @@ app_server <- function(input, output, session) {
     }
   })
 
-  ## Across module (always available from Datasets menu)
-  if (exists("MODULE.across")) {
-    AcrossBoard("across",
-      pgx = PGX,
-      pgx_dir = reactive(auth$user_dir),
-      labeltype = labeltype
-    )
-  }
-
-  ## Across module (always available from Datasets menu)
-  if (exists("MODULE.across")) {
-    AcrossBoard("across",
-      pgx = PGX,
-      pgx_dir = reactive(auth$user_dir),
-      labeltype = labeltype
-    )
-  }
-
-  ## Across module (always available from Datasets menu)
-  if (exists("MODULE.across")) {
+  ## Across module (available from Datasets menu when ENABLE_ACROSS is TRUE)
+  if (isTRUE(opt$ENABLE_ACROSS) && exists("MODULE.across")) {
     AcrossBoard("across",
       pgx = PGX,
       pgx_dir = reactive(auth$user_dir),
@@ -1133,11 +1115,43 @@ app_server <- function(input, output, session) {
       }
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
+
+      ## Show/hide across-datasets tab based on ENABLE_ACROSS option
+      enable_across <- isTRUE(opt$ENABLE_ACROSS)
+      bigdash.toggleMenuItem(session, "across-tab", enable_across)
+      dbg("[SERVER] ENABLE_ACROSS = ", enable_across)
+
+      ## Check if TileDB needs update for this user's directory
+      if (enable_across) {
+        user_dir <- auth$user_dir
+        if (!is.null(user_dir) && dir.exists(user_dir)) {
+          if (playbase::tiledb.needUpdate(user_dir)) {
+            message("[SERVER] TileDB needs update for user: ", auth$email)
+            shiny::showModal(shiny::modalDialog(
+              title = "Updating dataset database",
+              div(
+                shiny::icon("sync", class = "fa-spin"),
+                " Building cross-dataset database. This may take a few minutes...",
+                style = "font-size: 1.1em; padding: 20px 0;"
+              ),
+              footer = NULL,
+              easyClose = FALSE
+            ))
+            tryCatch({
+              playbase::tiledb.updateDatasetFolder(user_dir)
+            }, error = function(e) {
+              warning("[SERVER] TileDB update failed: ", e$message)
+            })
+            shiny::removeModal()
+          }
+        }
+      }
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
       ## Hide upload tab when logged out (will be re-evaluated on next login)
       bigdash.hideMenuItem(session, "upload-tab")
+      bigdash.hideMenuItem(session, "across-tab")
     }
   })
 
