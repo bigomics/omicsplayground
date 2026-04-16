@@ -161,9 +161,12 @@ admin_table_datamanager_server <- function(id, auth) {
       fl <- folder_list()
       shiny::req(fl)
       labels <- sapply(fl, folder_label)
+      ## Preserve current filter selection across refreshes
+      current <- input$filter_folder
+      sel <- if (!is.null(current) && current %in% c("__all__", fl)) current else "__all__"
       shiny::updateSelectInput(session, "filter_folder",
         choices = c("(all)" = "__all__", stats::setNames(fl, labels)),
-        selected = "__all__"
+        selected = sel
       )
       shiny::updateSelectInput(session, "dest_folder",
         choices = stats::setNames(fl, labels)
