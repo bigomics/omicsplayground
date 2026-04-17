@@ -50,6 +50,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.connectivity/R/connectivity_table_similarity_scores.R',encoding='UTF-8')
   source('board.connectivity/R/connectivity_ui.R',encoding='UTF-8')
   source('board.copilot/R/copilot_agent.R',encoding='UTF-8')
+  source('board.copilot/R/copilot_history_tools.R',encoding='UTF-8')
   source('board.copilot/R/copilot_panel_datasets.R',encoding='UTF-8')
   source('board.copilot/R/copilot_panel_docs.R',encoding='UTF-8')
   source('board.copilot/R/copilot_panel_evidence_server.R',encoding='UTF-8')

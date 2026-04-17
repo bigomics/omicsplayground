@@ -16,6 +16,13 @@ CopilotBoardUI <- function(id) {
     full_screen = FALSE,
     class = "border-0",
     style = "height: calc(100vh - 80px); overflow-y: auto;",
+    shiny::div(
+      class = "px-2 pt-2",
+      shiny::actionButton(
+        ns("new_chat"), "+ New chat",
+        class = "btn-sm btn-primary w-100"
+      )
+    ),
     bslib::navset_underline(
       id = ns("left_tabs"),
       bslib::nav_panel(

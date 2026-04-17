@@ -1,22 +1,16 @@
 #' Session History Sub-module
 #'
 #' Lists persisted Copilot sessions (via omicsagentovi::ovi_sessions +
-#' ovi_session_meta), supports "+ New chat", row-click restore, and
-#' delete-selected. Returns three reactives to the parent server:
+#' ovi_session_meta), supports row-click restore and delete-selected.
+#' Returns two reactives to the parent server:
 #'
 #'   - restore_request  reactiveVal(session_id) — set on row click
-#'   - new_chat_request reactiveVal(int)        — incremented on New chat
 #'   - delete_request   reactiveVal(session_id) — set on delete confirm
 
 copilot_panel_history_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(
     style = "padding: 8px;",
-    shiny::actionButton(
-      ns("new_chat"), "+ New chat",
-      class = "btn-sm btn-primary mb-2",
-      width = "100%"
-    ),
     DT::dataTableOutput(ns("history_table"), height = "auto"),
     shiny::uiOutput(ns("delete_ui"))
   )
@@ -41,7 +35,6 @@ copilot_panel_history_server <- function(id, chat_store, refresh_trigger = NULL)
     session_dir <- chat_store@state$session_dir
 
     restore_request  <- shiny::reactiveVal(NULL)
-    new_chat_request <- shiny::reactiveVal(0)
     delete_request   <- shiny::reactiveVal(NULL)
 
     sessions_df <- shiny::reactive({
@@ -138,13 +131,8 @@ copilot_panel_history_server <- function(id, chat_store, refresh_trigger = NULL)
       }
     })
 
-    shiny::observeEvent(input$new_chat, {
-      new_chat_request(new_chat_request() + 1L)
-    })
-
     list(
       restore_request  = restore_request,
-      new_chat_request = new_chat_request,
       delete_request   = delete_request
     )
   })

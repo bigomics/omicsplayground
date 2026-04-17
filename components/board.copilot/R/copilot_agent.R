@@ -24,7 +24,8 @@ copilot_snapshot_pgx <- function(pgx) {
   copilot_as_pgx(snapshot)
 }
 
-copilot_create_context <- function(pgx = NULL, plot_callback = NULL, pgx_dir = NULL) {
+copilot_create_context <- function(pgx = NULL, plot_callback = NULL,
+                                    pgx_dir = NULL, docs_dir = NULL) {
   ctx <- omicsagentovi::ovi_context(copilot_as_pgx(pgx))
 
   if (is.function(plot_callback)) {
@@ -32,6 +33,9 @@ copilot_create_context <- function(pgx = NULL, plot_callback = NULL, pgx_dir = N
   }
   if (!is.null(pgx_dir)) {
     ctx@state$data_dir <- pgx_dir
+  }
+  if (!is.null(docs_dir)) {
+    ctx@state$docs_dir <- docs_dir
   }
 
   ctx
@@ -48,17 +52,28 @@ copilot_create_context <- function(pgx = NULL, plot_callback = NULL, pgx_dir = N
 }
 
 copilot_create_agent <- function(pgx = NULL, plot_callback = NULL,
-                                  pgx_dir = NULL, tier = "copilot-default") {
+                                  pgx_dir = NULL, docs_dir = NULL,
+                                  tier = "copilot-default") {
+  t_start <- Sys.time()
   info("[copilot_create_agent] creating ovi_context; tier=", tier)
   ctx <- copilot_create_context(
     pgx = pgx,
     plot_callback = plot_callback,
-    pgx_dir = pgx_dir
+    pgx_dir = pgx_dir,
+    docs_dir = docs_dir
   )
+  t_ctx <- Sys.time()
 
   agent <- omicsagentovi::Agent(tier = tier, context = ctx)
+  t_agent <- Sys.time()
   model_name <- tryCatch(agent@model, error = function(e) "unknown")
-  info("[copilot_create_agent] Agent created — tier=", tier, " model=", model_name)
+  info(
+    "[copilot_create_agent] Agent created — tier=", tier,
+    " model=", model_name,
+    " context_ms=", round(as.numeric(difftime(t_ctx, t_start, units = "secs")) * 1000, 1),
+    " agent_ms=", round(as.numeric(difftime(t_agent, t_ctx, units = "secs")) * 1000, 1),
+    " total_ms=", round(as.numeric(difftime(t_agent, t_start, units = "secs")) * 1000, 1)
+  )
 
   list(
     prompt = function(text) {
@@ -85,19 +100,17 @@ copilot_create_agent <- function(pgx = NULL, plot_callback = NULL,
       omicsagentovi::ovi_set_pgx(agent, copilot_as_pgx(new_pgx))
     },
     reset = function(new_pgx = NULL, new_plot_callback = NULL, new_tier = NULL) {
-      info("[copilot_create_agent] reset called")
       pgx_to_use      <- if (is.null(new_pgx)) pgx else new_pgx
       callback_to_use <- if (is.function(new_plot_callback)) new_plot_callback else plot_callback
       tier_to_use     <- if (!is.null(new_tier)) new_tier else tier
       ctx   <<- copilot_create_context(
         pgx = pgx_to_use,
         plot_callback = callback_to_use,
-        pgx_dir = pgx_dir
+        pgx_dir = pgx_dir,
+        docs_dir = docs_dir
       )
       agent <<- omicsagentovi::Agent(tier = tier_to_use, context = ctx)
       tier  <<- tier_to_use
-      model_name <- tryCatch(agent@model, error = function(e) "unknown")
-      info("[copilot_create_agent] Agent recreated — tier=", tier_to_use, " model=", model_name)
     }
   )
 }

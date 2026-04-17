@@ -131,37 +131,6 @@ copilot_prune_sessions <- function(store, max_sessions = 100L) {
   invisible(NULL)
 }
 
-#' Replay persisted user/assistant text turns into a shinychat instance
-#'
-#' Tool turns are intentionally skipped per the no-tool-rendering policy.
-#'
-#' @param chat_id The shinychat widget id to append messages to.
-#' @param turns List of ellmer Turn objects from a restored session.
-#' @return Integer count of user turns replayed.
-copilot_replay_turns <- function(chat_id, turns) {
-  n_user <- 0L
-  for (turn in turns) {
-    role <- tryCatch(turn@role, error = function(e) NULL)
-    if (is.null(role) || !(role %in% c("user", "assistant"))) next
-    contents <- tryCatch(turn@contents, error = function(e) list())
-    has_tool <- any(vapply(contents, function(c) {
-      S7::S7_inherits(c, ellmer::ContentToolRequest) ||
-      S7::S7_inherits(c, ellmer::ContentToolResult)
-    }, logical(1)))
-    if (has_tool) next
-    text_parts <- vapply(contents, function(c) {
-      if (S7::S7_inherits(c, ellmer::ContentText)) c@text %||% "" else ""
-    }, character(1))
-    text <- paste(text_parts[nzchar(text_parts)], collapse = "\n")
-    if (!nzchar(text)) next
-    shinychat::chat_append_message(
-      chat_id, list(role = role, content = text), chunk = FALSE
-    )
-    if (role == "user") n_user <- n_user + 1L
-  }
-  n_user
-}
-
 #' Human-readable label for a copilot tier identifier
 #'
 #' @param tier Character scalar tier id (e.g. "copilot-default").
