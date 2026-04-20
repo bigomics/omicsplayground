@@ -148,7 +148,8 @@ app_ui <- function(x) {
           tcga = "TCGA survival (beta)"
         ),
         "MultiOmics" = MODULE.multiomics$module_menu(),
-        "WGCNA" = MODULE.wgcna$module_menu()
+        "WGCNA" = MODULE.wgcna$module_menu(),
+        "Epigenomics" = MODULE.epigenomics$module_menu()
       )
 
       ## filter disabled modules
@@ -185,7 +186,7 @@ app_ui <- function(x) {
           tab.names <- names(menu_tree[[i]])
           tab.titles <- menu_tree[[i]]
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+          if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
             menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
           } else {
             menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
@@ -537,6 +538,11 @@ app_ui <- function(x) {
             "preservation-tab",
             "Preservation WGCNA",
             tspan("Preservation analysis using the WGCNA framework")
+          ),
+          bigdash::sidebarTabHelp(
+            "ideograms-tab",
+            "Beta Ideograms",
+            tspan("Epigenomics visualizations and analyses for methylomics data.")
           ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
