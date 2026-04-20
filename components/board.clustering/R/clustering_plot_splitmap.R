@@ -123,6 +123,25 @@ clustering_plot_splitmap_server <- function(id,
       }
     })
 
+    ## Editor: get custom group order for split heatmaps
+    get_splitx_order <- function() {
+      custom_order <- input$hm_group_order
+      if (is.null(custom_order) || length(custom_order) == 0) return(NULL)
+      custom_order
+    }
+
+    ## Editor: drag-and-drop group ordering for split heatmaps
+    output$hm_group_order_ui <- shiny::renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      splitx <- pd$filt$grp
+      if (is.null(splitx) || length(unique(splitx)) <= 1) {
+        return(shiny::tags$em("Split the heatmap by a variable to reorder groups."))
+      }
+      grp_levels <- unique(splitx)
+      rank_list_ui(grp_levels, ns, input_id = "hm_group_order")
+    })
+
     plot_data <- shiny::reactive({
       filt <- getTopMatrix()
       shiny::req(filt)
@@ -191,7 +210,6 @@ clustering_plot_splitmap_server <- function(id,
       }
 
       ## split samples
-      splitx <- NULL
       splitx <- filt$grp
 
       # Calculate text sizes
@@ -208,12 +226,16 @@ clustering_plot_splitmap_server <- function(id,
       if (!input$show_colnames) cex1 <- 0
       show_colnames <- (cex1 > 0)
 
+      annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE, check.names = FALSE)
+      rownames(annotF) <- rownames(annot)
+
       # Select annot to display (user input)
       sel <- selected_phenotypes()
+      sel <- intersect(sel, colnames(annotF))
       if (length(sel) == 0) {
         annot <- NULL
       } else {
-        annot <- annot[, sel, drop = FALSE]
+        annot <- annotF[, sel, drop = FALSE]
       }
 
       if (hm_level() == "gene") {
@@ -261,6 +283,7 @@ clustering_plot_splitmap_server <- function(id,
         zx,
         split = splity,
         splitx = splitx,
+        splitx_order = get_splitx_order(),
         scale = scale.mode,
         show_legend = input$show_legend,
         show_colnames = show_colnames,
@@ -380,6 +403,7 @@ clustering_plot_splitmap_server <- function(id,
         ytips = tooltips,
         idx = idx,
         splitx = splitx,
+        splitx_order = get_splitx_order(),
         scale = scale.mode,
         zlim = zlim,
         symm = symm,
@@ -387,7 +411,8 @@ clustering_plot_splitmap_server <- function(id,
         rowcex = ifelse(input$show_rownames, row_cex, 0),
         colcex = col_cex,
         show_legend = input$show_legend,
-        return_x_matrix = TRUE
+        return_x_matrix = TRUE,
+        heatmap_colors = extract_heatmap_lmh_colors(input)
       )
       return(plt)
     }

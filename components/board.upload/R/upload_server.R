@@ -1,7 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
 
 UploadBoard <- function(id,
                         pgx_dir,
@@ -50,7 +48,6 @@ UploadBoard <- function(id,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
           annot.cols = annot.cols
         )
-        ## if (is.null(detected)) detected <- "error"
         detected
       })
     })
@@ -81,23 +78,8 @@ UploadBoard <- function(id,
       ))
     })
 
-    module_infotext <- tspan(paste0(
-      'Under the <b>Upload data</b> panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
-
-<br><br>
-<ol>
-<li>counts.csv: Counts file with gene on rows, samples as columns.
-<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
-<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
-</ol>
-
-<br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
-    ), js = FALSE)
-
     module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
 
-    ## observeEvent( new_upload(), {
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")
@@ -389,20 +371,12 @@ UploadBoard <- function(id,
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
             ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                MAXSAMPLES, "samples."
-              ),
-              type = "error"
-            )
+            # pop up telling user max sample reached (ui-alerts.R)
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "counts")
           }
           # Hard stop for scRNA-seq
-          if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+          if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 200.000 cells allowed for scRNA-seq")
             checked <- NULL
             # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
@@ -413,7 +387,7 @@ UploadBoard <- function(id,
               text = paste(
                 "You have reached the maximum number of cells allowed. Please",
                 tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
+                "200.000 cells."
               ),
               type = "error"
             )
@@ -467,14 +441,9 @@ UploadBoard <- function(id,
         if (!is.null(checked)) {
           if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
-            ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
-            # pop up telling user max samples reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
-              type = "error"
-            )
+            # pop up telling user max samples reached (ui-alerts.R)
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "samples")
           }
         }
 
@@ -493,7 +462,6 @@ UploadBoard <- function(id,
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
             res_counts <- cross_check$COUNTS
-            ## res_counts <- res_counts + checked_counts()$log_prior
             status <- "OK"
           } else {
             checked <- NULL
@@ -575,7 +543,7 @@ UploadBoard <- function(id,
           }
         }
 
-        if (!is.null(checked)) {
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
           checked <- playbase::contrasts.convertToLabelMatrix(
             contrasts = checked, samples = cc$SAMPLES
           )
@@ -657,25 +625,6 @@ UploadBoard <- function(id,
           finish = "Compute!"
         )
       )
-      ## } else {
-      ##   wizard <- wizardR::wizard(
-      ##     id = ns("upload_wizard"),
-      ##     width = 90,
-      ##     height = 75,
-      ##     modal = TRUE,
-      ##     style = "dots",
-      ##     lock_start = FALSE,
-      ##     counts_ui,
-      ##     samples_ui,
-      ##     contrasts_ui,
-      ##     normalization_panel,
-      ##     compute_panel,
-      ##     options = list(
-      ##       navigation = "buttons",
-      ##       finish = "Compute!"
-      ##     )
-      ##   )
-      ## }
       return(wizard)
     })
 
@@ -806,7 +755,7 @@ UploadBoard <- function(id,
         }
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         if (numpgx >= max.datasets) {
-          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+          shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
           return(NULL)
         }
         bigdash.selectTab(session, selected = "upload-tab")
@@ -826,7 +775,7 @@ UploadBoard <- function(id,
       }
       max.datasets <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
         return(NULL)
       }
 
@@ -1355,11 +1304,6 @@ UploadBoard <- function(id,
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
       norm_method = shiny::reactive(compute_input$norm_method),
-      #      imputation_method = shiny::reactive(compute_input$imputation_method),
-      #      bc_method = shiny::reactive(compute_input$bc_method),
-      #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
-      # samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      # samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),

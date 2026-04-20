@@ -17,6 +17,9 @@ app_server <- function(input, output, session) {
 
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
+  ## Initialise the global colour theme (in-session only)
+  init_color_theme()
+
   info("[SERVER] getwd = ", normalizePath(getwd()))
   info("[SERVER] SESSION = ", session$token)
 
@@ -168,6 +171,14 @@ app_server <- function(input, output, session) {
     pgx = PGX
   )
 
+  if (isTRUE(opt$ENABLE_ADMIN)) {
+    AdminPanelBoard(
+      "admin_panel",
+      auth = auth,
+      credentials_file = credentials_file
+    )
+  }
+
   env$user_settings <- list(
     enable_beta = shiny::reactive(input$enable_beta),
     enable_info = shiny::reactive(input$enable_info),
@@ -219,6 +230,10 @@ app_server <- function(input, output, session) {
 
   ## Do not display "Welcome" tab on the menu
   bigdash.hideMenuItem(session, "welcome-tab")
+  ## Hide admin tab by default (will be shown for admin users after login)
+  if (isTRUE(opt$ENABLE_ADMIN)) {
+    bigdash.hideMenuItem(session, "admin-tab")
+  }
   shinyjs::runjs("sidebarClose()")
 
   ## Modules needed from the start
@@ -808,11 +823,12 @@ app_server <- function(input, output, session) {
         WATERMARK <<- auth$options$WATERMARK
       }
 
-      info("[SERVER] trigger on change dataset done!")
     }
   )
 
   tab_control <- function() {
+    info("[SERVER] tab_control")
+
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
     show.ai <- env$user_settings$enable_ai()
@@ -821,15 +837,15 @@ app_server <- function(input, output, session) {
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
     ## Hide beta main tabs
-    info("[SERVER] disabling beta features")
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
-    bigdash.toggleTab(session, "preservation-tab", show.beta)
+    bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
     bigdash.toggleTab(session, "mwgcna-tab", show.beta)
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    toggleTab("wgcna-tabs", "AI Report✨", show.beta) 
 
     ## hide AI tabs
     show.ai.tabs <- isTRUE(show.ai) && isTRUE(show.beta)
@@ -869,7 +885,6 @@ app_server <- function(input, output, session) {
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
 
     ## Dynamically show upon availability in pgx object
-    info("[SERVER] disabling extra features")
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
     tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
     tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
@@ -1180,11 +1195,22 @@ app_server <- function(input, output, session) {
       }
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
+
+      ## Show/hide admin tab based on user's ADMIN status AND global ENABLE_ADMIN option
+      if (isTRUE(opt$ENABLE_ADMIN)) {
+        is_admin <- isTRUE(auth$ADMIN)
+        bigdash.toggleMenuItem(session, "admin-tab", is_admin)
+        dbg("[SERVER] ADMIN status for user = ", is_admin)
+      }
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
       ## Hide upload tab when logged out (will be re-evaluated on next login)
       bigdash.hideMenuItem(session, "upload-tab")
+      ## Hide admin tab when logged out (only if admin is enabled globally)
+      if (isTRUE(opt$ENABLE_ADMIN)) {
+        bigdash.hideMenuItem(session, "admin-tab")
+      }
     }
   })
 

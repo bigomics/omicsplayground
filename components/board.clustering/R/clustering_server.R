@@ -145,16 +145,22 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     # reactive functions ##############
     shiny::observeEvent(
       {
-        list(input$hm_splitby, pgx$X, pgx$samples)
+        list(input$hm_splitby, input$hm_level, pgx$X, pgx$samples)
       },
       {
-        shiny::req(pgx$X, pgx$samples, input$hm_splitby)
+        shiny::req(pgx$X, pgx$samples, input$hm_splitby, input$hm_level)
         if (input$hm_splitby == "none") {
           return()
         }
         if (input$hm_splitby == "gene") {
-          xgenes <- sort(rownames(getFilteredMatrix()$zx))
-          shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
+          if (input$hm_level == "geneset") {
+            ## at geneset level, show geneset names instead of genes
+            xgenesets <- sort(rownames(getFilteredMatrix()$zx))
+            shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenesets, server = TRUE)
+          } else {
+            xgenes <- sort(rownames(getFilteredMatrix()$zx))
+            shiny::updateSelectizeInput(session, "hm_splitvar", choices = xgenes, server = TRUE)
+          }
         }
         if (input$hm_splitby == "phenotype") {
           cvar <- sort(playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999))
@@ -180,6 +186,17 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
+    })
+
+    ## update split radio button label to match current level
+    shiny::observeEvent(input$hm_level, {
+      shiny::req(input$hm_level)
+      level_label <- tspan(input$hm_level, js = FALSE)
+      choices <- c("none", "phenotype", "contrast", "gene")
+      choices_names <- c("none", "phenotype", "contrast", level_label)
+      names(choices) <- choices_names
+      sel <- input$hm_splitby
+      shiny::updateRadioButtons(session, "hm_splitby", choices = choices, selected = sel)
     })
 
     shiny::observeEvent(pgx, {
@@ -381,8 +398,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       splitby <- input$hm_splitby
       do.split <- splitby != "none"
 
-      if (splitby == "gene" && !splitvar %in% rownames(pgx$X)) {
-        return(NULL)
+      ## validate splitvar exists in the appropriate matrix
+      if (splitby == "gene") {
+        split_rows <- if (input$hm_level == "geneset") rownames(pgx$gsetX) else rownames(pgx$X)
+        if (!splitvar %in% split_rows) {
+          return(NULL)
+        }
       }
       if (splitby == "phenotype" && !splitvar %in% colnames(pgx$samples)) {
         return(NULL)
@@ -406,9 +427,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         shiny::need(is.null(grp) || any(!is.na(grp)), "Selected grouping and filter combination is not valid (no samples left).")
       )
 
-      ## split on gene expression value: hi vs. low
-      if (do.split && splitvar %in% rownames(pgx$X)) {
-        gx <- playbase::imputeMissing(pgx$X, method = "SVD2")
+      ## split on gene/geneset expression value: hi vs. low
+      split_matrix <- if (input$hm_level == "geneset") pgx$gsetX else pgx$X
+      if (do.split && splitvar %in% rownames(split_matrix)) {
+        gx <- playbase::imputeMissing(split_matrix, method = "SVD2")
         gx <- gx[splitvar, colnames(zx)]
 
         ## TODO if this code is revived again, for some datasets
@@ -464,7 +486,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
 
       addsplitgene <- function(gg) {
-        if (do.split && splitvar %in% rownames(pgx$X)) {
+        if (do.split && splitvar %in% rownames(split_matrix)) {
           gg <- unique(c(splitvar, gg))
         }
         return(gg)

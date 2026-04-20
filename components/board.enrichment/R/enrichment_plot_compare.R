@@ -24,9 +24,14 @@ enrichment_plot_compare_ui <- function(
     info.methods = info.methods,
     info.references = info.references,
     info.extra_link = info.extra_link,
+    outputFunc = shiny::plotOutput,
+    outputFunc2 = shiny::plotOutput,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -66,6 +71,10 @@ enrichment_plot_compare_server <- function(id,
 
       gsmethods <- selected_gsetmethods()
 
+      col_up   <- get_editor_color(input, "color_up",   "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
+      col_line <- get_editor_color(input, "color_line", "line")
+
       par(mfrow = c(2, 5), mar = c(0.5, 3.2, 2.6, 0.5), mgp = c(2, 0.8, 0))
       i <- 1
       for (i in 1:5) {
@@ -101,7 +110,10 @@ enrichment_plot_compare_server <- function(id,
             main = cmp,
             xlab = "",
             cex.main = 0.80,
-            len.main = 72
+            len.main = 72,
+            col_up = col_up,
+            col_down = col_down,
+            col_line = col_line
           )
           qv1 <- formatC(qv0, format = "e", digits = 2)
           legend("topright", paste("q=", qv1), bty = "n", cex = 0.85)
@@ -123,7 +135,8 @@ enrichment_plot_compare_server <- function(id,
       func2 = compare.RENDER,
       pdf.width = 5, pdf.height = 5,
       res = c(95, 100),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

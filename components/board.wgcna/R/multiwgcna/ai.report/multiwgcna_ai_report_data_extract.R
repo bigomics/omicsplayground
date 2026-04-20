@@ -7,8 +7,13 @@ multiwgcna_ai_aux_layers <- function() {
   c("gset", "gs", "pheno", "ph")
 }
 
+multiwgcna_ai_unwrap_layers <- function(mwgcna) {
+  if (!is.null(mwgcna$layers)) mwgcna$layers else mwgcna
+}
+
 multiwgcna_ai_data_layers <- function(mwgcna) {
   if (is.null(mwgcna)) return(character(0))
+  mwgcna <- multiwgcna_ai_unwrap_layers(mwgcna)
   layers <- setdiff(names(mwgcna), multiwgcna_ai_aux_layers())
   layers[vapply(layers, function(layer) {
     w <- mwgcna[[layer]]

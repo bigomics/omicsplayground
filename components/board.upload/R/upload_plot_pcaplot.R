@@ -51,8 +51,15 @@ upload_plot_pcaplot_server <- function(id,
         shiny::req(pheno)
         shiny::req(counts)
         method <- input$pcaplot.method
-        X <- log2(1 + counts)
-        X[is.na(X)] <- median(X, na.rm = TRUE)
+        ## log1p(x)/log(2) == log2(1+x) but sparse-preserving: log1p(0)=0 so
+        ## structural zeros stay zero and the matrix stays sparse.
+        if (inherits(counts, "sparseMatrix")) {
+          X <- log1p(counts) / log(2)
+          if (anyNA(X@x)) X@x[is.na(X@x)] <- median(X@x, na.rm = TRUE)
+        } else {
+          X <- log2(1 + counts)
+          X[is.na(X)] <- median(X, na.rm = TRUE)
+        }
 
         ## clust <- playbase::pgx.clusterMatrix.DEPRECATED(X, dims = 2, method = method)$pos2d
         clust <- playbase::pgx.clusterBigMatrix(X, dims = 2, method = method[1])

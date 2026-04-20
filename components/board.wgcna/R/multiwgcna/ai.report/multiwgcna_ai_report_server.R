@@ -7,8 +7,15 @@ multiwgcna_ai_report_server <- function(id, mwgcna, pgx, parent_session, waterma
   moduleServer(id, function(input, output, session) {
     cache <- omicsai::omicsai_cache_init("mem")
 
-    module_choices <- shiny::reactive({
+    ## Normalize: extract $layers if present (devel wraps layers in obj)
+    mwgcna_layers <- shiny::reactive({
       w <- mwgcna()
+      shiny::req(w)
+      multiwgcna_ai_unwrap_layers(w)
+    })
+
+    module_choices <- shiny::reactive({
+      w <- mwgcna_layers()
       shiny::req(w)
       multiwgcna_ai_module_choices(w)
     })
@@ -20,7 +27,7 @@ multiwgcna_ai_report_server <- function(id, mwgcna, pgx, parent_session, waterma
 
     text_result <- multiwgcna_ai_text_server(
       "text",
-      mwgcna = mwgcna,
+      mwgcna = mwgcna_layers,
       pgx = pgx,
       controls = controls,
       parent_session = parent_session

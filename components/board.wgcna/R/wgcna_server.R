@@ -35,8 +35,7 @@ WgcnaBoard <- function(id, pgx) {
         easyClose = TRUE
       ))
     })
-
-
+    
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "WGCNA" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
@@ -50,12 +49,20 @@ WgcnaBoard <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
+    ## shiny::observe({
+    ##   ai_model <- getUserOption(session,'llm_model')
+    ##   showtab <- ifelse(ai_model=='', FALSE, TRUE)
+    ##   toggleTab("wgcna-tabs", "AI Report✨", showtab) ## too slow
+    ## })
+    
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
 
     compute_wgcna <- function() {
+
       pgx.showSmallModal("Recalculating WGCNA with new parameters...")
+
       progress <- shiny::Progress$new()
       on.exit(progress$close())
       progress$set(message = "Calculating WGCNA...", value = 0)
@@ -72,6 +79,17 @@ WgcnaBoard <- function(id, pgx) {
         ai_model = NULL,
         progress = progress
       )
+
+      message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
+      progress$set(message = "Initializing WGCNA object...", value = 0.7)
+      
+      llm_model <- getUserOption(session,'llm_model')
+      img_model <- NULL
+      #img_model <- "google:gemini-3.1-flash-image-preview"
+      out <- playbase::wgcna.init(
+        out, llm=llm_model, img_model=img_model, annot=pgx$genes,
+        progress = progress )
+      
       shiny::removeModal()
       out
     }
@@ -244,12 +262,6 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
-
-    ## wgcna_plot_MMvsGS_server(
-    ##   "geneSignificance",
-    ##   wgcna.compute = wgcna,
-    ##   watermark = WATERMARK
-    ## )
 
     wgcna_plot_sampledendrogram_server(
       "sampleDendrogram",

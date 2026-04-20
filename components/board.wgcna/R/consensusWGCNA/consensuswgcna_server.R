@@ -97,10 +97,20 @@ ConsensusWGCNA_Board <- function(id, pgx) {
           xx <- xx[names(xx) %in% c("gx", "px")]
           xx <- lapply(xx, function(x) playbase::rename_by2(x, annot_table = pgx$genes))
           gg <- Reduce(intersect, lapply(xx, rownames))
-          shiny::validate(shiny::need(
-            length(gg) > 0,
-            "Your dataset is incompatible for consensus WGCNA: no shared features."
-          ))
+          shiny::validate(
+            shiny::need(
+              length(gg) > 0,
+              "Your dataset is incompatible for consensus WGCNA: no shared features between transcriptomics and proteomics."
+            ),
+            shiny::need(
+              length(gg) >= 50,
+              paste0(
+                "Only ", length(gg), " shared features found between transcriptomics and proteomics layers ",
+                "(minimum required: 50). ",
+                "Ensure both layers use compatible feature identifiers (gene symbols, UniProt, or Ensembl IDs)."
+              )
+            )
+          )
           xx <- lapply(xx, function(x) x[gg, , drop = FALSE])
         } else if (!is.null(pgx$samples)) {
           splitby <- input$splitby
@@ -176,7 +186,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
           compute.enrichment = TRUE,
           summary = TRUE,
           ai_model = NULL,
-          ai_experiment = pgx$description,
+          experiment = pgx$description,
           gsea.mingenes = 5,
           gsea.ntop = 1000,
           progress = progress,
@@ -202,6 +212,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         return(cons)
       },
       ignoreNULL = FALSE
+
     )
 
 

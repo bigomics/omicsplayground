@@ -52,11 +52,18 @@ upload_plot_countstats_server <- function(id, checkTables, countsRT, watermark =
 
     plot.RENDER <- function() {
       counts <- plot_data()
+      ## Subsample both genes and cells before densifying.
+      ## Adding scalar 1 to a sparse matrix fills all structural zeros, breaking sparsity.
+      ## For a density plot 500 cells is more than sufficient for visual purposes.
+      n_genes <- nrow(counts)
+      n_samples <- ncol(counts)
+      if (nrow(counts) > 1000) counts <- counts[sample(nrow(counts), 1000), , drop = FALSE]
+      if (ncol(counts) > 500) counts <- counts[, sample(ncol(counts), 500), drop = FALSE]
+      if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- log2(1 + counts)
-      if (nrow(xx) > 1000) xx <- xx[sample(1:nrow(xx), 1000), , drop = FALSE]
       suppressWarnings(dc <- data.table::melt(xx))
       dc$value[dc$value == 0] <- NA
-      tt2 <- paste(nrow(counts), tspan("genes x", js = FALSE), ncol(counts), "samples")
+      tt2 <- paste(n_genes, tspan("genes x", js = FALSE), n_samples, "samples")
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
         ggplot2::xlab("log2(1+counts)") +

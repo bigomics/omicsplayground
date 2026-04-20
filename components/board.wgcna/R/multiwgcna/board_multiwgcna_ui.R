@@ -9,15 +9,21 @@ for (f in list.files(file.path(OPG, "components/board.wgcna/R/multiwgcna/ai.repo
 MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
-    shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL),
+    shinyjs::hidden(
+      shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL)
+    ),
+    shinyjs::hidden(    
+      shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL)
+    ),
+    shinyjs::hidden(    
+      shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)
+    ),
     shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
     shiny::conditionalPanel(
       "input.layers && input.layers.indexOf('gset') > -1",
       ns = ns,
       shiny::selectInput(ns("gsfilter"), "Geneset filter:", choices = NULL)
     ),
-    shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
@@ -38,7 +44,8 @@ MultiWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
-          shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
+          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
+          shiny::checkboxInput(ns("addgsets"),"add genesets",FALSE),          
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute",
             size = "xs",
@@ -51,7 +58,7 @@ MultiWGCNA_Inputs <- function(id) {
     shinyjs::hidden(
       bslib::accordion(
         id = ns("lasagna_options"),
-        open = FALSE,
+        open = TRUE,
         bslib::accordion_panel(
           "Lasagna options",
           icon = icon("cog", lib = "glyphicon"),
@@ -251,6 +258,8 @@ MultiWGCNA_UI <- function(id) {
         "AI Report",
         multiwgcna_ai_report_ui(ns("ai_report"))
       )
+
+      
     ) ## end tabsetPanel
   ) ## end div
 }
