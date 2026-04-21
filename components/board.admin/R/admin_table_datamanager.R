@@ -322,13 +322,19 @@ admin_table_datamanager_server <- function(id, auth) {
     }
 
     ## -----------------------------------------------------------
-    ## Get selected file paths
+    ## Get selected rows / file paths
     ## -----------------------------------------------------------
-    selected_files <- reactive({
+    selected_rows <- reactive({
       sel <- input$files_tbl_rows_selected
       if (is.null(sel) || length(sel) == 0) return(NULL)
       df <- display_data()
-      df$full_path[sel]
+      df[sel, , drop = FALSE]
+    })
+
+    selected_files <- reactive({
+      rows <- selected_rows()
+      if (is.null(rows)) return(NULL)
+      rows$full_path
     })
 
     ## -----------------------------------------------------------
@@ -361,8 +367,9 @@ admin_table_datamanager_server <- function(id, auth) {
     shiny::observeEvent(input$confirm_move, {
       shiny::req(isTRUE(auth$ADMIN))
       shiny::req(!busy())
-      files <- selected_files()
-      shiny::req(files)
+      rows <- selected_rows()
+      shiny::req(rows)
+      files <- rows$full_path
       dest <- input$dest_folder
       shiny::req(dest)
       dest_dir <- resolve_dir(dest)
@@ -375,7 +382,7 @@ admin_table_datamanager_server <- function(id, auth) {
           dir.create(dest_dir, recursive = TRUE)
         }
 
-        n_ok <- 0
+        success <- logical(length(files))
         for (i in seq_along(files)) {
           f <- files[i]
           shiny::incProgress(0.5 / length(files), detail = basename(f))
@@ -386,8 +393,17 @@ admin_table_datamanager_server <- function(id, auth) {
             ok <- file.copy(f, target, overwrite = FALSE)
             if (ok) file.remove(f)
           }
-          if (ok) n_ok <- n_ok + 1
+          if (ok) success[i] <- TRUE
         }
+        n_ok <- sum(success)
+
+        log_admin_action(
+          admin_email = auth$email,
+          action = "move",
+          subjects = basename(files[success]),
+          source_labels = rows$folder[success],
+          destination = dest
+        )
 
         ## Update datasets-info.csv in source and destination folders
         source_dirs <- unique(dirname(files))
@@ -432,8 +448,9 @@ admin_table_datamanager_server <- function(id, auth) {
     shiny::observeEvent(input$confirm_delete, {
       shiny::req(isTRUE(auth$ADMIN))
       shiny::req(!busy())
-      files <- selected_files()
-      shiny::req(files)
+      rows <- selected_rows()
+      shiny::req(rows)
+      files <- rows$full_path
       shiny::removeModal()
 
       disable_actions()
@@ -442,7 +459,15 @@ admin_table_datamanager_server <- function(id, auth) {
         source_dirs <- unique(dirname(files))
 
         shiny::incProgress(0.3, detail = paste("Removing", length(files), "file(s)"))
-        n_ok <- sum(file.remove(files))
+        removed <- file.remove(files)
+        n_ok <- sum(removed)
+
+        log_admin_action(
+          admin_email = auth$email,
+          action = "delete",
+          subjects = basename(files[removed]),
+          source_labels = rows$folder[removed]
+        )
 
         ## Update datasets-info.csv in affected folders
         for (i in seq_along(source_dirs)) {
