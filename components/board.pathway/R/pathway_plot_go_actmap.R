@@ -55,8 +55,13 @@ functional_plot_go_actmap_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     height = height,
     width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -114,7 +119,8 @@ functional_plot_go_actmap_server <- function(id,
           maxfc = 20,
           mar = c(15, 30),
           tl.cex = 1.05,
-          row.nchar = 60
+          row.nchar = 60,
+          heatmap_colors = extract_heatmap_colors(input)
         )
       }
 
@@ -137,20 +143,9 @@ functional_plot_go_actmap_server <- function(id,
           maxfc = 100,
           mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200)
+          row.nchar = ifelse(input$rotate, 60, 200),
+          heatmap_colors = extract_heatmap_colors(input)
         )
-
-        ## plotGOactmap(
-        ##   score = pathscore,
-        ##   go = graph,
-        ##   normalize = input$normalize,
-        ##   rotate = rotate,
-        ##   maxterm = 50,
-        ##   maxfc = 100,
-        ##   tl.cex = 1.1,
-        ##   row.nchar = ifelse(rotate, 60, 200),
-        ##   colorbar = TRUE
-        ## )
       }
 
       PlotModuleServer(
@@ -163,7 +158,8 @@ functional_plot_go_actmap_server <- function(id,
         pdf.width = 9,
         remove_margins = FALSE,
         pdf.height = 9,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

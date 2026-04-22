@@ -55,8 +55,13 @@ functional_plot_wikipathway_actmap_ui <- function(
     plotlib = "plotly",
     info.text = info.text,
     options = plot_opts,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     height = height,
-    width = c("100%", "100%")
+    width = c("100%", "100%"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -145,7 +150,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           maxfc = 20,
           mar = c(15, 30),
           tl.cex = 0.85,
-          row.nchar = 50
+          row.nchar = 50,
+          heatmap_colors = extract_heatmap_colors(input)
         )
       }
 
@@ -170,7 +176,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
           maxfc = 100,
           mar = c(15, 30),
           tl.cex = 1.1,
-          row.nchar = ifelse(input$rotate, 60, 200)
+          row.nchar = ifelse(input$rotate, 60, 200),
+          heatmap_colors = extract_heatmap_colors(input)
         )
       }
 
@@ -184,7 +191,8 @@ functional_plot_wikipathway_actmap_server <- function(id,
         remove_margins = FALSE,
         pdf.height = 11,
         pdf.width = 6,
-        add.watermark = watermark
+        add.watermark = watermark,
+        parent_session = session
       )
     } ## end of moduleServer
   )

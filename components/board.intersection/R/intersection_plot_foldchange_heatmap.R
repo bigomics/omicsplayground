@@ -33,9 +33,14 @@ foldchange_heatmap_ui <- function(
     info.text = info.text,
     caption = caption,
     options = FoldchangeHeatmap.opts,
+    outputFunc = shiny::plotOutput,
+    outputFunc2 = shiny::plotOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -97,7 +102,8 @@ foldchange_heatmap_server <- function(id,
           map.height = mh,
           mar = c(bm, 0.5, 0.5, 1),
           cluster_columns = cclust,
-          inset = c(0.01, 0.01)
+          inset = c(0.01, 0.01),
+          heatmap_colors = extract_heatmap_colors(input)
         )
       })
 
@@ -111,7 +117,8 @@ foldchange_heatmap_server <- function(id,
       plotlib = "base",
       res = c(90, 110),
       pdf.width = 5, pdf.height = 5,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

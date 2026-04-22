@@ -30,7 +30,10 @@ enrichment_plot_volcano_ui <- function(
     plotlib = c("plotly", "ggplot"),
     download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
@@ -103,6 +106,13 @@ enrichment_plot_volcano_server <- function(id,
         ylim <- c(0, max(12, 1.1 * max(-log10(pval), na.rm = TRUE)))
       }
 
+      ## Click-to-label data
+      click_df <- data.frame(
+        x = fx,
+        y = y,
+        feature_name = fc.genes
+      )
+
       return(list(
         x = fx,
         y = y,
@@ -111,7 +121,8 @@ enrichment_plot_volcano_server <- function(id,
         lab.cex = 1,
         fdr = fdr,
         lfc = lfc,
-        ylab = ylab
+        ylab = ylab,
+        df = click_df
       ))
     })
 
@@ -135,7 +146,8 @@ enrichment_plot_volcano_server <- function(id,
         marker.size = marker.size,
         displayModeBar = FALSE,
         showlegend = FALSE,
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = extract_volcano_colors(input)
       ) %>%
         plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
     }
@@ -152,21 +164,68 @@ enrichment_plot_volcano_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      playbase::ggVolcano(
+      ## Editor: custom labels
+      label_features <- get_custom_labels(input, pd[["fc.genes"]], defaults = pd[["sel.genes"]])
+
+      highlight <- if (isTRUE(input$color_selection)) {
+        label_features
+      } else {
+        pd[["sel.genes"]]
+      }
+      if (!is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      ## Editor: custom colors
+      plot_colors <- extract_volcano_colors(input)
+
+      ## Editor: label settings
+      ls <- extract_label_settings(input, defaults = list(label_size = 4, marker_size = 1))
+
+      ## Editor: hyperbolic cutoff
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      ## Editor: ggprism settings
+      gp <- extract_ggprism_params(input)
+
+      p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
         title = NULL,
         names = pd[["fc.genes"]],
         label.names = pd[["fc.genes"]],
-        highlight = pd[["sel.genes"]],
-        label = pd[["sel.genes"]],
+        highlight = highlight,
+        label = label_features,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = 1,
-        showlegend = FALSE
+        marker.size = ls$marker_size,
+        label.cex = ls$label_size,
+        axis.text.size = ls$axis_text_size,
+        showlegend = FALSE,
+        colors = plot_colors,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_palette = gp$ggprism_palette,
+        ggprism_colors = gp$ggprism_colors,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
+
+      ## Editor: margins & aspect ratio
+      p <- apply_editor_theme(p, input)
+
+      p
     }
 
     base.RENDER.modal <- function() {
@@ -203,11 +262,13 @@ enrichment_plot_volcano_server <- function(id,
         plotlib = x$plotlib,
         func = x$func,
         func2 = x$func2,
+        csvFunc = plot_data,
         res = c(80, 95), # resolution of plots
         pdf.width = 10,
         pdf.height = 8,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
   })
