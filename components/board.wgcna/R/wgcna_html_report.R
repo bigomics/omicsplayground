@@ -161,21 +161,17 @@ wgcna_html_report_server <- function(id,
     get_report <- shiny::eventReactive({
       btn_count()
     } ,{
-      dbg("[wgcna_html_report_server:get_report] reacted!")
             
       this_wgcna <- wgcna()
       if(btn_count() < 1) {
         rpt <- this_wgcna$report
         if(is.null(rpt)) return(NULL)
-        dbg("*** found report in wgcna object")
-        dbg("*** names.rpt = ", names(rpt))
         return(rpt)
         ##return(NULL)
       }
 
       llm_model <- getUserOption(session,'llm_model')
       if(is.null(llm_model) || llm_model == '') {
-        dbg("*** Error *** LLM not enabled")
         return(NULL)
       }
       
@@ -191,7 +187,6 @@ wgcna_html_report_server <- function(id,
       userprompt <- ifelse(is.null(input$userprompt),"",input$userprompt)
       topratio <- ifelse(is.null(input$topratio),0.85,input$topratio)
       
-      dbg("[wgcna_html_report_server:get_report] creating AI report...")
       rpt <- playbase::wgcna.create_report(
         this_wgcna,
         ai_model = llm_model,
@@ -427,7 +422,6 @@ wgcna_html_report_server <- function(id,
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
-      dbg("[observe:infographic_task$status] status = ", status)
       if(status != "success") {
         msg <- "..."
         if(status == "initial") msg <- "waiting for diagram..."
