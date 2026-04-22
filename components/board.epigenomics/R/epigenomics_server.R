@@ -30,43 +30,14 @@ EpigenomicsBoard <- function(id, pgx) {
       pheno <- colnames(Y)[sapply(Y, function(v) any(!is.na(v) & v != ""))]
       grps <- c("<ungrouped>", pheno)
       shiny::updateSelectInput(session, "select_pheno", choices = grps, selected = "<ungrouped>")
-      ## grps <- colnames(Y)
-      ## grps <- c(
-      ##   grep("^[.]", grps, value = TRUE, invert = TRUE),
-      ##   grep("^[.]", grps, value = TRUE)
-      ## )
-      ## grouped_choices <- setNames(
-      ##   lapply(grps, function(p) {
-      ##     kk <- sort(unique(as.character(na.omit(Y[[p]]))))
-      ##     setNames(paste0(p, "::", kk), kk)
-      ##   }),
-      ##   grps
-      ## )
-      ## all_choices <- c(list("<ungrouped>" = "<ungrouped>"), grouped_choices)
-      ## selgrp <- "<ungrouped>"
-      ## if (nrow(Y) > 20) {
-      ##   if (length(grps) > 0) {
-      ##     kk <- sort(unique(as.character(na.omit(Y[[grps[1]]])))[1])
-      ##     selgrp <- paste0(grps[1], "::", kk)
-      ##   }
-      ##   if ("group" %in% grps) {
-      ##     kk <- sort(unique(as.character(na.omit(Y[["group"]]))))[1]
-      ##     selgrp <- paste0("group::", kk)
-      ##   }
-      ##   if ("condition" %in% grps) {
-      ##     kk <- sort(unique(as.character(na.omit(Y[["condition"]]))))[1]
-      ##     selgrp <- paste0("condition::", kk)
-      ##   }
-      ## }    
-      ## shiny::updateSelectInput(session, "select_pheno", choices = all_choices, selected = selgrp)
     })
 
     chromosomes <- shiny::reactive({
       chroms <- input$select_chromosome
       if (!is.null(chroms)) chroms <- sort(as.numeric(unique(sub("^chr", "", chroms))))
       validate(
-        need(length(chroms) > 0, "Select at least 1 chromosome to be plotted."),
-        need(length(chroms) < 5, "Select max 4 chroms at a time for better graphics.")
+        need(length(chroms) > 0, "Select at least 1 chromosome to be plotted.")
+        #need(length(chroms) < 5, "Select max 4 chroms at a time for better graphics.")
       ) 
       return(chroms)
     })
@@ -88,7 +59,7 @@ EpigenomicsBoard <- function(id, pgx) {
       pgx,
       r.chromosome = chromosomes,
       r.samples = samples,
-      r.groupby = shiny::reactive({input$select_pheno)},
+      r.groupby = shiny::reactive({input$select_pheno}),
       watermark = WATERMARK
     )
 

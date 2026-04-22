@@ -68,7 +68,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       X <- plot_data()[["X"]]
       annot <- plot_data()[["annot"]]
       chromosomes <- plot_data()[["chromosomes"]]
-      shiny::req(X, annot)      
+      shiny::req(X, annot)
       playbase::plotMethylIdeogram(X, annot, chromosomes = chromosomes)
     }
     
