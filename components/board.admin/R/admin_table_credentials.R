@@ -234,11 +234,50 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       shiny::req(!is.null(credentials_file))
       df <- cred_data()
       shiny::req(!is.null(df))
+
+      ## Read pre-save state so we can diff admin-permission changes
+      old_df <- NULL
+      if (file.exists(credentials_file)) {
+        old_df <- tryCatch(
+          read.csv(credentials_file, colClasses = "character", stringsAsFactors = FALSE),
+          error = function(e) NULL
+        )
+      }
+
       tryCatch(
         {
           write.csv(df, file = credentials_file, row.names = FALSE, quote = TRUE)
           dbg("[admin_table_credentials] saved credentials to: ", credentials_file)
           status(paste("Saved successfully at", format(Sys.time(), "%H:%M:%S")))
+
+          ## Log admin grant/revoke events. Only transitions involving TRUE
+          ## are logged — plain adds/removes of non-admins are not auditable
+          ## permission changes.
+          admin_map <- function(d) {
+            if (is.null(d) || !"email" %in% names(d) || !"ADMIN" %in% names(d) || nrow(d) == 0) {
+              return(setNames(character(0), character(0)))
+            }
+            keys <- tolower(trimws(d$email))
+            vals <- toupper(trimws(d$ADMIN))
+            vals <- ifelse(vals == "TRUE", "TRUE", "FALSE")
+            setNames(vals, keys)
+          }
+          old_map <- admin_map(old_df)
+          new_map <- admin_map(df)
+          all_keys <- union(names(old_map), names(new_map))
+          for (k in all_keys) {
+            ov <- if (k %in% names(old_map)) old_map[[k]] else ""
+            nv <- if (k %in% names(new_map)) new_map[[k]] else ""
+            if (ov != nv && (ov == "TRUE" || nv == "TRUE")) {
+              log_admin_action(
+                admin_email = auth$email,
+                action = if (nv == "TRUE") "admin_grant" else "admin_revoke",
+                subjects = k,
+                source_labels = ov,
+                destination = nv
+              )
+            }
+          }
         },
         error = function(e) {
           status(paste("Error saving:", e$message))
