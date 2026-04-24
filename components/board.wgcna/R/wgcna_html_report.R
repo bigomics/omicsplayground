@@ -135,8 +135,8 @@ wgcna_report_inputs <- function(id) {
     shiny::downloadButton(
       ns("downloadPDF"),
       label = "Download",
-      style = "width: 100%;"
-    )
+      class = "btn-outline-primary",      
+      style = "width: 100%;")
   )
 }
 
@@ -150,8 +150,7 @@ wgcna_html_report_server <- function(id,
     ns <- session$ns
     btn_count <- reactiveVal(0)
 
-    observe({
-      wgcna <- wgcna()
+    observeEvent( wgcna(), {
       btn_count(runif(1))
     })
 
@@ -309,8 +308,8 @@ wgcna_html_report_server <- function(id,
 
     diag_count <- reactiveVal(0)
 
-    observe({
-      wgcna <- wgcna()
+    ## reset count on new data
+    observeEvent( wgcna(), {
       diag_count(runif(1))
     })
 
@@ -319,9 +318,14 @@ wgcna_html_report_server <- function(id,
     })
 
     get_diagram <- reactive({
+
       rpt <- get_report()
       shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
-      llm_model <- getUserOption(session, "llm_model")
+
+      ## for the moment we need explicit user generate
+      shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
+      
+      llm_model <- getUserOption(session,'llm_model')        
       this_wgcna <- wgcna()
       graph <- this_wgcna$graph
       if (diag_count() < 1) {
@@ -375,6 +379,11 @@ wgcna_html_report_server <- function(id,
 
     # Store and trigger the generated image path
     infographic_path <- reactiveVal(NULL)
+    
+    ## reset infographic upon new data
+    observeEvent( wgcna(), {
+      infographic_path(NULL)
+    })
 
     infographic_info <- function(msg) {
       outfile <- tempfile(fileext = ".png")
@@ -405,32 +414,30 @@ wgcna_html_report_server <- function(id,
     }) ## |> bslib::bind_task_button("generate_infographic")
 
     # Trigger the ExtendedTask when button is clicked
-    observeEvent(
-      {
-        c(input$generate_infographic, get_report())
-      },
-      {
-        rpt <- get_report()
-        if (is.null(rpt)) {
-          return(NULL)
-        }
-        has.model <- length(input$img_model) > 0 && input$img_model[1] != ""
-        shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))
-        report <- rpt$report
-        diagram <- rpt$diagram
-        if (!input$use_diagram) diagram <- NULL
-        model <- input$img_model
-        dbg("start infographic task...")
-        infographic_task$invoke(report, diagram, model)
+    observeEvent({
+      c(input$generate_infographic, get_report())
+    }, {
+      rpt <- get_report()      
+      if(is.null(rpt)) {
+        infographic_path(NULL)        
+        return(NULL)
       }
-    )
-
+      has.model <- length(input$img_model)>0 && input$img_model[1]!=""
+      shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
+      report <- rpt$report
+      diagram <- rpt$diagram
+      if(!input$use_diagram) diagram <- NULL
+      model <- input$img_model
+      dbg("start infographic task...")
+      shinyjs::disable("downloadPDF")      
+      infographic_task$invoke(report, diagram, model)
+    })
+    
     # Update reactive value when task status changes. This show a kind
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
-      dbg("[observe:infographic_task$status] status = ", status)
-      if (status != "success") {
+      if(status != "success") {
         msg <- "..."
         if (status == "initial") msg <- "waiting for diagram..."
         if (status == "running") msg <- "generating image ..."
@@ -447,6 +454,7 @@ wgcna_html_report_server <- function(id,
     infographic.RENDER <- function() {
       shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
       # Return a list containing the filename
+      shinyjs::enable("downloadPDF")
       list(
         src = infographic_path(),
         width = "100%",
@@ -458,7 +466,6 @@ wgcna_html_report_server <- function(id,
     PlotModuleServer(
       "infographic",
       plotlib = "image",
-      # plotlib = "generic",
       func = infographic.RENDER,
       pdf.width = 8, pdf.height = 5,
       res = c(75, 100),
