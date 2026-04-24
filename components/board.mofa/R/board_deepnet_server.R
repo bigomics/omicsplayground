@@ -402,7 +402,7 @@ DeepNetBoard <- function(id, pgx) {
       ntop = c(20, 32),
       rmar = c(0, 40),
       show_legend = c(0, 1),
-      add_annot = c(0, 1),
+      add_annot = c(FALSE, TRUE),
       update = update,
       watermark = WATERMARK
     )
@@ -413,7 +413,7 @@ DeepNetBoard <- function(id, pgx) {
       pgx = pgx,
       ntop = c(50, 50),
       plot.res = c(110, 110),
-      add_annot = c(1, 1),
+      add_annot = c(TRUE, TRUE),
       show_legend = c(1, 1),
       rmar = c(40, 40),
       update = update,
