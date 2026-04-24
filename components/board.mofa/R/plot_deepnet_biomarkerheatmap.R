@@ -34,7 +34,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  net,
                                                  pgx,
                                                  update,
-                                                 add_annot = c(0, 1),
+                                                 add_annot = c(FALSE, TRUE),
                                                  show_legend = c(0, 1),
                                                  ntop = c(20, 30),
                                                  rmar = c(0, 20),
@@ -46,7 +46,9 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       update()
       net <- net()
       annot <- NULL
-      if (add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]), ]
+      if (add_annot[1]) {
+        annot <- pgx$samples[colnames(net$X[[1]]),,drop=FALSE]
+      }
 
       # set labels
       gene.labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
@@ -77,7 +79,11 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       annot <- NULL
-      if (add_annot[2]) annot <- pgx$samples[colnames(net$X[[1]]), ]
+      
+      if (add_annot[2]) {
+        annot <- pgx$samples[colnames(net$X[[1]]),,drop=FALSE]
+      }
+
       playbase::deep.plotBiomarkerHeatmap(
         net,
         ntop = ntop[2],
