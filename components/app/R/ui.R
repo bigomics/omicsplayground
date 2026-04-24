@@ -154,7 +154,7 @@ app_ui <- function(x) {
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
-      
+
       dbg("names(menu_tree) = ", names(menu_tree))
       dbg("names.ENABLED = ", names(ENABLED))
       menu_tree <- menu_tree[MODULES_ENABLED]
@@ -314,10 +314,12 @@ app_ui <- function(x) {
                 "App settings",
                 "usersettings-tab"
               ),
-              if (isTRUE(opt$ENABLE_ADMIN)) bigdash::navbarDropdownTab(
-                "Admin panel",
-                "admin-tab"
-              ),
+              if (isTRUE(opt$ENABLE_ADMIN)) {
+                bigdash::navbarDropdownTab(
+                  "Admin panel",
+                  "admin-tab"
+                )
+              },
               upgrade.tab,
               tags$li(
                 actionLink("navbar_about", "About")
@@ -568,10 +570,12 @@ app_ui <- function(x) {
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
           ),
-          if (isTRUE(opt$ENABLE_ADMIN)) bigdash::bigTabItem(
-            "admin-tab",
-            AdminPanelUI("admin_panel")
-          ),
+          if (isTRUE(opt$ENABLE_ADMIN)) {
+            bigdash::bigTabItem(
+              "admin-tab",
+              AdminPanelUI("admin_panel")
+            )
+          },
           bigdash::bigTabItem(
             "sharing-tab",
             SharedDatasetsUI("load")

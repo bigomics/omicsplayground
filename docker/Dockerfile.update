@@ -79,6 +79,8 @@ RUN R -e "install.packages('mirai')"
 RUN R -e "BiocManager::install('minfi')"
 RUN R -e "BiocManager::install('wateRmelon')"
 RUN R -e "devtools::install_github('bigomics/metaLINCS')"
+RUN R -e "BiocManager::install('karyoploteR')"
+RUN R -e "BiocManager::install('regioneR')"
 
 #------------------------------------------------------------
 # Add supporting R libraries

@@ -14,14 +14,20 @@
 #' @param all_names Character vector of all valid feature names
 #' @return Character vector of matched feature names
 parse_label_features <- function(text, all_names) {
-  if (is.null(text) || text == "") return(NULL)
+  if (is.null(text) || text == "") {
+    return(NULL)
+  }
   lines <- trimws(strsplit(text, "\n")[[1]])
   lines <- lines[lines != ""]
-  if (length(lines) == 0) return(NULL)
+  if (length(lines) == 0) {
+    return(NULL)
+  }
 
   matched <- unlist(lapply(lines, function(line) {
     ## 1. Exact match for the whole line
-    if (line %in% all_names) return(line)
+    if (line %in% all_names) {
+      return(line)
+    }
     ## 2. Extract quoted strings first, then split remainder on spaces
     quoted <- regmatches(line, gregexpr('"[^"]*"', line))[[1]]
     remainder <- gsub('"[^"]*"', "", line)
@@ -31,7 +37,9 @@ parse_label_features <- function(text, all_names) {
     rest_tokens <- trimws(strsplit(trimws(remainder), "\\s+")[[1]])
     rest_tokens <- rest_tokens[rest_tokens != ""]
     tokens <- c(quoted, rest_tokens)
-    if (length(tokens) == 0) return(NULL)
+    if (length(tokens) == 0) {
+      return(NULL)
+    }
     ## Collect exact matches + grep remaining tokens
     exact <- tokens[tokens %in% all_names]
     remaining <- tokens[!tokens %in% all_names]
@@ -41,7 +49,9 @@ parse_label_features <- function(text, all_names) {
       }))
     }
     result <- c(exact, grepped)
-    if (length(result) > 0) return(result)
+    if (length(result) > 0) {
+      return(result)
+    }
     ## 3. Grep fallback for the whole line (if nothing matched at all)
     grep(line, all_names, value = TRUE, ignore.case = TRUE)
   }))
@@ -595,7 +605,9 @@ PlotModuleServer <- function(id,
           click_data <- plotly::event_data("plotly_click")
           shiny::req(click_data)
           clicked_feature <- click_data$key
-          if (is.null(clicked_feature) || is.na(clicked_feature) || clicked_feature == "") return()
+          if (is.null(clicked_feature) || is.na(clicked_feature) || clicked_feature == "") {
+            return()
+          }
 
           ## Quote names containing spaces so they stay as one token
           display_feature <- if (grepl(" ", clicked_feature)) {
@@ -654,7 +666,9 @@ PlotModuleServer <- function(id,
             }
           }
         }
-        if (is.null(plot_data)) return()
+        if (is.null(plot_data)) {
+          return()
+        }
         ## Ensure data.frame for $ access
         if (is.matrix(plot_data)) {
           plot_data <- data.frame(plot_data, row.names = rownames(plot_data), check.names = FALSE)
@@ -712,8 +726,6 @@ PlotModuleServer <- function(id,
           value = new_features
         )
       })
-
-
 
 
       ## --------------------------------------------------------------------------------
@@ -1434,23 +1446,29 @@ PlotModuleServer <- function(id,
         ## were changed before the module was navigated to.
         lapply(names(COLOR_THEME_MAPPING), function(key) {
           input_ids <- COLOR_THEME_MAPPING[[key]]
-          shiny::observeEvent(theme[[key]], {
-            val <- theme[[key]]
-            for (inp in input_ids) {
-              full_id <- parent_session$ns(inp)
-              shinyjs::runjs(sprintf(
-                "Shiny.setInputValue('%s', '%s')",
-                full_id, val
-              ))
-              colourpicker::updateColourInput(parent_session, inp, value = val)
-            }
-          }, ignoreInit = FALSE)
+          shiny::observeEvent(theme[[key]],
+            {
+              val <- theme[[key]]
+              for (inp in input_ids) {
+                full_id <- parent_session$ns(inp)
+                shinyjs::runjs(sprintf(
+                  "Shiny.setInputValue('%s', '%s')",
+                  full_id, val
+                ))
+                colourpicker::updateColourInput(parent_session, inp, value = val)
+              }
+            },
+            ignoreInit = FALSE
+          )
         })
 
         ## Palette observer
-        shiny::observeEvent(theme$palette, {
-          shiny::updateSelectInput(parent_session, "palette", selected = theme$palette)
-        }, ignoreInit = FALSE)
+        shiny::observeEvent(theme$palette,
+          {
+            shiny::updateSelectInput(parent_session, "palette", selected = theme$palette)
+          },
+          ignoreInit = FALSE
+        )
       }
 
       ## --------------------------------------------------------------------------------

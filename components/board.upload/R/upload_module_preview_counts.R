@@ -631,12 +631,12 @@ upload_table_preview_counts_server <- function(id,
         if (upload_datatype() == "scRNA-seq") {
           if (file.ext %in% c("h5", "h5ad")) {
             df <- tryCatch(
-            {
-              playbase::read_h5_counts(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_h5_counts(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (is.null(df)) {
               shinyalert::shinyalert(
@@ -647,12 +647,12 @@ upload_table_preview_counts_server <- function(id,
             }
           } else if (file.ext %in% c("gz", "zip")) {
             df <- tryCatch(
-            {
-              playbase::read_cellranger_output(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_cellranger_output(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (is.null(df)) {
               shinyalert::shinyalert(

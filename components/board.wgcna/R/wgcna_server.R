@@ -35,15 +35,17 @@ WgcnaBoard <- function(id, pgx) {
         easyClose = TRUE
       ))
     })
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "WGCNA" = list(disable = c("selected_module", "selected_trait", "report_options")),
       "Eigengenes" = list(disable = c("selected_module", "selected_trait", "report_options")),
       "Modules" = list(disable = c("report_options")),
-      "Enrichment" = list(disable = c("selected_trait","report_options")),
-      "AI Report✨" = list(disable = c("selected_module", "selected_trait",
-        "compare_accordion"))      
+      "Enrichment" = list(disable = c("selected_trait", "report_options")),
+      "AI Report✨" = list(disable = c(
+        "selected_module", "selected_trait",
+        "compare_accordion"
+      ))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -55,13 +57,12 @@ WgcnaBoard <- function(id, pgx) {
     ##   showtab <- ifelse(ai_model=='', FALSE, TRUE)
     ##   toggleTab("wgcna-tabs", "AI Report✨", showtab) ## too slow
     ## })
-    
+
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
 
     compute_wgcna <- function() {
-
       pgx.showSmallModal("Recalculating WGCNA with new parameters...")
 
       progress <- shiny::Progress$new()
@@ -83,14 +84,16 @@ WgcnaBoard <- function(id, pgx) {
 
       message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
-      
-      llm_model <- getUserOption(session,'llm_model')
+
+      llm_model <- getUserOption(session, "llm_model")
       img_model <- NULL
-      #img_model <- "google:gemini-3.1-flash-image-preview"
+      # img_model <- "google:gemini-3.1-flash-image-preview"
       out <- playbase::wgcna.init(
-        out, llm=llm_model, img_model=img_model, annot=pgx$genes,
-        progress = progress )
-      
+        out,
+        llm = llm_model, img_model = img_model, annot = pgx$genes,
+        progress = progress
+      )
+
       shiny::removeModal()
       out
     }
@@ -324,12 +327,11 @@ WgcnaBoard <- function(id, pgx) {
       id = "wgcnaReport",
       wgcna = wgcna,
       multi = FALSE,
-      r_annot = shiny::reactive(pgx$genes),      
+      r_annot = shiny::reactive(pgx$genes),
       watermark = WATERMARK
     )
 
 
-    
     return(NULL)
   })
 } ## end of Board
