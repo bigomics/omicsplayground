@@ -91,8 +91,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       render_version(isolate(render_version()) + 1)
     })
 
-    ## Build display data with only email, password, admin columns.
-    ## Password and admin use custom HTML inputs; email is plain text.
     display_data <- shiny::reactive({
       render_version()
       df <- shiny::isolate(cred_data())
@@ -101,18 +99,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
 
       display <- data.frame(
         email = df$email,
-        password = sapply(seq_len(nrow(df)), function(i) {
-          pw_escaped <- gsub('"', '&quot;', df$password[i])
-          sprintf(
-            paste0(
-              '<input type="password" class="pw-input" data-row="%d" value="%s"',
-              ' ondblclick="this.type=\'text\';this.select();"',
-              ' onblur="this.type=\'password\';"',
-              ' style="%swidth:100px;">'
-            ),
-            i, pw_escaped, input_style
-          )
-        }),
         admin = sapply(seq_len(nrow(df)), function(i) {
           val <- toupper(trimws(df$ADMIN[i]))
           is_self <- identical(tolower(trimws(df$email[i])), current_email)
@@ -121,7 +107,7 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
               '<select class="admin-select" data-row="%d" style="%s%s"%s>',
               '<option value="TRUE"%s>TRUE</option>',
               '<option value="FALSE"%s>FALSE</option>',
-              '</select>'
+              "</select>"
             ),
             i,
             input_style,
@@ -152,14 +138,8 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
                var row = parseInt($(this).data('row'));
                var val = $(this).val();
                Shiny.setInputValue('%s', {row: row, value: val}, {priority: 'event'});
-             });
-             table.on('change', 'input.pw-input', function() {
-               var row = parseInt($(this).data('row'));
-               var val = $(this).val();
-               Shiny.setInputValue('%s', {row: row, value: val}, {priority: 'event'});
              });",
-            ns("admin_select_change"),
-            ns("password_change")
+            ns("admin_select_change")
           )),
           options = list(
             dom = "lfrtip",
@@ -180,16 +160,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       change <- input$admin_select_change
       df <- cred_data()
       df$ADMIN[change$row] <- change$value
-      cred_data(df)
-      status("Unsaved changes")
-    })
-
-    ## Handle password input changes
-    shiny::observeEvent(input$password_change, {
-      shiny::req(isTRUE(auth$ADMIN))
-      change <- input$password_change
-      df <- cred_data()
-      df$password[change$row] <- change$value
       cred_data(df)
       status("Unsaved changes")
     })
@@ -234,11 +204,50 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       shiny::req(!is.null(credentials_file))
       df <- cred_data()
       shiny::req(!is.null(df))
+
+      ## Read pre-save state so we can diff admin-permission changes
+      old_df <- NULL
+      if (file.exists(credentials_file)) {
+        old_df <- tryCatch(
+          read.csv(credentials_file, colClasses = "character", stringsAsFactors = FALSE),
+          error = function(e) NULL
+        )
+      }
+
       tryCatch(
         {
           write.csv(df, file = credentials_file, row.names = FALSE, quote = TRUE)
           dbg("[admin_table_credentials] saved credentials to: ", credentials_file)
           status(paste("Saved successfully at", format(Sys.time(), "%H:%M:%S")))
+
+          ## Log admin grant/revoke events. Only transitions involving TRUE
+          ## are logged — plain adds/removes of non-admins are not auditable
+          ## permission changes.
+          admin_map <- function(d) {
+            if (is.null(d) || !"email" %in% names(d) || !"ADMIN" %in% names(d) || nrow(d) == 0) {
+              return(setNames(character(0), character(0)))
+            }
+            keys <- tolower(trimws(d$email))
+            vals <- toupper(trimws(d$ADMIN))
+            vals <- ifelse(vals == "TRUE", "TRUE", "FALSE")
+            setNames(vals, keys)
+          }
+          old_map <- admin_map(old_df)
+          new_map <- admin_map(df)
+          all_keys <- union(names(old_map), names(new_map))
+          for (k in all_keys) {
+            ov <- if (k %in% names(old_map)) old_map[[k]] else ""
+            nv <- if (k %in% names(new_map)) new_map[[k]] else ""
+            if (ov != nv && (ov == "TRUE" || nv == "TRUE")) {
+              log_admin_action(
+                admin_email = auth$email,
+                action = if (nv == "TRUE") "admin_grant" else "admin_revoke",
+                subjects = k,
+                source_labels = ov,
+                destination = nv
+              )
+            }
+          }
         },
         error = function(e) {
           status(paste("Error saving:", e$message))

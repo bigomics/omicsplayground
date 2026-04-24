@@ -119,7 +119,9 @@ preservationWGCNA_plot_moduletrait_server <- function(id,
       ## Also guard against trait being absent from some layers entirely.
       m1 <- tryCatch(
         sapply(res$modTraits, function(x) {
-          if (!trait %in% colnames(x)) return(rep(NA_real_, nrow(x)))
+          if (!trait %in% colnames(x)) {
+            return(rep(NA_real_, nrow(x)))
+          }
           x[, trait]
         }),
         error = function(e) NULL

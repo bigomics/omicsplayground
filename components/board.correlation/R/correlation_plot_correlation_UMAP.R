@@ -123,7 +123,7 @@ correlation_plot_correlation_UMAP_server <- function(id,
       higenes <- get_custom_labels(input, rownames(pgx$X), defaults = higenes)
 
       ## Editor: up/down colors → diverging gradient
-      col_up   <- get_editor_color(input, "color_up", "primary")
+      col_up <- get_editor_color(input, "color_up", "primary")
       col_down <- get_editor_color(input, "color_down", "secondary")
 
       ## Editor: color just selected — NA-out non-selected so they render as grey
@@ -131,10 +131,12 @@ correlation_plot_correlation_UMAP_server <- function(id,
       plot_hilight <- higenes
       if (isTRUE(input$color_selection) && length(higenes) > 0) {
         probe_syms <- make.names(playbase::probe2symbol(
-          names(rho0_plot), pgx$genes, "gene_name", fill_na = TRUE
+          names(rho0_plot), pgx$genes, "gene_name",
+          fill_na = TRUE
         ))
         hi_syms <- make.names(playbase::probe2symbol(
-          higenes, pgx$genes, "gene_name", fill_na = TRUE
+          higenes, pgx$genes, "gene_name",
+          fill_na = TRUE
         ))
         rho0_plot[!probe_syms %in% hi_syms] <- NA
         plot_hilight <- NULL
