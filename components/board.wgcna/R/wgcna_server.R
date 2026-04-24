@@ -107,14 +107,8 @@ WgcnaBoard <- function(id, pgx) {
       require(WGCNA)
       all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
         any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
-      has_wgcna <- "wgcna" %in% names(pgx) && all_req
-      dbg("[WgcnaBoard] all_req = ", all_req)
-      dbg("[WgcnaBoard] has_wgcna = ", has_wgcna)
-      
+      has_wgcna <- "wgcna" %in% names(pgx) && all_req      
       compute_clicked <- (input$compute != ncompute) 
-      dbg("[WgcnaBoard] input$compute = ", input$compute)
-      dbg("[WgcnaBoard] ncompute = ", ncompute)
-      dbg("[WgcnaBoard] compute_clicked = ", compute_clicked)
       
       # Use pre-computed results only if they exist, conditions are
       # met, AND we're not forcing recomputation
