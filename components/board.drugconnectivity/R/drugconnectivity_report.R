@@ -238,7 +238,7 @@ drugconnectivity_report_server <- function(id,
           report = report,
           model = model,
           filename = outfile,
-          aspectRatio = c("4:3","16:9","3:4")[2],          
+          aspectratio = c("4:3","16:9","3:4")[2],          
           add.fallback = TRUE
         ))
         if(inherits(outfile,"try-error")) return(NULL)
@@ -277,12 +277,6 @@ drugconnectivity_report_server <- function(id,
         infographic_path(task_result)        
       }
     })
-
-    ## # Update reactive value when task completes
-    ## observeEvent(infographic_task$result(), {
-    ##   task_result <- infographic_task$result()
-    ##   infographic_path(task_result)
-    ## })
 
     infographic.RENDER <- function() {
       #shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
