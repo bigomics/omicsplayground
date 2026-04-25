@@ -79,7 +79,6 @@ dataview_plot_boxplot_server <- function(id,
     })
 
     plotly.RENDER <- function() {
-
       res <- plot_data()
       shiny::req(res)
       data_type <- r.data_type()
@@ -93,26 +92,23 @@ dataview_plot_boxplot_server <- function(id,
       }
 
       df <- res$counts[, , drop = FALSE]
-
       if (nrow(df) > 1000) {
-        sel <- sample(nrow(df), 1000)
-        df <- df[sel, , drop = FALSE]
+        df <- df[sample(nrow(df), 1000), , drop = FALSE]
       }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
       long.df$sample <- as.character(long.df$sample)
 
+      split <- NULL
       annot <- res$annot
-      groupedByClass <- FALSE
       if (!is.null(annot)) {
-        kk <- input$group_by_feature_class
-        if (kk != "<ungrouped>") {
-          jj <- which(long.df$gene %in% rownames(annot))
-          if (kk %in% colnames(annot) & length(jj) > 0) {
-            long.df <- long.df[jj, , drop = FALSE]
-            jj <- match(long.df$gene, rownames(annot))
-            long.df$class <- annot[jj, kk]
-            groupedByClass <- TRUE
+        class_col <- input$group_by_feature_class
+        if (class_col != "<ungrouped>" && class_col %in% colnames(annot)) {
+          idx <- which(long.df$gene %in% rownames(annot))
+          if (length(idx) > 0) {
+            long.df <- long.df[idx, , drop = FALSE]
+            long.df$class <- annot[match(long.df$gene, rownames(annot)), class_col]
+            split <- "class"
           }
         }
       }
@@ -137,7 +133,6 @@ dataview_plot_boxplot_server <- function(id,
       }
       long.df$sample <- factor(long.df$sample, levels = samples)
 
-      split <- if (groupedByClass) "class" else NULL
       fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
