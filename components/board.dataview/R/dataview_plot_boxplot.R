@@ -1,8 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
-
 
 dataview_plot_boxplot_ui <- function(
   id,
@@ -14,6 +11,14 @@ dataview_plot_boxplot_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::radioButtons(
+      inputId = ns("group_by_feature_class"),
+      label = "Group by feature class (available when {Group by} is used)",
+      choices = "a"
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     title = title,
@@ -23,6 +28,7 @@ dataview_plot_boxplot_ui <- function(
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
+    options = options,
     editor = TRUE,
     ns_parent = ns,
     plot_type = "expression_barplot"
@@ -33,45 +39,39 @@ dataview_plot_boxplot_server <- function(id,
                                          parent.input,
                                          getCountsTable,
                                          r.samples = reactive(""),
+                                         r.annot = reactive(""),
                                          r.data_type,
                                          watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+    
+    shiny::observe({
+      annot <- r.annot()
+      display <- if (is.null(annot)) "none" else ""
+      shinyjs::runjs(sprintf(
+        'var modal = document.getElementById("%s");
+         var card = modal ? modal.closest(".card") : null;
+         var btn = card ? card.querySelector("[class*=\'fa-bars\']") : null;
+         if (btn) btn.closest(".btn").style.display = "%s";',
+        session$ns("pltmod-plotPopup"), display
+      ))
+      if (!is.null(annot)) {
+        shiny::updateRadioButtons(
+          session,
+          "group_by_feature_class",
+          choices = c("<ungrouped>", colnames(annot)) 
+        )
+      }
+    })
+    
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
+      annot <- r.annot()
       shiny::req(res)
-      list(counts = res$log2counts, sample = colnames(res$log2counts))
+      list(counts = res$log2counts, sample = colnames(res$log2counts), annot = annot)
     })
-
-    plot.RENDER <- function() {
-      res <- plot_data()
-      shiny::req(res)
-
-      par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
-      ## ---- xlab ------ ###
-      xaxt <- "l"
-      names.arg <- res$sample
-      if (length(names.arg) > 20) {
-        names.arg <- rep("", length(names.arg))
-        xaxt <- "n"
-      }
-
-      cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
-      boxplot(
-        res$counts,
-        col = rgb(0.2, 0.5, 0.8, 0.4),
-        names = names.arg,
-        cex.axis = cex.names,
-        border = rgb(0.824, 0.824, 0.824, 0.9),
-        xaxt = xaxt,
-        las = 3,
-        cex.lab = 1,
-        ylab = "counts (log2)",
-        outline = FALSE,
-        varwidth = FALSE
-      )
-    }
-
+    
     output$rank_list <- shiny::renderUI({
       res <- plot_data()
       shiny::req(res)
@@ -79,6 +79,7 @@ dataview_plot_boxplot_server <- function(id,
     })
 
     plotly.RENDER <- function() {
+
       res <- plot_data()
       shiny::req(res)
       data_type <- r.data_type()
@@ -92,6 +93,7 @@ dataview_plot_boxplot_server <- function(id,
       }
 
       df <- res$counts[, , drop = FALSE]
+
       if (nrow(df) > 1000) {
         sel <- sample(nrow(df), 1000)
         df <- df[sel, , drop = FALSE]
@@ -100,6 +102,21 @@ dataview_plot_boxplot_server <- function(id,
       colnames(long.df) <- c("gene", "sample", "value")
       long.df$sample <- as.character(long.df$sample)
 
+      annot <- res$annot
+      groupedByClass <- FALSE
+      if (!is.null(annot)) {
+        kk <- input$group_by_feature_class
+        if (kk != "<ungrouped>") {
+          jj <- which(long.df$gene %in% rownames(annot))
+          if (kk %in% colnames(annot) & length(jj) > 0) {
+            long.df <- long.df[jj, , drop = FALSE]
+            jj <- match(long.df$gene, rownames(annot))
+            long.df$class <- annot[jj, kk]
+            groupedByClass <- TRUE
+          }
+        }
+      }
+      
       bar_color <- get_editor_color(input, "scatter_color", "secondary")
       fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
       bars_order <- input$bars_order
@@ -120,11 +137,12 @@ dataview_plot_boxplot_server <- function(id,
       }
       long.df$sample <- factor(long.df$sample, levels = samples)
 
-      ## boxplot
+      split <- if (groupedByClass) "class" else NULL
       fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
         y = "value",
+        split = split,
         yaxistitle = ylab,
         color = bar_color,
         fillcolor = fill_color,
@@ -133,10 +151,7 @@ dataview_plot_boxplot_server <- function(id,
         plotly_default()
 
       fig
-    }
 
-    modal_plot.RENDER <- function() {
-      plot.RENDER()
     }
 
     modal_plotly.RENDER <- function() {

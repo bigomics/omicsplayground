@@ -131,7 +131,18 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       samples
     })
 
-    #
+    annot <- shiny::reactive({
+      annot <- NULL
+      shiny::req(input$data_groupby)
+      if (input$data_groupby == "<ungrouped>") return(annot)
+      kk <- grep("class", tolower(colnames(pgx$genes)))
+      if (length(kk) > 0) {
+        kk <- unique(colnames(pgx$genes)[kk])
+        annot <- pgx$genes[, kk, drop = FALSE]
+      }
+      return(annot)
+    })
+    
     dataview_module_geneinfo_server(
       "geneinfo",
       pgx,
@@ -200,6 +211,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       input,
       getCountStatistics,
       r.samples = selected_samples,
+      r.annot = annot,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
