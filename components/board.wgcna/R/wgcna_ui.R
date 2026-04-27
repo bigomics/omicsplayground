@@ -318,22 +318,24 @@ WgcnaUI <- function(id) {
           col_widths = 12,
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
-#          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently."), translate=FALSE),
-          div(class="alert alert-primary p-2", 
-            wgcna_report_bullets_ui(ns("wgcnaReport"))),
+          #          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently."), translate=FALSE),
+          div(
+            class = "alert alert-primary p-2",
+            wgcna_report_bullets_ui(ns("wgcnaReport"))
+          ),
           bslib::layout_columns(
-            col_widths = c(6,6),
-            height = "calc(100vh - 180px)",            
+            col_widths = c(6, 6),
+            height = "calc(100vh - 180px)",
             wgcna_html_report_ui(
               ns("wgcnaReport"),
               title = "AI Report",
               caption = "AI-generated summary report",
               height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto","100%")
-            ),                        
+              width = c("auto", "100%")
+            ),
             bslib::layout_columns(
               col_widths = 12,
-              row_heights = c(1,1),
+              row_heights = c(1, 1),
               wgcna_report_diagram_ui(
                 ns("wgcnaReport"),
                 title = "Module Diagram",
@@ -352,7 +354,6 @@ WgcnaUI <- function(id) {
           )
         )
       )
-      
     )
   )
 }

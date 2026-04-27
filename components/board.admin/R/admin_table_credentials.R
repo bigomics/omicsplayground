@@ -91,8 +91,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       render_version(isolate(render_version()) + 1)
     })
 
-    ## Build display data with only email, password, admin columns.
-    ## Password and admin use custom HTML inputs; email is plain text.
     display_data <- shiny::reactive({
       render_version()
       df <- shiny::isolate(cred_data())
@@ -101,18 +99,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
 
       display <- data.frame(
         email = df$email,
-        password = sapply(seq_len(nrow(df)), function(i) {
-          pw_escaped <- gsub('"', '&quot;', df$password[i])
-          sprintf(
-            paste0(
-              '<input type="password" class="pw-input" data-row="%d" value="%s"',
-              ' ondblclick="this.type=\'text\';this.select();"',
-              ' onblur="this.type=\'password\';"',
-              ' style="%swidth:100px;">'
-            ),
-            i, pw_escaped, input_style
-          )
-        }),
         admin = sapply(seq_len(nrow(df)), function(i) {
           val <- toupper(trimws(df$ADMIN[i]))
           is_self <- identical(tolower(trimws(df$email[i])), current_email)
@@ -121,7 +107,7 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
               '<select class="admin-select" data-row="%d" style="%s%s"%s>',
               '<option value="TRUE"%s>TRUE</option>',
               '<option value="FALSE"%s>FALSE</option>',
-              '</select>'
+              "</select>"
             ),
             i,
             input_style,
@@ -152,14 +138,8 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
                var row = parseInt($(this).data('row'));
                var val = $(this).val();
                Shiny.setInputValue('%s', {row: row, value: val}, {priority: 'event'});
-             });
-             table.on('change', 'input.pw-input', function() {
-               var row = parseInt($(this).data('row'));
-               var val = $(this).val();
-               Shiny.setInputValue('%s', {row: row, value: val}, {priority: 'event'});
              });",
-            ns("admin_select_change"),
-            ns("password_change")
+            ns("admin_select_change")
           )),
           options = list(
             dom = "lfrtip",
@@ -180,16 +160,6 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
       change <- input$admin_select_change
       df <- cred_data()
       df$ADMIN[change$row] <- change$value
-      cred_data(df)
-      status("Unsaved changes")
-    })
-
-    ## Handle password input changes
-    shiny::observeEvent(input$password_change, {
-      shiny::req(isTRUE(auth$ADMIN))
-      change <- input$password_change
-      df <- cred_data()
-      df$password[change$row] <- change$value
       cred_data(df)
       status("Unsaved changes")
     })

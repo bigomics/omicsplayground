@@ -128,15 +128,15 @@ drugconnectivity_plot_actmap_server <- function(id,
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
 
-        col_up   <- get_editor_color(input, "color_up", "primary")
+        col_up <- get_editor_color(input, "color_up", "primary")
         col_down <- get_editor_color(input, "color_down", "secondary")
         pal <- grDevices::colorRampPalette(c(col_down, "white", col_up))(5)
         color.scale <- list(
-          list(0,    pal[[1]]),
+          list(0, pal[[1]]),
           list(0.25, pal[[2]]),
-          list(0.5,  pal[[3]]),
+          list(0.5, pal[[3]]),
           list(0.75, pal[[4]]),
-          list(1,    pal[[5]])
+          list(1, pal[[5]])
         )
         x_axis <- colnames(score)
         y_axis <- rownames(score)

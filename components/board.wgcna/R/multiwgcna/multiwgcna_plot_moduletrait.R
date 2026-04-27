@@ -62,8 +62,8 @@ multiwgcna_plot_moduletrait_server <- function(id,
       wgcna <- wgcna[sel.layers]
       shiny::req(length(wgcna) > 0)
 
-      nmax <- 9999 
-      if (input$showtop) nmax <- 20 ## top 20 modules 
+      nmax <- 9999
+      if (input$showtop) nmax <- 20 ## top 20 modules
       plottype <- input$plottype
 
       merge_modules <- input$mergemodules
