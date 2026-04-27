@@ -31,7 +31,7 @@ dataview_plot_boxplot_ui <- function(
     options = options,
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "expression_barplot"
+    plot_type = "expression_boxplot"
   )
 }
 
@@ -78,6 +78,25 @@ dataview_plot_boxplot_server <- function(id,
       rank_list_ui(as.character(res$sample), session$ns)
     })
 
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      res <- plot_data()
+      shiny::req(res)
+      annot <- res$annot
+      shiny::req(annot)
+      class_col <- input$group_by_feature_class
+      shiny::req(class_col, class_col != "<ungrouped>", class_col %in% colnames(annot))
+      classes <- sort(unique(stats::na.omit(as.character(annot[, class_col]))))
+      shiny::req(length(classes) > 0)
+      theme_palette <- shiny::isolate(get_color_theme()$palette)
+      if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
+      default_clrs <- tryCatch(
+        omics_pal_d(palette = theme_palette)(length(classes)),
+        error = function(e) omics_pal_d("default")(length(classes))
+      )
+      custom_palette_pickers(classes, session$ns, default_clrs)
+    })
+
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
@@ -112,7 +131,28 @@ dataview_plot_boxplot_server <- function(id,
           }
         }
       }
-      
+
+      palette_colors <- NULL
+      if (!is.null(split)) {
+        classes <- sort(unique(stats::na.omit(as.character(long.df$class))))
+        n_classes <- length(classes)
+        if (n_classes > 0) {
+          theme_palette <- shiny::isolate(get_color_theme()$palette)
+          if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
+          fallback_pal <- tryCatch(
+            omics_pal_d(palette = theme_palette)(n_classes),
+            error = function(e) omics_pal_d("default")(n_classes)
+          )
+          palette_colors <- resolve_palette_colors(
+            input, n_classes,
+            fallback_colors = fallback_pal
+          )
+          if (!is.null(palette_colors)) {
+            palette_colors <- stats::setNames(palette_colors, classes)
+          }
+        }
+      }
+
       bar_color <- get_editor_color(input, "scatter_color", "secondary")
       fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
       bars_order <- input$bars_order
@@ -141,7 +181,8 @@ dataview_plot_boxplot_server <- function(id,
         yaxistitle = ylab,
         color = bar_color,
         fillcolor = fill_color,
-        linecolor = bar_color
+        linecolor = bar_color,
+        colors = palette_colors
       ) %>%
         plotly_default()
 
