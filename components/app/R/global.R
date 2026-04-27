@@ -348,7 +348,7 @@ i18n$set_translation_language("RNA-seq")
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
 opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 50, opt$LLM_MAXTURNS)
 
 ## Copilot tier selection — verify against the omicsagentovi registry
 if (is.null(opt$COPILOT_MODEL)) {
