@@ -144,8 +144,8 @@ drugconnectivity_report_server <- function(id,
 
       pgx$drugs <- drugs()
       db <- rdb()
-      rpt <- playbase::ai.create_report_drug_connectivity(
-        pgx, model=llm_model, db=db,
+      rpt <- playbase::cmap.create_report(
+        pgx, model = llm_model, db = db,
         user.prompt = input$ai_prompt)
         
       return(rpt)

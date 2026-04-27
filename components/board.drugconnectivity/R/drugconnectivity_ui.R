@@ -170,7 +170,7 @@ DrugConnectivityUI <- function(id) {
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
-    panel1 <- shiny::tabsetPanel(
+    shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,
       panel2,
