@@ -121,13 +121,26 @@ copilot_panel_evidence_server <- function(id, local_pgx = NULL) {
     })
     shiny::outputOptions(output, "evidence_plotly", suspendWhenHidden = FALSE)
 
-    ## iheatmapr wraps in to_widget() before req() can bail — suspendWhenHidden crashes at startup.
-    output$evidence_iheatmapr <- iheatmapr::renderIheatmap({
-      rec <- active_iheatmapr_record()
-      shiny::req(rec)
-      log_render_handoff(rec, "render_handoff")
-      rec$plot
-    })
+    ## renderIheatmap internally calls to_widget() which only has an S4
+
+    ## method for "Iheatmap".  omicsplots::pgx.plot_heatmap already converts
+    ## to an "iheatmapr" htmlwidget via to_widget(), so renderIheatmap would
+    ## try to convert *again* and fail with:
+    ##   unable to find an inherited method for function 'to_widget'
+    ##     for signature '"iheatmapr"'
+    ## Use shinyRenderWidget directly so we can handle both cases.
+    output$evidence_iheatmapr <- htmlwidgets::shinyRenderWidget(
+      quote({
+        rec <- active_iheatmapr_record()
+        shiny::req(rec)
+        log_render_handoff(rec, "render_handoff")
+        p <- rec$plot
+        if (methods::is(p, "Iheatmap")) iheatmapr::to_widget(p) else p
+      }),
+      iheatmapr::iheatmaprOutput,
+      environment(),
+      quoted = TRUE
+    )
 
     ## --- plot_rendered event handler ---
     shiny::observeEvent(input$plot_rendered, {
