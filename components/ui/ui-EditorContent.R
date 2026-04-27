@@ -18,10 +18,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     }
   }
 
-  ## Per-plot-type bar colour: correlation and expression_barplot use
-  ## scatter_color (→ secondary theme); all other bar plots use bar_color.
-  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
-  bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary else ct$bar_color
+  ## Per-plot-type bar colour: correlation, expression_barplot and
+  ## expression_boxplot use scatter_color (→ secondary theme); all other
+  ## bar plots use bar_color.
+  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) "scatter_color" else "bar_color"
+  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary    else ct$bar_color
 
   # Default editor content
   volcano_content <- shiny::div(
@@ -825,12 +826,88 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     )
   )
 
+  # Boxplot with optional grouping: single bar color (ungrouped) + palette (grouped)
+  group_by_input_js <- paste0("input['", ns_parent("group_by_feature_class"), "']")
+  ungrouped_cond <- paste0("!", group_by_input_js, " || ", group_by_input_js, " == '<ungrouped>'")
+  grouped_cond <- paste0(group_by_input_js, " && ", group_by_input_js, " != '<ungrouped>'")
+
+  expression_boxplot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::conditionalPanel(
+              condition = ungrouped_cond,
+              colourpicker::colourInput(
+                ns_parent(bar_color_input_id), "Bar Color",
+                bar_color_init
+              )
+            ),
+            shiny::conditionalPanel(
+              condition = grouped_cond,
+              shiny::selectInput(
+                ns_parent("palette"), "Group palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom"
+                ),
+                selected = ct$palette
+              ),
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
+            )
+          ),
+          bslib::accordion_panel(
+            "Bars Order",
+            shiny::selectInput(
+              ns_parent("bars_order"),
+              "Sort bars by:",
+              choices = c(
+                "Alphabetical" = "alphabetical",
+                "Value (ascending)" = "ascending",
+                "Value (descending)" = "descending",
+                "Custom (shuffle the order)" = "custom"
+              ),
+              selected = bars_order_default
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+              shiny::div(
+                shiny::uiOutput(ns_parent("rank_list"))
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Return content based on plot type
   switch(plot_type,
     "volcano" = volcano_content,
     "heatmap" = heatmap_content,
     "barplot" = barplot_content,
     "expression_barplot" = barplot_content,
+    "expression_boxplot" = expression_boxplot_content,
     "correlation" = barplot_content,
     "scatterplot" = scatterplot_content,
     "featuremap" = featuremap_content,
