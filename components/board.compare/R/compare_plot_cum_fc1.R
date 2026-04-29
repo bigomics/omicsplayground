@@ -145,7 +145,6 @@ compare_plot_cum_fc1_server <- function(id,
               ggplot2::guides(fill = "none")
           )
         }
-        p <- apply_ggprism_fill(p, gp)
         p <- apply_ggprism_theme(p, gp, x_angle = 90)
         p <- apply_editor_theme(p, input)
         fig <- ggplot_as_plotly_image(p)

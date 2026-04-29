@@ -108,31 +108,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             conditionalPanel(
               condition = "input.use_ggprism",
               ns = ns_parent,
-              selectInput(
-                ns_parent("ggprism_palette"),
-                "Theme palette",
-                choices = c(
-                  "Black & White" = "black_and_white",
-                  "Colorblind Safe" = "colorblind_safe",
-                  "Office" = "office",
-                  "Floral" = "floral",
-                  "Earth Tones" = "earth_tones",
-                  "Pearl" = "pearl",
-                  "Muted Rainbow" = "muted_rainbow",
-                  "Candy Bright" = "candy_bright",
-                  "Prism Dark" = "prism_dark",
-                  "Prism Light" = "prism_light",
-                  "Winter Soft" = "winter_soft",
-                  "Starry" = "starry",
-                  "Viridis" = "viridis",
-                  "Plasma" = "plasma",
-                  "Inferno" = "inferno",
-                  "Magma" = "magma"
-                ),
-                selected = "black_and_white"
-              ),
               checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
               shiny::hr(),
               shiny::tags$label("Axis guides"),
               selectInput(
@@ -345,31 +321,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             conditionalPanel(
               condition = "input.use_ggprism",
               ns = ns_parent,
-              selectInput(
-                ns_parent("ggprism_palette"),
-                "Theme palette",
-                choices = c(
-                  "Black & White" = "black_and_white",
-                  "Colorblind Safe" = "colorblind_safe",
-                  "Office" = "office",
-                  "Floral" = "floral",
-                  "Earth Tones" = "earth_tones",
-                  "Pearl" = "pearl",
-                  "Muted Rainbow" = "muted_rainbow",
-                  "Candy Bright" = "candy_bright",
-                  "Prism Dark" = "prism_dark",
-                  "Prism Light" = "prism_light",
-                  "Winter Soft" = "winter_soft",
-                  "Starry" = "starry",
-                  "Viridis" = "viridis",
-                  "Plasma" = "plasma",
-                  "Inferno" = "inferno",
-                  "Magma" = "magma"
-                ),
-                selected = "black_and_white"
-              ),
               checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
               shiny::hr(),
               shiny::tags$label("Axis guides"),
               selectInput(
@@ -625,31 +577,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             conditionalPanel(
               condition = "input.use_ggprism",
               ns = ns_parent,
-              selectInput(
-                ns_parent("ggprism_palette"),
-                "Theme palette",
-                choices = c(
-                  "Black & White" = "black_and_white",
-                  "Colorblind Safe" = "colorblind_safe",
-                  "Office" = "office",
-                  "Floral" = "floral",
-                  "Earth Tones" = "earth_tones",
-                  "Pearl" = "pearl",
-                  "Muted Rainbow" = "muted_rainbow",
-                  "Candy Bright" = "candy_bright",
-                  "Prism Dark" = "prism_dark",
-                  "Prism Light" = "prism_light",
-                  "Winter Soft" = "winter_soft",
-                  "Starry" = "starry",
-                  "Viridis" = "viridis",
-                  "Plasma" = "plasma",
-                  "Inferno" = "inferno",
-                  "Magma" = "magma"
-                ),
-                selected = "black_and_white"
-              ),
               checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
               shiny::hr(),
               shiny::tags$label("Axis guides"),
               selectInput(

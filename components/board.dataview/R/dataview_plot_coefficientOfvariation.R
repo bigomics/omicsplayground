@@ -124,7 +124,6 @@ dataview_plot_variationcoefficient_server <- function(id,
           fillcolor = fill_color,
           linecolor = bar_color
         )
-        p <- apply_ggprism_fill(p, gp)
         p <- apply_ggprism_theme(p, gp, x_angle = 90)
         p <- apply_editor_theme(p, input)
         fig <- ggplot_as_plotly_image(p)

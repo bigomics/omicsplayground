@@ -166,7 +166,6 @@ expression_plot_barplot_server <- function(id,
               ggplot2::guides(fill = "none")
           )
         }
-        p <- apply_ggprism_fill(p, gp)
         p <- apply_ggprism_theme(p, gp, x_angle = 0)
         p <- apply_editor_theme(p, input)
         fig <- ggplot_as_plotly_image(p)

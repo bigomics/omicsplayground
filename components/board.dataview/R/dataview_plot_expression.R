@@ -198,7 +198,6 @@ dataview_plot_expression_server <- function(id,
                 color = df$points.color
               )
           }
-          p <- apply_ggprism_fill(p, gp)
           p <- apply_ggprism_theme(p, gp, x_angle = 90)
           p <- apply_editor_theme(p, input)
           fig <- ggplot_as_plotly_image(p)
@@ -276,7 +275,6 @@ dataview_plot_expression_server <- function(id,
             fillcolor = points.color,
             yaxistitle = pd$ylab
           )
-          p <- apply_ggprism_fill(p, gp)
           p <- apply_ggprism_theme(p, gp, x_angle = 90)
           p <- apply_editor_theme(p, input)
           fig <- ggplot_as_plotly_image(p)

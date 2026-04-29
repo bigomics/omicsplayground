@@ -279,7 +279,6 @@ expression_plot_topgenes_server <- function(id,
               ggplot2::guides(fill = "none")
           )
         }
-        p <- apply_ggprism_fill(p, gp)
         p <- apply_ggprism_theme(p, gp, x_angle = 0)
         p <- apply_editor_theme(p, input)
         plts[[length(plts) + 1]] <- p

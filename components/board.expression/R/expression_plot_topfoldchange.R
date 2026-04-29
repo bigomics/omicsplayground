@@ -137,7 +137,6 @@ expression_plot_topfoldchange_server <- function(id,
           xaxistitle = "",
           grouped = FALSE
         )
-        p <- apply_ggprism_fill(p, gp)
         p <- apply_ggprism_theme(p, gp, x_angle = 0)
         p <- apply_editor_theme(p, input)
         fig <- ggplot_as_plotly_image(p)

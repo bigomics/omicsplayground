@@ -197,7 +197,6 @@ dataview_plot_correlation_server <- function(id,
         fillcolor = df$color,
         yaxistitle = "Correlation (rho)"
       )
-      p <- apply_ggprism_fill(p, gp)
       p <- apply_ggprism_theme(p, gp, x_angle = 90)
       p <- apply_editor_theme(p, input)
       ggplot_as_plotly_image(p)

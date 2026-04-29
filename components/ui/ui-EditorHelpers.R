@@ -196,8 +196,6 @@ apply_plotly_editor_theme <- function(fig, input,
 extract_ggprism_params <- function(input) {
   list(
     use_ggprism           = isTRUE(input$use_ggprism),
-    ggprism_palette       = if (is.null(input$ggprism_palette)) "black_and_white" else input$ggprism_palette,
-    ggprism_colors        = isTRUE(input$ggprism_colors),
     ggprism_border        = isTRUE(input$ggprism_border),
     ggprism_axis_guide    = if (is.null(input$ggprism_axis_guide)) "default" else input$ggprism_axis_guide,
     ggprism_show_legend   = isTRUE(input$ggprism_show_legend),
@@ -225,11 +223,9 @@ apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
                                 x_angle = NULL) {
   if (!isTRUE(gp$use_ggprism)) return(p)
 
-  theme_palette <- if (isTRUE(gp$ggprism_colors)) gp$ggprism_palette else "black_and_white"
-
   p <- p +
     ggprism::theme_prism(
-      palette = theme_palette,
+      palette = "black_and_white",
       base_size = base_size,
       base_family = base_family,
       border = gp$ggprism_border
@@ -287,32 +283,6 @@ apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
     )
   }
 
-  p
-}
-
-
-#' Apply ggprism fill and colour scales to a ggplot.
-#'
-#' When \code{ggprism_colors} is enabled in the editor, replaces the
-#' fill and colour scales with prism palette equivalents.
-#'
-#' @param p  A ggplot2 plot object.
-#' @param gp Named list from \code{extract_ggprism_params()}.
-#' @return The (possibly modified) ggplot2 plot object.
-apply_ggprism_fill <- function(p, gp) {
-  if (!isTRUE(gp$ggprism_colors)) return(p)
-
-  x_mapping <- p$mapping$x
-  if (!is.null(x_mapping)) {
-    p <- p + ggplot2::aes(fill = !!x_mapping)
-  }
-
-  suppressMessages(
-    p <- p +
-      ggprism::scale_fill_prism(palette = gp$ggprism_palette) +
-      ggprism::scale_colour_prism(palette = gp$ggprism_palette) +
-      ggplot2::guides(fill = "none")
-  )
   p
 }
 
@@ -432,25 +402,6 @@ apply_prism_plotly <- function(fig, gp) {
     legend = legend_cfg,
     font = list(family = "Arial, Helvetica, sans-serif", color = "#000000")
   )
-
-  ## --- Prism palette colors applied to bar traces ---
-  if (isTRUE(gp$ggprism_colors)) {
-    prism_cols <- tryCatch(
-      ggprism::prism_colour_pal(palette = gp$ggprism_palette)(8),
-      error = function(e) NULL
-    )
-    if (!is.null(prism_cols)) {
-      fig <- plotly::plotly_build(fig)
-      ci <- 1
-      for (i in seq_along(fig$x$data)) {
-        tr <- fig$x$data[[i]]
-        if (!is.null(tr$type) && tr$type == "bar") {
-          fig$x$data[[i]]$marker$color <- prism_cols[(ci - 1) %% length(prism_cols) + 1]
-          ci <- ci + 1
-        }
-      }
-    }
-  }
 
   fig
 }
