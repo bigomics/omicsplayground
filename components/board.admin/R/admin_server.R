@@ -4,6 +4,41 @@
 ##
 
 
+## Append one row per admin action to the per-host audit log.
+## Hostname is part of the filename because multiple deploys may share
+## the same mounted etc/ folder; admin events must not be mixed across
+## servers or the audit trail becomes ambiguous.
+log_admin_action <- function(admin_email, action, subjects,
+                             source_labels = "", destination = "") {
+  if (length(subjects) == 0) return(invisible())
+  host <- NULL
+  if (exists("opt", inherits = TRUE)) host <- opt$HOSTNAME
+  if (is.null(host) || !nzchar(host)) {
+    host <- toupper(Sys.info()[["nodename"]])
+  }
+  host <- gsub("[^A-Za-z0-9._-]", "_", host)
+  log.file <- file.path(ETC, paste0("PGXADMIN-", host, ".log"))
+  log.entry <- data.frame(
+    date = format(Sys.time(), tz = "CET"),
+    admin = admin_email,
+    action = action,
+    subject = subjects,
+    source = source_labels,
+    destination = destination,
+    stringsAsFactors = FALSE
+  )
+  tryCatch({
+    if (file.exists(log.file)) {
+      write.table(log.entry, file = log.file, col.names = FALSE,
+                  row.names = FALSE, sep = ",", append = TRUE)
+    } else {
+      write.table(log.entry, file = log.file, col.names = TRUE,
+                  row.names = FALSE, sep = ",")
+    }
+  }, error = function(e) dbg("[admin_log] write error: ", e$message))
+}
+
+
 #' AdminPanel module server function
 #'
 #' @description A shiny Module (server code).

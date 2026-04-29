@@ -24,7 +24,9 @@
 #' @return A single colour string.
 get_editor_color <- function(input, id, default) {
   val <- input[[id]]
-  if (!is.null(val)) return(val)
+  if (!is.null(val)) {
+    return(val)
+  }
   if (grepl("^#", default)) default else get_color_theme()[[default]]
 }
 
@@ -38,7 +40,7 @@ get_editor_color <- function(input, id, default) {
 extract_volcano_colors <- function(input,
                                    notsig = "#707070AA",
                                    notsel = "#cccccc88") {
-  col_up   <- get_editor_color(input, "color_up",   "primary")
+  col_up <- get_editor_color(input, "color_up", "primary")
   col_down <- get_editor_color(input, "color_down", "secondary")
   colors <- c(up = col_up, notsig = notsig, down = col_down)
   if (!is.null(notsel)) colors <- c(colors, notsel = notsel)
@@ -54,7 +56,7 @@ extract_volcano_colors <- function(input,
 #' @param mid   Default midpoint colour (default \code{"grey90"}).
 #' @return Character vector of length 3.
 extract_heatmap_colors <- function(input, mid = "grey90") {
-  col_up   <- get_editor_color(input, "color_up",   "primary")
+  col_up <- get_editor_color(input, "color_up", "primary")
   col_down <- get_editor_color(input, "color_down", "secondary")
   c(col_down, mid, col_up)
 }
@@ -68,8 +70,8 @@ extract_heatmap_colors <- function(input, mid = "grey90") {
 #' @return Character vector of length 3.
 extract_heatmap_lmh_colors <- function(input) {
   c(
-    get_editor_color(input, "color_low",  "secondary"),
-    get_editor_color(input, "color_mid",  "neutral"),
+    get_editor_color(input, "color_low", "secondary"),
+    get_editor_color(input, "color_mid", "neutral"),
     get_editor_color(input, "color_high", "primary")
   )
 }
@@ -92,13 +94,19 @@ extract_heatmap_lmh_colors <- function(input) {
 #'   through \code{playbase::map_probes(pgx$genes, ...)}.
 #' @return Character vector of resolved labels, or \code{defaults}.
 get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL) {
-  if (!isTRUE(input$custom_labels)) return(defaults)
+  if (!isTRUE(input$custom_labels)) {
+    return(defaults)
+  }
 
   label_text <- input$label_features
-  if (is.null(label_text) || !nzchar(trimws(label_text))) return(defaults)
+  if (is.null(label_text) || !nzchar(trimws(label_text))) {
+    return(defaults)
+  }
 
   resolved <- parse_label_features(label_text, feature_names)
-  if (is.null(resolved) || length(resolved) == 0) return(defaults)
+  if (is.null(resolved) || length(resolved) == 0) {
+    return(defaults)
+  }
 
   if (!is.null(pgx)) {
     resolved <- playbase::map_probes(pgx$genes, resolved)
@@ -127,10 +135,10 @@ apply_editor_theme <- function(p, input,
                                margin_default = 10,
                                aspect_ratio_default = 0.5) {
   if (isTRUE(input$margin_checkbox)) {
-    mt <- ifelse(is.na(input$margin_top),    margin_default, input$margin_top)
-    mr <- ifelse(is.na(input$margin_right),  margin_default, input$margin_right)
+    mt <- ifelse(is.na(input$margin_top), margin_default, input$margin_top)
+    mr <- ifelse(is.na(input$margin_right), margin_default, input$margin_right)
     mb <- ifelse(is.na(input$margin_bottom), margin_default, input$margin_bottom)
-    ml <- ifelse(is.na(input$margin_left),   margin_default, input$margin_left)
+    ml <- ifelse(is.na(input$margin_left), margin_default, input$margin_left)
     p <- p + ggplot2::theme(
       plot.margin = ggplot2::margin(t = mt, r = mr, b = mb, l = ml, unit = "pt")
     )
@@ -441,14 +449,14 @@ extract_label_settings <- function(input, defaults = list()) {
   }
 
   list(
-    label_size         = safe("label_size",         dfl$label_size),
-    marker_size        = safe("marker_size",        dfl$marker_size),
-    axis_text_size     = safe("axis_text_size",     dfl$axis_text_size),
-    box_padding        = safe("box_padding",        dfl$box_padding,        null_na = TRUE),
+    label_size         = safe("label_size", dfl$label_size),
+    marker_size        = safe("marker_size", dfl$marker_size),
+    axis_text_size     = safe("axis_text_size", dfl$axis_text_size),
+    box_padding        = safe("box_padding", dfl$box_padding, null_na = TRUE),
     min_segment_length = safe("min_segment_length", dfl$min_segment_length, null_na = TRUE),
-    label_box          = safe("label_box",          dfl$label_box),
-    segment_linetype   = safe("segment_linetype",   dfl$segment_linetype,   cast = as.integer),
-    hyperbola_k        = safe("hyperbola_k",        dfl$hyperbola_k)
+    label_box          = safe("label_box", dfl$label_box),
+    segment_linetype   = safe("segment_linetype", dfl$segment_linetype, cast = as.integer),
+    hyperbola_k        = safe("hyperbola_k", dfl$hyperbola_k)
   )
 }
 
@@ -533,7 +541,9 @@ get_custom_palette_colors <- function(input, n, fallback_colors = NULL) {
 resolve_palette_colors <- function(input, n, fallback_colors = NULL) {
   palette <- input$palette
   if (is.null(palette) || palette %in% c("original", "default", "")) {
-    if (!is.null(fallback_colors)) return(rep_len(fallback_colors, n))
+    if (!is.null(fallback_colors)) {
+      return(rep_len(fallback_colors, n))
+    }
     return(NULL)
   }
   if (palette == "custom") {

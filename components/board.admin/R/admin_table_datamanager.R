@@ -123,8 +123,12 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     ## Mapping from display label to internal folder path
     folder_label <- function(path) {
-      if (path == "data/") return("(root)")
-      if (path == "data_shared/") return("shared")
+      if (path == "data/") {
+        return("(root)")
+      }
+      if (path == "data_shared/") {
+        return("shared")
+      }
       if (path == "data_public/") {
         pub_label <- auth$options$PUBLIC_DATASETS_LABEL
         return(if (!is.null(pub_label) && nchar(pub_label) > 0) pub_label else "public")
@@ -139,7 +143,7 @@ admin_table_datamanager_server <- function(id, auth) {
       refresh_trigger()
       shiny::req(isTRUE(auth$ADMIN))
 
-      folders <- c("data/")
+      folders <- character(0)
 
       ## User directories inside PGX.DIR
       user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
@@ -149,8 +153,9 @@ admin_table_datamanager_server <- function(id, auth) {
         folders <- c(folders, paste0("data/", user_dirs, "/"))
       }
 
-      ## Shared and public dirs
-      if (dir.exists(SHARE.DIR)) folders <- c(folders, "data_shared/")
+      ## Public dir (root "data/" and "data_shared/" are intentionally omitted
+      ## from the dropdowns — files in those locations still appear under the
+      ## "(all)" filter via file_data()).
       if (dir.exists(PUBLIC.DIR)) folders <- c(folders, "data_public/")
 
       folders
@@ -161,9 +166,12 @@ admin_table_datamanager_server <- function(id, auth) {
       fl <- folder_list()
       shiny::req(fl)
       labels <- sapply(fl, folder_label)
+      ## Preserve current filter selection across refreshes
+      current <- input$filter_folder
+      sel <- if (!is.null(current) && current %in% c("__all__", fl)) current else "__all__"
       shiny::updateSelectInput(session, "filter_folder",
         choices = c("(all)" = "__all__", stats::setNames(fl, labels)),
-        selected = "__all__"
+        selected = sel
       )
       shiny::updateSelectInput(session, "dest_folder",
         choices = stats::setNames(fl, labels)
@@ -182,18 +190,27 @@ admin_table_datamanager_server <- function(id, auth) {
       ## Helper: read dataset info from datasets-info.csv in a directory
       read_dataset_info <- function(dir) {
         info_file <- file.path(dir, "datasets-info.csv")
-        if (!file.exists(info_file)) return(NULL)
-        tryCatch({
-          df <- read.csv(info_file, colClasses = "character", stringsAsFactors = FALSE)
-          if ("dataset" %in% names(df)) df else NULL
-        }, error = function(e) NULL)
+        if (!file.exists(info_file)) {
+          return(NULL)
+        }
+        tryCatch(
+          {
+            df <- read.csv(info_file, colClasses = "character", stringsAsFactors = FALSE)
+            if ("dataset" %in% names(df)) df else NULL
+          },
+          error = function(e) NULL
+        )
       }
 
       ## Helper: scan a directory for .pgx (non-recursive)
       scan_pgx <- function(dir, label) {
-        if (!dir.exists(dir)) return(NULL)
+        if (!dir.exists(dir)) {
+          return(NULL)
+        }
         ff <- list.files(dir, pattern = "\\.pgx$", full.names = TRUE)
-        if (length(ff) == 0) return(NULL)
+        if (length(ff) == 0) {
+          return(NULL)
+        }
         ## Lookup info from datasets-info.csv
         info_df <- read_dataset_info(dir)
         datasets <- sub("\\.pgx$", "", basename(ff))
@@ -309,9 +326,15 @@ admin_table_datamanager_server <- function(id, auth) {
     ## -----------------------------------------------------------
     resolve_dir <- function(label) {
       opg <- dirname(PGX.DIR)
-      if (label == "data/") return(PGX.DIR)
-      if (label == "data_shared/") return(SHARE.DIR)
-      if (label == "data_public/") return(PUBLIC.DIR)
+      if (label == "data/") {
+        return(PGX.DIR)
+      }
+      if (label == "data_shared/") {
+        return(SHARE.DIR)
+      }
+      if (label == "data_public/") {
+        return(PUBLIC.DIR)
+      }
       ## User directory e.g. "data/user@example.com/"
       sub_dir <- sub("^data/", "", label)
       sub_dir <- sub("/$", "", sub_dir)
@@ -319,21 +342,28 @@ admin_table_datamanager_server <- function(id, auth) {
     }
 
     ## -----------------------------------------------------------
-    ## Get selected file paths
+    ## Get selected rows / file paths
     ## -----------------------------------------------------------
-    selected_files <- reactive({
+    selected_rows <- reactive({
       sel <- input$files_tbl_rows_selected
-      if (is.null(sel) || length(sel) == 0) return(NULL)
+      if (is.null(sel) || length(sel) == 0) {
+        return(NULL)
+      }
       df <- display_data()
-      df$full_path[sel]
+      df[sel, , drop = FALSE]
+    })
+
+    selected_files <- reactive({
+      rows <- selected_rows()
+      if (is.null(rows)) return(NULL)
+      rows$full_path
     })
 
     ## -----------------------------------------------------------
-    ## Move files
+    ## Move files (with confirmation)
     ## -----------------------------------------------------------
     shiny::observeEvent(input$move_btn, {
       shiny::req(isTRUE(auth$ADMIN))
-      shiny::req(!busy())
       files <- selected_files()
       if (is.null(files)) {
         status("No files selected.")
@@ -341,7 +371,31 @@ admin_table_datamanager_server <- function(id, auth) {
       }
       dest <- input$dest_folder
       shiny::req(dest)
+      dest_label <- folder_label(dest)
+      shiny::showModal(shiny::modalDialog(
+        title = "Confirm Move",
+        shiny::HTML(paste0(
+          "<p>Move <b>", length(files), "</b> file(s) to <b>", dest_label, "</b>?</p>",
+          "<ul>", paste0("<li>", basename(files), "</li>", collapse = ""), "</ul>"
+        )),
+        footer = shiny::tagList(
+          shiny::actionButton(ns("confirm_move"), "Move", class = "btn-warning"),
+          shiny::modalButton("Cancel")
+        ),
+        easyClose = TRUE
+      ))
+    })
+
+    shiny::observeEvent(input$confirm_move, {
+      shiny::req(isTRUE(auth$ADMIN))
+      shiny::req(!busy())
+      rows <- selected_rows()
+      shiny::req(rows)
+      files <- rows$full_path
+      dest <- input$dest_folder
+      shiny::req(dest)
       dest_dir <- resolve_dir(dest)
+      shiny::removeModal()
 
       disable_actions()
       on.exit(enable_actions())
@@ -350,7 +404,7 @@ admin_table_datamanager_server <- function(id, auth) {
           dir.create(dest_dir, recursive = TRUE)
         }
 
-        n_ok <- 0
+        success <- logical(length(files))
         for (i in seq_along(files)) {
           f <- files[i]
           shiny::incProgress(0.5 / length(files), detail = basename(f))
@@ -361,8 +415,17 @@ admin_table_datamanager_server <- function(id, auth) {
             ok <- file.copy(f, target, overwrite = FALSE)
             if (ok) file.remove(f)
           }
-          if (ok) n_ok <- n_ok + 1
+          if (ok) success[i] <- TRUE
         }
+        n_ok <- sum(success)
+
+        log_admin_action(
+          admin_email = auth$email,
+          action = "move",
+          subjects = basename(files[success]),
+          source_labels = rows$folder[success],
+          destination = dest
+        )
 
         ## Update datasets-info.csv in source and destination folders
         source_dirs <- unique(dirname(files))
@@ -407,8 +470,9 @@ admin_table_datamanager_server <- function(id, auth) {
     shiny::observeEvent(input$confirm_delete, {
       shiny::req(isTRUE(auth$ADMIN))
       shiny::req(!busy())
-      files <- selected_files()
-      shiny::req(files)
+      rows <- selected_rows()
+      shiny::req(rows)
+      files <- rows$full_path
       shiny::removeModal()
 
       disable_actions()
@@ -417,7 +481,20 @@ admin_table_datamanager_server <- function(id, auth) {
         source_dirs <- unique(dirname(files))
 
         shiny::incProgress(0.3, detail = paste("Removing", length(files), "file(s)"))
-        n_ok <- sum(file.remove(files))
+        ## Soft-delete: rename ".pgx" -> ".pgx_" so files are hidden from
+        ## the app but remain recoverable on disk (same pattern as the
+        ## per-user delete in board.loading).
+        removed <- vapply(files, function(f) {
+          isTRUE(file.rename(f, paste0(f, "_")))
+        }, logical(1))
+        n_ok <- sum(removed)
+
+        log_admin_action(
+          admin_email = auth$email,
+          action = "delete",
+          subjects = basename(files[removed]),
+          source_labels = rows$folder[removed]
+        )
 
         ## Update datasets-info.csv in affected folders
         for (i in seq_along(source_dirs)) {

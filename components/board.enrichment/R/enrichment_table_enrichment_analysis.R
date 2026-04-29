@@ -98,7 +98,8 @@ enrichment_table_enrichment_analysis_server <- function(id,
       if (input$rowgroup) {
         db <- sub(":.*", "", rownames(rpt))
         rpt <- cbind(DB = db, rpt)
-        rpt <- rpt[order(rpt$DB, rpt$meta.q, -abs(rpt$logFC)), ]
+        meta.sig <- if ("meta.q" %in% colnames(rpt)) rpt$meta.q else rpt$meta.p
+        rpt <- rpt[order(rpt$DB, meta.sig, -abs(rpt$logFC)), ]
       }
 
       is.numcol <- sapply(rpt, function(col) is.numeric(col) && !is.integer(col))

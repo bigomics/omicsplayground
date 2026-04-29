@@ -69,7 +69,6 @@ expression_plot_barplot_server <- function(id,
                                            res,
                                            watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     ## Editor: rank list for custom drag-and-drop ordering
     output$rank_list <- renderUI({
       pd <- plot_data()
