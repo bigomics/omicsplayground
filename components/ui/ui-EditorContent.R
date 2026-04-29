@@ -992,6 +992,52 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 shiny::uiOutput(ns_parent("rank_list"))
               )
             )
+          ),
+          # Aspect Ratio
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          # ggprism Theme
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
           )
         ),
         shiny::div(

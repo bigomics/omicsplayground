@@ -15,7 +15,7 @@ dataview_plot_boxplot_ui <- function(
     shiny::radioButtons(
       inputId = ns("group_by_feature_class"),
       label = "Group by feature class (available when {Group by} is used)",
-      choices = "a"
+      choices = "<ungrouped>"
     )
   )
 
@@ -153,7 +153,7 @@ dataview_plot_boxplot_server <- function(id,
         }
       }
 
-      bar_color <- get_editor_color(input, "scatter_color", "secondary")
+      bar_color <- if (!is.null(split)) "black" else get_editor_color(input, "scatter_color", "secondary")
       fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
       bars_order <- input$bars_order
       samples <- res$sample
