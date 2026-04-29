@@ -164,6 +164,116 @@ AuthenticationModuleApacheCookie <- function(id,
 }
 
 ## ================================================================================
+## AuthenticationModuleHeader
+##
+## Trust an authenticated user identity injected by an upstream reverse proxy
+## (e.g. ShinyProxy with SAML/OIDC) via HTTP request headers. ShinyProxy
+## guarantees these headers cannot be spoofed by the client. The default header
+## names match ShinyProxy's: HTTP_X_SP_USERID and HTTP_X_SP_USERGROUPS, where
+## "name-attribute" in shinyproxy SAML config typically resolves to the user's
+## email.
+## ================================================================================
+
+AuthenticationModuleHeader <- function(id,
+                                       header_name = "HTTP_X_SP_USERID",
+                                       groups_header = "HTTP_X_SP_USERGROUPS",
+                                       credentials_file = NULL) {
+  shiny::moduleServer(
+    id, function(input, output, session) {
+      message("[AuthenticationModuleHeader] >>>> reading user from upstream header <<<<")
+      ns <- session$ns
+
+      email <- session$request[[header_name]]
+      if (is.null(email)) email <- ""
+      email <- tolower(as.character(email))
+
+      groups <- session$request[[groups_header]]
+      if (is.null(groups)) groups <- ""
+
+      user_dir <- file.path(PGX.DIR)
+      if (nzchar(email) && isTRUE(opt$ENABLE_USERDIR)) {
+        user_dir <- file.path(PGX.DIR, email)
+        create_user_dir_if_needed(user_dir, PGX.DIR)
+      }
+
+      is_logged <- nzchar(email)
+      username  <- email
+      level     <- ""
+      limit     <- ""
+      is_admin  <- FALSE
+
+      if (!is_logged) {
+        warning("[AuthenticationModuleHeader] no upstream user header found (",
+                header_name, "); user not logged in")
+      }
+
+      ## Optional privilege lookup against CREDENTIALS file. Gated by
+      ## USE_CREDENTIALS in OPTIONS — server.R only passes credentials_file
+      ## through when that flag is TRUE. Missing email = no privileges
+      ## (still logged in). Expired email = logged out.
+      if (is_logged && !is.null(credentials_file) && file.exists(credentials_file)) {
+        creds <- tryCatch(
+          utils::read.csv(credentials_file, colClasses = "character"),
+          error = function(e) NULL
+        )
+        if (!is.null(creds) && "email" %in% colnames(creds)) {
+          row <- which(tolower(creds$email) == email)[1]
+          if (!is.na(row)) {
+            cred <- creds[row, ]
+            valid_date <- TRUE
+            if ("expiry" %in% colnames(cred) && nzchar(cred$expiry)) {
+              valid_date <- isTRUE(Sys.Date() < as.Date(cred$expiry))
+            }
+            if (!valid_date) {
+              message("[AuthenticationModuleHeader] credentials expired for ", email)
+              is_logged <- FALSE
+            } else {
+              if ("username" %in% colnames(cred) && nzchar(cred$username)) {
+                username <- cred$username
+              }
+              if ("level" %in% colnames(cred)) level <- cred$level
+              if ("limit" %in% colnames(cred)) limit <- cred$limit
+              if ("ADMIN" %in% colnames(cred)) {
+                is_admin <- isTRUE(as.logical(cred$ADMIN))
+              }
+              message("[AuthenticationModuleHeader] credentials matched for ", email,
+                      " (level=", level, ", ADMIN=", is_admin, ")")
+            }
+          } else {
+            message("[AuthenticationModuleHeader] no credentials row for ", email)
+          }
+        }
+      }
+
+      USER <- shiny::reactiveValues(
+        method = "header",
+        logged = is_logged,
+        username = username,
+        email = email,
+        level = level,
+        limit = limit,
+        ADMIN = is_admin,
+        options = read_user_options(user_dir),
+        user_dir = user_dir
+      )
+
+      resetUSER <- function() {
+        ## Logout must happen at the upstream proxy; we only clear local state.
+        USER$logged <- FALSE
+        USER$username <- ""
+        USER$email <- ""
+        USER$level <- ""
+        USER$limit <- ""
+        MODULES_LOADED[] <<- FALSE
+      }
+
+      USER$resetUSER <- resetUSER
+      return(USER)
+    }
+  )
+}
+
+## ================================================================================
 ## FirebaseAuthenticationModule
 ## ================================================================================
 
