@@ -61,7 +61,7 @@ app_server <- function(input, output, session) {
   credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
   no.credentials <- (!isTRUE(opt$USE_CREDENTIALS) || !has.credentials)
-  if (no.credentials && authentication != "password") {
+  if (no.credentials && !(authentication %in% c("password", "shinyproxy-sso-admin"))) {
     credentials_file <- NULL
   }
 
@@ -127,6 +127,15 @@ app_server <- function(input, output, session) {
     auth <- AuthenticationModuleApacheCookie(
       id = "auth",
       show_modal = FALSE
+    )
+  } else if (authentication == "shinyproxy-sso") {
+    auth <- AuthenticationModuleHeader(
+      id = "auth"
+    )
+  } else if (authentication == "shinyproxy-sso-admin") {
+    auth <- AuthenticationModuleHeader(
+      id = "auth",
+      credentials_file = credentials_file
     )
   } else {
     ## stop everything
@@ -1267,7 +1276,7 @@ app_server <- function(input, output, session) {
       userLogoutSequence(isolate(auth), action = "session.logout")
 
       ## we do extra logout actions for shinyproxy
-      if (opt$AUTHENTICATION == "shinyproxy") {
+      if (opt$AUTHENTICATION %in% c("shinyproxy", "shinyproxy-sso", "shinyproxy-sso-admin")) {
         session$sendCustomMessage("shinyproxy-logout", list())
       }
     }
