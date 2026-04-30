@@ -122,46 +122,86 @@ drugconnectivity_plot_moa_server <- function(id,
           return(df)
         }
 
-        p <- playbase::pgx.barplot.PLOTLY(
-          data = df,
-          x = "x",
-          y = "y",
-          yaxistitle = yaxistitle,
-          xaxistitle = "",
-          grouped = FALSE, ## not really...
-          yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top))),
-          xlen = 30
-        )
-
-        ## Editor: bar color
         bar_color <- get_editor_color(input, "bar_color", "bar_color")
-        p <- plotly::plotly_build(p)
-        for (i in seq_along(p$x$data)) {
-          if (!is.null(p$x$data[[i]]$type) && p$x$data[[i]]$type == "bar") {
-            p$x$data[[i]]$marker$color <- bar_color
-          }
-        }
-
-        ## Editor: bars order
         bars_order <- if (!is.null(input$bars_order)) input$bars_order else "ascending"
-        if (!is.null(bars_order)) {
-          if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
-            p <- plotly::layout(p, xaxis = list(
-              categoryorder = "array",
-              categoryarray = input$rank_list_basic
-            ))
-          } else {
-            cat_order <- switch(bars_order,
-              "alphabetical" = "category ascending",
-              "ascending" = "total ascending",
-              "descending" = "total descending",
-              "trace"
-            )
-            p <- plotly::layout(p, xaxis = list(categoryorder = cat_order))
+        gp <- extract_ggprism_params(input)
+
+        if (gp$use_ggprism) {
+          ## reorder factor levels for ggplot
+          if (bars_order == "descending") {
+            df$x <- factor(df$x, levels = rev(levels(df$x)))
+          } else if (bars_order == "alphabetical") {
+            df$x <- factor(df$x, levels = sort(levels(df$x)))
+          } else if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+            custom <- intersect(input$rank_list_basic, levels(df$x))
+            if (length(custom) > 0) df$x <- factor(df$x, levels = custom)
           }
+
+          p <- playbase::pgx.barplot.GGPLOT(
+            data = df,
+            x = "x",
+            y = "y",
+            fillcolor = bar_color,
+            yaxistitle = yaxistitle,
+            xaxistitle = "",
+            grouped = FALSE
+          )
+
+          ymax <- max(abs(df$y), na.rm = TRUE) * 1.1
+          p <- p + ggplot2::coord_cartesian(ylim = c(-ymax, ymax))
+
+          x_map <- p$mapping$x
+          if (!is.null(x_map)) {
+            suppressMessages(
+              p <- p +
+                ggplot2::aes(fill = !!x_map) +
+                ggplot2::scale_fill_manual(values = rep(bar_color, 50)) +
+                ggplot2::guides(fill = "none")
+            )
+          }
+          p <- apply_ggprism_theme(p, gp, x_angle = 90)
+          p <- apply_editor_theme(p, input)
+          fig <- ggplot_as_plotly_image(p)
+        } else {
+          p <- playbase::pgx.barplot.PLOTLY(
+            data = df,
+            x = "x",
+            y = "y",
+            yaxistitle = yaxistitle,
+            xaxistitle = "",
+            grouped = FALSE,
+            yrange = c(-1.1, 1.1) * max(abs(as.numeric(moa.top))),
+            xlen = 30
+          )
+
+          p <- plotly::plotly_build(p)
+          for (i in seq_along(p$x$data)) {
+            if (!is.null(p$x$data[[i]]$type) && p$x$data[[i]]$type == "bar") {
+              p$x$data[[i]]$marker$color <- bar_color
+            }
+          }
+
+          if (!is.null(bars_order)) {
+            if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+              p <- plotly::layout(p, xaxis = list(
+                categoryorder = "array",
+                categoryarray = input$rank_list_basic
+              ))
+            } else {
+              cat_order <- switch(bars_order,
+                "alphabetical" = "category ascending",
+                "ascending" = "total ascending",
+                "descending" = "total descending",
+                "trace"
+              )
+              p <- plotly::layout(p, xaxis = list(categoryorder = cat_order))
+            }
+          }
+          fig <- p
         }
 
-        return(p)
+        if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+        return(fig)
       }
 
       plot.RENDER <- function() {

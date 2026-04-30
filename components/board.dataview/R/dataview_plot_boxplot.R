@@ -15,7 +15,7 @@ dataview_plot_boxplot_ui <- function(
     shiny::radioButtons(
       inputId = ns("group_by_feature_class"),
       label = "Group by feature class (available when {Group by} is used)",
-      choices = "a"
+      choices = "<ungrouped>"
     )
   )
 
@@ -153,7 +153,7 @@ dataview_plot_boxplot_server <- function(id,
         }
       }
 
-      bar_color <- get_editor_color(input, "scatter_color", "secondary")
+      bar_color <- if (!is.null(split)) "black" else get_editor_color(input, "scatter_color", "secondary")
       fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
       bars_order <- input$bars_order
       samples <- res$sample
@@ -173,19 +173,40 @@ dataview_plot_boxplot_server <- function(id,
       }
       long.df$sample <- factor(long.df$sample, levels = samples)
 
-      fig <- playbase::pgx.boxplot.PLOTLY(
-        data = long.df,
-        x = "sample",
-        y = "value",
-        split = split,
-        yaxistitle = ylab,
-        color = bar_color,
-        fillcolor = fill_color,
-        linecolor = bar_color,
-        colors = palette_colors
-      ) %>%
-        plotly_default()
+      gp <- extract_ggprism_params(input)
 
+      if (gp$use_ggprism) {
+        ## --- ggplot2 + ggprism path ---
+        p <- playbase::pgx.boxplot.GGPLOT(
+          data = long.df, x = "sample", y = "value",
+          split = split,
+          yaxistitle = ylab,
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color,
+          colors = palette_colors
+        )
+        p <- apply_ggprism_theme(p, gp, x_angle = 90)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
+      } else {
+        ## --- existing plotly path ---
+        fig <- playbase::pgx.boxplot.PLOTLY(
+          data = long.df,
+          x = "sample",
+          y = "value",
+          split = split,
+          yaxistitle = ylab,
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color,
+          colors = palette_colors
+        ) %>%
+          plotly_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
 
     }

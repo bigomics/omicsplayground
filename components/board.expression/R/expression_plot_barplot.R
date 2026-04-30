@@ -136,57 +136,90 @@ expression_plot_barplot_server <- function(id,
         return(NULL)
       }
 
-      fig <- playbase::pgx.plotExpression(
-        pgx = pd[["pgx"]],
-        probe = pd[["gene"]],
-        main = pd[["main"]],
-        comp = pd[["comp"]],
-        grouped = pd[["grouped"]],
-        showothers = pd[["showothers"]],
-        max.points = 200, ## slow!!
-        names = TRUE,
-        logscale = pd[["logscale"]],
-        srt = pd[["srt"]],
-        xlab = "",
-        plotlib = "plotly"
-      )
-
-      ## Editor: bar color (only override when user changed from default #A6CEE3)
+      gp <- extract_ggprism_params(input)
       bar_color <- get_editor_color(input, "bar_color", "#A6CEE3")
-      effective_color <- bar_color
-      if (bar_color != "#A6CEE3" && !is.null(fig)) {
-        fig <- plotly::plotly_build(fig)
-        for (i in seq_along(fig$x$data)) {
-          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
-            fig$x$data[[i]]$marker$color <- bar_color
+
+      if (gp$use_ggprism) {
+        ## --- ggplot2 + ggprism path ---
+        p <- playbase::pgx.plotExpression(
+          pgx = pd[["pgx"]],
+          probe = pd[["gene"]],
+          main = pd[["main"]],
+          comp = pd[["comp"]],
+          grouped = pd[["grouped"]],
+          showothers = pd[["showothers"]],
+          max.points = 200,
+          names = TRUE,
+          logscale = pd[["logscale"]],
+          srt = pd[["srt"]],
+          xlab = "",
+          plotlib = "ggplot"
+        )
+        shiny::req(p)
+        x_map <- p$mapping$x
+        if (!is.null(x_map)) {
+          suppressMessages(
+            p <- p +
+              ggplot2::aes(fill = !!x_map) +
+              ggplot2::scale_fill_manual(values = rep(bar_color, 50)) +
+              ggplot2::guides(fill = "none")
+          )
+        }
+        p <- apply_ggprism_theme(p, gp, x_angle = 0)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
+      } else {
+        ## --- existing plotly path ---
+        fig <- playbase::pgx.plotExpression(
+          pgx = pd[["pgx"]],
+          probe = pd[["gene"]],
+          main = pd[["main"]],
+          comp = pd[["comp"]],
+          grouped = pd[["grouped"]],
+          showothers = pd[["showothers"]],
+          max.points = 200,
+          names = TRUE,
+          logscale = pd[["logscale"]],
+          srt = pd[["srt"]],
+          xlab = "",
+          plotlib = "plotly"
+        )
+
+        effective_color <- bar_color
+        if (bar_color != "#A6CEE3" && !is.null(fig)) {
+          fig <- plotly::plotly_build(fig)
+          for (i in seq_along(fig$x$data)) {
+            if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+              fig$x$data[[i]]$marker$color <- bar_color
+            }
+          }
+        }
+
+        if (!is.null(fig)) {
+          fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
+        }
+
+        ## Editor: bars order
+        bars_order <- input$bars_order
+        if (!is.null(bars_order) && !is.null(fig)) {
+          if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+            fig <- plotly::layout(fig, xaxis = list(
+              categoryorder = "array",
+              categoryarray = input$rank_list_basic
+            ))
+          } else {
+            cat_order <- switch(bars_order,
+              "alphabetical" = "category ascending",
+              "ascending" = "total ascending",
+              "descending" = "total descending",
+              "trace"
+            )
+            fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
           }
         }
       }
 
-      ## Editor: sync title color with bar color
-      if (!is.null(fig)) {
-        fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
-      }
-
-      ## Editor: bars order
-      bars_order <- input$bars_order
-      if (!is.null(bars_order) && !is.null(fig)) {
-        if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
-          fig <- plotly::layout(fig, xaxis = list(
-            categoryorder = "array",
-            categoryarray = input$rank_list_basic
-          ))
-        } else {
-          cat_order <- switch(bars_order,
-            "alphabetical" = "category ascending",
-            "ascending" = "total ascending",
-            "descending" = "total descending",
-            "trace"
-          )
-          fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
-        }
-      }
-
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
     }
 
