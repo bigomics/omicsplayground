@@ -93,12 +93,14 @@ mofa_report_inputs <- function(id) {
       class = "btn-outline-primary",
       width = '100%'
     ),
-    shiny::downloadButton(
-      ns("downloadPDF"),
-      label = "Download",
-      class = "btn-outline-primary",      
-      style = "width: 100%;",
-      width = '100%')
+    shinyjs::disabled(
+      shiny::downloadButton(
+        ns("downloadPDF"),
+        label = "Download",
+        class = "btn-outline-primary",      
+        style = "width: 100%;",
+        width = '100%')
+    )
   )
 }
 
@@ -121,11 +123,13 @@ mofa_report_server <- function(id,
     
     observeEvent( mofa(), {
       btn_count(runif(1))
-      infographic_info(" ")      
+      infographic_info(" ")
+      shinyjs::disable("downloadPDF") 
     })
 
     observeEvent(input$ai_generate, {
       btn_count( btn_count() + 1)
+      shinyjs::disable("downloadPDF")
     })
     
     get_report <- shiny::eventReactive({
@@ -163,6 +167,18 @@ mofa_report_server <- function(id,
     ignoreInit = FALSE
     )
 
+    observe({
+      rpt <- get_report()
+      task_status <- infographic_task$status()
+      report_ready <- !is.null(rpt) && !is.null(rpt$report)
+      infographic_ready <- isTRUE(task_status == "success")
+      if (report_ready && infographic_ready) {
+        shinyjs::enable("downloadPDF")
+      } else {
+        shinyjs::disable("downloadPDF")
+      }
+    })
+    
     output$downloadPDF <- shiny::downloadHandler(
       filename = function() {
         "mofa-report.pdf"
@@ -198,6 +214,7 @@ mofa_report_server <- function(id,
     text.RENDER <- function() {
       rpt <- get_report()
       txt <- rpt$report
+      if(is.null(txt)) shinyjs::disable("downloadPDF")       
       shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
       if(input$as_html) {
         txt <- markdown::markdownToHTML(txt, fragment.only=TRUE)

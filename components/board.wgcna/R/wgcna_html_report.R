@@ -179,9 +179,8 @@ wgcna_html_report_server <- function(id,
             return(NULL)
           }
           dbg("*** found report in wgcna object")
-          dbg("*** names.rpt = ", names(rpt))
-          ## return(rpt)
-          return(NULL)
+          return(rpt)
+          ##return(NULL)
         }
 
         progress <- shiny::Progress$new()
@@ -224,10 +223,8 @@ wgcna_html_report_server <- function(id,
       diagram_ready <- !is.null(rpt) && !is.null(rpt$diagram)
       infographic_ready <- isTRUE(task_status == "success")
       if (report_ready && diagram_ready && infographic_ready) {
-        dbg("*** enable downloadPDF! ***")
         shinyjs::enable("downloadPDF")
       } else {
-        dbg("*** disable downloadPDF! ***")
         shinyjs::disable("downloadPDF")
       }
     })
