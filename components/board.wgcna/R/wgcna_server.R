@@ -87,11 +87,9 @@ WgcnaBoard <- function(id, pgx) {
       llm_model <- getUserOption(session,'llm_model')
       img_model <- NULL  # skip infographics
       #img_model <- "google:gemini-3.1-flash-image-preview"
-
       out <- playbase::wgcna.init(
-        out,
-        llm = llm_model, img_model = img_model, annot = pgx$genes,
-        progress = progress
+        out, llm = llm_model, img_model = img_model,
+        annot = pgx$genes, progress = progress
       )
 
       shiny::removeModal()
@@ -124,7 +122,6 @@ WgcnaBoard <- function(id, pgx) {
         dbg("[WgcnaBoard] >>> recomputing WGCNA results")
         out <- compute_wgcna()
       }
-
 
       ## update Inputs
       me <- sort(names(out$me.genes))

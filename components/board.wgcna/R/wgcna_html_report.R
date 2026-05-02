@@ -167,20 +167,18 @@ wgcna_html_report_server <- function(id,
         btn_count()
       },
       {
-        llm_model <- getUserOption(session, "llm_model")
-        if (is.null(llm_model) || llm_model == "") {
-          return(NULL)
-        }
-
         this_wgcna <- wgcna()
         if (btn_count() < 1) {
           rpt <- this_wgcna$report
           if (is.null(rpt)) {
             return(NULL)
           }
-          dbg("*** found report in wgcna object")
           return(rpt)
-          ##return(NULL)
+        }
+
+        llm_model <- getUserOption(session, "llm_model")
+        if (is.null(llm_model) || llm_model == "") {
+          return(NULL)
         }
 
         progress <- shiny::Progress$new()
@@ -337,10 +335,10 @@ wgcna_html_report_server <- function(id,
     get_diagram <- reactive({
 
       rpt <- get_report()
-      shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
+      shiny::validate(shiny::need(!is.null(rpt), "Report not available"))
 
       ## for the moment we need explicit user generate
-      shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
+      ##shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
       
       llm_model <- getUserOption(session,'llm_model')        
       this_wgcna <- wgcna()
@@ -349,9 +347,7 @@ wgcna_html_report_server <- function(id,
         dg <- rpt$diagram
       } else if (!is.null(llm_model) && llm_model != "") {
         dg <- playbase::wgcna.create_diagram(
-          rpt$report, llm_model,
-          graph = graph,
-          rankdir = "LR"
+          rpt$report, llm_model, graph = graph, rankdir = "LR"
         )
       } else {
         dg <- NULL

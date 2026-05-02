@@ -137,15 +137,20 @@ drugconnectivity_report_server <- function(id,
     } ,{
       
       ##llm_model <- "groq:openai/gpt-oss-20b"
-      llm_model <- getUserOption(session,'llm_model')
-      if(btn_count() < 1 || llm_model == '') {
+      if(btn_count() < 1) {
         this_drugs <- drugs()
-        rpt <- this_drugs$report
+        db <- rdb()
+        rpt <- this_drugs[[db]]$report
         if (is.null(rpt)) {
           return(NULL)
         }
         dbg("*** found report in drugs object")
         return(rpt)
+      }
+
+      llm_model <- getUserOption(session,'llm_model')
+      if(is.null(llm_model) || llm_model == '') {
+        return(NULL)
       }
       
       progress <- shiny::Progress$new()
@@ -156,7 +161,7 @@ drugconnectivity_report_server <- function(id,
       db <- rdb()
       rpt <- playbase::cmap.create_report(
         pgx, model = llm_model, db = db,
-        user.prompt = input$ai_prompt)
+        user.prompt = input$ai_prompt, force=FALSE)
         
       return(rpt)
     },
@@ -187,7 +192,7 @@ drugconnectivity_report_server <- function(id,
         rpt <- get_report()
         rpt$infographic <- infographic_path()
         db <- rdb()
-        full_rpt <- playbase::rpt.compile_drugconnectivity_report(
+        full_rpt <- playbase::rpt.compile_cmap_report(
           obj=NULL, which.db=db, report=rpt,
           pgx=pgx, model=NULL, hlevel=2, shift=TRUE)
         playbase::markdownToPDF(full_rpt, file) 

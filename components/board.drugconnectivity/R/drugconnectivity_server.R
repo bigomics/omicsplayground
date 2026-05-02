@@ -70,16 +70,17 @@ DrugConnectivityBoard <- function(id, pgx) {
       
       ## need to recompute MOA (if not done), NOTE: should be done in
       ## pgx computation
-      info("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
-      pgx.showSmallModal("Calculating MOA<br>Please wait...")
-
+      dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
+      pgx.showSmallModal("Calculating MOA<br>Please wait...")      
+      pgx$drugs$report <- NULL
       db=names(pgx$drugs)[1]
       for(db in names(pgx$drugs)) {
         res <- pgx$drugs[[db]]
-        moa <- metaLINCS::computeMoaEnrichment(res) 
-        pgx$drugs[[db]][['moa']] <- moa
+        if(is.null(res$moa)) {        
+          moa <- metaLINCS::computeMoaEnrichment(res)
+          pgx$drugs[[db]][['moa']] <- moa
+        }
       }
-      
       shiny::removeModal(session)
       return(pgx$drugs)
     })
