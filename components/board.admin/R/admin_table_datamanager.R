@@ -143,7 +143,7 @@ admin_table_datamanager_server <- function(id, auth) {
       refresh_trigger()
       shiny::req(isTRUE(auth$ADMIN))
 
-      folders <- c("data/")
+      folders <- character(0)
 
       ## User directories inside PGX.DIR
       user_dirs <- list.dirs(PGX.DIR, full.names = FALSE, recursive = FALSE)
@@ -153,8 +153,9 @@ admin_table_datamanager_server <- function(id, auth) {
         folders <- c(folders, paste0("data/", user_dirs, "/"))
       }
 
-      ## Shared and public dirs
-      if (dir.exists(SHARE.DIR)) folders <- c(folders, "data_shared/")
+      ## Public dir (root "data/" and "data_shared/" are intentionally omitted
+      ## from the dropdowns — files in those locations still appear under the
+      ## "(all)" filter via file_data()).
       if (dir.exists(PUBLIC.DIR)) folders <- c(folders, "data_public/")
 
       folders
@@ -480,7 +481,12 @@ admin_table_datamanager_server <- function(id, auth) {
         source_dirs <- unique(dirname(files))
 
         shiny::incProgress(0.3, detail = paste("Removing", length(files), "file(s)"))
-        removed <- file.remove(files)
+        ## Soft-delete: rename ".pgx" -> ".pgx_" so files are hidden from
+        ## the app but remain recoverable on disk (same pattern as the
+        ## per-user delete in board.loading).
+        removed <- vapply(files, function(f) {
+          isTRUE(file.rename(f, paste0(f, "_")))
+        }, logical(1))
         n_ok <- sum(removed)
 
         log_admin_action(
