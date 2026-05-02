@@ -50,6 +50,9 @@
 
 ### v4.1.6+master260323 (2026-03-23)
 
--  feat: private repo install via secrets + cache [view](https://github.com/bigomics/omicsplayground/commit/c46d2ecb50c70ae2fe29e9306431add70abcc87b)
+-  feat: make biomarker work with 1 feature [view](https://github.com/bigomics/omicsplayground/commit/8fa1cf454c02c918c53e4c05290128121565dd84)
+-  feat: move computeok email to main thread [view](https://github.com/bigomics/omicsplayground/commit/c990ee5eac6ea936f6b2c74f502b557bfa16c099)
+-  feat: samples table use names instead of -1/1 [view](https://github.com/bigomics/omicsplayground/commit/3127f969191c069cfbdb74b76bc9f49ff179ad62)
+-  feat: global label type on lasagna module [view](https://github.com/bigomics/omicsplayground/commit/07a8103d08b89a2671e154225abd28d6419718c0)
 
 

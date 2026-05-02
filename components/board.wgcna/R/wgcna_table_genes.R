@@ -87,6 +87,8 @@ wgcna_table_genes_server <- function(id,
       }
 
       js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ", ellipsis.len, ", false )")
+      js.ellipsis20 <- paste0("$.fn.dataTable.render.ellipsis(20, false)")
+      js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")      
 
       DT::datatable(
         df,
@@ -105,8 +107,12 @@ wgcna_table_genes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
+              targets = c("feature","symbol"),
+              render = DT::JS(js.ellipsis20)
+            ),
+            list(
               targets = c("title"),
-              render = DT::JS(js.ellipsis)
+              render = DT::JS(js.ellipsis40)
             )
           )
         )

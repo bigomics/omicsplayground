@@ -116,4 +116,3 @@
 -  feat: private repo install via secrets + cache [view](https://github.com/bigomics/omicsplayground/commit/c46d2ecb50c70ae2fe29e9306431add70abcc87b)
 -  Update version to v4.1.6+master260323 [view](https://github.com/bigomics/omicsplayground/commit/887cdf100e4ae7f0d092b60730046a6ee15a135f)
 
-
