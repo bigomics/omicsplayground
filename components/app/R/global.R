@@ -180,6 +180,7 @@ opt.default <- list(
   MAX_COMPARISONS = 20,
   MAX_GENES = 20000,
   MAX_GENESETS = 5000,
+  MAX_METH_FEATURES = 450000,
   MAX_SHARED_QUEUE = 3,
   MAX_SESSIONS = 2,
   TIMEOUT = 0,
@@ -278,7 +279,7 @@ BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics"
+  "multiomics", "ideograms"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
@@ -286,14 +287,16 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Epigenomics"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
+if (is.null(opt$MODULES_METHYLOMICS)) opt$MODULES_METHYLOMICS <- MODULES
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
+MODULES_METHYLOMICS <- array(MODULES %in% opt$MODULES_METHYLOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
 ## ------------------------------------------------

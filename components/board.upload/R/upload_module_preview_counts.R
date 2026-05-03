@@ -3,10 +3,6 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-## ---------------------------------------------------
-## COUNTS UPLOAD (for wizard dialog)
-## ---------------------------------------------------
-
 upload_table_preview_counts_ui <- function(id) {
   ns <- shiny::NS(id)
   uiOutput(ns("table_counts"), fill = TRUE)
@@ -580,7 +576,7 @@ upload_table_preview_counts_server <- function(id,
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       ext <- tools::file_ext(input$counts_csv$name)
-      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "methylomics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
       c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad", "gz", "zip")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
@@ -741,6 +737,12 @@ upload_table_preview_counts_server <- function(id,
         )
       }
 
+      ## Precheck methylation: hope to filter probes & samples
+      if (!is.null(df) && upload_datatype() == "methylomics") {
+        jj <- which(!is.na(rownames(df)) & rownames(df) != "")
+        df <- df[jj, , drop = FALSE]
+      }
+      
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")
