@@ -32,6 +32,8 @@ upload_module_computepgx_server <- function(
   upload_name,
   upload_description,
   upload_datatype,
+  is.olink = shiny::reactive(FALSE),
+  is.nulisa = shiny::reactive(FALSE),
   upload_organism,
   upload_gx_methods,
   upload_gset_methods,
@@ -138,6 +140,11 @@ upload_module_computepgx_server <- function(
             "drug connectivity" = "drugs", "wordcloud",
             "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
           )
+        } else if (is.olink() || is.nulisa()) {
+          mm <- c(
+            "drug connectivity" = "drugs",
+            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+          )
         } else {
           mm <- c(
             "celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
@@ -168,6 +175,8 @@ upload_module_computepgx_server <- function(
         ## Default selection based on datatype
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
+        } else if (is.olink() || is.nulisa()) {
+          mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
         } else {
           mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
         }
