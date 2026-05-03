@@ -100,7 +100,7 @@ UploadBoard <- function(id,
         shiny::selectInput(
           ns("proteomics_type"),
           label = "Proteomics type:",
-          choices = c("MS", "Olink NPX"),
+          choices = c("MS", "Olink NPX", "Nulisa NPQ"),
           selected = "MS",
           width = "150px"
         )
@@ -113,6 +113,15 @@ UploadBoard <- function(id,
       req(upload_datatype())
       if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
         return(input$proteomics_type == "Olink NPX")
+      } else {
+        return(FALSE)
+      }
+    })
+
+    is.nulisa <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
+        return(input$proteomics_type == "Nulisa NPQ")
       } else {
         return(FALSE)
       }
@@ -275,7 +284,8 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         olink <- is.olink()
-        if (olink) {
+        nulisa <- is.nulisa()
+        if (olink || nulisa) {
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
@@ -295,7 +305,7 @@ UploadBoard <- function(id,
             checked_for_log(TRUE)
           }
         }
-        return(list(res = res, olink = olink))
+        return(list(res = res, olink = olink, nulisa = nulisa))
       }
     )
 
@@ -308,6 +318,7 @@ UploadBoard <- function(id,
         checked <- NULL
         res <- uploaded_counts()$res
         olink <- uploaded_counts()$olink
+        nulisa <- uploaded_counts()$nulisa
         if (is.null(res)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
@@ -323,7 +334,7 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        if (olink) {
+        if (olink || nulisa) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {
@@ -340,11 +351,11 @@ UploadBoard <- function(id,
           }
         }
 
-        # For data != Olink NPX, no further negative values allowed (in the linear space).
+        # For data != Olink NPX and != NULISA NPQ, no further negative values allowed (in the linear space).
         # Set any negatives to zero and inform the user. Store value.
         # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
         negs <- sum(res$df < 0, na.rm = TRUE)
-        if (negs > 0 && !olink) {
+        if (negs > 0 && !olink && !nulisa) {
           res$df <- pmax(res$df, 0)
           ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
           shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
@@ -1259,6 +1270,7 @@ UploadBoard <- function(id,
       r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
+      is.nulisa = is.nulisa,
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx
@@ -1322,6 +1334,8 @@ UploadBoard <- function(id,
       upload_name = upload_name,
       upload_description = upload_description,
       upload_datatype = upload_datatype,
+      is.olink = is.olink,
+      is.nulisa = is.nulisa,
       upload_organism = upload_organism,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,
