@@ -132,11 +132,13 @@ wgcna_report_inputs <- function(id) {
       class = "btn-outline-primary",
       width = "100%"
     ),
-    shiny::downloadButton(
-      ns("downloadPDF"),
-      label = "Download",
-      class = "btn-outline-primary",      
-      style = "width: 100%;")
+    shinyjs::disabled(
+      shiny::downloadButton(
+        ns("downloadPDF"),
+        label = "Download",
+        class = "btn-outline-primary",
+        style = "width: 100%;")
+    )
   )
 }
 
@@ -152,10 +154,12 @@ wgcna_html_report_server <- function(id,
 
     observeEvent( wgcna(), {
       btn_count(runif(1))
+      shinyjs::disable("downloadPDF") 
     })
 
     observeEvent(input$generate_btn, {
       btn_count(btn_count() + 1)
+      shinyjs::disable("downloadPDF") 
     })
 
     get_report <- shiny::eventReactive(
@@ -163,20 +167,17 @@ wgcna_html_report_server <- function(id,
         btn_count()
       },
       {
-        llm_model <- getUserOption(session, "llm_model")
-        if (is.null(llm_model) || llm_model == "") {
-          return(NULL)
-        }
-
         this_wgcna <- wgcna()
         if (btn_count() < 1) {
           rpt <- this_wgcna$report
           if (is.null(rpt)) {
             return(NULL)
           }
-          dbg("*** found report in wgcna object")
-          dbg("*** names.rpt = ", names(rpt))
-          ## return(rpt)
+          return(rpt)
+        }
+
+        llm_model <- getUserOption(session, "llm_model")
+        if (is.null(llm_model) || llm_model == "") {
           return(NULL)
         }
 
@@ -212,6 +213,19 @@ wgcna_html_report_server <- function(id,
       ignoreNULL = FALSE,
       ignoreInit = FALSE
     )
+
+    observe({
+      rpt <- get_report()
+      task_status <- infographic_task$status()
+      report_ready <- !is.null(rpt) && !is.null(rpt$report)
+      diagram_ready <- !is.null(rpt) && !is.null(rpt$diagram)
+      infographic_ready <- isTRUE(task_status == "success")
+      if (report_ready && diagram_ready && infographic_ready) {
+        shinyjs::enable("downloadPDF")
+      } else {
+        shinyjs::disable("downloadPDF")
+      }
+    })
 
     output$downloadPDF <- downloadHandler(
       filename = function() {
@@ -276,6 +290,7 @@ wgcna_html_report_server <- function(id,
 
     text.RENDER <- function() {
       txt <- contents_text()
+      if(is.null(txt)) shinyjs::disable("downloadPDF") 
       shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
       res <- markdown::markdownToHTML(txt, fragment.only = TRUE)
       out <- shiny::div(class = "gene-info", shiny::HTML(res))
@@ -320,10 +335,10 @@ wgcna_html_report_server <- function(id,
     get_diagram <- reactive({
 
       rpt <- get_report()
-      shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
+      shiny::validate(shiny::need(!is.null(rpt), "Report not available"))
 
       ## for the moment we need explicit user generate
-      shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
+      ##shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
       
       llm_model <- getUserOption(session,'llm_model')        
       this_wgcna <- wgcna()
@@ -332,9 +347,7 @@ wgcna_html_report_server <- function(id,
         dg <- rpt$diagram
       } else if (!is.null(llm_model) && llm_model != "") {
         dg <- playbase::wgcna.create_diagram(
-          rpt$report, llm_model,
-          graph = graph,
-          rankdir = "LR"
+          rpt$report, llm_model, graph = graph, rankdir = "LR"
         )
       } else {
         dg <- NULL
@@ -429,7 +442,6 @@ wgcna_html_report_server <- function(id,
       if(!input$use_diagram) diagram <- NULL
       model <- input$img_model
       dbg("start infographic task...")
-      shinyjs::disable("downloadPDF")      
       infographic_task$invoke(report, diagram, model)
     })
     
@@ -453,8 +465,6 @@ wgcna_html_report_server <- function(id,
 
     infographic.RENDER <- function() {
       shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
-      # Return a list containing the filename
-      shinyjs::enable("downloadPDF")
       list(
         src = infographic_path(),
         width = "100%",

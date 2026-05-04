@@ -34,18 +34,23 @@ drugconnectivity_table_dsea_server <- function(id,
     table_data <- shiny::reactive({
       dsea <- getActiveDSEA()
       shiny::req(dsea)
-
       dt <- dsea$table
       return(dt)
     })
 
     table.RENDER <- function() {
       res <- table_data()
+
+      ## shorten strings
       res$moa <- playbase::shortstring(res$moa, 60)
       res$target <- playbase::shortstring(res$target, 30)
       res$drug <- playbase::shortstring(res$drug, 60)
-
       colnames(res) <- sub("moa", "MOA", colnames(res))
+
+      ## round-up digits
+      ii <- grep("NES|pval|padj",colnames(res))
+      res[,ii] <- round(res[,ii], digits=4)
+      
       DT::datatable(res,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
