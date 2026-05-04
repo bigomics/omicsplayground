@@ -28,7 +28,7 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
 
   PlotModuleUI(
     ns("pltmod"),
-    plotlib = "base",
+    plotlib = "ggplot",
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -42,7 +42,7 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
     title = title,
     ns_parent = ns,
     editor = TRUE,
-    plot_type = "scatterplot"
+    plot_type = "boxplot_methyl"
   )
 
 }
@@ -55,6 +55,44 @@ epigenomics_plot_boxplot_beta_server <- function(id,
                                                  watermark = FALSE) {
 
   moduleServer(id, function(input, output, session) {
+
+    grouped <- shiny::reactive({
+      pv <- r.pheno()
+      !is.null(pv) && length(pv) == 1 && pv != "" && pv != "<ungrouped>"
+    })
+
+    shiny::observe({
+      if (grouped()) {
+        shinyjs::hide("box_color_panel")
+        shinyjs::show("group_color_panel")
+      } else {
+        shinyjs::show("box_color_panel")
+        shinyjs::hide("group_color_panel")
+      }
+    })
+
+    group_levels <- shiny::reactive({
+      pd <- plot_data()
+      shiny::req(pd)
+      pv <- pd$pheno
+      if (is.null(pv) || length(pv) != 1 || pv == "" || pv == "<ungrouped>") return(character(0))
+      kk <- which(colnames(pd$samples) == pv)
+      if (length(kk) == 0) return(character(0))
+      vec <- as.character(pd$samples[, kk[1]])
+      lvls <- sort(unique(vec[!is.na(vec) & vec != ""]))
+      if (length(lvls) < 2) character(0) else lvls
+    })
+
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      lvls <- group_levels()
+      shiny::req(length(lvls) > 0)
+      custom_palette_pickers(
+        labels = lvls,
+        ns_func = session$ns,
+        default_colors = omics_pal_d("muted_light")(length(lvls))
+      )
+    })
 
     plot_data <- shiny::reactive({
 
@@ -101,8 +139,8 @@ epigenomics_plot_boxplot_beta_server <- function(id,
         if (length(kk) > 0) {
           pheno <- as.character(samples[, kk[1]])
           kk <- which(!is.na(pheno) & pheno != "")
-          if (length(unique(pheno[kk])) == 2) {
-            pheno <- pheno[kk]            
+          if (length(unique(pheno[kk])) >= 2) {
+            pheno <- pheno[kk]
             samples <- samples[kk, , drop = FALSE]
             X <- X[, kk, drop = FALSE]
           } else {
@@ -110,23 +148,32 @@ epigenomics_plot_boxplot_beta_server <- function(id,
           }
         }
       }
-      playbase::plotMethylOverview(X, annot, pheno,
-        plot.beta.dist = FALSE, plot.beta.boxplots = TRUE)
+
+      n_groups   <- if (is.character(pheno) && length(pheno) > 1) length(unique(pheno)) else 0
+      box_color  <- get_editor_color(input, "box_color", "bar_color")
+      group_clrs <- if (n_groups >= 2) {
+        resolve_palette_colors(
+          input, n = n_groups,
+          fallback_colors = omics_pal_d("muted_light")(n_groups)
+        )
+      } else NULL
+
+      playbase::plotMethylOverview(
+        X, annot, pheno,
+        plot.beta.dist = FALSE, plot.beta.boxplots = TRUE,
+        box_color = box_color,
+        group_colors = group_clrs
+      )
 
     }
 
-    modal_plot.RENDER <- function() { plot.RENDER() }
-
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
-      plotlib2 = "base",
+      plotlib = "ggplot",
+      plotlib2 = "ggplot",
       func = plot.RENDER,
-      func2 = modal_plot.RENDER,
       csvFunc = plot_data,
-      renderFunc = shiny::renderPlot,
-      renderFunc2 = shiny::renderPlot,
-      res = c(100, 170) * 0.85,
+      res = c(90, 120),
       pdf.width = 6,
       pdf.height = 6,
       add.watermark = watermark,

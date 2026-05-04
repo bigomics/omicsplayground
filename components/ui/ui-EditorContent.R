@@ -790,6 +790,58 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     )
   )
 
+  # Boxplot (methylation): single box color when ungrouped, palette when grouped.
+  # The two divs are toggled by the server based on grouping state via shinyjs.
+  boxplot_methyl_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::div(
+              id = ns_parent("box_color_panel"),
+              colourpicker::colourInput(
+                ns_parent("box_color"), "Box color",
+                ct$bar_color
+              )
+            ),
+            shiny::div(
+              id = ns_parent("group_color_panel"),
+              shiny::selectInput(
+                ns_parent("palette"), "Color palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom", "custom_gradient"
+                ),
+                selected = ct$palette
+              ),
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+    )
+  )
+
   # Correlation matrix: up/down colors only
   correlation_matrix_content <- shiny::div(
     class = "popup-modal",
@@ -842,6 +894,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "scatter_highlight" = scatter_highlight_content,
     "rank_plot" = rank_plot_content,
     "correlation_matrix" = correlation_matrix_content,
-    "scatter_updown" = scatter_updown_content
+    "scatter_updown" = scatter_updown_content,
+    "boxplot_methyl" = boxplot_methyl_content
   )
 }

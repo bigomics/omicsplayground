@@ -16,7 +16,7 @@ epigenomics_plot_beta_dist_ui <- function(id,
 
   PlotModuleUI(
     ns("pltmod"),
-    plotlib = "base",
+    plotlib = "ggplot",
     info.text = info.text,
     info.methods = info.methods,
     info.references = info.references,
@@ -29,7 +29,7 @@ epigenomics_plot_beta_dist_ui <- function(id,
     title = title,
     ns_parent = ns,
     editor = TRUE,
-    plot_type = "scatterplot"
+    plot_type = "correlation_matrix"
   )
 
 }
@@ -90,22 +90,25 @@ epigenomics_plot_beta_dist_server <- function(id,
         pheno <- NULL
       }
 
-      playbase::plotMethylOverview(X, annot, pheno, NULL, plot.beta.dist = TRUE)
-        
+      up_color   <- get_editor_color(input, "color_up",   "#d73027")
+      down_color <- get_editor_color(input, "color_down", "#4575b4")
+
+      playbase::plotMethylOverview(
+        X, annot, pheno, NULL,
+        plot.beta.dist = TRUE,
+        up_color = up_color,
+        down_color = down_color
+      )
+
     }
   
-    modal_plot.RENDER <- function() { plot.RENDER() }
-
     PlotModuleServer(
       "pltmod",
-      plotlib = "base",
-      plotlib2 = "base",
+      plotlib = "ggplot",
+      plotlib2 = "ggplot",
       func = plot.RENDER,
-      func2 = modal_plot.RENDER,
       csvFunc = plot_data,
-      renderFunc = shiny::renderPlot,
-      renderFunc2 = shiny::renderPlot,
-      res = c(100, 170) * 0.85,
+      res = c(90, 120),
       pdf.width = 6,
       pdf.height = 6,
       add.watermark = watermark,
