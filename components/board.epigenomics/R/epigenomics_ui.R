@@ -66,10 +66,10 @@ EpigenomicsUI <- function(id) {
 
       shiny::tabPanel(
         "Methylomics landscape",
-        bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
+          bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
           bslib::layout_columns(
             col_widths = 12,
             row_heights = list(1.33, 1),            
