@@ -96,7 +96,9 @@ MultiWGCNA_Board <- function(id, pgx) {
         dataX <- playbase::mofa.split_data(pgx$X)
         samples <- pgx$samples
         contrasts <- pgx$contrasts
-
+        
+        llm_model <- getUserOption(session, "llm_model")
+        
         obj.wgcna <- playbase::wgcna.compute_multiomics(
           dataX = dataX,
           samples = samples,
@@ -117,7 +119,8 @@ MultiWGCNA_Board <- function(id, pgx) {
           annot = pgx$genes,
           GMT = pgx$GMT,
           report = TRUE,
-          ai_model = NULL,
+          #ai_model = NULL,
+          ai_model = llm_model,
           experiment = pgx$description,
           progress = progress
         )
