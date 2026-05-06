@@ -62,7 +62,10 @@ clustering_plot_clustpca_ui <- function(
     options = plot_opts,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -74,6 +77,16 @@ clustering_plot_clustpca_server <- function(id,
                                             parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      colvar <- input$hmpca.colvar
+      shiny::req(colvar)
+      samples <- selected_samples()
+      groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
+      custom_palette_pickers(groups, ns)
+    })
 
     plot_data <- shiny::reactive({
       samples <- selected_samples()
@@ -88,7 +101,7 @@ clustering_plot_clustpca_server <- function(id,
     })
 
 
-    create_plot <- function(pgx, pos, pca2d.varexp, method, colvar, shapevar, label, cex) {
+    create_plot <- function(pgx, pos, pca2d.varexp, method, colvar, shapevar, label, cex, palette = "muted_light", custom_colors = NULL) {
       do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
       df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
@@ -120,7 +133,11 @@ clustering_plot_clustpca_server <- function(id,
       tt.info <- I(as.character(tt.info))
       cex1 <- c(1.0, 0.8, 0.6)[1 + 1 * (nrow(pos) > 30) + 1 * (nrow(pos) > 200)]
       clrs.length <- length(unique(colvar))
-      clrs <- rep(omics_pal_d(palette = "muted_light")(8), ceiling(clrs.length / 8))[1:clrs.length]
+      if (!is.null(custom_colors) && length(custom_colors) >= clrs.length) {
+        clrs <- custom_colors[1:clrs.length]
+      } else {
+        clrs <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))[1:clrs.length]
+      }
 
       if (do3d) {
         plt <- plotly::plot_ly(df, mode = "markers") %>%
@@ -257,6 +274,13 @@ clustering_plot_clustpca_server <- function(id,
       do3d <- (input$plot3d)
       multiplot <- length(methods) > 1
 
+      ## Editor: palette and custom colors
+      groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
+      n_groups <- length(groups)
+      custom_colors <- resolve_palette_colors(input, n_groups, fallback_colors = omics_pal_d("muted_light")(n_groups))
+      palette <- if (!is.null(input$palette)) input$palette else "muted_light"
+      if (palette %in% c("original", "default", "custom", "")) palette <- "muted_light"
+
       plist <- list()
       for (i in 1:length(methods)) {
         m <- methods[i]
@@ -273,7 +297,9 @@ clustering_plot_clustpca_server <- function(id,
           colvar = colvar,
           shapevar = shapevar,
           label = label,
-          cex = ifelse(length(methods) > 1, 0.6, 1)
+          cex = ifelse(length(methods) > 1, 0.6, 1),
+          palette = palette,
+          custom_colors = custom_colors
         )
       }
       plist
@@ -298,7 +324,8 @@ clustering_plot_clustpca_server <- function(id,
       res = c(90, 170), ## resolution of plots
       pdf.width = 8,
       pdf.height = 8,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

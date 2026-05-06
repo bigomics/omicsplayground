@@ -15,9 +15,8 @@ wgcna_plot_gdendogram_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("showtrait"), "Show traits", FALSE),
+    shiny::checkboxInput(ns("showtrait"), "Show traits", TRUE),
     shiny::checkboxInput(ns("showcontrasts"), "Show contrasts", FALSE)
   )
 

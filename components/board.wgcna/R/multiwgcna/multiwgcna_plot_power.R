@@ -41,7 +41,7 @@ multiwgcna_plot_power_server <- function(id,
                                          r_layers) {
   moduleServer(id, function(input, output, session) {
     plot.RENDER <- function() {
-      wgcna <- mwgcna()
+      wgcna <- mwgcna()$layers
 
       layers <- r_layers()
       sel.layers <- intersect(layers, names(wgcna))

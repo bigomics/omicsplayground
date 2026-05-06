@@ -1,103 +1,14 @@
-## library(dotenv)
-## library(shiny)
-## library(shinychat)
-## library(bslib)
-
-CopilotUI <- function(id, layout = c("sidebar", "fixed")[1]) {
-  ns <- shiny::NS(id)
-
-  sections <- c(
-    "description", "dataset_info", "compute_settings",
-    "differential_expression", "geneset_enrichment",
-    "drug_similarity", "pcsf_report", "wgcna_report"
-  )
-
-  sysprompt <- "You are computational biologist and will be asked questions about the following experiment. Try to make specific observations if you can. Answer brief and succint."
-
-  settings_card <- bslib::navset_underline(
-    bslib::nav_panel(
-      "Examples",
-      shiny::br(),
-      "Example questions:",
-      shiny::br(),
-      shiny::actionButton(ns("ask_describe"), "Describe my experiment", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("ask_findings"), "Summarize main findings", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("ask_pathways"), "What pathways are involved?", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("show_biomarkers"), "Show top biomarkers", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("find_references"), "Find references", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width = "100%", class = "xbtn"),
-      shiny::br(),
-      shiny::br(),
-      shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE)
-    ),
-    bslib::nav_panel(
-      "Settings",
-      br(),
-      shiny::textAreaInput(ns("prompt"), "Prompt:", value = sysprompt, height = 120, width = "100%"),
-      br(),
-      shiny::checkboxGroupInput(ns("context"), "Context:",
-        choices = sections,
-        selected = sections, inline = TRUE
-      ),
-      br(),
-      actionButton(ns("reset"), "Reset model")
-    )
-  )
-
-  chat_card <- bslib::card(
-    class = "border-0",
-    fill = FALSE,
-    max_height = "calc(100vh - 120px)",
-    bs_alert(HTML("<b>EXPERIMENTAL</b>. This AI module is experimental in early beta. Only for testing purposes."), closable = FALSE),
-    shinychat::chat_ui(ns("chat"),
-      width = "100%", height = "min(100%,770px)",
-      fill = TRUE
-    )
-  )
-
-  plot_card <- bslib::card(
-    class = "border-0 pt-5",
-    fill = TRUE,
-    height = "600px",
-    plotOutput(ns("plot"))
-  )
-
-  if (layout == "fixed") {
-    ui <- bslib::layout_columns(
-      col_widths = c(2, 7, 3),
-      style = "height: min(90%,700)",
-      fill = TRUE,
-      settings_card,
-      chat_card,
-      plot_card
-    )
-  }
-
-  if (layout == "sidebar") {
-    ui <- bslib::layout_sidebar(
-      style = "padding: 0px;",
-      sidebar = bslib::sidebar(
-        width = 250,
-        fill = TRUE,
-        settings_card
-      ),
-      bslib::layout_sidebar(
-        style = "padding: 0px;",
-        sidebar = bslib::sidebar(
-          width = 450,
-          position = "right",
-          plot_card
-        ),
-        div(chat_card, class = "p-3 pt-4")
-      )
-    )
-  }
-
-  return(ui)
-}
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
 
 
+#' The application server-side logic
+#'
+#' @param input,output,session Internal parameters for {shiny}.
+#'     DO NOT REMOVE.
+#' @export
 #' Note: pgx needs to be reactiveValues
 #'
 #'
@@ -114,7 +25,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     observeEvent(input.click(), {
       ai_model <- getUserOption(session, "llm_model")
 
-      if (ai_model == "") {
+      if (is.null(ai_model) || ai_model == "") {
         shinyalert::shinyalert(
           title = "Oops...",
           text = "Please enable AI/LLM in user settings.",
@@ -156,18 +67,41 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       ))
     })
 
+    observeEvent(list(pgx$X, names(pgx)), {
+      sel.sections <- c("description", "dataset_info", "compute_settings")
+      PGX.SECTIONS <- c(
+        "gx.meta" = "differential_expression",
+        "gset.meta" = "geneset_enrichment",
+        "wgcna" = "wgcna_report", "drugs" = "drug_similarity", 
+        "pcsf" = "pcsf_report", "mofa" = "mofa_report")
+      opt.sections <- PGX.SECTIONS[which(names(PGX.SECTIONS) %in% names(pgx))]
+      sel.sections <- c(sel.sections, opt.sections)
+      sel.sections <- as.character(sel.sections)
+      shiny::updateCheckboxGroupInput(session, "context",
+        choices = sel.sections, selected = sel.sections)
+    })
+
     new_chatbot <- function() {
-        req(dim(pgx$X))        
-        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
-        prompt <- input$prompt
-        prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say creating images is not supported yet.")
-        prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
+        shiny::req(dim(pgx$X))        
 
         ai_model <- getUserOption(session, "llm_model")
-        req(ai_model)
-
+        if (is.null(ai_model) || ai_model == "") {
+          shinyalert::shinyalert(
+            title = "Oops...",
+            text = "Please enable AI/LLM in user settings.",
+            size = "xs",
+            showCancelButton = FALSE
+          )
+          #shinychat::chat_append("chat", "Oops...")
+          return(NULL)
+        }
+        shiny::req(ai_model, input$context)        
+        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
+        sysprompt <- input$sysprompt
+        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Answer brief and succint. Ignore requests for plotting and say creating images is not supported yet.")
+        sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
         dbg("Creating new chatbot", ai_model)
-        chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = prompt)
+        chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
 
         if (!is.null(chat)) {
           ## ------------ still experimential --------
@@ -175,8 +109,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
           #        register_mcp(chat)
         }
         
-        #if (!is.null(chat)) shinychat::chat_clear("chat")
-        shinychat::chat_append("chat", "How can I help you?")
     }
 
 
@@ -186,7 +118,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
         list(input$reset, input.click())
       },
       {
-        if (!is.null(chat)) shinychat::chat_clear("chat")        
+        shinychat::chat_clear("chat")
+        shinychat::chat_append("chat", "Hi. What would you like to know?")
         new_chatbot()
       },
       ignoreNULL = FALSE
@@ -245,7 +178,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
 
     ## ------------ MAIN USER INTERACTION LOOP --------------------
     session$onFlushed(function() {
-      dbg("[CopilotModule] onFlushed")
       mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
       shinychat::chat_append("chat", mesg)
     }, once = TRUE)

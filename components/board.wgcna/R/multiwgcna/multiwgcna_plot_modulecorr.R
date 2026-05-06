@@ -56,7 +56,7 @@ multiwgcna_plot_modulecorr_server <- function(id,
                                               r_condition) {
   moduleServer(id, function(input, output, session) {
     plot.RENDER <- function() {
-      wgcna <- mwgcna()
+      wgcna <- mwgcna()$layers
 
       layers <- r_layers()
       condition <- r_condition()

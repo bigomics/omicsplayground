@@ -45,7 +45,10 @@ featuremap_plot_geneset_map_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg"),
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "featuremap"
   )
 }
 
@@ -172,6 +175,13 @@ featuremap_plot_table_geneset_map_server <- function(id,
           )
         p
       } else if (plotlib == "ggplot") {
+        ## Editor inputs
+        low_color <- get_editor_color(input, "color_low", "#3181de")
+        high_color <- get_editor_color(input, "color_high", "#f23451")
+        custom_col <- c(low_color, "#f8f8f8", high_color)
+
+        custom_hilight2 <- get_custom_labels(input, rownames(pos))
+
         p <- plotUMAP(
           pos,
           fc,
@@ -185,6 +195,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
           cex.axis = cex.label * 0.6,
           bgcolor = "white",
           gridcolor = "grey90",
+          col = custom_col,
+          hilight2_override = custom_hilight2,
           plotlib = "ggplot"
         )
         p
@@ -234,7 +246,8 @@ featuremap_plot_table_geneset_map_server <- function(id,
         pdf.width = 5,
         pdf.height = 5,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
 

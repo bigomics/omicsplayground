@@ -466,6 +466,62 @@ opg_ui <- function() {
               bigdash::navbarDropdownTab(
                 "Shared datasets",
                 "sharing-tab"
+              if (isTRUE(opt$ENABLE_ADMIN)) {
+                bigdash::navbarDropdownTab(
+                  "Admin panel",
+                  "admin-tab"
+                )
+              },
+              upgrade.tab,
+              tags$li(
+                actionLink("navbar_about", "About")
+              ),
+              logout.tab
+            )
+          ),
+          div(
+            id = "mainmenu_appsettings",
+            bigdash::navbarDropdown(
+              auto_close = "outside",
+              shiny::icon("cog"),
+              div(
+                class = "dropdown-items",
+                bslib::input_switch("enable_beta", "Enable beta features"),
+                bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
+                selector_switch(
+                  class = "card-footer-checked",
+                  label = "Show captions",
+                  is.checked = FALSE
+                ),
+                shiny::conditionalPanel(
+                  "input.enable_beta",
+                  bslib::input_switch("enable_llm", "Enable AI"),
+                  shiny::conditionalPanel(
+                    "input.enable_llm",
+                    bigdash::navbarDropdownItem(
+                      shiny::selectInput(
+                        inputId = "llm_model",
+                        label = NULL,
+                        choices = opt$LLM_MODELS,
+                        selected = 1,
+                        width = "100%"
+                      )
+                    )
+                  )
+                )
+              ),
+              bigdash::navbarDropdownItem(
+                withTooltip(
+                  shiny::selectInput(
+                    inputId = "selected_labeltype",
+                    label = "Label type:",
+                    choices = c("feature", "symbol", "name"),
+                    selected = "feature",
+                    width = "100%"
+                  ),
+                  "Choose a label type to be displayed in the plots",
+                  placement = "right", options = list(container = "body")
+                )
               )
             )
           )
@@ -715,6 +771,12 @@ opg_ui <- function() {
           AppSettingsInputs("app_settings"),
           AppSettingsUI("app_settings")
         ),
+        if (isTRUE(opt$ENABLE_ADMIN)) {
+          bigdash::bigTabItem(
+            "admin-tab",
+            AdminPanelUI("admin_panel")
+          )
+        },
         bigdash::bigTabItem(
           "sharing-tab",
           SharedDatasetsUI("load")

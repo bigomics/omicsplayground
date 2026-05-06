@@ -36,7 +36,10 @@ dataview_plot_abundance_ui <- function(
     options = options,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot"
   )
 }
 
@@ -56,6 +59,21 @@ dataview_plot_abundance_server <- function(id,
       }
     })
 
+    output$rank_list <- shiny::renderUI({
+      res <- plot_data()
+      shiny::req(res)
+      rank_list_ui(colnames(res$prop.counts), session$ns)
+    })
+
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      res <- plot_data()
+      shiny::req(res)
+      genes <- rownames(head(res$prop.counts, 5))
+      default_clrs <- omics_pal_d(palette = "expanded")(length(genes))
+      custom_palette_pickers(genes, session$ns, default_clrs)
+    })
+
     plotly.RENDER <- function(return_csv = FALSE) {
       res <- plot_data()
       shiny::req(res)
@@ -63,9 +81,31 @@ dataview_plot_abundance_server <- function(id,
       if (!input$show_overall_prop) {
         long.data <- reshape2::melt(head(res$prop.counts, 5))
         colnames(long.data) <- c("gene", "sample", "value")
+        long.data$sample <- as.character(long.data$sample)
         if (return_csv) {
           return(long.data)
         }
+
+        ## Apply sample ordering
+        samples <- colnames(res$prop.counts)
+        bars_order <- input$bars_order
+        if (!is.null(bars_order)) {
+          if (bars_order == "ascending") {
+            top_vals <- head(res$prop.counts, 1)[1, samples]
+            samples <- names(sort(top_vals))
+          } else if (bars_order == "descending") {
+            top_vals <- head(res$prop.counts, 1)[1, samples]
+            samples <- names(sort(top_vals, decreasing = TRUE))
+          } else if (bars_order == "custom" && !is.null(input$rank_list_basic) &&
+            all(input$rank_list_basic %in% colnames(res$prop.counts))) {
+            samples <- input$rank_list_basic
+          }
+        }
+        long.data$sample <- factor(long.data$sample, levels = samples)
+
+        ## Resolve palette
+        n_genes <- length(unique(long.data$gene))
+        colors_vec <- resolve_palette_colors(input, n_genes, fallback_colors = omics_pal_d("expanded")(n_genes))
 
         ## stacked barchart
         fig <-
@@ -75,7 +115,7 @@ dataview_plot_abundance_server <- function(id,
             y = ~value,
             type = "bar",
             color = ~gene,
-            colors = omics_pal_d(palette = "expanded")(length(unique(long.data$gene))),
+            colors = colors_vec,
             hovertemplate = ~ paste0(
               "Sample: <b>", sample, "</b><br>",
               "Gene: <b>", gene, "</b><br>",
@@ -151,7 +191,8 @@ dataview_plot_abundance_server <- function(id,
       res = c(90, 170),
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

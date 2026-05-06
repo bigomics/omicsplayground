@@ -24,7 +24,10 @@ dataview_plot_histogram_ui <- function(
     options = NULL,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering"
   )
 }
 
@@ -79,6 +82,15 @@ dataview_plot_histogram_server <- function(id,
       plot.RENDER()
     }
 
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      pd <- plot_data()
+      shiny::req(pd)
+      samples <- colnames(pd$histogram)[-c(1, 2)]
+      default_clrs <- rep(omics_pal_d(palette = "expanded")(8), ceiling(length(samples) / 8))
+      custom_palette_pickers(samples, session$ns, default_clrs)
+    })
+
     plotly.RENDER <- function() {
       pdata <- plot_data()
       shiny::req(pdata)
@@ -91,7 +103,6 @@ dataview_plot_histogram_server <- function(id,
 
       df <- data.frame(
         x = rep(hist$mids, ncol(hist) - 2),
-        #
         y = as.vector(y.smooth),
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
@@ -102,6 +113,9 @@ dataview_plot_histogram_server <- function(id,
         xlab <- "Expression"
       }
 
+      n_samples <- length(unique(df$sample))
+      line_colors <- resolve_palette_colors(input, n_samples, fallback_colors = omics_pal_d("expanded")(n_samples))
+
       fig <-
         plotly::plot_ly(
           data = df,
@@ -111,18 +125,11 @@ dataview_plot_histogram_server <- function(id,
           mode = "lines",
           split = ~sample,
           color = ~sample,
-          colors = omics_pal_d(palette = "expanded")(length(unique(df$sample))) # ,
-          # hovertemplate = ~paste0(
-          #   "Sample: <b>", sample, "</b><br>",
-          #   "Expression: <b>", x, "</b><br>",
-          #   "Density: <b>", y, "</b>",
-
-          # )
+          colors = line_colors
         ) %>%
         plotly::layout(
           xaxis = list(title = xlab),
           yaxis = list(title = "Density"),
-          ## TODO: decide if unified label or not - maybe only in zoom mode as it's that long?
           hovermode = "x unified",
           font = list(family = "Lato"),
           margin = list(l = 10, r = 10, b = 10, t = 10),
@@ -146,11 +153,10 @@ dataview_plot_histogram_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data, ##  *** downloadable data as CSV
-
-
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

@@ -30,7 +30,10 @@ compare_plot_fcfc_ui <- function(id,
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_highlight"
   )
 }
 
@@ -62,7 +65,8 @@ compare_plot_fcfc_server <- function(id,
     })
 
     interactive_fcfc <- function(plot_data, hilight = NULL,
-                                 marker_size = 6, label_size = 6, cex.axis = 12) {
+                                 marker_size = 6, label_size = 6, cex.axis = 12,
+                                 color_point = "#22222255", color_highlight = "red") {
       shiny::req(plot_data())
       FC <- plot_data()
       mat <- getMatrices()
@@ -111,12 +115,13 @@ compare_plot_fcfc_server <- function(id,
             x = F[, 1],
             y = F[, 2],
             text = rownames(F),
+            key = rownames(F),
             type = "scattergl",
             mode = "markers",
             marker = list(
               size = marker_size,
               opacity = 0.33,
-              color = "#22222255",
+              color = color_point,
               line = list(
                 color = "#AAAAAA44",
                 width = 0.2
@@ -137,7 +142,7 @@ compare_plot_fcfc_server <- function(id,
                 key = hilight1,
                 type = "scattergl",
                 mode = "marker+text",
-                marker = list(opacity = 1, size = marker_size, color = "red"),
+                marker = list(opacity = 1, size = marker_size, color = color_highlight),
                 textposition = "top center",
                 textfont = list(color = "#464545"),
                 showlegend = FALSE
@@ -186,9 +191,17 @@ compare_plot_fcfc_server <- function(id,
       shiny::validate(shiny::need(getMatrices(), "Please select contrasts and run 'Compute'"))
       higenes <- hilightgenes()
 
+      ## Editor: custom colors
+      clr_point <- get_editor_color(input, "color_point", "#222222")
+      clr_highlight <- get_editor_color(input, "color_highlight", "#f23451")
+
+      ## Editor: custom labels
+      higenes <- get_custom_labels(input, rownames(plot_data()), defaults = higenes)
+
       p <- interactive_fcfc(
         plot_data = plot_data, marker_size = 6, cex.axis = 12,
-        hilight = higenes
+        hilight = higenes,
+        color_point = clr_point, color_highlight = clr_highlight
       ) %>%
         plotly::layout(
           dragmode = "select",
@@ -204,7 +217,8 @@ compare_plot_fcfc_server <- function(id,
       csvFunc = plot_data,
       res = c(85, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

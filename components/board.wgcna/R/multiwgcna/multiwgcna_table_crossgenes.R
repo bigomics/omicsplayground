@@ -40,7 +40,7 @@ multiwgcna_table_crossgenes_server <- function(id,
                                                r_module) {
   moduleServer(id, function(input, output, session) {
     table_df <- function() {
-      wgcna <- mwgcna()
+      wgcna <- mwgcna()$layers
       module <- r_module()
       annot <- r_annot()
 

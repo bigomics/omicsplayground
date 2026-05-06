@@ -38,7 +38,10 @@ enrichment_plot_volcanomethods_ui <- function(
     width = width,
     cards = TRUE,
     card_names = c("dynamic", "static"),
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
@@ -80,6 +83,13 @@ enrichment_plot_volcanomethods_server <- function(id,
         title_y <- "Significance (-log10p)"
       }
 
+      ## Click-to-label data (per-facet coordinates)
+      click_df <- data.frame(
+        x = as.vector(FC),
+        y = as.vector(-log10(S + 1e-12)),
+        feature_name = rep(rownames(FC), ncol(FC))
+      )
+
       pd <- list(
         FC = FC,
         S = S,
@@ -87,7 +97,8 @@ enrichment_plot_volcanomethods_server <- function(id,
         fdr = fdr,
         lfc = lfc,
         title_y = title_y,
-        gset_selected = gset_selected()
+        gset_selected = gset_selected(),
+        df = click_df
       )
       pd
     })
@@ -124,6 +135,7 @@ enrichment_plot_volcanomethods_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
+        colors = extract_volcano_colors(input),
         label = label,
         highlight = highlight,
         by_sig = FALSE
@@ -173,22 +185,64 @@ enrichment_plot_volcanomethods_server <- function(id,
       y <- sig$sig
       y <- -log10(y + 1e-12)
 
-      playbase::ggVolcano(
+      ## Editor: custom labels
+      label_features <- get_custom_labels(input, rownames(pd[["FC"]]), defaults = pd[["gset_selected"]])
+
+      highlight <- if (isTRUE(input$color_selection)) {
+        label_features
+      } else {
+        pd[["gset_selected"]]
+      }
+      if (!is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      ## Editor: extract settings via helpers
+      plot_colors <- extract_volcano_colors(input)
+      ls <- extract_label_settings(input)
+      gp <- extract_ggprism_params(input)
+
+      ## Editor: hyperbolic cutoff
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      p <- playbase::ggVolcano(
         x,
         y,
         gene_names,
         facet = facet,
-        label = pd[["gset_selected"]],
-        highlight = pd[["gset_selected"]],
-        label.cex = 5,
+        label = label_features,
+        highlight = highlight,
+        label.cex = ls$label_size,
         lfc = pd[["lfc"]],
         psig = pd[["fdr"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["title_y"]],
-        marker.size = 1.2,
+        marker.size = ls$marker_size,
+        axis.text.size = ls$axis_text_size,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        colors = plot_colors,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_palette = gp$ggprism_palette,
+        ggprism_colors = gp$ggprism_colors,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
+
+      ## Editor: margins & aspect ratio
+      p <- apply_editor_theme(p, input)
+
+      p
     }
 
 
@@ -208,7 +262,8 @@ enrichment_plot_volcanomethods_server <- function(id,
         pdf.width = 10,
         pdf.height = 5,
         add.watermark = watermark,
-        card = x$card
+        card = x$card,
+        parent_session = session
       )
     })
   })

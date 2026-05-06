@@ -1,8 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
-
 
 dataview_plot_boxplot_ui <- function(
   id,
@@ -14,6 +11,14 @@ dataview_plot_boxplot_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+  options <- shiny::tagList(
+    shiny::radioButtons(
+      inputId = ns("group_by_feature_class"),
+      label = "Group by feature class (available when {Group by} is used)",
+      choices = "a"
+    )
+  )
+
   PlotModuleUI(
     ns("pltmod"),
     title = title,
@@ -22,7 +27,11 @@ dataview_plot_boxplot_ui <- function(
     caption = caption,
     info.text = info.text,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height
+    height = height,
+    options = options,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "expression_boxplot"
   )
 }
 
@@ -30,44 +39,63 @@ dataview_plot_boxplot_server <- function(id,
                                          parent.input,
                                          getCountsTable,
                                          r.samples = reactive(""),
+                                         r.annot = reactive(""),
                                          r.data_type,
                                          watermark = FALSE) {
+
   moduleServer(id, function(input, output, session) {
+    
+    shiny::observe({
+      annot <- r.annot()
+      display <- if (is.null(annot)) "none" else ""
+      shinyjs::runjs(sprintf(
+        'var modal = document.getElementById("%s");
+         var card = modal ? modal.closest(".card") : null;
+         var btn = card ? card.querySelector("[class*=\'fa-bars\']") : null;
+         if (btn) btn.closest(".btn").style.display = "%s";',
+        session$ns("pltmod-plotPopup"), display
+      ))
+      if (!is.null(annot)) {
+        shiny::updateRadioButtons(
+          session,
+          "group_by_feature_class",
+          choices = c("<ungrouped>", colnames(annot)) 
+        )
+      }
+    })
+    
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
+      annot <- r.annot()
       shiny::req(res)
-      list(counts = res$log2counts, sample = colnames(res$log2counts))
+      list(counts = res$log2counts, sample = colnames(res$log2counts), annot = annot)
     })
-
-    plot.RENDER <- function() {
+    
+    output$rank_list <- shiny::renderUI({
       res <- plot_data()
       shiny::req(res)
+      rank_list_ui(as.character(res$sample), session$ns)
+    })
 
-      par(mar = c(8, 4, 1, 2), mgp = c(2.2, 0.8, 0))
-      ## ---- xlab ------ ###
-      xaxt <- "l"
-      names.arg <- res$sample
-      if (length(names.arg) > 20) {
-        names.arg <- rep("", length(names.arg))
-        xaxt <- "n"
-      }
-
-      cex.names <- ifelse(length(names.arg) > 10, 0.8, 0.9)
-      boxplot(
-        res$counts,
-        col = rgb(0.2, 0.5, 0.8, 0.4),
-        names = names.arg,
-        cex.axis = cex.names,
-        border = rgb(0.824, 0.824, 0.824, 0.9),
-        xaxt = xaxt,
-        las = 3,
-        cex.lab = 1,
-        ylab = "counts (log2)",
-        outline = FALSE,
-        varwidth = FALSE
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      res <- plot_data()
+      shiny::req(res)
+      annot <- res$annot
+      shiny::req(annot)
+      class_col <- input$group_by_feature_class
+      shiny::req(class_col, class_col != "<ungrouped>", class_col %in% colnames(annot))
+      classes <- sort(unique(stats::na.omit(as.character(annot[, class_col]))))
+      shiny::req(length(classes) > 0)
+      theme_palette <- shiny::isolate(get_color_theme()$palette)
+      if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
+      default_clrs <- tryCatch(
+        omics_pal_d(palette = theme_palette)(length(classes)),
+        error = function(e) omics_pal_d("default")(length(classes))
       )
-    }
+      custom_palette_pickers(classes, session$ns, default_clrs)
+    })
 
     plotly.RENDER <- function() {
       res <- plot_data()
@@ -84,26 +112,82 @@ dataview_plot_boxplot_server <- function(id,
 
       df <- res$counts[, , drop = FALSE]
       if (nrow(df) > 1000) {
-        sel <- sample(nrow(df), 1000)
-        df <- df[sel, , drop = FALSE]
+        df <- df[sample(nrow(df), 1000), , drop = FALSE]
       }
       long.df <- reshape2::melt(df)
       colnames(long.df) <- c("gene", "sample", "value")
+      long.df$sample <- as.character(long.df$sample)
 
-      ## boxplot
+      split <- NULL
+      annot <- res$annot
+      if (!is.null(annot)) {
+        class_col <- input$group_by_feature_class
+        if (class_col != "<ungrouped>" && class_col %in% colnames(annot)) {
+          idx <- which(long.df$gene %in% rownames(annot))
+          if (length(idx) > 0) {
+            long.df <- long.df[idx, , drop = FALSE]
+            long.df$class <- annot[match(long.df$gene, rownames(annot)), class_col]
+            split <- "class"
+          }
+        }
+      }
+
+      palette_colors <- NULL
+      if (!is.null(split)) {
+        classes <- sort(unique(stats::na.omit(as.character(long.df$class))))
+        n_classes <- length(classes)
+        if (n_classes > 0) {
+          theme_palette <- shiny::isolate(get_color_theme()$palette)
+          if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
+          fallback_pal <- tryCatch(
+            omics_pal_d(palette = theme_palette)(n_classes),
+            error = function(e) omics_pal_d("default")(n_classes)
+          )
+          palette_colors <- resolve_palette_colors(
+            input, n_classes,
+            fallback_colors = fallback_pal
+          )
+          if (!is.null(palette_colors)) {
+            palette_colors <- stats::setNames(palette_colors, classes)
+          }
+        }
+      }
+
+      bar_color <- get_editor_color(input, "scatter_color", "secondary")
+      fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
+      bars_order <- input$bars_order
+      samples <- res$sample
+
+      ## Apply sample ordering
+      if (!is.null(bars_order)) {
+        if (bars_order == "ascending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians))
+        } else if (bars_order == "descending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians, decreasing = TRUE))
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic) &&
+          all(input$rank_list_basic %in% res$sample)) {
+          samples <- input$rank_list_basic
+        }
+      }
+      long.df$sample <- factor(long.df$sample, levels = samples)
+
       fig <- playbase::pgx.boxplot.PLOTLY(
         data = long.df,
         x = "sample",
         y = "value",
-        yaxistitle = ylab
+        split = split,
+        yaxistitle = ylab,
+        color = bar_color,
+        fillcolor = fill_color,
+        linecolor = bar_color,
+        colors = palette_colors
       ) %>%
         plotly_default()
 
       fig
-    }
 
-    modal_plot.RENDER <- function() {
-      plot.RENDER()
     }
 
     modal_plotly.RENDER <- function() {
@@ -119,7 +203,8 @@ dataview_plot_boxplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }
