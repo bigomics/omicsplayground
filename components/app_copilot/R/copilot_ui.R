@@ -7,7 +7,7 @@
 CopilotUI <- function(id) {
   ns <- shiny::NS(id)
 
-  sysprompt <- "You are computational biologist and will be asked questions about the following experiment. Make specific observations if you can. Answer brief and succint."
+  sysprompt <- "You are computational biologist and will be asked questions about the following experiment. Make specific observations if you can."
 
   examples_card <- bslib::navset_underline(
     bslib::nav_panel(
@@ -30,6 +30,10 @@ CopilotUI <- function(id) {
       "Settings",
       br(),
       shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = sysprompt, height = 120, width = "100%"),
+      br(),
+      shiny::radioButtons(ns("response_length"), "Response length:",
+        choices = c("default","short","longer"), selected="short", inline = TRUE
+      ),
       br(),
       shiny::checkboxGroupInput(ns("context"), "Context:",
         choices = NULL, inline = TRUE
@@ -57,18 +61,18 @@ CopilotUI <- function(id) {
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
         row_heights = "26px",
-        shiny::actionButton(ns("studio_audioverview"), "Audio overview", width = "100%", class = "xbtn",
-          icon = icon("headphones")),
-        shiny::actionButton(ns("studio_slidedeck"), "Slide deck", width = "100%", class = "xbtn",
-          icon = icon("film")),
-        shiny::actionButton(ns("studio_report"), "Reports", width = "100%", class = "xbtn",
-          icon = icon("film")),
+        shiny::actionButton(ns("studio_audioverview"), "Audio overview", width = "100%",
+          class = "xbtn", icon = icon("headphones")),
+        shiny::actionButton(ns("studio_slidedeck"), "Slide deck", width = "100%",
+          class = "xbtn", icon = icon("film")),
+        shiny::actionButton(ns("studio_report"), "Reports", width = "100%",
+          class = "xbtn", icon = icon("film")),
         shiny::actionButton(ns("studio_quiz"), "Quiz", width = "100%", class = "xbtn",
           icon = icon("quora")),
-        shiny::actionButton(ns("studio_infographic"), "Infographic", width = "100%", class = "xbtn",
-          icon = icon("image")),
-        shiny::actionButton(ns("studio_datatable"), "Data table", width = "100%", class = "xbtn",
-          icon = icon("table"))
+        shiny::actionButton(ns("studio_infographic"), "Infographic", width = "100%",
+          class = "xbtn", icon = icon("image")),
+        shiny::actionButton(ns("studio_datatable"), "Data table", width = "100%",
+          class = "xbtn", icon = icon("table"))
       )
     )
   )
@@ -76,7 +80,7 @@ CopilotUI <- function(id) {
   output_card <- bslib::navset_underline(
     bslib::nav_panel(
       "Output",
-      height = "500px",
+      height = "600px",
       plotOutput(ns("plot"))
     )
   )
@@ -85,15 +89,29 @@ CopilotUI <- function(id) {
     col_widths = c(2, 7, 3),
     style = "height: min(90%,700)",
     fill = TRUE,
-    bslib::layout_columns(
-      col_widths = c(12),
-      examples_card      
+    ## left sidebar
+    bslib::card(
+      class = "border-0",
+      fill = TRUE,
+      height = "calc(100vh - 100px)",
+      bslib::layout_columns(
+        col_widths = c(12),
+        examples_card      
+      )
     ),
+    ## center section
     chat_card,
+    ## right sidebar
     bslib::layout_columns(
       col_widths = c(12),
-      studio_card,
-      output_card
+      height = "calc(100vh - 100px)",
+      bslib::card(
+        class = "border-0",
+        studio_card
+      ),
+      bslib::card(
+        output_card
+      )
     )
   )
 

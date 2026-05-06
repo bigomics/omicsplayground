@@ -98,7 +98,17 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
         shiny::req(ai_model, input$context)        
         content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
         sysprompt <- input$sysprompt
-        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Answer brief and succint. Ignore requests for plotting and say creating images is not supported yet.")
+        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet.")
+
+        ## add response length
+        if(input$response_length == "short") {
+          sysprompt <- paste(sysprompt, "Answer brief and succint.")
+        } else if(input$response_length == "longer") {
+          sysprompt <- paste(sysprompt, "Answer in detail.")
+        } else {
+          ##
+        }
+          
         sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
         dbg("Creating new chatbot", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
@@ -153,6 +163,17 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
         )
         return(NULL)
       }
+
+      ## add response length
+      question <- paste(sub("[.]$","",question),".")
+      if(input$response_length == "short") {
+        question <- paste(question, "Answer brief and succint.")
+      } else if(input$response_length == "longer") {
+        question <- paste(question, "Answer in detail.")
+      } else {
+        ##
+      }
+      
       if (showq) {
         msg <- list(role = "user", content = question)
         shinychat::chat_append_message("chat", msg, chunk = FALSE)
