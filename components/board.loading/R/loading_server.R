@@ -339,7 +339,7 @@ LoadingBoard <- function(id,
 
       loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
-        warning("[LoadingBoard@load_react] ERROR loading PGX file ", pgxfile, "\n")
+        warning("[loadAndActivatePGX] ERROR loading PGX file ", pgxfile, "\n")
         beepr::beep(10)
         shiny::removeModal()
         return(NULL)
@@ -351,7 +351,7 @@ LoadingBoard <- function(id,
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
         if (is.null(loaded_pgx)) {
-          warning("[loading_server.R@load_react] ERROR in object initialization\n")
+          warning("[loadAndActivatePGX] ERROR in object initialization\n")
           beepr::beep(10)
           shiny::showNotification("ERROR in object initialization!\n")
           shiny::removeModal()
@@ -364,14 +364,14 @@ LoadingBoard <- function(id,
         slots1 <- names(loaded_pgx)
         is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
         if (length(slots1) != length(slots0) && is_user_dir) {
-          info("[loading_server.R] saving updated PGX")
+          info("[loadAndActivatePGX] saving updated PGX")
           new_slots <- setdiff(slots1, slots0)
           savePGX(loaded_pgx, file = pgxfile)
         }
 
         ## Copying to pgx list to reactiveValues in
         ## session environment.
-        info("[loading_server.R] copying pgx object to global environment")
+        info("[loadAndActivatePGX] copying pgx object to global environment")
         empty.slots <- setdiff(names(pgx), names(loaded_pgx))
         isolate({
           for (e in empty.slots) {
@@ -383,12 +383,11 @@ LoadingBoard <- function(id,
         })
       }) ## end of withProgress
 
-      info("[loading_server.R] copying pgx done!")
+      ## clean up
       gc()
       remove(loaded_pgx)
-
+      
       ## remove modal on exit??
-
       ## shiny::removeModal()
       bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
 
@@ -398,7 +397,10 @@ LoadingBoard <- function(id,
       } else {
         is_data_loaded(is_data_loaded() + 1)
       }
+      
+      info("[loadAndActivatePGX] done!")
     }
+    
     observeEvent(input$newuploadbutton, {
       new_upload(new_upload() + 1)
     })

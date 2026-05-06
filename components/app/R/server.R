@@ -259,35 +259,6 @@ app_server <- function(input, output, session) {
     new_upload = new_upload
   )
 
-  if(opt$DEVMODE) {
-
-    env$load2 <- LoadingBoard(
-      id = "load2",
-      pgx = PGX,
-      auth = auth,
-      pgx_topdir = PGX.DIR,
-      load_example = load_example,
-      reload_pgxdir = reload_pgxdir,
-      current_page = reactive(input$nav),
-      load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx,
-      new_upload = new_upload
-    )
-
-    upload_datatype2 <- UploadBoard(
-      id = "upload2",
-      pgx_dir = PGX.DIR,
-      pgx = PGX,
-      auth = auth,
-      reload_pgxdir = reload_pgxdir,
-      load_uploaded_data = load_uploaded_data,
-      recompute_pgx = recompute_pgx,
-      inactivityCounter = inactivityCounter,
-      new_upload = new_upload
-    )
-
-  }
-
   shiny::observeEvent(upload_datatype(), {
     if (grepl("proteomics", upload_datatype(), ignore.case = TRUE)) {
       shiny.i18n::update_lang("proteomics", session)
@@ -740,30 +711,29 @@ app_server <- function(input, output, session) {
     ))
   })
 
-  ## Copilot button
-  output$copilot_button <- renderUI({
-    if (is.null(PGX$X)) {
-      return(NULL)
-    }
-    show.beta <- env$user_settings$enable_beta()
-    if (show.beta) {
-      ui <- shiny::actionButton(
-        "copilot_click", "Copilot",
-        width = "auto", class = "quick-button"
-      )
-    } else {
-      ui <- NULL
-    }
-    return(ui)
-  })
-
-  CopilotServer("copilot",
-    pgx = PGX, input.click = reactive({
-      req(input$copilot_click > 0)
-      input$copilot_click
-    }),
-    layout = "fixed", maxturns = opt$LLM_MAXTURNS
-  )
+  ## ## Copilot button
+  ## output$copilot_button <- renderUI({
+  ##   if (is.null(PGX$X)) {
+  ##     return(NULL)
+  ##   }
+  ##   show.beta <- env$user_settings$enable_beta()
+  ##   if (show.beta) {
+  ##     ui <- shiny::actionButton(
+  ##       "copilot_click", "Copilot",
+  ##       width = "auto", class = "quick-button"
+  ##     )
+  ##   } else {
+  ##     ui <- NULL
+  ##   }
+  ##   return(ui)
+  ## })
+  ## CopilotServer("copilot",
+  ##   pgx = PGX, input.click = reactive({
+  ##     req(input$copilot_click > 0)
+  ##     input$copilot_click
+  ##   }),
+  ##   layout = "fixed", maxturns = opt$LLM_MAXTURNS
+  ## )
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -1450,7 +1420,7 @@ app_server <- function(input, output, session) {
 
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
-    # Resest inactivity counter when there is user activity (a click on the UI)
+    # Reset inactivity counter when there is user activity (a click on the UI)
     observeEvent(input$userActivity, {
       inactivityCounter(0) # Reset counter on any user activity
     })
@@ -1462,23 +1432,27 @@ app_server <- function(input, output, session) {
   }
 
   ## -------------------------------------------------------------
-  ## Other apps
+  ## Other app servers
   ## -------------------------------------------------------------
+  
+  WelcomeBoard2("welcome2",
+    auth = auth,
+    load_example = load_example,
+    new_upload = new_upload,
+    parent = session
+  )
+  
+  CopilotServer("copilot", pgx = PGX, input.click = reactive(NULL),
+    layout = "fixed", maxturns = opt$LLM_MAXTURNS)
+  
+  AppSettingsBoard("settings2", auth=auth, pgx=PGX) 
+  
   if(opt$DEVMODE) {
-
-    WelcomeBoard2("welcome2",
-      auth = auth,
-      load_example = load_example,
-      new_upload = new_upload,
-      parent = session
-    )
+    dbg("[SERVER] WARNING: DEVMODE modules enabled!")
     prism_server("prism")
     tools_server("tools", parent = session)
-    CopilotServer("copilot2", pgx = PGX, input.click = reactive(NULL),
-      layout = "fixed", maxturns = opt$LLM_MAXTURNS)
-    AppSettingsBoard("settings2", auth=auth, pgx=PGX) 
+    RunMonitorServer("runmonitor")
   }
-
   
   ## -------------------------------------------------------------
   ## report server times

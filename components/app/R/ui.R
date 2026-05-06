@@ -96,112 +96,105 @@ app_ui <- function(x) {
         href = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#"))
     }
     
-    if(opt$DEVMODE) {
-      ## new multi-app UI
-
-      nav_page <- function(...) {
-        bslib::page_fluid(
-          theme = bigdash::big_theme(),
-          title = NULL,
-          style = "padding: 0px;",
-          bigdash::navbar(
-            title = tags$img(
-              src = "assets/img/bigomics.png",
-              width = "110"
-            ),
-            center = tags$div(
+    ## new multi-app UI
+    nav_page <- function(...) {
+      bslib::page_fluid(
+        theme = bigdash::big_theme(),
+        title = NULL,
+        style = "padding: 0px;",
+        bigdash::navbar(
+          title = tags$img(
+            src = "assets/img/bigomics.png",
+            width = "110"
+          ),
+          center = tags$div(
               "title in navbar",
               style = 'text-align:center;width: 100%;'
-            ),
-            left = NULL,
-            NULL
           ),
-          ... 
-        )
-      }
-
-      nav_page <- function(p) {p}  ## dummy
-        
-      ui <- bigdash::bigPage(
-        header,
-        navbar = NULL,
-        bslib::navset_pill_list(
-          id = "app-sidebar",
-          ##widths = c("50px","calc(100% - 50px)"),
-          widths = c(1,11),
-          selected = "Home",
-          well = TRUE,
-          bslib::nav_panel(title = "Home", icon=icon("home"),
-            nav_page(WelcomeBoardUI("welcome2"))
-          ),
-          bslib::nav_panel(title = "Library", icon=icon("book"),
-            nav_page(
-              div(LoadingUI("load2"), class = "px-3 py-0")
-            )
-          ),
-#          bslib::nav_panel(title = "Runs", icon=icon("person-running"),
-#            p("Runs or batch processing")
-#          ),
-          bslib::nav_panel(title = "Explore", icon=icon("magnifying-glass-chart"),
-            opg_ui()
-          ),
-          ## bslib::nav_panel(title = "MOX", icon=icon("layer-group"),
-          ##   mox_ui("mox")
-          ## ),
+          left = NULL,
+          NULL
+        ),
+        ... 
+      )
+    }
+    
+    nav_page <- function(p) {p}  ## dummy
+    
+    ui <- bigdash::bigPage(
+      header,
+      navbar = NULL,
+      bslib::navset_pill_list(
+        id = "app-sidebar",
+        ##widths = c("50px","calc(100% - 50px)"),
+        widths = c(1,11),
+        selected = "Home",
+        well = TRUE,
+        bslib::nav_panel(title = "Home", icon=icon("home"),
+          nav_page(WelcomeBoardUI("welcome2"))
+        ),
+        bslib::nav_panel(title = "Library", icon=icon("book"),
+          nav_page(
+            div(LoadingUI("load"), class = "px-3 py-0")
+          )
+        ),
+        bslib::nav_panel(
+          title = "Dashboard", icon=icon("chart-line"),
+          opg_ui()
+        ),
+        bslib::nav_panel(
+          title = "Copilot", icon = icon("robot"),
+          div( class = "px-3 py-0",
+            shiny::div(id = "navheader-current-section", HTML("Copilot")),
+            CopilotUI("copilot")
+          )
+        ),
+        if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(
-            title = "Reports", icon=icon("file-lines"),
+            title = "Runs", icon=icon("person-running"),
             div( class = "px-3 py-0",
-              shiny::div(id = "navheader-current-section", HTML("Reports")),
-              #report_ui("report")
-              p("Reporting module")
+              ##shiny::div(id = "navheader-current-section", HTML("Runs")),
+              ##p("Monitor and inspect the details of computation runs"),
+              RunMonitorUI("runmonitor")
             )
-          ),
-          bslib::nav_panel(title = "Copilot", icon = icon("robot"),
-            div( class = "px-3 py-0",
-              shiny::div(id = "navheader-current-section", HTML("Copilot")),
-              CopilotUI("copilot2", layout = c("sidebar", "fixed")[2])
-            )
-          ),
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(title = "Tools", icon = icon("tools"),
             tools_ui("tools")
-          ),
-          ## Hidden panels
-          bslib::nav_panel_hidden("Prism", prism_ui("prism")),
-          bslib::nav_panel_hidden("MOX",   mox_ui("mox")),          
-          bslib::nav_panel_hidden("Upload", UploadUI("upload2")),
-
-          ## lower settings buttons
-          bslib::nav_spacer(),
-          bslib::nav_panel("Settings", icon=icon("cog"),
-            div(AppSettingsUI2("settings2"), class='px-3 py-0') 
-          ),          
-          bslib::nav_menu(
-            title = "Help",
-            icon = icon("circle-question"),
-            nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
-            nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
-            nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
-            nav_weblink("Reddit r/omicsplayground", href="https://www.reddit.com/r/omicsplayground"),
-            nav_weblink("Submit a support ticket", href="https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t"),
-            nav_weblink("Github issues", href="https://github.com/bigomics/omicsplayground/issues/"),
-            nav_weblink("Case studies", href="https://bigomics.ch/case-studies/")
-          ),
-          bslib::nav_menu(
-            title = "",
-            icon = icon("user"),
-            bslib::nav_item(NULL, actionLink("app_profile", "My profile")),
-            bslib::nav_item(NULL, actionLink("navbar_about", "About")),
-            bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),            
-            nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
-            nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            
-            signout_link
           )
-        )
+        },
+        ## Hidden panels (e.g. tools)
+        bslib::nav_panel_hidden("Prism", prism_ui("prism")),
+        bslib::nav_panel_hidden("Upload", UploadUI("upload")),
+        
+        ## lower settings buttons
+        bslib::nav_spacer(),
+        bslib::nav_panel("Settings", icon=icon("cog"),
+          div(AppSettingsUI2("settings2"), class='px-3 py-0') 
+        ),          
+        bslib::nav_menu(
+          title = "Help",
+          icon = icon("circle-question"),
+          nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
+          nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
+          nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
+          nav_weblink("Reddit r/omicsplayground", href="https://www.reddit.com/r/omicsplayground"),
+          nav_weblink("Submit a support ticket", href="https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t"),
+          nav_weblink("Github issues", href="https://github.com/bigomics/omicsplayground/issues/"),
+          nav_weblink("Case studies", href="https://bigomics.ch/case-studies/")
+        ),
+        bslib::nav_menu(
+          title = "",
+          icon = icon("user"),
+          bslib::nav_item(NULL, actionLink("app_profile", "My profile")),
+          bslib::nav_item(NULL, actionLink("navbar_about", "About")),
+          bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),            
+          nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
+          nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            
+          signout_link
+          )
       )
-    } else {
-      ## old style
-      ui <- opg_ui()
-    }
+    )
 
     return(ui)
   }
@@ -290,7 +283,7 @@ opg_ui <- function() {
         pcsf = "PCSF",
         tcga = "TCGA survival (beta)"
       ),
-      "MultiOmics (beta)" = MODULE.multiomics$module_menu(),
+      "MultiOmics" = MODULE.multiomics$module_menu(),
       "WGCNA" = MODULE.wgcna$module_menu()
     )
 
@@ -418,6 +411,12 @@ opg_ui <- function() {
             "App settings",
             "usersettings-tab"
           ),
+          if (isTRUE(opt$ENABLE_ADMIN)) {
+            bigdash::navbarDropdownTab(
+              "Admin panel",
+              "admin-tab"
+            )
+          },          
           upgrade.tab,
           tags$li(
             actionLink("navbar_about", "About")
@@ -466,62 +465,6 @@ opg_ui <- function() {
               bigdash::navbarDropdownTab(
                 "Shared datasets",
                 "sharing-tab"
-              if (isTRUE(opt$ENABLE_ADMIN)) {
-                bigdash::navbarDropdownTab(
-                  "Admin panel",
-                  "admin-tab"
-                )
-              },
-              upgrade.tab,
-              tags$li(
-                actionLink("navbar_about", "About")
-              ),
-              logout.tab
-            )
-          ),
-          div(
-            id = "mainmenu_appsettings",
-            bigdash::navbarDropdown(
-              auto_close = "outside",
-              shiny::icon("cog"),
-              div(
-                class = "dropdown-items",
-                bslib::input_switch("enable_beta", "Enable beta features"),
-                bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
-                selector_switch(
-                  class = "card-footer-checked",
-                  label = "Show captions",
-                  is.checked = FALSE
-                ),
-                shiny::conditionalPanel(
-                  "input.enable_beta",
-                  bslib::input_switch("enable_llm", "Enable AI"),
-                  shiny::conditionalPanel(
-                    "input.enable_llm",
-                    bigdash::navbarDropdownItem(
-                      shiny::selectInput(
-                        inputId = "llm_model",
-                        label = NULL,
-                        choices = opt$LLM_MODELS,
-                        selected = 1,
-                        width = "100%"
-                      )
-                    )
-                  )
-                )
-              ),
-              bigdash::navbarDropdownItem(
-                withTooltip(
-                  shiny::selectInput(
-                    inputId = "selected_labeltype",
-                    label = "Label type:",
-                    choices = c("feature", "symbol", "name"),
-                    selected = "feature",
-                    width = "100%"
-                  ),
-                  "Choose a label type to be displayed in the plots",
-                  placement = "right", options = list(container = "body")
-                )
               )
             )
           )
@@ -753,11 +696,11 @@ opg_ui <- function() {
           WelcomeBoardInputs("welcome"),
           WelcomeBoardUI("welcome")
         ),
-        bigdash::bigTabItem(
-          "load-tab",
-          # LoadingInputs("load")
-          LoadingUI("load")
-        ),
+        ## bigdash::bigTabItem(
+        ##   "load-tab",
+        ##   # LoadingInputs("load")
+        ##   LoadingUI("load")
+        ## ),
         bigdash::bigTabItem(
           "upload-tab",
           UploadUI("upload")

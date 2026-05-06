@@ -90,6 +90,8 @@ wgcna_table_genes_server <- function(id,
       js.ellipsis20 <- paste0("$.fn.dataTable.render.ellipsis(20, false)")
       js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")      
 
+      feature.cols <- intersect(c("feature","symbol"),colnames(df))
+      
       DT::datatable(
         df,
         rownames = FALSE,
@@ -107,7 +109,7 @@ wgcna_table_genes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              targets = c("feature","symbol"),
+              targets = feature.cols,
               render = DT::JS(js.ellipsis20)
             ),
             list(
