@@ -33,7 +33,8 @@ featuremap_plot_gset_sig_ui <- function(
     ns_parent = ns,
     plot_type = "featuremap",
     color_selection = TRUE,
-    color_selection_default = TRUE
+    color_selection_default = TRUE,
+    subplot_order = TRUE
   )
 }
 
@@ -45,6 +46,14 @@ featuremap_plot_gset_sig_server <- function(id,
                                             plotFeaturesPanel,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    output$rank_list <- shiny::renderUI({
+      dt <- plot_data()
+      shiny::req(dt)
+      F <- dt[[1]]
+      shiny::req(F, ncol(F) > 0)
+      rank_list_ui(sort(colnames(F)), session$ns)
+    })
+
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
 
@@ -116,6 +125,16 @@ featuremap_plot_gset_sig_server <- function(id,
       long_var <- as.vector(F)
       names(long_var) <- rownames(long_pos)
       long_facet <- rep(colnames(F), each = nrow(F))
+
+      ## Editor: subplot order
+      facet_levels <- colnames(F)
+      if (isTRUE(input$subplot_order == "custom") && !is.null(input$rank_list_basic)) {
+        req <- input$rank_list_basic
+        facet_levels <- c(intersect(req, facet_levels), setdiff(facet_levels, req))
+      } else {
+        facet_levels <- sort(facet_levels)
+      }
+      long_facet <- factor(long_facet, levels = facet_levels)
 
       hilight_scatter <- if (color_sel) sel else NULL
       opacity <- ifelse(is.null(sel), 0.9, 0.4)
