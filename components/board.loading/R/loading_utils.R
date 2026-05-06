@@ -33,7 +33,7 @@ sendShareMessage <- function(pgxname, sender, share_user, path_to_creds = "gmail
         glue::glue("Email sent on {blastula::add_readable_time()}.")
       )
     ),
-    from = "bigomics.app@gmail.com",
+    from = "noreply@bigomics.ch",
     to = share_user,
     subject = paste("Omics Playground: You received a new dataset from", sender),
     credentials = blastula::creds_file(path_to_creds)

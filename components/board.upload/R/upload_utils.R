@@ -238,7 +238,7 @@ sendErrorMessageToUser <- function(user_email, pgx_name, error, path_to_creds = 
         glue::glue("Email sent on {blastula::add_readable_time()}.")
       )
     ),
-    from = "bigomics.app@gmail.com",
+    from = "noreply@bigomics.ch",
     to = user_email,
     subject = paste("Omics Playground: Error when computing a dataset"),
     credentials = blastula::creds_file(path_to_creds)
@@ -277,7 +277,7 @@ sendSuccessMessageToUser <- function(user_email, pgx_name, path_to_creds = "gmai
         glue::glue("Email sent on {blastula::add_readable_time()}.")
       )
     ),
-    from = "bigomics.app@gmail.com",
+    from = "noreply@bigomics.ch",
     to = user_email,
     subject = paste("Omics Playground: Dataset computed successfully!"),
     credentials = blastula::creds_file(path_to_creds)

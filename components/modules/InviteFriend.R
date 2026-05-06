@@ -228,7 +228,7 @@ The BigOmics Team
           ),
           footer = blastula::md(randomMotto())
         ),
-        from = "bigomics.app@gmail.com",
+        from = "noreply@bigomics.ch",
         to = friend_email,
         ##        cc = "support@bigomics.ch",
         subject = paste("You're invited! Join Omics Playground today"),
@@ -284,7 +284,7 @@ The BigOmics Team
           ),
           footer = blastula::md(randomMotto())
         ),
-        from = "bigomics.app@gmail.com",
+        from = "noreply@bigomics.ch",
         to = user_email,
         ##      cc = "support@bigomics.ch",
         subject = paste("Your Invite has been sent!"),

@@ -65,7 +65,7 @@ clustering_plot_clustpca_ui <- function(
     height = height,
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "clustering"
+    plot_type = "clustering_prism"
   )
 }
 
@@ -252,6 +252,49 @@ clustering_plot_clustpca_server <- function(id,
       return(plt)
     }
 
+    create_ggplot <- function(pgx, pos, pca2d.varexp, method, colvar, label, cex, palette = "muted_light", custom_colors = NULL) {
+      sel <- rownames(pos)
+      df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
+
+      if (colvar %in% colnames(df)) {
+        colvar_fct <- factor(df[, colvar])
+      } else {
+        colvar_fct <- factor(rep("all", nrow(df)))
+      }
+
+      clrs.length <- length(unique(colvar_fct))
+      if (!is.null(custom_colors) && length(custom_colors) >= clrs.length) {
+        clrs <- custom_colors[1:clrs.length]
+      } else {
+        clrs <- rep(omics_pal_d(palette = palette)(8), ceiling(clrs.length / 8))[1:clrs.length]
+      }
+
+      showlabels <- (label %in% c("group", "inside"))
+
+      if (method == "pca") {
+        xl <- paste0(toupper(method), "1 (", pca2d.varexp[1], "%)")
+        yl <- paste0(toupper(method), "2 (", pca2d.varexp[2], "%)")
+      } else {
+        xl <- paste0(toupper(method), "1")
+        yl <- paste0(toupper(method), "2")
+      }
+
+      p <- playbase::pgx.scatterPlotXY.GGPLOT(
+        pos,
+        var = colvar_fct,
+        col = clrs,
+        cex = cex,
+        xlab = xl,
+        ylab = yl,
+        title = toupper(method),
+        cex.title = 1.2,
+        cex.clust = 1.1,
+        label.clusters = showlabels,
+        legend = !(label %in% c("<none>", "group", "sample"))
+      )
+      p
+    }
+
     create_plotlist <- function() {
       samples <- selected_samples()
       options <- input$hmpca_options
@@ -305,14 +348,82 @@ clustering_plot_clustpca_server <- function(id,
       plist
     }
 
+    create_gg_plotlist <- function() {
+      samples <- selected_samples()
+      colvar <- input$hmpca.colvar
+      clustmethod <- clustmethod()
+      label <- input$pca_label
+
+      shiny::validate(shiny::need(
+        length(samples) > 1,
+        "Filtering too restrictive. Please change 'Filter samples' settings."
+      ))
+      shiny::req(samples, colvar, clustmethod)
+
+      methods <- clustmethod()
+      if (input$all_clustmethods) {
+        cluster.names <- names(pgx$cluster$pos)
+        methods <- sub("2d", "", grep("2d", cluster.names, value = TRUE))
+      }
+
+      groups <- sort(unique(as.character(pgx$samples[samples, colvar])))
+      n_groups <- length(groups)
+      custom_colors <- resolve_palette_colors(input, n_groups, fallback_colors = omics_pal_d("muted_light")(n_groups))
+      palette <- if (!is.null(input$palette)) input$palette else "muted_light"
+      if (palette %in% c("original", "default", "custom", "")) palette <- "muted_light"
+
+      gp <- extract_ggprism_params(input)
+
+      plts <- list()
+      for (i in seq_along(methods)) {
+        m <- methods[i]
+        m1 <- paste0(m, "2d")
+        pos <- pgx$cluster$pos[[m1]]
+        pos <- pos[samples, ]
+        pca2d.varexp <- pgx$cluster$pos$pca2d.varexp
+
+        p <- create_ggplot(
+          pgx = pgx,
+          pos = pos,
+          pca2d.varexp = pca2d.varexp,
+          method = m,
+          colvar = colvar,
+          label = label,
+          cex = ifelse(length(methods) > 1, 0.6, 1),
+          palette = palette,
+          custom_colors = custom_colors
+        )
+        p <- apply_ggprism_theme(p, gp)
+        p <- apply_editor_theme(p, input)
+        plts[[length(plts) + 1]] <- p
+      }
+      plts
+    }
+
     plot.RENDER <- reactive({
-      if (length(create_plotlist()) == 1) {
-        # this is necessary to show axis titles (subplot errases them)
-        create_plotlist()[[1]]
+      gp <- extract_ggprism_params(input)
+      do3d <- isTRUE(input$plot3d)
+
+      if (gp$use_ggprism && !do3d) {
+        plts <- create_gg_plotlist()
+        shiny::req(length(plts) > 0)
+        if (length(plts) == 1) {
+          ggplot_as_plotly_image(plts[[1]], width = 6, height = 6)
+        } else {
+          nc <- ceiling(sqrt(length(plts)))
+          combined <- patchwork::wrap_plots(plts, ncol = nc)
+          nr <- ceiling(length(plts) / nc)
+          ggplot_as_plotly_image(combined, width = nc * 4, height = nr * 4)
+        }
       } else {
-        plist <- create_plotlist()
-        nc <- ceiling(sqrt(length(plist)))
-        plotly::subplot(plist, nrows = nc, margin = 0.04)
+        fig <- if (length(create_plotlist()) == 1) {
+          create_plotlist()[[1]]
+        } else {
+          plist <- create_plotlist()
+          nc <- ceiling(sqrt(length(plist)))
+          plotly::subplot(plist, nrows = nc, margin = 0.04)
+        }
+        apply_plotly_editor_theme(fig, input)
       }
     })
 
