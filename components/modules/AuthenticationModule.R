@@ -209,8 +209,7 @@ AuthenticationModuleHeader <- function(id,
 
       ## Optional privilege lookup against CREDENTIALS file. Gated by
       ## USE_CREDENTIALS in OPTIONS — server.R only passes credentials_file
-      ## through when that flag is TRUE. Missing email = no privileges
-      ## (still logged in). Expired email = logged out.
+      ## through when that flag is TRUE. Missing or expired email = logged out.
       if (is_logged && !is.null(credentials_file) && file.exists(credentials_file)) {
         creds <- tryCatch(
           utils::read.csv(credentials_file, colClasses = "character"),
@@ -241,8 +240,21 @@ AuthenticationModuleHeader <- function(id,
             }
           } else {
             message("[AuthenticationModuleHeader] no credentials row for ", email)
+            is_logged <- FALSE
           }
         }
+      }
+
+      if (!is_logged) {
+        sever::sever(
+          shiny::tagList(
+            shiny::tags$h1("Access denied", style = "color:white;font-family:lato;"),
+            shiny::p("Your account is not authorized for this application.",
+                     style = "font-size:15px;")
+          ),
+          bg_color = "#004c7d"
+        )
+        session$close()
       }
 
       USER <- shiny::reactiveValues(
