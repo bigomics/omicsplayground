@@ -3,6 +3,34 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+## Wrap an editor modal body with a top "Reset to defaults" button and a
+## namespaced container div. The button id and container id are placed in
+## the *parent* namespace because the editor inputs themselves are created
+## with ns_parent(); shinyjs::reset only correctly strips/applies one ns
+## prefix, so wrapper + inputs must share the same namespace.
+editorModalBody <- function(ns_parent, ...) {
+  shiny::tagList(
+    bslib::layout_column_wrap(
+      style = bslib::css(grid_template_columns = "1fr 5fr"),
+      shiny::div(
+        class = "editor-reset-bar",
+        style = "display:flex; justify-content:flex-start; margin-bottom:8px;",
+        shiny::actionButton(
+          inputId = ns_parent("editor_reset"),
+          label = "Reset to defaults",
+          icon = shiny::icon("rotate-left"),
+          class = "btn-sm btn-outline-primary",
+          width = "100%"
+        )
+      )
+    ),
+    shiny::div(
+      id = ns_parent("editor_inputs"),
+      ...
+    )
+  )
+}
+
 getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE) {
   ## Snapshot current theme values (non-reactive) so that lazily-loaded
   ## modules start with the colours the user has already chosen.
@@ -32,6 +60,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -173,6 +202,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -184,6 +214,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -257,6 +288,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -268,6 +300,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -363,6 +396,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -374,6 +408,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -401,6 +436,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -412,6 +448,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -448,6 +485,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -459,6 +497,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -493,6 +532,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -504,6 +544,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -534,6 +575,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -545,6 +587,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -619,6 +662,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -630,6 +674,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -680,6 +725,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -691,6 +737,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -721,6 +768,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -732,6 +780,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -769,6 +818,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -780,6 +830,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -812,6 +863,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -823,6 +875,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -854,6 +907,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -865,6 +919,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -895,6 +950,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -906,6 +962,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -930,6 +987,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -945,6 +1003,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -1050,6 +1109,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               bigLoaders::useSpinner()
           }
         )
+      )
       )
     )
   )

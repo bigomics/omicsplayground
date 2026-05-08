@@ -595,6 +595,21 @@ PlotModuleServer <- function(id,
         ignoreInit = TRUE
       )
 
+      ## Reset all editor inputs back to their UI-declared defaults.
+      ## The button and wrapper div are created in the *parent* namespace
+      ## (see editorModalBody()), because shinyjs::reset only handles a
+      ## single ns prefix and the editor inputs themselves use ns_parent.
+      ## We run shinyjs::reset inside the parent_session's reactive
+      ## domain so it prefixes/strips with the parent ns and dispatches
+      ## the resulting update*Input calls to the right session.
+      if (!is.null(parent_session)) {
+        shiny::observeEvent(parent_session$input$editor_reset, {
+          shiny::withReactiveDomain(parent_session, {
+            shinyjs::reset("editor_inputs")
+          })
+        }, ignoreInit = TRUE)
+      }
+
       ## --------------------------------------------------------------------------------
       ## ------------------------ Click-to-label handler --------------------------------
       ## --------------------------------------------------------------------------------
