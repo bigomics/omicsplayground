@@ -61,7 +61,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Data table" = list(disable = NULL),
       "Samples" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
       "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
-      "Settings" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
+      "Settings" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion",
+        "data_samplefilter"))
     )
 
     shiny::observeEvent(input$tabs, {
