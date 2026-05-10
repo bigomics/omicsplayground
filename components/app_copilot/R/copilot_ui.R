@@ -61,7 +61,7 @@ CopilotUI <- function(id) {
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
         row_heights = "26px",
-        shiny::actionButton(ns("studio_audioverview"), "Audio overview", width = "100%",
+        shiny::actionButton(ns("studio_podcast"), "Podcast", width = "100%",
           class = "xbtn", icon = icon("headphones")),
         shiny::actionButton(ns("studio_slidedeck"), "Slide deck", width = "100%",
           class = "xbtn", icon = icon("film")),

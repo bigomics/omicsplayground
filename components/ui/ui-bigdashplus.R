@@ -12,13 +12,18 @@
 bigdash.selectTab <- function(session, selected) {
   shiny:::validate_session_object(session)
   msg <- shiny:::dropNulls(list(value = selected))
-  #
   session$sendCustomMessage("bigdash-select-tab", msg)
 }
 
-bigdash.showTabsGoToDataView <- function(session) {
+bigdash.showTabs <- function(session) {
   session$sendCustomMessage("show-tabs", list()) ## in app/R/www/temp.js
 }
+
+## bigdash.showTabsGoToDataView <- function(session) {
+##   #session$sendCustomMessage("show-tabs", list()) ## in app/R/www/temp.js
+##   bigdash.showTabs(session)  
+##   bigdash.selectTab(session, "dataview-tab") 
+## }
 
 ## ------------------- sideBar ---------------------------
 bigdash.openSidebar <- function() {

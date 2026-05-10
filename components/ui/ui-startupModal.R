@@ -51,3 +51,55 @@ ui.startupModal <- function(id, messages, title = NULL) {
   modal <- div(id = id, modal)
   return(modal)
 }
+
+ui.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoons") {
+  cartoon_list <- list(
+    list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
+    list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),
+    list(slogan = "Analytics anywhere. Anytime.", img = "cartoon-cloudservice.jpg"),
+    list(slogan = "Analyze with confidence. Be a rockstar", img = "bigomics-rockstar3.jpg"),
+    list(slogan = "Fast track your Bioinformatics", img = "selfservice-checkout2.png"),
+    list(slogan = "Integrate more. Dig deeper", img = "cartoon-integration.jpg"),
+    list(slogan = "Your analysis doesn't take coffee breaks", img = "gone-for-coffee.png"),
+    list(slogan = "Too much data? Help yourself", img = "cartoon-datahelp2.jpg"),
+    list(slogan = "Big Friendly Omics", img = "big-friendly-omics1.jpg"),
+    list(slogan = "Big Data meets Biology", img = "bigdata-meets.png")
+  )
+
+  randomCartoon <- function() {
+    cartoon <- sample(cartoon_list, 1)[[1]]
+    cartoon$img2 <- paste0("static/cartoons/", cartoon$img)
+    cartoon$img <- file.path(img.path, cartoon$img)
+    cartoon
+  }
+
+  toon <- randomCartoon()
+  shiny::showModal(shiny::modalDialog(
+    title = shiny::div(shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style = "text-align:center;"),
+    shiny::img(src = toon$img2, class = "img-fluid"),
+    footer = fillRow(flex = c(1, NA, 1), " ", msg, " "),
+    size = "l",
+    easyClose = FALSE,
+    fade = TRUE
+  ))
+}
+
+ui.showImageModal <- function(img, title, footer='', width=1088) {
+  imgfile = tempfile(fileext=".png")
+  png::writePNG(img, target = imgfile)
+  hratio <- dim(img)[1] / dim(img)[2]
+  header <- NULL
+  if(!is.null(title) && title != "") header <- shiny::h3(HTML(title))
+  shiny::showModal(
+    modalDialog2(
+      shiny::div(shiny::img(src = base64enc::dataURI(file=imgfile),
+        width = width, height = hratio*width)),
+      header = header,
+      footer = div(HTML(footer),
+        style='display:inline; font-size:1.2em; line-height:1.1em'),
+      size = "xl",
+      easyClose = TRUE,
+      fade = TRUE
+    )
+  )
+}

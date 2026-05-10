@@ -1005,6 +1005,8 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
+        dbg("[new_upload] 1: new_upload = ", new_upload())
+        
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (!enable_upload) {
@@ -1017,6 +1019,8 @@ UploadBoard <- function(id,
           return(NULL)
         }
 
+        dbg("[new_upload] 2:")
+        
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
@@ -1033,6 +1037,8 @@ UploadBoard <- function(id,
           vars_selected(NULL)
         })
 
+        dbg("[new_upload] 3:")
+        
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
 
@@ -1045,6 +1051,8 @@ UploadBoard <- function(id,
           )
         }
 
+        dbg("[new_upload] 4:")        
+        
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
           if (process_counter() < MAX_DS_PROCESS) {

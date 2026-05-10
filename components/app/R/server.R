@@ -153,11 +153,11 @@ app_server <- function(input, output, session) {
   new_upload <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
-  WelcomeBoard("welcome",
-    auth = auth,
-    load_example = load_example,
-    new_upload = new_upload
-  )
+  ## WelcomeBoard("welcome",
+  ##   auth = auth,
+  ##   load_example = load_example,
+  ##   new_upload = new_upload
+  ## )
 
   env$user_profile <- UserProfileBoard(
     "user_profile",
@@ -219,16 +219,26 @@ app_server <- function(input, output, session) {
   )
 
   ## Do not display "Welcome" tab on the menu
-  bigdash.hideMenuItem(session, "welcome-tab")
+  #bigdash.hideMenuItem(session, "welcome-tab")
   ## Hide admin tab by default (will be shown for admin users after login)
   if (isTRUE(opt$ENABLE_ADMIN)) {
     bigdash.hideMenuItem(session, "admin-tab")
   }
   shinyjs::runjs("sidebarClose()")
-
+  shinyjs::disable(selector = "a[data-value='Dashboard']")
+  
   ## Modules needed from the start
   recompute_pgx <- shiny::reactiveVal(NULL)
 
+
+  shiny::observeEvent( new_upload(), {
+    dbg("[MAIN] reacted! : new_upload = ", new_upload())
+    if(new_upload() > 0) {
+      bslib::nav_select("app-sidebar", "Upload")
+    }
+  })
+
+  
   ########################################################### TEST
 
   env$load <- LoadingBoard(
@@ -241,7 +251,8 @@ app_server <- function(input, output, session) {
     current_page = reactive(input$nav),
     load_uploaded_data = load_uploaded_data,
     recompute_pgx = recompute_pgx,
-    new_upload = new_upload
+    new_upload = new_upload,
+    parent = session
   )
 
   ## Modules needed from the start
@@ -347,6 +358,7 @@ app_server <- function(input, output, session) {
     })
 
     if (env$load$is_data_loaded()) { # == 1) {
+
       additional_ui_tabs <- list(
         dataview = bigdash::bigTabItem(
           "dataview-tab",
@@ -370,6 +382,10 @@ app_server <- function(input, output, session) {
         insertBigTabUI(additional_ui_tabs[tab])
       }
 
+      ## show the dashboard item in app sidebar
+      #bslib::nav_show("app-sidebar", "Dashboard")
+      shinyjs::enable(selector = "a[data-value='Dashboard']")
+      
       shiny::withProgress(
         message = "Preparing your dashboard (server)...",
         value = 0,
@@ -380,6 +396,8 @@ app_server <- function(input, output, session) {
             DataViewBoard("dataview",
               pgx = PGX, labeltype = labeltype
             )
+            bslib::nav_select("app-sidebar", selected = "Dashboard")
+            bigdash.selectTab(session, "dataview-tab")            
           }
           shiny::incProgress(0.1)
 
@@ -487,20 +505,21 @@ app_server <- function(input, output, session) {
             let settings = $(el)
               .find('.tab-settings')
               .first();
-
             $(settings).data('target', $(el).data('name'));
             $(settings).appendTo('#settings-content');
           });"
       )
     }
 
-    bigdash.selectTab(session, selected = "dataview-tab")
-    bigdash.openSettings()
-
     ## remove loading modal from LoadingBoard
     shiny::removeModal()
+    bslib::nav_select("app-sidebar", selected = "Dashboard")
 
-    bigdash.showTabsGoToDataView(session)
+    bigdash.openSettings(lock = TRUE)
+    bigdash.openSidebar()
+    bigdash.showTabs(session)
+    bigdash.selectTab(session, "dataview-tab")
+
   })
 
   insertBigTabUI2 <- function(ui, menu) {
@@ -520,7 +539,6 @@ app_server <- function(input, output, session) {
       let settings = $(el)
         .find('.tab-settings')
         .first();
-
       $(settings).data('target', $(el).data('name'));
       $(settings).appendTo('#settings-content');
     });"
@@ -615,9 +633,9 @@ app_server <- function(input, output, session) {
 
   shinyjs::onclick("logo-bigomics", {
     shinyjs::runjs("console.info('logo-bigomics clicked')")
-    bigdash.selectTab(session, selected = "welcome-tab")
-    shinyjs::runjs("sidebarClose()")
-    shinyjs::runjs("settingsClose()")
+    #bigdash.selectTab(session, selected = "welcome-tab")
+    #shinyjs::runjs("sidebarClose()")
+    #shinyjs::runjs("settingsClose()")
   })
 
   observeEvent(input$menu_createreport, {
@@ -637,17 +655,9 @@ app_server <- function(input, output, session) {
     user
   })
 
-  ## this avoids flickering
-  welcome_detector <- reactiveVal(NULL)
-  observeEvent(input$nav, {
-    welcome_detector(input$nav == "welcome-tab")
-  })
-
   output$current_dataset <- shiny::renderUI({
-    shiny::req(auth$logged)
     has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    nav.welcome <- welcome_detector()
-    if (isTRUE(auth$logged) && has.pgx && !nav.welcome) {
+    if (isTRUE(auth$logged) && has.pgx) {
       ## trigger on change of dataset
       pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
       tag <- shiny::actionButton(
@@ -661,79 +671,30 @@ app_server <- function(input, output, session) {
     tag
   })
 
+  ## Show experiment info if dataset name is clicked.
   observeEvent(input$dataset_click, {
     shiny::req(PGX$name)
-    pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-    ##    fields <- c("name", "datatype", "description", "date", "norm_method", "imputation_method", "bc_method", "remove_outliers")
-    fields <- c("name", "datatype", "description", "date", "settings", "versions")
-    fields <- intersect(fields, names(PGX))
-    gset.methods <- sort(colnames(PGX$gset.meta$meta[[1]]$fc))
-    gx.methods <- colnames(PGX$gx.meta$meta[[1]]$fc)
-    extra_methods <- c(
-      wgcna = "WGCNA",
-      mofa = "MOFA",
-      deconv = "celltype deconvolution",
-      drugs = "drug connectivity",
-      wordcloud = "wordcloud",
-      connectivity = "experiment similarity"
-    )
-    extra.compute <- unname(extra_methods[names(extra_methods) %in% names(PGX)])
-    fields <- c(fields, "gset.methods", "gx.methods", "extra.compute")
-    body <- ""
-    listcollapse <- function(lst) paste0(names(lst), "=", lst, collapse = "; ")
-    for (f in fields) {
-      if (f == "gset.methods") {
-        body <- paste(body, "<b>Enrichment methods:</b>&nbsp; ", paste(gset.methods, collapse = ", "), "<br>")
-      } else if (f == "gx.methods") {
-        body <- paste(body, "<b>Gene tests:</b>&nbsp; ", paste(gx.methods, collapse = ", "), "<br>")
-      } else if (f == "extra.compute") {
-        body <- paste(body, "<b>Extra analysis:</b>&nbsp; ", paste(extra.compute, collapse = ", "), "<br>")
-      } else if (length(PGX[[f]]) > 1) {
-        for (n in names(PGX[[f]])) {
-          val <- PGX[[f]][[n]]
-          if (length(val) > 1) val <- listcollapse(val)
-          txt1 <- paste0("<b>", paste0(f, ".", n), ":</b>&nbsp; ", val, "<br>", collapse = "")
-          body <- paste(body, txt1)
-        }
-      } else {
-        txt1 <- paste0("<b>", f, ":</b>&nbsp; ", PGX[[f]], "<br>")
-        body <- paste(body, txt1)
-      }
+    has.infographic <- !is.null(PGX$wgcna$report$infographic)
+    pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)    
+    if(has.infographic) {
+      img <- PGX$wgcna$report$infographic
+      footer <- gsub("- |\n"," ",PGX$wgcna$report$bullets)
+      footer <- paste("<b>WGCNA graphical abstract</b>. ",footer)
+      ui.showImageModal(img, title=NULL, footer, width=1088)         
+    } else {
+      fields <- c("name", "description", "datatype", "date", "settings",
+        "omicsplayground_version")
+      body <- playbase::pgx.info(PGX, fields=fields, format="html")
+      shiny::showModal(shiny::modalDialog(
+        header = pgx.name,
+        div(HTML(body), style = "font-size: 1.1em;"),
+        footer = NULL,
+        size = "l",
+        easyClose = TRUE,
+        fade = FALSE
+      ))
     }
-
-    shiny::showModal(shiny::modalDialog(
-      title = pgx.name,
-      div(HTML(body), style = "font-size: 1.1em;"),
-      footer = NULL,
-      size = "l",
-      easyClose = TRUE,
-      fade = FALSE
-    ))
   })
-
-  ## ## Copilot button
-  ## output$copilot_button <- renderUI({
-  ##   if (is.null(PGX$X)) {
-  ##     return(NULL)
-  ##   }
-  ##   show.beta <- env$user_settings$enable_beta()
-  ##   if (show.beta) {
-  ##     ui <- shiny::actionButton(
-  ##       "copilot_click", "Copilot",
-  ##       width = "auto", class = "quick-button"
-  ##     )
-  ##   } else {
-  ##     ui <- NULL
-  ##   }
-  ##   return(ui)
-  ## })
-  ## CopilotServer("copilot",
-  ##   pgx = PGX, input.click = reactive({
-  ##     req(input$copilot_click > 0)
-  ##     input$copilot_click
-  ##   }),
-  ##   layout = "fixed", maxturns = opt$LLM_MAXTURNS
-  ## )
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -795,7 +756,7 @@ app_server <- function(input, output, session) {
         warning("[SERVER] !!! no data. hiding menu.")
         shinyjs::runjs("sidebarClose()")
         shinyjs::runjs("settingsClose()")
-        bigdash.selectTab(session, selected = "welcome-tab")
+        bigdash.selectTab(session, selected = "dataview-tab")        
         return(NULL)
       }
 
@@ -810,11 +771,11 @@ app_server <- function(input, output, session) {
       } else {
         WATERMARK <<- auth$options$WATERMARK
       }
+
     }
   )
 
   tab_control <- function() {
-    info("[SERVER] tab_control")
 
     ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
@@ -863,6 +824,7 @@ app_server <- function(input, output, session) {
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
+    
   }
 
   ## -------------------------------------------------------------
@@ -945,7 +907,7 @@ app_server <- function(input, output, session) {
   )
   inviteCallback <- function() {
     ## After succesful invite, we extend the session
-    dbg("[MAIN] inviteCB called!")
+    dbg("[MAIN] inviteCallback called!")
     if (isTRUE(opt$TIMEOUT > 0)) {
       session_timer$reset()
       shinyalert::shinyalert(

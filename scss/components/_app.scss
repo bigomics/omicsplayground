@@ -40,6 +40,11 @@
     border-radius: 10px;
 }
 
+#app-sidebar .nav-link.disabled {
+    color: #777;
+    display: block !important;
+}
+
 #app-sidebar .nav-item {
     --bs-nav-link-padding-x: 0px;
     --bs-nav-link-padding-y: 0px;

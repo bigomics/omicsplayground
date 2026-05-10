@@ -812,7 +812,6 @@ PlotModuleServer <- function(id,
                   dev.off()
                 } else if (plotlib == "image") {
                   p <- func()
-                  dbg("[downloadHandler.PNG] copy image ", p$src, "to PNGFILE", PNGFILE)
                   file.copy(p$src, PNGFILE, overwrite = TRUE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PNG inside plot func()

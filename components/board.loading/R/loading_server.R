@@ -17,7 +17,8 @@ LoadingBoard <- function(id,
                          current_page,
                          load_uploaded_data,
                          recompute_pgx,
-                         new_upload) {
+                         new_upload,
+                         parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -84,40 +85,41 @@ LoadingBoard <- function(id,
       )
     })
 
-    output$sharing_panel_ui <- renderUI({
-      if (!auth$options$ENABLE_USER_SHARE) {
-        return(
-          "Your version does not allow sharing of datasets."
-        )
-      }
-      received_files <- pgxreceived$getReceivedFiles()
-      shared_files <- pgxshared$getSharedFiles()
-      num_received <- length(received_files)
-      num_shared <- length(shared_files)
+    ## output$sharing_panel_ui <- renderUI({
+    ##   if (!auth$options$ENABLE_USER_SHARE) {
+    ##     return(
+    ##       "Your version does not allow sharing of datasets."
+    ##     )
+    ##   }
+    ##   received_files <- pgxreceived$getReceivedFiles()
+    ##   shared_files <- pgxshared$getSharedFiles()
+    ##   num_received <- length(received_files)
+    ##   num_shared <- length(shared_files)
 
-      ## if (num_received == 0 && num_shared == 0) {
-      ##   dbg("[sharing_panel_ui] no shared datasets!")
-      ##   return(paste("No shared datasets in queue."))
-      ## }
+    ##   ## if (num_received == 0 && num_shared == 0) {
+    ##   ##   dbg("[sharing_panel_ui] no shared datasets!")
+    ##   ##   return(paste("No shared datasets in queue."))
+    ##   ## }
 
-      out1 <- shiny::wellPanel(
-        shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-        br(), br(),
-        pgxreceived$receivedPGXtable(),
-        br()
-      )
+    ##   out1 <- shiny::wellPanel(
+    ##     shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
+    ##     br(), br(),
+    ##     pgxreceived$receivedPGXtable(),
+    ##     br()
+    ##   )
 
-      out2 <- shiny::wellPanel(
-        shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-        br(), br(),
-        pgxshared$sharedPGXtable(),
-        br()
-      )
+    ##   out2 <- shiny::wellPanel(
+    ##     shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
+    ##     br(), br(),
+    ##     pgxshared$sharedPGXtable(),
+    ##     br()
+    ##   )
 
-      out <- shiny::tagList(out1, out2)
-      return(out)
-    })
+    ##   out <- shiny::tagList(out1, out2)
+    ##   return(out)
+    ## })
 
+    
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
@@ -141,11 +143,11 @@ LoadingBoard <- function(id,
         } else {
           loadAndActivatePGX("example-data")
 
-          # open the left & right sidebar
-          bigdash.openSettings(lock = TRUE)
-          bigdash.openSidebar()
-          bigdash.selectTab(session, selected = "dataview-tab")
-          ## shiny::removeModal()
+          ## # open the left & right sidebar
+          ## bigdash.openSettings(lock = TRUE)
+          ## bigdash.openSidebar()
+          ## bigdash.selectTab(session, selected = "dataview-tab")
+          ## ## shiny::removeModal()
         }
       },
       ignoreInit = TRUE
@@ -335,7 +337,7 @@ LoadingBoard <- function(id,
 
     loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
       ## During loading show loading pop-up modal
-      pgx.showCartoonModal()
+      ui.showCartoonModal()
 
       loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
@@ -387,10 +389,6 @@ LoadingBoard <- function(id,
       gc()
       remove(loaded_pgx)
       
-      ## remove modal on exit??
-      ## shiny::removeModal()
-      bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
-
       ## notify new data uploaded
       if (is.null(is_data_loaded())) {
         is_data_loaded(1)
@@ -402,7 +400,8 @@ LoadingBoard <- function(id,
     }
     
     observeEvent(input$newuploadbutton, {
-      new_upload(new_upload() + 1)
+      ##new_upload(new_upload() + 1)
+      bslib::nav_select("app-sidebar", "Upload", session=parent)      
     })
 
     observeEvent(load_uploaded_data(), {

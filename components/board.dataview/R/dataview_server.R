@@ -24,17 +24,17 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## More Info (pop up window)
     ## ----------------------------------------------------------------------
 
-    data_infotext <- HTML('
-        <center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=Rc7Rlmxa3GyyEtsd&amp;start=190" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>')
+    data_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=Rc7Rlmxa3GyyEtsd&amp;start=190" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>')
+    OmicsBoard("board", pgx, title="Data View", infotext = data_infotext) 
 
     ## ------- observe functions -----------
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>DataView Board</strong>"),
-        shiny::HTML(data_infotext),
-        easyClose = TRUE, size = "xl"
-      ))
-    })
+    ## shiny::observeEvent(input$board_info, {
+    ##   shiny::showModal(shiny::modalDialog(
+    ##     title = shiny::HTML("<strong>DataView Board</strong>"),
+    ##     shiny::HTML(data_infotext),
+    ##     easyClose = TRUE, size = "xl"
+    ##   ))
+    ## })
 
     ## update filter choices upon change of data set
     shiny::observe({
@@ -60,7 +60,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Sample QC" = list(disable = c("search_gene")),
       "Data table" = list(disable = NULL),
       "Samples" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
-      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
+      "Contrasts" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion")),
+      "Settings" = list(disable = c("search_gene", "data_groupby", "data_type", "data_type_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -253,6 +254,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       watermark = WATERMARK
     )
 
+    dataview_html_settings_server(
+      "settings",
+      pgx,
+      watermark = WATERMARK) 
+        
     ## ================================================================================
     ## ===============================  TABLES ========================================
     ## ================================================================================
@@ -399,7 +405,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       },
       ignoreNULL = TRUE
     )
-
+    
     ## ================================================================================
     ## =================================== END ========================================
     ## ================================================================================

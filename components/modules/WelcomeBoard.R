@@ -237,6 +237,7 @@ WelcomeBoard2 <- function(id, auth, load_example, new_upload, parent) {
       #bigdash.openSettings(lock = TRUE)
       #bigdash.openSidebar()
       #bigdash.selectTab(session, selected = "upload-tab")
+      #new_upload( new_upload() + 1)
       bslib::nav_select("app-sidebar", "Upload", session=parent)
     })
 

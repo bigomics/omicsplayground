@@ -183,7 +183,7 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
       }
 		});
 
-	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
+//	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
 	$('#sidebar-help-container').show();
 	}, 1000);
 });

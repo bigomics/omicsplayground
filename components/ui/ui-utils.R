@@ -183,58 +183,6 @@ alertDataLoaded <- function(session, ngs) {
   message("[alertDataLoaded] WARNING:: no PGX object")
 }
 
-pgx.randomCartoon <- function() {
-  cartoon_list <- list(
-    list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
-    list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),
-    list(slogan = "Analytics anywhere. Anytime.", img = "cartoon-cloudservice.jpg"),
-    list(slogan = "Analyze with confidence. Be a rockstar", img = "bigomics-rockstar3.jpg"),
-    list(slogan = "Fast track your Bioinformatics", img = "selfservice-checkout2.png"),
-    list(slogan = "Integrate more. Dig deeper", img = "cartoon-integration.jpg"),
-    list(slogan = "Your analysis doesn't take coffee breaks", img = "gone-for-coffee.png"),
-    list(slogan = "Too much data? Help yourself", img = "cartoon-datahelp2.jpg"),
-    list(slogan = "Big Friendly Omics", img = "big-friendly-omics1.jpg"),
-    list(slogan = "Big Data meets Biology", img = "bigdata-meets.png")
-  )
-
-  cartoon <- sample(cartoon_list, 1)[[1]]
-  cartoon$img2 <- file.path("cartoons", cartoon$img)
-  cartoon$img <- file.path("www/cartoons", cartoon$img)
-  cartoon
-}
-
-pgx.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoons") {
-  cartoon_list <- list(
-    list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
-    list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),
-    list(slogan = "Analytics anywhere. Anytime.", img = "cartoon-cloudservice.jpg"),
-    list(slogan = "Analyze with confidence. Be a rockstar", img = "bigomics-rockstar3.jpg"),
-    list(slogan = "Fast track your Bioinformatics", img = "selfservice-checkout2.png"),
-    list(slogan = "Integrate more. Dig deeper", img = "cartoon-integration.jpg"),
-    list(slogan = "Your analysis doesn't take coffee breaks", img = "gone-for-coffee.png"),
-    list(slogan = "Too much data? Help yourself", img = "cartoon-datahelp2.jpg"),
-    list(slogan = "Big Friendly Omics", img = "big-friendly-omics1.jpg"),
-    list(slogan = "Big Data meets Biology", img = "bigdata-meets.png")
-  )
-
-  randomCartoon <- function() {
-    cartoon <- sample(cartoon_list, 1)[[1]]
-    cartoon$img2 <- paste0("static/cartoons/", cartoon$img)
-    cartoon$img <- file.path(img.path, cartoon$img)
-    cartoon
-  }
-
-  toon <- randomCartoon()
-  shiny::showModal(shiny::modalDialog(
-    title = shiny::div(shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style = "text-align:center;"),
-    shiny::img(src = toon$img2, class = "img-fluid"),
-    footer = fillRow(flex = c(1, NA, 1), " ", msg, " "),
-    size = "l",
-    easyClose = FALSE,
-    fade = TRUE
-  ))
-}
-
 HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteString) {
   pattern <- paste0("^", NoLinkString, "$")
   special_cases <- grepl(pattern, wrapHyperLinkOutput, perl = TRUE)
@@ -346,7 +294,6 @@ addSettings <- function(ns, session, file) {
   # Execute the command
   system(pdftk_command)
   ## finally copy to final exported file
-  dbg("[downloadHandler.PDF] copy PDFFILE", final_pdf, "to download file", file)
   file.copy(final_pdf, file, overwrite = TRUE)
 }
 
@@ -382,7 +329,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
       pca_label = "Label",
       all_clustmethods = "Show all methods",
       plot3d = "Plot 3D",
-      showlabels = "Shoe group labels",
+      showlabels = "Show group labels",
       hm_pcaverage = "Average by gene module",
       hm_pcscale = "Scale values",
       gx_grouped = "Group samples",
@@ -487,10 +434,6 @@ tspan <- function(text, js = TRUE) {
 ## forced JS version
 jspan <- function(text) tspan(text, js = TRUE)
 
-
-tspan.SAVE <- function(label) {
-  shiny::span(class = "i18n", `data-key` = label, label)
-}
 
 #' Create a loading spinner element
 #'

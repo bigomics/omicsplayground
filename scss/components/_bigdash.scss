@@ -66,8 +66,8 @@ html {
     }
 
     //---------------- sidebar ---------------------
-    .sidebar-container {
-	height: calc(100vh - 36px);
+    #sidebar-container {
+	height: 100vh;
     }
     
     .sidebar-expanded>.sidebar {
@@ -138,8 +138,8 @@ html {
     }
 
     //---------------- settings ---------------------
-    .settings-container {
-	height: calc(100vh - 36px);
+    #settings-container {
+	height: 100vh;	
     }
 
     .settings-expanded {

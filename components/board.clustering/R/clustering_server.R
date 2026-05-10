@@ -19,7 +19,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     clust_infotext <-
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/phm1joeZTO4?si=GgUWBZNlxdU_TpPX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
-
+    OmicsBoard("board", pgx, title="Cluster Samples", infotext = clust_infotext) 
+    
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
@@ -45,13 +46,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     })
 
     # Board info
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Clustering Board</strong>"),
-        shiny::HTML(clust_infotext),
-        easyClose = TRUE, size = "xl"
-      ))
-    })
+    ## shiny::observeEvent(input$board_info, {
+    ##   shiny::showModal(shiny::modalDialog(
+    ##     title = shiny::HTML("<strong>Clustering Board</strong>"),
+    ##     shiny::HTML(clust_infotext),
+    ##     easyClose = TRUE, size = "xl"
+    ##   ))
+    ## })
 
     shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)

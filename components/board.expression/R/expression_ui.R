@@ -80,6 +80,8 @@ ExpressionUI <- function(id) {
 
   fullH <- "calc(100vh - 125px)" ## full height of page (minus header)
   halfH <- "calc(50vh - 125px)" ## half height of page
+  fullH <- "calc(100vh - 100px)" ## full height of page (minus header)
+  halfH <- "calc(50vh - 100px)" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -297,8 +299,20 @@ ExpressionUI <- function(id) {
     )
   ) ## end tabs2 = bottom tabsetPanel
 
-  div(
-    boardHeader(title = "Differential expression", info_link = ns("gx_info")),
+  ## div(
+  ##   boardHeader(title = "Differential expression", info_link = ns("gx_info")),
+  ##   bslib::layout_columns(
+  ##     col_widths = 12,
+  ##     height = fullH,
+  ##     gap = "0px",
+  ##     tabs1,
+  ##     tabs2
+  ##   )
+  ## )
+
+  OmicsBoardUI(
+    title = "Differential expression",
+    id = ns("board"),
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,
@@ -307,4 +321,5 @@ ExpressionUI <- function(id) {
       tabs2
     )
   )
+  
 }
