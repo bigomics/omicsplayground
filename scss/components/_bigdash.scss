@@ -22,7 +22,14 @@ html {
     // bit darker (see Matt)
     .nav-tabs .nav-link {
 	color: #b8b8b8;
+	border-bottom: solid 0px;
+	background-color: transparent;
+    }
+
+    .nav-tabs .nav-link.active {
+	color: black;
 	border-bottom: solid 1px;
+	background-color: transparent;	
     }
 
     // only on navbars
@@ -68,6 +75,8 @@ html {
     //---------------- sidebar ---------------------
     #sidebar-container {
 	height: 100vh;
+	padding-top: 10px;	
+	background-color: aliceblue;	
     }
     
     .sidebar-expanded>.sidebar {
@@ -139,7 +148,9 @@ html {
 
     //---------------- settings ---------------------
     #settings-container {
-	height: 100vh;	
+	padding-top: 10px;
+	height: 100vh;
+	background-color: aliceblue;	
     }
 
     .settings-expanded {

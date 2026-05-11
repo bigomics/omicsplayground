@@ -69,9 +69,9 @@ OmicsBoard <- function(id, pgx, title, infotext) {
         shiny::actionButton(
           ns("dataset_click"), pgx.name,
           class = "quick-button",
-          style = "border: none; color: black; font-size: 1.2em;"
+          style = "border: none; color: black; font-size: 1.2em; background-color: transparent;"
         ),
-        style = "padding: 20px 0px 0px 0px;"
+        style = "padding: 30px 0px 0px 0px;"
       )
     })
     

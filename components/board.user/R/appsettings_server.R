@@ -133,6 +133,10 @@ AppSettingsBoard <- function(id, auth, pgx) {
       save_color_theme(shiny::reactiveValuesToList(theme), auth$user_dir)
     })
 
+    ##----------------------------------------------------------------------
+    ## new features
+    ##----------------------------------------------------------------------
+
     newfeatures.RENDER <- reactive({
       newfeat <- markdown::markdownToHTML(
         file = file.path(OPG, "FEATURES.md"),
@@ -148,6 +152,10 @@ AppSettingsBoard <- function(id, auth, pgx) {
       renderFunc = renderUI
     )
 
+    ##----------------------------------------------------------------------
+    ## packages
+    ##----------------------------------------------------------------------
+    
     packages.RENDER <- function() {
       pkg <- read.table(file.path(OPG, "RPackageLicenses.txt"), sep = "\t", header = TRUE)
       DT::datatable(pkg,

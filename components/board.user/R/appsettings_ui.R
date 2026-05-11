@@ -110,19 +110,19 @@ AppSettingsUI2 <- function(id) {
 
         bslib::layout_columns(
           height = "calc(100vh - 183px)",
-          col_widths = c(6,6),
+          col_widths = c(4,8),
           bslib::card(
             bslib::card_header("App settings"),
             bslib::card_body(
               gap = '0.3em',
-              bslib::input_switch("enable_beta", "Enable beta features"),              
-              bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
+              bslib::input_switch("enable_beta", "Enable beta features", value=TRUE),
+              bslib::input_switch("enable_info", "Show info boxes", value=TRUE),
               selector_switch(
                 class = "card-footer-checked",
                 label = "Show captions",
                 is.checked = FALSE
               ),
-              bslib::input_switch("enable_llm", "Enable AI"),
+              bslib::input_switch("enable_llm", "Enable AI", value=TRUE),
               shiny::conditionalPanel(
                 "input.enable_llm",
                 bigdash::navbarDropdownItem(
@@ -148,10 +148,7 @@ AppSettingsUI2 <- function(id) {
               )
             )
           ),
-          bslib::card(
-            bslib::card_header("Settings 2"),
-            bslib::card_body()
-          )
+          div()
         )
       ),
 

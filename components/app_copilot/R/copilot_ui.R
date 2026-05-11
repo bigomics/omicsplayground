@@ -20,11 +20,7 @@ CopilotUI <- function(id) {
       shiny::actionButton(ns("ask_pathways"), "What pathways are involved?", width = "100%", class = "xbtn"),
       shiny::actionButton(ns("show_biomarkers"), "Show top biomarkers", width = "100%", class = "xbtn"),
       shiny::actionButton(ns("find_references"), "Find references", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width = "100%", class = "xbtn"),
-      shiny::actionButton(ns("plot_volcano"), "Show volcano plot", width = "100%", class = "xbtn"),
-      shiny::br(),
-      shiny::br(),
-      shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE)
+      shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width = "100%", class = "xbtn")
     ),
     bslib::nav_panel(
       "Settings",
@@ -34,15 +30,26 @@ CopilotUI <- function(id) {
       shiny::radioButtons(ns("response_length"), "Response length:",
         choices = c("default","short","longer"), selected="short", inline = TRUE
       ),
-      br(),
-      shiny::checkboxGroupInput(ns("context"), "Context:",
-        choices = NULL, inline = TRUE
-      ),
-      br(),
+      br(),      
+      shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),
+      br(),      
       actionButton(ns("reset"), "Reset model")
     )
   )
-  
+
+  input_card <- bslib::navset_underline(
+    bslib::nav_panel(
+      "Input sources",
+      br(),
+      shiny::checkboxGroupInput(ns("context"), "Dataset context:",
+        choices = NULL, inline = TRUE
+      ),
+      br(),
+      br(),      
+      shiny::fileInput("file", "Add sources:", accept = NULL, multiple=TRUE),
+    )
+  )
+
   chat_card <- bslib::card(
     class = "border-0",
     fill = FALSE,
@@ -86,17 +93,18 @@ CopilotUI <- function(id) {
   )
 
   ui <- bslib::layout_columns(
-    col_widths = c(2, 7, 3),
+    col_widths = c(3, 6, 3),
     style = "height: min(90%,700)",
     fill = TRUE,
     ## left sidebar
-    bslib::card(
-      class = "border-0",
-      fill = TRUE,
+    bslib::layout_columns(
+      col_widths = c(12),
       height = "calc(100vh - 100px)",
-      bslib::layout_columns(
-        col_widths = c(12),
-        examples_card      
+      bslib::card(
+        examples_card
+      ),
+      bslib::card(
+        input_card
       )
     ),
     ## center section
@@ -106,7 +114,6 @@ CopilotUI <- function(id) {
       col_widths = c(12),
       height = "calc(100vh - 100px)",
       bslib::card(
-        class = "border-0",
         studio_card
       ),
       bslib::card(

@@ -17,7 +17,7 @@
 
 #app-sidebar {
 //    white-space: pre-line;
-    height: 96vh;
+    height: calc(100vh - 35px);
     margin-top: -15px;
 }
 
@@ -29,8 +29,8 @@
 #app-sidebar .nav-link {
     color: #bbb;
     text-align: center;
-    font-size: 0.85em;
-    padding: 10px 0 4px 0;
+    font-size: 0.8em;
+    padding: 15px 0 4px 0;
     white-space: normal;
 }
 
@@ -49,8 +49,8 @@
     --bs-nav-link-padding-x: 0px;
     --bs-nav-link-padding-y: 0px;
     width: 60px;
-    padding-top: 15px;
-    line-height: 1.4em;
+    padding-top: 5px;
+    line-height: 1.2em;
 }
 
 #app-sidebar .dropdown-toggle::after {
@@ -59,4 +59,14 @@
 
 #app-sidebar i {
     font-size: 28px;
+}
+
+#app .col-sm-11>.tab-content {
+    margin-top: -15px;
+    height: 100%;
+}
+
+#app .col-sm-11>.tab-content>.tab-pane {
+    background-color: #F7FAFD;
+    height: calc(100vh + 15px);
 }
