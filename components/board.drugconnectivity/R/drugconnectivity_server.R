@@ -63,25 +63,42 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     get_pgx_drugs <- eventReactive( pgx$drugs, {
 
-      ## check if we have precomputed MOA slots
-      if(!is.null(pgx$drugs[[1]]$moa)) {
-        return(pgx$drugs)
+      ## lazily compute MOA if missing (should be done at pgx computation time)
+      if(is.null(pgx$drugs[[1]]$moa)) {
+        dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
+        pgx.showSmallModal("Calculating MOA<br>Please wait...")
+        pgx$drugs$report <- NULL
+        for(db in names(pgx$drugs)) {
+          res <- pgx$drugs[[db]]
+          if(is.null(res$moa)) {
+            moa <- metaLINCS::computeMoaEnrichment(res)
+            pgx$drugs[[db]][['moa']] <- moa
+          }
+        }
+        shiny::removeModal(session)
       }
-      
-      ## need to recompute MOA (if not done), NOTE: should be done in
-      ## pgx computation
-      dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
-      pgx.showSmallModal("Calculating MOA<br>Please wait...")      
-      pgx$drugs$report <- NULL
-      db=names(pgx$drugs)[1]
-      for(db in names(pgx$drugs)) {
-        res <- pgx$drugs[[db]]
-        if(is.null(res$moa)) {        
-          moa <- metaLINCS::computeMoaEnrichment(res)
-          pgx$drugs[[db]][['moa']] <- moa
+
+      ## lazily compute CMAP cluster positions if missing
+      if(is.null(pgx$drugs[[1]]$clust)) {
+        dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing CMAP positions...")
+        for(db in names(pgx$drugs)) {
+          res <- pgx$drugs[[db]]
+          if (!is.null(res$clust)) next
+          smat <- res$stats
+          if (is.null(smat) || !is.matrix(smat) || nrow(smat) < 5 || ncol(smat) < 2) next
+          smat[is.na(smat)] <- 0
+          nn <- min(15L, nrow(smat) - 1L)
+          clust <- try(
+            uwot::umap(smat, fast_sgd = TRUE, verbose = FALSE, n_neighbors = nn),
+            silent = TRUE
+          )
+          if (!inherits(clust, "try-error")) {
+            rownames(clust) <- rownames(smat)
+            pgx$drugs[[db]][['clust']] <- clust
+          }
         }
       }
-      shiny::removeModal(session)
+
       return(pgx$drugs)
     })
     
