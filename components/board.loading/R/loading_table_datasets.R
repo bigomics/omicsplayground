@@ -1046,18 +1046,7 @@ loading_table_datasets_server <- function(id,
             inputId = "confirmdelete"
           )
         } else {
-          msg <- paste(
-            "Deleting is disabled.",
-            "Please <a href='https://events.bigomics.ch/upgrade' target='_blank'>",
-            "<b><u>upgrade</u></b></a> your account to enable it."
-          )
-          shinyalert::shinyalert(
-            title = "Oops!",
-            text = HTML(msg),
-            showCancelButton = TRUE,
-            showConfirmButton = FALSE,
-            html = TRUE
-          )
+          shinyalert_delete_without_limits() ## ui-alerts.R
         }
       },
       ignoreNULL = TRUE,
