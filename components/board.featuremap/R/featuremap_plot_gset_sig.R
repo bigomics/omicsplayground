@@ -49,9 +49,9 @@ featuremap_plot_gset_sig_server <- function(id,
     output$rank_list <- shiny::renderUI({
       dt <- plot_data()
       shiny::req(dt)
-      F <- dt[[1]]
-      shiny::req(F, ncol(F) > 0)
-      rank_list_ui(sort(colnames(F)), session$ns)
+      facet_df <- dt[[1]]
+      shiny::req(facet_df, ncol(facet_df) > 0)
+      rank_list_ui(sort(colnames(facet_df)), session$ns)
     })
 
     plot_data <- shiny::reactive({
