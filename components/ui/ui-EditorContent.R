@@ -31,7 +31,7 @@ editorModalBody <- function(ns_parent, ...) {
   )
 }
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE) {
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE, subplot_order = FALSE) {
   ## Snapshot current theme values (non-reactive) so that lazily-loaded
   ## modules start with the colours the user has already chosen.
   ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
@@ -467,6 +467,26 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               )
             )
           ),
+          if (subplot_order) {
+            bslib::accordion_panel(
+              "Subplot Order",
+              shiny::selectInput(
+                ns_parent("subplot_order"),
+                "Sort subplots by:",
+                choices = c(
+                  "Alphabetical" = "alphabetical",
+                  "Custom (shuffle the order)" = "custom"
+                ),
+                selected = "alphabetical"
+              ),
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("subplot_order"), "'] == 'custom'"),
+                shiny::div(
+                  shiny::uiOutput(ns_parent("rank_list"))
+                )
+              )
+            )
+          },
           bslib::accordion_panel(
             "Labels",
             if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = color_selection_default),
