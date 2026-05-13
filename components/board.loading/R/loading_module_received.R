@@ -181,25 +181,32 @@ upload_module_received_server <- function(id,
             return(NULL)
           }
 
-          ## Peek dataset dimensions to check plan limits before accepting.
-          ## Shared dir has no aggregated metadata CSV, so we load the file.
-          pgx_dims <- tryCatch(
-            shiny::withProgress(message = "Checking dataset...", value = 0.5, {
-              pgx_data <- playbase::pgx.load(file_from)
-              list(
-                nsamples = ncol(pgx_data$X),
-                ngenes = nrow(pgx_data$X),
-                datatype = if (!is.null(pgx_data$datatype)) pgx_data$datatype else ""
-              )
-            }),
-            error = function(e) NULL
-          )
+          ## Enforce plan size limits, but skip the check when the sender is a
+          ## CRO so CRO-shared datasets always go through.
+          sender_email <- gsub(".*__from__|__$", "", pgx_name)
+          cro_emails <- get_cro_emails()
+          sender_is_cro <- !is.null(cro_emails) && sender_email %in% cro_emails
 
-          if (!is.null(pgx_dims) && dataset_exceeds_limits(
-            pgx_dims$nsamples, pgx_dims$ngenes, pgx_dims$datatype, auth$options
-          )) {
-            shinyalert_exceeds_plan_limits() ## ui-alerts.R
-            return(NULL)
+          if (!sender_is_cro) {
+            ## Shared dir has no aggregated metadata CSV, so we load the file.
+            pgx_dims <- tryCatch(
+              shiny::withProgress(message = "Checking dataset...", value = 0.5, {
+                pgx_data <- playbase::pgx.load(file_from)
+                list(
+                  nsamples = ncol(pgx_data$X),
+                  ngenes = nrow(pgx_data$X),
+                  datatype = if (!is.null(pgx_data$datatype)) pgx_data$datatype else ""
+                )
+              }),
+              error = function(e) NULL
+            )
+
+            if (!is.null(pgx_dims) && dataset_exceeds_limits(
+              pgx_dims$nsamples, pgx_dims$ngenes, pgx_dims$datatype, auth$options
+            )) {
+              shinyalert_exceeds_plan_limits() ## ui-alerts.R
+              return(NULL)
+            }
           }
 
           ## Rename file to user folder. Some servers do not allow
