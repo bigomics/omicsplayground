@@ -363,6 +363,11 @@ app_server <- function(input, output, session) {
           "dataview-tab",
           DataViewInputs("dataview"),
           DataViewUI("dataview")
+        ),
+        copilot = bigdash::bigTabItem(
+          "copilot-tab",
+          CopilotBoardInputs("copilot"),
+          CopilotBoardUI("copilot")
         )
       )
 
@@ -479,6 +484,19 @@ app_server <- function(input, output, session) {
             })
           }
 
+          if (MODULES_TO_LOAD["Copilot"]) {
+            info("[SERVER] calling Copilot board module")
+            insertBigTabItem("copilot")
+            bigdash.showMenuElement(session, "Copilot")
+            bigdash.showTab(session, "copilot-tab")
+            CopilotBoardServer("copilot", pgx = PGX, pgx_dir = PGX.DIR,
+                               chat_dir = CHAT.DIR,
+                               docs_dir = DOCS.DIR,
+                               maxturns = opt$LLM_MAXTURNS,
+                               tiers = opt$COPILOT_MODEL,
+                               is_data_loaded = env$load$is_data_loaded)
+          }
+
           MODULES_LOADED <<- MODULES_ACTIVE
 
           if (env$load$is_data_loaded() > 0) {
@@ -505,8 +523,13 @@ app_server <- function(input, output, session) {
       )
     }
 
-    bigdash.selectTab(session, selected = "dataview-tab")
-    bigdash.openSettings()
+    ## Skip redirect to DataView when the dataset switch originated from Copilot.
+    ## Without this guard, switching datasets in the Copilot panel would yank the
+    ## user away from the chat UI to the DataView tab.
+    if (!isTRUE(input$nav == "copilot-tab")) {
+      bigdash.selectTab(session, selected = "dataview-tab")
+      bigdash.openSettings()
+    }
 
     ## remove loading modal from LoadingBoard
     shiny::removeModal()
@@ -728,7 +751,8 @@ app_server <- function(input, output, session) {
       return(NULL)
     }
     show.beta <- env$user_settings$enable_beta()
-    if (show.beta) {
+    enable.ai <- env$user_settings$enable_ai()
+    if (isTRUE(show.beta) && isTRUE(enable.ai)) {
       ui <- shiny::actionButton(
         "copilot_click", "Copilot",
         width = "auto", class = "quick-button"
@@ -738,13 +762,10 @@ app_server <- function(input, output, session) {
     }
     return(ui)
   })
-  CopilotServer("copilot",
-    pgx = PGX, input.click = reactive({
-      req(input$copilot_click > 0)
-      input$copilot_click
-    }),
-    layout = "fixed", maxturns = opt$LLM_MAXTURNS
-  )
+  ## Navigate to copilot board on toolbar button click
+  shiny::observeEvent(input$copilot_click, {
+    bigdash.selectTab(session, selected = "copilot-tab")
+  })
 
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
@@ -834,10 +855,17 @@ app_server <- function(input, output, session) {
     show.ai <- env$user_settings$enable_ai()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
 
+    enable.ai <- env$user_settings$enable_ai()
+    if (is.null(enable.ai) || length(enable.ai) == 0) enable.ai <- FALSE
+
     has.libx <- dir.exists(file.path(OPG, "libx"))
 
     ## Hide beta main tabs
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
+    ## Copilot requires Beta + AI
+    if (isTRUE(MODULES_LOADED[["Copilot"]])) {
+      bigdash.toggleTab(session, "copilot-tab", show.beta && enable.ai)
+    }
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
     bigdash.toggleTab(session, "mwgcna-tab", show.beta)
@@ -1220,14 +1248,8 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
 
   clearPGX <- function() {
-    ## clear PGX data
-    pgx.names <- isolate(names(PGX))
-    length.pgx <- length(pgx.names)
-    if (length.pgx > 0) {
-      for (i in 1:length.pgx) {
-        PGX[[pgx.names[i]]] <<- NULL
-      }
-    }
+    ## Clear all active PGX slot values (names persist — Shiny limitation)
+    for (k in rv_active_names(PGX)) PGX[[k]] <<- NULL
   }
 
   userLogoutSequence <- function(auth, action) {

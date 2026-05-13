@@ -591,7 +591,7 @@ PlotModuleServer <- function(id,
       ## ------------------------ Click-to-label handler --------------------------------
       ## --------------------------------------------------------------------------------
       ## Plotly click handler (for plotly editor popups)
-      if (requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
+      if (!is.null(parent_session) && requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
         observeEvent(plotly::event_data("plotly_click"), {
           shiny::req(parent_session)
           click_data <- plotly::event_data("plotly_click")
@@ -1352,6 +1352,16 @@ PlotModuleServer <- function(id,
                 scrollZoom = TRUE
               ) %>%
               plotly::plotly_build()
+            if (!is.null(plot$x$data) && length(plot$x$data) > 0) {
+              plot$x$data <- lapply(plot$x$data, function(tr) {
+                type_val <- if (!is.null(tr$type)) tolower(as.character(tr$type)[1]) else ""
+                if (identical(type_val, "bar") && !is.null(tr$mode)) {
+                  tr$mode <- NULL
+                }
+                tr
+              })
+            }
+            plot <- plotly::event_register(plot, "plotly_click")
 
             if (remove_margins == TRUE) {
               plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
@@ -1388,6 +1398,16 @@ PlotModuleServer <- function(id,
                 scrollZoom = TRUE
               ) %>%
               plotly::plotly_build()
+            if (!is.null(plot$x$data) && length(plot$x$data) > 0) {
+              plot$x$data <- lapply(plot$x$data, function(tr) {
+                type_val <- if (!is.null(tr$type)) tolower(as.character(tr$type)[1]) else ""
+                if (identical(type_val, "bar") && !is.null(tr$mode)) {
+                  tr$mode <- NULL
+                }
+                tr
+              })
+            }
+            plot <- plotly::event_register(plot, "plotly_click")
             # Remove toImage button from modebar
             if (inherits(plot$x$config$modeBarButtons, "list")) {
               for (y in seq_along(plot$x$config$modeBarButtons[[1]])) {

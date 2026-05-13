@@ -333,7 +333,7 @@ i18n$set_translation_language("RNA-seq")
 
 ## LLM model setup (profiles defined in components/modules/AiCards.R)
 opt$LLM_MODELS <- llm_model_choices(opt$LLM_MODELS)
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 50, opt$LLM_MAXTURNS)
 dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
 
 ## Image model setup

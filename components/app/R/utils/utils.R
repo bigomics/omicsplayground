@@ -40,6 +40,38 @@ opg_markdown_to_html <- function(text) {
   markdown::markdownToHTML(text = txt, fragment.only = TRUE)
 }
 
+## ---------------------------------------------------------------------------
+## reactiveValues slot-presence helpers
+## ---------------------------------------------------------------------------
+## Shiny's reactiveValues does not support true key deletion: assigning NULL
+## clears the value but the name stays in names(rv). These helpers encode
+## "active slot" as "non-NULL value" so callers don't rely on names() alone.
+
+#' Check whether a reactiveValues slot holds a non-NULL value
+rv_has_value <- function(rv, key) {
+  !is.null(shiny::isolate(rv[[key]]))
+}
+
+#' Return only the slot names whose values are non-NULL
+rv_active_names <- function(rv) {
+  nms <- shiny::isolate(names(rv))
+  Filter(function(k) !is.null(shiny::isolate(rv[[k]])), nms)
+}
+
+#' Synchronize a reactiveValues object from a plain list.
+#'
+#' Copies every element of `x` into `rv`, and NULLs out any rv slots
+#' that are not in `x`. Note: NULL-assignment clears the value but
+#' the name persists in names(rv) — this is a Shiny limitation.
+sync_rv_from_list <- function(rv, x) {
+  ## NULL out slots present in rv but missing from x
+  stale <- setdiff(shiny::isolate(names(rv)), names(x))
+  for (k in stale) rv[[k]] <- NULL
+  ## Copy all slots from x
+
+  for (k in names(x)) rv[[k]] <- x[[k]]
+}
+
 setUserOption <- function(session, var, value) {
   session$userData[[var]] <- value
 }
@@ -175,7 +207,7 @@ tipifyB <- function(...) {
 ## }
 
 tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
-  has.slot <- (slot %in% names(pgx)) && !is.null(pgx[[slot]])
+  has.slot <- rv_has_value(pgx, slot)
   if (has.slot && enable) {
     bigdash.showTab(session, tabname)
   } else {

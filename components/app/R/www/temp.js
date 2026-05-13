@@ -135,6 +135,51 @@ Shiny.addCustomMessageHandler('enableInfo', (data) => {
   Shiny.setInputValue(data.id, data.value);
 });
 
+Shiny.addCustomMessageHandler('copilot-chat-batch-append', (msg) => {
+  const chatId = msg && msg.id ? msg.id : null;
+  const chatEl = chatId ? document.getElementById(chatId) : null;
+  const messages = Array.isArray(msg && msg.messages) ? msg.messages : [];
+  const doneInputId = msg && msg.done_input_id ? msg.done_input_id : null;
+  const rawBatchSize = msg && Number.isFinite(msg.batch_size) ? Number(msg.batch_size) : 32;
+  const batchSize = Math.max(1, rawBatchSize);
+
+  if (!chatEl || messages.length === 0) {
+    if (doneInputId) {
+      Shiny.setInputValue(doneInputId, Date.now(), { priority: 'event' });
+    }
+    return;
+  }
+
+  let idx = 0;
+  const appendNext = () => {
+    const limit = Math.min(idx + batchSize, messages.length);
+    for (; idx < limit; idx++) {
+      const message = messages[idx] || {};
+      const detail = {
+        role: message.role === 'user' ? 'user' : 'assistant',
+        content: typeof message.content === 'string' ? message.content : '',
+        content_type: 'markdown',
+        html_deps: '[]',
+        chunk_type: null,
+        operation: null
+      };
+      const ev = new CustomEvent('shiny-chat-append-message', { detail });
+      chatEl.dispatchEvent(ev);
+    }
+
+    if (idx < messages.length) {
+      window.requestAnimationFrame(appendNext);
+      return;
+    }
+
+    if (doneInputId) {
+      Shiny.setInputValue(doneInputId, Date.now(), { priority: 'event' });
+    }
+  };
+
+  appendNext();
+});
+
 const logout = () => {
 	unloadSidebar();
 	sidebarClose();
