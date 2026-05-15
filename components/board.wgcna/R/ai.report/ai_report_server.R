@@ -27,8 +27,25 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       setdiff(names(sort(lengths(w$me.genes), decreasing = TRUE)), "grey")
     })
 
+    # Low-signal heuristic: TRUE when no module clears q < 0.05 in its
+    # gse table. Deep Report retrieval is unproductive without anchors,
+    # so the Deep button is disabled in this case (see controls server).
+    low_signal_reactive <- shiny::reactive({
+      w <- wgcna()
+      if (is.null(w) || is.null(w$gse) || length(w$gse) == 0) return(FALSE)
+      any_sig <- vapply(w$gse, function(g) {
+        is.data.frame(g) && "q.value" %in% colnames(g) &&
+          any(!is.na(g$q.value) & g$q.value < 0.05)
+      }, logical(1))
+      !any(any_sig)
+    })
+
     # Controls
-    controls <- ai_report_controls_server("controls", module_choices = ai_module_choices)
+    controls <- ai_report_controls_server(
+      "controls",
+      module_choices = ai_module_choices,
+      low_signal = low_signal_reactive
+    )
 
     # ── Coordinator-owned progress bar (spans text + diagram) ──
     report_progress <- shiny::reactiveVal(NULL)
@@ -92,31 +109,32 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       style = wgcna_diagram_style()
     )
 
+    # Image / infographic card.
+    # Reads from text_result$text (unified) so Deep Report's output also
+    # feeds the image when the deep button fires. Gated on the opt-in
+    # checkbox; trigger is the OR of Report and Deep Report triggers.
+    image_text_reactive <- shiny::reactive(text_result$text() %||% "")
+    image_params_reactive <- shiny::reactive({
+      txt <- image_text_reactive()
+      shiny::req(nzchar(txt))
+      organism <- pgx$organism %||% "human"
+      diag <- diagram_result()
+      edgelist <- if (!is.null(diag)) diag$edgelist else NULL
+      img_style <- controls$image_style() %||% "bigomics"
+      img_blocks <- as.integer(controls$image_blocks() %||% 1L)
+      bp <- wgcna_build_image_prompt(txt, organism, edgelist,
+                                     style_name = img_style, n_blocks = img_blocks)
+      list(content = bp$board, system = bp$system, style = img_style, blocks = img_blocks)
+    })
     AiImageCardServer(
       "layout-infographic",
       params_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
-        shiny::req(nzchar(txt))
-        organism <- pgx$organism %||% "human"
-        diag <- diagram_result()
-        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        img_style <- controls$image_style() %||% "bigomics"
-        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
-        bp <- wgcna_build_image_prompt(txt, organism, edgelist,
-                                       style_name = img_style, n_blocks = img_blocks)
-        list(content = bp$board)
+        p <- image_params_reactive()
+        list(content = p$content)
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
-        shiny::req(nzchar(txt))
-        organism <- pgx$organism %||% "human"
-        diag <- diagram_result()
-        edgelist <- if (!is.null(diag)) diag$edgelist else NULL
-        img_style <- controls$image_style() %||% "bigomics"
-        img_blocks <- as.integer(controls$image_blocks() %||% 1L)
-        bp <- wgcna_build_image_prompt(txt, organism, edgelist,
-                                       style_name = img_style, n_blocks = img_blocks)
+        p <- image_params_reactive()
         img_model <- getUserOption(parent_session, "image_model")
         shiny::validate(shiny::need(
           !is.null(img_model) && nzchar(img_model),
@@ -124,19 +142,19 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
         ))
         omicsai::omicsai_image_config(
           model = img_model,
-          system_prompt = bp$system,
-          style = img_style,
-          n_blocks = img_blocks,
+          system_prompt = p$system,
+          style = p$style,
+          n_blocks = p$blocks,
           image_size = "1K"
         )
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
-        if (controls$mode() == "report" && isTRUE(controls$include_infographic())) {
-          controls$trigger()
-        } else {
-          0
-        }
+        if (!isTRUE(controls$include_infographic())) return(0)
+        ## Fire on Report (mode=report only — not Summary) OR on Deep
+        ## Report. Sum so a new click on either is a fresh tick.
+        report_tick <- if (controls$mode() == "report") controls$trigger() else 0
+        report_tick + controls$deep_trigger()
       }),
       watermark = watermark
     )
