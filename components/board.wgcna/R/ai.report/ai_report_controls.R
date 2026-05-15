@@ -3,14 +3,6 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-## Cost / ETA indicators rendered under the Generate button, keyed by mode.
-## Single source of truth — bump here when pricing or model changes.
-.WGCNA_AI_REPORT_COSTS <- list(
-  report      = list(cost = "~$0.01", eta = "~20s"),
-  summary     = list(cost = "~$0.01", eta = "~10s"),
-  deep_report = list(cost = "~$0.05", eta = "~2min")
-)
-
 #' AI Report Controls UI
 #'
 #' Single-button control panel: mode picks the path (Report / Summary /
@@ -40,11 +32,8 @@ ai_report_controls_ui <- function(id) {
       "Generate!",
       icon = icon("refresh"),
       class = "btn-outline-primary btn-block",
-      style = "margin-bottom: 2px;"
+      style = "margin-bottom: 10px;"
     ),
-
-    # Cost/ETA hint — re-rendered on mode change.
-    shiny::uiOutput(ns("cost_hint")),
 
     # Report/Deep-Report extras (hidden in Summary mode).
     shinyjs::hidden(
@@ -111,21 +100,6 @@ ai_report_controls_server <- function(id, module_choices = NULL,
         shinyjs::hide("summary_controls")
         shinyjs::show("report_extras")
       }
-    })
-
-    # Cost/ETA hint, re-rendered on mode change.
-    output$cost_hint <- shiny::renderUI({
-      mode <- input$mode %||% "report"
-      cfg <- .WGCNA_AI_REPORT_COSTS[[mode]]
-      if (is.null(cfg)) return(NULL)
-      shiny::tags$small(
-        style = paste(
-          "display:block; color:#888;",
-          "margin-top:-4px; margin-bottom:10px;",
-          "text-align:center;"
-        ),
-        sprintf("%s / %s", cfg$cost, cfg$eta)
-      )
     })
 
     # Populate image style choices on init (deferred from UI to avoid startup crash)
