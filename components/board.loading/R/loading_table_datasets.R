@@ -566,6 +566,7 @@ loading_table_datasets_server <- function(id,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
+        selection = list(mode='single', selected=1),
         options = list(
           dom = "ft",
           pageLength = 9999,

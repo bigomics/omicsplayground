@@ -147,11 +147,16 @@ app_ui <- function(x) {
           opg_ui()
         ),
         bslib::nav_panel(
-          title = "Copilot", icon = icon("robot"),
-          div( class = "px-4 py-0",
-            shiny::div(id = "navheader-current-section", HTML("Copilot")),
-            CopilotUI("copilot")
-          )
+          title = HTML("AI&nbsp;Studio"),
+          value="Studio",
+          icon = icon("clapperboard"),
+          div(StudioUI("studio"), class = "px-4 py-0")          
+        ),
+        bslib::nav_panel(
+          title = HTML("AI&nbsp;Copilot"),
+          value="Copilot",
+          icon = icon("robot"),          
+          div(CopilotUI("copilot"), class = "px-4 py-0")          
         ),
         if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(
@@ -179,7 +184,7 @@ app_ui <- function(x) {
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),
-          div(AppSettingsUI2("settings2"), class='px-4 py-0') 
+          div(AppSettingsUI("app_settings"), class='px-4 py-0') 
         ),          
         bslib::nav_menu(
           title = "Help",

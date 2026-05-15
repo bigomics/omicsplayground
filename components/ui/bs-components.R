@@ -8,7 +8,7 @@
 ##
 
 bs_alert <- function(text, conditional = TRUE, style = "primary", closable = TRUE,
-                     translate = TRUE, translate_js = TRUE, html = TRUE) {
+                     translate = FALSE, translate_js = TRUE, html = TRUE) {
   id <- bigdash:::make_id()
   if (conditional) {
     btn.class <- "btn-close btn-close-bs-conditional"

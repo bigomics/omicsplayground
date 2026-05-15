@@ -158,5 +158,9 @@ html {
         min-width: 12rem;	
     }
 
+    .btn {
+	--bs-btn-border-radius: 6px;
+    }
+
     
 }

@@ -17,6 +17,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     ns <- session$ns
     chat <- NULL
 
+    OmicsBoard("board", pgx, title="CoPilot", infotext = NULL) 
+    
     ## count number of interactionsy
     n_turns <- reactiveVal(0)
 
@@ -129,7 +131,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       },
       {
         shinychat::chat_clear("chat")
-        shinychat::chat_append("chat", "Hi. What would you like to know?")
+        mesg <- paste("👋 Hi. I'm **Copilot**, your AI-powered thinking partner. Ask me anything about your data!")        
+        shinychat::chat_append("chat", mesg)
         new_chatbot()
       },
       ignoreNULL = FALSE
@@ -141,8 +144,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       qq <- trimws(qq)
       qq <- paste("  <li class='suggestion submit'>", qq, "</li>")
       qq <- paste("<p><ul>\n", paste(qq, collapse = "\n"), "\n</ul>")
-      msg <- list(role = "assistant", content = qq)
-      shinychat::chat_append_message("chat", msg, chunk = TRUE, operation = "append")
+      mesg <- list(role = "assistant", content = qq)
+      shinychat::chat_append_message("chat", mesg, chunk = TRUE, operation = "append")
     }
 
     ask_copilot <- function(question, showq = TRUE, suggest = TRUE) {
@@ -165,8 +168,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       }
 
       ## add response length
-      question <- paste(sub("[.]$","",question),".")
-      if(input$response_length == "short") {
+      question <- paste(trimws(sub("[.]$","",question)),".")
+      if(input$response_length == "shorter") {
         question <- paste(question, "Answer brief and succint.")
       } else if(input$response_length == "longer") {
         question <- paste(question, "Answer in detail.")
@@ -175,8 +178,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       }
       
       if (showq) {
-        msg <- list(role = "user", content = question)
-        shinychat::chat_append_message("chat", msg, chunk = FALSE)
+        mesg <- list(role = "user", content = question)
+        shinychat::chat_append_message("chat", mesg, chunk = FALSE)
       }
       response <- chat$chat_async(question)
       shinychat::chat_append("chat", response) %...>% {
@@ -209,10 +212,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     })
 
     ## ---------------------- examples -----------------------------
-    observeEvent(input$ask_describe, {
-      ask_copilot("Describe my experiment", suggest = input$followup)
-    })
-
     observeEvent(input$ask_findings, {
       ask_copilot("Summarize main findings of this experiment", suggest = input$followup)
     })
@@ -236,9 +235,7 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     })
 
     observeEvent(input$plot_volcano, {
-      ask_copilot("Using the tools, create a volcano plot for contrast=1. Return one-line code",
-        suggest = FALSE
-      )
+      ask_copilot("Using the tools, create a volcano plot for contrast=1. Return one-line code", suggest = input$followup)
     })
 
     ## ----------------- plot output -------------------------------

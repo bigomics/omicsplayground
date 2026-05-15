@@ -27,7 +27,7 @@
 }
 
 #app-sidebar .nav-link {
-    color: #bbb;
+    color: #ccc;
     text-align: center;
     font-size: 0.8em;
     padding: 15px 0 4px 0;
@@ -35,13 +35,13 @@
 }
 
 #app-sidebar .nav-link.active {
-    color: #eeeeee;
+    color: #fff;
     background-color: #568;    
     border-radius: 10px;
 }
 
 #app-sidebar .nav-link.disabled {
-    color: #777;
+    color: #888;
     display: block !important;
 }
 

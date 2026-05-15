@@ -240,9 +240,9 @@ opg_ui <- function() {
       ##         label = "show captions",
       ##         is.checked = FALSE
       ##       ),
-      ##       bslib::input_switch("enable_llm", "Enable AI"),
+      ##       bslib::input_switch("enable_ai", "Enable AI"),
       ##       shiny::conditionalPanel(
-      ##         "input.enable_llm",
+      ##         "input.enable_ai",
       ##           bigdash::navbarDropdownItem(
       ##             shiny::selectInput(
       ##               inputId = "llm_model",
@@ -534,11 +534,11 @@ opg_ui <- function() {
           "userprofile-tab",
           UserProfileUI("user_profile")
         ),
-        bigdash::bigTabItem(
-          "usersettings-tab",
-          AppSettingsInputs("app_settings"),
-          AppSettingsUI("app_settings")
-        ),
+        ## bigdash::bigTabItem(
+        ##   "usersettings-tab",
+        ##   AppSettingsInputs("app_settings"),
+        ##   AppSettingsUI("app_settings")
+        ## ),
         if (isTRUE(opt$ENABLE_ADMIN)) {
           bigdash::bigTabItem(
             "admin-tab",

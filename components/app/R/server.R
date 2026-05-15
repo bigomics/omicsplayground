@@ -165,11 +165,11 @@ app_server <- function(input, output, session) {
     nav_count = reactive(nav$count)
   )
 
-  AppSettingsBoard(
-    "app_settings",
-    auth = auth,
-    pgx = PGX
-  )
+  ## AppSettingsBoard(
+  ##   "app_settings",
+  ##   auth = auth,
+  ##   pgx = PGX
+  ## )
 
   if (isTRUE(opt$ENABLE_ADMIN)) {
     AdminPanelBoard(
@@ -184,39 +184,6 @@ app_server <- function(input, output, session) {
     enable_info = shiny::reactive(input$enable_info)
   )
 
-  ## observe and set global User options
-  shiny::observeEvent(input$enable_llm, {
-    model <- input$llm_model
-    if (input$enable_llm) {
-      if (is.null(model) || model == "") {
-        shinyalert::shinyalert(
-          "ERROR",
-          "No LLM server available. Please check your settings."
-        )
-        return(NULL)
-      }
-      shinyalert::shinyalert("WARNING",
-        "Using LLM might expose some of your data to external LLM servers.",
-        closeOnClickOutside = TRUE
-        # showCancelButton = TRUE
-      )
-    }
-  })
-
-  shiny::observeEvent(
-    {
-      list(input$enable_llm, input$llm_model)
-    },
-    {
-      if (input$enable_llm) {
-        dbg("[MAIN] enable input$llm_model -> ", input$llm_model)
-        setUserOption(session, "llm_model", input$llm_model)
-      } else {
-        dbg("[MAIN] AI/LLM diabled")
-        setUserOption(session, "llm_model", "")
-      }
-    }
-  )
 
   ## Do not display "Welcome" tab on the menu
   #bigdash.hideMenuItem(session, "welcome-tab")
@@ -226,6 +193,8 @@ app_server <- function(input, output, session) {
   }
   shinyjs::runjs("sidebarClose()")
   shinyjs::disable(selector = "a[data-value='Dashboard']")
+  shinyjs::disable(selector = "a[data-value='Studio']")
+  shinyjs::disable(selector = "a[data-value='Copilot']")
   
   ## Modules needed from the start
   recompute_pgx <- shiny::reactiveVal(NULL)
@@ -385,6 +354,8 @@ app_server <- function(input, output, session) {
       ## show the dashboard item in app sidebar
       #bslib::nav_show("app-sidebar", "Dashboard")
       shinyjs::enable(selector = "a[data-value='Dashboard']")
+      shinyjs::enable(selector = "a[data-value='Studio']")
+      shinyjs::enable(selector = "a[data-value='Copilot']")
       
       shiny::withProgress(
         message = "Preparing your dashboard (server)...",
@@ -1406,8 +1377,10 @@ app_server <- function(input, output, session) {
   
   CopilotServer("copilot", pgx = PGX, input.click = reactive(NULL),
     layout = "fixed", maxturns = opt$LLM_MAXTURNS)
+
+  StudioServer("studio", pgx = PGX)
   
-  AppSettingsBoard("settings2", auth=auth, pgx=PGX) 
+  AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 
   
   if(opt$DEVMODE) {
     dbg("[SERVER] WARNING: DEVMODE modules enabled!")

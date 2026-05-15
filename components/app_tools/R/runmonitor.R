@@ -50,7 +50,7 @@ RunMonitorServer <- function(id) {
     output$runtable <- DT::renderDT({
       tt <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
       df <- data.frame(
-        job = c("first_run","second_run"),
+        job = c("my_first_run","my_second_run"),
         start = rep(tt,2),
         duration = c("0:35 hours","-"),
         status = c("completed","running")

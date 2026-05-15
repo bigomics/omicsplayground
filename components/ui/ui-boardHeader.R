@@ -28,8 +28,21 @@ boardHeader <- function(title, info_link) {
   )
 }
 
-OmicsBoardUI <- function(id, title, ...) {
+OmicsBoardUI <- function(id, title, ..., info=TRUE) {
   ns <- shiny::NS(id) ## namespace
+  div.link <- NULL
+  if(isTRUE(info)) {
+    div.link <- withTooltip(
+      shiny::actionLink(
+        inputId = ns("board_info"),
+        label = "",
+        icon = shiny::icon("youtube"),
+        style = "color: #ccc;"
+      ),
+      "Video tutorial about this board"
+    )
+  }
+
   bslib::layout_columns(
     col_widths = 12,
     gap = 0,
@@ -40,48 +53,48 @@ OmicsBoardUI <- function(id, title, ...) {
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, " &nbsp;")),
-        withTooltip(
-          shiny::actionLink(
-            inputId = ns("board_info"),
-            label = "",
-            icon = shiny::icon("youtube"),
-            style = "color: #ccc;"
-          ),
-          "Video tutorial about this board"
-        )
+        div.link
       ),
-      div(),
-      shiny::uiOutput(ns("current_dataset"))
+      shiny::uiOutput(ns("current_dataset")),
+      div( tags$a(
+        href="http://www.bigomics.ch", target = "_blank", 
+        shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px")),
+        style="margin: 34px 5px -20px 0; padding: 0 0 0 80px;")
     ),
     ...
   )
 }
 
-OmicsBoard <- function(id, pgx, title, infotext) {
+OmicsBoard <- function(id, pgx, title, infotext=NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
     output$current_dataset <- shiny::renderUI({
       has.pgx <- !is.null(pgx$name) && length(pgx$name) > 0
-      shiny::req(has.pgx)
-      pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+      if(has.pgx) {
+        pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+      } else {
+        pgx.name <- "(no dataset)"
+      }
       div(
         shiny::actionButton(
           ns("dataset_click"), pgx.name,
           class = "quick-button",
           style = "border: none; color: black; font-size: 1.2em; background-color: transparent;"
         ),
-        style = "padding: 30px 0px 0px 0px;"
+        style = "padding: 30px 0px 0px 0px; text-align: center;"
       )
     })
     
     ## ------- observe functions -----------
     shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML(paste0("<strong>",title,"Board</strong>")),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "xl"
-      ))
+      if(!is.null(infotext)) {
+        shiny::showModal(shiny::modalDialog(
+          title = shiny::HTML(paste0("<strong>",title,"Board</strong>")),
+          shiny::HTML(infotext),
+          easyClose = TRUE, size = "xl"
+        ))
+      }
     })
 
     ## Show experiment info if dataset name is clicked.
@@ -108,7 +121,6 @@ OmicsBoard <- function(id, pgx, title, infotext) {
         ))
       }
     })
-    
     
   })
 }

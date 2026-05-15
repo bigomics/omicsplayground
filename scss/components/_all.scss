@@ -338,6 +338,10 @@ html {
     padding: 0
   }
 
+  .action-label:hover {
+      //background-color: #FFFFFF22;
+  }
+  
   #emailLinkWrapper {
     display: none;
     padding-left: 20rem;
@@ -362,6 +366,10 @@ html {
 
   .form-group {
       margin-bottom: 0.3rem; 
+  }
+
+  .form-check-input:checked, .shiny-input-container .checkbox input:checked {
+      background-color: aliceblue;
   }
   
 }

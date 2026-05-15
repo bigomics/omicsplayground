@@ -23,6 +23,51 @@ AppSettingsBoard <- function(id, auth, pgx) {
     })
 
     ## ----------------------------------------------------------------
+    ## AI switches
+    ## ----------------------------------------------------------------
+    ## observe and set global User options
+    shiny::observeEvent(input$enable_ai, {
+      model <- input$llm_model
+      if (input$enable_ai) {
+        if (is.null(model) || model == "") {
+          shinyalert::shinyalert(
+            "ERROR",
+            "No LLM server available. Please check your settings."
+          )
+          return(NULL)
+        }
+        shinyalert::shinyalert("WARNING",
+          "Using LLM might expose some of your data to external LLM servers.",
+          closeOnClickOutside = TRUE
+          # showCancelButton = TRUE
+        )
+      }
+    })
+    
+    shiny::observeEvent(
+    {
+      list(input$enable_ai, input$llm_model, input$img_model)
+    },
+    {
+
+      dbg("[AppSettingsBoard] enable_ai -> ", input$enable_ai)
+      dbg("[AppSettingsBoard] input$llm_model -> ", input$llm_model)      
+      dbg("[AppSettingsBoard] input$img_model -> ", input$img_model)        
+      
+      if (input$enable_ai) {
+        dbg("[AppSettingsBoard] enable input$llm_model -> ", input$llm_model)
+        dbg("[AppSettingsBoard] enable input$img_model -> ", input$img_model)        
+        setUserOption(session, "llm_model", input$llm_model)
+        setUserOption(session, "img_model", input$img_model)        
+      } else {
+        dbg("[AppSettingsBoard] AI/LLM diabled")
+        setUserOption(session, "llm_model", "")
+        setUserOption(session, "img_model", "")
+      }
+    })
+    
+
+    ## ----------------------------------------------------------------
     ## Plot Colors theme handling
     ## ----------------------------------------------------------------
     theme <- get_color_theme()
@@ -161,6 +206,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       DT::datatable(pkg,
         rownames = FALSE,
         plugins = "scrollResize",
+        fillContainer = TRUE,
         options = list(
           dom = "t",
           pageLength = 999,
