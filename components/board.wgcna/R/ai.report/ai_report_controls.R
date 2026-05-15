@@ -3,18 +3,19 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-## Cost / ETA indicators rendered under each generate button.
+## Cost / ETA indicators rendered under the Generate button, keyed by mode.
 ## Single source of truth — bump here when pricing or model changes.
 .WGCNA_AI_REPORT_COSTS <- list(
   report      = list(cost = "~$0.01", eta = "~20s"),
+  summary     = list(cost = "~$0.01", eta = "~10s"),
   deep_report = list(cost = "~$0.05", eta = "~2min")
 )
 
 #' AI Report Controls UI
 #'
-#' Standard control panel for AI report options with mode toggle.
-#' Mode and Generate button are always visible. Module selector and
-#' style options are only visible in Summary mode (toggled via shinyjs).
+#' Single-button control panel: mode picks the path (Report / Summary /
+#' Deep Report) and Generate fires it. Mode-specific extras (module
+#' selector, infographic toggle) are shown/hidden via shinyjs.
 #'
 #' @param id Module namespace ID
 #'
@@ -22,25 +23,18 @@
 ai_report_controls_ui <- function(id) {
   ns <- shiny::NS(id)
 
-  .cost_hint <- function(slot) {
-    cfg <- .WGCNA_AI_REPORT_COSTS[[slot]]
-    shiny::tags$small(
-      style = "display:block; color:#888; margin-top:-6px; margin-bottom:10px; text-align:center;",
-      sprintf("%s / %s", cfg$cost, cfg$eta)
-    )
-  }
-
   shiny::tagList(
-    # Always visible: Mode toggle
     shiny::radioButtons(
       ns("mode"),
       "Mode:",
-      choices = c("Report" = "report", "Summary" = "summary"),
-      selected = "report",
-      inline = TRUE
+      choices = c(
+        "Report" = "report",
+        "Summary" = "summary",
+        "Deep Report" = "deep_report"
+      ),
+      selected = "report"
     ),
 
-    # Always visible: Generate button
     shiny::actionButton(
       ns("generate_btn"),
       "Generate!",
@@ -48,27 +42,23 @@ ai_report_controls_ui <- function(id) {
       class = "btn-outline-primary btn-block",
       style = "margin-bottom: 2px;"
     ),
-    .cost_hint("report"),
 
-    # Deep Report button (literature-grounded agentic report).
-    # Disabled on low-signal datasets via shinyjs (toggled in server).
-    shiny::actionButton(
-      ns("deep_generate_btn"),
-      "Generate Deep Report",
-      icon = icon("book"),
-      class = "btn-outline-primary btn-block",
-      style = "margin-bottom: 2px;"
-    ),
-    .cost_hint("deep_report"),
+    # Cost/ETA hint — re-rendered on mode change.
+    shiny::uiOutput(ns("cost_hint")),
 
-    # Opt-in infographic generation (default off to keep cost low).
-    shiny::checkboxInput(
-      ns("include_infographic"),
-      "Include infographic",
-      value = FALSE
+    # Report/Deep-Report extras (hidden in Summary mode).
+    shinyjs::hidden(
+      shiny::div(
+        id = ns("report_extras"),
+        shiny::checkboxInput(
+          ns("include_infographic"),
+          "Include infographic",
+          value = FALSE
+        )
+      )
     ),
 
-    # Summary-only controls (hidden when in Report mode)
+    # Summary-only controls (hidden in Report/Deep modes).
     shinyjs::hidden(
       shiny::div(
         id = ns("summary_controls"),
@@ -77,10 +67,9 @@ ai_report_controls_ui <- function(id) {
           "Module:",
           choices = NULL,
           width = "100%"
-        ),
-
+        )
       )
-    ),
+    )
 
     ## NOTE: "Show Prompt" checkbox is rendered in the text card's hamburger
     ## menu (see ai_report_ui.R). Infographic style/blocks controls are
@@ -110,14 +99,33 @@ ai_report_controls_server <- function(id, module_choices = NULL,
                                       low_signal = shiny::reactive(FALSE)) {
   moduleServer(id, function(input, output, session) {
 
-    # Toggle mode-specific controls based on mode selection
+    # Toggle mode-specific controls based on mode selection.
+    # Summary shows module dropdown; Report / Deep Report show the
+    # infographic checkbox. Mode block is mutually-exclusive.
     shiny::observe({
       mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
+        shinyjs::hide("report_extras")
       } else {
         shinyjs::hide("summary_controls")
+        shinyjs::show("report_extras")
       }
+    })
+
+    # Cost/ETA hint, re-rendered on mode change.
+    output$cost_hint <- shiny::renderUI({
+      mode <- input$mode %||% "report"
+      cfg <- .WGCNA_AI_REPORT_COSTS[[mode]]
+      if (is.null(cfg)) return(NULL)
+      shiny::tags$small(
+        style = paste(
+          "display:block; color:#888;",
+          "margin-top:-4px; margin-bottom:10px;",
+          "text-align:center;"
+        ),
+        sprintf("%s / %s", cfg$cost, cfg$eta)
+      )
     })
 
     # Populate image style choices on init (deferred from UI to avoid startup crash)
@@ -145,29 +153,37 @@ ai_report_controls_server <- function(id, module_choices = NULL,
       )
     })
 
-    # Trigger counter (increments on button click)
+    # Single Generate button; mode at click time decides which counter
+    # ticks. Trigger and deep_trigger are independent so existing
+    # eventReactives (Report/Summary on trigger, Deep on deep_trigger)
+    # keep firing exactly once per relevant click. image_trigger is a
+    # separate counter that captures "this was a Report or Deep click"
+    # so the image card never fires from mode switches alone.
     trigger <- reactiveVal(0)
+    deep_trigger <- reactiveVal(0)
+    image_trigger <- reactiveVal(0)
     observeEvent(input$generate_btn, {
-      trigger(trigger() + 1)
+      mode <- shiny::isolate(input$mode %||% "report")
+      if (mode == "deep_report") {
+        deep_trigger(deep_trigger() + 1)
+      } else {
+        trigger(trigger() + 1)
+      }
+      if (mode %in% c("report", "deep_report")) {
+        image_trigger(image_trigger() + 1)
+      }
     })
 
-    # Deep Report trigger counter (driven by deep_generate_btn).
-    # Kept separate from `trigger` so the regular Report path is never
-    # fired by the deep button and vice-versa.
-    deep_trigger <- reactiveVal(0)
-    observeEvent(input$deep_generate_btn, {
-      deep_trigger(deep_trigger() + 1)
-    }, ignoreNULL = TRUE, ignoreInit = TRUE)
-
-    # Disable Deep Report on low-signal datasets — literature retrieval
-    # would be unproductive without enrichment anchors. Toggled via
-    # shinyjs so the visible cost-hint label remains.
+    # Disable Generate when mode = Deep Report on low-signal datasets —
+    # literature retrieval is unproductive without enrichment anchors.
+    # Toggled via shinyjs; cost-hint label stays visible.
     shiny::observe({
       is_low <- isTRUE(low_signal())
-      if (is_low) {
-        shinyjs::disable("deep_generate_btn")
+      mode <- input$mode %||% "report"
+      if (is_low && mode == "deep_report") {
+        shinyjs::disable("generate_btn")
       } else {
-        shinyjs::enable("deep_generate_btn")
+        shinyjs::enable("generate_btn")
       }
     })
 
@@ -175,6 +191,7 @@ ai_report_controls_server <- function(id, module_choices = NULL,
     list(
       trigger = reactive(trigger()),
       deep_trigger = reactive(deep_trigger()),
+      image_trigger = reactive(image_trigger()),
       mode = reactive(input$mode %||% "report"),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),

@@ -151,10 +151,10 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       cache = cache,
       trigger_reactive = shiny::reactive({
         if (!isTRUE(controls$include_infographic())) return(0)
-        ## Fire on Report (mode=report only — not Summary) OR on Deep
-        ## Report. Sum so a new click on either is a fresh tick.
-        report_tick <- if (controls$mode() == "report") controls$trigger() else 0
-        report_tick + controls$deep_trigger()
+        ## image_trigger ticks only on Report or Deep clicks (never
+        ## on Summary or on mode switches), so the card fires once
+        ## per relevant Generate press and never spuriously.
+        controls$image_trigger()
       }),
       watermark = watermark
     )
