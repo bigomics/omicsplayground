@@ -122,24 +122,12 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       tables <- wgcna_build_report_tables(w, pgx)
       report_data_tables(tables$text)
 
-      ## Step 2: Classify module signal strength
-      message(sprintf("[INFO][%s] --- [AI-REPORT] classifying modules...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
-      if (!is.null(p)) p$set(message = "Classifying modules...", value = 0.10)
-      ranking <- wgcna_rank_modules(w)
-
-      ## Step 3: Assemble data content (domain data only, no instructions)
+      ## Step 2: Build structured prompt
+      ## v03: tables$text carries the dual-trait data block; the module-tier
+      ## label is already rendered per row by wgcna_build_report_tables, so
+      ## the prior wgcna_rank_modules() injection is no longer needed.
       message(sprintf("[INFO][%s] --- [AI-REPORT] assembling prompt...", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
-      if (!is.null(p)) p$set(message = "Assembling prompt...", value = 0.15)
-      data_content <- omicsai::collapse_lines(
-        "## Module Signal Classification",
-        omicsai::omicsai_format_ranking(ranking),
-        "---",
-        "## Input Data",
-        tables$text,
-        sep = "\n\n"
-      )
-
-      ## Step 4: Build structured prompt
+      if (!is.null(p)) p$set(message = "Assembling prompt...", value = 0.10)
       board_rules_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_report_rules.md")
       organism <- pgx$organism %||% NULL
 
@@ -152,7 +140,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
         species     = omicsai::omicsai_species_prompt(organism),
         context     = omicsai::frag(interpretation_path),
         board_rules = omicsai::frag(board_rules_path),
-        data        = data_content
+        data        = tables$text
       )
       bp <- omicsai::build_prompt(rp)
 
@@ -199,9 +187,6 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
     ##   - `board_rules` slot swapped from wgcna_report_rules.md to
     ##     wgcna_agent_skills.md (Phase A/B agent skills + section rules
     ##     for the Deep variant). `context` stays at wgcna_interpretation.md.
-    ##   - The deterministic Module Signal Classification block is NOT
-    ##     injected here: the agent uses the dual-trait tables directly
-    ##     (Phase 4 will eventually drop it from the Report branch too).
     ##   - Dispatch via omicsagentovi::Agent + agent_prompt() instead of
     ##     omicsai::omicsai_gen_text. The 6-arg constructor signature
     ##     mirrors tmp/.../v03_iterate.R:318-327 (the verified campaign
@@ -295,24 +280,23 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       turns <- tryCatch(agent@chat$get_turns(), error = function(e) list())
       deep_turns(turns)
 
-      ## Post-hoc cost cap check (soft — render output, prepend warning)
-      usage <- tryCatch(omicsagentovi::agent_usage_summary(agent),
-                        error = function(e) NULL)
-      if (!is.null(usage)) {
-        cost <- .deep_usd_cost(usage)
-        message(sprintf("[INFO][%s] --- [AI-DEEP-REPORT] usage: in_fresh=%d in_cached=%d out=%d est_cost=$%.4f",
-                        format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-                        usage$input_tokens_fresh %||% 0L,
-                        usage$input_tokens_cached %||% 0L,
-                        usage$output_tokens %||% 0L,
-                        cost))
-        if (isTRUE(cost > DEEP_COST_CAP_USD)) {
-          warn_msg <- sprintf(
-            "Deep Report cost (~$%.2f) exceeded the $%.2f cap — partial output below.",
-            cost, DEEP_COST_CAP_USD)
-          deep_cost_warning(warn_msg)
-          response <- paste0("> **Warning:** ", warn_msg, "\n\n", response)
-        }
+      ## Post-hoc cost cap check (soft — render output, prepend warning).
+      ## In-house package contract: agent_usage_summary must be present;
+      ## a missing/erroring call is a real bug, not graceful-degradation.
+      usage <- omicsagentovi::agent_usage_summary(agent)
+      cost <- .deep_usd_cost(usage)
+      message(sprintf("[INFO][%s] --- [AI-DEEP-REPORT] usage: in_fresh=%d in_cached=%d out=%d est_cost=$%.4f",
+                      format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+                      usage$input_tokens_fresh %||% 0L,
+                      usage$input_tokens_cached %||% 0L,
+                      usage$output_tokens %||% 0L,
+                      cost))
+      if (isTRUE(cost > DEEP_COST_CAP_USD)) {
+        warn_msg <- sprintf(
+          "Deep Report cost (~$%.2f) exceeded the $%.2f cap — partial output below.",
+          cost, DEEP_COST_CAP_USD)
+        deep_cost_warning(warn_msg)
+        response <- paste0("> **Warning:** ", warn_msg, "\n\n", response)
       }
 
       ## Safety net: prepend H1 if missing
