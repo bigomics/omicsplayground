@@ -49,7 +49,7 @@ AiReportUI <- function(id) {
     bslib::nav_panel(title = "WGCNA",
       shiny::div( shiny::htmlOutput(ns("wgcna")), style="align-items: center;")
     ),
-    bslib::nav_panel(title = "WGCNAplus",
+    bslib::nav_panel(title = "moxWGCNA",
       shiny::div( shiny::htmlOutput(ns("wgcna2")), style="align-items: center;")
     ),
     bslib::nav_panel(title = "L1000",
@@ -101,7 +101,7 @@ AiReportServer <- function(id, pgx, rnav) {
       nav_toggle(pgx$gx.meta,"DE")
       nav_toggle(pgx$mofa,"MOFA")      
       nav_toggle(pgx$drugs,"L1000")
-      nav_toggle(pgx$wgcna_mox,"WGCNAplus")      
+      nav_toggle(pgx$wgcna_mox,"moxWGCNA")      
       nav_toggle(pgx$wgcna,"WGCNA")
       nav_toggle(pgx$report,"Integrated")
     }
@@ -125,7 +125,7 @@ AiReportServer <- function(id, pgx, rnav) {
     })
 
     output$wgcna2 <- renderUI({
-      shiny::validate(need(!is.null(wgcna2_pdf()),"missing WGCNAplus report"))      
+      shiny::validate(need(!is.null(wgcna2_pdf()),"missing moxWGCNA report"))      
       tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',wgcna2_pdf(),'"></iframe>', sep = "")
       return(HTML(tag))
     })

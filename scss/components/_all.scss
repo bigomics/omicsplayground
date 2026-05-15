@@ -207,7 +207,24 @@ html {
       --bs-btn-padding-x: 1.2em;
       --bs-btn-padding-y: 0.6em;      
   }
+
+  .xbtn {
+      background-color: rgba(0, 127, 192, 0.1);
+      color: rgba(40, 110, 182, 0.8);
+      border-radius: 10px;
+      margin: 5px;
+      border: 0px;
+  }
   
+  .xbtn:hover {
+      background-color: rgba(0, 127, 192,0.2);
+      color: black;    
+  }
+  
+  .xbtn-disabled {
+      background-color: rgba(80, 150, 250, 0.1) !important;
+  }
+      
   .run-button,
   .load-button {
     outline: none;

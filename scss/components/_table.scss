@@ -107,7 +107,7 @@ html {
     }
     
     table.dataTable>tbody>tr.selected>* {
-        --dt-row-selected: 217, 229, 248, 0.5;
+        --dt-row-selected: 217, 229, 248, 0.8;
         --dt-row-selected-text: 0, 0, 0;
     }
     table.dataTable>tbody>tr.selected:hover>* {

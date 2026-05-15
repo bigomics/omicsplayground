@@ -16,18 +16,18 @@ StudioUI <- function(id) {
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
         row_heights = "26px",
+        shiny::actionButton(ns("show_infographic"), "Infographic", width = "100%",
+          class = "xbtn", icon = icon("image")),
+        shiny::actionButton(ns("show_reports"), "Reports", width = "100%",
+          class = "xbtn", icon = icon("file-lines")),
         shiny::actionButton(ns("show_poster"), "Poster", width = "100%",
           class = "xbtn", icon = icon("note-sticky")),
         shiny::actionButton(ns("show_slidedeck"), "Slide deck", width = "100%",
           class = "xbtn", icon = icon("film")),
-        shiny::actionButton(ns("show_reports"), "Reports", width = "100%",
-          class = "xbtn", icon = icon("file-lines")),
-        shiny::actionButton(ns("show_infographic"), "Infographic", width = "100%",
-          class = "xbtn", icon = icon("image")),
         shiny::actionButton(ns("show_podcast"), "Podcast", width = "100%",
-          class = "xbtn", icon = icon("headphones")),
-        shiny::actionButton(ns("show_quiz"), "Quiz", width = "100%", class = "xbtn",
-          icon = icon("quora"))
+          class = "xbtn xbtn-disabled disabled", icon = icon("headphones")),
+        shiny::actionButton(ns("show_quiz"), "Quiz", width = "100%",
+          class = "xbtn xbtn-disabled disabled", icon = icon("quora"))
       )
     )
   )

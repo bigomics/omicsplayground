@@ -35,7 +35,7 @@ InfographicUI <- function(id) {
           height="100%", width="100%", style = "text-align: center;")
       )
     ),
-    bslib::nav_panel(title = "WGCNAplus",
+    bslib::nav_panel(title = "moxWGCNA",
       bslib::card(
         min_height = 600,
         full_screen = TRUE,
@@ -81,7 +81,7 @@ InfographicServer <- function(id, pgx) {
       nav_toggle(pgx$mofa,"MOFA")      
       nav_toggle(pgx$gx.meta,"DE")
       nav_toggle(pgx$drugs,"L1000")
-      nav_toggle(pgx$wgcna_mox,"WGCNAplus")      
+      nav_toggle(pgx$wgcna_mox,"moxWGCNA")      
       nav_toggle(pgx$wgcna,"WGCNA")
     })
     
@@ -117,7 +117,7 @@ InfographicServer <- function(id, pgx) {
 
     output$wgcna2 <- renderImage({
       img <- pgx$wgcna_mox$report$infographic
-      shiny::validate(need(!is.null(img),"missing WGCNAplus infographic"))      
+      shiny::validate(need(!is.null(img),"missing moxWGCNA infographic"))      
       target <- file.path(tmpdir, "infographic-wgcna2.png")
       png::writePNG(img, target = target)
       list(src = target, height = "auto", width = "100%")

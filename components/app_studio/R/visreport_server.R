@@ -47,7 +47,7 @@ VisReportSettings <- function(id, output_format=NULL, type="dataset") {
     shiny::br(),
     shiny::radioButtons(
       inputId = ns("contrasts_choice"),
-      label = "Select comparisons to include in your report:",
+      label = "Select comparisons to include:",
       choices = c("all (maximum 20)" = "all", "select")
     ),
     shiny::conditionalPanel(
@@ -62,7 +62,7 @@ VisReportSettings <- function(id, output_format=NULL, type="dataset") {
       )
     ),
     shiny::br(),
-    shiny::h5("Select sections to include:"),
+    "Select sections to include:",
     shiny::checkboxInput(
       inputId = ns("section_clustering"),
       label = "Clustering (PCA, Heatmap)",
