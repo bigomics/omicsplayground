@@ -530,21 +530,21 @@ opg_ui <- function() {
         ##   "upload-tab",
         ##   UploadUI("upload")
         ## ),
-        bigdash::bigTabItem(
-          "userprofile-tab",
-          UserProfileUI("user_profile")
-        ),
+        ## bigdash::bigTabItem(
+        ##   "userprofile-tab",
+        ##   UserProfileUI("user_profile")
+        ## ),
         ## bigdash::bigTabItem(
         ##   "usersettings-tab",
         ##   AppSettingsInputs("app_settings"),
         ##   AppSettingsUI("app_settings")
         ## ),
-        if (isTRUE(opt$ENABLE_ADMIN)) {
-          bigdash::bigTabItem(
-            "admin-tab",
-            AdminPanelUI("admin_panel")
-          )
-        }
+        ## if (isTRUE(opt$ENABLE_ADMIN)) {
+        ##   bigdash::bigTabItem(
+        ##     "admin-tab",
+        ##     AdminPanelUI("admin_panel")
+        ##   )
+        ## }
         ## bigdash::bigTabItem(
         ##   "sharing-tab",
         ##   SharedDatasetsUI("load")

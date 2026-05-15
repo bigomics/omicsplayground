@@ -1368,6 +1368,14 @@ app_server <- function(input, output, session) {
   ## Other app servers
   ## -------------------------------------------------------------
   
+  observeEvent(input$my_profile, {
+    bslib::nav_select("app-sidebar", selected = "UserProfile")
+  })
+  
+  ## -------------------------------------------------------------
+  ## Other app servers
+  ## -------------------------------------------------------------
+  
   WelcomeBoard2("welcome2",
     auth = auth,
     load_example = load_example,

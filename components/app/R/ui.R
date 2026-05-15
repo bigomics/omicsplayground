@@ -180,6 +180,14 @@ app_ui <- function(x) {
         bslib::nav_panel_hidden("Upload",
           div(UploadUI("upload"), class='px-4 py-0')           
         ),
+        bslib::nav_panel_hidden("UserProfile",
+          div(UserProfileUI("user_profile"), class='px-4 py-0')
+        ),
+        if (isTRUE(opt$ENABLE_ADMIN)) {
+          bslib::nav_panel_hidden("UserProfile",
+            div(AdminPanelUI("admin_panel"), class='px-4 py-0')
+          )
+        },
         
         ## lower settings buttons
         bslib::nav_spacer(),
@@ -189,6 +197,7 @@ app_ui <- function(x) {
         bslib::nav_menu(
           title = "Help",
           icon = icon("circle-question"),
+          bslib::nav_item(NULL, actionLink("navbar_about", "About")),
           nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
           nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
           nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
@@ -200,8 +209,10 @@ app_ui <- function(x) {
         bslib::nav_menu(
           title = "",
           icon = icon("user"),
-          bslib::nav_item(NULL, actionLink("app_profile", "My profile")),
-          bslib::nav_item(NULL, actionLink("navbar_about", "About")),
+          bslib::nav_item(NULL, actionLink("my_profile", "My profile")),
+          if (isTRUE(opt$ENABLE_ADMIN)) {
+            bslib::nav_item(NULL, actionLink("show_admin", "Admin panel"))
+          },
           bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),            
           nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
           nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            

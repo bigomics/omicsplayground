@@ -63,20 +63,20 @@ StudioUI <- function(id) {
   output_panel <- bslib::navset_hidden(
     id = ns("studiopanel"),
     bslib::nav_panel(
-      "Poster",
-      VisReportUI(ns("poster"), output_format="poster")
-    ),    
-    bslib::nav_panel(
-      "Slide deck",
-      VisReportUI(ns("slide"), output_format="slide", type="comparison")
+      "Infographic",
+      InfographicUI(ns("infographic"))
     ),
     bslib::nav_panel(
       "Reports",
       AiReportUI(ns("aireport"))
     ),
     bslib::nav_panel(
-      "Infographic",
-      InfographicUI(ns("infographic"))
+      "Poster",
+      VisReportUI(ns("poster"), output_format="poster")
+    ),    
+    bslib::nav_panel(
+      "Slide deck",
+      VisReportUI(ns("slide"), output_format="slide", type="comparison")
     ),
     bslib::nav_panel(
       "Podcast",
