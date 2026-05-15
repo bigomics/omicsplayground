@@ -43,6 +43,9 @@ AiReportUI <- function(id) {
 
   ui <- bslib::navset_tab(
     id = ns("navset"),
+    bslib::nav_panel(title = "Integrated",
+      shiny::div( shiny::htmlOutput(ns("integrated")), style="align-items: center;")
+    ),
     bslib::nav_panel(title = "WGCNA",
       shiny::div( shiny::htmlOutput(ns("wgcna")), style="align-items: center;")
     ),
@@ -74,6 +77,7 @@ AiReportServer <- function(id, pgx, rnav) {
     
     pdf_tempdir <- tempdir()
     shiny::addResourcePath('pdf', pdf_tempdir)
+    on.exit(removeResourcePath('pdf'))
 
     wgcna_pdf <- reactiveVal(NULL)
     wgcna2_pdf <- reactiveVal(NULL)    
@@ -81,16 +85,11 @@ AiReportServer <- function(id, pgx, rnav) {
     mofa_pdf <- reactiveVal(NULL)
     de_pdf <- reactiveVal(NULL)
     enrichment_pdf <- reactiveVal(NULL)
+    integrated_pdf <- reactiveVal(NULL)
 
     generate_btn <- reactiveVal(0)
-    
-    shiny::observeEvent( pgx$X, {
-      wgcna_pdf(NULL)
-      wgcna2_pdf(NULL)      
-      cmap_pdf(NULL)
-      mofa_pdf(NULL)
-      de_pdf(NULL)
-      enrichment_pdf(NULL)
+
+    update_nav <- function(pgx) {
       nav_toggle <- function(x,target) {
         if(is.null(x)) bslib::nav_hide("navset",target)
         if(!is.null(x)) {
@@ -104,6 +103,17 @@ AiReportServer <- function(id, pgx, rnav) {
       nav_toggle(pgx$drugs,"L1000")
       nav_toggle(pgx$wgcna_mox,"WGCNAplus")      
       nav_toggle(pgx$wgcna,"WGCNA")
+      nav_toggle(pgx$report,"Integrated")
+    }
+    
+    shiny::observeEvent( pgx$X, {
+      wgcna_pdf(NULL)
+      wgcna2_pdf(NULL)      
+      cmap_pdf(NULL)
+      mofa_pdf(NULL)
+      de_pdf(NULL)
+      enrichment_pdf(NULL)
+      update_nav(pgx)
       generate_btn(1)
     })
     
@@ -143,6 +153,12 @@ AiReportServer <- function(id, pgx, rnav) {
       tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',enrichment_pdf(),'"></iframe>', sep = "")
       return(HTML(tag))
     })
+
+    output$integrated <- renderUI({
+      shiny::validate(need(!is.null(integrated_pdf()),"missing integrated report"))
+      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',integrated_pdf(),'"></iframe>', sep = "")
+      return(HTML(tag))
+    })
     
     ## ---------------------- generate reports ----------------------
     shiny::observeEvent(input$generate, generate_btn(generate_btn()+1))
@@ -161,6 +177,7 @@ AiReportServer <- function(id, pgx, rnav) {
         mofa_pdf(NULL)
         de_pdf(NULL)
         enrichment_pdf(NULL)
+        integrated_pdf(NULL)
       }
 
       progress <- shiny::Progress$new()
@@ -181,7 +198,7 @@ AiReportServer <- function(id, pgx, rnav) {
         progress$set(message = "Please wait. Updating reports...", value = 0.3)
         pgx <- playbase::pgx.update_reports(
           pgx, force=input$force, llm_model, img_model=NULL,
-          select = c("wgcna","mofa","cmap") )        
+          select = c("wgcna","mofa","cmap","integrated") )        
       }
 
       dbg("[AiReportServer] Converting to PDF...")
@@ -217,12 +234,15 @@ AiReportServer <- function(id, pgx, rnav) {
         mofa_pdf("pdf/report-mofa.pdf")
       }     
 
-      
-    }) 
+      integrated_rpt <- pgx$report$report
+      if(!is.null(integrated_rpt) && is.null(integrated_pdf())) {
+        pdf_target <- file.path(pdf_tempdir,"report-integrated.pdf")
+        playbase::markdownToPDF(integrated_rpt, file=pdf_target, quiet=TRUE)
+        integrated_pdf("pdf/report-integrated.pdf")
+      }     
 
-    on.exit({
-      removeResourcePath('pdf')
-    })
+      update_nav(pgx)
+    }) 
     
   }) ## end of moduleServer
 }
