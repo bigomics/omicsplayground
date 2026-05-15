@@ -176,8 +176,6 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
     ai_report_layout_server(
       "layout",
       text_reactive = text_result$text,
-      deep_turns_reactive = text_result$deep_turns,
-      last_deep_reactive = text_result$last_deep,
       watermark = watermark
     )
   })

@@ -40,8 +40,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
     # ---- Data tables cache (passed to diagram for supporting context) ----
     report_data_tables <- shiny::reactiveVal(NULL)
 
-    # ---- Deep Report state (turns trace + cost-cap warning) ----
-    deep_turns <- shiny::reactiveVal(NULL)
+    # ---- Deep Report state (cost-cap warning surfaced via response prefix) ----
     deep_cost_warning <- shiny::reactiveVal(NULL)
 
     ## v03 Deep Report cost cap (USD, post-hoc, soft warning).
@@ -194,8 +193,9 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
     ##   - Post-hoc cost cap ($0.50 default): if exceeded, the agent
     ##     output is still rendered but prefixed with a visible warning
     ##     (per Phase 5 brief — soften the plan's hard halt to a warn).
-    ##   - Tool-call trace captured into `deep_turns` for the UI evidence
-    ##     panel (Task 5.3).
+    ##   - Tool-call trace is intentionally NOT surfaced to the UI: keeping
+    ##     the agent's pipeline opaque to the end user; the agent's text
+    ##     output already carries Vancouver citations and a Bibliography.
     ##
     ## NOTE: synchronous agent_prompt() is used (not _async). The
     ## campaign verified sync, and the existing Report branch is also
@@ -260,8 +260,6 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
         chat_args     = list(api_args = list(reasoning = list(summary = "auto")))
       )
 
-      ## Reset trace from any previous run
-      deep_turns(NULL)
       deep_cost_warning(NULL)
 
       p$set(message = "Running Deep Report agent (this can take 1–3 minutes)...", value = 0.30)
@@ -275,10 +273,6 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
             .aicards_friendly_error(conditionMessage(e))))
         }
       )
-
-      ## Capture trace for the UI evidence panel
-      turns <- tryCatch(agent@chat$get_turns(), error = function(e) list())
-      deep_turns(turns)
 
       ## Post-hoc cost cap check (soft — render output, prepend warning).
       ## In-house package contract: agent_usage_summary must be present;
@@ -345,7 +339,6 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       text = ai_text,
       report_text = ai_report,
       deep_text = ai_deep_report,
-      deep_turns = deep_turns,
       deep_cost_warning = deep_cost_warning,
       last_deep = shiny::reactive(last_deep()),
       report_data_tables = report_data_tables
