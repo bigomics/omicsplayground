@@ -142,9 +142,12 @@ wgcna_build_report_tables <- function(wgcna, pgx,
     module_data[[mod]] <- list(
       size = md$size,
       eigengene_profile = md$eigengene_profile,
-      peak_condition = md$peak_condition,
       top_trait = md$top_trait,
       top_r = md$top_r,
+      top_pos_trait = md$top_pos_trait,
+      top_pos_r = md$top_pos_r,
+      top_neg_trait = md$top_neg_trait,
+      top_neg_r = md$top_neg_r,
       n_sig = md$n_sig,
       n_total = md$n_total,
       top_enrichment = top_enrich,
@@ -155,9 +158,10 @@ wgcna_build_report_tables <- function(wgcna, pgx,
     overview_rows[[mod]] <- list(
       module = mod,
       size = md$size,
-      peak_condition = md$peak_condition,
-      top_trait = md$top_trait,
-      top_r = md$top_r,
+      top_pos_trait = md$top_pos_trait,
+      top_pos_r = md$top_pos_r,
+      top_neg_trait = md$top_neg_trait,
+      top_neg_r = md$top_neg_r,
       n_sig = md$n_sig,
       n_total = md$n_total
     )
@@ -262,26 +266,33 @@ wgcna_build_report_tables <- function(wgcna, pgx,
   overview_order <- names(sort(vapply(overview_rows, function(x) x$n_sig, integer(1)),
                                decreasing = TRUE))
 
-  # Overview table
+  # Overview table \u2014 dual-trait split: positive and negative correlation
+  # carry their own columns so the model cannot collapse them. Verbal r
+  # strength replaces raw numbers per v03 data-block contract.
+  fmt_trait <- function(trait, r) {
+    if (is.na(trait) || is.na(r)) return("\u2014")
+    sprintf("%s (%s)", trait, omicsai::omicsai_verbalize_r(r))
+  }
   grey_size <- length(wgcna$me.genes[["MEgrey"]])
   ov_rows <- lapply(overview_order, function(m) {
     ov <- overview_rows[[m]]
     data.frame(
       Module = m,
       Genes = as.character(ov$size),
-      Peak_Condition = ov$peak_condition,
-      Top_Trait = ov$top_trait,
-      Trait_r = if (is.na(ov$top_r)) "NA" else sprintf("%+.2f", ov$top_r),
+      `Top correlated trait` = fmt_trait(ov$top_pos_trait, ov$top_pos_r),
+      `Top anti-correlated trait` = fmt_trait(ov$top_neg_trait, ov$top_neg_r),
       Sig_Enrichments = as.character(ov$n_sig),
       Total = as.character(ov$n_total),
-      stringsAsFactors = FALSE
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
   })
   ov_rows[[length(ov_rows) + 1]] <- data.frame(
     Module = "grey", Genes = as.character(grey_size),
-    Peak_Condition = "\u2014", Top_Trait = "\u2014", Trait_r = "\u2014",
+    `Top correlated trait` = "\u2014", `Top anti-correlated trait` = "\u2014",
     Sig_Enrichments = "\u2014", Total = "\u2014",
-    stringsAsFactors = FALSE
+    stringsAsFactors = FALSE,
+    check.names = FALSE
   )
   overview_df <- do.call(rbind, ov_rows)
   overview_table <- paste(omicsai::omicsai_format_mdtable(overview_df), collapse = "\n")
@@ -302,9 +313,21 @@ wgcna_build_report_tables <- function(wgcna, pgx,
       lines <- c(lines, paste0("Eigengene profile: ", profile_str))
     }
 
-    # Top trait
-    if (nzchar(mdat$top_trait) && !is.na(mdat$top_r)) {
-      lines <- c(lines, sprintf("Top trait: %s (r=%+.2f)", mdat$top_trait, mdat$top_r))
+    # Trait coordination — split positive/negative so direction cannot be
+    # inferred from a single absolute-value pick.
+    has_pos <- !is.na(mdat$top_pos_trait)
+    has_neg <- !is.na(mdat$top_neg_trait)
+    if (has_pos || has_neg) {
+      parts <- character(0)
+      if (has_pos) {
+        parts <- c(parts, sprintf("↑ in %s (%s)",
+          mdat$top_pos_trait, omicsai::omicsai_verbalize_r(mdat$top_pos_r)))
+      }
+      if (has_neg) {
+        parts <- c(parts, sprintf("↓ in %s (%s)",
+          mdat$top_neg_trait, omicsai::omicsai_verbalize_r(mdat$top_neg_r)))
+      }
+      lines <- c(lines, paste0("Trait coordination: ", paste(parts, collapse = " / ")))
     }
     lines <- c(lines, "")
 
@@ -611,6 +634,22 @@ wgcna_build_summary_params <- function(wgcna, module, pgx) {
   stat_lines <- c("**Module Statistics:**")
   if (!is.na(md$size)) {
     stat_lines <- c(stat_lines, paste0("- **Size:** ", md$size, " genes"))
+  }
+
+  has_pos <- !is.na(md$top_pos_trait)
+  has_neg <- !is.na(md$top_neg_trait)
+  if (has_pos || has_neg) {
+    parts <- character(0)
+    if (has_pos) {
+      parts <- c(parts, sprintf("↑ in %s (%s)",
+        md$top_pos_trait, omicsai::omicsai_verbalize_r(md$top_pos_r)))
+    }
+    if (has_neg) {
+      parts <- c(parts, sprintf("↓ in %s (%s)",
+        md$top_neg_trait, omicsai::omicsai_verbalize_r(md$top_neg_r)))
+    }
+    stat_lines <- c(stat_lines,
+      paste0("- **Trait coordination:** ", paste(parts, collapse = " / ")))
   }
 
   if (length(trait_stats) > 0) {

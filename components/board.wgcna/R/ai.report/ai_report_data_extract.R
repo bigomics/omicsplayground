@@ -217,12 +217,32 @@ extract_module_data <- function(wgcna, module, pgx,
 
   top_trait <- ""
   top_r <- NA_real_
+  top_pos_trait <- NA_character_
+  top_pos_r <- NA_real_
+  top_neg_trait <- NA_character_
+  top_neg_r <- NA_real_
   if (!is.null(M) && module %in% rownames(M)) {
     cors <- M[module, ]
     top_idx <- which.max(abs(cors))
     if (length(top_idx) > 0) {
       top_trait <- names(cors)[top_idx]
       top_r <- cors[top_idx]
+    }
+    # Dual-trait split: argmax-positive at r>=0.5, argmin-negative at r<=-0.5.
+    # Separating direction avoids the silent contradiction that arose when a
+    # single "top trait" column carried an absolute-value pick alongside a
+    # peak-condition driven by the most-negative eigengene.
+    pos_cors <- cors[!is.na(cors) & cors >= 0.5]
+    if (length(pos_cors) > 0) {
+      i <- which.max(pos_cors)
+      top_pos_trait <- names(pos_cors)[i]
+      top_pos_r <- pos_cors[i]
+    }
+    neg_cors <- cors[!is.na(cors) & cors <= -0.5]
+    if (length(neg_cors) > 0) {
+      i <- which.min(neg_cors)
+      top_neg_trait <- names(neg_cors)[i]
+      top_neg_r <- neg_cors[i]
     }
   }
 
@@ -236,14 +256,12 @@ extract_module_data <- function(wgcna, module, pgx,
 
   # --- Eigengene profile ---
   eigengene_profile <- NULL
-  peak_condition <- ""
   datME <- wgcna$datME %||% wgcna$net$MEs
   groups <- if (!is.null(pgx$samples$group)) pgx$samples$group else NULL
   if (!is.null(datME) && module %in% colnames(datME) && !is.null(groups)) {
     eigengene <- datME[, module]
     group_means <- tapply(eigengene, groups, mean)
     eigengene_profile <- group_means
-    peak_condition <- names(which.max(abs(group_means)))
   }
 
   # --- Enrichment data ---
@@ -276,9 +294,12 @@ extract_module_data <- function(wgcna, module, pgx,
     fallback_genes = fallback_genes,
     fallback_sets = fallback_sets,
     eigengene_profile = eigengene_profile,
-    peak_condition = peak_condition,
     top_trait = top_trait,
     top_r = top_r,
+    top_pos_trait = top_pos_trait,
+    top_pos_r = top_pos_r,
+    top_neg_trait = top_neg_trait,
+    top_neg_r = top_neg_r,
     n_sig = n_sig,
     n_total = n_total,
     gse = gse,
