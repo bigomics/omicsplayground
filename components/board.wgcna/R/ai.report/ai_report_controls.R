@@ -20,8 +20,8 @@ ai_report_controls_ui <- function(id) {
       ns("mode"),
       "Mode:",
       choices = c(
-        "Report" = "report",
         "Summary" = "summary",
+        "Report" = "report",
         "Deep Report" = "deep_report"
       ),
       selected = "report"
