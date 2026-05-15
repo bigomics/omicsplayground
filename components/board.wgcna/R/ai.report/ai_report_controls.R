@@ -65,7 +65,7 @@ ai_report_controls_ui <- function(id) {
 #' @param id Module namespace ID
 #' @param module_choices Reactive returning character vector of module names
 #'
-#' @return List with reactives: trigger, mode, show_prompt, selected_module
+#' @return List with reactives: trigger, deep_trigger, mode, show_prompt, selected_module
 ai_report_controls_server <- function(id, module_choices = NULL) {
   moduleServer(id, function(input, output, session) {
 
@@ -110,9 +110,19 @@ ai_report_controls_server <- function(id, module_choices = NULL) {
       trigger(trigger() + 1)
     })
 
+    # Deep Report trigger counter (driven by deep_generate_btn, added to
+    # the UI in Phase 6.1). Kept separate from `trigger` so the regular
+    # Report path is never fired by the deep button and vice-versa.
+    # observeEvent silently no-ops while the input does not yet exist.
+    deep_trigger <- reactiveVal(0)
+    observeEvent(input$deep_generate_btn, {
+      deep_trigger(deep_trigger() + 1)
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+
     # Return reactive values
     list(
       trigger = reactive(trigger()),
+      deep_trigger = reactive(deep_trigger()),
       mode = reactive(input$mode %||% "report"),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),

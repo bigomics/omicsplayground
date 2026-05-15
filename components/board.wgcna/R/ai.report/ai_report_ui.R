@@ -83,7 +83,7 @@ ai_report_layout_ui <- function(id,
   bslib::layout_columns(
     col_widths = 12,
     height = "calc(100vh - 180px)",
-    row_heights = c("auto", 1),
+    row_heights = c("auto", 1, "auto"),
 
     # Disclaimer banner
     bs_alert(
@@ -133,6 +133,34 @@ ai_report_layout_ui <- function(id,
           extra_options = infographic_options
         )
       )
+    ),
+
+    ## ── Deep Report evidence trail (only rendered when the last fired
+    ## generation was a Deep Report and the agent emitted tool calls).
+    ## Re-uses the collapsible <details>/<summary> pattern from
+    ## board.copilot (.format_tool_request in copilot_agent.R) without
+    ## pulling the full plot-history evidence panel — Deep Report
+    ## produces no plots, only tool-call summaries plus the agent's
+    ## final bibliography (which is rendered inline in the main text
+    ## card under the ## Bibliography heading).
+    shiny::conditionalPanel(
+      condition = paste0("output['", ns("has_deep_trace"), "']"),
+      bslib::card(
+        class = "mt-2",
+        bslib::card_header(
+          shiny::tags$details(
+            shiny::tags$summary(
+              shiny::tags$strong("Evidence trail (Deep Report)"),
+              shiny::tags$small(class = "text-muted ms-2",
+                                "Tool calls used to ground citations")
+            ),
+            shiny::div(
+              class = "mt-2",
+              shiny::uiOutput(ns("deep_trace"))
+            )
+          )
+        )
+      )
     )
   )
 }
@@ -154,6 +182,8 @@ ai_report_layout_server <- function(id,
                                     text_reactive,
                                     diagram_result_reactive = NULL,
                                     infographic_reactive = NULL,
+                                    deep_turns_reactive = NULL,
+                                    last_deep_reactive = NULL,
                                     watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
 
@@ -201,6 +231,90 @@ ai_report_layout_server <- function(id,
       add.watermark = watermark
     )
 
+    # ============================================================
+    # Deep Report evidence trail (tool-call summaries)
+    # ============================================================
+    output$has_deep_trace <- shiny::reactive({
+      if (is.null(last_deep_reactive) || is.null(deep_turns_reactive)) return(FALSE)
+      if (!isTRUE(last_deep_reactive())) return(FALSE)
+      turns <- deep_turns_reactive()
+      !is.null(turns) && length(turns) > 0
+    })
+    shiny::outputOptions(output, "has_deep_trace", suspendWhenHidden = FALSE)
+
+    output$deep_trace <- shiny::renderUI({
+      if (is.null(deep_turns_reactive)) return(NULL)
+      turns <- deep_turns_reactive()
+      shiny::req(turns)
+      .render_deep_tool_trace(turns)
+    })
+
     invisible(NULL)
   })
+}
+
+#' Render the Deep Report tool-call trace as a list of collapsible blocks.
+#'
+#' One <details> per ContentToolRequest plus a small block per matching
+#' ContentToolResult. Mirrors `.format_tool_request` in
+#' `board.copilot/R/copilot_agent.R` but renders results inline instead
+#' of dropping them from the chat stream.
+.render_deep_tool_trace <- function(turns) {
+  trunc <- function(s, n = 600L) {
+    s <- as.character(s)
+    if (length(s) == 0L || is.na(s)) return("")
+    if (nchar(s) > n) paste0(substr(s, 1L, n), "\n… [truncated]") else s
+  }
+  scalar <- function(x) {
+    if (is.null(x)) return("")
+    paste(vapply(x, function(v) as.character(v)[1L], character(1L)), collapse = ", ")
+  }
+
+  blocks <- list()
+  for (turn in turns) {
+    contents <- tryCatch(turn@contents, error = function(e) list())
+    for (item in contents) {
+      if (S7::S7_inherits(item, ellmer::ContentToolRequest)) {
+        tool_name <- tryCatch(item@name, error = function(e) "<unknown>")
+        args      <- tryCatch(item@arguments, error = function(e) list())
+        args_txt <- if (length(args) > 0L) {
+          paste(names(args),
+                vapply(args, function(v) trunc(scalar(v), 200L), character(1L)),
+                sep = " = ", collapse = "\n")
+        } else {
+          "(no arguments)"
+        }
+        blocks[[length(blocks) + 1L]] <- shiny::tags$details(
+          class = "mb-1",
+          shiny::tags$summary(
+            shiny::icon("wrench"),
+            shiny::tags$code(tool_name)
+          ),
+          shiny::tags$pre(
+            style = "font-size: 0.85em; white-space: pre-wrap;",
+            args_txt
+          )
+        )
+      } else if (S7::S7_inherits(item, ellmer::ContentToolResult)) {
+        result_txt <- tryCatch(
+          {
+            v <- item@value
+            if (is.character(v)) v else paste(utils::capture.output(print(v)), collapse = "\n")
+          },
+          error = function(e) ""
+        )
+        blocks[[length(blocks) + 1L]] <- shiny::tags$div(
+          class = "ms-3 mb-2 small text-muted",
+          shiny::tags$pre(
+            style = "font-size: 0.8em; white-space: pre-wrap; background: #f7f7f7; padding: 4px;",
+            trunc(result_txt, 800L)
+          )
+        )
+      }
+    }
+  }
+  if (length(blocks) == 0L) {
+    return(shiny::tags$em("No tool calls were made during this run."))
+  }
+  shiny::tagList(blocks)
 }
