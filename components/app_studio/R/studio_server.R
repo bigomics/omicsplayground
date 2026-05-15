@@ -24,6 +24,7 @@ StudioServer <- function(id, pgx) {
     })
     
     ## ---------------------- observers ------------------------
+
     observeEvent(input$show_poster, {
       bslib::nav_select("studiopanel","Poster")
       bslib::nav_select("settings","Poster")      
@@ -43,7 +44,7 @@ StudioServer <- function(id, pgx) {
       bslib::nav_select("studiopanel","Infographic")
       bslib::nav_select("settings","Infographic")      
     })
-
+    
     observeEvent(input$show_podcast, {
       bslib::nav_select("studiopanel","Podcast")
       bslib::nav_select("settings","Podcast")

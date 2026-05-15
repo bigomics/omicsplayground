@@ -35,20 +35,20 @@ StudioUI <- function(id) {
   settings_card <- bslib::navset_hidden(
     id = ns("settings"),
     bslib::nav_panel(
-      "Poster",
-      VisReportSettings(ns("poster"), output_format="poster")
-    ),    
-    bslib::nav_panel(
-      "Slide deck",
-      VisReportSettings(ns("slide"), output_format="slide", type="comparison")
+      "Infographic",
+      InfographicSettings(ns("infographic"))
     ),
     bslib::nav_panel(
       "Reports",
       AiReportSettings(ns("aireport"))
     ),
     bslib::nav_panel(
-      "Infographic",
-      InfographicSettings(ns("infographic"))
+      "Poster",
+      VisReportSettings(ns("poster"), output_format="poster")
+    ),    
+    bslib::nav_panel(
+      "Slide deck",
+      VisReportSettings(ns("slide"), output_format="slide", type="comparison")
     ),
     bslib::nav_panel(
       "Podcast",
