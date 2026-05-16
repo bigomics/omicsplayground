@@ -5,24 +5,25 @@
 
 opg_ui <- function() {
 
+  message("\n======================================================")
+  message("======================= UI ===========================")
+  message("======================================================\n")
+
   #-------------------------------------------------------
   ## Build USERMENU
   #-------------------------------------------------------
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-  upgrade.tab <- NULL
-  if (opt$AUTHENTICATION == "firebase") {
-    upgrade.tab <- bigdash::navbarDropdownItem(
-      "Upgrade",
-      onClick = "show_plans()"
-    )
-  }
-  
-  createUI <- function() {
-    message("\n======================================================")
-    message("======================= UI ===========================")
-    message("======================================================\n")
-
+  ## upgrade.tab <- NULL
+  ## if (opt$AUTHENTICATION == "firebase") {
+  ##   upgrade.tab <- bigdash::navbarDropdownItem(
+  ##     "Upgrade",
+  ##     onClick = "show_plans()"
+  ##   )
+  ## }
+    
+  createUI <- function(menu_tree) {
+    
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     id <- "maintabs"
     
@@ -47,47 +48,6 @@ opg_ui <- function() {
       )
     }
 
-    menu_tree <- list(
-      ## "Welcome" = c(
-      ##   welcome = "Welcome"
-      ## ),
-      ## "Datasets" = c(
-      ##   load = "Home"
-      ## ),
-      "DataView" = c(
-        dataview = "DataView"
-      ),
-      "Clustering" = c(
-        clustersamples = "Samples",
-        clusterfeatures = "Features"
-      ),
-      "Expression" = c(
-        diffexpr = "Differential expression",
-        timeseries = "TimeSeries", ## here???
-        corr = "Correlation analysis",
-        bio = "Find biomarkers"
-      ),
-      "GeneSets" = c(
-        enrich = "Geneset Enrichment",
-        sig = "Test geneset",
-        pathway = "Pathway analysis",
-        wordcloud = "Word cloud"
-      ),
-      "Compare" = c(
-        isect = "Compare signatures",
-        comp = "Compare datasets",
-        cmap = "Similar experiments"
-      ),
-      "SystemsBio" = c(
-        drug = "Drug connectivity",
-        cell = "Cell profiling",
-        pcsf = "PCSF",
-        tcga = "TCGA survival (beta)"
-      ),
-      "MultiOmics" = MODULE.multiomics$module_menu(),
-      "WGCNA" = MODULE.wgcna$module_menu()
-    )
-
     ## filter disabled modules
     #ENABLED["welcome"] <<- TRUE
     #ENABLED["load"] <<- TRUE
@@ -98,7 +58,7 @@ opg_ui <- function() {
     ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
-    populateSidebar <- function(menu_tree) {
+    createMenu <- function(menu_tree) {
       sidebar_item <- function(title, name) {
         div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
       }
@@ -132,10 +92,10 @@ opg_ui <- function() {
     }
 
     info("[ui.R] creating sidebar menu")
-    mm <- populateSidebar(menu_tree)
-    mm <- lapply(mm, as.character)
-    mm <- HTML(unlist(mm))
-    sidebar <- bigdash::sidebar("Menu", mm)
+    menu <- createMenu(menu_tree)
+    menu <- lapply(menu, as.character)
+    menu <- HTML(unlist(menu))
+    sidebar <- bigdash::sidebar("Menu", menu)
 
     big_theme2 <- bigdash::big_theme()
     big_theme2 <- bslib::bs_add_variables(big_theme2,
@@ -554,8 +514,54 @@ opg_ui <- function() {
     ) ## end of bigPage
   }
 
+
+  menu_tree <- list(
+    "DataView" = c(
+      dataview = "DataView"
+    ),
+    "Clustering" = c(
+      clustersamples = "Samples",
+      clusterfeatures = "Features"
+    ),
+    "Expression" = c(
+      diffexpr = "Differential expression",
+      timeseries = "TimeSeries", ## here???
+      corr = "Correlation analysis",
+      bio = "Find biomarkers"
+    ),
+    "GeneSets" = c(
+      enrich = "Geneset Enrichment",
+      sig = "Test geneset",
+      pathway = "Pathway analysis",
+      wordcloud = "Word cloud"
+    ),
+    "Compare" = c(
+      isect = "Compare signatures",
+      comp = "Compare datasets",
+      cmap = "Similar experiments"
+    ),
+    "SystemsBio" = c(
+      drug = "Drug connectivity",
+      cell = "Cell profiling",
+      pcsf = "PCSF",
+      tcga = "TCGA survival (beta)"
+    ),
+    "MultiOmics" = MODULE.multiomics$module_menu(),
+    "WGCNA" = MODULE.wgcna$module_menu()
+  )
+
+  if(opt$USER_LEVEL == 'BASIC') {
+    menu_tree <- list(
+      "DataView" = c(dataview = "DataView"),
+      "Cluster Samples" = c(clustersamples = "Cluster Samples"),
+      "Differential expression" = c(diffexpr = "Differential expression"),
+      "Geneset Enrichment" = c(enrich = "Geneset Enrichment"),
+      "Pathway analysis" = c(pathway = "Pathway analysis")
+    )
+  } 
+    
   info("[ui.R] >>> creating UI")
-  ui <- createUI()
+  ui <- createUI(menu_tree)
   info("[ui.R] <<< finished UI!")
 
   return(ui)
