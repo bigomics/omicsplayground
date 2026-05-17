@@ -197,7 +197,7 @@ AiImageCardUI <- function(id,
 
   PlotModuleUI(
     ns("image"),
-    outputFunc = shiny::htmlOutput,
+    outputFunc = shiny::imageOutput,
     title = title,
     label = "",
     info.text = info.text,

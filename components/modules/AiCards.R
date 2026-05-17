@@ -922,23 +922,25 @@ AiImageCardServer <- function(id,
       }
     })
 
+    ## Returns the renderImage descriptor list when the image is ready, or
+    ## surfaces error / loading / show-prompt states via shiny::validate so
+    ## Shiny renders them as message overlays. Using plotlib="image" rather
+    ## than "generic" routes the on-disk PNG path through PlotModule's
+    ## native renderImage + PNG-export pipeline (file.copy(p$src, PNGFILE)
+    ## in the download handler), so PNG download / watermark / PDF embed
+    ## all work without re-encoding the bytes.
     image_render <- function() {
       if (!is.null(rv$error)) {
         shiny::validate(shiny::need(FALSE, rv$error))
       }
 
       if (isTRUE(input$show_prompt) && !is.null(rv$prompt)) {
-        txt <- paste0("## Image Prompt\n\n```text\n",
-                      .aicards_safe_fenced_block(rv$prompt),
-                      "\n```")
-        return(shiny::div(
-          class = "ai-prompt-view",
-          style = "overflow-y:auto;max-height:100%;padding:1em;",
-          shiny::HTML(opg_markdown_to_html(txt))
+        shiny::validate(shiny::need(
+          FALSE,
+          paste0("Image prompt:\n\n", rv$prompt)
         ))
       }
 
-      # Show status while background task is running
       if (rv$status == "running") {
         spinner_msgs <- c(
           "Generating infographic (this can take 60\u2013120s)\u2026",
@@ -946,12 +948,7 @@ AiImageCardServer <- function(id,
           "Taking longer than usual\u2026"
         )
         msg <- spinner_msgs[min(rv$attempt, length(spinner_msgs))]
-        return(shiny::div(
-          class = "text-muted",
-          style = "display:flex;align-items:center;justify-content:center;height:100%;font-size:1.1em;",
-          shiny::icon("spinner", class = "fa-spin me-2"),
-          msg
-        ))
+        shiny::validate(shiny::need(FALSE, msg))
       }
 
       shiny::validate(shiny::need(
@@ -975,27 +972,20 @@ AiImageCardServer <- function(id,
         "image/png"
       )
 
-      data_uri <- base64enc::dataURI(file = image_path, mime = mime)
-
-      shiny::div(
-        class = "ai-image-content",
-        style = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;",
-        shiny::tags$img(
-          src = data_uri,
-          alt = "AI-generated infographic",
-          style = "max-width:100%;max-height:100%;object-fit:contain;"
-        )
+      list(
+        src = image_path,
+        contentType = mime,
+        alt = "AI-generated infographic",
+        style = "max-width:100%;max-height:100%;object-fit:contain;"
       )
     }
 
     PlotModuleServer(
       "image",
-      plotlib = "generic",
-      plotlib2 = "generic",
+      plotlib = "image",
+      plotlib2 = "image",
       func = image_render,
       func2 = image_render,
-      renderFunc = shiny::renderUI,
-      renderFunc2 = shiny::renderUI,
       pdf.width = 8,
       pdf.height = 5,
       res = c(75, 100),
