@@ -1,90 +1,105 @@
-#' Copilot Board UI
+# copilot_ui.R — Copilot Board UI Shell
+#
+# Three-column bslib layout. Left: datasets/history/docs tabset.
+# Centre: chat region. Right: evidence placeholder.
+#
+# Phase 1: module slots are empty uiOutput() placeholders. Later phases slot
+# in CopilotDatasetsUI, CopilotHistoryUI, CopilotDocsUI, CopilotEvidenceUI,
+# and extract the chat region into CopilotChatUI (Phase 4).
+# Phase 6: this file is renamed to CopilotBoardUI.R.
+
+#' Copilot Board UI Shell
 #'
-#' Three-column layout: datasets/history/docs | chat | evidence
-
-CopilotBoardInputs <- function(id) {
-  ns <- shiny::NS(id)
-  ## Copilot has no sidebar settings — left column is internal
-  shiny::div()
-}
-
+#' Three-column bslib layout: datasets/history/docs | chat | evidence.
+#' Left column is internal (no sidebar settings exposed).
+#'
+#' @param id Module namespace id.
+#' @return A `bslib::layout_columns` tag.
+#' @export
 CopilotBoardUI <- function(id) {
   ns <- shiny::NS(id)
 
-  ## Left column: tabbed navigation for datasets, history, docs
-  left_panel <- bslib::card(
-    full_screen = FALSE,
-    class = "border-0",
-    style = "height: calc(100vh - 80px); overflow-y: auto;",
-    shiny::div(
-      class = "px-2 pt-2",
-      shiny::actionButton(
-        ns("new_chat"), "+ New chat",
-        class = "btn-sm btn-primary w-100"
-      )
-    ),
-    bslib::navset_underline(
-      id = ns("left_tabs"),
-      bslib::nav_panel(
-        "Datasets",
-        copilot_panel_datasets_ui(ns("datasets"))
-      ),
-      bslib::nav_panel(
-        "History",
-        copilot_panel_history_ui(ns("history"))
-      ),
-      bslib::nav_panel(
-        "Docs",
-        copilot_panel_docs_ui(ns("docs"))
-      )
-    )
-  )
+  bslib::layout_columns(
+    col_widths = c(3, 5, 4),
 
-  ## Center column: chat interface
-  center_panel <- bslib::card(
-    class = "border-0",
-    style = "height: calc(100vh - 80px);",
-    bslib::card_header(
-      class = "d-flex justify-content-between align-items-center",
-      shiny::span("Copilot Chat", class = "fw-bold"),
-      shiny::div(
-        class = "d-flex gap-2 align-items-center",
-        shiny::selectInput(
-          inputId = ns("tier"),
-          label   = NULL,
-          choices = NULL,
-          width   = "180px"
+    # ---- Left column: datasets / history / docs ----
+    bslib::card(
+      full_screen = FALSE,
+      bslib::card_header(
+        shiny::actionButton(
+          ns("new_chat"),
+          label = "New chat",
+          icon  = shiny::icon("plus"),
+          class = "btn-sm btn-outline-secondary w-100"
+        )
+      ),
+      bslib::navset_underline(
+        bslib::nav_panel(
+          "Datasets",
+          shiny::uiOutput(ns("datasets"))   # TODO(phase 6): CopilotDatasetsUI(ns("datasets"))
+        ),
+        bslib::nav_panel(
+          "History",
+          shiny::uiOutput(ns("history"))    # TODO(phase 6): CopilotHistoryUI(ns("history"))
+        ),
+        bslib::nav_panel(
+          "Docs",
+          shiny::uiOutput(ns("docs"))       # TODO(phase 6): CopilotDocsUI(ns("docs"))
         )
       )
     ),
-    shiny::div(
-      class = "p-2",
-      style = "flex: 1;",
-      shinychat::chat_ui(ns("chat"), width = "100%", height = "calc(100vh - 240px)", fill = TRUE)
+
+    # ---- Centre column: chat ----
+    bslib::card(
+      bslib::card_header(
+        shiny::div(
+          class = "d-flex align-items-center gap-2",
+          shiny::span("Copilot Chat", class = "me-auto fw-semibold"),
+          shiny::selectInput(
+            ns("tier"),
+            label   = NULL,
+            choices = .COPILOT_TIER_IDS,
+            width   = "auto"
+          )
+        )
+      ),
+      # TODO(phase 4): replace with CopilotChatUI(ns("chat")) once chat module exists
+      shinychat::chat_ui(
+        ns("chat"),
+        height       = "100%",
+        fill         = TRUE,
+        placeholder  = "Ask a question about your data…"
+      ),
+      bslib::card_footer(
+        shiny::div(
+          class = "d-flex flex-wrap gap-2",
+          shiny::actionButton(ns("ask_describe"),   "Describe data",     class = "btn-sm btn-outline-primary"),
+          shiny::actionButton(ns("ask_findings"),   "Key findings",      class = "btn-sm btn-outline-primary"),
+          shiny::actionButton(ns("ask_pathways"),   "Top pathways",      class = "btn-sm btn-outline-primary"),
+          shiny::actionButton(ns("ask_biomarkers"), "Biomarker genes",   class = "btn-sm btn-outline-primary"),
+          shiny::actionButton(ns("ask_plot"),       "Show a plot",       class = "btn-sm btn-outline-primary")
+        )
+      ),
+      shinyjs::hidden(
+        shiny::actionButton(
+          ns("stop_btn"),
+          label = "Stop",
+          icon  = shiny::icon("stop"),
+          class = "btn-danger btn-sm position-absolute"
+        )
+      )
     ),
-    bslib::card_footer(
-      class = "d-flex flex-wrap gap-1 p-2",
-      shiny::actionButton(ns("ask_describe"), "Describe experiment", class = "btn-sm btn-outline-primary"),
-      shiny::actionButton(ns("ask_findings"), "Summarize findings", class = "btn-sm btn-outline-primary"),
-      shiny::actionButton(ns("ask_pathways"), "Top pathways", class = "btn-sm btn-outline-primary"),
-      shiny::actionButton(ns("ask_biomarkers"), "Top biomarkers", class = "btn-sm btn-outline-primary"),
-      shiny::actionButton(ns("ask_plot"), "Show PCA plot", class = "btn-sm btn-outline-primary")
-    )
-  )
 
-  ## Right column: evidence panel
-  right_panel <- shiny::div(
-    style = "height: calc(100vh - 80px); overflow-y: auto;",
-    copilot_panel_evidence_ui(ns("evidence"))
+    # ---- Right column: evidence ----
+    shiny::uiOutput(ns("evidence"))  # TODO(phase 5): CopilotEvidenceUI(ns("evidence"))
   )
+}
 
-  ## Three-column layout
-  bslib::layout_columns(
-    col_widths = c(3, 5, 4),
-    style = "height: calc(100vh - 80px); padding: 8px;",
-    fill = TRUE,
-    left_panel,
-    center_panel,
-    right_panel
-  )
+#' Copilot Board Sidebar Inputs (empty — left column is internal)
+#'
+#' @param id Module namespace id.
+#' @return An empty `shiny::div()`.
+#' @export
+CopilotBoardInputs <- function(id) {
+  shiny::div()
 }
