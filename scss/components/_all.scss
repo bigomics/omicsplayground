@@ -374,6 +374,12 @@ html {
     line-height: 1.1em;
   }
 
+  #reportTA textarea.form-control {
+    font-size: 1.15em;
+    line-height: 1.1em;
+    padding: 50px 100px 50px 120px;
+  }
+
   // used in loader
   .shiny-input-text.form-control {
     padding: .375rem .75rem;

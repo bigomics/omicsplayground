@@ -32,8 +32,12 @@ AiReportSettings <- function(id) {
     br(),
     shiny::actionButton(ns("generate"), "Generate reports",
       class="btn btn-primary", style="margin-bottom: 6px;"),
+    shiny::actionButton(ns("clear"), "Clear",
+      class="btn btn-warning-outline", style="margin-bottom: 6px;"),
     br(),
-    shiny::checkboxInput(ns("force"), "force", FALSE)
+    shiny::checkboxInput(ns("force"), "Force regenerate", FALSE),
+    br(),
+    shiny::fileInput(ns("logofile"), "Replace logo:", accept=c(".png",".jpg"))
   )
 }
 
@@ -41,60 +45,109 @@ AiReportSettings <- function(id) {
 AiReportUI <- function(id) {
   ns <- shiny::NS(id)
 
-  ui <- bslib::navset_tab(
-    id = ns("navset"),
+  preview_ui <- bslib::navset_tab(
+    id = ns("navset_preview"),
     bslib::nav_panel(title = "Summary",
-      shiny::div( shiny::htmlOutput(ns("summary")), style="align-items: center;")
+      shiny::div( shiny::htmlOutput(ns("summary")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
     ),
     bslib::nav_panel(title = "WGCNA",
-      shiny::div( shiny::htmlOutput(ns("wgcna")), style="align-items: center;")
+      shiny::div( shiny::htmlOutput(ns("wgcna"))%>% bigLoaders::useSpinner(),
+        style="align-items: center;")      
     ),
     bslib::nav_panel(title = "moxWGCNA",
-      shiny::div( shiny::htmlOutput(ns("wgcna2")), style="align-items: center;")
+      shiny::div( shiny::htmlOutput(ns("wgcna2")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
     ),
     bslib::nav_panel(title = "L1000",
-      shiny::div( shiny::htmlOutput(ns("cmap")), style="align-items: center;")
+      shiny::div( shiny::htmlOutput(ns("cmap")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
     ),
-    bslib::nav_panel(title = "MOFA", 
-      shiny::div( shiny::htmlOutput(ns("mofa")), style="align-items: center;")
+    bslib::nav_panel(title = "MOFA",
+      shiny::div( shiny::htmlOutput(ns("mofa")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
     ),
     bslib::nav_panel(title = "DE",
-      shiny::div( shiny::htmlOutput(ns("de")), style="align-items: center;")
-    ),
+      shiny::div( shiny::htmlOutput(ns("de")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
+    ),    
     bslib::nav_panel(title = "Enrichment",
-      shiny::div( shiny::htmlOutput(ns("enrichment")), style="align-items: center;")
+      shiny::div( shiny::htmlOutput(ns("enrichment")) %>% bigLoaders::useSpinner(),
+        style="align-items: center;")
     )
   )
 
+  text_area <- function(id) {
+    div( shiny::textAreaInput(ns(id), NULL, value = "",
+      height = "calc(100vh - 160px)", width = "100%"),
+      id="reportTA", style='font-size: 1em;')
+  }
+  
+  edit_ui <- bslib::navset_tab(
+    id = ns("navset_edit"),
+    bslib::nav_panel(title = "Summary", text_area("edit_summary")),
+    bslib::nav_panel(title = "WGCNA", text_area("edit_wgcna")),
+    bslib::nav_panel(title = "moxWGCNA", text_area("edit_wgcna2")),
+    bslib::nav_panel(title = "L1000", text_area("edit_cmap")),
+    bslib::nav_panel(title = "MOFA", text_area("edit_mofa")),
+    bslib::nav_panel(title = "DE", text_area("edit_de")),
+    bslib::nav_panel(title = "Enrichment", text_area("edit_enrichment"))
+  )
+
+  ui <- bslib::navset_hidden(
+    id = ns("navset"),
+    bslib::nav_panel(title = "Preview", preview_ui),    
+    bslib::nav_panel(title = "Edit", edit_ui),
+    header = tagList(
+      bslib::nav_spacer(),
+      div( bslib::input_switch(ns("edit_mode"), "edit", FALSE),
+        style = "position: absolute; width: 100px; right: 0px; font-size: 1.1em;")
+      )
+  )
   return(ui)
 }
 
-AiReportServer <- function(id, pgx, rnav) {
+
+AiReportServer <- function(id, pgx) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
-
-    observe(dbg("[AiReportServer] rnav =", rnav()))
     
     pdf_tempdir <- tempdir()
+    opg.logo = file.path(OPG,"components/app/R/www/bigomics-logo-small.png")
+    logopath = file.path(pdf_tempdir,"logo.png")
+    file.copy(opg.logo, logopath)
+    
+    de_pdf <- file.path(pdf_tempdir,"report-de.pdf")
+    enrichment_pdf <- file.path(pdf_tempdir,"report-enrichment.pdf")      
+    mofa_pdf <- file.path(pdf_tempdir,"report-mofa.pdf")
+    wgcna_pdf <- file.path(pdf_tempdir,"report-wgcna.pdf")
+    wgcna2_pdf <- file.path(pdf_tempdir,"report-wgcna2.pdf")      
+    cmap_pdf <- file.path(pdf_tempdir,"report-cmap.pdf")
+    summary_pdf <- file.path(pdf_tempdir,"report-summary.pdf")      
+
     shiny::addResourcePath('pdf', pdf_tempdir)
-    on.exit(removeResourcePath('pdf'))
-
-    wgcna_pdf <- reactiveVal(NULL)
-    wgcna2_pdf <- reactiveVal(NULL)    
-    cmap_pdf <- reactiveVal(NULL)
-    mofa_pdf <- reactiveVal(NULL)
-    de_pdf <- reactiveVal(NULL)
-    enrichment_pdf <- reactiveVal(NULL)
-    summary_pdf <- reactiveVal(NULL)
-
-    generate_btn <- reactiveVal(0)
-
+    on.exit({
+      unlink(de_pdf)
+      unlink(enrichment_pdf)
+      unlink(mofa_pdf)
+      unlink(wgcna_pdf)
+      unlink(wgcna2_pdf)
+      unlink(cmap_pdf)
+      unlink(summary_pdf)      
+      removeResourcePath('pdf')
+    })
+    
     update_nav <- function(pgx) {
       nav_toggle <- function(x,target) {
-        if(is.null(x)) bslib::nav_hide("navset",target)
+        if(is.null(x)) {
+          bslib::nav_hide("navset_preview",target)
+          bslib::nav_hide("navset_edit",target)          
+        }
         if(!is.null(x)) {
-          bslib::nav_show("navset",target)
-          bslib::nav_select("navset",target)          
+          bslib::nav_show("navset_preview",target)
+          bslib::nav_select("navset_preview",target)          
+          bslib::nav_show("navset_edit",target)
+          bslib::nav_select("navset_edit",target)          
         }
       }
       nav_toggle(pgx$gset.meta,"Enrichment")
@@ -105,81 +158,117 @@ AiReportServer <- function(id, pgx, rnav) {
       nav_toggle(pgx$wgcna,"WGCNA")
       nav_toggle(pgx$report,"Summary")
     }
+
+    has.warned=0
     
-    shiny::observeEvent( pgx$X, {
-      wgcna_pdf(NULL)
-      wgcna2_pdf(NULL)      
-      cmap_pdf(NULL)
-      mofa_pdf(NULL)
-      de_pdf(NULL)
-      enrichment_pdf(NULL)
-      update_nav(pgx)
-      generate_btn(1)
+    shiny::observeEvent( input$edit_mode, {
+      if(input$edit_mode) {
+        bslib::nav_select("navset", "Edit")
+        shinyalert::shinyalert(
+          text = HTML("Warning. Edits are currently <b>not saved</b> after logout!"),
+          html = TRUE,
+          closeOnClickOutside = TRUE,
+          timer = ifelse(has.warned, 1000, 0)
+        )
+        has.warned <<- has.warned + 1
+      } else {
+        bslib::nav_select("navset", "Preview")
+      }
     })
     
-    ## ----------------------- outputs -------------------------
+    ## ----------------------- PDF outputs -------------------------
+    countLetters <- function(text) {
+      az <- c(letters, LETTERS)
+      cc <- sapply(az, function(s) sum(gregexpr(s,text)[[1]]>0))
+      cc[az]
+    }
+
+    char_counts <- c( "wgcna" = 0, "wgcna2" = 0, "mofa" = 0, "cmap" = 0,
+      "summary" = 0, "de" = 0, "enrichment" = 0)    
+    letter_counts = rep(list(countLetters("")), length(names(char_counts)))
+    names(letter_counts) <- names(char_counts)
+    
+    has.changed <- function(what, now) {
+      if(is.null(now)) now <- ""
+      ct <- nchar(now)
+      changed1 <- (!is.null(now) && ct != char_counts[what])
+      char_counts[what] <<- ct
+      lt <- countLetters(now)
+      changed2 <- !all((lt - letter_counts[[what]]) == 0)
+      letter_counts[[what]] <<- lt
+      return(changed1 || changed2)
+    }
+
+    updatePDF <- function(rpt, rptname, pdfname) {
+      if(has.changed(rptname, rpt)) {
+        shiny::withProgress(message = "updating PDF...", value = 0.7, {
+          file <- file.path(pdf_tempdir, pdfname)
+          playbase::markdownToPDF(rpt, file=file, logo=logopath, quiet=FALSE)
+        })
+      }
+    }
+
+    output$summary <- renderUI({
+      updatePDF(input$edit_summary, "summary", "report-summary.pdf")
+      shiny::validate(need(file.exists(summary_pdf), "missing summary report"))
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-summary.pdf"></iframe>'
+      return(HTML(tag))      
+    })
+
     output$wgcna <- renderUI({
-      shiny::validate(need(!is.null(wgcna_pdf()),"missing WGCNA report"))      
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',wgcna_pdf(),'"></iframe>', sep = "")
+      updatePDF(input$edit_wgcna, "wgcna", "report-wgcna.pdf")      
+      shiny::validate(need(file.exists(wgcna_pdf),"missing WGCNA report"))      
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-wgcna.pdf"></iframe>'
       return(HTML(tag))
     })
 
     output$wgcna2 <- renderUI({
-      shiny::validate(need(!is.null(wgcna2_pdf()),"missing moxWGCNA report"))      
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',wgcna2_pdf(),'"></iframe>', sep = "")
+      updatePDF(input$edit_wgcna2, "wgcna2", "report-wgcna2.pdf")            
+      shiny::validate(need(file.exists(wgcna2_pdf),"missing moxWGCNA report"))      
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-wgcna2.pdf"></iframe>'
       return(HTML(tag))
     })
 
     output$cmap <- renderUI({
-      shiny::validate(need(!is.null(cmap_pdf()),"missing L1000 report"))            
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',cmap_pdf(),'"></iframe>', sep = "")
+      updatePDF(input$edit_cmap, "cmap", "report-cmap.pdf")                  
+      shiny::validate(need(file.exists(cmap_pdf),"missing L1000 report"))            
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-cmap.pdf"></iframe>'
       return(HTML(tag))
     })
 
     output$mofa <- renderUI({
-      shiny::validate(need(!is.null(mofa_pdf()),"missing MOFA report"))
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',mofa_pdf(),'"></iframe>', sep = "")
+      updatePDF(input$edit_mofa, "mofa", "report-mofa.pdf")                        
+      shiny::validate(need(file.exists(mofa_pdf),"missing mofa report"))            
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="pdf/report-mofa.pdf"></iframe>'
       return(HTML(tag))
     })
 
     output$de <- renderUI({
-      shiny::validate(need(!is.null(de_pdf()),"missing DE report"))            
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',de_pdf(),'"></iframe>', sep = "")
+      ## updatePDF(input$edit_de, "de", "report-de.pdf")                        
+      shiny::validate(need(file.exists(de_pdf),"missing DE report"))            
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-de.pdf"></iframe>'
       return(HTML(tag))
     })
 
     output$enrichment <- renderUI({
-      shiny::validate(need(!is.null(enrichment_pdf()),"missing Enrichment report"))
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',enrichment_pdf(),'"></iframe>', sep = "")
+      ## updatePDF(input$edit_enrichment, "de", "report-enrichment.pdf")                        
+      shiny::validate(need(file.exists(enrichment_pdf),"missing Enrichment report"))
+      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-enrichment.pdf"></iframe>'
       return(HTML(tag))
     })
 
-    output$summary <- renderUI({
-      shiny::validate(need(!is.null(summary_pdf()),"missing summary report"))
-      tag <- paste('<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="',summary_pdf(),'"></iframe>', sep = "")
-      return(HTML(tag))
-    })
     
-    ## ---------------------- generate reports ----------------------
-    shiny::observeEvent(input$generate, generate_btn(generate_btn()+1))
-
+    ##---------------------------------------------------------------
+    ## --------- main observer: generate reports --------------------
+    ##---------------------------------------------------------------
+    
     shiny::observeEvent({
-      list(generate_btn(), pgx$X)
+      input$generate
     }, {
 
       dbg("[AiReportServer] input.nav = ", input$nav)
       dbg("[AiReportServer] input.navset = ", input$navset)
       
-      if(input$force) {
-        wgcna_pdf(NULL)
-        wgcna2_pdf(NULL)      
-        cmap_pdf(NULL)
-        mofa_pdf(NULL)
-        de_pdf(NULL)
-        enrichment_pdf(NULL)
-        summary_pdf(NULL)
-      }
-
       progress <- shiny::Progress$new()
       on.exit(progress$close())
       
@@ -189,60 +278,74 @@ AiReportServer <- function(id, pgx, rnav) {
       llm_model <- getUserOption(session, "llm_model")
       img_model <- getUserOption(session, "img_model")      
       img_model <- NULL
-      dbg("[AiReportServer] generate_btn = ", generate_btn())
-      
-      if (!is.null(llm_model) && llm_model != "" && generate_btn()>1) {
+
+      if (!is.null(llm_model) && llm_model != "") {
         dbg("[AiReportServer] updating reports...")
         dbg("[AiReportServer] llm_model = ", llm_model)
         #dbg("[AiReportServer] img_model = ", img_model)
         progress$set(message = "Please wait. Updating reports...", value = 0.3)
+        
         pgx <- playbase::pgx.update_reports(
           pgx, force=input$force, llm_model, img_model=NULL,
-          select = c("wgcna","mofa","cmap","summary") )        
+          select = c("wgcna","mofa","cmap","summary") )
+        
       }
+      update_nav(pgx)      
 
-      dbg("[AiReportServer] Converting to PDF...")
-      progress$set(message = "Converting to PDF...", value = 0.7)
+      clear_files()
+
+      rpt_wgcna <- pgx$wgcna$report$report
+      rpt_wgcna2 <- pgx$wgcna_mox$report$report      
+      rpt_mofa <- pgx$mofa$report$report
+      rpt_cmap <- pgx$drugs[[1]]$report$report      
+      rpt_summary <- pgx$report$report
       
-      ## fill panels
-      wgcna_rpt <- pgx$wgcna$report$report
-      if(!is.null(wgcna_rpt) && is.null(wgcna_pdf())) {
-        #wgcna_rpt <- playbase::rpt.compile_wgcna_report(pgx, report=NULL)
-        pdf_target <- file.path(pdf_tempdir,"report-wgcna.pdf")
-        playbase::markdownToPDF(wgcna_rpt, file=pdf_target, quiet=TRUE)
-        wgcna_pdf("pdf/report-wgcna.pdf")
-      }
+      updateTextAreaInput(session, "edit_wgcna", value = rpt_wgcna)
+      updateTextAreaInput(session, "edit_wgcna2", value = rpt_wgcna2)
+      updateTextAreaInput(session, "edit_mofa", value = rpt_mofa)
+      updateTextAreaInput(session, "edit_cmap", value = rpt_cmap)
+      updateTextAreaInput(session, "edit_summary", value = rpt_summary)
 
-      wgcna2_rpt <- pgx$wgcna_mox$report$report
-      if(!is.null(wgcna2_rpt) && is.null(wgcna2_pdf())) {
-        pdf_target <- file.path(pdf_tempdir,"report-wgcna2.pdf")
-        playbase::markdownToPDF(wgcna2_rpt, file=pdf_target, quiet=TRUE)
-        wgcna2_pdf("pdf/report-wgcna2.pdf")
-      }
-      
-      cmap_rpt <- pgx$drugs[[1]]$report$report
-      if(!is.null(cmap_rpt) && is.null(cmap_pdf())) {
-        pdf_target <- file.path(pdf_tempdir,"report-cmap.pdf")
-        playbase::markdownToPDF(cmap_rpt, file=pdf_target, quiet=TRUE)
-        cmap_pdf("pdf/report-cmap.pdf")
-      }
+      updateCheckboxInput(session, "force", value = FALSE)
+      updateActionButton(session, "generate", label = "Reset reports")      
+    })
+    
+    ##-------------------------------------------------
+    ##------------ other observers --------------------
+    ##-------------------------------------------------
 
-      mofa_rpt <- pgx$mofa$report$report
-      if(!is.null(mofa_rpt) && is.null(mofa_pdf())) {
-        pdf_target <- file.path(pdf_tempdir,"report-mofa.pdf")
-        playbase::markdownToPDF(mofa_rpt, file=pdf_target, quiet=TRUE)
-        mofa_pdf("pdf/report-mofa.pdf")
-      }     
+    observe({
+      file <- input$logofile
+      req(file)
+      ext <- tools::file_ext(file$datapath)
+      validate(need(ext %in% c('jpg','png'), "Please upload a png or jpg file"))
+      file.copy(file$datapath, logopath, overwrite=TRUE)
+    })
 
-      summary_rpt <- pgx$report$report
-      if(!is.null(summary_rpt) && is.null(summary_pdf())) {
-        pdf_target <- file.path(pdf_tempdir,"report-summary.pdf")
-        playbase::markdownToPDF(summary_rpt, file=pdf_target, quiet=TRUE)
-        summary_pdf("pdf/report-summary.pdf")
-      }     
+    shiny::observeEvent({
+      list(pgx$X, input$clear)
+    }, {
+      clear_files()
+      updateCheckboxInput(session, "force", value = FALSE)      
+      updateActionButton(session, "generate", label = "Generate reports")
+    })
 
-      update_nav(pgx)
-    }) 
+    clear_files <- function() {
+      dbg("[clear_files] clearing files!")
+      updateTextAreaInput(session, "edit_wgcna", value = "")
+      updateTextAreaInput(session, "edit_wgcna2", value = "")
+      updateTextAreaInput(session, "edit_mofa", value = "")
+      updateTextAreaInput(session, "edit_cmap", value = "")
+      updateTextAreaInput(session, "edit_summary", value = "")
+      unlink(file.path(pdf_tempdir,"report-wgcna.pdf"))
+      unlink(file.path(pdf_tempdir,"report-wgcna2.pdf"))
+      unlink(file.path(pdf_tempdir,"report-cmap.pdf"))
+      unlink(file.path(pdf_tempdir,"report-mofa.pdf"))
+      unlink(file.path(pdf_tempdir,"report-summary.pdf"))            
+      char_counts <<- char_counts * 0
+      letter_counts <<- lapply(letter_counts, function(x) x*0)
+    }
+
     
   }) ## end of moduleServer
 }

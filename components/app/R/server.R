@@ -15,8 +15,6 @@ app_server <- function(input, output, session) {
   message("======================== SERVER ===========================")
   message("===========================================================\n")
 
-  VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
-
   ## Initialise the global colour theme (in-session only)
   init_color_theme()
 
@@ -482,15 +480,18 @@ app_server <- function(input, output, session) {
       )
     }
 
-    ## remove loading modal from LoadingBoard
-    shiny::removeModal()
+    ## Goto dataview
     bslib::nav_select("app-sidebar", selected = "Dashboard")
-
     bigdash.openSettings(lock = TRUE)
     bigdash.openSidebar()
     bigdash.showTabs(session)
     bigdash.selectTab(session, "dataview-tab")
 
+    ## remove loading modal from LoadingBoard
+    shinyjs::delay(2000, {
+      shiny::removeModal()
+    })
+    
   })
 
   insertBigTabUI2 <- function(ui, menu) {
@@ -1006,34 +1007,7 @@ app_server <- function(input, output, session) {
   ## About
   ## -------------------------------------------------------------
 
-  observeEvent(input$navbar_about, {
-    authors <- c(
-      "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Jonathan Manson-Hennig, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
-    )
-    authors <- paste(sort(authors), collapse = ", ")
-
-    shiny::showModal(
-      shiny::modalDialog(
-        div(
-          h2("Omics Playground"),
-          h5(VERSION),
-          h5("Advanced omics analysis for everyone"), br(), br(),
-          p("Created with love and proudly presented to you by BigOmics Analytics from Ticino, the sunny side of Switzerland."),
-          p(tags$a(href = "https://www.bigomics.ch", "www.bigomics.ch")),
-          style = "text-align:center; line-height: 1em;"
-        ),
-        footer = div(
-          "© 2000-2025 BigOmics Analytics, Inc.",
-          br(), br(),
-          paste("Credits:", authors),
-          style = "font-size: 0.8em; line-height: 0.9em; text-align:center;"
-        ),
-        size = "m",
-        easyClose = TRUE,
-        fade = FALSE
-      )
-    )
-  })
+  observeEvent(input$navbar_about, ui.showAboutModal())
 
   ## -------------------------------------------------------------
   ## Session login sequence
@@ -1321,7 +1295,6 @@ app_server <- function(input, output, session) {
     }
   })
 
-
   ## clean up any remanining UI from previous aborted processx
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
@@ -1330,27 +1303,11 @@ app_server <- function(input, output, session) {
   observeEvent(auth$logged, {
     if (auth$logged) {
       shinyjs::delay(500, {
-        ## read startup messages
-        msg_file <- file.path(ETC, "MESSAGES")
-        if (file.exists(msg_file)) {
-          msg <- readLines(msg_file)
-          msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
-          if (length(msg) > 0) {
-            msg <- c(msg[[1]], sample(msg, min(4, length(msg))))
-            STARTUP_MESSAGES <- msg
-            shiny::showModal(
-              ui.startupModal(
-                id = "startup_modal",
-                messages = STARTUP_MESSAGES,
-                title = "BigOmics Highlights"
-              )
-            )
-          }
-        }
+        #ui.showStartupModal()
+        #ui.showAboutModal()
       })
     }
   })
-
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Reset inactivity counter when there is user activity (a click on the UI)

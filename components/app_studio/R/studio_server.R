@@ -54,11 +54,16 @@ StudioServer <- function(id, pgx) {
       bslib::nav_select("studiopanel","Quiz")
       bslib::nav_select("settings","Quiz")
     })
+
+    observeEvent(input$show_custom, {
+      bslib::nav_select("studiopanel","Custom")
+      bslib::nav_select("settings","Custom")
+    })
     
     ## ----------------- output -------------------------------
     VisReportServer("poster", pgx, output_format="poster")
     VisReportServer("slide", pgx, output_format="slide")
-    AiReportServer("aireport", pgx, reactive(input$nav) )         
+    AiReportServer("aireport", pgx)         
     InfographicServer("infographic", pgx)
     
   }) ## end moduleServer

@@ -56,10 +56,14 @@ OmicsBoardUI <- function(id, title, ..., info=TRUE) {
         div.link
       ),
       shiny::uiOutput(ns("current_dataset")),
-      div( tags$a(
-        href="http://www.bigomics.ch", target = "_blank", 
-        shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px")),
-        style="margin: 34px 5px -20px 0; padding: 0 0 0 80px;")
+#      div( tags$a(
+#        href="http://www.bigomics.ch", target = "_blank", 
+#        shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px")),
+#        style="margin: 34px 5px -20px 0; padding: 0 0 0 80px;")
+      div(shiny::actionButton(ns("logo_click"),
+        shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px"),
+        class = "quick-button", style="border: 0px; background-color: transparent;"),
+        style="margin: 28px 5px -20px 0; padding: 0 0 0 80px;")
     ),
     ...
   )
@@ -97,6 +101,10 @@ OmicsBoard <- function(id, pgx, title, infotext=NULL) {
       }
     })
 
+    shiny::observeEvent(input$logo_click, {
+      ui.aboutModal()
+    })
+    
     ## Show experiment info if dataset name is clicked.
     observeEvent(input$dataset_click, {
       shiny::req(pgx$name)

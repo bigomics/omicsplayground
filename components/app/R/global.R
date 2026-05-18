@@ -80,6 +80,7 @@ pgx.system.file <- function(file = ".", package) {
   file.path(dir, file)
 }
 
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 AUTHENTICATION <- "none"
 WATERMARK <- FALSE
 DEVMODE <- FALSE

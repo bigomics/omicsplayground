@@ -3,23 +3,29 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ui.startupModal <- function(id, messages, title = NULL) {
-  if (length(messages) == 0) {
-    return(NULL)
-  }
+ui.showStartupModal <- function(title = "BigOmics Highlights") {
 
-  header <- sapply(strsplit(messages, split = ":::"), function(m) m[[1]])
-  messages2 <- sapply(messages, function(s) sub(".*:::", "", s))
+  ## read startup messages
+  msg_file <- file.path(ETC, "MESSAGES")
+  if (!file.exists(msg_file)) return(NULL)
+
+  msg <- readLines(msg_file)
+  msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+  #msg <- c(msg[[1]], sample(msg, min(4, length(msg))))
+  msg <- sample(msg, min(4, length(msg)))
+  
+  header <- sapply(strsplit(msg, split = ":::"), function(m) m[[1]])
+  msg2 <- sapply(msg, function(s) sub(".*:::", "", s))
 
   carousel_items <- list()
-  for (i in 1:length(messages)) {
+  for (i in 1:length(msg)) {
     tag1 <- bsutils::carouselItem(
       div(
         style = "height: 380px; margin-top: 0px;",
         class = "d-flex align-items-center justify-content-center",
         HTML(paste0(
           "<div><h4 class='modal-title text-center'>",
-          header[[i]], "</h4>", messages2[[i]], "</div>"
+          header[[i]], "</h4>", msg2[[i]], "</div>"
         ))
       ),
       class = "p-2"
@@ -48,8 +54,9 @@ ui.startupModal <- function(id, messages, title = NULL) {
     ),
     easyClose = TRUE
   )
-  modal <- div(id = id, modal)
-  return(modal)
+  shiny::showModal(
+    div(id = "startup_modal", modal)
+  )
 }
 
 ui.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoons") {
@@ -100,6 +107,35 @@ ui.showImageModal <- function(img, title, footer='', width=1088) {
       size = "xl",
       easyClose = TRUE,
       fade = TRUE
+    )
+  )
+}
+
+ui.showAboutModal <- function() {
+  authors <- c(
+    "Ana Nufer, Antonino Zito, Axel Martinelli, Carson Sievert, Cédric Scherer, Gabriela Scorici, Griffin Seidel, Ivo Kwee, John Coene, Jonathan Manson-Hennig, Layal Abo Khayal, Marco Sciaini, Matt Leech, Mauro Miguel Masiero, Murat Akhmedov, Nick Cullen, Santiago Caño Muñiz, Shalini Pandurangan, Stefan Reifenberg, Xavier Escribà Montagut"
+  )
+  authors <- paste(sort(authors), collapse = ", ")
+  
+  shiny::showModal(
+    shiny::modalDialog(
+      div(
+        h2("Omics Playground"),
+        h5(VERSION),
+        h5("Advanced omics analysis for everyone"), br(), br(),
+        p("Created with love and proudly presented to you by BigOmics Analytics from Ticino, the sunny side of Switzerland."),
+        p(tags$a(href="https://www.bigomics.ch", "www.bigomics.ch", target="_blank")),
+        style = "text-align:center; line-height: 1em;"
+      ),
+      footer = div(
+        "© 2000-2026 BigOmics Analytics, Inc.",
+        br(), br(),
+        paste("Credits:", authors),
+        style = "font-size: 0.8em; line-height: 0.9em; text-align:center;"
+      ),
+      size = "m",
+      easyClose = TRUE,
+      fade = FALSE
     )
   )
 }

@@ -336,9 +336,15 @@ LoadingBoard <- function(id,
     }
 
     loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
-      ## During loading show loading pop-up modal
-      ui.showCartoonModal()
 
+      ## During loading show loading pop-up modal
+      firstpgx <- (length(names(pgx))==0)
+      if(firstpgx) {
+        ui.showStartupModal()
+      } else {
+        ui.showCartoonModal()
+      }
+      
       loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
         warning("[loadAndActivatePGX] ERROR loading PGX file ", pgxfile, "\n")
