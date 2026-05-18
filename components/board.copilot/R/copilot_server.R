@@ -159,24 +159,26 @@ CopilotBoardServer <- function(
     # For now, save_ctrl$on_run_settled() is dormant — Phase 4 wires the trigger.
 
     # ---- Phase 3: restore controller ----
-    # restore_ctrl <- copilot_restore_controller(
-    #   bindings_factory = function() build_run_bindings(
-    #                        session          = session,
-    #                        evidence_api     = evidence$api,
-    #                        docs_dir         = docs_dir,
-    #                        data_dir         = pgx_dir,
-    #                        pgx_loaded_event = pgx_loaded_event
-    #                      ),
-    #   store            = chat_store,
-    #   agent_rv         = agent_rv,
-    #   chat_api         = chat,
-    #   evidence_api     = evidence,
-    #   restore_inflight = restore_inflight,
-    #   session          = session
-    # )
-    # shiny::observeEvent(history$on_restore(), {
-    #   restore_ctrl$start(history$on_restore())
-    # })
+    restore_ctrl <- copilot_restore_controller(
+      store            = chat_store,
+      agent            = agent_rv,
+      run_status       = run_status,
+      restore_inflight = restore_inflight,
+      bindings_factory = function() build_run_bindings(
+                           session          = session,
+                           evidence_api     = NULL,   # TODO(phase 5): pass evidence$api
+                           docs_dir         = docs_dir,
+                           data_dir         = pgx_dir,
+                           pgx_loaded_event = pgx_loaded_event
+                         ),
+      local_pgx        = shiny::reactive(pgx),
+      data_dir         = pgx_dir,
+      evidence         = NULL,                        # TODO(phase 5): pass evidence module handle
+      chat_ns          = session$ns("chat"),
+      session          = session
+    )
+    # TODO(phase 6): wire history$on_restore() -> restore_ctrl$start(sid)
+    # For now the controller is dormant — Phase 6 wires CopilotHistoryServer.
 
     # ---- Phase 4: run controller ----
     # run_ctrl <- copilot_run_controller(
