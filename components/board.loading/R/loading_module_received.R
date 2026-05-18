@@ -19,12 +19,42 @@ upload_module_received_server <- function(id,
 
       nr_ds_received <- reactiveVal(0)
 
-      # function that listed to input new_dataset_received
-      show_shared_tab <- function() {
-        if (input$new_dataset_received) {
-          bigdash.selectTab(session, "load-tab")
-          shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
+      # callbackR for the "New dataset received" modal: jump to Shared datasets
+      show_shared_tab <- function(value) {
+        if (isTRUE(value)) {
+          bigdash.selectTab(session, "sharing-tab")
         }
+      }
+
+      # keep navbar badges in sync with the count of pending received datasets
+      update_shared_badges <- function(n) {
+        shinyjs::runjs(sprintf(
+          "(function(n){
+            var sub = document.querySelector('a[data-target=\"sharing-tab\"]');
+            if (sub) {
+              var oldSub = sub.querySelector('.shared-pending-badge');
+              if (oldSub) oldSub.remove();
+              if (n > 0) {
+                var b = document.createElement('span');
+                b.className = 'shared-pending-badge';
+                b.style.cssText = 'display:inline-block;background:#dc3545;color:#fff;border-radius:10px;padding:0 6px;margin-left:6px;font-size:11px;font-weight:600;line-height:16px;vertical-align:middle;';
+                b.textContent = n;
+                sub.appendChild(b);
+              }
+            }
+            document.querySelectorAll('.nav-link.dropdown-toggle').forEach(function(el){
+              if (el.textContent.trim().indexOf('Datasets') !== 0) return;
+              var oldDot = el.querySelector('.shared-pending-dot');
+              if (oldDot) oldDot.remove();
+              if (n > 0) {
+                var d = document.createElement('span');
+                d.className = 'shared-pending-dot';
+                d.style.cssText = 'display:inline-block;background:#dc3545;border-radius:50%%;width:8px;height:8px;margin-left:6px;vertical-align:middle;';
+                el.appendChild(d);
+              }
+            });
+          })(%d);", n
+        ))
       }
 
       ## ------------ get received files
@@ -48,14 +78,15 @@ upload_module_received_server <- function(id,
             shinyalert::shinyalert(
               "New dataset received!",
               paste(
-                "You have received a dataset from another user. Please accept or decline it in the Sharing panel."
+                "You have received a dataset from another user.",
+                "Click below to view and accept it."
               ),
-              showConfirmButton = FALSE,
-              ##            confirmButtonText = "Go to shared datasets",
+              showConfirmButton = TRUE,
+              confirmButtonText = "Go to shared datasets",
+              confirmButtonCol = "#337ab7",
               showCancelButton = TRUE,
-              cancelButtonText = "OK",
-              inputId = "new_dataset_received"
-              ##              callbackR = show_shared_tab
+              cancelButtonText = "Later",
+              callbackR = show_shared_tab
             )
           }
           nr_ds_received(current_ds_received)
@@ -77,6 +108,12 @@ upload_module_received_server <- function(id,
           return(pgxfiles)
         }
       )
+
+      # refresh navbar badges whenever the pending-shares count changes
+      shiny::observe({
+        files <- getReceivedFiles()
+        update_shared_badges(if (is.null(files)) 0L else length(files))
+      })
 
       receivedPGXtable <- shiny::eventReactive(
         c(getReceivedFiles()),
