@@ -1,7 +1,8 @@
 # CopilotChatUI.R — Chat Module UI
 #
 # Centre column of the copilot board: chat header + tier selector, chat body
-# (shinychat::chat_ui), footer with example buttons and hidden stop button.
+# (shinychat::chat_ui). Height-constrained so the chat region scrolls
+# internally rather than pushing the outer page taller.
 #
 # See .active_plans/refactor_copilot/chat/specs.md §CopilotChatUI.
 
@@ -18,6 +19,7 @@ CopilotChatUI <- function(id) {
   ns <- shiny::NS(id)
 
   bslib::card(
+    style = "height: calc(100vh - 80px);",
     bslib::card_header(
       shiny::div(
         class = "d-flex align-items-center gap-2",
@@ -30,28 +32,13 @@ CopilotChatUI <- function(id) {
         )
       )
     ),
-    shinychat::chat_ui(
-      ns("chat"),
-      height      = "100%",
-      fill        = TRUE,
-      placeholder = "Ask a question about your data…"
-    ),
-    bslib::card_footer(
-      shiny::div(
-        class = "d-flex flex-wrap gap-2 align-items-center",
-        shiny::actionButton(ns("ask_describe"),   "Describe data",   class = "btn-sm btn-outline-primary"),
-        shiny::actionButton(ns("ask_findings"),   "Key findings",    class = "btn-sm btn-outline-primary"),
-        shiny::actionButton(ns("ask_pathways"),   "Top pathways",    class = "btn-sm btn-outline-primary"),
-        shiny::actionButton(ns("ask_biomarkers"), "Biomarker genes", class = "btn-sm btn-outline-primary"),
-        shiny::actionButton(ns("ask_plot"),       "Show a plot",     class = "btn-sm btn-outline-primary"),
-        shinyjs::hidden(
-          shiny::actionButton(
-            ns("stop_btn"),
-            label = "Stop",
-            icon  = shiny::icon("stop"),
-            class = "btn-sm btn-danger ms-auto"
-          )
-        )
+    shiny::div(
+      style = "flex: 1; min-height: 0;",
+      shinychat::chat_ui(
+        ns("chat"),
+        height      = "calc(100vh - 240px)",
+        fill        = TRUE,
+        placeholder = "Ask a question about your data…"
       )
     )
   )

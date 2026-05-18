@@ -16,6 +16,7 @@ CopilotBoardUI <- function(id) {
 
   bslib::layout_columns(
     col_widths = c(3, 5, 4),
+    style = "height: calc(100vh - 80px);",
 
     # ---- Left column: datasets / history / docs ----
     bslib::card(

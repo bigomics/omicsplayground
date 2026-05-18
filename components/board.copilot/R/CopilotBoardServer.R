@@ -119,10 +119,7 @@ CopilotBoardServer <- function(
     )
     docs     <- CopilotDocsServer("docs", docs_dir = docs_dir)
 
-    # ---- Run dispatch observers (stop / new chat / tier change) ----
-    shiny::observeEvent(input$stop_btn, {
-      run_ctrl$dispatch(run_request_abort())
-    })
+    # ---- Run dispatch observers (new chat / tier change) ----
     shiny::observeEvent(input$new_chat, {
       run_ctrl$dispatch(run_request_new_chat())
     }, ignoreInit = TRUE)

@@ -10,29 +10,19 @@
 # ---- Null-coalescing operator ----
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# ---- Example questions ----
-.COPILOT_EXAMPLE_QUESTIONS <- list(
-  describe   = "Describe my experiment and the main comparisons being made",
-  findings   = "Summarize the main findings of this experiment",
-  pathways   = "List the top enriched pathways and explain how they relate to the experiment",
-  biomarkers = "Show the top candidate biomarkers for this experiment",
-  plot       = "Show me a PCA plot of the samples"
-)
-
 #' Copilot Chat Module Server
 #'
 #' Owns shinychat I/O. Observes `chat_event` and dispatches `post`, `clear`,
-#' `stream`, and `replay` events to shinychat. Forwards user input and
-#' example-button clicks to `on_user_message`.
+#' `stream`, and `replay` events to shinychat. Forwards user input to
+#' `on_user_message`.
 #'
 #' @param id Module namespace id.
-#' @param on_user_message function(text) — called on every user submission
-#'   (text input or example button). Should normally dispatch a
-#'   `run_request_ask(text)` to the run controller.
+#' @param on_user_message function(text) — called on every user submission.
+#'   Should normally dispatch a `run_request_ask(text)` to the run controller.
 #' @param chat_event reactive() or reactiveVal() returning list|NULL — event
 #'   bus written by the orchestrator. Shapes: post / clear / stream / replay.
-#' @param run_status Optional reactive(character) — drives stop_btn visibility
-#'   and example-button disabling when value is `"streaming"`.
+#' @param run_status Optional reactive(character) — currently unused (kept for
+#'   API compatibility).
 #' @param tier_choices Optional reactive() returning named character vector —
 #'   pushed into the tier selectInput on change.
 #'
@@ -51,24 +41,6 @@ CopilotChatServer <- function(
     user_input_rv  <- shiny::reactiveVal("")
     stream_done_rv <- shiny::reactiveVal(0L)
     last_error_rv  <- shiny::reactiveVal(NULL)
-
-    # ---- run_status: disable example buttons + toggle stop_btn ----
-    if (!is.null(run_status)) {
-      shiny::observe({
-        streaming <- identical(run_status(), "streaming")
-        if (streaming) {
-          shinyjs::disable("ask_describe");   shinyjs::disable("ask_findings")
-          shinyjs::disable("ask_pathways");   shinyjs::disable("ask_biomarkers")
-          shinyjs::disable("ask_plot")
-          shinyjs::show("stop_btn")
-        } else {
-          shinyjs::enable("ask_describe");    shinyjs::enable("ask_findings")
-          shinyjs::enable("ask_pathways");    shinyjs::enable("ask_biomarkers")
-          shinyjs::enable("ask_plot")
-          shinyjs::hide("stop_btn")
-        }
-      })
-    }
 
     # ---- tier choices update ----
     if (!is.null(tier_choices)) {
@@ -141,28 +113,45 @@ CopilotChatServer <- function(
       on_user_message(text)
     })
 
-    # ---- Example buttons ----
-    .ask <- function(text) {
-      user_input_rv(text)
-      on_user_message(text)
-    }
-    shiny::observeEvent(input$ask_describe,   .ask(.COPILOT_EXAMPLE_QUESTIONS$describe))
-    shiny::observeEvent(input$ask_findings,   .ask(.COPILOT_EXAMPLE_QUESTIONS$findings))
-    shiny::observeEvent(input$ask_pathways,   .ask(.COPILOT_EXAMPLE_QUESTIONS$pathways))
-    shiny::observeEvent(input$ask_biomarkers, .ask(.COPILOT_EXAMPLE_QUESTIONS$biomarkers))
-    shiny::observeEvent(input$ask_plot,       .ask(.COPILOT_EXAMPLE_QUESTIONS$plot))
-
     # ---- on_tool_request: inline collapsible tool marker ----
     # Passed by run_controller as on_tool_request argument to agent_prompt_stream.
     # Fires once per tool start, during streaming.
     .on_tool_request <- function(req) {
-      args_json <- tryCatch(
-        jsonlite::toJSON(req$arguments, auto_unbox = TRUE, pretty = TRUE),
-        error = function(e) "{}"
-      )
+      log_trace("copilot.chat.tool_request",
+        name     = req$name %||% "unknown",
+        n_args   = length(req$arguments),
+        arg_keys = paste(names(req$arguments) %||% character(0), collapse = ","))
+
+      args_text <- tryCatch({
+        args <- req$arguments
+        if (length(args) == 0L) {
+          "(no arguments)"
+        } else {
+          lines <- mapply(function(key, val) {
+            formatted <- if (is.list(val) || (is.vector(val) && length(val) > 1L)) {
+              if (length(val) > 5L) {
+                short <- paste(format(val[seq_len(5L)]), collapse = ", ")
+                paste0(short, ", …")
+              } else {
+                paste(format(val), collapse = ", ")
+              }
+            } else {
+              format(val)
+            }
+            paste0(key, " = ", formatted)
+          }, names(args), args, SIMPLIFY = TRUE, USE.NAMES = FALSE)
+          paste(lines, collapse = "\n")
+        }
+      }, error = function(e) {
+        tryCatch(
+          jsonlite::toJSON(req$arguments, auto_unbox = TRUE, pretty = TRUE),
+          error = function(e2) "(error formatting arguments)"
+        )
+      })
+
       marker <- paste0(
         '<details><summary>\U0001F527 ', req$name %||% "tool", '</summary>',
-        '<pre>', args_json, '</pre>',
+        '<pre>', args_text, '</pre>',
         '</details>'
       )
       tryCatch(

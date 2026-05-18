@@ -32,7 +32,7 @@ make_record <- function(role, content) {
 }
 
 # ===========================================================================
-# user input + example buttons
+# user input
 # ===========================================================================
 
 test_that("user text input triggers on_user_message with trimmed text", {
@@ -59,76 +59,6 @@ test_that("empty user input is ignored (no callback)", {
     ), {
       session$setInputs(chat_user_input = "   ")
       expect_null(captured)
-    }
-  )
-})
-
-test_that("ask_describe button fires the describe prompt", {
-  captured <- NULL
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) captured <<- text,
-      chat_event      = shiny::reactive(NULL)
-    ), {
-      session$setInputs(ask_describe = 1L)
-      expect_match(captured, "Describe my experiment", fixed = TRUE)
-    }
-  )
-})
-
-test_that("ask_findings button fires the findings prompt", {
-  captured <- NULL
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) captured <<- text,
-      chat_event      = shiny::reactive(NULL)
-    ), {
-      session$setInputs(ask_findings = 1L)
-      expect_match(captured, "main findings", fixed = TRUE)
-    }
-  )
-})
-
-test_that("ask_pathways button fires the pathways prompt", {
-  captured <- NULL
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) captured <<- text,
-      chat_event      = shiny::reactive(NULL)
-    ), {
-      session$setInputs(ask_pathways = 1L)
-      expect_match(captured, "enriched pathways", fixed = TRUE)
-    }
-  )
-})
-
-test_that("ask_biomarkers button fires the biomarkers prompt", {
-  captured <- NULL
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) captured <<- text,
-      chat_event      = shiny::reactive(NULL)
-    ), {
-      session$setInputs(ask_biomarkers = 1L)
-      expect_match(captured, "biomarkers", fixed = TRUE)
-    }
-  )
-})
-
-test_that("ask_plot button fires the plot prompt", {
-  captured <- NULL
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) captured <<- text,
-      chat_event      = shiny::reactive(NULL)
-    ), {
-      session$setInputs(ask_plot = 1L)
-      expect_match(captured, "PCA plot", fixed = TRUE)
     }
   )
 })
@@ -253,40 +183,6 @@ test_that("stream event chains promise; stream_done ticks on resolve", {
       later::run_now()
       session$flushReact()
       expect_equal(api$stream_done(), 1L)
-    }
-  )
-})
-
-# ===========================================================================
-# run_status drives stop_btn visibility
-# ===========================================================================
-
-test_that("run_status == 'streaming' shows stop_btn (shinyjs::show called)", {
-  show_calls <- character(0)
-  hide_calls <- character(0)
-  local_mocked_bindings(
-    show    = function(id, ...) { show_calls <<- c(show_calls, id); invisible(NULL) },
-    hide    = function(id, ...) { hide_calls <<- c(hide_calls, id); invisible(NULL) },
-    disable = function(id, ...) invisible(NULL),
-    enable  = function(id, ...) invisible(NULL),
-    .package = "shinyjs"
-  )
-
-  rs_rv <- shiny::reactiveVal("idle")
-  shiny::testServer(CopilotChatServer,
-    args = list(
-      id              = "chat",
-      on_user_message = function(text) NULL,
-      chat_event      = shiny::reactive(NULL),
-      run_status      = shiny::reactive(rs_rv())
-    ), {
-      session$flushReact()
-      # initial idle -> hide
-      expect_true("stop_btn" %in% hide_calls)
-
-      rs_rv("streaming")
-      session$flushReact()
-      expect_true("stop_btn" %in% show_calls)
     }
   )
 })
