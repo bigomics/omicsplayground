@@ -145,11 +145,17 @@ CopilotBoardServer <- function(
     }, ignoreNULL = TRUE)
 
     # Source 2: global PGX from other boards
+    # Materialise the reactiveValues into a plain list with class "pgx" before
+    # handing it to the agent — tools run outside the reactive domain and the
+    # package's downstream code (.ovi_pgx_name + omicspgxmcp plot tools) expects
+    # a plain list, not a reactiveValues handle.
     shiny::observeEvent(pgx$name, {
-      shiny::req(pgx$name)
+      shiny::req(pgx$name, !is.null(pgx$X))
       if (!is.null(restore_inflight())) return()
+      snapshot <- shiny::reactiveValuesToList(pgx)
+      class(snapshot) <- unique(c("pgx", class(snapshot)))
       run_ctrl$apply_dataset(
-        pgx_val  = pgx,
+        pgx_val  = snapshot,
         name     = as.character(pgx$name[[1]]),
         path     = NULL,
         data_dir = pgx_dir

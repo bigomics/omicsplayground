@@ -105,14 +105,29 @@ copilot_run_controller <- function(
 
   # ---- Current pgx extractor ----
   # The global `pgx` is a reactiveValues whose `$name` field signals "a
-  # dataset has been loaded". The dataset itself is the reactiveValues
-  # handle (other boards consume it via `pgx$X`, `pgx$samples`, ...). We
-  # pass the reactiveValues itself to RunContext / agent_set_pgx — that
-  # matches the existing apply_dataset wiring in copilot_server Phase 1.
+  # On reset (new_chat / tier change) we rebuild an Agent and need the
+  # currently-loaded PGX in the same shape the existing agent stored —
+  # a plain list with class "pgx", not the reactiveValues handle (tools
+  # run outside the reactive domain, and reactiveValues breaks
+  # downstream consumers like .ovi_pgx_name and omicspgxmcp plot tools).
+  # The current agent already holds the materialised PGX in its context,
+  # set there by an earlier `apply_dataset` / `agent_set_pgx`, so prefer
+  # that path. As a fallback (no current agent yet), materialise from the
+  # reactiveValues directly.
   .current_pgx <- function() {
-    val <- tryCatch(shiny::isolate(pgx$name), error = function(e) NULL)
-    if (is.null(val)) return(NULL)
-    pgx
+    current <- shiny::isolate(agent())
+    if (!is.null(current)) {
+      ctx_pgx <- tryCatch(current@context@pgx, error = function(e) NULL)
+      if (!is.null(ctx_pgx)) return(ctx_pgx)
+    }
+    has_data <- tryCatch(
+      !is.null(shiny::isolate(pgx$name)) && !is.null(shiny::isolate(pgx$X)),
+      error = function(e) FALSE
+    )
+    if (!isTRUE(has_data)) return(NULL)
+    snapshot <- shiny::reactiveValuesToList(pgx)
+    class(snapshot) <- unique(c("pgx", class(snapshot)))
+    snapshot
   }
 
   # ------------------------------------------------------------------------
