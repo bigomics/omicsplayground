@@ -88,6 +88,9 @@ CopilotBoardServer <- function(
       },
       chat_event   = shiny::reactive(chat_event_rv()),
       run_status   = shiny::reactive(run_status()),
+      on_abort     = function(reason) {
+        run_ctrl$dispatch(run_request_abort(reason))
+      },
       tier_choices = tier_choices_rx
     )
 

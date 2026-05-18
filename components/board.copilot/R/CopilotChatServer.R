@@ -21,8 +21,12 @@
 #'   Should normally dispatch a `run_request_ask(text)` to the run controller.
 #' @param chat_event reactive() or reactiveVal() returning list|NULL — event
 #'   bus written by the orchestrator. Shapes: post / clear / stream / replay.
-#' @param run_status Optional reactive(character) — currently unused (kept for
-#'   API compatibility).
+#' @param run_status Optional reactive(character) — drives the send→stop
+#'   morph: when `run_status() == "streaming"`, shinychat's send button is
+#'   hidden via CSS and an overlaid stop button is shown.
+#' @param on_abort Optional function(reason) — invoked when the stop button is
+#'   clicked. Should normally dispatch a `run_request_abort()` to the run
+#'   controller. If NULL the stop button still renders but does nothing.
 #' @param tier_choices Optional reactive() returning named character vector —
 #'   pushed into the tier selectInput on change.
 #'
@@ -33,6 +37,7 @@ CopilotChatServer <- function(
   on_user_message,
   chat_event,
   run_status   = NULL,
+  on_abort     = NULL,
   tier_choices = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -48,6 +53,23 @@ CopilotChatServer <- function(
         ch <- tier_choices()
         shiny::req(ch)
         shiny::updateSelectInput(session, "tier", choices = ch)
+      })
+    }
+
+    # ---- run_status: morph send button into stop button while streaming ----
+    # When run_status() == "streaming" we add the .copilot-streaming class on
+    # body (CSS hides shinychat's send button) and show the overlaid stop
+    # button at the same coordinates. On any other state, reverse.
+    if (!is.null(run_status)) {
+      shiny::observe({
+        streaming <- identical(run_status(), "streaming")
+        if (streaming) {
+          shinyjs::addClass(selector = "body", class = "copilot-streaming")
+          shinyjs::show("stop_btn_wrap")
+        } else {
+          shinyjs::removeClass(selector = "body", class = "copilot-streaming")
+          shinyjs::hide("stop_btn_wrap")
+        }
       })
     }
 
@@ -112,6 +134,11 @@ CopilotChatServer <- function(
       user_input_rv(text)
       on_user_message(text)
     })
+
+    # ---- Stop button (overlay on shinychat's send button while streaming) ----
+    shiny::observeEvent(input$stop_btn, {
+      if (is.function(on_abort)) on_abort("User stopped the run")
+    }, ignoreInit = TRUE)
 
     # ---- on_tool_request: inline collapsible tool marker ----
     # Passed by run_controller as on_tool_request argument to agent_prompt_stream.
