@@ -20,7 +20,8 @@
   position: absolute;
   bottom: 6px;
   right: 8px;
-  z-index: 10;
+  z-index: 1000;
+  pointer-events: auto;
 }
 .copilot-chat-stop-wrap .btn {
   background-color: var(--bs-danger, #dc3545);

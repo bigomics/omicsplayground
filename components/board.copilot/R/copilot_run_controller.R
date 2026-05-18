@@ -191,13 +191,26 @@ copilot_run_controller <- function(
   # ------------------------------------------------------------------------
   .run_abort <- function(request) {
     current <- shiny::isolate(agent())
-    if (is.null(current)) return(invisible(NULL))
-    tryCatch(
+    if (is.null(current)) {
+      log_info("copilot.run.abort_skipped", reason = "no_agent")
+      return(invisible(NULL))
+    }
+    rs_status <- tryCatch(
+      omicsagentovi::run_state_status(current@run_state),
+      error = function(e) "unknown"
+    )
+    log_info("copilot.run.abort_invoked",
+             reason     = request$reason %||% "User stopped the run",
+             run_status = shiny::isolate(run_status()),
+             rs_status  = rs_status)
+    ok <- tryCatch(
       omicsagentovi::agent_request_abort(current, request$reason %||% "User stopped the run"),
       error = function(e) {
         log_info("copilot.run.abort_failed", msg = conditionMessage(e))
+        FALSE
       }
     )
+    log_info("copilot.run.abort_result", ok = isTRUE(ok))
     # run_status will be flipped to "aborted" by the stream's on_done callback.
     invisible(NULL)
   }

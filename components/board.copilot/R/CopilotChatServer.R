@@ -137,6 +137,9 @@ CopilotChatServer <- function(
 
     # ---- Stop button (overlay on shinychat's send button while streaming) ----
     shiny::observeEvent(input$stop_btn, {
+      log_info("copilot.chat.stop_clicked",
+               value = as.integer(input$stop_btn %||% 0L),
+               has_on_abort = is.function(on_abort))
       if (is.function(on_abort)) on_abort("User stopped the run")
     }, ignoreInit = TRUE)
 
