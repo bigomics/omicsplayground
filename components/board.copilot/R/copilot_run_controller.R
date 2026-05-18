@@ -97,6 +97,21 @@ copilot_run_controller <- function(
     )
   }
 
+  # ---- Session id generator ----
+  # AgentSession's default session_id is NA_character_, which makes the
+  # sessions/turns/transcript_records save fail with NOT NULL constraint
+  # errors. The package leaves session-id minting to the host, so we
+  # generate one at every fresh-agent construction site (first dataset
+  # load, new_chat reset, tier change).
+  .new_session_id <- function() {
+    paste0(
+      "sess-",
+      format(Sys.time(), "%Y%m%d-%H%M%S"),
+      "-",
+      paste(sample(c(0:9, letters), 8, replace = TRUE), collapse = "")
+    )
+  }
+
   # ---- Current pgx extractor ----
   # The global `pgx` is a reactiveValues whose `$name` field signals "a
   # On reset (new_chat / tier change) we rebuild an Agent and need the
@@ -245,6 +260,7 @@ copilot_run_controller <- function(
         omicsagentovi::Agent(
           tier     = the_tier,
           context  = omicsagentovi::RunContext(pgx = pgx_val),
+          session  = omicsagentovi::AgentSession(session_id = .new_session_id()),
           bindings = bindings
         ),
         error = function(e) {
@@ -330,6 +346,7 @@ copilot_run_controller <- function(
         omicsagentovi::Agent(
           tier     = shiny::isolate(tier()),
           context  = omicsagentovi::RunContext(pgx = pgx_val),
+          session  = omicsagentovi::AgentSession(session_id = .new_session_id()),
           bindings = bindings
         ),
         error = function(e) {
