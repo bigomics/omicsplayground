@@ -461,6 +461,27 @@ extract_label_settings <- function(input, defaults = list()) {
 }
 
 
+#' Hyperbolic significance mask matching playbase::ggVolcano.
+#'
+#' Returns a logical vector flagging points that lie above the hyperbola
+#' (y - -log10(psig)) * (|fc| - lfc) > k, with |fc| > lfc.
+#'
+#' @param fc Effect size (log2FC) vector.
+#' @param y  Already -log10-transformed significance vector.
+#' @param psig Significance threshold on the original scale (FDR/p).
+#' @param lfc Log fold-change threshold (vertical asymptote).
+#' @param k Hyperbola curvature.
+#' @return Logical vector the same length as \code{fc}.
+hyperbolic_significance <- function(fc, y, psig, lfc, k = 1) {
+  if (is.null(k) || is.na(k)) k <- 1
+  psig_t <- -log10(psig)
+  sig <- (y - psig_t) * (abs(fc) - lfc) > k
+  sig[abs(fc) <= lfc] <- FALSE
+  sig[is.na(sig)] <- FALSE
+  sig
+}
+
+
 ## ---------------------------------------------------------------
 ## 6. Custom palette UI helpers
 ## ---------------------------------------------------------------
