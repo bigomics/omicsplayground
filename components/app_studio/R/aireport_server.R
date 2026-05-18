@@ -163,15 +163,17 @@ AiReportServer <- function(id, pgx) {
     
     shiny::observeEvent( input$edit_mode, {
       if(input$edit_mode) {
+        bslib::nav_select("navset_edit", input$navset_preview)                  
         bslib::nav_select("navset", "Edit")
-        shinyalert::shinyalert(
-          text = HTML("Warning. Edits are currently <b>not saved</b> after logout!"),
-          html = TRUE,
-          closeOnClickOutside = TRUE,
-          timer = ifelse(has.warned, 1000, 0)
-        )
+        ## shinyalert::shinyalert(
+        ##   text = HTML("Warning. Edits are currently <b>not saved</b> after logout!"),
+        ##   html = TRUE,
+        ##   closeOnClickOutside = TRUE,
+        ##   timer = ifelse(has.warned, 1000, 0)
+        ## )
         has.warned <<- has.warned + 1
       } else {
+        bslib::nav_select("navset_preview", input$navset_edit)          
         bslib::nav_select("navset", "Preview")
       }
     })
@@ -203,58 +205,55 @@ AiReportServer <- function(id, pgx) {
       if(has.changed(rptname, rpt)) {
         shiny::withProgress(message = "updating PDF...", value = 0.7, {
           file <- file.path(pdf_tempdir, pdfname)
-          playbase::markdownToPDF(rpt, file=file, logo=logopath, quiet=FALSE)
+          playbase::markdownToPDF(rpt, file=file, logo=logopath, quiet=TRUE)
         })
       }
     }
 
+    pdf.iframe <- function(pdfname) {
+      HTML(paste0('<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/',pdfname,'" type="application/pdf"></iframe>'))
+    }
+    
     output$summary <- renderUI({
       updatePDF(input$edit_summary, "summary", "report-summary.pdf")
       shiny::validate(need(file.exists(summary_pdf), "missing summary report"))
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-summary.pdf"></iframe>'
-      return(HTML(tag))      
+      return(pdf.iframe("report-summary.pdf"))
     })
 
     output$wgcna <- renderUI({
       updatePDF(input$edit_wgcna, "wgcna", "report-wgcna.pdf")      
       shiny::validate(need(file.exists(wgcna_pdf),"missing WGCNA report"))      
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-wgcna.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-wgcna.pdf"))
     })
 
     output$wgcna2 <- renderUI({
       updatePDF(input$edit_wgcna2, "wgcna2", "report-wgcna2.pdf")            
       shiny::validate(need(file.exists(wgcna2_pdf),"missing moxWGCNA report"))      
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-wgcna2.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-wgcna2.pdf"))
     })
 
     output$cmap <- renderUI({
       updatePDF(input$edit_cmap, "cmap", "report-cmap.pdf")                  
       shiny::validate(need(file.exists(cmap_pdf),"missing L1000 report"))            
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-cmap.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-cmap.pdf"))
     })
-
+    
     output$mofa <- renderUI({
       updatePDF(input$edit_mofa, "mofa", "report-mofa.pdf")                        
       shiny::validate(need(file.exists(mofa_pdf),"missing mofa report"))            
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 30px)" src="pdf/report-mofa.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-mofa.pdf"))
     })
 
     output$de <- renderUI({
       ## updatePDF(input$edit_de, "de", "report-de.pdf")                        
       shiny::validate(need(file.exists(de_pdf),"missing DE report"))            
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-de.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-de.pdf"))
     })
 
     output$enrichment <- renderUI({
-      ## updatePDF(input$edit_enrichment, "de", "report-enrichment.pdf")                        
+      ## updatePDF(input$edit_enrichment, "de", "report-enrichment.pdf")      
       shiny::validate(need(file.exists(enrichment_pdf),"missing Enrichment report"))
-      tag <- '<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/report-enrichment.pdf"></iframe>'
-      return(HTML(tag))
+      return(pdf.iframe("report-enrichment.pdf"))
     })
 
     
