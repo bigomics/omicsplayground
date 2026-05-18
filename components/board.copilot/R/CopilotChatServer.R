@@ -20,7 +20,9 @@
 #' @param on_user_message function(text) — called on every user submission.
 #'   Should normally dispatch a `run_request_ask(text)` to the run controller.
 #' @param chat_event reactive() or reactiveVal() returning list|NULL — event
-#'   bus written by the orchestrator. Shapes: post / clear / stream / replay.
+#'   bus written by the orchestrator. Shapes: post / clear / reset / stream / replay.
+#'   `reset` combines clear + post in a single flush-safe write:
+#'   `list(type = "reset", role = "assistant", text = <greeting>)`.
 #' @param run_status Optional reactive(character) — drives the send→stop
 #'   morph: when `run_status() == "streaming"`, shinychat's send button is
 #'   hidden via CSS and an overlaid stop button is shown.
@@ -31,6 +33,7 @@
 #'   pushed into the tier selectInput on change.
 #'
 #' @return list(user_input, stream_done, last_error, on_tool_request, push_event=NULL)
+#'   chat_event shapes handled: post / clear / reset / stream / replay.
 #' @export
 CopilotChatServer <- function(
   id,
@@ -92,6 +95,17 @@ CopilotChatServer <- function(
         },
         clear = {
           shinychat::chat_clear("chat")
+        },
+        reset = {
+          shinychat::chat_clear("chat")
+          text <- event$text %||% ""
+          if (nzchar(text)) {
+            shinychat::chat_append_message(
+              "chat",
+              list(role = event$role %||% "assistant", content = text),
+              chunk = FALSE
+            )
+          }
         },
         stream = {
           result <- shinychat::chat_append("chat", event$async_gen)

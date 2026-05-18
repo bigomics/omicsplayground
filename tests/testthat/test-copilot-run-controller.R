@@ -370,10 +370,9 @@ test_that("dispatch(new_chat) with dirty agent pre-saves and rebuilds; clears ch
       # With NULL pgx, the reset leaves agent as NULL (no Agent constructed)
       expect_null(shiny::isolate(agent_rv()))
 
-      # Chat events: clear then greeting post
+      # Chat events: single reset event (clear + greeting in one flush-safe write)
       kinds <- vapply(posted, function(e) e$type, character(1))
-      expect_true("clear" %in% kinds)
-      expect_true("post"  %in% kinds)
+      expect_true("reset" %in% kinds)
 
       expect_equal(shiny::isolate(run_status_rv()), "idle")
     }
@@ -516,11 +515,12 @@ test_that("apply_dataset with NULL agent constructs a new Agent", {
   fake_agent <- make_stub_agent()
 
   local_mocked_bindings(
-    Agent = function(tier, context, bindings) {
+    Agent = function(tier, context, session, bindings) {
       agent_constructed <<- TRUE
       fake_agent
     },
     RunContext = function(pgx) list(pgx = pgx),
+    AgentSession = function(session_id = NA_character_) list(session_id = session_id),
     .package = "omicsagentovi"
   )
 

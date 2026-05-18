@@ -119,6 +119,66 @@ test_that("clear event calls chat_clear", {
   )
 })
 
+test_that("reset event calls chat_clear once then chat_append_message with greeting", {
+  cleared  <- 0L
+  appended <- list()
+  local_mocked_bindings(
+    chat_clear = function(id) { cleared <<- cleared + 1L; invisible(NULL) },
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_append = function(id, ...) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+    ), {
+      ev_rv(list(type = "reset", role = "assistant", text = "Welcome!"))
+      session$flushReact()
+
+      expect_equal(cleared, 1L)
+      expect_equal(length(appended), 1L)
+      expect_equal(appended[[1]]$role,    "assistant")
+      expect_equal(appended[[1]]$content, "Welcome!")
+    }
+  )
+})
+
+test_that("reset event with empty text only calls chat_clear (no post)", {
+  cleared  <- 0L
+  appended <- list()
+  local_mocked_bindings(
+    chat_clear = function(id) { cleared <<- cleared + 1L; invisible(NULL) },
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_append = function(id, ...) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+    ), {
+      ev_rv(list(type = "reset", role = "assistant", text = ""))
+      session$flushReact()
+
+      expect_equal(cleared, 1L)
+      expect_equal(length(appended), 0L)
+    }
+  )
+})
+
 test_that("replay event iterates records via chat_append_message", {
   appended <- list()
   local_mocked_bindings(

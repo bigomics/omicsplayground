@@ -39,6 +39,20 @@
 .copilot-chat-stop-wrap .btn:hover {
   background-color: var(--bs-danger, #b02a37);
 }
+.copilot-chat-tier-wrap {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  z-index: 1000;
+  pointer-events: auto;
+}
+.copilot-chat-tier-wrap .selectize-control,
+.copilot-chat-tier-wrap .form-group { margin: 0; }
+.copilot-chat-tier-wrap .selectize-input {
+  min-width: 140px;
+  font-size: 0.85em;
+  padding-block: 2px;
+}
 /* When streaming, hide shinychat's send button so the stop button reads
    as a morph rather than a sibling. */
 .copilot-streaming shiny-chat-input .shiny-chat-btn-send { display: none; }
@@ -60,18 +74,6 @@ CopilotChatUI <- function(id) {
     class = "copilot-chat-card",
     style = "height: calc(100vh - 80px);",
     shiny::tags$head(shiny::tags$style(shiny::HTML(.COPILOT_CHAT_CSS))),
-    bslib::card_header(
-      shiny::div(
-        class = "d-flex align-items-center gap-2",
-        shiny::span("Copilot Chat", class = "me-auto fw-semibold"),
-        shiny::selectInput(
-          ns("tier"),
-          label   = NULL,
-          choices = NULL,
-          width   = "auto"
-        )
-      )
-    ),
     shiny::div(
       class = "copilot-chat-body position-relative",
       shinychat::chat_ui(
@@ -79,6 +81,17 @@ CopilotChatUI <- function(id) {
         height      = "100%",
         fill        = TRUE,
         placeholder = "Ask a question about your data…"
+      ),
+      # Tier selector — bottom-left, mirroring the stop button at bottom-right.
+      shiny::div(
+        id    = ns("tier_wrap"),
+        class = "copilot-chat-tier-wrap",
+        shiny::selectInput(
+          ns("tier"),
+          label   = NULL,
+          choices = NULL,
+          width   = "auto"
+        )
       ),
       # Overlaid stop button — same coordinates as shinychat's send button.
       # Hidden by default; the chat server toggles visibility on run_status.

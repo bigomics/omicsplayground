@@ -279,13 +279,12 @@ copilot_run_controller <- function(
       tryCatch(evidence$clear(), error = function(e) NULL)
     }
 
-    chat_event(list(type = "clear"))
     greeting <- if (is.null(new_agent)) {
       copilot_msg("greeting")
     } else {
       copilot_msg("greeting_active")
     }
-    chat_event(list(type = "post", role = "assistant", text = greeting))
+    chat_event(list(type = "reset", role = "assistant", text = greeting))
 
     run_status("idle")
     invisible(NULL)
