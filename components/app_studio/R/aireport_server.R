@@ -211,7 +211,7 @@ AiReportServer <- function(id, pgx) {
     }
 
     pdf.iframe <- function(pdfname) {
-      HTML(paste0('<iframe style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/',pdfname,'" type="application/pdf"></iframe>'))
+      HTML(paste0('<embed style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/',pdfname,'" type="application/pdf" />'))      
     }
     
     output$summary <- renderUI({
