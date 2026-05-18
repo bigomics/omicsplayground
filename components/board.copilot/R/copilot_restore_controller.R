@@ -11,8 +11,12 @@
 #   2. `bindings` arg replaced by `bindings_factory` — called inside start()
 #      so bindings closures capture the current reactive environment.
 #
+# Phase 4 refactor: shinychat I/O is no longer called directly. The
+# controller now writes events into the chat module's `chat_event`
+# reactiveVal; CopilotChatServer dispatches them to shinychat.
+#
 # See .active_plans/refactor_copilot/restore_controller/specs.md for the
-# full contract and failure mode table.
+# full contract.
 
 # ---- Null-coalescing operator ----
 `%||%` <- function(a, b) if (is.null(a)) b else a
@@ -29,37 +33,24 @@
 # Internal helpers (file-local, prefixed `.`)
 # --------------------------------------------------------------------------
 
-#' Replay the visible transcript into shinychat
+#' Replay the visible transcript by pushing a single `replay` event.
 #'
-#' Iterates `session_transcript(agent@session, view = "user")` and calls
-#' `shinychat::chat_append_message` for each record with non-empty
-#' `content_text`. Returns count of records actually appended.
+#' Fetches `session_transcript(agent@session, view = "user")`, filters out
+#' records with empty `content_text`, and pushes one `replay` event into
+#' `chat_event`. The chat module's replay handler does the per-record
+#' append.
 #'
-#' @param agent   An `omicsagentovi::Agent`.
-#' @param chat_ns Character scalar — namespaced shinychat id.
-#' @return Integer count of records appended.
-.replay_transcript <- function(agent, chat_ns) {
+#' @param agent      An `omicsagentovi::Agent`.
+#' @param chat_event reactiveVal — chat module event bus writer.
+#' @return Integer count of records included in the replay payload.
+.replay_transcript <- function(agent, chat_event) {
   records <- omicsagentovi::session_transcript(agent@session, view = "user")
-  n <- 0L
-  for (rec in records) {
-    if (!nzchar(rec@content_text)) next
-    tryCatch(
-      {
-        shinychat::chat_append_message(
-          chat_ns,
-          list(role = rec@role, content = rec@content_text),
-          chunk = FALSE
-        )
-        n <- n + 1L
-      },
-      error = function(e) {
-        .log_info_restore("copilot.replay_record_failed",
-          idx = rec@idx,
-          msg = conditionMessage(e))
-      }
-    )
+  # Drop empty-content records (keep filter semantics from Phase 3).
+  records <- Filter(function(r) nzchar(r@content_text), records)
+  if (length(records) > 0L) {
+    chat_event(list(type = "replay", records = records))
   }
-  n
+  length(records)
 }
 
 # --------------------------------------------------------------------------
@@ -86,8 +77,8 @@
 #' @param data_dir          Character scalar — passed to `agent_set_pgx`.
 #' @param evidence          List with `$clear()` or `NULL`. Guard for NULL.
 #'   Phase 5 wires a real evidence handle here.
-#' @param chat_ns           Character — namespaced shinychat id
-#'   (e.g. `session$ns("chat")`).
+#' @param chat_event        `reactiveVal` — chat module event bus writer.
+#'   Receives `clear`, `post`, and `replay` events.
 #' @param session           Shiny session object — required for
 #'   `ExtendedTask` scoping and `showNotification`.
 #'
@@ -104,7 +95,7 @@ copilot_restore_controller <- function(
   local_pgx,
   data_dir,
   evidence,
-  chat_ns,
+  chat_event,
   session
 ) {
 
@@ -137,11 +128,11 @@ copilot_restore_controller <- function(
       shiny::showNotification(msg, type = "warning", session = session)
     }
 
-    # Placeholder chat message — TODO phase 6: replace via copilot_msg()
-    shinychat::chat_append(
-      chat_ns,
-      "Restore failed. You can continue with the current session or pick another from history."
-    )
+    # TODO phase 6: copilot_msg("restore.failed")
+    chat_event(list(
+      type = "post", role = "assistant",
+      text = "Restore failed. You can continue with the current session or pick another from history."
+    ))
 
     restore_inflight(NULL)
     restore_status("failed")
@@ -193,7 +184,7 @@ copilot_restore_controller <- function(
     agent(restored)
     restore_status("replaying")
 
-    n_replayed <- .replay_transcript(restored, chat_ns)
+    n_replayed <- .replay_transcript(restored, chat_event)
 
     restore_inflight(NULL)
     restore_status("idle")
@@ -230,9 +221,11 @@ copilot_restore_controller <- function(
     # Clear evidence panel if wired (Phase 5)
     if (!is.null(evidence)) evidence$clear()
 
-    # Clear chat and show placeholder — TODO phase 6: replace via copilot_msg()
-    shinychat::chat_clear(chat_ns)
-    shinychat::chat_append(chat_ns, "Restoring previous session…")
+    # Clear chat and show placeholder via the event bus.
+    # TODO phase 6: copilot_msg("restore.starting")
+    chat_event(list(type = "clear"))
+    chat_event(list(type = "post", role = "assistant",
+                    text = "Restoring previous session…"))
 
     .log_info_restore("copilot.restore_start", session_id = session_id)
 

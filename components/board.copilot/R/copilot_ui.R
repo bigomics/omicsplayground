@@ -1,11 +1,8 @@
 # copilot_ui.R — Copilot Board UI Shell
 #
 # Three-column bslib layout. Left: datasets/history/docs tabset.
-# Centre: chat region. Right: evidence placeholder.
+# Centre: CopilotChatUI module (Phase 4). Right: evidence placeholder.
 #
-# Phase 1: module slots are empty uiOutput() placeholders. Later phases slot
-# in CopilotDatasetsUI, CopilotHistoryUI, CopilotDocsUI, CopilotEvidenceUI,
-# and extract the chat region into CopilotChatUI (Phase 4).
 # Phase 6: this file is renamed to CopilotBoardUI.R.
 
 #' Copilot Board UI Shell
@@ -49,46 +46,8 @@ CopilotBoardUI <- function(id) {
       )
     ),
 
-    # ---- Centre column: chat ----
-    bslib::card(
-      bslib::card_header(
-        shiny::div(
-          class = "d-flex align-items-center gap-2",
-          shiny::span("Copilot Chat", class = "me-auto fw-semibold"),
-          shiny::selectInput(
-            ns("tier"),
-            label   = NULL,
-            choices = .COPILOT_TIER_IDS,
-            width   = "auto"
-          )
-        )
-      ),
-      # TODO(phase 4): replace with CopilotChatUI(ns("chat")) once chat module exists
-      shinychat::chat_ui(
-        ns("chat"),
-        height       = "100%",
-        fill         = TRUE,
-        placeholder  = "Ask a question about your data…"
-      ),
-      bslib::card_footer(
-        shiny::div(
-          class = "d-flex flex-wrap gap-2",
-          shiny::actionButton(ns("ask_describe"),   "Describe data",     class = "btn-sm btn-outline-primary"),
-          shiny::actionButton(ns("ask_findings"),   "Key findings",      class = "btn-sm btn-outline-primary"),
-          shiny::actionButton(ns("ask_pathways"),   "Top pathways",      class = "btn-sm btn-outline-primary"),
-          shiny::actionButton(ns("ask_biomarkers"), "Biomarker genes",   class = "btn-sm btn-outline-primary"),
-          shiny::actionButton(ns("ask_plot"),       "Show a plot",       class = "btn-sm btn-outline-primary")
-        )
-      ),
-      shinyjs::hidden(
-        shiny::actionButton(
-          ns("stop_btn"),
-          label = "Stop",
-          icon  = shiny::icon("stop"),
-          class = "btn-danger btn-sm position-absolute"
-        )
-      )
-    ),
+    # ---- Centre column: chat (Phase 4 — owned by CopilotChatUI module) ----
+    CopilotChatUI(ns("chat")),
 
     # ---- Right column: evidence ----
     shiny::uiOutput(ns("evidence"))  # TODO(phase 5): CopilotEvidenceUI(ns("evidence"))
