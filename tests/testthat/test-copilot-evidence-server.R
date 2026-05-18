@@ -15,6 +15,9 @@
   "../../components/board.copilot/R"
 }
 
+source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
+source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
+source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
 source(file.path(.board_dir, "copilot_plot_render.R"),    local = TRUE)
 source(file.path(.board_dir, "CopilotEvidenceServer.R"),  local = TRUE)
 

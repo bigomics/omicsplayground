@@ -10,15 +10,7 @@
 # ---- Null-coalescing operator ----
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# ---- Local minimal logger (TODO phase 6: replace with copilot_logger.R log_info) ----
-.log_info <- function(event, ...) {
-  args <- list(...)
-  kv <- if (length(args)) paste(names(args), unlist(lapply(args, as.character)),
-                                sep = "=", collapse = " ") else ""
-  message("[CopilotChat] ", event, if (nzchar(kv)) paste0(" ", kv) else "")
-}
-
-# ---- Example questions (TODO phase 6: copilot_msg("example.<key>")) ----
+# ---- Example questions ----
 .COPILOT_EXAMPLE_QUESTIONS <- list(
   describe   = "Describe my experiment and the main comparisons being made",
   findings   = "Summarize the main findings of this experiment",
@@ -116,8 +108,7 @@ CopilotChatServer <- function(
             onRejected = function(e) {
               msg <- conditionMessage(e)
               last_error_rv(msg)
-              # TODO(phase 6): copilot_msg("stream.error", message = msg)
-              .post("assistant", paste("Copilot error:", msg))
+              .post("assistant", copilot_msg("error_prefix", msg = msg))
               stream_done_rv(shiny::isolate(stream_done_rv()) + 1L)
             }
           )
@@ -132,7 +123,7 @@ CopilotChatServer <- function(
                 chunk = FALSE
               ),
               error = function(e) {
-                .log_info("copilot.chat.replay_record_failed",
+                log_info("copilot.chat.replay_record_failed",
                           msg = conditionMessage(e))
               }
             )
@@ -181,7 +172,7 @@ CopilotChatServer <- function(
           chunk = TRUE
         ),
         error = function(e) {
-          .log_info("copilot.chat.tool_marker_failed", msg = conditionMessage(e))
+          log_info("copilot.chat.tool_marker_failed", msg = conditionMessage(e))
         }
       )
     }

@@ -122,8 +122,7 @@ copilot_build_plot <- function(pgx, plot_type, args) {
 copilot_prerender_ggplot <- function(plot_obj, width = 8, height = 6, dpi = 96) {
   path <- tempfile(fileext = ".png")
   ggplot2::ggsave(path, plot = plot_obj, width = width, height = height, dpi = dpi)
-  message("[CopilotPlotRender] ggplot -> PNG path=", path, " size=", file.size(path))
-  # TODO(phase 6): replace message() with copilot_logger log_info("copilot.prerender.ggplot")
+  log_info("copilot.prerender.ggplot", path = path, size = file.size(path))
   path
 }
 
@@ -147,8 +146,7 @@ copilot_prerender_plotly <- function(plot_obj) {
     modeBarButtonsToAdd = list(),
     displaylogo = FALSE
   )
-  message("[CopilotPlotRender] plotly_build done")
-  # TODO(phase 6): replace message() with copilot_logger log_info("copilot.prerender.plotly")
+  log_info("copilot.prerender.plotly")
   built
 }
 

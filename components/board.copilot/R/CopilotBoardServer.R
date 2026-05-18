@@ -1,31 +1,22 @@
-# copilot_server.R — Copilot Board Orchestrator
+# CopilotBoardServer.R — Copilot Board Orchestrator
 #
 # Lifecycle owner for the Agent reactive. Wires module servers and lifecycle
 # controllers. Does not implement run/save/restore logic — those live in their
-# respective controllers.
-#
-# Phase 4 scope:
-#   - Raw Agent reactive (agent_rv)
-#   - Save + restore controllers wired (Phases 2 + 3)
-#   - Chat module + run controller live (Phase 4)
-#   - apply_dataset now lives in the run controller (moved from orchestrator)
-
-# ---- Tier IDs (from contract_audit.md §1 / copilot-models.R:12-25) ----
-.COPILOT_TIER_IDS <- c("copilot-default", "copilot-fast", "copilot-deep")
+# respective controllers (copilot_run_controller, copilot_save_controller,
+# copilot_restore_controller).
 
 #' Copilot Board Orchestrator
 #'
 #' Wires module servers and controllers. Holds the agent reactive.
-#' Does not contain run/save/restore logic — those live in their controllers.
 #'
 #' @param id         Module namespace id.
 #' @param pgx        Global PGX reactiveValues shared across all boards.
 #' @param pgx_dir    Path to directory containing .pgx dataset files.
-#'                   Passed to RunBindings$data_dir and CopilotDatasetsServer.
 #' @param chat_dir   Path for persisting chat sessions (SessionStore root).
-#' @param docs_dir   Path for uploaded documents. Passed to RunBindings$docs_dir.
-#' @param maxturns   Maximum user turns per session. Passed to run controller.
+#' @param docs_dir   Path for uploaded documents.
+#' @param maxturns   Maximum user turns per session.
 #' @param tiers      Character vector of tier identifiers (first = default).
+#'   Defaults to `COPILOT_TIERS` from `copilot_options.R`.
 #' @param is_data_loaded Optional reactiveVal; incremented after dataset load.
 #'
 #' @return NULL (side-effects only; called for Shiny registration).
@@ -37,7 +28,7 @@ CopilotBoardServer <- function(
   chat_dir,
   docs_dir,
   maxturns       = Inf,
-  tiers          = "copilot-default",
+  tiers          = COPILOT_TIERS,
   is_data_loaded = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -54,12 +45,11 @@ CopilotBoardServer <- function(
     # ---- Non-reactive state ----
     chat_store <- omicsagentovi::SessionStore(session_dir = chat_dir)
 
-    # ---- Phase 5: evidence module ----
-    # Instantiated BEFORE run/restore controllers so $append_artifact is available
-    # when bindings factories are called.
+    # ---- Evidence module (constructed first so $append_artifact is available
+    # when run/restore bindings factories run) ----
     evidence <- CopilotEvidenceServer("evidence", local_pgx = shiny::reactive(pgx))
 
-    # ---- Phase 2: save controller ----
+    # ---- Save controller ----
     save_ctrl <- copilot_save_controller(
       store                     = chat_store,
       agent                     = agent_rv,
@@ -67,7 +57,7 @@ CopilotBoardServer <- function(
       session                   = session
     )
 
-    # ---- Phase 3: restore controller ----
+    # ---- Restore controller ----
     restore_ctrl <- copilot_restore_controller(
       store            = chat_store,
       agent            = agent_rv,
@@ -86,12 +76,10 @@ CopilotBoardServer <- function(
       chat_event       = chat_event_rv,
       session          = session
     )
-    # TODO(phase 6): wire history$on_restore() -> restore_ctrl$start(sid)
 
-    # ---- Phase 4: chat module ----
+    # ---- Chat module ----
     tier_choices_rx <- shiny::reactive({
-      # TODO(phase 6): use copilot_tier_label() for display labels.
-      stats::setNames(tiers, tiers)
+      stats::setNames(tiers, vapply(tiers, copilot_tier_label, character(1)))
     })
     chat <- CopilotChatServer(
       "chat",
@@ -103,7 +91,7 @@ CopilotBoardServer <- function(
       tier_choices = tier_choices_rx
     )
 
-    # ---- Phase 4: run controller ----
+    # ---- Run controller ----
     run_ctrl <- copilot_run_controller(
       agent                = agent_rv,
       run_status           = run_status,
@@ -121,6 +109,15 @@ CopilotBoardServer <- function(
       maxturns             = maxturns,
       session              = session
     )
+
+    # ---- Panel modules (datasets / history / docs) ----
+    datasets <- CopilotDatasetsServer("datasets", pgx_dir = pgx_dir)
+    history  <- CopilotHistoryServer(
+      "history",
+      session_dir               = chat_dir,
+      history_invalidation_tick = shiny::reactive(history_invalidation_tick())
+    )
+    docs     <- CopilotDocsServer("docs", docs_dir = docs_dir)
 
     # ---- Run dispatch observers (stop / new chat / tier change) ----
     shiny::observeEvent(input$stop_btn, {
@@ -149,11 +146,9 @@ CopilotBoardServer <- function(
       pgx_loaded_event(NULL)
     }, ignoreNULL = TRUE)
 
-    # Source 2: global PGX from other boards
-    # Materialise the reactiveValues into a plain list with class "pgx" before
-    # handing it to the agent — tools run outside the reactive domain and the
-    # package's downstream code (.ovi_pgx_name + omicspgxmcp plot tools) expects
-    # a plain list, not a reactiveValues handle.
+    # Source 2: global PGX from other boards. Materialise reactiveValues into
+    # a plain list with class "pgx" — tools run outside the reactive domain
+    # and downstream package code expects a plain list.
     shiny::observeEvent(pgx$name, {
       shiny::req(pgx$name, !is.null(pgx$X))
       if (!is.null(restore_inflight())) return()
@@ -167,21 +162,73 @@ CopilotBoardServer <- function(
       )
     }, ignoreNULL = TRUE)
 
-    # TODO(phase 6): Source 3 — datasets panel selection.
+    # Source 3: human dataset picker (CopilotDatasetsServer selection)
+    shiny::observeEvent(datasets$selected(), {
+      path <- datasets$selected()
+      shiny::req(path)
+      if (!is.null(restore_inflight())) return()
+      loaded <- tryCatch(
+        {
+          pgx_obj <- playbase::pgx.load(path)
+          pgx_obj <- playbase::pgx.initialize(pgx_obj)
+          pgx_obj
+        },
+        error = function(e) {
+          shiny::showNotification(
+            copilot_msg("switch_failed", msg = conditionMessage(e)),
+            type = "error", session = session
+          )
+          NULL
+        }
+      )
+      if (is.null(loaded)) return()
+      # Push into global pgx so other boards see it.
+      sync_rv_from_list(pgx, loaded)
+      class(loaded) <- unique(c("pgx", class(loaded)))
+      run_ctrl$apply_dataset(
+        pgx_val  = loaded,
+        name     = tools::file_path_sans_ext(basename(path)),
+        path     = path,
+        data_dir = pgx_dir
+      )
+      bigdash.showTabsGoToDataView(session)
+      if (!is.null(is_data_loaded)) {
+        is_data_loaded(shiny::isolate(is_data_loaded()) + 1L)
+      }
+    }, ignoreNULL = TRUE)
+
+    # ---- History panel: restore trigger ----
+    shiny::observeEvent(history$on_restore(), {
+      sid <- history$on_restore()
+      shiny::req(sid)
+      restore_ctrl$start(sid)
+      history$on_restore(NULL)   # consume edge
+    }, ignoreNULL = TRUE)
+
+    # ---- History panel: delete trigger ----
+    shiny::observeEvent(history$on_delete(), {
+      sid <- history$on_delete()
+      shiny::req(sid)
+      tryCatch(
+        omicsagentovi::ovi_session_delete(session_id = sid, session_dir = chat_dir),
+        error = function(e) {
+          shiny::showNotification(
+            paste("Delete failed:", conditionMessage(e)),
+            type = "error", session = session
+          )
+        }
+      )
+      history_invalidation_tick(shiny::isolate(history_invalidation_tick()) + 1L)
+      history$on_delete(NULL)
+    }, ignoreNULL = TRUE)
 
     # ---- Greeting on first flush ----
     session$onFlushed(function() {
-      # TODO(phase 6): copilot_msg("greeting")
       chat_event_rv(list(
         type = "post", role = "assistant",
-        text = "Hi — load a dataset and ask me anything about your experiment."
+        text = copilot_msg("greeting")
       ))
     }, once = TRUE)
-
-    # ---- Phase 6: datasets/history/docs modules ----
-    # datasets <- CopilotDatasetsServer("datasets", ...)
-    # history  <- CopilotHistoryServer("history",  ...)
-    # docs     <- CopilotDocsServer("docs",         ...)
 
     invisible(NULL)
   })

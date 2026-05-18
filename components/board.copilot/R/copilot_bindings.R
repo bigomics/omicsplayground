@@ -9,9 +9,6 @@
 #   notification_sink: tool-manage-pgx.R:202   — function(level, payload)
 #   progress_callback: NEVER CALLED            — stub only
 
-# ---- Tier IDs (from contract_audit.md §1 / copilot-models.R:12-25) ----
-.COPILOT_TIER_IDS <- c("copilot-default", "copilot-fast", "copilot-deep")
-
 #' Build RunBindings for the Copilot board
 #'
 #' Creates a typed `omicsagentovi::RunBindings` S7 object that wires host
@@ -116,14 +113,14 @@ build_run_bindings <- function(
           is.function(tryCatch(session$sendNotification, error = function(e2) NULL))
         if (has_session) {
           shiny::showNotification(
-            paste("Plot rendering failed:", conditionMessage(e)),
+            copilot_msg("plot_failed", msg = conditionMessage(e)),
             type    = "warning",
             session = session
           )
         } else {
-          message("[CopilotBindings] plot_callback error: ", conditionMessage(e))
+          log_info("copilot.bindings.plot_callback_failed",
+                   msg = conditionMessage(e))
         }
-        # TODO(phase 6): route via notification_sink "internal" level + log_warn
       })
     }
     # Wrap for reactive-domain safety (callback fires from tool-execution thread)
@@ -153,7 +150,6 @@ build_run_bindings <- function(
         }
       }
       # All other levels: no-op (forward-compatible placeholder).
-      # TODO(phase 6): route to copilot_logger when shared/ arrives.
       invisible(NULL)
     }
   }

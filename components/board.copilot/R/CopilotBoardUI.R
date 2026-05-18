@@ -1,9 +1,7 @@
-# copilot_ui.R — Copilot Board UI Shell
+# CopilotBoardUI.R — Copilot Board UI Shell
 #
 # Three-column bslib layout. Left: datasets/history/docs tabset.
-# Centre: CopilotChatUI module (Phase 4). Right: evidence placeholder.
-#
-# Phase 6: this file is renamed to CopilotBoardUI.R.
+# Centre: CopilotChatUI module. Right: CopilotEvidenceUI module.
 
 #' Copilot Board UI Shell
 #'
@@ -31,25 +29,16 @@ CopilotBoardUI <- function(id) {
         )
       ),
       bslib::navset_underline(
-        bslib::nav_panel(
-          "Datasets",
-          shiny::uiOutput(ns("datasets"))   # TODO(phase 6): CopilotDatasetsUI(ns("datasets"))
-        ),
-        bslib::nav_panel(
-          "History",
-          shiny::uiOutput(ns("history"))    # TODO(phase 6): CopilotHistoryUI(ns("history"))
-        ),
-        bslib::nav_panel(
-          "Docs",
-          shiny::uiOutput(ns("docs"))       # TODO(phase 6): CopilotDocsUI(ns("docs"))
-        )
+        bslib::nav_panel("Datasets", CopilotDatasetsUI(ns("datasets"))),
+        bslib::nav_panel("History",  CopilotHistoryUI(ns("history"))),
+        bslib::nav_panel("Docs",     CopilotDocsUI(ns("docs")))
       )
     ),
 
-    # ---- Centre column: chat (Phase 4 — owned by CopilotChatUI module) ----
+    # ---- Centre column: chat ----
     CopilotChatUI(ns("chat")),
 
-    # ---- Right column: evidence (Phase 5) ----
+    # ---- Right column: evidence ----
     CopilotEvidenceUI(ns("evidence"))
   )
 }

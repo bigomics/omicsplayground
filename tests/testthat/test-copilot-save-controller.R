@@ -17,6 +17,15 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
 }
 
 # ---- Source the controller under test ----
+.board_dir_shared <- if (dir.exists("components/board.copilot/R")) {
+  "components/board.copilot/R"
+} else {
+  "../../components/board.copilot/R"
+}
+source(file.path(.board_dir_shared, "copilot_options.R"),  local = TRUE)
+source(file.path(.board_dir_shared, "copilot_messages.R"), local = TRUE)
+source(file.path(.board_dir_shared, "copilot_logger.R"),   local = TRUE)
+
 .ctrl_path <- if (file.exists("components/board.copilot/R/copilot_save_controller.R")) {
   "components/board.copilot/R/copilot_save_controller.R"
 } else {

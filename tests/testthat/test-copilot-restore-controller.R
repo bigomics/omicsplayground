@@ -22,6 +22,9 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
   "../../components/board.copilot/R"
 }
 
+source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
+source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
+source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
 source(file.path(.board_dir, "copilot_bindings.R"),           local = TRUE)
 source(file.path(.board_dir, "copilot_restore_controller.R"), local = TRUE)
 

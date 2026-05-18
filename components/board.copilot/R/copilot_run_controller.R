@@ -11,14 +11,6 @@
 # ---- Null-coalescing operator ----
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# ---- Local minimal logger (TODO phase 6: replace with copilot_logger.R log_info) ----
-.log_info <- function(event, ...) {
-  args <- list(...)
-  kv <- if (length(args)) paste(names(args), unlist(lapply(args, as.character)),
-                                sep = "=", collapse = " ") else ""
-  message("[CopilotRun] ", event, if (nzchar(kv)) paste0(" ", kv) else "")
-}
-
 # ---- Request constructors (pure helpers — no reactives) ----
 
 #' @export
@@ -139,7 +131,7 @@ copilot_run_controller <- function(
     current <- shiny::isolate(agent())
     if (is.null(current)) {
       chat_event(list(type = "post", role = "assistant",
-                      text = "Load a dataset first, then I can answer questions."))
+                      text = copilot_msg("no_dataset")))
       return(invisible(NULL))
     }
 
@@ -154,8 +146,7 @@ copilot_run_controller <- function(
                            logical(1)))
       if (n_user >= maxturns) {
         chat_event(list(type = "post", role = "assistant",
-          text = paste0("This session has reached the maximum of ", maxturns,
-                        " user turns. Start a new chat to continue.")))
+          text = copilot_msg("max_turns", n = maxturns)))
         return(invisible(NULL))
       }
     }
@@ -181,10 +172,10 @@ copilot_run_controller <- function(
         }
       ),
       error = function(e) {
-        .log_info("copilot.run.stream_invoke_failed", msg = conditionMessage(e))
+        log_info("copilot.run.stream_invoke_failed", msg = conditionMessage(e))
         run_status("failed")
         chat_event(list(type = "post", role = "assistant",
-          text = paste("Copilot error:", conditionMessage(e))))
+          text = copilot_msg("error_prefix", msg = conditionMessage(e))))
         NULL
       }
     )
@@ -204,7 +195,7 @@ copilot_run_controller <- function(
     tryCatch(
       omicsagentovi::agent_request_abort(current, request$reason %||% "User stopped the run"),
       error = function(e) {
-        .log_info("copilot.run.abort_failed", msg = conditionMessage(e))
+        log_info("copilot.run.abort_failed", msg = conditionMessage(e))
       }
     )
     # run_status will be flipped to "aborted" by the stream's on_done callback.
@@ -222,7 +213,7 @@ copilot_run_controller <- function(
       saved <- tryCatch(
         omicsagentovi::session_save(store, current),
         error = function(e) {
-          .log_info("copilot.run.presave_failed", msg = conditionMessage(e))
+          log_info("copilot.run.presave_failed", msg = conditionMessage(e))
           current
         }
       )
@@ -244,9 +235,9 @@ copilot_run_controller <- function(
           bindings = bindings
         ),
         error = function(e) {
-          .log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
+          log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
           shiny::showNotification(
-            paste("Copilot: failed to create agent —", conditionMessage(e)),
+            copilot_msg("agent_failed", msg = conditionMessage(e)),
             type = "error", session = session
           )
           NULL
@@ -261,11 +252,9 @@ copilot_run_controller <- function(
 
     chat_event(list(type = "clear"))
     greeting <- if (is.null(new_agent)) {
-      # TODO(phase 6): copilot_msg("greeting.no_dataset")
-      "Hi — load a dataset and ask me anything about your experiment."
+      copilot_msg("greeting")
     } else {
-      # TODO(phase 6): copilot_msg("greeting")
-      "Hi — what would you like to explore?"
+      copilot_msg("greeting_active")
     }
     chat_event(list(type = "post", role = "assistant", text = greeting))
 
@@ -291,14 +280,14 @@ copilot_run_controller <- function(
   # ------------------------------------------------------------------------
   dispatch <- function(request) {
     if (!is.list(request) || is.null(request$kind)) {
-      .log_info("copilot.run.bad_request")
+      log_info("copilot.run.bad_request")
       return(invisible(NULL))
     }
 
     # Guard: while streaming, only abort is permitted.
     if (identical(shiny::isolate(run_status()), "streaming") &&
         !identical(request$kind, "abort")) {
-      .log_info("copilot.run.dispatch_busy", kind = request$kind)
+      log_info("copilot.run.dispatch_busy", kind = request$kind)
       return(invisible(NULL))
     }
 
@@ -308,7 +297,7 @@ copilot_run_controller <- function(
       new_chat = .run_new_chat(request),
       tier     = .run_tier(request),
       {
-        .log_info("copilot.run.unknown_kind", kind = request$kind)
+        log_info("copilot.run.unknown_kind", kind = request$kind)
         invisible(NULL)
       }
     )
@@ -331,9 +320,9 @@ copilot_run_controller <- function(
           bindings = bindings
         ),
         error = function(e) {
-          .log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
+          log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
           shiny::showNotification(
-            paste("Copilot: failed to create agent —", conditionMessage(e)),
+            copilot_msg("agent_failed", msg = conditionMessage(e)),
             type = "error", session = session
           )
           NULL
@@ -351,9 +340,9 @@ copilot_run_controller <- function(
           data_dir     = data_dir
         ),
         error = function(e) {
-          .log_info("copilot.run.set_pgx_failed", msg = conditionMessage(e))
+          log_info("copilot.run.set_pgx_failed", msg = conditionMessage(e))
           shiny::showNotification(
-            paste("Copilot: failed to switch dataset —", conditionMessage(e)),
+            copilot_msg("switch_failed", msg = conditionMessage(e)),
             type = "error", session = session
           )
           NULL

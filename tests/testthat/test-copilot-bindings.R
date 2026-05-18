@@ -21,6 +21,15 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
 # testthat sets the working directory to tests/testthat/, so we step up two
 # levels to the repo root. devtools::test() also anchors at the repo root,
 # so we check both.
+.board_dir_shared <- if (dir.exists("components/board.copilot/R")) {
+  "components/board.copilot/R"
+} else {
+  "../../components/board.copilot/R"
+}
+source(file.path(.board_dir_shared, "copilot_options.R"),  local = TRUE)
+source(file.path(.board_dir_shared, "copilot_messages.R"), local = TRUE)
+source(file.path(.board_dir_shared, "copilot_logger.R"),   local = TRUE)
+
 .bindings_path <- if (file.exists("components/board.copilot/R/copilot_bindings.R")) {
   "components/board.copilot/R/copilot_bindings.R"
 } else {

@@ -10,14 +10,6 @@
 # See .active_plans/refactor_copilot/save_controller/specs.md for the full
 # contract.
 
-# ---- Local minimal logger (TODO phase 6: replace with copilot_logger.R log_info) ----
-.log_info <- function(event, ...) {
-  args <- list(...)
-  kv <- if (length(args)) paste(names(args), unlist(lapply(args, as.character)),
-                                sep = "=", collapse = " ") else ""
-  message("[CopilotSave] ", event, if (nzchar(kv)) paste0(" ", kv) else "")
-}
-
 # --------------------------------------------------------------------------
 # Internal prune helper
 # --------------------------------------------------------------------------
@@ -34,7 +26,7 @@
     tryCatch(
       omicsagentovi::ovi_session_delete(sid, session_dir = store@session_dir),
       error = function(e) {
-        .log_info("copilot.prune_failed", sid = sid, msg = conditionMessage(e))
+        log_info("copilot.prune_failed", sid = sid, msg = conditionMessage(e))
       }
     )
   }
@@ -91,7 +83,7 @@ copilot_save_controller <- function(
 
     if (identical(save_task$status(), "running")) {
       # Skip — the next settled run will find the same dirty state and save again.
-      .log_info("copilot.save_skipped_busy",
+      log_info("copilot.save_skipped_busy",
         reason = reason,
         dirty_gen = current@session@dirty_generation)
       return(invisible(NULL))
@@ -102,7 +94,7 @@ copilot_save_controller <- function(
       save_task$invoke(store, current),
       error = function(e) {
         save_status("failed")
-        .log_info("copilot.save_invoke_failed", msg = conditionMessage(e))
+        log_info("copilot.save_invoke_failed", msg = conditionMessage(e))
       }
     )
     invisible(NULL)
@@ -114,7 +106,7 @@ copilot_save_controller <- function(
 
     if (is.null(updated_agent)) {
       save_status("failed")
-      .log_info("copilot.save_failed")
+      log_info("copilot.save_failed")
       return()
     }
 
@@ -130,7 +122,7 @@ copilot_save_controller <- function(
     history_invalidation_tick(shiny::isolate(history_invalidation_tick()) + 1L)
     save_status("idle")
 
-    .log_info("copilot.save_complete",
+    log_info("copilot.save_complete",
       session_id = updated_agent@session@session_id,
       saved_gen  = updated_agent@session@saved_generation)
 

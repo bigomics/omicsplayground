@@ -21,14 +21,6 @@
 # ---- Null-coalescing operator ----
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# ---- Local minimal logger (TODO phase 6: replace with copilot_logger.R log_info) ----
-.log_info_restore <- function(event, ...) {
-  args <- list(...)
-  kv <- if (length(args)) paste(names(args), unlist(lapply(args, as.character)),
-                                sep = "=", collapse = " ") else ""
-  message("[CopilotRestore] ", event, if (nzchar(kv)) paste0(" ", kv) else "")
-}
-
 # --------------------------------------------------------------------------
 # Internal helpers (file-local, prefixed `.`)
 # --------------------------------------------------------------------------
@@ -128,10 +120,9 @@ copilot_restore_controller <- function(
       shiny::showNotification(msg, type = "warning", session = session)
     }
 
-    # TODO phase 6: copilot_msg("restore.failed")
     chat_event(list(
       type = "post", role = "assistant",
-      text = "Restore failed. You can continue with the current session or pick another from history."
+      text = copilot_msg("restore_failed")
     ))
 
     restore_inflight(NULL)
@@ -169,14 +160,14 @@ copilot_restore_controller <- function(
           data_dir     = data_dir
         ),
         error = function(e) {
-          .log_info_restore("copilot.restore_pgx_inject_failed",
+          log_info("copilot.restore_pgx_inject_failed",
             msg = conditionMessage(e))
           restored  # continue without PGX rather than failing the whole restore
         }
       )
       elapsed_ms <- round(
         as.numeric(difftime(Sys.time(), started, units = "secs")) * 1000, 1)
-      .log_info_restore("copilot.restore_pgx_injected",
+      log_info("copilot.restore_pgx_injected",
         dataset    = current_pgx$name %||% "unknown",
         elapsed_ms = elapsed_ms)
     }
@@ -189,7 +180,7 @@ copilot_restore_controller <- function(
     restore_inflight(NULL)
     restore_status("idle")
 
-    .log_info_restore("copilot.restore_complete",
+    log_info("copilot.restore_complete",
       session_id = session_id %||% "unknown",
       n_replayed = n_replayed,
       has_pgx    = !is.null(current_pgx))
@@ -201,7 +192,7 @@ copilot_restore_controller <- function(
     # Guard: refuse while agent is actively streaming
     if (identical(run_status(), "streaming")) {
       shiny::showNotification(
-        "Restore is unavailable while the agent is responding.",
+        copilot_msg("restore_busy"),
         type = "warning",
         session = session
       )
@@ -222,12 +213,11 @@ copilot_restore_controller <- function(
     if (!is.null(evidence)) evidence$clear()
 
     # Clear chat and show placeholder via the event bus.
-    # TODO phase 6: copilot_msg("restore.starting")
     chat_event(list(type = "clear"))
     chat_event(list(type = "post", role = "assistant",
-                    text = "Restoring previous session…"))
+                    text = copilot_msg("restore_started")))
 
-    .log_info_restore("copilot.restore_start", session_id = session_id)
+    log_info("copilot.restore_start", session_id = session_id)
 
     tryCatch(
       {
@@ -236,7 +226,7 @@ copilot_restore_controller <- function(
         restore_task$invoke(store, session_id, bindings)
       },
       error = function(e) {
-        .log_info_restore("copilot.restore_invoke_failed",
+        log_info("copilot.restore_invoke_failed",
           msg = conditionMessage(e))
         .handle_restore_failure(e, session_id, previous_agent)
       }
