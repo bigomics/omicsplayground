@@ -54,6 +54,11 @@ CopilotBoardServer <- function(
     # ---- Non-reactive state ----
     chat_store <- omicsagentovi::SessionStore(session_dir = chat_dir)
 
+    # ---- Phase 5: evidence module ----
+    # Instantiated BEFORE run/restore controllers so $append_artifact is available
+    # when bindings factories are called.
+    evidence <- CopilotEvidenceServer("evidence", local_pgx = shiny::reactive(pgx))
+
     # ---- Phase 2: save controller ----
     save_ctrl <- copilot_save_controller(
       store                     = chat_store,
@@ -70,14 +75,14 @@ CopilotBoardServer <- function(
       restore_inflight = restore_inflight,
       bindings_factory = function() build_run_bindings(
                            session          = session,
-                           evidence_api     = NULL,   # TODO(phase 5)
+                           evidence_api     = list(append_artifact = evidence$append_artifact),
                            docs_dir         = docs_dir,
                            data_dir         = pgx_dir,
                            pgx_loaded_event = pgx_loaded_event
                          ),
       local_pgx        = shiny::reactive(pgx),
       data_dir         = pgx_dir,
-      evidence         = NULL,                       # TODO(phase 5)
+      evidence         = evidence,
       chat_event       = chat_event_rv,
       session          = session
     )
@@ -105,7 +110,7 @@ CopilotBoardServer <- function(
       tier                 = tier,
       save_ctrl            = save_ctrl,
       restore_ctrl         = restore_ctrl,
-      evidence             = NULL,             # TODO(phase 5)
+      evidence             = evidence,
       store                = chat_store,
       chat_event           = chat_event_rv,
       chat_on_tool_request = chat$on_tool_request,
@@ -172,10 +177,6 @@ CopilotBoardServer <- function(
         text = "Hi — load a dataset and ask me anything about your experiment."
       ))
     }, once = TRUE)
-
-    # ---- Phase 5: evidence module ----
-    # evidence <- CopilotEvidenceServer("evidence", pgx = pgx)
-    # Re-wire build_run_bindings() after evidence is available.
 
     # ---- Phase 6: datasets/history/docs modules ----
     # datasets <- CopilotDatasetsServer("datasets", ...)

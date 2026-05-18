@@ -32,12 +32,21 @@ library(omicsagentovi)
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
+# Source the plot render helpers used by the new plot_callback implementation.
+.render_path <- if (file.exists("components/board.copilot/R/copilot_plot_render.R")) {
+  "components/board.copilot/R/copilot_plot_render.R"
+} else {
+  "../../components/board.copilot/R/copilot_plot_render.R"
+}
+source(.render_path, local = TRUE)
+
 # A minimal evidence_api stub that records calls.
+# post-Phase-5: $append_artifact(record) receives a single list arg.
 make_evidence_stub <- function() {
   calls <- list()
   list(
-    append_artifact = function(...) {
-      calls[[length(calls) + 1L]] <<- list(...)
+    append_artifact = function(record) {
+      calls[[length(calls) + 1L]] <<- record
       invisible(NULL)
     },
     calls = function() calls
@@ -185,4 +194,42 @@ test_that("progress_callback is always a no-op function (never NULL)", {
   # Must not error and must return invisible(NULL)
   out <- result@progress_callback(list(kind = "tool_start", tool = "show_plot"))
   expect_null(out)
+})
+
+test_that("plot_callback propagates a well-formed record to evidence_api$append_artifact", {
+  # Build a ggplot stub and override copilot_build_plot in the env where
+  # copilot_bindings.R was sourced (same local env due to source(..., local = TRUE)).
+  stub_plot <- ggplot2::ggplot(data.frame(x = 1, y = 1), ggplot2::aes(x, y)) +
+                 ggplot2::geom_point()
+  old_build <- copilot_build_plot           # saved from the sourced env
+  copilot_build_plot <<- function(...) stub_plot   # patch in same env
+  on.exit(copilot_build_plot <<- old_build)        # restore
+
+  stub   <- make_evidence_stub()
+  result <- build_run_bindings(
+    session          = NULL,
+    evidence_api     = stub,
+    pgx_loaded_event = NULL
+  )
+
+  # Invoke the callback directly; session = NULL means no wrapFunction path taken.
+  result@plot_callback(
+    pgx       = list(),
+    plot_type = "pca",
+    args      = list(contrast = "A_vs_B"),
+    artifact  = NULL
+  )
+
+  recorded <- stub$calls()
+  expect_equal(length(recorded), 1L)
+  rec <- recorded[[1L]]
+  expect_true(is.list(rec))
+  expect_equal(rec$kind, "ggplot")
+  expect_equal(rec$plot_type, "pca")
+  expect_equal(rec$args$contrast, "A_vs_B")
+  expect_null(rec$artifact)
+  # Prerendered path must point to an existing PNG file
+  expect_false(is.null(rec$prerendered_path))
+  expect_true(file.exists(rec$prerendered_path))
+  copilot_prerender_cleanup(rec$prerendered_path)
 })

@@ -19,8 +19,9 @@
 #'
 #' @param session Shiny session object, or NULL (used for reactive-domain
 #'   wrapping of plot_callback). NULL -> callbacks that need a session are NULL.
-#' @param evidence_api List with at minimum `$append_artifact(pgx, plot_type, args, artifact)`.
-#'   Returned by `CopilotEvidenceServer`. NULL -> plot_callback set to NULL.
+#' @param evidence_api List with at minimum `$append_artifact(record)` (single-arg,
+#'   the fully-rendered record list). Returned by `CopilotEvidenceServer`. NULL ->
+#'   plot_callback set to NULL.
 #' @param docs_dir character(0 or 1). Passed through to RunBindings; NULL/"" -> character(0).
 #' @param data_dir character(0 or 1). Same normalisation as docs_dir.
 #' @param pgx_loaded_event reactiveVal handle (or bare function, or NULL).
@@ -56,19 +57,74 @@ build_run_bindings <- function(
   data_dir <- .normalise_dir(data_dir)
 
   # ---- plot_callback ----
-  # Phase 1: forward raw arguments to evidence_api$append_artifact.
-  # TODO(phase 5): render plot from recipe here using copilot_build_plot(),
-  #   copilot_detect_plot_kind(), copilot_parse_features() before forwarding.
+  # Receives (pgx, plot_type, args, artifact) from the package (tool-show-plot.R:79).
+  # Builds the plot from the recipe using the board-side renderer, then hands a
+  # fully-rendered record to evidence_api$append_artifact(record) (single-arg).
+  # Errors are UI failures, not run failures (overview §5): caught locally and
+  # surfaced via showNotification without propagating to the package.
   plot_cb <- if (is.null(evidence_api)) {
     NULL
   } else {
     impl <- function(pgx, plot_type, args, artifact) {
-      evidence_api$append_artifact(
-        pgx       = pgx,
-        plot_type = plot_type,
-        args      = args,
-        artifact  = artifact
-      )
+      tryCatch({
+        plot_obj <- copilot_build_plot(pgx, plot_type, args)
+        kind     <- copilot_detect_plot_kind(plot_obj)
+        if (is.null(kind)) {
+          stop("unrecognised plot class: ", paste(class(plot_obj), collapse = " "))
+        }
+
+        prerendered_path <- NULL
+        if (identical(kind, "ggplot")) {
+          prerendered_path <- tryCatch(
+            copilot_prerender_ggplot(plot_obj),
+            error = function(e) {
+              message("[CopilotBindings] prerender_ggplot failed: ", conditionMessage(e))
+              NULL
+            }
+          )
+        } else if (identical(kind, "plotly")) {
+          plot_obj <- copilot_prerender_plotly(plot_obj)
+        }
+
+        label <- trimws(paste(
+          plot_type,
+          args$contrast   %||%
+          args$collection %||%
+          "",
+          sep = " "
+        ))
+
+        record <- list(
+          kind             = kind,
+          plot             = plot_obj,
+          prerendered_path = prerendered_path,
+          plot_type        = plot_type,
+          args             = args,
+          artifact         = artifact,
+          label            = label,
+          timestamp        = Sys.time()
+        )
+        evidence_api$append_artifact(record)
+      }, error = function(e) {
+        # Artifact failures are UI failures, not run failures (overview §5).
+        # Surface as a warning notification; do not propagate so the stream
+        # on_done handler can still complete normally.
+        # Guard: showNotification needs a live Shiny session — fall back to
+        # message() in headless/test contexts where session is NULL or lacks
+        # sendNotification.
+        has_session <- !is.null(session) &&
+          is.function(tryCatch(session$sendNotification, error = function(e2) NULL))
+        if (has_session) {
+          shiny::showNotification(
+            paste("Plot rendering failed:", conditionMessage(e)),
+            type    = "warning",
+            session = session
+          )
+        } else {
+          message("[CopilotBindings] plot_callback error: ", conditionMessage(e))
+        }
+        # TODO(phase 6): route via notification_sink "internal" level + log_warn
+      })
     }
     # Wrap for reactive-domain safety (callback fires from tool-execution thread)
     if (!is.null(session) && is.function(session[["wrapFunction"]])) {

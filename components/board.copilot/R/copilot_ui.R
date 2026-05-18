@@ -49,8 +49,8 @@ CopilotBoardUI <- function(id) {
     # ---- Centre column: chat (Phase 4 — owned by CopilotChatUI module) ----
     CopilotChatUI(ns("chat")),
 
-    # ---- Right column: evidence ----
-    shiny::uiOutput(ns("evidence"))  # TODO(phase 5): CopilotEvidenceUI(ns("evidence"))
+    # ---- Right column: evidence (Phase 5) ----
+    CopilotEvidenceUI(ns("evidence"))
   )
 }
 

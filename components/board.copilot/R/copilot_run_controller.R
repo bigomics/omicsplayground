@@ -96,7 +96,9 @@ copilot_run_controller <- function(
   .build_bindings <- function() {
     build_run_bindings(
       session          = session,
-      evidence_api     = if (!is.null(evidence)) evidence$api else NULL,
+      evidence_api     = if (!is.null(evidence))
+                           list(append_artifact = evidence$append_artifact)
+                         else NULL,
       docs_dir         = docs_dir,
       data_dir         = pgx_dir,
       pgx_loaded_event = pgx_loaded_event
