@@ -149,15 +149,14 @@ CopilotBoardServer <- function(
     #   })
 
     # ---- Phase 2: save controller ----
-    # save_ctrl <- copilot_save_controller(
-    #   store            = chat_store,
-    #   agent_rv         = agent_rv,
-    #   history_tick     = history_invalidation_tick,
-    #   session          = session
-    # )
-    # shiny::observeEvent(<run_settled_signal>, {
-    #   save_ctrl$on_run_settled(agent_rv())
-    # })
+    save_ctrl <- copilot_save_controller(
+      store                     = chat_store,
+      agent                     = agent_rv,
+      history_invalidation_tick = history_invalidation_tick,
+      session                   = session
+    )
+    # TODO(phase 4): replace with run_ctrl-emitted run_settled signal.
+    # For now, save_ctrl$on_run_settled() is dormant — Phase 4 wires the trigger.
 
     # ---- Phase 3: restore controller ----
     # restore_ctrl <- copilot_restore_controller(
