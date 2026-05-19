@@ -1,3 +1,21 @@
+### v4.1.8+master260519 (2026-05-19)
+
+-  feat: add ggprism theme support and plot editor enhancements [view](https://github.com/bigomics/omicsplayground/commit/35360e1e8aff9da4b16d31b293a34a55f161e064)
+-  feat: preserve user filter selection after file delete/move in admin panel [view](https://github.com/bigomics/omicsplayground/commit/19a98a62a397189a2d3d8f139164258a447c9c48)
+-  feat: add confirmation dialog before moving files in admin panel [view](https://github.com/bigomics/omicsplayground/commit/814d59fb6d9cc922aac7e74d9c8d762ad576ee36)
+-  feat: show meta.p instead of meta.q in enrichment table when "Show p-values" is enabled [view](https://github.com/bigomics/omicsplayground/commit/f7f455a9f48b2079d11309e6c2ed2fea95e4921e)
+-  feat: log admin actions [view](https://github.com/bigomics/omicsplayground/commit/147d089cb1a166bfbce391eef930443e53498dc7)
+-  feat: edit metadata on existing datasets [view](https://github.com/bigomics/omicsplayground/commit/7ba987444bb7bc238dd4f96e3a34b5a102f9b51c)
+-  add option to group by feature classes the boxplots [view](https://github.com/bigomics/omicsplayground/commit/19154124c5ab7c0a21d7b1168e32b0f848f539e7)
+-  feat: integrate plot editor into boxplot grouped/non grouped [view](https://github.com/bigomics/omicsplayground/commit/e46b5be418988b924c49f76280445097fb0f62e3)
+-  feat: add shinyproxy-sso[-admin] header-based auth methods [view](https://github.com/bigomics/omicsplayground/commit/0b466c8e641581ce91c5562c7b9ebc8a878ed4e3)
+-  feat(boxplot): expose prism panel + group-aware color/border [view](https://github.com/bigomics/omicsplayground/commit/2a0e36be4ef83a18e2f6b25d5a3c62bfcf3952ee)
+-  feat: new bigomics.ch email sender [view](https://github.com/bigomics/omicsplayground/commit/c77176be4c665b1ad0c3418d2de01cdf076f99a2)
+-  feat: plot editor order umap subplots [view](https://github.com/bigomics/omicsplayground/commit/56cbff537414a46842ef90a3e98630ff22904bc8)
+-  feat: sp-sso-admin if user not in credentials stop app [view](https://github.com/bigomics/omicsplayground/commit/b62b632ecca6adf26d6a03dfc8f1e76d52f9267a)
+-  feat: button to reset editor choices [view](https://github.com/bigomics/omicsplayground/commit/06ea0f91e8fcc9887e87b2193fa4cc370106dbce)
+
+
 ### v4.1.7+master260414 (2026-04-14)
 
 -  feat: admin option on auth module [view](https://github.com/bigomics/omicsplayground/commit/807bc4093f876dbd4849e00fcdd8e21b75b74941)
@@ -46,13 +64,5 @@
 -  feat:  show user emails instead of paths, strip .pgx extension, add description column [view](https://github.com/bigomics/omicsplayground/commit/8c578ca07db56de6bce4343f75b7c8c8bf9d87ef)
 -  feat: new upgrade link [view](https://github.com/bigomics/omicsplayground/commit/0b61d25863cfe2e53d84efcae035c6ed51a6b8c6)
 -  feat: new alert messages [view](https://github.com/bigomics/omicsplayground/commit/dda9f6bc79fd83f237567996df0b8680174665f4)
-
-
-### v4.1.6+master260323 (2026-03-23)
-
--  feat: make biomarker work with 1 feature [view](https://github.com/bigomics/omicsplayground/commit/8fa1cf454c02c918c53e4c05290128121565dd84)
--  feat: move computeok email to main thread [view](https://github.com/bigomics/omicsplayground/commit/c990ee5eac6ea936f6b2c74f502b557bfa16c099)
--  feat: samples table use names instead of -1/1 [view](https://github.com/bigomics/omicsplayground/commit/3127f969191c069cfbdb74b76bc9f49ff179ad62)
--  feat: global label type on lasagna module [view](https://github.com/bigomics/omicsplayground/commit/07a8103d08b89a2671e154225abd28d6419718c0)
 
 
