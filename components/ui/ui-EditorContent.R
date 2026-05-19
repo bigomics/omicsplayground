@@ -3,7 +3,35 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE) {
+## Wrap an editor modal body with a top "Reset to defaults" button and a
+## namespaced container div. The button id and container id are placed in
+## the *parent* namespace because the editor inputs themselves are created
+## with ns_parent(); shinyjs::reset only correctly strips/applies one ns
+## prefix, so wrapper + inputs must share the same namespace.
+editorModalBody <- function(ns_parent, ...) {
+  shiny::tagList(
+    bslib::layout_column_wrap(
+      style = bslib::css(grid_template_columns = "1fr 5fr"),
+      shiny::div(
+        class = "editor-reset-bar",
+        style = "display:flex; justify-content:flex-start; margin-bottom:8px;",
+        shiny::actionButton(
+          inputId = ns_parent("editor_reset"),
+          label = "Reset to defaults",
+          icon = shiny::icon("rotate-left"),
+          class = "btn-sm btn-outline-primary",
+          width = "100%"
+        )
+      )
+    ),
+    shiny::div(
+      id = ns_parent("editor_inputs"),
+      ...
+    )
+  )
+}
+
+getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards = FALSE, outputFunc = NULL, width.2 = NULL, height.2 = NULL, bar_color_default = "#3181de", palette_default = "default", bars_order_default = "alphabetical", color_selection = FALSE, color_selection_default = FALSE, subplot_order = FALSE) {
   ## Snapshot current theme values (non-reactive) so that lazily-loaded
   ## modules start with the colours the user has already chosen.
   ct <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
@@ -18,10 +46,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     }
   }
 
-  ## Per-plot-type bar colour: correlation and expression_barplot use
-  ## scatter_color (→ secondary theme); all other bar plots use bar_color.
-  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot")) "scatter_color" else "bar_color"
-  bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot")) ct$secondary else ct$bar_color
+  ## Per-plot-type bar colour: correlation, expression_barplot and
+  ## expression_boxplot use scatter_color (→ secondary theme); all other
+  ## bar plots use bar_color.
+  bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) "scatter_color" else "bar_color"
+  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary    else ct$bar_color
 
   # Default editor content
   volcano_content <- shiny::div(
@@ -31,6 +60,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -108,31 +138,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
             conditionalPanel(
               condition = "input.use_ggprism",
               ns = ns_parent,
-              selectInput(
-                ns_parent("ggprism_palette"),
-                "Theme palette",
-                choices = c(
-                  "Black & White" = "black_and_white",
-                  "Colorblind Safe" = "colorblind_safe",
-                  "Office" = "office",
-                  "Floral" = "floral",
-                  "Earth Tones" = "earth_tones",
-                  "Pearl" = "pearl",
-                  "Muted Rainbow" = "muted_rainbow",
-                  "Candy Bright" = "candy_bright",
-                  "Prism Dark" = "prism_dark",
-                  "Prism Light" = "prism_light",
-                  "Winter Soft" = "winter_soft",
-                  "Starry" = "starry",
-                  "Viridis" = "viridis",
-                  "Plasma" = "plasma",
-                  "Inferno" = "inferno",
-                  "Magma" = "magma"
-                ),
-                selected = "black_and_white"
-              ),
               checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              checkboxInput(ns_parent("ggprism_colors"), "Use prism colors", value = FALSE),
               shiny::hr(),
               shiny::tags$label("Axis guides"),
               selectInput(
@@ -196,6 +202,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -207,6 +214,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -280,6 +288,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -291,6 +300,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -327,6 +337,52 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                 shiny::uiOutput(ns_parent("rank_list"))
               )
             )
+          ),
+          # Aspect Ratio
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          # ggprism Theme
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
           )
         ),
         shiny::div(
@@ -340,6 +396,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -351,6 +408,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -378,6 +436,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -389,6 +448,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -407,6 +467,26 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               )
             )
           ),
+          if (subplot_order) {
+            bslib::accordion_panel(
+              "Subplot Order",
+              shiny::selectInput(
+                ns_parent("subplot_order"),
+                "Sort subplots by:",
+                choices = c(
+                  "Alphabetical" = "alphabetical",
+                  "Custom (shuffle the order)" = "custom"
+                ),
+                selected = "alphabetical"
+              ),
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("subplot_order"), "'] == 'custom'"),
+                shiny::div(
+                  shiny::uiOutput(ns_parent("rank_list"))
+                )
+              )
+            )
+          },
           bslib::accordion_panel(
             "Labels",
             if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = color_selection_default),
@@ -425,6 +505,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -436,6 +517,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -470,6 +552,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -481,6 +564,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -511,6 +595,94 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
+    )
+  )
+
+  # Clustering scatterplot + Prism Theme panel (for PCA and phenoplot only)
+  clustering_prism_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      editorModalBody(ns_parent,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::selectInput(
+              ns_parent("palette"), "Color palette",
+              choices = c(
+                "default", "muted_light", "light", "dark",
+                "super_light", "super_dark", "muted", "expanded",
+                "highlight_blue", "highlight_red", "highlight_orange",
+                "custom", "custom_gradient"
+              ),
+              selected = ct$palette
+            ),
+            shiny::uiOutput(ns_parent("custom_palette_ui"))
+          ),
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 1.0, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+      )
     )
   )
 
@@ -522,6 +694,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -572,6 +745,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -583,6 +757,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -613,6 +788,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -624,6 +800,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -661,6 +838,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -672,6 +850,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -704,6 +883,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -715,6 +895,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -746,6 +927,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -757,6 +939,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -787,6 +970,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
     )
   )
 
@@ -798,6 +982,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
+      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
@@ -822,6 +1007,130 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+      )
+    )
+  )
+
+  # Boxplot with optional grouping: single bar color (ungrouped) + palette (grouped)
+  group_by_input_js <- paste0("input['", ns_parent("group_by_feature_class"), "']")
+  ungrouped_cond <- paste0("!", group_by_input_js, " || ", group_by_input_js, " == '<ungrouped>'")
+  grouped_cond <- paste0(group_by_input_js, " && ", group_by_input_js, " != '<ungrouped>'")
+
+  expression_boxplot_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      editorModalBody(ns_parent,
+      bslib::layout_column_wrap(
+        style = bslib::css(grid_template_columns = "1fr 5fr"),
+        bslib::accordion(
+          id = ns("plot_options_accordion"),
+          bslib::accordion_panel(
+            "Color Scheme",
+            shiny::conditionalPanel(
+              condition = ungrouped_cond,
+              colourpicker::colourInput(
+                ns_parent(bar_color_input_id), "Bar Color",
+                bar_color_init
+              )
+            ),
+            shiny::conditionalPanel(
+              condition = grouped_cond,
+              shiny::selectInput(
+                ns_parent("palette"), "Group palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom"
+                ),
+                selected = ct$palette
+              ),
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
+            )
+          ),
+          bslib::accordion_panel(
+            "Bars Order",
+            shiny::selectInput(
+              ns_parent("bars_order"),
+              "Sort bars by:",
+              choices = c(
+                "Alphabetical" = "alphabetical",
+                "Value (ascending)" = "ascending",
+                "Value (descending)" = "descending",
+                "Custom (shuffle the order)" = "custom"
+              ),
+              selected = bars_order_default
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+              shiny::div(
+                shiny::uiOutput(ns_parent("rank_list"))
+              )
+            )
+          ),
+          # Aspect Ratio
+          bslib::accordion_panel(
+            "Aspect Ratio",
+            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+            conditionalPanel(
+              condition = "input.aspect_ratio_checkbox",
+              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+              ns = ns_parent
+            )
+          ),
+          # ggprism Theme
+          bslib::accordion_panel(
+            "Prism Theme",
+            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+            conditionalPanel(
+              condition = "input.use_ggprism",
+              ns = ns_parent,
+              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+              shiny::hr(),
+              shiny::tags$label("Axis guides"),
+              selectInput(
+                ns_parent("ggprism_axis_guide"),
+                NULL,
+                choices = c(
+                  "Default" = "default",
+                  "Minor ticks" = "prism_minor",
+                  "Offset axis" = "prism_offset",
+                  "Offset + minor ticks" = "prism_offset_minor"
+                ),
+                selected = "default"
+              ),
+              shiny::hr(),
+              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              conditionalPanel(
+                condition = "input.ggprism_show_legend",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                ),
+                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "popup-plot",
+          if (cards) {
+            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+              bigLoaders::useSpinner()
+          } else {
+            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+              bigLoaders::useSpinner()
+          }
+        )
+      )
+      )
     )
   )
 
@@ -831,11 +1140,13 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "heatmap" = heatmap_content,
     "barplot" = barplot_content,
     "expression_barplot" = barplot_content,
+    "expression_boxplot" = expression_boxplot_content,
     "correlation" = barplot_content,
     "scatterplot" = scatterplot_content,
     "featuremap" = featuremap_content,
     "enrichment" = enrichment_content,
     "clustering" = clustering_content,
+    "clustering_prism" = clustering_prism_content,
     "grouped_barplot" = grouped_barplot_content,
     "gradient" = gradient_content,
     "significance" = significance_content,

@@ -81,10 +81,9 @@ compare_plot_cum_fc2_server <- function(id,
       rank_list_ui(labels, ns, input_id = "rank_list_order")
     })
 
-    cumfcplot.RENDER <- shiny::reactive({
+    plot_data_prepared <- shiny::reactive({
       shiny::req(getMatrices())
 
-      # Get the cumulative fold changes for dataset 2
       res <- getMatrices()
       FC <- cbind(res$F1, res$F2)
       F2 <- res$F2
@@ -92,7 +91,6 @@ compare_plot_cum_fc2_server <- function(id,
       ii <- ii[order(rowMeans(FC[ii, ]))]
       F2 <- F2[ii, , drop = FALSE]
 
-      # rename_by
       if (!is.null(rownames(F2))) {
         rownames(F2) <- make.names(playbase::probe2symbol(rownames(F2), pgx$genes, labeltype(), fill_na = TRUE), unique = TRUE)
       }
@@ -109,32 +107,70 @@ compare_plot_cum_fc2_server <- function(id,
           F2 <- F2[custom_order, , drop = FALSE]
         }
       }
-      ## "ascending" is already the default order
 
-      ## Editor: bar color
+      F2
+    })
+
+    cumfcplot.RENDER <- shiny::reactive({
+      F2 <- plot_data_prepared()
+      shiny::req(F2)
+
       bar_color <- get_editor_color(input, "bar_color", "#66C2A5")
-      fillcolor <- rep(bar_color, ncol(F2))
+      gp <- extract_ggprism_params(input)
 
-      # Prepare input for the plot
-      d <- data.frame(
-        x = factor(rownames(F2), levels = rownames(F2)),
-        y = F2
-      )
-      ycols <- colnames(d[, 2:ncol(d)])
+      if (gp$use_ggprism) {
+        y_vals <- rowMeans(F2, na.rm = TRUE)
+        d <- data.frame(
+          x = factor(rownames(F2), levels = rownames(F2)),
+          y = y_vals
+        )
 
-      # Call the plot function
-      suppressWarnings(
-        fig <- playbase::pgx.barplot.PLOTLY(
+        p <- playbase::pgx.barplot.GGPLOT(
           data = d,
           x = "x",
-          y = ycols,
-          fillcolor = fillcolor,
+          y = "y",
+          fillcolor = bar_color,
           yaxistitle = "log2FC",
           xaxistitle = "",
           title = "",
           grouped = FALSE
         )
-      )
+
+        x_map <- p$mapping$x
+        if (!is.null(x_map)) {
+          suppressMessages(
+            p <- p +
+              ggplot2::aes(fill = !!x_map) +
+              ggplot2::scale_fill_manual(values = rep(bar_color, 50)) +
+              ggplot2::guides(fill = "none")
+          )
+        }
+        p <- apply_ggprism_theme(p, gp, x_angle = 90)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
+      } else {
+        fillcolor <- rep(bar_color, ncol(F2))
+
+        d <- data.frame(
+          x = factor(rownames(F2), levels = rownames(F2)),
+          y = F2
+        )
+        ycols <- colnames(d[, 2:ncol(d)])
+
+        suppressWarnings(
+          fig <- playbase::pgx.barplot.PLOTLY(
+            data = d,
+            x = "x",
+            y = ycols,
+            fillcolor = fillcolor,
+            yaxistitle = "log2FC",
+            xaxistitle = "",
+            title = "",
+            grouped = FALSE
+          )
+        )
+      }
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       return(fig)
     })
 

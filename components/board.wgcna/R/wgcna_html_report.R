@@ -132,10 +132,12 @@ wgcna_report_inputs <- function(id) {
       class = "btn-outline-primary",
       width = "100%"
     ),
-    shiny::downloadButton(
-      ns("downloadPDF"),
-      label = "Download",
-      style = "width: 100%;"
+    shinyjs::disabled(
+      shiny::downloadButton(
+        ns("downloadPDF"),
+        label = "Download",
+        class = "btn-outline-primary",
+        style = "width: 100%;")
     )
   )
 }
@@ -150,13 +152,14 @@ wgcna_html_report_server <- function(id,
     ns <- session$ns
     btn_count <- reactiveVal(0)
 
-    observe({
-      wgcna <- wgcna()
+    observeEvent( wgcna(), {
       btn_count(runif(1))
+      shinyjs::disable("downloadPDF") 
     })
 
     observeEvent(input$generate_btn, {
       btn_count(btn_count() + 1)
+      shinyjs::disable("downloadPDF") 
     })
 
     get_report <- shiny::eventReactive(
@@ -164,20 +167,17 @@ wgcna_html_report_server <- function(id,
         btn_count()
       },
       {
-        llm_model <- getUserOption(session, "llm_model")
-        if (is.null(llm_model) || llm_model == "") {
-          return(NULL)
-        }
-
         this_wgcna <- wgcna()
         if (btn_count() < 1) {
           rpt <- this_wgcna$report
           if (is.null(rpt)) {
             return(NULL)
           }
-          dbg("*** found report in wgcna object")
-          dbg("*** names.rpt = ", names(rpt))
-          ## return(rpt)
+          return(rpt)
+        }
+
+        llm_model <- getUserOption(session, "llm_model")
+        if (is.null(llm_model) || llm_model == "") {
           return(NULL)
         }
 
@@ -213,6 +213,19 @@ wgcna_html_report_server <- function(id,
       ignoreNULL = FALSE,
       ignoreInit = FALSE
     )
+
+    observe({
+      rpt <- get_report()
+      task_status <- infographic_task$status()
+      report_ready <- !is.null(rpt) && !is.null(rpt$report)
+      diagram_ready <- !is.null(rpt) && !is.null(rpt$diagram)
+      infographic_ready <- isTRUE(task_status == "success")
+      if (report_ready && diagram_ready && infographic_ready) {
+        shinyjs::enable("downloadPDF")
+      } else {
+        shinyjs::disable("downloadPDF")
+      }
+    })
 
     output$downloadPDF <- downloadHandler(
       filename = function() {
@@ -277,6 +290,7 @@ wgcna_html_report_server <- function(id,
 
     text.RENDER <- function() {
       txt <- contents_text()
+      if(is.null(txt)) shinyjs::disable("downloadPDF") 
       shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
       res <- markdown::markdownToHTML(txt, fragment.only = TRUE)
       out <- shiny::div(class = "gene-info", shiny::HTML(res))
@@ -309,8 +323,8 @@ wgcna_html_report_server <- function(id,
 
     diag_count <- reactiveVal(0)
 
-    observe({
-      wgcna <- wgcna()
+    ## reset count on new data
+    observeEvent( wgcna(), {
       diag_count(runif(1))
     })
 
@@ -319,18 +333,21 @@ wgcna_html_report_server <- function(id,
     })
 
     get_diagram <- reactive({
+
       rpt <- get_report()
-      shiny::validate(shiny::need(!is.null(rpt), "Diagram not available"))
-      llm_model <- getUserOption(session, "llm_model")
+      shiny::validate(shiny::need(!is.null(rpt), "Report not available"))
+
+      ## for the moment we need explicit user generate
+      ##shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
+      
+      llm_model <- getUserOption(session,'llm_model')        
       this_wgcna <- wgcna()
       graph <- this_wgcna$graph
       if (diag_count() < 1) {
         dg <- rpt$diagram
       } else if (!is.null(llm_model) && llm_model != "") {
         dg <- playbase::wgcna.create_diagram(
-          rpt$report, llm_model,
-          graph = graph,
-          rankdir = "LR"
+          rpt$report, llm_model, graph = graph, rankdir = "LR"
         )
       } else {
         dg <- NULL
@@ -375,6 +392,11 @@ wgcna_html_report_server <- function(id,
 
     # Store and trigger the generated image path
     infographic_path <- reactiveVal(NULL)
+    
+    ## reset infographic upon new data
+    observeEvent( wgcna(), {
+      infographic_path(NULL)
+    })
 
     infographic_info <- function(msg) {
       outfile <- tempfile(fileext = ".png")
@@ -405,32 +427,29 @@ wgcna_html_report_server <- function(id,
     }) ## |> bslib::bind_task_button("generate_infographic")
 
     # Trigger the ExtendedTask when button is clicked
-    observeEvent(
-      {
-        c(input$generate_infographic, get_report())
-      },
-      {
-        rpt <- get_report()
-        if (is.null(rpt)) {
-          return(NULL)
-        }
-        has.model <- length(input$img_model) > 0 && input$img_model[1] != ""
-        shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))
-        report <- rpt$report
-        diagram <- rpt$diagram
-        if (!input$use_diagram) diagram <- NULL
-        model <- input$img_model
-        dbg("start infographic task...")
-        infographic_task$invoke(report, diagram, model)
+    observeEvent({
+      c(input$generate_infographic, get_report())
+    }, {
+      rpt <- get_report()      
+      if(is.null(rpt)) {
+        infographic_path(NULL)        
+        return(NULL)
       }
-    )
-
+      has.model <- length(input$img_model)>0 && input$img_model[1]!=""
+      shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
+      report <- rpt$report
+      diagram <- rpt$diagram
+      if(!input$use_diagram) diagram <- NULL
+      model <- input$img_model
+      dbg("start infographic task...")
+      infographic_task$invoke(report, diagram, model)
+    })
+    
     # Update reactive value when task status changes. This show a kind
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
-      dbg("[observe:infographic_task$status] status = ", status)
-      if (status != "success") {
+      if(status != "success") {
         msg <- "..."
         if (status == "initial") msg <- "waiting for diagram..."
         if (status == "running") msg <- "generating image ..."
@@ -446,7 +465,6 @@ wgcna_html_report_server <- function(id,
 
     infographic.RENDER <- function() {
       shiny::validate(shiny::need(!is.null(infographic_path()), "Infographic not available."))
-      # Return a list containing the filename
       list(
         src = infographic_path(),
         width = "100%",
@@ -458,7 +476,6 @@ wgcna_html_report_server <- function(id,
     PlotModuleServer(
       "infographic",
       plotlib = "image",
-      # plotlib = "generic",
       func = infographic.RENDER,
       pdf.width = 8, pdf.height = 5,
       res = c(75, 100),

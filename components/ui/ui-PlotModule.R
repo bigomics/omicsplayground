@@ -97,7 +97,8 @@ PlotModuleUI <- function(id,
                          palette_default = "muted_light",
                          bars_order_default = "alphabetical",
                          color_selection = FALSE,
-                         color_selection_default = FALSE) {
+                         color_selection_default = FALSE,
+                         subplot_order = FALSE) {
   ns <- shiny::NS(id)
 
   # Svg is only available if watermark is disabled
@@ -483,7 +484,8 @@ PlotModuleUI <- function(id,
     palette_default = palette_default,
     bars_order_default = bars_order_default,
     color_selection = color_selection,
-    color_selection_default = color_selection_default
+    color_selection_default = color_selection_default,
+    subplot_order = subplot_order
   )
 
   ## inline styles (should be in CSS...)
@@ -594,6 +596,21 @@ PlotModuleServer <- function(id,
         },
         ignoreInit = TRUE
       )
+
+      ## Reset all editor inputs back to their UI-declared defaults.
+      ## The button and wrapper div are created in the *parent* namespace
+      ## (see editorModalBody()), because shinyjs::reset only handles a
+      ## single ns prefix and the editor inputs themselves use ns_parent.
+      ## We run shinyjs::reset inside the parent_session's reactive
+      ## domain so it prefixes/strips with the parent ns and dispatches
+      ## the resulting update*Input calls to the right session.
+      if (!is.null(parent_session)) {
+        shiny::observeEvent(parent_session$input$editor_reset, {
+          shiny::withReactiveDomain(parent_session, {
+            shinyjs::reset("editor_inputs")
+          })
+        }, ignoreInit = TRUE)
+      }
 
       ## --------------------------------------------------------------------------------
       ## ------------------------ Click-to-label handler --------------------------------

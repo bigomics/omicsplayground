@@ -61,7 +61,7 @@ app_server <- function(input, output, session) {
   credentials_file <- file.path(ETC, "CREDENTIALS")
   has.credentials <- file.exists(credentials_file)
   no.credentials <- (!isTRUE(opt$USE_CREDENTIALS) || !has.credentials)
-  if (no.credentials && authentication != "password") {
+  if (no.credentials && !(authentication %in% c("password", "shinyproxy-sso-admin"))) {
     credentials_file <- NULL
   }
 
@@ -127,6 +127,15 @@ app_server <- function(input, output, session) {
     auth <- AuthenticationModuleApacheCookie(
       id = "auth",
       show_modal = FALSE
+    )
+  } else if (authentication == "shinyproxy-sso") {
+    auth <- AuthenticationModuleHeader(
+      id = "auth"
+    )
+  } else if (authentication == "shinyproxy-sso-admin") {
+    auth <- AuthenticationModuleHeader(
+      id = "auth",
+      credentials_file = credentials_file
     )
   } else {
     ## stop everything
@@ -833,6 +842,7 @@ app_server <- function(input, output, session) {
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
     toggleTab("wgcna-tabs", "AI Report✨", show.beta)
+    toggleTab("drug-tabs", "AI Summary✨", show.beta)     
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     toggleTab("diffexpr-tabs1", "FC-FC comparison", "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) && length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1)
@@ -1267,7 +1277,7 @@ app_server <- function(input, output, session) {
       userLogoutSequence(isolate(auth), action = "session.logout")
 
       ## we do extra logout actions for shinyproxy
-      if (opt$AUTHENTICATION == "shinyproxy") {
+      if (opt$AUTHENTICATION %in% c("shinyproxy", "shinyproxy-sso", "shinyproxy-sso-admin")) {
         session$sendCustomMessage("shinyproxy-logout", list())
       }
     }

@@ -580,7 +580,7 @@ upload_table_preview_counts_server <- function(id,
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       ext <- tools::file_ext(input$counts_csv$name)
-      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics")
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "multi-omics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
       c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad", "gz", "zip")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
@@ -666,23 +666,34 @@ upload_table_preview_counts_server <- function(id,
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
             df0 <- tryCatch(
+            {
+              playbase::read_Olink_NPX(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+            )
+            if (!is.null(df0)) {
+              df <- df0[["counts"]]
+              df.samples <- df0[["samples"]]
+            } else {
+              df0 <- tryCatch(
               {
-                playbase::read_Olink_NPX(datafile)
+                playbase::read_counts(datafile)
               },
               error = function(w) {
                 NULL
               }
-            )
+              )
+              if (!is.null(df0)) df <- df0
+            }
             if (is.null(df0)) {
               shinyalert::shinyalert(
                 title = "Error",
-                text = "Your data may not be in Official Olink format. Please check."
+                text = "Your data may not be correctly formatted as either standard abundance.csv or Official Olink format. Please check."
               )
-            } else {
-              df <- df0[["counts"]]
-              df.samples <- df0[["samples"]]
-              rm(df0)
             }
+            rm(df0)
           } else if (upload_datatype() == "proteomics" && !is.olink()) {
             df <- tryCatch(
               {
@@ -749,7 +760,8 @@ upload_table_preview_counts_server <- function(id,
         if (is.null(uploaded$annot.csv)) {
           c1 <- (upload_datatype() != "scRNA-seq")
           c2 <- (!file.ext %in% c("h5", "h5ad", "parquet"))
-          ann.data <- if (c1 & c2) playbase::read_annot(datafile) else NULL
+          olink_loaded <- exists("df.samples", inherits = FALSE) && !is.null(df.samples)
+          ann.data <- if (c1 && c2 && !olink_loaded) playbase::read_annot(datafile) else NULL
           uploaded$annot.csv <- ann.data
         }
       }

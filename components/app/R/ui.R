@@ -102,6 +102,14 @@ app_ui <- function(x) {
           onClick = "shinyproxy_logout();",
           link = "/login"
         )
+      } else if (opt$AUTHENTICATION %in% c("shinyproxy-sso", "shinyproxy-sso-admin")) {
+        ## Upstream-header auth (e.g. ShinyProxy + SAML). Hit /logout so
+        ## ShinyProxy clears its session and triggers the IdP SLO via the
+        ## configured saml.logout-url, then bounce back to /login.
+        logout.tab <- bigdash::navbarDropdownItem(
+          "Logout",
+          link = "/logout"
+        )
       } else if (opt$AUTHENTICATION == "apache-cookie") {
         ## For apache SSO we need to redirect to /mellon/logout for SSO logout
         logout.tab <- bigdash::navbarDropdownItem(
