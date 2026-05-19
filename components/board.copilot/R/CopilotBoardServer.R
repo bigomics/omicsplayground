@@ -137,10 +137,14 @@ CopilotBoardServer <- function(
     shiny::observeEvent(pgx_loaded_event(), {
       shiny::req(!is.null(pgx_loaded_event()))
       p <- pgx_loaded_event()
+      # Use the bridge's resolved absolute path (omicsagentovi >= 0.4.1
+      # adds dataset_path to the notification_sink payload). p$name_arg
+      # is the raw LLM input — could be a basename — and must not be
+      # stored as a locator path or restore will fail to re-load.
       run_ctrl$apply_dataset(
         pgx_val  = p$pgx,
         name     = p$dataset_name,
-        path     = p$name_arg,
+        path     = p$dataset_path,
         data_dir = p$data_dir
       )
       pgx_loaded_event(NULL)
