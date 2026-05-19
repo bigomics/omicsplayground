@@ -169,7 +169,9 @@ apply_editor_theme <- function(p, input,
 #' @return The (possibly modified) plotly figure.
 apply_plotly_editor_theme <- function(fig, input,
                                       aspect_ratio_default = 0.8) {
-  if (!isTRUE(input$aspect_ratio_checkbox)) return(fig)
+  if (!isTRUE(input$aspect_ratio_checkbox)) {
+    return(fig)
+  }
   ar <- if (is.null(input$aspect_ratio) || is.na(input$aspect_ratio)) {
     aspect_ratio_default
   } else {
@@ -229,7 +231,9 @@ extract_ggprism_params <- function(input) {
 #' @return The (possibly modified) ggplot2 plot object.
 apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
                                 x_angle = NULL) {
-  if (!isTRUE(gp$use_ggprism)) return(p)
+  if (!isTRUE(gp$use_ggprism)) {
+    return(p)
+  }
 
   p <- p +
     ggprism::theme_prism(
@@ -317,9 +321,11 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
   encoded <- base64enc::base64encode(tmpfile)
   src <- paste0("data:image/png;base64,", encoded)
 
-  plotly::plot_ly(type = "scatter", mode = "markers",
-                  x = 0, y = 0, marker = list(opacity = 0),
-                  hoverinfo = "none", showlegend = FALSE) %>%
+  plotly::plot_ly(
+    type = "scatter", mode = "markers",
+    x = 0, y = 0, marker = list(opacity = 0),
+    hoverinfo = "none", showlegend = FALSE
+  ) %>%
     plotly::layout(
       images = list(list(
         source = src,
@@ -329,10 +335,14 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
         xanchor = "left", yanchor = "top",
         layer = "below"
       )),
-      xaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
-                    range = c(0, 1), fixedrange = TRUE),
-      yaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
-                    range = c(0, 1), fixedrange = TRUE),
+      xaxis = list(
+        visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+        range = c(0, 1), fixedrange = TRUE
+      ),
+      yaxis = list(
+        visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+        range = c(0, 1), fixedrange = TRUE
+      ),
       margin = list(l = 0, r = 0, t = 0, b = 0),
       plot_bgcolor = "white",
       paper_bgcolor = "white"
@@ -355,7 +365,9 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
 #' @param gp  Named list from \code{extract_ggprism_params()}.
 #' @return The (possibly modified) plotly figure.
 apply_prism_plotly <- function(fig, gp) {
-  if (!isTRUE(gp$use_ggprism)) return(fig)
+  if (!isTRUE(gp$use_ggprism)) {
+    return(fig)
+  }
 
   ## --- Base theme: clean white background, outside ticks ---
   axis_base <- list(

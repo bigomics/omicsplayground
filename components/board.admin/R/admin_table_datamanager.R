@@ -355,7 +355,9 @@ admin_table_datamanager_server <- function(id, auth) {
 
     selected_files <- reactive({
       rows <- selected_rows()
-      if (is.null(rows)) return(NULL)
+      if (is.null(rows)) {
+        return(NULL)
+      }
       rows$full_path
     })
 

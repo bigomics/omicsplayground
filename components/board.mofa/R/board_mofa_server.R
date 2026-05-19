@@ -42,13 +42,12 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "show_types","report_options")),
-      "Response" = list(disable = c("show_types","report_options")),
+      "Overview" = list(disable = c("selected_factor", "show_types", "report_options")),
+      "Response" = list(disable = c("show_types", "report_options")),
       "Weights" = list(disable = c("report_options")),
-      "Enrichment" = list(disable = c("show_types","report_options")),
-      "gsetMOFA" = list(disable = c("show_types","report_options")),
-      "AI Summary✨" = list(disable = c("selected_factor", "show_types","options_accordion")
-      )
+      "Enrichment" = list(disable = c("show_types", "report_options")),
+      "gsetMOFA" = list(disable = c("show_types", "report_options")),
+      "AI Summary✨" = list(disable = c("selected_factor", "show_types", "options_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {

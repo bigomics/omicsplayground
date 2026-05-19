@@ -10,7 +10,9 @@
 ## servers or the audit trail becomes ambiguous.
 log_admin_action <- function(admin_email, action, subjects,
                              source_labels = "", destination = "") {
-  if (length(subjects) == 0) return(invisible())
+  if (length(subjects) == 0) {
+    return(invisible())
+  }
   host <- NULL
   if (exists("opt", inherits = TRUE)) host <- opt$HOSTNAME
   if (is.null(host) || !nzchar(host)) {
@@ -27,15 +29,22 @@ log_admin_action <- function(admin_email, action, subjects,
     destination = destination,
     stringsAsFactors = FALSE
   )
-  tryCatch({
-    if (file.exists(log.file)) {
-      write.table(log.entry, file = log.file, col.names = FALSE,
-                  row.names = FALSE, sep = ",", append = TRUE)
-    } else {
-      write.table(log.entry, file = log.file, col.names = TRUE,
-                  row.names = FALSE, sep = ",")
-    }
-  }, error = function(e) dbg("[admin_log] write error: ", e$message))
+  tryCatch(
+    {
+      if (file.exists(log.file)) {
+        write.table(log.entry,
+          file = log.file, col.names = FALSE,
+          row.names = FALSE, sep = ",", append = TRUE
+        )
+      } else {
+        write.table(log.entry,
+          file = log.file, col.names = TRUE,
+          row.names = FALSE, sep = ","
+        )
+      }
+    },
+    error = function(e) dbg("[admin_log] write error: ", e$message)
+  )
 }
 
 

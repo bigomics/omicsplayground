@@ -48,9 +48,9 @@ drugconnectivity_table_dsea_server <- function(id,
       colnames(res) <- sub("moa", "MOA", colnames(res))
 
       ## round-up digits
-      ii <- grep("NES|pval|padj",colnames(res))
-      res[,ii] <- round(res[,ii], digits=4)
-      
+      ii <- grep("NES|pval|padj", colnames(res))
+      res[, ii] <- round(res[, ii], digits = 4)
+
       DT::datatable(res,
         rownames = FALSE,
         class = "compact cell-border stripe hover",
