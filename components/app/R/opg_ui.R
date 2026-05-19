@@ -58,7 +58,7 @@ opg_ui <- function() {
     ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
-    createMenu <- function(menu_tree) {
+    createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
         div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
       }
@@ -74,227 +74,70 @@ opg_ui <- function() {
         }
         bigdash::sidebarMenu(title, !!!ee)
       }
-
-      ## This creates the menu from a menu_tree
       menu <- list()
-      i <- 3
-      for (i in 1:length(menu_tree)) {
-        tab.names <- names(menu_tree[[i]])
-        tab.titles <- menu_tree[[i]]
-        menu.id <- names(menu_tree)[i]
+      for (i in 1:length(tree)) {
+        tab.names <- names(tree[[i]])
+        tab.titles <- tree[[i]]
+        menu.id <- names(tree)[i]
         if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
           menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
         } else {
-          menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
+          menu[[menu.id]] <- sidebar_menu_with_items(tree[[i]], menu.id)
         }
       }
-      return(menu)
+      menu <- lapply(menu, as.character)
+      HTML(unlist(menu))
     }
 
-    info("[ui.R] creating sidebar menu")
-    menu <- createMenu(menu_tree)
-    menu <- lapply(menu, as.character)
-    menu <- HTML(unlist(menu))
-    sidebar <- bigdash::sidebar("Menu", menu)
+    basic_menu_tree <- list(
+      "DataView"                = c(dataview       = "DataView"),
+      "Cluster Samples"         = c(clustersamples = "Cluster Samples"),
+      "Differential expression" = c(diffexpr       = "Differential expression"),
+      "Geneset Enrichment"      = c(enrich         = "Geneset Enrichment"),
+      "Pathway analysis"        = c(pathway        = "Pathway analysis")
+    )
 
+    initial_is_full <- (opt$USER_LEVEL != "BASIC")
+    info("[opg_ui] creating sidebar menu")
+    info("[opg_ui] initial_is_full = ", initial_is_full)
+    
+    sidebar <- bigdash::sidebar(
+      "Menu",
+      ## div(
+      ##   id = "menu-mode-switch",
+      ##   shinyWidgets::switchInput(
+      ##     "menu_mode_toggle",
+      ##     label    = NULL,
+      ##     value    = initial_is_full,
+      ##     onLabel  = "Advanced",
+      ##     offLabel = "Basic",
+      ##     size     = "mini"
+      ##   )
+      ## ),
+      div(
+        id = "menu-full",
+        class = "nodisp", style = "diplay: none;",
+        createMenu(menu_tree)
+      ),
+      div(
+        id = "menu-basic",
+        class = "nodisp", style = "diplay: none;",        
+        createMenu(basic_menu_tree)
+      )
+    )
+    
     big_theme2 <- bigdash::big_theme()
     big_theme2 <- bslib::bs_add_variables(big_theme2,
       "grid-breakpoints" = "map-merge($grid-breakpoints, ('xxxl': 2400px))",
       .where = "declarations"
     )
 
-
-    div.chirpbutton <- NULL
-    div.invitebutton <- NULL
-    div.upgradebutton <- NULL
-    div.helpmenu <- NULL
-    div.usermenu <- NULL
-    div.appsettings <- NULL
-    
-    if(0) {
-      ## if (opt$ENABLE_CHIRP) {
-      ##   div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-      ##     width = "auto", class = "quick-button",
-      ##     onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-      ##   )
-      ## }
-      ## div.invitebutton <- InviteFriendUI("invite")
-      ## div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
-      ##   UpgradeModuleUI("upgrade")
-      ## } else {
-      ##   NULL
-      ## }
-      ## div.helpmenu <- div(
-      ##   id = "mainmenu_help",
-      ##   bigdash::navbarDropdown(
-      ##     "Help",
-      ##     bigdash::navbarDropdownItem(
-      ##       "Documentation",
-      ##       link = "https://omicsplayground.readthedocs.io",
-      ##       target = "_blank"
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       "Video tutorials",
-      ##       link = "https://bigomics.ch/tutorials/",
-      ##       target = "_blank"
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       "Google forum",
-      ##       link = "https://groups.google.com/d/forum/omicsplayground",
-      ##       target = "_blank"
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       "Submit a support ticket",
-      ##       link = "https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t",
-      ##       target = "_blank"
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       "Github issues",
-      ##       link = "https://github.com/bigomics/omicsplayground/issues",
-      ##       target = "_blank"
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       "Case studies",
-      ##       link = "https://bigomics.ch/case-studies/",
-      ##       target = "_blank"
-      ##     )
-      ##   )
-      ## )
-      ## div.usermenu <- div(
-      ##   id = "mainmenu_user",
-      ##   bigdash::navbarDropdown(
-      ##     ## "User",
-      ##     shiny::textOutput("current_user", inline = TRUE),
-      ##     bigdash::navbarDropdownTab(
-      ##       "User profile",
-      ##       "userprofile-tab"
-      ##     ),
-      ##     bigdash::navbarDropdownTab(
-      ##       "App settings",
-      ##       "usersettings-tab"
-      ##     ),
-      ##     if (isTRUE(opt$ENABLE_ADMIN)) {
-      ##       bigdash::navbarDropdownTab(
-      ##         "Admin panel",
-      ##         "admin-tab"
-      ##       )
-      ##     },          
-      ##     upgrade.tab,
-      ##     tags$li(
-      ##       actionLink("navbar_about", "About")
-      ##     ),
-      ##     logout.tab
-      ##   )
-      ## )
-      ## div.appsettings <- div(
-      ##   id = "mainmenu_appsettings",
-      ##   bigdash::navbarDropdown(
-      ##     auto_close = "outside",
-      ##     shiny::icon("cog"),
-      ##     div(
-      ##       class = "dropdown-items",
-      ##       bslib::input_switch("enable_beta", "Enable beta features"),
-      ##       bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
-      ##       selector_switch(
-      ##         class = "card-footer-checked",
-      ##         label = "show captions",
-      ##         is.checked = FALSE
-      ##       ),
-      ##       bslib::input_switch("enable_ai", "Enable AI"),
-      ##       shiny::conditionalPanel(
-      ##         "input.enable_ai",
-      ##           bigdash::navbarDropdownItem(
-      ##             shiny::selectInput(
-      ##               inputId = "llm_model",
-      ##               label = NULL,
-      ##               choices = opt$LLM_MODELS,
-      ##               selected = 1,
-      ##               width = "100%"
-      ##             )
-      ##           )
-      ##       )              
-      ##     ),
-      ##     bigdash::navbarDropdownItem(
-      ##       withTooltip(
-      ##         shiny::selectInput(
-      ##           inputId = "selected_labeltype",
-      ##           label = "Label type:",
-      ##           choices = c("feature", "symbol", "name"),
-      ##           selected = "feature",
-      ##           width = "100%"
-      ##         ),
-      ##         "Choose a label type to be displayed in the plots",
-      ##         placement = "right", options = list(container = "body")
-      ##       )
-      ##     )
-      ##   )
-      ## )
-    }
-
     ## ------------------------- bigPage ----------------------------------
-    bigdash.sidebarHelp2 <- function(...) {
+    make_sidebarHelp <- function(...) {
       do.call(bigdash::sidebarHelp, rlang::list2(...))
     }
 
-    ## navbar <- bigdash::navbar(
-    ##   title = tags$img(
-    ##     id = "logo-bigomics",
-    ##     src = "static/bigomics-logo.png",
-    ##     height = "30"
-    ##   ),
-    ##   center = tags$div(
-    ##     shiny::div(shiny::uiOutput("current_dataset"), class = "current-dataset")
-    ##   ),
-    ##   left = tags$div(
-    ##     style = "padding: 0 0 0 20px;",
-    ##     div(
-    ##       style = "display: inline-block; ",
-    ##       bigdash::navbarDropdown(
-    ##         "Datasets",
-    ##         style = "border: 1px; padding: 2px 6px;",
-    ##         bigdash::navbarDropdownTab(
-    ##           "Upload new",
-    ##           "upload-tab"
-    ##         ),
-    ##         bigdash::navbarDropdownTab(
-    ##           "Load from library",
-    ##           "load-tab"
-    ##         ),
-    ##         bigdash::navbarDropdownTab(
-    ##           "Shared datasets",
-    ##           "sharing-tab"
-    ##         )
-    ##       )
-    ##     )
-    ##   ),
-    ##   div.upgradebutton,
-    ##   div.invitebutton,
-    ##   div.chirpbutton,
-    ##   div.helpmenu,
-    ##   div.usermenu,
-    ##   div.appsettings,        
-    ##   ## THIS IS SO WEIRD. if we remove/comment out the
-    ##   ## prettySwitch, the header of all plotModules f*ck
-    ##   ## up... (IK). HELP!!! we do not need this button...
-    ##   div(
-    ##     style = "visibility: hidden; display: none;",
-    ##     shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
-    ##   )
-    ## )
-
-    navbar <- bigdash::navbar(
-      title = NULL,
-      center = NULL,
-      left = NULL,
-      ## THIS IS SO WEIRD. if we remove/comment out the
-      ## prettySwitch, the header of all plotModules f*ck
-      ## up... (IK). HELP!!! we do not need this button...
-      div(
-        style = "visibility: hidden; display: none;",
-        shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
-      )
-    )
-
+    ## empty navbar
     navbar <- div(
       ## THIS IS SO WEIRD. if we remove/comment out the
       ## prettySwitch, the header of all plotModules f*ck
@@ -314,22 +157,7 @@ opg_ui <- function() {
         "Settings"
       ),
       ## bigdash::sidebarHelp(
-      bigdash.sidebarHelp2(
-        ## bigdash::sidebarTabHelp(
-        ##   "welcome-tab",
-        ##   "BigOmics Playground",
-        ##   "is your self-service bioinformatics platform for interactive analysis,
-        ##             visualization and interpretation of transcriptomics and proteomics data.
-        ##             Perform complex data analysis and visualization easily without coding,
-        ##             and significantly reduce the time-to-discovery."
-        ## ),
-        ## bigdash::sidebarTabHelp(
-        ##   "load-tab",
-        ##   "Analyze dataset",
-        ##   "This panel shows the available datasets within the platform. These data sets
-        ##    have been pre-computed and are ready to be used. Select a
-        ##    dataset in the table and load the data set by clicking the 'Analyze dataset' button."
-        ## ),
+      make_sidebarHelp(
         bigdash::sidebarTabHelp(
           "upload-tab",
           "Upload new",
@@ -515,7 +343,7 @@ opg_ui <- function() {
   }
 
 
-  menu_tree <- list(
+  full_menu_tree <- list(
     "DataView" = c(
       dataview = "DataView"
     ),
@@ -550,19 +378,9 @@ opg_ui <- function() {
     "WGCNA" = MODULE.wgcna$module_menu()
   )
 
-  if(opt$USER_LEVEL == 'BASIC') {
-    menu_tree <- list(
-      "DataView" = c(dataview = "DataView"),
-      "Cluster Samples" = c(clustersamples = "Cluster Samples"),
-      "Differential expression" = c(diffexpr = "Differential expression"),
-      "Geneset Enrichment" = c(enrich = "Geneset Enrichment"),
-      "Pathway analysis" = c(pathway = "Pathway analysis")
-    )
-  } 
-    
-  info("[ui.R] >>> creating UI")
-  ui <- createUI(menu_tree)
-  info("[ui.R] <<< finished UI!")
+  info("[opg_ui] >>> creating UI")
+  ui <- createUI(full_menu_tree)
+  info("[opg_ui] <<< finished UI!")
 
   return(ui)
 }

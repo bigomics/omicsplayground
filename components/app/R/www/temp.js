@@ -54,14 +54,16 @@ const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
 		.each((index, el) => {
-			if(index == 0 || index == 1){
-				$(el).show();
-				return;
-			}
 			if($(el).hasClass('collapse')){
 				$(el).removeClass('show');
+				$(el).hide();
+				return;
 			}
-			$(el).hide();
+			if($(el).hasClass('nodisp')){
+				$(el).hide();
+				return;
+			}
+			$(el).show();
 		});
         $('#sidebar-help-container').hide();
 }

@@ -10,7 +10,12 @@
 
 AppSettingsUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-  
+
+  ## IMPORANT: most id's do not use ns() to be accessible at top level
+  ## app_server and opg_server.
+
+  initial_is_basic <- (opt$USER_LEVEL == "BASIC")
+
   div(
     boardHeader(title = "Settings", info_link = ns("board_info")),
 
@@ -29,6 +34,7 @@ AppSettingsUI <- function(id) {
               gap = '0.3em',
               bslib::input_switch("enable_beta", "Enable beta features", value=TRUE),
               bslib::input_switch("enable_info", "Show info boxes", value=TRUE),
+              bslib::input_switch("menu_basic",  "Basic menu", value=initial_is_basic),
               selector_switch(
                 class = "card-footer-checked",
                 label = "Show captions",

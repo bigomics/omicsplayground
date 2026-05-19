@@ -17,6 +17,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app_tools/R/runmonitor.R',encoding='UTF-8')
   source('app_tools/R/tools_server.R',encoding='UTF-8')
   source('app_tools/R/tools_ui.R',encoding='UTF-8')
+  source('app/R/opg_server.R',encoding='UTF-8')
   source('app/R/opg_ui.R',encoding='UTF-8')
   source('app/R/utils/auth.R',encoding='UTF-8')
   source('app/R/utils/database.R',encoding='UTF-8')
