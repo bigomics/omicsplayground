@@ -42,10 +42,13 @@
 .copilot-chat-tier-wrap {
   position: absolute;
   bottom: 6px;
-  left: 8px;
+  left: 16px;
   z-index: 1000;
   pointer-events: auto;
 }
+/* Grow shinychat's textarea so the tier trigger overlay has room to sit
+   inside the input pill without colliding with the placeholder text. */
+shiny-chat-input textarea { min-height: 42px !important; }
 .copilot-chat-tier-wrap .copilot-tier-trigger {
   color: var(--bs-secondary-color, #6c757d);
   text-decoration: none;
@@ -101,9 +104,10 @@ CopilotChatUI <- function(id) {
           ),
           shiny::radioButtons(
             ns("tier_choice"),
-            label    = NULL,
-            choices  = NULL,
-            selected = character(0)
+            label        = NULL,
+            choiceNames  = unname(vapply(COPILOT_TIERS, copilot_tier_label, character(1))),
+            choiceValues = unname(COPILOT_TIERS),
+            selected     = COPILOT_TIERS[[1]]
           ),
           placement = "top",
           id        = ns("tier_pop")
