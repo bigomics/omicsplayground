@@ -46,12 +46,16 @@
   z-index: 1000;
   pointer-events: auto;
 }
-.copilot-chat-tier-wrap .selectize-control,
-.copilot-chat-tier-wrap .form-group { margin: 0; }
-.copilot-chat-tier-wrap .selectize-input {
-  min-width: 140px;
+.copilot-chat-tier-wrap .copilot-tier-trigger {
+  color: var(--bs-secondary-color, #6c757d);
+  text-decoration: none;
   font-size: 0.85em;
-  padding-block: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.copilot-chat-tier-wrap .copilot-tier-trigger:hover {
+  background-color: var(--bs-tertiary-bg, rgba(0,0,0,0.05));
+  text-decoration: none;
 }
 /* When streaming, hide shinychat's send button so the stop button reads
    as a morph rather than a sibling. */
@@ -60,9 +64,9 @@
 
 #' Copilot Chat UI
 #'
-#' bslib::card composing the chat region. The tier selectInput is empty by
-#' default; the chat server populates it via `updateSelectInput` driven by
-#' the `tier_choices` reactive.
+#' bslib::card composing the chat region. The tier popover trigger is a
+#' borderless actionLink; the server populates choices via `updateRadioButtons`
+#' and renders the active label via `tier_label` uiOutput.
 #'
 #' @param id Module namespace id (same id passed to CopilotChatServer).
 #' @return A `bslib::card`.
@@ -83,14 +87,26 @@ CopilotChatUI <- function(id) {
         placeholder = "Ask a question about your data…"
       ),
       # Tier selector — bottom-left, mirroring the stop button at bottom-right.
+      # Borderless actionLink trigger opens a popover with radioButtons so the
+      # selection lives in the chat module's own namespace (fixing the dead
+      # observer that previously read input$tier from the board namespace).
       shiny::div(
         id    = ns("tier_wrap"),
         class = "copilot-chat-tier-wrap",
-        shiny::selectInput(
-          ns("tier"),
-          label   = NULL,
-          choices = NULL,
-          width   = "auto"
+        bslib::popover(
+          shiny::actionLink(
+            ns("tier_btn"),
+            label = shiny::uiOutput(ns("tier_label"), inline = TRUE),
+            class = "copilot-tier-trigger"
+          ),
+          shiny::radioButtons(
+            ns("tier_choice"),
+            label    = NULL,
+            choices  = NULL,
+            selected = character(0)
+          ),
+          placement = "top",
+          id        = ns("tier_pop")
         )
       ),
       # Overlaid stop button — same coordinates as shinychat's send button.

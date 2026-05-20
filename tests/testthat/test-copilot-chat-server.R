@@ -283,6 +283,68 @@ test_that("on_tool_request appends a collapsible <details> marker", {
 })
 
 # ===========================================================================
+# tier_choices — updateRadioButtons is called with the right choices
+# ===========================================================================
+
+test_that("tier_choices update calls updateRadioButtons with correct choices", {
+  calls <- list()
+  local_mocked_bindings(
+    updateRadioButtons = function(session, inputId, ...) {
+      calls[[length(calls) + 1L]] <<- list(inputId = inputId, ...)
+      invisible(NULL)
+    },
+    .package = "shiny"
+  )
+
+  choices_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = shiny::reactive(NULL),
+      tier_choices    = choices_rv
+    ), {
+      ch <- c("Balanced (Default)" = "copilot-default", "Fast" = "copilot-fast")
+      choices_rv(ch)
+      session$flushReact()
+
+      expect_true(length(calls) >= 1L)
+      last_call <- calls[[length(calls)]]
+      expect_equal(last_call$inputId, "tier_choice")
+      expect_equal(last_call$choiceValues, unname(ch))
+      expect_equal(last_call$choiceNames, names(ch))
+    }
+  )
+})
+
+# ===========================================================================
+# tier_clicked — picking a tier via radioButtons updates the reactiveVal
+# ===========================================================================
+
+test_that("input$tier_choice triggers tier_clicked reactiveVal", {
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = shiny::reactive(NULL)
+    ), {
+      api <- session$returned
+      expect_null(api$tier_clicked())
+
+      # observeEvent with ignoreInit = TRUE skips the first setInputs call
+      # (treated as init), so we need two distinct setInputs calls.
+      session$setInputs(tier_choice = "copilot-default")
+      session$flushReact()
+      expect_null(api$tier_clicked())  # first call is the "init", ignored
+
+      session$setInputs(tier_choice = "copilot-fast")
+      session$flushReact()
+      expect_equal(api$tier_clicked(), "copilot-fast")
+    }
+  )
+})
+
+# ===========================================================================
 # Public surface shape
 # ===========================================================================
 
@@ -299,6 +361,8 @@ test_that("CopilotChatServer returns the documented API list", {
       expect_true(shiny::is.reactive(api$last_error))
       expect_true(is.function(api$on_tool_request))
       expect_null(api$push_event)
+      # tier_clicked is a reactiveVal (also a function/reactive)
+      expect_true(is.function(api$tier_clicked))
     }
   )
 })

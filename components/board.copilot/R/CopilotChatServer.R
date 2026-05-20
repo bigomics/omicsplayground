@@ -13,26 +13,31 @@
 #' Copilot Chat Module Server
 #'
 #' Owns shinychat I/O. Observes `chat_event` and dispatches `post`, `clear`,
-#' `stream`, and `replay` events to shinychat. Forwards user input to
+#' `reset`, and `replay` events to shinychat. Forwards user input to
 #' `on_user_message`.
 #'
 #' @param id Module namespace id.
-#' @param on_user_message function(text) — called on every user submission.
+#' @param on_user_message function(text) -- called on every user submission.
 #'   Should normally dispatch a `run_request_ask(text)` to the run controller.
-#' @param chat_event reactive() or reactiveVal() returning list|NULL — event
+#' @param chat_event reactive() or reactiveVal() returning list|NULL -- event
 #'   bus written by the orchestrator. Shapes: post / clear / reset / stream / replay.
 #'   `reset` combines clear + post in a single flush-safe write:
 #'   `list(type = "reset", role = "assistant", text = <greeting>)`.
-#' @param run_status Optional reactive(character) — drives the send→stop
+#' @param run_status Optional reactive(character) -- drives the send/stop
 #'   morph: when `run_status() == "streaming"`, shinychat's send button is
 #'   hidden via CSS and an overlaid stop button is shown.
-#' @param on_abort Optional function(reason) — invoked when the stop button is
+#' @param on_abort Optional function(reason) -- invoked when the stop button is
 #'   clicked. Should normally dispatch a `run_request_abort()` to the run
 #'   controller. If NULL the stop button still renders but does nothing.
-#' @param tier_choices Optional reactive() returning named character vector —
-#'   pushed into the tier selectInput on change.
+#' @param tier_choices Optional reactive() returning named character vector --
+#'   pushed into the tier radioButtons on change.
+#' @param current_tier Optional reactive()/reactiveVal() returning the active
+#'   tier id -- used to keep the radio selection and the trigger label in sync
+#'   with the orchestrator's state.
 #'
-#' @return list(user_input, stream_done, last_error, on_tool_request, push_event=NULL)
+#' @return list(user_input, stream_done, last_error, on_tool_request,
+#'   push_event=NULL, tier_clicked) where `tier_clicked` is a reactiveVal
+#'   that updates whenever the user picks a new tier in the popover.
 #'   chat_event shapes handled: post / clear / reset / stream / replay.
 #' @export
 CopilotChatServer <- function(
@@ -41,7 +46,8 @@ CopilotChatServer <- function(
   chat_event,
   run_status   = NULL,
   on_abort     = NULL,
-  tier_choices = NULL
+  tier_choices = NULL,
+  current_tier = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
@@ -49,15 +55,40 @@ CopilotChatServer <- function(
     user_input_rv  <- shiny::reactiveVal("")
     stream_done_rv <- shiny::reactiveVal(0L)
     last_error_rv  <- shiny::reactiveVal(NULL)
+    tier_clicked   <- shiny::reactiveVal(NULL)
 
     # ---- tier choices update ----
     if (!is.null(tier_choices)) {
       shiny::observe({
         ch <- tier_choices()
         shiny::req(ch)
-        shiny::updateSelectInput(session, "tier", choices = ch)
+        shiny::updateRadioButtons(
+          session, "tier_choice",
+          choiceNames  = names(ch),
+          choiceValues = unname(ch),
+          selected     = shiny::isolate(
+            if (!is.null(current_tier)) current_tier() else character(0)
+          )
+        )
       })
     }
+
+    # ---- tier label output ----
+    output$tier_label <- shiny::renderUI({
+      shiny::req(current_tier, tier_choices)
+      cur <- current_tier()
+      if (is.null(cur) || !nzchar(cur)) return(NULL)
+      ch  <- tier_choices()
+      lbl <- names(ch)[match(cur, unname(ch))]
+      if (is.na(lbl)) lbl <- cur
+      shiny::tagList(shiny::span(lbl), shiny::span(" ▾", class = "copilot-tier-chevron"))
+    })
+
+    # ---- tier_choice observer ----
+    shiny::observeEvent(input$tier_choice, {
+      shiny::req(input$tier_choice)
+      tier_clicked(input$tier_choice)
+    }, ignoreInit = TRUE)
 
     # ---- run_status: morph send button into stop button while streaming ----
     # When run_status() == "streaming" we add the .copilot-streaming class on
@@ -224,7 +255,8 @@ CopilotChatServer <- function(
       stream_done     = shiny::reactive(stream_done_rv()),
       last_error      = shiny::reactive(last_error_rv()),
       on_tool_request = .on_tool_request,
-      push_event      = NULL
+      push_event      = NULL,
+      tier_clicked    = tier_clicked
     )
   })
 }

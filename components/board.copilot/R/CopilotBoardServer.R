@@ -81,7 +81,7 @@ CopilotBoardServer <- function(
     tier_choices_rx <- shiny::reactive({
       stats::setNames(tiers, vapply(tiers, copilot_tier_label, character(1)))
     })
-    chat <- CopilotChatServer(
+    chat_mod <- CopilotChatServer(
       "chat",
       on_user_message = function(text) {
         run_ctrl$dispatch(run_request_ask(text, show_user_msg = TRUE))
@@ -91,7 +91,8 @@ CopilotBoardServer <- function(
       on_abort     = function(reason) {
         run_ctrl$dispatch(run_request_abort(reason))
       },
-      tier_choices = tier_choices_rx
+      tier_choices = tier_choices_rx,
+      current_tier = tier
     )
 
     # ---- Run controller ----
@@ -104,7 +105,7 @@ CopilotBoardServer <- function(
       evidence             = evidence,
       store                = chat_store,
       chat_event           = chat_event_rv,
-      chat_on_tool_request = chat$on_tool_request,
+      chat_on_tool_request = chat_mod$on_tool_request,
       pgx                  = pgx,
       pgx_dir              = pgx_dir,
       docs_dir             = docs_dir,
@@ -126,10 +127,14 @@ CopilotBoardServer <- function(
     shiny::observeEvent(input$new_chat, {
       run_ctrl$dispatch(run_request_new_chat())
     }, ignoreInit = TRUE)
-    shiny::observeEvent(input$tier, {
-      shiny::req(input$tier)
-      if (identical(input$tier, shiny::isolate(tier()))) return()
-      run_ctrl$dispatch(run_request_tier(input$tier))
+    # Tier changes come from the chat module's popover radioButtons (living in
+    # the "chat" namespace) via the returned tier_clicked reactiveVal — the old
+    # observeEvent(input$tier) was reading the board namespace and never fired.
+    shiny::observeEvent(chat_mod$tier_clicked(), {
+      new_tier <- chat_mod$tier_clicked()
+      shiny::req(new_tier)
+      if (identical(new_tier, shiny::isolate(tier()))) return()
+      run_ctrl$dispatch(run_request_tier(new_tier))
     }, ignoreInit = TRUE)
 
     # ---- Dataset-change observers (route through run_ctrl$apply_dataset) ----
