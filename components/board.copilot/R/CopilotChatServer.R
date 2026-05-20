@@ -123,11 +123,19 @@ CopilotChatServer <- function(
         },
         replay = {
           records <- event$records %||% list()
+          # Prefer content_text_visible (no injected preamble) so the user
+          # sees only what they typed on replay; fall back to content_text
+          # for records saved before omicsagentovi 0.5.0 added the split.
+          .visible <- function(r) {
+            v <- tryCatch(r@content_text_visible, error = function(e) NULL)
+            if (!is.null(v) && length(v) && !is.na(v) && nzchar(v)) v
+            else r@content_text
+          }
           for (rec in records) {
             tryCatch(
               shinychat::chat_append_message(
                 "chat",
-                list(role = rec@role, content = rec@content_text),
+                list(role = rec@role, content = .visible(rec)),
                 chunk = FALSE
               ),
               error = function(e) {

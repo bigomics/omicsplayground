@@ -46,6 +46,24 @@ copilot_trace_enabled <- function() {
   isTRUE(getOption(.OPT_COPILOT_TRACE, FALSE))
 }
 
+#' System prompt for Agent construction
+#'
+#' Returns the string passed to `system_prompt` when constructing a fresh
+#' `omicsagentovi::Agent`. Reads the `copilot.system_prompt` R option first;
+#' falls back to the default bundled prompt via
+#' `omicsagentovi::ovi_system_prompt()`.
+#'
+#' To use a board-specific or deployment-specific prompt, set the option
+#' before the app starts (e.g. in `global.R`):
+#' `options(copilot.system_prompt = omicsagentovi::ovi_system_prompt("agent_system_report"))`
+#'
+#' @return Character scalar system prompt, or `NA_character_` if no bundled
+#'   file is found and no option is set.
+#' @export
+copilot_system_prompt <- function() {
+  getOption("copilot.system_prompt", omicsagentovi::ovi_system_prompt())
+}
+
 #' Max history (cap on sessions kept). Reads `copilot.max_history` with default.
 #' @export
 copilot_max_history <- function(default = .COPILOT_MAX_HISTORY) {

@@ -254,14 +254,28 @@ copilot_run_controller <- function(
     bindings <- .build_bindings()
     pgx_val  <- .current_pgx()
 
+    # Carry the prior agent's dataset locator into the new agent so the new
+    # session knows the dataset name + path on disk even when the LLM has not
+    # called manage_pgx yet. Without this, session_save persists
+    # dataset_name = NA and history shows "(no dataset)".
+    prior_locator <- if (!is.null(current)) {
+      tryCatch(current@context@dataset_locator,
+               error = function(e) list(name = NA_character_,
+                                        path = NA_character_,
+                                        data_dir = NA_character_))
+    } else {
+      list(name = NA_character_, path = NA_character_, data_dir = NA_character_)
+    }
+
     new_agent <- NULL
     if (!is.null(pgx_val)) {
       new_agent <- tryCatch(
         omicsagentovi::Agent(
-          tier     = the_tier,
-          context  = omicsagentovi::RunContext(pgx = pgx_val),
-          session  = omicsagentovi::AgentSession(session_id = .new_session_id()),
-          bindings = bindings
+          tier          = the_tier,
+          system_prompt = copilot_system_prompt(),
+          context       = omicsagentovi::RunContext(pgx = pgx_val),
+          session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
+          bindings      = bindings
         ),
         error = function(e) {
           log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
@@ -272,6 +286,26 @@ copilot_run_controller <- function(
           NULL
         }
       )
+      # Install the dataset locator + current_dataset memory block so the
+      # agent is aware of the dataset on the very first turn.
+      if (!is.null(new_agent)) {
+        new_agent <- tryCatch(
+          omicsagentovi::agent_set_pgx(
+            new_agent,
+            pgx          = pgx_val,
+            dataset_name = prior_locator$name,
+            dataset_path = prior_locator$path,
+            data_dir     = prior_locator$data_dir
+          ),
+          error = function(e) {
+            log_info("copilot.run.set_pgx_after_reset_failed", msg = conditionMessage(e))
+            new_agent
+          }
+        )
+        # Stage context blocks (current_dataset, future providers) so the
+        # LLM sees host-prepared context on the first user turn.
+        new_agent <- .copilot_stage_context_blocks(new_agent)
+      }
     }
     agent(new_agent)
 
@@ -339,14 +373,18 @@ copilot_run_controller <- function(
 
     current <- shiny::isolate(agent())
     if (is.null(current)) {
-      # First dataset load: construct a fresh Agent at the current tier.
+      # First dataset load: construct a fresh Agent at the current tier,
+      # then install the dataset locator + current_dataset memory block so
+      # the agent is aware of the dataset on the very first turn and the
+      # next save records the real dataset name (not "(no dataset)").
       bindings <- .build_bindings()
       new_agent <- tryCatch(
         omicsagentovi::Agent(
-          tier     = shiny::isolate(tier()),
-          context  = omicsagentovi::RunContext(pgx = pgx_val),
-          session  = omicsagentovi::AgentSession(session_id = .new_session_id()),
-          bindings = bindings
+          tier          = shiny::isolate(tier()),
+          system_prompt = copilot_system_prompt(),
+          context       = omicsagentovi::RunContext(pgx = pgx_val),
+          session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
+          bindings      = bindings
         ),
         error = function(e) {
           log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
@@ -357,6 +395,23 @@ copilot_run_controller <- function(
           NULL
         }
       )
+      if (!is.null(new_agent)) {
+        new_agent <- tryCatch(
+          omicsagentovi::agent_set_pgx(
+            new_agent,
+            pgx          = pgx_val,
+            dataset_name = name,
+            dataset_path = path,
+            data_dir     = data_dir
+          ),
+          error = function(e) {
+            log_info("copilot.run.set_pgx_at_first_load_failed",
+                     msg = conditionMessage(e))
+            new_agent
+          }
+        )
+        new_agent <- .copilot_stage_context_blocks(new_agent)
+      }
       agent(new_agent)
     } else {
       # Switch dataset on existing Agent. Chat preserved (Q3).
@@ -377,7 +432,11 @@ copilot_run_controller <- function(
           NULL
         }
       )
-      if (!is.null(updated)) agent(updated)
+      if (!is.null(updated)) {
+        # Re-stage context blocks so the next turn sees the new dataset.
+        updated <- .copilot_stage_context_blocks(updated)
+        agent(updated)
+      }
     }
     invisible(NULL)
   }

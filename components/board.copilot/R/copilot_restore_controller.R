@@ -172,6 +172,11 @@ copilot_restore_controller <- function(
         elapsed_ms = elapsed_ms)
     }
 
+    # Re-stage host context blocks: omicsagentovi clears the inject registry
+    # on restore (next-turn intent is not persisted), so providers must run
+    # again for the LLM to see them on the post-restore first turn.
+    restored <- .copilot_stage_context_blocks(restored)
+
     agent(restored)
     restore_status("replaying")
 

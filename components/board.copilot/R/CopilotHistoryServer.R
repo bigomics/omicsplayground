@@ -80,16 +80,68 @@ CopilotHistoryServer <- function(id, session_dir,
       df
     })
 
+    # First-user-message lookup. ovi_sessions doesn't expose transcript
+    # contents, so we read transcript_records directly via DBI. WAL mode lets
+    # us share the SessionStore file safely (read-only open per refresh).
+    .briefings <- shiny::reactive({
+      df <- .sessions()
+      if (nrow(df) == 0L) return(character(0))
+      db_path <- file.path(session_dir, "sessions.sqlite")
+      if (!file.exists(db_path)) return(rep("", nrow(df)))
+      tryCatch({
+        con <- DBI::dbConnect(RSQLite::SQLite(), db_path, flags = RSQLite::SQLITE_RO)
+        on.exit(DBI::dbDisconnect(con), add = TRUE)
+        ids <- df$session_id
+        placeholders <- paste(rep("?", length(ids)), collapse = ",")
+        # Prefer content_text_visible (user-typed text without injected
+        # context preamble); fall back to content_text for legacy rows
+        # written before omicsagentovi 0.5.0 added the visible split.
+        rows <- DBI::dbGetQuery(
+          con,
+          sprintf(
+            "SELECT t.session_id,
+                    COALESCE(t.content_text_visible, t.content_text) AS content_text
+               FROM transcript_records t
+              INNER JOIN (
+                SELECT session_id, MIN(idx) AS min_idx
+                  FROM transcript_records
+                 WHERE role = 'user'
+                   AND content_text IS NOT NULL
+                   AND length(content_text) > 0
+                   AND session_id IN (%s)
+                 GROUP BY session_id
+              ) m ON t.session_id = m.session_id AND t.idx = m.min_idx",
+            placeholders
+          ),
+          params = as.list(ids)
+        )
+        first_msg <- setNames(rows$content_text, rows$session_id)
+        out <- vapply(ids, function(sid) {
+          msg <- first_msg[[sid]] %||% ""
+          if (!nzchar(msg)) return("")
+          msg <- gsub("\\s+", " ", trimws(msg))
+          if (nchar(msg) <= 80L) msg else paste0(substr(msg, 1L, 80L), "…")
+        }, character(1))
+        out
+      }, error = function(e) {
+        log_info("copilot.history.briefing_query_failed", msg = conditionMessage(e))
+        rep("", nrow(df))
+      })
+    })
+
     .display_df <- shiny::reactive({
       df <- .sessions()
       if (nrow(df) == 0L) {
-        return(data.frame(Title = character(0),
+        return(data.frame(Dataset = character(0),
+                          Briefing = character(0),
                           Turns = integer(0),
                           Updated = character(0),
                           stringsAsFactors = FALSE))
       }
-      title <- ifelse(is.na(df$dataset_name) | !nzchar(df$dataset_name),
-                      "(no dataset)", df$dataset_name)
+      dataset <- ifelse(is.na(df$dataset_name) | !nzchar(df$dataset_name),
+                        "(no dataset)", df$dataset_name)
+      briefing <- .briefings()
+      if (length(briefing) != nrow(df)) briefing <- rep("", nrow(df))
       updated <- vapply(df$updated_at, function(ts) {
         copilot_format_relative_time(
           format(as.POSIXct(ts, origin = "1970-01-01", tz = "UTC"),
@@ -97,9 +149,10 @@ CopilotHistoryServer <- function(id, session_dir,
         )
       }, character(1))
       data.frame(
-        Title   = title,
-        Turns   = df$n_turns,
-        Updated = updated,
+        Dataset  = dataset,
+        Briefing = briefing,
+        Turns    = df$n_turns,
+        Updated  = updated,
         stringsAsFactors = FALSE
       )
     })
@@ -107,9 +160,10 @@ CopilotHistoryServer <- function(id, session_dir,
     output$history_table <- DT::renderDataTable({
       df <- .display_df()
       if (nrow(df) == 0L) {
-        empty <- data.frame(Title = "No conversations yet",
-                            Turns = "",
-                            Updated = "")
+        empty <- data.frame(Dataset  = "No conversations yet",
+                            Briefing = "",
+                            Turns    = "",
+                            Updated  = "")
         return(DT::datatable(empty, selection = "none", rownames = FALSE,
                              options = list(dom = "t", paging = FALSE)))
       }
