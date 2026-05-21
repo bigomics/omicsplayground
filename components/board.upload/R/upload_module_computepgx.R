@@ -1435,15 +1435,17 @@ upload_module_computepgx_server <- function(
       ## or not, and if we are allowed to show the compute button.
       observeEvent(process_counter(), {
         if (process_counter() > 0) {
-          shiny::insertUI(
-            selector = "#current_dataset",
-            where = "beforeBegin",
-            ui = loading_spinner("Computation in progress..."),
-            session = session
-          )
+          ## shiny::insertUI(
+          ##   selector = "#current_dataset",
+          ##   where = "beforeBegin",
+          ##   ui = computing_spinner_ui("Computation in progress..."),
+          ##   session = session
+          ## )
+          show_computing_spinner(99.99)
         } else if (process_counter() == 0) {
           # remove UI with JS, had problems with shiny::removeUI
-          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
+          ##shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
+          hide_computing_spinner()
         }
       })
 

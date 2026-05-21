@@ -6,10 +6,12 @@
 
 header_infotext <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
-boardHeader <- function(title, info_link) {
+boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
+  if(is.null(mid)) mid <- div()
+  if(is.null(right)) right <- div()  
   div(
     fillRow(
-      flex = c(NA, 1),
+      flex = c(NA, 1, NA),
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, " &nbsp;")),
@@ -23,7 +25,8 @@ boardHeader <- function(title, info_link) {
           "Video tutorial about this board"
         )
       ),
-      div()
+      mid,
+      right
     )
   )
 }

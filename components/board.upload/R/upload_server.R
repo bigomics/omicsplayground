@@ -652,7 +652,6 @@ UploadBoard <- function(id,
         if (!is.null(checked)) {
           dbg("[UploadServer:checked_annot] colnames.annot = ", colnames(checked))
         }
-
         list(status = status, matrix = checked)
       }
     )
@@ -750,6 +749,7 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
+      show_computing_spinner(value=99)
       recompute_pgx(NULL) ## need to reset ???
     })
 
@@ -1004,8 +1004,6 @@ UploadBoard <- function(id,
         if (new_upload() == 0) {
           return(NULL)
         }
-
-        dbg("[new_upload] 1: new_upload = ", new_upload())
         
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
@@ -1018,8 +1016,6 @@ UploadBoard <- function(id,
           )
           return(NULL)
         }
-
-        dbg("[new_upload] 2:")
         
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
@@ -1036,8 +1032,6 @@ UploadBoard <- function(id,
           orig_counts_matrix(NULL) ## new az
           vars_selected(NULL)
         })
-
-        dbg("[new_upload] 3:")
         
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
@@ -1050,8 +1044,6 @@ UploadBoard <- function(id,
             closeOnClickOutside = FALSE
           )
         }
-
-        dbg("[new_upload] 4:")        
         
         if (enable_upload) {
           MAX_DS_PROCESS <- 1
