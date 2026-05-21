@@ -12,7 +12,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     tabH <- 200 ## row height of panel
     tabH <- "60vh" ## row height of panel
 
-    dsea_infotext <- strwrap("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug
+    infotext <- strwrap("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug
         sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate
         biological functions through mechanism-of-action (MOA) and known drug molecular targets.<br><br>
         In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel,
@@ -28,13 +28,13 @@ DrugConnectivityBoard <- function(id, pgx) {
     shiny::observe({
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
-      shiny::updateSelectInput(session, "dsea_method", choices = ct)
+      shiny::updateSelectInput(session, "method", choices = ct)
     })
 
     shiny::observeEvent(input$dsea_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
-        shiny::HTML(dsea_infotext),
+        shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
     })
@@ -43,13 +43,14 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::req(pgx$X)
       ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
-      shiny::updateSelectInput(session, "dsea_contrast", choices = ct)
+      shiny::updateSelectInput(session, "contrast", choices = ct)
     })
 
+    # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Drug enrichment" = list(disable = c("ai_report_accordion")),
-      "Connectivity map (beta)" = list(disable = c("ai_report_accordion")),
-      "AI Report" = list(disable = character(0))
+      "Drug enrichment" = list(disable = c("aiui")),
+      "Connectivity map (beta)" = list(disable = c("aiui")),
+      "AI Summary✨" = list(disable = c("filter_table","contrast"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -60,112 +61,92 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## Shared Reactive functions
     ## =========================================================================
 
+    get_pgx_drugs <- eventReactive( pgx$drugs, {
+
+      ## lazily compute MOA if missing (should be done at pgx computation time)
+      if(is.null(pgx$drugs[[1]]$moa)) {
+        dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
+        pgx.showSmallModal("Calculating MOA<br>Please wait...")
+        pgx$drugs$report <- NULL
+        for(db in names(pgx$drugs)) {
+          res <- pgx$drugs[[db]]
+          if(is.null(res$moa)) {
+            moa <- metaLINCS::computeMoaEnrichment(res)
+            pgx$drugs[[db]][['moa']] <- moa
+          }
+        }
+        shiny::removeModal(session)
+      }
+
+      ## lazily compute CMAP cluster positions if missing
+      if(is.null(pgx$drugs[[1]]$clust)) {
+        dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing CMAP positions...")
+        for(db in names(pgx$drugs)) {
+          res <- pgx$drugs[[db]]
+          if (!is.null(res$clust)) next
+          smat <- res$stats
+          if (is.null(smat) || !is.matrix(smat) || nrow(smat) < 5 || ncol(smat) < 2) next
+          smat[is.na(smat)] <- 0
+          nn <- min(15L, nrow(smat) - 1L)
+          clust <- try(
+            uwot::umap(smat, fast_sgd = TRUE, verbose = FALSE, n_neighbors = nn),
+            silent = TRUE
+          )
+          if (!inherits(clust, "try-error")) {
+            rownames(clust) <- rownames(smat)
+            pgx$drugs[[db]][['clust']] <- clust
+          }
+        }
+      }
+
+      return(pgx$drugs)
+    })
+
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-      shiny::req(pgx$drugs, input$dsea_contrast, input$dsea_method)
 
-      contr <- input$dsea_contrast
-      if (is.null(contr)) {
-        return(NULL)
-      }
+      contr <- input$contrast
+      dmethod <- input$method
+      shiny::req(contr, dmethod)
 
-      dmethod <- input$dsea_method
-      if (is.null(dmethod)) {
-        return(NULL)
-      }
-
-      dr <- pgx$drugs[[dmethod]]
-
-      nes <- round(dr$X[, contr], 4)
-      pv <- round(dr$P[, contr], 4)
-      qv <- round(dr$Q[, contr], 4)
-      drug <- rownames(dr$X)
-      if (is.null(ncol(dr$stats))) {
-        stats <- dr$stats
-      } else {
-        stats <- dr$stats[, contr]
-      }
-      annot <- dr$annot
-      nes[is.na(nes)] <- 0
-      qv[is.na(qv)] <- 1
-      pv[is.na(pv)] <- 1
-
-      ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
-      if (is.null(annot)) {
-        warning("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
-        annot <- read.csv(file.path(FILESX, "cmap/L1000_repurposing_drugs.txt"),
-          sep = "\t", comment.char = "#"
-        )
-        rownames(annot) <- annot$pert_iname
-      }
-
-      ## compile results matrix
-      jj <- match(toupper(drug), toupper(rownames(annot)))
-      annot <- annot[jj, c("moa", "target")]
-      dt <- data.frame(drug = drug, NES = nes, pval = pv, padj = qv, annot)
-      dt <- dt[order(-dt$NES), ]
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)
 
       ## sometimes UI is not ready
-      if (length(input$dseatable_filter) == 0) {
+      if (length(input$filter_table) == 0) {
         return(NULL)
       }
+      do.filter <- input$filter_table
 
-      if (input$dseatable_filter) {
-        sel <- which(dt$moa != "" | dt$target != "")
-        dt <- dt[sel, , drop = FALSE]
-      }
-      dsea <- list(table = dt, clust = dr$clust, stats = stats)
+      dsea <- playbase::pgx.getDrugConnectivityTable(
+        pgx=NULL, contrast=contr, db=dmethod,
+        drugs=pgxdrugs, filter=do.filter)
 
       return(dsea)
     })
 
     getMOA.target <- shiny::reactive({
-      ## meta-GSEA on molecular targets
-      dsea <- getActiveDSEA()
-      dt <- dsea$table
-      shiny::req(dt)
-      targets.list <- lapply(
-        enc2utf8(as.character(dt$target)),
-        function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-      )
-      names(targets.list) <- rownames(dt)
-      targets <- setdiff(unique(unlist(targets.list)), c(NA, "", " "))
-      gmt <- lapply(targets, function(g) {
-        names(which(sapply(targets.list, function(t) (g %in% t))))
-      })
-      names(gmt) <- targets
-
-      rnk <- dt$NES
-      names(rnk) <- rownames(dt)
-      suppressWarnings(
-        moa.target <- fgsea::fgsea(gmt, rnk, nperm = 20000)
-      )
-      moa.target <- moa.target[order(-abs(moa.target$NES)), ]
-      return(moa.target)
+      contr <- input$contrast
+      db <- input$method
+      shiny::req(contr,db)
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)
+      moa <- playbase::pgx.getDrugMOATable(
+        pgx=NULL, contrast=contr, db=db,
+        drugs=pgxdrugs, type="targetGene")
+      return(moa)
     })
 
-
     getMOA.class <- shiny::reactive({
-      ## meta-GSEA on MOA terms
-      dsea <- getActiveDSEA()
-      dt <- dsea$table
-      shiny::req(dt)
-      moa.list <- lapply(
-        enc2utf8(as.character(dt$moa)),
-        function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]])
-      )
-      names(moa.list) <- rownames(dt)
-      moa <- setdiff(unlist(moa.list), c("", NA, " "))
-      gmt <- lapply(moa, function(g) names(which(sapply(moa.list, function(t) (g %in% t)))))
-      names(gmt) <- moa
-      rnk <- dt$NES
-      names(rnk) <- rownames(dt)
-      suppressWarnings(
-        #
-        moa.class <- fgsea::fgsea(gmt, rnk)
-      )
-      moa.class <- moa.class[order(-abs(moa.class$NES)), ]
-      return(moa.class)
+      contr <- input$contrast
+      db <- input$method
+      shiny::req(contr,db)
+      pgxdrugs <- get_pgx_drugs()
+      shiny::req(pgxdrugs)
+      moa <- playbase::pgx.getDrugMOATable(
+        pgx=NULL, contrast=contr, db=db,
+        drugs=pgxdrugs, type="drugClass")
+      return(moa)
     })
 
     ## =========================================================================
@@ -182,10 +163,9 @@ DrugConnectivityBoard <- function(id, pgx) {
     drugconnectivity_plot_enplots_server(
       "dsea_enplots",
       pgx,
-      reactive(input$dsea_contrast),
-      reactive(input$dsea_method),
+      reactive(input$contrast),
+      reactive(input$method),
       dsea_table,
-      getActiveDSEA,
       watermark = WATERMARK
     )
 
@@ -203,17 +183,16 @@ DrugConnectivityBoard <- function(id, pgx) {
     drugconnectivity_plot_actmap_server(
       "dsea_actmap",
       pgx,
-      reactive(input$dsea_contrast),
-      reactive(input$dsea_method),
+      reactive(input$contrast),
+      reactive(input$method),
       dsea_table,
       getActiveDSEA,
       watermark = WATERMARK
     )
 
-
-    ## =======================================================================================
-    ## CONNECTIVITY MAP TAB
-    ## =======================================================================================
+    ## ==================================================================================
+    ## Module servers
+    ## ==================================================================================
 
     drugconnectivity_plot_cmap_enplot_server(
       "cmap_enplot",
@@ -230,14 +209,21 @@ DrugConnectivityBoard <- function(id, pgx) {
       cmap_table = cmap_table,
       getMOA.class = getMOA.class,
       getMOA.target = getMOA.target,
-      dsea_method = reactive(input$dsea_method),
-      dsea_contrast = reactive(input$dsea_contrast),
+      dsea_method = reactive(input$method),
+      dsea_contrast = reactive(input$contrast),
       watermark = WATERMARK
     )
 
     cmap_table <- drugconnectivity_table_cmap_server(
       "cmap_table",
       getActiveDSEA
+    )
+
+    drugconnectivity_report_server(
+      "cmap_report",
+      pgx = pgx,
+      drugs = get_pgx_drugs,
+      rdb = reactive(input$method)
     )
 
     ## =======================================================================================
@@ -247,9 +233,9 @@ DrugConnectivityBoard <- function(id, pgx) {
     drugconnectivity_ai_report_server(
       "ai_report",
       pgx = pgx,
-      method_reactive = shiny::reactive(input$dsea_method),
-      contrast_reactive = shiny::reactive(input$dsea_contrast),
-      annotated_only_reactive = shiny::reactive(input$dseatable_filter),
+      method_reactive = shiny::reactive(input$method),
+      contrast_reactive = shiny::reactive(input$contrast),
+      annotated_only_reactive = shiny::reactive(input$filter_table),
       parent_session = session,
       watermark = WATERMARK
     )
