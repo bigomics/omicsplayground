@@ -56,7 +56,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
+    
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
@@ -101,10 +101,10 @@ DrugConnectivityBoard <- function(id, pgx) {
 
       return(pgx$drugs)
     })
-
+    
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
-
+      
       contr <- input$contrast
       dmethod <- input$method
       shiny::req(contr, dmethod)
@@ -117,11 +117,11 @@ DrugConnectivityBoard <- function(id, pgx) {
         return(NULL)
       }
       do.filter <- input$filter_table
-
+      
       dsea <- playbase::pgx.getDrugConnectivityTable(
         pgx=NULL, contrast=contr, db=dmethod,
         drugs=pgxdrugs, filter=do.filter)
-
+      
       return(dsea)
     })
 
@@ -133,7 +133,7 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::req(pgxdrugs)
       moa <- playbase::pgx.getDrugMOATable(
         pgx=NULL, contrast=contr, db=db,
-        drugs=pgxdrugs, type="targetGene")
+        drugs=pgxdrugs, type="targetGene")       
       return(moa)
     })
 
@@ -142,10 +142,10 @@ DrugConnectivityBoard <- function(id, pgx) {
       db <- input$method
       shiny::req(contr,db)
       pgxdrugs <- get_pgx_drugs()
-      shiny::req(pgxdrugs)
+      shiny::req(pgxdrugs)      
       moa <- playbase::pgx.getDrugMOATable(
         pgx=NULL, contrast=contr, db=db,
-        drugs=pgxdrugs, type="drugClass")
+        drugs=pgxdrugs, type="drugClass")       
       return(moa)
     })
 
@@ -193,7 +193,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## ==================================================================================
     ## Module servers
     ## ==================================================================================
-
+    
     drugconnectivity_plot_cmap_enplot_server(
       "cmap_enplot",
       pgx,
@@ -226,10 +226,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       rdb = reactive(input$method)
     )
 
-    ## =======================================================================================
-    ## AI REPORT TAB
-    ## =======================================================================================
-
     drugconnectivity_ai_report_server(
       "ai_report",
       pgx = pgx,
@@ -239,5 +235,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       parent_session = session,
       watermark = WATERMARK
     )
+
   })
 }

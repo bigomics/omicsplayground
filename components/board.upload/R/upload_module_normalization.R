@@ -23,6 +23,7 @@ upload_module_normalization_server <- function(
   r_annot,
   upload_datatype,
   is.olink,
+  is.nulisa,
   is.count = FALSE,
   height = 720,
   recompute_pgx = NULL
@@ -59,10 +60,9 @@ upload_module_normalization_server <- function(
         counts[which(is.infinite(counts))] <- NA
 
         ## Olink NPX are passed on up to here unaltered.
-        if (is.olink()) {
-          dbg("[normalization_server:imputedX] Olink NPX Proteomics")
+        if (is.olink() | is.nulisa()) {
+          dbg("[normalization_server:imputedX] Olink NPX or NULISA NPQ Proteomics")
           counts <- 2**counts
-          shiny::updateCheckboxInput(session, "normalize", value = FALSE)
         }
 
         if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
@@ -418,7 +418,7 @@ upload_module_normalization_server <- function(
         if (!any(is.na(X0)) && !(input$zero_as_na && has.zeros)) {
           plot.new()
           text(0.5, 0.5, "No missing values", cex = 1.2)
-        } else { 
+        } else {
           ii <- which(is.na(X0))
           if (isolate(input$zero_as_na)) {
             ii <- which(is.na(X0) | X0 == 0)
@@ -854,7 +854,7 @@ upload_module_normalization_server <- function(
         }
 
         ## Normalization defaults
-        default_normalize <- TRUE
+        default_normalize <- !(is.olink() || is.nulisa())
         default_norm_method <- 1
         if (!is.null(pgx_settings$norm_method)) {
           if (pgx_settings$norm_method == "skip_normalization") {

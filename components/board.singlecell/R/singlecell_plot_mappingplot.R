@@ -251,8 +251,10 @@ singlecell_plot_mappingplot_server <- function(id,
           if (k %% n != 0) rownames(score_matrix) <- rep("", nrow(score_matrix))
           if (nrow(score_matrix) > 100) rownames(score_matrix) <- rep("", nrow(score_matrix))
 
-          playbase::gx.imagemap(score_matrix, cex = 0.85, main = "", clust = FALSE,
-            col = col_pal(64))
+          playbase::gx.imagemap(score_matrix,
+            cex = 0.85, main = "", clust = FALSE,
+            col = col_pal(64)
+          )
           title(main = method_name, cex.main = 1.1, line = 0.4, font.main = 1)
           k <- k + 1
         }

@@ -44,7 +44,6 @@ multiwgcna_plot_dendrograms_server <- function(id,
                                                mwgcna,
                                                r_layers) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
       wgcna <- mwgcna()$layers
       layers <- r_layers()
@@ -67,10 +66,10 @@ multiwgcna_plot_dendrograms_server <- function(id,
       dr <- ifelse(input$showtraits || input$showcontrasts, 0.3, 1)
 
       ## Need to set layout manually
-      layout.matrix <- matrix(1:(2*nr*nc), nrow = nr*2, ncol = nc)
+      layout.matrix <- matrix(1:(2 * nr * nc), nrow = nr * 2, ncol = nc)
       graphics::layout(
         mat = layout.matrix,
-        heights = rep(c(1*dr, 1), nr),
+        heights = rep(c(1 * dr, 1), nr),
         widths = rep(1, nc)
       )
       i <- 1
@@ -81,8 +80,8 @@ multiwgcna_plot_dendrograms_server <- function(id,
           main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
           show.traits = input$showtraits,
           show.contrasts = input$showcontrasts,
-          marAll = c(1,7,1,0),
-          #use.tree = input$clusterby,
+          marAll = c(1, 7, 1, 0),
+          # use.tree = input$clusterby,
           setLayout = FALSE
         )
       }

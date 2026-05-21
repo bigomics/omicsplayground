@@ -6,8 +6,10 @@
 #' @noRd
 app_server <- function(input, output, session) {
 
+  setUserOption(session, "llm_model", "")
+
   # list functions in global
-  
+
   board = options()$board
   authentication = options()$authentication
   server_fn_name <- glue::glue("{board}board")

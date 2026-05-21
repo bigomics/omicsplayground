@@ -24,9 +24,9 @@ auth_user_level_is_free <- function(user_level) {
 
 ## Standard Ok (cancel) + Contact us (confirm, opens contact page in new tab)
 shinyalert_ok_contact_us <- function(title,
-                                      text,
-                                      html = FALSE,
-                                      type = "warning") {
+                                     text,
+                                     html = FALSE,
+                                     type = "warning") {
   shinyalert::shinyalert(
     title = title,
     text = if (html) shiny::HTML(text) else text,

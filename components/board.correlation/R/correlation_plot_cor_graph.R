@@ -112,7 +112,7 @@ correlation_plot_cor_graph_server <- function(
       }
 
       ## Editor: up/down colors for positive/negative correlation edges
-      col_up   <- get_editor_color(input, "color_up", "primary")
+      col_up <- get_editor_color(input, "color_up", "primary")
       col_down <- get_editor_color(input, "color_down", "secondary")
 
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
@@ -133,7 +133,7 @@ correlation_plot_cor_graph_server <- function(
       if ("rho" %in% names(visdata$edges)) {
         rho_abs <- abs(visdata$edges$rho)
         max_rho <- max(rho_abs, na.rm = TRUE)
-        alpha   <- if (max_rho > 0) 0.25 + 0.25 * rho_abs / max_rho else rep(0.6, length(rho_abs))
+        alpha <- if (max_rho > 0) 0.25 + 0.25 * rho_abs / max_rho else rep(0.6, length(rho_abs))
         base_colors <- ifelse(visdata$edges$rho >= 0, col_up, col_down)
         visdata$edges$color <- mapply(
           function(col, a) grDevices::adjustcolor(col, alpha.f = a),
