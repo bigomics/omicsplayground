@@ -158,33 +158,96 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
     )
 
     # ---- Download handler ----
-    # Dispatches on artifact kind:
-    #   ggplot    -> PNG copy of the pre-rendered file
-    #   plotly    -> standalone HTML via htmlwidgets::saveWidget
-    #   iheatmapr -> standalone HTML via htmlwidgets::saveWidget
-    .download_ext <- function(kind) {
-      switch(kind, ggplot = "png", plotly = "html", iheatmapr = "html", "bin")
+    # Format choice depends on artifact kind:
+    #   ggplot    -> PNG (only; ggsave at width x height inches, 288 dpi = 4x)
+    #   plotly    -> HTML (saveWidget) or PNG (plotlyExport: kaleido -> webshot2)
+    #   iheatmapr -> HTML (saveWidget) or PNG (iheatmapr::save_iheatmap, webshot)
+    # plotlyExport is defined in components/ui/ui-PlotModule.R and is reused
+    # here so we don't fork the kaleido/webshot fallback chain.
+    .default_fmt <- function(kind) {
+      switch(kind, ggplot = "png", plotly = "html", iheatmapr = "html", "html")
     }
+    .clamp_dim <- function(x, default) {
+      x <- suppressWarnings(as.numeric(x))
+      if (length(x) != 1L || is.na(x) || x <= 0) default else x
+    }
+
+    output$dl_format_ui <- shiny::renderUI({
+      rec <- active_artifact()
+      if (is.null(rec)) return(NULL)
+      choices <- switch(rec$kind,
+        ggplot    = c(PNG = "png"),
+        plotly    = c(HTML = "html", PNG = "png"),
+        iheatmapr = c(HTML = "html", PNG = "png"),
+        c(HTML = "html")
+      )
+      shiny::selectInput(
+        ns("dl_format"), "Format",
+        choices  = choices,
+        selected = .default_fmt(rec$kind),
+        width    = "100%"
+      )
+    })
+
     output$evidence_download <- shiny::downloadHandler(
       filename = function() {
-        rec <- active_artifact()
+        rec  <- active_artifact()
         kind <- if (!is.null(rec)) rec$kind else "plot"
-        ts <- format(Sys.time(), "%Y%m%d-%H%M%S")
-        sprintf("copilot-%s-%s.%s", kind, ts, .download_ext(kind))
+        fmt  <- input$dl_format %||% .default_fmt(kind)
+        ts   <- format(Sys.time(), "%Y%m%d-%H%M%S")
+        sprintf("copilot-%s-%s.%s", kind, ts, fmt)
       },
       content = function(file) {
         rec <- active_artifact()
         shiny::req(rec)
-        if (identical(rec$kind, "ggplot")) {
-          shiny::req(!is.null(rec$prerendered_path), file.exists(rec$prerendered_path))
-          file.copy(rec$prerendered_path, file, overwrite = TRUE)
-        } else if (identical(rec$kind, "plotly")) {
-          htmlwidgets::saveWidget(rec$plot, file, selfcontained = TRUE)
-        } else if (identical(rec$kind, "iheatmapr")) {
-          p <- rec$plot
-          if (methods::is(p, "Iheatmap")) p <- iheatmapr::to_widget(p)
-          htmlwidgets::saveWidget(p, file, selfcontained = TRUE)
-        }
+        w    <- .clamp_dim(input$dl_width,  8)
+        h    <- .clamp_dim(input$dl_height, 6)
+        fmt  <- input$dl_format %||% .default_fmt(rec$kind)
+        # Mirror PlotModule's constants (ui-PlotModule.R:762-764):
+        #   px per inch = 80, upscale resx = 4 (so 288 dpi effective for ggplot)
+        resx <- 4
+        png_w <- w * 80
+        png_h <- h * 80
+        progress_msg <- if (identical(fmt, "png")) "Exporting to PNG" else "Exporting to HTML"
+        shiny::withProgress(message = progress_msg, value = 0.8, {
+          if (identical(rec$kind, "ggplot")) {
+            # ggplot only supports PNG here. We deviate from PlotModule by
+            # passing width/height since the whole feature is user-chosen
+            # dimensions; PlotModule omits them (ui-PlotModule.R:792).
+            # Fallback: copy the pre-rendered PNG if rec$plot is missing.
+            if (!is.null(rec$plot)) {
+              ggplot2::ggsave(
+                file, plot = rec$plot,
+                width = w, height = h, units = "in",
+                dpi = 72 * resx, device = "png"
+              )
+            } else {
+              shiny::req(!is.null(rec$prerendered_path), file.exists(rec$prerendered_path))
+              file.copy(rec$prerendered_path, file, overwrite = TRUE)
+            }
+          } else if (identical(rec$kind, "plotly")) {
+            if (identical(fmt, "png")) {
+              # Mirror PlotModule's plotly PNG path (ui-PlotModule.R:767-771).
+              p <- rec$plot
+              p$width  <- png_w
+              p$height <- png_h
+              plotlyExport(p, file, width = p$width, height = p$height, scale = resx)
+            } else {
+              # Mirror PlotModule's HTML path (ui-PlotModule.R:1031-1075):
+              # plain saveWidget, no dimension manipulation.
+              htmlwidgets::saveWidget(rec$plot, file, selfcontained = TRUE)
+            }
+          } else if (identical(rec$kind, "iheatmapr")) {
+            p <- rec$plot
+            if (methods::is(p, "Iheatmap")) p <- iheatmapr::to_widget(p)
+            if (identical(fmt, "png")) {
+              # Mirror PlotModule's iheatmapr PNG path (ui-PlotModule.R:773-774).
+              iheatmapr::save_iheatmap(p, vwidth = png_w, vheight = png_h, file)
+            } else {
+              htmlwidgets::saveWidget(p, file, selfcontained = TRUE)
+            }
+          }
+        })
       }
     )
 

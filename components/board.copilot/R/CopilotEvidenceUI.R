@@ -56,11 +56,42 @@ CopilotEvidenceUI <- function(id) {
             class = "download-button", title = "download",
             shiny::conditionalPanel(
               condition = paste0("output['", ns("has_plot"), "']"),
-              shiny::downloadButton(
-                ns("evidence_download"),
-                label = NULL,
+              # DropdownMenu trigger (download icon, circular) + popover body
+              # holding width / height in inches and the actual downloadButton.
+              # Mirrors PlotModule's pattern at ui-PlotModule.R:216-245.
+              DropdownMenu(
+                shiny::div(
+                  style = "width: 240px;",
+                  # Format selector — rendered server-side because the available
+                  # choices depend on artifact kind (ggplot=PNG only;
+                  # plotly/iheatmapr=HTML+PNG).
+                  shiny::uiOutput(ns("dl_format_ui")),
+                  shiny::div(
+                    style = "display: flex; gap: 10px; margin-bottom: 12px;",
+                    shiny::div(
+                      style = "flex: 1;",
+                      shiny::numericInput(
+                        ns("dl_width"), "Width (in)",
+                        value = 8, min = 1, max = 20, step = 1, width = "100%"
+                      )
+                    ),
+                    shiny::div(
+                      style = "flex: 1;",
+                      shiny::numericInput(
+                        ns("dl_height"), "Height (in)",
+                        value = 6, min = 1, max = 20, step = 1, width = "100%"
+                      )
+                    )
+                  ),
+                  shiny::downloadButton(
+                    ns("evidence_download"),
+                    label = "Download",
+                    class = "btn-outline-primary btn-sm w-100"
+                  )
+                ),
+                size = "xs",
                 icon = shiny::icon("download"),
-                class = "btn-circle-xs"
+                status = "default"
               )
             )
           ),
