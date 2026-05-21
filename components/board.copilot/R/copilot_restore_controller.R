@@ -133,21 +133,20 @@ copilot_restore_controller <- function(
     invisible(NULL)
   }
 
-  # ---- Result observer ----
-  shiny::observeEvent(restore_task$result(), {
-    session_id <- shiny::isolate(restore_inflight())
+  # ---- Shared completion handler (sync and async paths) ----
+  # Performs PGX inject, context-block re-stage, agent commit, and replay.
+  # `restore_mode` is logged for diagnostic separation of fast path vs future.
+  .complete_restore <- function(restored, session_id, restore_mode = "async") {
+    if (is.null(restored)) return(invisible(NULL))
 
-    restored <- tryCatch(
-      restore_task$result(),
-      error = function(e) {
-        .handle_restore_failure(e, session_id, NULL)
-        NULL
-      }
-    )
-    if (is.null(restored)) return()
-
-    # Inject current PGX on the Shiny thread (no future-boundary serialisation)
     current_pgx <- tryCatch(shiny::isolate(local_pgx()), error = function(e) NULL)
+    # `current_pgx` is typically a reactiveValues-like object; field reads
+    # must also be isolated when this runs outside a reactive consumer
+    # (e.g. the sync fast path firing from session$onFlushed).
+    pgx_name <- tryCatch(
+      shiny::isolate(current_pgx$name),
+      error = function(e) NA_character_
+    )
 
     if (!is.null(current_pgx)) {
       restore_status("attaching_dataset")
@@ -156,25 +155,22 @@ copilot_restore_controller <- function(
         omicsagentovi::agent_set_pgx(
           restored,
           current_pgx,
-          dataset_name = current_pgx$name %||% NA_character_,
+          dataset_name = pgx_name %||% NA_character_,
           data_dir     = data_dir
         ),
         error = function(e) {
           log_info("copilot.restore_pgx_inject_failed",
             msg = conditionMessage(e))
-          restored  # continue without PGX rather than failing the whole restore
+          restored
         }
       )
       elapsed_ms <- round(
         as.numeric(difftime(Sys.time(), started, units = "secs")) * 1000, 1)
       log_info("copilot.restore_pgx_injected",
-        dataset    = current_pgx$name %||% "unknown",
+        dataset    = pgx_name %||% "unknown",
         elapsed_ms = elapsed_ms)
     }
 
-    # Re-stage host context blocks: omicsagentovi clears the inject registry
-    # on restore (next-turn intent is not persisted), so providers must run
-    # again for the LLM to see them on the post-restore first turn.
     restored <- .copilot_stage_context_blocks(restored)
 
     agent(restored)
@@ -186,10 +182,26 @@ copilot_restore_controller <- function(
     restore_status("idle")
 
     log_info("copilot.restore_complete",
-      session_id = session_id %||% "unknown",
-      n_replayed = n_replayed,
-      has_pgx    = !is.null(current_pgx))
+      session_id   = session_id %||% "unknown",
+      n_replayed   = n_replayed,
+      has_pgx      = !is.null(current_pgx),
+      restore_mode = restore_mode)
 
+    invisible(NULL)
+  }
+
+  # ---- Result observer (async path) ----
+  shiny::observeEvent(restore_task$result(), {
+    session_id <- shiny::isolate(restore_inflight())
+    restored <- tryCatch(
+      restore_task$result(),
+      error = function(e) {
+        .handle_restore_failure(e, session_id, NULL)
+        NULL
+      }
+    )
+    if (is.null(restored)) return()
+    .complete_restore(restored, session_id, restore_mode = "async")
   }, ignoreNULL = TRUE)
 
   # ---- start() — sole public entry point ----
@@ -222,12 +234,50 @@ copilot_restore_controller <- function(
     chat_event(list(type = "post", role = "assistant",
                     text = copilot_msg("restore_started")))
 
-    log_info("copilot.restore_start", session_id = session_id)
+    has_local_pgx <- !is.null(tryCatch(local_pgx(), error = function(e) NULL))
+    log_info("copilot.restore_start",
+      session_id    = session_id,
+      restore_mode  = if (has_local_pgx) "sync" else "async")
+
+    bindings <- tryCatch(bindings_factory(), error = function(e) {
+      .handle_restore_failure(e, session_id, previous_agent)
+      NULL
+    })
+    if (is.null(bindings)) return(invisible(NULL))
+
+    if (has_local_pgx) {
+      # Sync fast path: a PGX is already attached so there is no future-side
+      # heavy work to wait on. Restore inside onFlushed so the "Restoring..."
+      # placeholder is painted first, then run synchronously on the main
+      # thread — avoids the future/promise queue + observer-fire roundtrip.
+      session$onFlushed(function() {
+        started <- Sys.time()
+        restored <- tryCatch(
+          omicsagentovi::ovi_restore(
+            session_id  = session_id,
+            session_dir = store@session_dir,
+            bindings    = bindings,
+            restore_pgx = "never"
+          ),
+          error = function(e) {
+            log_info("copilot.restore_sync_failed", msg = conditionMessage(e))
+            .handle_restore_failure(e, session_id, previous_agent)
+            NULL
+          }
+        )
+        if (is.null(restored)) return()
+        restore_ms <- round(
+          as.numeric(difftime(Sys.time(), started, units = "secs")) * 1000, 1)
+        log_info("copilot.restore_worker_done",
+          session_id = session_id, restore_ms = restore_ms,
+          restore_mode = "sync")
+        .complete_restore(restored, session_id, restore_mode = "sync")
+      }, once = TRUE)
+      return(invisible(NULL))
+    }
 
     tryCatch(
       {
-        # Build fresh bindings per restore attempt
-        bindings <- bindings_factory()
         restore_task$invoke(store, session_id, bindings)
       },
       error = function(e) {

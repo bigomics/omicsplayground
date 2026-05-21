@@ -162,18 +162,41 @@ CopilotChatServer <- function(
             if (!is.null(v) && length(v) && !is.na(v) && nzchar(v)) v
             else r@content_text
           }
-          for (rec in records) {
+
+          mode <- tryCatch(copilot_replay_mode(), error = function(e) "single")
+          if (identical(mode, "batch") &&
+              !is.null(session) &&
+              is.function(session$sendCustomMessage) &&
+              length(records) > 0L) {
+            payload <- lapply(records, function(r) {
+              list(role = as.character(r@role),
+                   content = as.character(.visible(r) %||% ""))
+            })
             tryCatch(
-              shinychat::chat_append_message(
-                "chat",
-                list(role = rec@role, content = .visible(rec)),
-                chunk = FALSE
-              ),
+              session$sendCustomMessage("copilot-chat-batch-append", list(
+                id         = session$ns("chat"),
+                messages   = payload,
+                batch_size = 32L
+              )),
               error = function(e) {
-                log_info("copilot.chat.replay_record_failed",
+                log_info("copilot.chat.replay_batch_failed",
                           msg = conditionMessage(e))
               }
             )
+          } else {
+            for (rec in records) {
+              tryCatch(
+                shinychat::chat_append_message(
+                  "chat",
+                  list(role = rec@role, content = .visible(rec)),
+                  chunk = FALSE
+                ),
+                error = function(e) {
+                  log_info("copilot.chat.replay_record_failed",
+                            msg = conditionMessage(e))
+                }
+              )
+            }
           }
         }
       )
