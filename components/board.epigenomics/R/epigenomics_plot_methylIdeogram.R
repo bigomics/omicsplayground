@@ -32,10 +32,10 @@ epigenomics_plot_methylIdeogram_ui <- function(id,
       withTooltip(
         shiny::checkboxInput(
           ns("remove_probecounts_bar"),
-          "Remove barplots of probe counts",
+          "Remove barplots of feature counts",
           FALSE
         ),
-        "Remove barplots of probe counts in the lower panel of each ideogram.",
+        "Remove barplots of feature counts in the lower panel of each ideogram.",
         placement = "top"
       )
     )
@@ -95,12 +95,19 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       samples <- r.samples()
       if (!all(samples %in% colnames(X))) return(NULL)
 
+      annot <- genes[kk, , drop = FALSE]
+      pos_col <- colnames(annot)[grep("^pos$|position|location", tolower(colnames(annot)))[1]]
+      if (!is.na(pos_col)) {
+        annot[[pos_col]] <- as.numeric(sub(";.*", "", as.character(annot[[pos_col]])))
+      }
+      
       return(list(
         X = X[kk, samples, drop = FALSE],
         samples = pgx$samples[samples, , drop = FALSE],
-        annot = genes[kk, , drop = FALSE],
+        annot = annot,
         chromosomes = r.chromosome(),
-        pheno = r.pheno()
+        pheno = r.pheno(),
+        dma = pgx$dma
       ))
 
     })
@@ -115,7 +122,8 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       pheno <- res[["pheno"]]
       annot <- res[["annot"]]
       chromosomes <- res[["chromosomes"]]
-
+      dma <- res[["dma"]]
+      
       if (!is.null(pheno) && pheno != "<ungrouped>") {
         kk <- which(colnames(samples) == pheno)
         if (length(kk) > 0) {
@@ -132,10 +140,21 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       } else {
         pheno <- NULL
       }
-
+      
+      if (!is.null(dma)) {
+        loess_bins <- 5L
+        bin_size <- 1e6
+        if (dma == "Differentially methylated regions") {
+          loess_bins <- 20L
+          bin_size <- 2e6
+        }
+      }
+            
       playbase::plotMethylIdeogram(X, annot, pheno, chromosomes,
+        bin_size = bin_size,
         probe_count_bars = !input$remove_probecounts_bar,
-        pheno_lines = input$show_pheno_lines)
+        pheno_lines = input$show_pheno_lines,
+        loess_bins = loess_bins)
 
     }
   
