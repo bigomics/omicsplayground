@@ -157,6 +157,99 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
       quoted = TRUE
     )
 
+    # ---- Download handler ----
+    # Dispatches on artifact kind:
+    #   ggplot    -> PNG copy of the pre-rendered file
+    #   plotly    -> standalone HTML via htmlwidgets::saveWidget
+    #   iheatmapr -> standalone HTML via htmlwidgets::saveWidget
+    .download_ext <- function(kind) {
+      switch(kind, ggplot = "png", plotly = "html", iheatmapr = "html", "bin")
+    }
+    output$evidence_download <- shiny::downloadHandler(
+      filename = function() {
+        rec <- active_artifact()
+        kind <- if (!is.null(rec)) rec$kind else "plot"
+        ts <- format(Sys.time(), "%Y%m%d-%H%M%S")
+        sprintf("copilot-%s-%s.%s", kind, ts, .download_ext(kind))
+      },
+      content = function(file) {
+        rec <- active_artifact()
+        shiny::req(rec)
+        if (identical(rec$kind, "ggplot")) {
+          shiny::req(!is.null(rec$prerendered_path), file.exists(rec$prerendered_path))
+          file.copy(rec$prerendered_path, file, overwrite = TRUE)
+        } else if (identical(rec$kind, "plotly")) {
+          htmlwidgets::saveWidget(rec$plot, file, selfcontained = TRUE)
+        } else if (identical(rec$kind, "iheatmapr")) {
+          p <- rec$plot
+          if (methods::is(p, "Iheatmap")) p <- iheatmapr::to_widget(p)
+          htmlwidgets::saveWidget(p, file, selfcontained = TRUE)
+        }
+      }
+    )
+
+    # ---- Maximize modal slot ----
+    # The modal itself is declared statically in CopilotEvidenceUI (Bootstrap
+    # data-bs-toggle, no R round-trip). Here we emit ONLY the active kind's
+    # output element so plotly/iheatmapr don't mount inside a display:none
+    # conditionalPanel (which would freeze them at zero width and produce the
+    # squeezed-column render in the modal).
+    output$evidence_modal_slot <- shiny::renderUI({
+      rec <- active_artifact()
+      if (is.null(rec)) return(NULL)
+      mh <- "calc(80vh - 100px)"
+      switch(rec$kind,
+        ggplot    = shiny::imageOutput(ns("evidence_ggplot_modal"), width = "100%", height = mh),
+        plotly    = plotly::plotlyOutput(ns("evidence_plotly_modal"), width = "100%", height = mh),
+        iheatmapr = iheatmapr::iheatmaprOutput(ns("evidence_iheatmapr_modal"), width = "100%", height = mh),
+        NULL
+      )
+    })
+
+    output$evidence_ggplot_modal <- shiny::renderImage({
+      rec <- active_artifact()
+      shiny::req(
+        !is.null(rec),
+        identical(rec$kind, "ggplot"),
+        !is.null(rec$prerendered_path),
+        file.exists(rec$prerendered_path)
+      )
+      list(
+        src         = rec$prerendered_path,
+        contentType = "image/png",
+        width       = "100%",
+        alt         = "Evidence Plot (maximized)"
+      )
+    }, deleteFile = FALSE)
+
+    output$evidence_plotly_modal <- plotly::renderPlotly({
+      rec <- active_artifact()
+      shiny::req(!is.null(rec), identical(rec$kind, "plotly"))
+      # Clear any width/height baked in by plotly_build() at inline-card size.
+      # Belt-and-braces: the modal_slot uiOutput already avoids the zero-width
+      # mount, but cached dimensions in $x$layout would still override autosize.
+      p <- rec$plot
+      if (!is.null(p$x) && !is.null(p$x$layout)) {
+        p$x$layout$width  <- NULL
+        p$x$layout$height <- NULL
+      }
+      p$width  <- NULL
+      p$height <- NULL
+      p
+    })
+
+    output$evidence_iheatmapr_modal <- htmlwidgets::shinyRenderWidget(
+      quote({
+        rec <- active_artifact()
+        shiny::req(!is.null(rec), identical(rec$kind, "iheatmapr"))
+        p <- rec$plot
+        if (methods::is(p, "Iheatmap")) iheatmapr::to_widget(p) else p
+      }),
+      iheatmapr::iheatmaprOutput,
+      environment(),
+      quoted = TRUE
+    )
+
     # ---- Carousel rendering ----
     output$plot_carousel <- shiny::renderUI({
       hist <- plot_history()

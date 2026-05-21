@@ -146,6 +146,16 @@ copilot_prerender_plotly <- function(plot_obj) {
     modeBarButtonsToAdd = list(),
     displaylogo = FALSE
   )
+  # Register plotly_click so the global PlotModule click listener
+  # (event_data("plotly_click") in ui-PlotModule.R) doesn't warn about an
+  # unregistered source "A" when this plot is the one being clicked.
+  # CAVEAT: that PlotModule observer also reads click_data$key and writes to
+  # parent_session$input$label_features. Because copilot plots inherit the
+  # default plotly source "A", clicks on agent traces carrying a `key` field
+  # will leak into a board's "Label features" textarea. Fix when it bites:
+  # set a non-default source on copilot plots, or scope the PlotModule
+  # observer to a specific source.
+  built <- plotly::event_register(built, "plotly_click")
   log_info("copilot.prerender.plotly")
   built
 }

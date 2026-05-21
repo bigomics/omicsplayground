@@ -37,9 +37,50 @@ CopilotEvidenceUI <- function(id) {
     ),
 
     # ---- Plot card ----
+    # Header mirrors the standard PlotModuleUI look: a `plotmodule-header`
+    # fillRow placed via `as.card_item` (NOT card_header), with the icon
+    # buttons wearing the same `btn-circle-xs` / `download-button` /
+    # `zoom-button` classes so they pick up the project's existing CSS.
     bslib::card(
       class = "mb-2",
-      bslib::card_header("Evidence Plot", class = "py-1 px-2 fw-bold"),
+      bslib::as.card_item(shiny::div(
+        shiny::fillRow(
+          flex = c(1, NA, NA),
+          class = "plotmodule-header",
+          shiny::div(
+            class = "plotmodule-title",
+            style = "white-space: nowrap; overflow: hidden; text-overflow: clip;",
+            "Evidence Plot"
+          ),
+          shiny::div(
+            class = "download-button", title = "download",
+            shiny::conditionalPanel(
+              condition = paste0("output['", ns("has_plot"), "']"),
+              shiny::downloadButton(
+                ns("evidence_download"),
+                label = NULL,
+                icon = shiny::icon("download"),
+                class = "btn-circle-xs"
+              )
+            )
+          ),
+          shiny::div(
+            class = "zoom-button", title = "zoom",
+            shiny::conditionalPanel(
+              condition = paste0("output['", ns("has_plot"), "']"),
+              # data-bs-toggle modalTrigger (no R round-trip), pointed at the
+              # always-mounted .popup-modal declared below. Mirrors PlotModule's
+              # zoom path so the modal inherits the same global CSS and sizing.
+              modalTrigger(
+                ns("evidence_zoombutton"),
+                ns("evidencePopup"),
+                shiny::icon("up-right-and-down-left-from-center"),
+                class = "btn-circle-xs"
+              )
+            )
+          )
+        )
+      )),
       bslib::card_body(
         class = "p-2",
 
@@ -77,6 +118,44 @@ CopilotEvidenceUI <- function(id) {
           iheatmapr::iheatmaprOutput(ns("evidence_iheatmapr"), height = "350px")
         )
       )
+    ),
+
+    # ---- Maximize modal ----
+    # Recipe copied from PlotModule (`ui-PlotModule.R:480-512`):
+    #   * `modalUI(size = "fullscreen")` -> Bootstrap `.modal-fullscreen` so
+    #     the dialog spans the viewport instead of getting capped by the
+    #     project-global `.modal-lg { width: 640px }` override.
+    #   * `.popup-modal` / `.popup-plot` wrappers pick up the global rules
+    #     in `playground.css` (margin auto, fonts, footer hidden).
+    #   * Four inline CSS rules per instance — `.modal-content { width: 100vw }`
+    #     is the load-bearing one that stretches the content layer to viewport
+    #     width; without it the plotly inside collapses to a narrow column.
+    #   * Inner output is a `uiOutput` slot so only the active kind's output
+    #     element is mounted, avoiding the zero-width autosize problem that
+    #     `display: none` `conditionalPanel`s cause for plotly.
+    shiny::div(
+      class = "popup-modal",
+      modalUI(
+        id = ns("evidencePopup"),
+        title = "Evidence Plot",
+        size = "fullscreen",
+        footer = NULL,
+        shiny::div(
+          class = "popup-plot-body",
+          shiny::div(
+            class = "popup-plot",
+            shiny::uiOutput(ns("evidence_modal_slot"))
+          )
+        )
+      ),
+      shiny::tags$head(shiny::tags$style(shiny::HTML(sprintf(
+        "#%s .modal-dialog  { width: 100%%; }
+         #%s .modal-body    { min-height: calc(80vh - 100px); padding: 30px 150px; }
+         #%s .modal-content { width: 100vw; }
+         #%s .modal-footer  { display: none; }",
+        ns("evidencePopup"), ns("evidencePopup"),
+        ns("evidencePopup"), ns("evidencePopup")
+      ))))
     ),
 
     # ---- Plot history carousel (visible when 2+ plots in history) ----
