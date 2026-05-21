@@ -120,9 +120,11 @@ expression_plot_topfoldchange_server <- function(id,
       gp <- extract_ggprism_params(input)
       bar_color <- get_editor_color(input, "bar_color", "#A6CEE3")
 
+      fc_top <- pd[["fc.top"]]
+      fc_top <- fc_top[!is.na(fc_top)]
       fc_data <- data.frame(
-        x = factor(names(pd[["fc.top"]]), levels = names(pd[["fc.top"]])),
-        y = as.numeric(pd[["fc.top"]])
+        x = factor(names(fc_top), levels = names(fc_top)),
+        y = as.numeric(fc_top)
       )
 
       if (gp$use_ggprism) {
@@ -149,7 +151,7 @@ expression_plot_topfoldchange_server <- function(id,
           title = pd[["gene"]],
           yaxistitle = "Fold change (log2)",
           xaxistitle = "",
-          yrange = c(-1.1, 1.1) * max(abs(pd[["fc.top"]])),
+          yrange = c(-1.1, 1.1) * max(abs(fc_top)),
           margin = list(l = 10, r = 10, b = 0, t = 25),
           grouped = FALSE
         )

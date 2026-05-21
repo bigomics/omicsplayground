@@ -113,7 +113,7 @@ wgcna_table_genes_server <- function(id,
               render = DT::JS(js.ellipsis20)
             ),
             list(
-              targets = c("title"),
+              targets = intersect(c("title"), colnames(df)),
               render = DT::JS(js.ellipsis40)
             )
           )
