@@ -276,13 +276,17 @@ drugconnectivity_ai_text_server <- function(id,
       message(sprintf("[INFO][%s] --- [AI-DEEP-REPORT] running agent_prompt (max 50 turns)...",
                       format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
-      response <- tryCatch(
+      ## agent_prompt() returns an AgentResult (list with $text, $agent,
+      ## $status, $error) since the omicsagentovi S7 refactor — we only
+      ## need the generated text here.
+      agent_result <- tryCatch(
         omicsagentovi::agent_prompt(agent, bp$board),
         error = function(e) {
           shiny::validate(shiny::need(FALSE,
             .aicards_friendly_error(conditionMessage(e))))
         }
       )
+      response <- agent_result$text %||% ""
 
       ## Post-hoc cost cap check (soft — render output, prepend warning).
       usage <- omicsagentovi::agent_usage_summary(agent)
