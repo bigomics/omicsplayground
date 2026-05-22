@@ -118,11 +118,8 @@ drugconnectivity_ai_report_server <- function(id,
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
-        if (controls$mode() == "report" && isTRUE(controls$include_infographic())) {
-          controls$trigger()
-        } else {
-          0
-        }
+        if (!isTRUE(controls$include_infographic())) return(0)
+        controls$image_trigger()
       }),
       watermark = watermark
     )

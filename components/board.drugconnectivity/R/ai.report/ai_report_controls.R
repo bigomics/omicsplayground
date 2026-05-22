@@ -11,9 +11,12 @@ drugconnectivity_ai_report_controls_ui <- function(id) {
     shiny::radioButtons(
       ns("mode"),
       "Mode:",
-      choices = c("Report" = "report", "Summary" = "summary"),
-      selected = "report",
-      inline = TRUE
+      choices = c(
+        "Summary" = "summary",
+        "Report" = "report",
+        "Deep Report" = "deep_report"
+      ),
+      selected = "report"
     ),
 
     shiny::actionButton(
@@ -95,13 +98,31 @@ drugconnectivity_ai_report_controls_server <- function(id, module_choices = NULL
       )
     })
 
+    # Single Generate button; mode at click time decides which counter
+    # ticks. trigger and deep_trigger are independent so existing
+    # eventReactives (Report/Summary on trigger, Deep on deep_trigger)
+    # fire exactly once per relevant click. image_trigger is a separate
+    # counter that captures "this was a Report or Deep click" so the
+    # image card never fires from mode switches alone.
     trigger <- reactiveVal(0)
+    deep_trigger <- reactiveVal(0)
+    image_trigger <- reactiveVal(0)
     observeEvent(input$generate_btn, {
-      trigger(trigger() + 1)
+      mode <- shiny::isolate(input$mode %||% "report")
+      if (mode == "deep_report") {
+        deep_trigger(deep_trigger() + 1)
+      } else {
+        trigger(trigger() + 1)
+      }
+      if (mode %in% c("report", "deep_report")) {
+        image_trigger(image_trigger() + 1)
+      }
     })
 
     list(
       trigger = reactive(trigger()),
+      deep_trigger = reactive(deep_trigger()),
+      image_trigger = reactive(image_trigger()),
       mode = reactive(input$mode %||% "report"),
       summary_style = reactive(input$summary_style),
       show_prompt = reactive(input$show_prompt),
