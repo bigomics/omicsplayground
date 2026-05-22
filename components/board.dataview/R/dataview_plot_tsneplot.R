@@ -86,7 +86,9 @@ dataview_plot_tsne_server <- function(id,
         ylab <- "expression (CPM)"
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
-        if (data_type == "logCPM") {
+        if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") {
+          ylab <- "Beta values"
+        } else if (data_type == "logCPM") {
           ylab <- "expression (log2CPM)"
         } else {
           ylab <- "expression (log2)"
