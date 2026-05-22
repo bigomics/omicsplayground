@@ -276,3 +276,20 @@ MicrosummaryUI <- function(id, tab_names) {
     html = FALSE
   )
 }
+
+#' Reusable "Include infographic" checkbox for AI Report controls
+#'
+#' Standard checkbox widget shared across boards that expose the AI Report
+#' flow. Pair with [AiImageCardServer]'s `trigger_reactive` argument to gate
+#' infographic generation. Boards typically wrap the call in a
+#' `shinyjs::hidden(shiny::div(id = ns("report_extras"), ...))` so the
+#' checkbox is hidden in Summary mode and shown in Report / Deep Report
+#' mode.
+#'
+#' @param id Fully-namespaced input id (caller has already applied `ns(...)`).
+#' @param value Logical; initial state of the checkbox. Defaults to `FALSE`.
+#'
+#' @return A `shiny::checkboxInput` widget.
+aicards_include_infographic_input <- function(id, value = FALSE) {
+  shiny::checkboxInput(id, "Include infographic", value = value)
+}

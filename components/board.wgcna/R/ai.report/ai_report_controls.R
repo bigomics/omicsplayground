@@ -39,11 +39,7 @@ ai_report_controls_ui <- function(id) {
     shinyjs::hidden(
       shiny::div(
         id = ns("report_extras"),
-        shiny::checkboxInput(
-          ns("include_infographic"),
-          "Include infographic",
-          value = FALSE
-        )
+        aicards_include_infographic_input(ns("include_infographic"))
       )
     ),
 

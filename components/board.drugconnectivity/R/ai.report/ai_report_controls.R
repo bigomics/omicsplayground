@@ -24,6 +24,14 @@ drugconnectivity_ai_report_controls_ui <- function(id) {
       style = "margin-bottom: 10px;"
     ),
 
+    # Report-only extras (hidden in Summary mode).
+    shinyjs::hidden(
+      shiny::div(
+        id = ns("report_extras"),
+        aicards_include_infographic_input(ns("include_infographic"))
+      )
+    ),
+
     shinyjs::hidden(
       shiny::div(
         id = ns("summary_controls"),
@@ -57,8 +65,10 @@ drugconnectivity_ai_report_controls_server <- function(id, module_choices = NULL
       mode <- input$mode %||% "report"
       if (mode == "summary") {
         shinyjs::show("summary_controls")
+        shinyjs::hide("report_extras")
       } else {
         shinyjs::hide("summary_controls")
+        shinyjs::show("report_extras")
       }
     })
 
@@ -96,7 +106,7 @@ drugconnectivity_ai_report_controls_server <- function(id, module_choices = NULL
       summary_style = reactive(input$summary_style),
       show_prompt = reactive(input$show_prompt),
       selected_module = reactive(input$summary_module),
-      include_infographic = reactive(TRUE),
+      include_infographic = reactive(isTRUE(input$include_infographic)),
       image_style = reactive(input$image_style %||% "bigomics"),
       image_blocks = reactive(input$image_blocks %||% "1")
     )
