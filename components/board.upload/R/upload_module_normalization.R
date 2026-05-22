@@ -528,7 +528,9 @@ upload_module_normalization_server <- function(
           if (input$missing_plottype == "PCA of imputed data") {
             if (any(X2 > 0)) {
               X3 <- imputedX()$X
-              if (input$impute) X3 <- log2(imputedX()$counts + imputedX()$prior)
+              if (input$impute && upload_datatype() != "methylomics") {
+                X3 <- log2(imputedX()$counts + imputedX()$prior)
+              }
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
               is.mox <- playbase::is.multiomics(rownames(X3))

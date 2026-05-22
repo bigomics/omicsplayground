@@ -527,16 +527,18 @@ upload_table_preview_counts_server <- function(id,
       if (ncol(counts) > 500) counts <- counts[, sample(ncol(counts), 500), drop = FALSE]
       if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
-      if (!is_logscale()) {
+      if (!is_logscale() && upload_datatype() != "methylomics") {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(prior + xx)
       }
       suppressWarnings(dc <- reshape2::melt(xx))
       dc$value[dc$value == 0] <- NA
       tt2 <- paste(n_genes, tspan("genes x", js = FALSE), n_samples, "samples")
+      xlab <- "counts (log2)"
+      if (upload_datatype() == "methylomics") xlab <- "Beta values"
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
-        ggplot2::xlab(tspan("counts (log2)", js = FALSE)) +
+        ggplot2::xlab(tspan(xlab, js = FALSE)) +
         ggplot2::theme(legend.position = "none") +
         ggplot2::ggtitle(toupper(tspan("Counts", js = FALSE)), subtitle = tt2)
     })
@@ -548,11 +550,13 @@ upload_table_preview_counts_server <- function(id,
       if (ncol(counts) > 40) counts <- counts[, sample(ncol(counts), 40), drop = FALSE]
       if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
-      if (!is_logscale()) {
+      if (!is_logscale() && upload_datatype() != "methylomics") {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(pmax(xx, 0) + prior)
       }
-      boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
+      ylab <- "counts (log2)"
+      if (upload_datatype() == "methylomics") ylab <- "Beta values"
+      boxplot(xx, ylab = tspan(ylab, js = FALSE))
     })
 
     # error pop-up alert
