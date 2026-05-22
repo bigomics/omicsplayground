@@ -135,7 +135,10 @@ upload_module_computepgx_server <- function(
         } else {
           c1 <- grepl("methylomics", upload_datatype(), ignore.case = TRUE)
           c2 <- grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)
-          if (c1 | c2) {
+          if (c1) {
+            mm <- c("drug connectivity" = "drugs",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          } else if (c2) {
             mm <- c("drug connectivity" = "drugs", "wordcloud",
               "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
           } else {
@@ -164,9 +167,10 @@ upload_module_computepgx_server <- function(
           }
         }
 
-        ## Default selection based on datatype
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
+        } else if (grepl("methylomics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drugs", "connectivity", "wgcna")
         } else {
           mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
         }
