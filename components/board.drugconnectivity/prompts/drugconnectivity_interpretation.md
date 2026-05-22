@@ -1,95 +1,82 @@
-## EXPERIMENT CONTEXT
+# Drug connectivity context
 
-This analysis uses drug connectivity mapping and drug set enrichment analysis (DSEA) to identify drugs whose perturbation signatures match or oppose the experimental gene expression signature.
+## What this analysis is
 
-Experiment: {{experiment}}
+Drug connectivity mapping scores each drug's pre-computed perturbation
+signature against the experimental gene expression signature, using
+GSEA-style enrichment. Each drug receives a Normalized Enrichment Score
+(NES) and significance values (p, q).
 
-## LANGUAGE RULES
+Three levels of aggregation are reported per contrast:
 
-Certainty calibration:
-- Strong evidence (replicated, mechanistic): use "demonstrates", "shows", "reveals"
-- Moderate evidence (statistical): use "suggests", "indicates", "points to"
-- Preliminary or exploratory: use "may", "might", "appears to"
-- Correlational data: use "is associated with", "correlates with"
+- **DSEA (Drug Set Enrichment Analysis)**: per-drug NES — multiple
+  perturbation experiments per drug aggregated into a single score.
+- **MOA-class enrichment**: NES recomputed over drugs sharing a
+  pharmacological class (e.g., "HDAC inhibitor", "EGFR inhibitor").
+- **Target enrichment**: NES recomputed over drugs hitting the same
+  molecular target (gene-level).
 
-Avoid:
-- "proves", "establishes", "clearly demonstrates" (too strong)
-- "causes", "leads to", "drives" (implies causation from correlation)
-- Anthropomorphizing genes: NOT "TP53 wants" but "TP53 functions in"
+## Databases (analysis backends)
 
-## NUMERICAL INTERPRETATION
+The data block names the active backend in `analysis_type` /
+`analysis_type_description`. Two families exist, with **opposite NES
+direction semantics**:
 
-P-values in omics context:
-- Omics experiments test thousands of features simultaneously
-- p < 0.05 has high false positive rate; use with caution
-- p < 0.01 still permits many false positives at genome scale
-- FDR/adjusted p-values (q < 0.05) are more reliable for omics
-- Always note whether values are raw or adjusted
+- **L1000/activity** and **L1000/gene** — transcriptional connectivity
+  (Connectivity Map / LINCS L1000 perturbation profiles). Activity uses
+  Transcriptional Activity Scores aggregated across cell lines; gene
+  uses per-cell-line 978-landmark log-fold-changes.
+- **CTRPv2/sensitivity** and **GDSC/sensitivity** — pharmacological
+  sensitivity connectivity. CTRPv2 uses AUC dose-response over ~481
+  compounds × ~860 cancer cell lines; GDSC uses IC50 over ~367 clinical
+  anti-cancer drugs × ~987 cell lines.
 
-Fold changes:
-- |FC| < 1.5 (|log2FC| < 0.58): modest, potentially noise
-- |FC| 1.5-2 (|log2FC| 0.58-1): moderate effect
-- |FC| 2-4 (|log2FC| 1-2): substantial effect
-- |FC| > 4 (|log2FC| > 2): strong effect
+## NES direction semantics
 
-Enrichment analysis:
-- High enrichment does not equal biological importance
-- Well-studied pathways are over-represented in databases
-- Small gene set overlaps may lack robustness
-- Consider overlap size alongside enrichment score
+Read the backend before naming therapeutic candidates.
 
-## DRUG CONNECTIVITY-SPECIFIC GUIDANCE
+- **L1000** (transcriptional): negative NES → drug *opposes* the
+  experimental signature → reversal candidate. Positive NES → drug
+  *mimics* it.
+- **CTRPv2 / GDSC** (sensitivity): positive NES → experimental state
+  *predicts vulnerability* (sensitivity candidate). Negative NES →
+  predicted resistance.
 
-Drug connectivity analysis enriches experimental gene expression signatures against pre-computed drug perturbation profiles; the analysis type determines which profiles are used and how NES should be interpreted.
+## Definitions
 
-**NES direction semantics — read the ANALYSIS TYPE field carefully:**
+- **NES**: signed enrichment score; semantics depend on backend (above).
+- **Annotation coverage**: fraction of tested drugs that carry MOA /
+  target metadata. Low coverage weakens MOA / target interpretation
+  and is reported per contrast.
+- **Tier (strong / moderate / weak / data-limited)**: per-contrast
+  classification provided in the data block, derived from significant
+  drug count, max |NES|, MOA / target hits and annotation coverage.
+  **Authoritative — do not reclassify.**
 
-- **L1000/activity or L1000/gene (transcriptional connectivity)**: NES reflects transcriptional similarity.
-  - Negative NES → drug *opposes* the experimental signature → candidate for reversing/treating the state.
-  - Positive NES → drug *mimics* the experimental signature → shares the same transcriptional programme.
-  - Drugs opposing the signature (negative NES) are the primary therapeutic candidates.
+## Quantitative thresholds
 
-- **CTRPv2/sensitivity or GDSC/sensitivity (pharmacological sensitivity connectivity)**: NES reflects co-variation of drug sensitivity with the experimental gene expression profile.
-  - Positive NES → the experimental state *predicts sensitivity* to the drug (vulnerability candidate).
-  - Negative NES → the experimental state predicts resistance or insensitivity.
-  - Drugs with positive NES are the primary therapeutic candidates (opposite direction from L1000).
+- |NES| ≥ 1.5 strong; 1.0–1.5 moderate; 0.5–1.0 mild; < 0.5 minimal.
+- q < 0.05 significant (headline claims).
+- p < 0.05 with q ≥ 0.05 nominal (mention with hedging).
+- Otherwise unsupported (suppress unless explicitly required).
+- Numbers live in the data block, not the prose.
 
-Apply the correct direction interpretation throughout the report. Drug Set Enrichment Analysis (DSEA) aggregates multiple perturbation experiments per drug; MOA analysis groups by pharmacological class; target analysis groups by molecular target.
+## Evidence hierarchy
 
-## QUANTITATIVE INTERPRETATION GUIDELINES
+When building the narrative for each contrast, walk this hierarchy:
 
-Drug connectivity metrics:
-- |NES| > 1.5: strong connectivity; 1.0–1.5 moderate; 0.5–1.0 mild; < 0.5 minimal
-- Direction: see DRUG CONNECTIVITY-SPECIFIC GUIDANCE above — direction semantics differ by analysis type
-- p-value < 0.01: high confidence; 0.01–0.05 standard significance; 0.05–0.10 marginal; > 0.10 not significant
-- q-value (adjusted p-value): accounts for multiple testing across all drugs tested
+1. **Supported MOA terms** (from the "Interpretation evidence summary"
+   lines in the data block) — primary frame per contrast.
+2. **Corroborating targets** — validate the mechanism at gene level.
+3. **Exemplar drugs** — anchor the mechanism with one or two named
+   compounds matching a supported MOA term.
+4. **Raw top drugs** — exploratory only; use when no MOA signal exists.
 
-MOA and target analysis:
-- MOA NES reflects whether drugs sharing a mechanism collectively match or oppose the signature
-- Target gene NES indicates whether drugs acting on the same molecular target show concordant connectivity
-- Higher absolute NES with lower q-values indicates stronger and more reliable MOA/target enrichment
-- MOA classes or targets with few drugs should be interpreted cautiously
+## Caveats to keep visible
 
-Integration rules:
-- Prioritize drugs with both strong absolute NES and low q-values
-- Look for convergent MOA themes among top drugs (e.g., multiple kinase inhibitors or HDAC inhibitors)
-- Therapeutic candidates: for L1000 analyses, drugs opposing the signature (negative NES); for sensitivity analyses, drugs with positive NES (predicted vulnerability)
-- Cross-reference drug targets with differentially expressed genes for mechanistic insight
-- Cell-line caveat applies to all analysis types; L1000 also has dose/time mismatch; CTRPv2/GDSC reflects cancer-line pharmacology
-
-## Confidence Rules
-
-- Treat q-values and significant-count metrics as primary confidence anchors.
-- Use annotation coverage to qualify confidence.
-- Explicitly mark data-limited contexts when annotation is sparse or significance is weak.
-
-## Language Rules
-
-- Use phrasing such as "suggests", "is consistent with", "prioritizes for follow-up".
-- Do not claim proven efficacy, causality, or clinical benefit.
-- Keep translational caveats explicit (L1000 cell line context, dose/time mismatch risk).
-
-## Actionability Rules
-
-- Propose concrete and feasible next steps (orthogonal transcriptomic checks, pathway assays, benchmark compounds).
-- Keep recommendations tied to presented quantitative evidence.
+- Connectivity reflects cell-line perturbation signatures, not direct
+  clinical efficacy.
+- Dose, exposure time and cell context of reference profiles may diverge
+  from the experimental biology.
+- Annotation coverage gates MOA / target claims — when coverage is low,
+  flag it before recommending mechanisms.

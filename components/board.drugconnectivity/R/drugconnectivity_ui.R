@@ -145,7 +145,7 @@ DrugConnectivityUI <- function(id) {
 
 
   panel4 <- shiny::tabPanel(
-    "AI Report",
+    "AI Report✨",
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,

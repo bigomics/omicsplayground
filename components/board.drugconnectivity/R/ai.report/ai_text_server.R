@@ -65,7 +65,7 @@ drugconnectivity_ai_text_server <- function(id,
         only_annotated <- isTRUE(annotated_only_reactive())
         shiny::req(method, contrast)
 
-        at <- dc_analysis_type_info(method)
+        at <- playbase::drugs.analysisInfo(method)
 
         params <- drugconnectivity_build_summary_params(
           pgx = pgx,
@@ -119,7 +119,7 @@ drugconnectivity_ai_text_server <- function(id,
       only_annotated <- isTRUE(annotated_only_reactive())
       shiny::req(method)
 
-      at <- dc_analysis_type_info(method)
+      at <- playbase::drugs.analysisInfo(method)
 
       progress <- shiny::Progress$new()
       on.exit(progress$close())

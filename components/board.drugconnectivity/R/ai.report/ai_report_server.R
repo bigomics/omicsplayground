@@ -16,8 +16,12 @@ drugconnectivity_ai_report_server <- function(id,
     summary_choices <- shiny::reactive({
       method <- method_reactive()
       shiny::req(method)
-      dr <- dc_get_method_data(pgx, method)
-      choices <- dc_get_contrasts(dr)
+      dr <- pgx$drugs[[method]]
+      choices <- if (!is.null(dr) && !is.null(dr$X)) {
+        sort(setdiff(colnames(dr$X), grep("^IA:", colnames(dr$X), value = TRUE)))
+      } else {
+        character(0)
+      }
       fallback <- contrast_reactive()
       if (!is.null(fallback) && nzchar(fallback) && !fallback %in% choices) {
         choices <- c(fallback, choices)

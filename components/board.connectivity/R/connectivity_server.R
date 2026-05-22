@@ -24,6 +24,9 @@ ConnectivityBoard <- function(
     )
 
     tab_elements <- list(
+      "FC correlation" = list(disable = NULL),
+      "FC Heatmap" = list(disable = NULL),
+      "Meta-network" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {
