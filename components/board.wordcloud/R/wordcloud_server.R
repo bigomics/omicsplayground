@@ -13,6 +13,7 @@ WordCloudBoard <- function(id, pgx) {
 "), js = FALSE)
 
     tab_elements <- list(
+      "Word Cloud" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs, {

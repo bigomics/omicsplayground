@@ -30,6 +30,11 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
     tab_elements <- list(
+      "Overview" = list(disable = NULL),
+      "Top features" = list(disable = NULL),
+      "Volcano by comparison" = list(disable = NULL),
+      "Volcano by method" = list(disable = NULL),
+      "FC-FC comparison" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {

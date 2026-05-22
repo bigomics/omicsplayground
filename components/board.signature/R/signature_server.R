@@ -40,6 +40,10 @@ SignatureBoard <- function(id, pgx,
     UREACYCLE.METABOLITES <- "15729 16349 16941 16467 16199 17672 17053 18012"
 
     tab_elements <- list(
+      "Volcano plots" = list(disable = NULL),
+      "Enrichment" = list(disable = NULL),
+      "Overlap/similarity" = list(disable = NULL),
+      "Markers" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {

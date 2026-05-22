@@ -35,8 +35,15 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
-    tab_elements <- list(
-      "AI Summary" = list(disable = NULL)
+    tab_elements <- c(
+      list(
+        "Enrichment" = list(disable = NULL),
+        "Enrichment by comparison" = list(disable = NULL),
+        "Volcano by comparison" = list(disable = NULL),
+        "Volcano by method" = list(disable = NULL),
+        "AI Summary" = list(disable = NULL)
+      ),
+      setNames(list(list(disable = NULL)), as.character(tspan("Gene expression")))
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)

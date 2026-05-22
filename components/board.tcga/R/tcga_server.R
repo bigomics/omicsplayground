@@ -22,6 +22,7 @@ TcgaBoard <- function(id, pgx) {
     )
 
     tab_elements <- list(
+      "TCGA survival" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {

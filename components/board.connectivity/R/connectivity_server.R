@@ -29,6 +29,7 @@ ConnectivityBoard <- function(
       "Meta-network" = list(disable = NULL),
       "AI Summary" = list(disable = NULL)
     )
+
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
