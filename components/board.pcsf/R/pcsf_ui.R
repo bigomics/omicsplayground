@@ -146,7 +146,7 @@ PcsfUI <- function(id) {
       ), ## end tabpanel2
 
       shiny::tabPanel(
-        "AI Report",
+        "AI Report✨",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",

@@ -138,7 +138,7 @@ mofa_report_server <- function(id,
       
       ##llm_model <- "groq:openai/gpt-oss-20b"
       llm_model <- getUserOption(session,'llm_model')
-      if(llm_model == '') {
+      if(is.null(llm_model) || llm_model == '') {
         return(NULL)
       }
       if(btn_count() < 1 && !is.null(pgx$mofa$report)) {

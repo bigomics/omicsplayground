@@ -29,6 +29,13 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
 
+    tab_elements <- list(
+      "AI Summary" = list(disable = NULL)
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
     # ================================================================================
     # =============================== observers ======================================
     # ================================================================================

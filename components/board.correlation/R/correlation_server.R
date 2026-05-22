@@ -39,7 +39,8 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Graph" = list(
         enable = NULL,
         disable = NULL
-      )
+      ),
+      "AI Summary" = list(disable = NULL)
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)

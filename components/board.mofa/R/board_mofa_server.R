@@ -47,7 +47,7 @@ MofaBoard <- function(id, pgx) {
       "Weights" = list(disable = c("ai_report_accordion")),
       "Enrichment" = list(disable = c("show_types", "ai_report_accordion")),
       "gsetMOFA" = list(disable = c("show_types", "ai_report_accordion")),
-      "AI Report" = list(disable = c("selected_factor", "show_types", "data_type_accordion"))
+      "AI Report✨" = list(disable = c("selected_factor", "show_types", "data_type_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {

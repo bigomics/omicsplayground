@@ -44,7 +44,7 @@ MultiWGCNA_Board <- function(id, pgx) {
       "Module correlation" = list(disable = c("phenotype", "module", "wgcna_options", "lasagna_options", "ai_report_accordion")),
       "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "ai_report_accordion")),
       "Feature Table" = list(disable = c("layers", "condition", "wgcna_options", "lasagna_options", "ai_report_accordion")),
-      "AI Report" = list(disable = c("phenotype", "module", "condition", "layers", "wgcna_options", "lasagna_options"))
+      "AI Report✨" = list(disable = c("phenotype", "module", "condition", "layers", "wgcna_options", "lasagna_options"))
     )
 
     shiny::observeEvent(input$tabs, {

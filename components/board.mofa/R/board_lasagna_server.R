@@ -42,7 +42,7 @@ LasagnaBoard <- function(id, pgx) {
     tab_elements <- list(
       "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter", "ai_report_accordion")),
       "Multi-partite graph" = list(disable = c("clust_options", "ai_report_accordion")),
-      "AI Report" = list(disable = c("clust_options", "mpartite_options", "gsfilter"))
+      "AI Report✨" = list(disable = c("clust_options", "mpartite_options", "gsfilter"))
       # "Multi-type network" = list(disable = c("clust_options"))
     )
 

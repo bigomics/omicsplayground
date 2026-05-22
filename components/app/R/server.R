@@ -882,7 +882,7 @@ app_server <- function(input, output, session) {
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
     toggleTab("wgcna-tabs", "AI Report✨", show.beta)
-    toggleTab("drug-tabs", "AI Summary✨", show.beta)     
+    toggleTab("drug-tabs", "AI Summary✨", FALSE)     
 
     ## hide AI tabs
     show.ai.tabs <- isTRUE(show.ai) && isTRUE(show.beta)
@@ -902,8 +902,8 @@ app_server <- function(input, output, session) {
       }
     }
 
-    toggle_tabs_by_label(ai.summary.tabsets, "AI Summary", show.ai.tabs)
-    toggle_tabs_by_label(ai.report.tabsets, "AI Report", show.ai.tabs)
+    toggle_tabs_by_label(ai.summary.tabsets, "AI Summary", FALSE)
+    toggle_tabs_by_label(ai.report.tabsets, "AI Report✨", show.ai.tabs)
 
     ## toggle microsummary containers (hidden by default, shown when AI enabled)
     micro.containers <- c(

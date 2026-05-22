@@ -31,7 +31,8 @@ TimeSeriesBoard <- function(id,
       "Statistics" = list(
         enable = NULL,
         disable = c("timefactor", "module", "knn")
-      )
+      ),
+      "AI Summary" = list(disable = NULL)
     )
 
     shiny::observeEvent(input$tabs1, {

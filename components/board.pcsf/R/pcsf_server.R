@@ -22,7 +22,7 @@ PcsfBoard <- function(id, pgx) {
     tab_elements <- list(
       "Gene PCSF" = list(disable = c("gset_accordion", "ai_report_accordion")),
       "Geneset PCSF" = list(disable = c("pcsf_accordion", "ai_report_accordion")),
-      "AI Report" = list(disable = c("pcsf_accordion", "gset_accordion"))
+      "AI Report✨" = list(disable = c("pcsf_accordion", "gset_accordion"))
     )
 
     my_observers[[1]] <- shiny::observeEvent(input$tabs, {

@@ -302,7 +302,7 @@ WgcnaUI <- function(id) {
           ) ## end layout_columns (left column)
         ) ## end layout_columns (page)
       ), ## end tabPanel
-      shiny::tabPanel("AI Report", wgcna_ai_report_ui(ns("ai_report")))
+      shiny::tabPanel("AI Report✨", wgcna_ai_report_ui(ns("ai_report")))
     )
   )
 }

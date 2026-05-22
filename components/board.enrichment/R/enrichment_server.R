@@ -35,6 +35,13 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
+    tab_elements <- list(
+      "AI Summary" = list(disable = NULL)
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================

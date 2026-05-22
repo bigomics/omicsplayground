@@ -21,6 +21,13 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
+    tab_elements <- list(
+      "AI Summary" = list(disable = NULL)
+    )
+    shiny::observeEvent(input$tabs1, {
+      bigdash::update_tab_elements(input$tabs1, tab_elements)
+    })
+
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================

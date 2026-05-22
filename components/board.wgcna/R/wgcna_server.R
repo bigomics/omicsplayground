@@ -42,7 +42,7 @@ WgcnaBoard <- function(id, pgx) {
       "Eigengenes" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
       "Modules" = list(disable = c("ai_report_accordion")),
       "Enrichment" = list(disable = c("selected_trait", "ai_report_accordion")),
-      "AI Report" = list(disable = c("selected_module", "selected_trait", "compare_accordion"))
+      "AI Report✨" = list(disable = c("selected_module", "selected_trait", "compare_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {

@@ -143,36 +143,6 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
-  panel3 <- shiny::tabPanel(
-    "AI Summary✨",
-    bslib::layout_columns(
-      col_widths = 12,
-      height = "calc(100vh - 180px)",
-      row_heights = c("auto", 1),
-      div(
-        class = "alert alert-primary p-2",
-        drugconnectivity_report_bullets_ui(ns("cmap_report"))
-      ),
-      bslib::layout_columns(
-        col_widths = c(7, 5),
-        height = "calc(100vh - 180px)",
-        drugconnectivity_report_summary_ui(
-          ns("cmap_report"),
-          title = "Summary",
-          caption = "AI-generated summary",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        ),
-        drugconnectivity_report_infographic_ui(
-          ns("cmap_report"),
-          title = "Infographic",
-          caption = "AI-generated infographic",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
-    )
-  )
 
   panel4 <- shiny::tabPanel(
     "AI Report",
@@ -189,7 +159,6 @@ DrugConnectivityUI <- function(id) {
       id = ns("tabs"),
       panel1,
       panel2,
-      panel3,
       panel4
     )
   )

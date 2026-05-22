@@ -255,7 +255,7 @@ MultiWGCNA_UI <- function(id) {
       ),
 
       shiny::tabPanel(
-        "AI Report",
+        "AI Report✨",
         multiwgcna_ai_report_ui(ns("ai_report"))
       )
 

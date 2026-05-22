@@ -50,7 +50,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     tab_elements <- list(
       "Drug enrichment" = list(disable = c("aiui")),
       "Connectivity map (beta)" = list(disable = c("aiui")),
-      "AI Summary✨" = list(disable = c("filter_table","contrast"))
+      "AI Report✨" = list(disable = c("filter_table", "contrast", "aiui"))
     )
 
     shiny::observeEvent(input$tabs, {
