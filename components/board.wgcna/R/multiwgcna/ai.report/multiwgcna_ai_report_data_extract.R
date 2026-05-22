@@ -67,10 +67,10 @@ multiwgcna_select_top_enrichment <- function(sig_gse, n) {
 }
 
 multiwgcna_classify_artifact <- function(layer_wgcna, module) {
-  if (is.null(layer_wgcna)) return(list(confidence = "none", reason = NULL))
-  tryCatch(classify_artifact(layer_wgcna, module), error = function(e) {
-    list(confidence = "none", reason = NULL)
-  })
+  ## Artifact classification was retired with the WGCNA AI-report v03 migration
+  ## (epic omicsplayground-io5); the heuristic was not generalisable.
+  ## Stub retained so multiwgcna_rank_modules() keeps the same row shape.
+  list(confidence = "none", reason = NULL)
 }
 
 multiwgcna_module_links <- function(mwgcna, module_ref, min_abs_r = 0.6, top_n = 5L) {

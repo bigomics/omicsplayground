@@ -23,6 +23,16 @@ LLM_MODEL_PROFILES <- list(
     label = "GPT-oss 120B", group = "Groq",
     env_var = "GROQ_API_KEY",
     defaults = list(temperature = 0.7, max_tokens = 4096L, timeout_seconds = 60L)
+  ),
+  "openai:gpt-5.4-nano" = list(
+    label = "GPT-5.4 Nano", group = "OpenAI",
+    env_var = "OPENAI_API_KEY",
+    defaults = list(temperature = 0.7, max_tokens = 32768L, timeout_seconds = 120L)
+  ),
+  "openai:gpt-5.4-mini" = list(
+    label = "GPT-5.4 Mini", group = "OpenAI",
+    env_var = "OPENAI_API_KEY",
+    defaults = list(temperature = 0.7, max_tokens = 32768L, timeout_seconds = 180L)
   )
   ## "xai:grok-4-1-fast-non-reasoning" = list(
   ##   label = "Grok 4 Fast", group = "xAI",
@@ -70,7 +80,7 @@ AI_BUDGETS <- list(
   microsummary  = 1024L,    # short structured bullet extract (3-5 bullets)
   short_summary = 2048L,    # 250-350 word summary card
   long_summary  = 4096L,    # 500-600 word summary card
-  report        = 8192L     # full multi-section markdown report
+  report        = 32768L    # full multi-section markdown report (2000-3000 words + reasoning headroom)
 )
 
 # ── Mirai daemon for async image generation ────────────────────────

@@ -20,7 +20,7 @@ multiwgcna_build_hub_table <- function(md, ntop_genes = 20L) {
 
   gs <- utils::head(gs, ntop_genes)
   features <- gs$feature
-  symbols <- resolve_symbols(features, md$annot)
+  symbols <- playbase::probe2symbol(features, md$annot, "symbol", fill_na = TRUE)
   funcs <- resolve_functions(features, md$annot)
 
   data.frame(

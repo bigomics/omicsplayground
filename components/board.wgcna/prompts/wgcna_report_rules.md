@@ -32,7 +32,8 @@ from parametric knowledge that are not anchored in the data block.
 - Mention the grey module size **once**, here. Do not return to it.
 - If the data block carries a `low-signal` flag (`r_q75 < 0.4`), open
   the section with that flag.
-
+- Do not mention methods details, refer to methods as "see Methods section below" 
+  or similar.
 ### Main findings
 
 The lead findings, GROUPED by biological theme rather than by individual

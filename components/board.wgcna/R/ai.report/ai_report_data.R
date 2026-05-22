@@ -1,83 +1,195 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 # =============================================================================
-# WGCNA AI Report — Data Extraction and Classification
+# WGCNA AI Report — data extraction and template rendering
 # =============================================================================
-# Deterministic functions that build structured data for the AI report prompt.
-# No Shiny dependencies. No LLM calls.
+# Single home for all deterministic data functions consumed by the AI-report
+# Shiny module (ai_text_server.R). No Shiny dependencies. No LLM calls.
 #
-# Helpers (in ai_report_data_extract.R):
-#   extract_module_data, resolve_symbols, resolve_functions,
-#   select_top_enrichment, classify_artifact
+# Layout (top to bottom):
+#   - extraction primitives (resolve_*, display_*, extract_module_data,
+#     .compute_module_data, .compute_families_text)
+#   - section builders, one per template slot:
+#       data_overview, data_contrast, data_modsummary,
+#       data_eigen_cor, data_module_detail
+#   - orchestrator:        wgcna_build_report_tables
+#   - per-module summary:  wgcna_build_summary_params
+#   - methods section:     wgcna_build_methods
 #
-# Public functions:
-#   wgcna_build_report_tables(wgcna, pgx, ...)  — structured data tables
-#   wgcna_build_summary_params(wgcna, module, pgx) — single-module summary params
-#   wgcna_rank_modules(wgcna)                    — signal tier classification
-#   wgcna_build_methods(wgcna, pgx)              — deterministic methods section
+# Verbal-label rendering uses omicsai::omicsai_verbalize_{r,q,logfc} — keep
+# them in the prompt data block; do not re-introduce raw numbers in rendered
+# text except where explicitly documented (lead module's top correlated trait).
 
 BOARD_PROMPTS_DIR <- file.path(OPG, "components/board.wgcna/prompts")
 
-#' Build structured report tables from WGCNA results
+
+# -----------------------------------------------------------------------------
+# Extraction primitives
+# -----------------------------------------------------------------------------
+
+#' Look up function descriptions for features (NULL-safe)
+resolve_functions <- function(features, annot, max_chars = 60L) {
+  funcs <- rep("", length(features))
+  if (is.null(annot)) return(funcs)
+  func_col <- intersect(c("gene_title", "gene_name", "description"), colnames(annot))
+  if (length(func_col) == 0) return(funcs)
+  idx <- match(features, rownames(annot))
+  valid <- !is.na(idx)
+  funcs[valid] <- as.character(annot[idx[valid], func_col[1]])
+  substr(funcs, 1, max_chars)
+}
+
+#' Render module identifiers in canonical MEcolor form.
 #'
-#' Extracts module-level data (enrichment, hub genes, eigengene profiles,
-#' trait correlations) and formats them as a text block for the LLM prompt
-#' plus a structured list for deterministic use.
+#' Datasets keyed by integer suffix (`ME0`/`ME1`/...) get remapped via
+#' `WGCNA::labels2colors`; datasets already in MEcolor form pass through.
+#' Identifiers not present in `wgcna$me.genes` are returned unchanged.
+display_module <- function(x, wgcna) {
+  me_names <- names(wgcna$me.genes)
+  suf <- suppressWarnings(as.integer(sub("^ME", "", me_names)))
+  if (length(suf) == 0 || any(is.na(suf))) return(x)
+  map <- setNames(paste0("ME", WGCNA::labels2colors(suf)), me_names)
+  out <- map[x]
+  out[is.na(out)] <- x[is.na(out)]
+  unname(out)
+}
+
+
+#' Extract all data for a single WGCNA module.
 #'
-#' @param wgcna WGCNA results object
-#' @param pgx PGX object
-#' @param n_modules Integer; max non-grey modules to detail (default 8)
-#' @param ntop_enrichment Integer; max enrichment terms per module (default 5)
-#' @param ntop_genes Integer; max hub genes per module (default 5)
-#' @param include_module_cors Logical; include module-module correlations
-#' @param include_overlap Logical; include enrichment overlap details
-#' @param include_families Logical; include gene family enrichment
-#' @param include_contrasts Logical; include experimental contrasts
+#' Returns a list with raw values used by both the summary mode and the
+#' multi-module report mode. The caller is expected to cache `top` and `M`
+#' across modules.
 #'
-#' @return List with \code{text} (character) and \code{data} (structured list)
-wgcna_build_report_tables <- function(wgcna, pgx,
-                                      n_modules = 8L,
-                                      ntop_enrichment = 20L,
-                                      ntop_genes = 50L,
-                                      include_module_cors = TRUE,
-                                      include_overlap = TRUE,
-                                      include_families = TRUE,
-                                      include_contrasts = TRUE) {
+#' Handles two `wgcna$gse` shapes: per-module list (mox-brca, Bruker_Generoso)
+#' and flat data.frame with a `module` column (example-data and similar).
+extract_module_data <- function(wgcna, module, pgx,
+                                top = NULL, M = NULL,
+                                max_traits = 3L) {
   annot <- wgcna$annot
 
-  # --- Experiment metadata ---
-  experiment <- wgcna$experiment %||% pgx$description %||% "omics experiment"
-  organism <- pgx$organism %||% "unknown"
-  n_samples <- tryCatch(nrow(pgx$samples), error = function(e) NA_integer_)
-  sample_groups <- if (!is.null(pgx$samples$group)) {
-    levels_or_unique <- if (is.factor(pgx$samples$group)) {
-      levels(pgx$samples$group)
-    } else {
-      unique(pgx$samples$group)
+  if (is.null(top)) {
+    top <- tryCatch(
+      playbase::wgcna.getTopGenesAndSets(wgcna, annot = annot, ntop = 40,
+                                         level = "gene", rename = "gene_title"),
+      error = function(e) list(pheno = list(), genes = list(), sets = list())
+    )
+  }
+
+  phenotypes <- "None"
+  if (module %in% names(top$pheno)) {
+    phenotypes <- paste(top$pheno[[module]], collapse = ", ")
+  }
+  fallback_genes <- top$genes[[module]]
+  if (is.null(fallback_genes)) fallback_genes <- character(0)
+  fallback_sets <- top$sets[[module]]
+  if (is.null(fallback_sets)) fallback_sets <- character(0)
+
+  size <- length(wgcna$me.genes[[module]])
+
+  if (is.null(M)) {
+    M <- tryCatch(playbase:::wgcna.get_modTraits(wgcna), error = function(e) NULL)
+  }
+
+  top_trait <- ""
+  top_r <- NA_real_
+  top_pos_trait <- NA_character_
+  top_pos_r <- NA_real_
+  top_neg_trait <- NA_character_
+  top_neg_r <- NA_real_
+  if (!is.null(M) && module %in% rownames(M)) {
+    cors <- M[module, ]
+    top_idx <- which.max(abs(cors))
+    if (length(top_idx) > 0) {
+      top_trait <- names(cors)[top_idx]
+      top_r <- cors[top_idx]
     }
-    paste(levels_or_unique, collapse = ", ")
-  } else {
-    "unknown"
+    ## Dual-trait split: best positive + best negative trait, each gated by
+    ## |r| >= 0.5 so direction cannot be inferred from a single absolute-value
+    ## pick (the silent contradiction we hit in v01).
+    pos_idx <- which.max(cors)
+    if (length(pos_idx) > 0 && !is.na(cors[pos_idx]) && cors[pos_idx] >= 0.5) {
+      top_pos_trait <- names(cors)[pos_idx]
+      top_pos_r     <- cors[pos_idx]
+    }
+    neg_idx <- which.min(cors)
+    if (length(neg_idx) > 0 && !is.na(cors[neg_idx]) && cors[neg_idx] <= -0.5) {
+      top_neg_trait <- names(cors)[neg_idx]
+      top_neg_r     <- cors[neg_idx]
+    }
   }
-  n_features <- tryCatch(nrow(pgx$X), error = function(e) NA_integer_)
-  n_wgcna_features <- length(unlist(wgcna$me.genes))
-  if (is.null(n_wgcna_features) || n_wgcna_features == 0) {
-    n_wgcna_features <- tryCatch(ncol(wgcna$datExpr), error = function(e) NA_integer_)
+
+  traits <- character(0)
+  if (phenotypes != "None" && nzchar(phenotypes)) {
+    traits <- trimws(strsplit(phenotypes, ",\\s*")[[1]])
+    traits <- traits[nzchar(traits) & traits != "None"]
+    traits <- head(traits, max_traits)
   }
 
-  # WGCNA parameters
-  network_type <- wgcna$networktype %||% wgcna$net$networkType %||% "signed"
-  power <- wgcna$power %||% wgcna$net$power %||% "NA"
-  min_mod_size <- wgcna$minModSize %||% "20"
-  merge_cut_height <- wgcna$mergeCutHeight %||% "0.15"
+  eigengene_profile <- NULL
+  datME <- if (!is.null(wgcna$datME)) wgcna$datME else wgcna$net$MEs
+  groups <- if (!is.null(pgx$samples$group)) pgx$samples$group else NULL
+  if (!is.null(datME) && module %in% colnames(datME) && !is.null(groups)) {
+    eigengene_profile <- tapply(datME[, module], groups, mean)
+  }
 
-  # --- Module ordering ---
-  all_modules <- names(wgcna$me.genes)
-  non_grey <- setdiff(all_modules, "MEgrey")
-  non_grey <- non_grey[order(lengths(wgcna$me.genes[non_grey]), decreasing = TRUE)]
-  non_grey <- head(non_grey, n_modules)
+  ## Enrichment: resolve both gse shapes (per-module list vs flat df).
+  n_sig <- 0L
+  n_total <- 0L
+  gse_raw <- wgcna$gse
+  gse <- NULL
+  if (is.data.frame(gse_raw) && "module" %in% colnames(gse_raw)) {
+    gse <- gse_raw[!is.na(gse_raw$module) & gse_raw$module == module, , drop = FALSE]
+  } else if (is.list(gse_raw)) {
+    gse <- gse_raw[[module]]
+  }
+  if (is.data.frame(gse) && nrow(gse) > 0 && "q.value" %in% colnames(gse)) {
+    n_sig <- sum(gse$q.value < 0.05, na.rm = TRUE)
+    n_total <- nrow(gse)
+  }
 
-  # --- Pre-compute shared data for loop efficiency ---
+  trait_stats <- list()
+  stat_traits <- if (length(traits) > 0) traits else if (nzchar(top_trait)) top_trait
+  for (tr in stat_traits) {
+    gs <- tryCatch(
+      playbase::wgcna.getGeneStats(wgcna, module = module, trait = tr, plot = FALSE),
+      error = function(e) NULL
+    )
+    if (is.data.frame(gs) && nrow(gs) > 0) {
+      trait_stats[[tr]] <- gs
+    }
+  }
+
+  list(
+    size = size,
+    phenotypes = phenotypes,
+    traits = traits,
+    fallback_genes = fallback_genes,
+    fallback_sets = fallback_sets,
+    eigengene_profile = eigengene_profile,
+    top_trait = top_trait,
+    top_r = top_r,
+    top_pos_trait = top_pos_trait,
+    top_pos_r = top_pos_r,
+    top_neg_trait = top_neg_trait,
+    top_neg_r = top_neg_r,
+    n_sig = n_sig,
+    n_total = n_total,
+    gse = gse,
+    trait_stats = trait_stats
+  )
+}
+
+
+#' Compute per-module structured data for a set of modules.
+#'
+#' Wraps extract_module_data() over a list of modules, attaching hub-gene
+#' tables (resolved symbols + descriptions) and the trait selected for the
+#' single-trait report view.
+.compute_module_data <- function(wgcna, pgx, modules,
+                                 ntop_enrichment = 20L, ntop_genes = 50L) {
+  annot <- if (!is.null(wgcna$annot)) wgcna$annot else pgx$genes
+
   M <- tryCatch(playbase:::wgcna.get_modTraits(wgcna), error = function(e) NULL)
   top <- tryCatch(
     playbase::wgcna.getTopGenesAndSets(wgcna, annot = annot, ntop = 40,
@@ -85,22 +197,12 @@ wgcna_build_report_tables <- function(wgcna, pgx,
     error = function(e) list(pheno = list(), genes = list(), sets = list())
   )
 
-  # --- Build per-module data ---
   module_data <- list()
-  overview_rows <- list()
-
-  for (mod in non_grey) {
+  for (mod in modules) {
     md <- extract_module_data(wgcna, mod, pgx, top = top, M = M)
 
-    # Tiered enrichment selection for report
-    top_enrich <- NULL
-    if (is.data.frame(md$gse) && md$n_sig > 0) {
-      sig_gse <- md$gse[!is.na(md$gse$q.value) & md$gse$q.value < 0.05, , drop = FALSE]
-      sig_gse <- sig_gse[order(sig_gse$q.value), , drop = FALSE]
-      top_enrich <- select_top_enrichment(sig_gse, ntop_enrichment)
-    }
-
-    # Hub genes: use first available trait for single-trait report view
+    ## Hub genes for the single-trait report view (first phenotype-derived
+    ## trait if available, else the absolute-top trait).
     hub_genes_df <- NULL
     trait_for_genes <- if (length(md$traits) > 0) md$traits[1] else md$top_trait
 
@@ -116,7 +218,7 @@ wgcna_build_report_tables <- function(wgcna, pgx,
       }
       top_gs <- head(gs, ntop_genes)
 
-      symbols <- resolve_symbols(top_gs$feature, annot)
+      symbols <- playbase::probe2symbol(top_gs$feature, annot, "symbol", fill_na = TRUE)
       funcs <- resolve_functions(top_gs$feature, annot)
 
       mm_vals <- if ("moduleMembership" %in% colnames(top_gs)) {
@@ -150,657 +252,455 @@ wgcna_build_report_tables <- function(wgcna, pgx,
       top_neg_r = md$top_neg_r,
       n_sig = md$n_sig,
       n_total = md$n_total,
-      top_enrichment = top_enrich,
+      full_gse = md$gse,
       hub_genes = hub_genes_df,
       trait_for_genes = trait_for_genes
     )
-
-    overview_rows[[mod]] <- list(
-      module = mod,
-      size = md$size,
-      top_pos_trait = md$top_pos_trait,
-      top_pos_r = md$top_pos_r,
-      top_neg_trait = md$top_neg_trait,
-      top_neg_r = md$top_neg_r,
-      n_sig = md$n_sig,
-      n_total = md$n_total
-    )
   }
 
-  # --- Contrasts (experimental design) ---
-  contrasts_text <- NULL
-  if (include_contrasts && !is.null(pgx$model.parameters$contr.matrix)) {
-    cm <- pgx$model.parameters$contr.matrix
-    contrast_names <- colnames(cm)
-    group_names <- rownames(cm)
-    ct_lines <- character(0)
-    for (cn in contrast_names) {
-      pos <- group_names[cm[, cn] > 0]
-      neg <- group_names[cm[, cn] < 0]
-      ct_lines <- c(ct_lines, sprintf("- %s: %s vs %s",
-        cn, paste(pos, collapse = "+"), paste(neg, collapse = "+")))
+  module_data
+}
+
+
+#' Per-module gene-family enrichment (≥3 members in a family of 5–500).
+#' Returns a named list of character vectors, keyed by module.
+.compute_families_text <- function(wgcna, pgx, modules) {
+  if (is.null(pgx$families)) return(NULL)
+  fam_names <- names(pgx$families)
+  fam_names <- fam_names[fam_names != "<all>"]
+  fam_sizes <- lengths(pgx$families[fam_names])
+  fam_names <- fam_names[fam_sizes >= 5 & fam_sizes <= 500]
+  if (length(fam_names) == 0) return(NULL)
+
+  out <- list()
+  for (mod in modules) {
+    mod_genes <- wgcna$me.genes[[mod]]
+    if (is.null(mod_genes) || length(mod_genes) == 0) next
+
+    overlaps <- vapply(fam_names, function(fn) {
+      length(intersect(mod_genes, pgx$families[[fn]]))
+    }, integer(1))
+
+    sig_fam <- overlaps[overlaps >= 3]
+    if (length(sig_fam) == 0) next
+    sig_fam <- head(sort(sig_fam, decreasing = TRUE), 5)
+
+    out[[mod]] <- vapply(names(sig_fam), function(fn) {
+      sprintf("%s (%d of %d)", fn, sig_fam[fn], length(pgx$families[[fn]]))
+    }, character(1))
+  }
+  out
+}
+
+
+# -----------------------------------------------------------------------------
+# Section builders — one per template slot
+# -----------------------------------------------------------------------------
+
+#' Build the `## Overview` placeholder values.
+#'
+#' Returns a list of named substitutions for the Overview block of the
+#' data template. Caller merges these into the substitute() arg list.
+data_overview <- function(wgcna, pgx) {
+  experiment <- if (!is.null(wgcna$experiment)) wgcna$experiment
+                else if (!is.null(pgx$description)) pgx$description
+                else "omics experiment"
+  organism <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
+  n_samples <- tryCatch(nrow(pgx$samples), error = function(e) NA_integer_)
+  n_features_total <- tryCatch(nrow(pgx$X), error = function(e) NA_integer_)
+  n_features_used <- length(unlist(wgcna$me.genes))
+  if (is.null(n_features_used) || n_features_used == 0) {
+    n_features_used <- tryCatch(ncol(wgcna$datExpr), error = function(e) NA_integer_)
+  }
+
+  power <- if (!is.null(wgcna$power)) wgcna$power
+           else if (!is.null(wgcna$net$power)) wgcna$net$power
+           else "NA"
+  min_mod_size <- if (!is.null(wgcna$minModSize)) wgcna$minModSize else "20"
+  merge_cut_height <- if (!is.null(wgcna$mergeCutHeight)) wgcna$mergeCutHeight else "0.15"
+
+  list(
+    experiment       = as.character(experiment),
+    organism         = as.character(organism),
+    n_samples        = as.character(n_samples),
+    n_features_total = as.character(n_features_total),
+    n_features_used  = as.character(n_features_used),
+    power            = as.character(power),
+    min_mod_size     = as.character(min_mod_size),
+    merge_cut_height = as.character(merge_cut_height)
+  )
+}
+
+
+#' Build the `## Experimental contrasts` block.
+#'
+#' Returns a markdown bullet list (one line per contrast) or a placeholder
+#' string if no contrast matrix is available.
+data_contrast <- function(pgx) {
+  cm <- pgx$model.parameters$contr.matrix
+  if (is.null(cm)) return("(no contrasts available)")
+
+  group_names <- rownames(cm)
+  lines <- vapply(colnames(cm), function(cn) {
+    pos <- group_names[cm[, cn] > 0]
+    neg <- group_names[cm[, cn] < 0]
+    sprintf("- %s: %s vs %s", cn,
+            paste(pos, collapse = "+"), paste(neg, collapse = "+"))
+  }, character(1))
+  paste(lines, collapse = "\n")
+}
+
+
+#' Build the `## Modules summary` table block.
+#'
+#' Dual-trait columns: best positive (>= 0.5) and best negative (<= -0.5).
+#' Lead module (first row) also carries `(r = ±0.NN)` next to the verbal
+#' label on its top correlated trait. Grey is appended as a final row.
+data_modsummary <- function(wgcna, module_data, lead_module) {
+  module_order <- names(module_data)
+  if (length(module_order) == 0) return(list(table = "", footnote = ""))
+
+  fmt_trait_col <- function(trait, r, is_lead_pos = FALSE) {
+    if (is.na(trait) || !nzchar(trait)) return("—")
+    verbal <- omicsai::omicsai_verbalize_r(r)
+    if (is_lead_pos && !is.na(r)) {
+      sprintf("%s (%s, r = %+.2f)", trait, verbal, r)
+    } else {
+      sprintf("%s (%s)", trait, verbal)
     }
-    contrasts_text <- ct_lines
   }
 
-  # --- Module-module eigengene correlations ---
-  module_cors_text <- NULL
-  if (include_module_cors) {
-    me_data <- wgcna$datME %||% wgcna$net$MEs
-    if (!is.null(me_data)) {
-      me_cols <- intersect(non_grey, colnames(me_data))
-      if (length(me_cols) >= 2) {
-        me_cor <- cor(me_data[, me_cols])
-        pairs <- character(0)
-        for (i in 1:(length(me_cols) - 1)) {
-          for (j in (i + 1):length(me_cols)) {
-            r <- me_cor[i, j]
-            if (abs(r) >= 0.7) {
-              pairs <- c(pairs, sprintf("%s \u2194 %s: r = %+.2f",
-                me_cols[i], me_cols[j], r))
-            }
-          }
-        }
-        module_cors_text <- pairs
-      }
-    }
-  }
-
-  # --- Enrichment overlap details ---
-  if (include_overlap) {
-    for (mod in non_grey) {
-      mdat <- module_data[[mod]]
-      if (!is.null(mdat$top_enrichment) && nrow(mdat$top_enrichment) > 0) {
-        te <- mdat$top_enrichment
-        if ("overlap" %in% colnames(te)) {
-          module_data[[mod]]$enrichment_overlap <- te$overlap
-        }
-        if ("genes" %in% colnames(te)) {
-          gene_lists <- vapply(te$genes, function(g) {
-            genes <- strsplit(as.character(g), "\\|")[[1]]
-            if (length(genes) > 25) {
-              paste0(paste(head(genes, 25), collapse = "|"),
-                     sprintf(" (+%d more)", length(genes) - 25))
-            } else {
-              paste(genes, collapse = "|")
-            }
-          }, character(1))
-          module_data[[mod]]$enrichment_genes <- gene_lists
-        }
-      }
-    }
-  }
-
-  # --- Gene family enrichment per module ---
-  families_text <- NULL
-  if (include_families && !is.null(pgx$families)) {
-    fam_names <- names(pgx$families)
-    fam_names <- fam_names[fam_names != "<all>"]
-    fam_sizes <- lengths(pgx$families[fam_names])
-    fam_names <- fam_names[fam_sizes >= 5 & fam_sizes <= 500]
-
-    families_text <- list()
-    for (mod in non_grey) {
-      mod_genes <- wgcna$me.genes[[mod]]
-      if (is.null(mod_genes) || length(mod_genes) == 0) next
-
-      overlaps <- vapply(fam_names, function(fn) {
-        length(intersect(mod_genes, pgx$families[[fn]]))
-      }, integer(1))
-
-      sig_fam <- overlaps[overlaps >= 3]
-      if (length(sig_fam) == 0) next
-      sig_fam <- sort(sig_fam, decreasing = TRUE)
-      sig_fam <- head(sig_fam, 5)
-
-      fam_strs <- vapply(names(sig_fam), function(fn) {
-        sprintf("%s (%d of %d)", fn, sig_fam[fn], length(pgx$families[[fn]]))
-      }, character(1))
-
-      families_text[[mod]] <- fam_strs
-    }
-  }
-
-  # --- Build computed sub-blocks for template substitution ---
-
-  overview_order <- names(sort(vapply(overview_rows, function(x) x$n_sig, integer(1)),
-                               decreasing = TRUE))
-
-  # Overview table \u2014 dual-trait split: positive and negative correlation
-  # carry their own columns so the model cannot collapse them. Verbal r
-  # strength replaces raw numbers per v03 data-block contract.
-  fmt_trait <- function(trait, r) {
-    if (is.na(trait) || is.na(r)) return("\u2014")
-    sprintf("%s (%s)", trait, omicsai::omicsai_verbalize_r(r))
-  }
-  grey_size <- length(wgcna$me.genes[["MEgrey"]])
-  ov_rows <- lapply(overview_order, function(m) {
-    ov <- overview_rows[[m]]
+  ov_rows <- lapply(module_order, function(m) {
+    md <- module_data[[m]]
+    is_lead <- identical(m, lead_module)
     data.frame(
-      Module = m,
-      Genes = as.character(ov$size),
-      `Top correlated trait` = fmt_trait(ov$top_pos_trait, ov$top_pos_r),
-      `Top anti-correlated trait` = fmt_trait(ov$top_neg_trait, ov$top_neg_r),
-      Sig_Enrichments = as.character(ov$n_sig),
-      Total = as.character(ov$n_total),
+      Module = display_module(m, wgcna),
+      Genes  = as.character(md$size),
+      `Top correlated trait`      = fmt_trait_col(md$top_pos_trait, md$top_pos_r, is_lead),
+      `Top anti-correlated trait` = fmt_trait_col(md$top_neg_trait, md$top_neg_r),
+      `Enrichment hits`           = as.character(md$n_sig),
       stringsAsFactors = FALSE,
       check.names = FALSE
     )
   })
-  ov_rows[[length(ov_rows) + 1]] <- data.frame(
-    Module = "grey", Genes = as.character(grey_size),
-    `Top correlated trait` = "\u2014", `Top anti-correlated trait` = "\u2014",
-    Sig_Enrichments = "\u2014", Total = "\u2014",
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
+
+  grey_size <- length(wgcna$me.genes[["MEgrey"]])
+  if (is.null(grey_size) || grey_size == 0) {
+    grey_size <- length(wgcna$me.genes[["grey"]])
+  }
+  if (!is.null(grey_size) && grey_size > 0) {
+    ov_rows[[length(ov_rows) + 1]] <- data.frame(
+      Module = "grey", Genes = as.character(grey_size),
+      `Top correlated trait` = "—",
+      `Top anti-correlated trait` = "—",
+      `Enrichment hits` = "—",
+      stringsAsFactors = FALSE, check.names = FALSE
+    )
+  }
+
   overview_df <- do.call(rbind, ov_rows)
-  overview_table <- paste(omicsai::omicsai_format_mdtable(overview_df), collapse = "\n")
+  table_md <- paste(omicsai::omicsai_format_mdtable(overview_df), collapse = "\n")
 
-  # Per-module detail blocks
-  module_blocks <- vapply(overview_order, function(mod) {
-    mdat <- module_data[[mod]]
-    lines <- character(0)
-    lines <- c(lines, sprintf("### %s (%d genes)", mod, mdat$size))
+  ## Footnote: "Showing X of N modules."
+  raw <- names(wgcna$me.genes)
+  suf <- suppressWarnings(as.integer(sub("^ME", "", raw)))
+  display <- raw
+  if (length(suf) > 0 && all(!is.na(suf))) {
+    display <- paste0("ME", WGCNA::labels2colors(suf))
+  }
+  is_grey <- raw %in% c("MEgrey", "grey") | display %in% c("MEgrey", "grey")
+  n_total_non_grey <- sum(!is_grey)
+  footnote <- sprintf("Showing %d of %d modules.",
+                      length(module_order), n_total_non_grey)
 
-    # Eigengene profile
-    if (!is.null(mdat$eigengene_profile)) {
-      profile_str <- paste(
-        sprintf("%s=%s", names(mdat$eigengene_profile),
-                omicsai::omicsai_format_num(mdat$eigengene_profile, 2)),
-        collapse = ", "
-      )
-      lines <- c(lines, paste0("Eigengene profile: ", profile_str))
-    }
+  list(table = table_md, footnote = footnote)
+}
 
-    # Trait coordination — split positive/negative so direction cannot be
-    # inferred from a single absolute-value pick.
-    has_pos <- !is.na(mdat$top_pos_trait)
-    has_neg <- !is.na(mdat$top_neg_trait)
-    if (has_pos || has_neg) {
-      parts <- character(0)
-      if (has_pos) {
-        parts <- c(parts, sprintf("↑ in %s (%s)",
-          mdat$top_pos_trait, omicsai::omicsai_verbalize_r(mdat$top_pos_r)))
-      }
-      if (has_neg) {
-        parts <- c(parts, sprintf("↓ in %s (%s)",
-          mdat$top_neg_trait, omicsai::omicsai_verbalize_r(mdat$top_neg_r)))
-      }
-      lines <- c(lines, paste0("Trait coordination: ", paste(parts, collapse = " / ")))
-    }
-    lines <- c(lines, "")
 
-    # Enrichment
-    if (!is.null(mdat$top_enrichment) && nrow(mdat$top_enrichment) > 0) {
-      te <- mdat$top_enrichment
-      enrich_df <- data.frame(
-        `#` = seq_len(nrow(te)),
-        Term = te$geneset,
-        `q-value` = te$q.value,
-        Source = if ("source" %in% colnames(te)) as.character(te$source) else "",
-        stringsAsFactors = FALSE,
-        check.names = FALSE
-      )
-      lines <- c(lines,
-        sprintf("Top enrichment (%d significant of %d):", mdat$n_sig, mdat$n_total),
-        omicsai::omicsai_format_mdtable(enrich_df, formatters = list(
-          `q-value` = omicsai::omicsai_format_pvalue
-        ))
-      )
-    } else {
-      lines <- c(lines, "No significant enrichment (all q > 0.05)")
-    }
-    lines <- c(lines, "")
+#' Build the `## Module-module eigengene correlations` block.
+#'
+#' Verbal labels only; raw r stripped at the rendering layer.
+data_eigen_cor <- function(wgcna, modules) {
+  me_data <- if (!is.null(wgcna$datME)) wgcna$datME else wgcna$net$MEs
+  if (is.null(me_data)) return("(no strong correlations detected)")
 
-    # Hub genes
-    if (!is.null(mdat$hub_genes) && nrow(mdat$hub_genes) > 0) {
-      hg <- mdat$hub_genes
-      logfc_label <- if (nzchar(mdat$trait_for_genes)) {
-        paste0("logFC (vs ", mdat$trait_for_genes, ")")
-      } else {
-        "logFC"
-      }
-      lines <- c(lines,
-        sprintf("Hub genes (top %d by MM):", nrow(hg)),
-        omicsai::omicsai_format_mdtable(
-          hg,
-          col_labels = c(symbol = "Gene", logFC = logfc_label, func = "Known function"),
-          formatters = list(
-            MM = function(x) omicsai::omicsai_format_num(x, 2),
-            logFC = function(x) omicsai::omicsai_format_num(x, 1)
-          )
-        )
-      )
-    }
+  me_cols <- intersect(modules, colnames(me_data))
+  if (length(me_cols) < 2) return("(no strong correlations detected)")
 
-    # Enrichment overlap
-    if (include_overlap && !is.null(module_data[[mod]]$enrichment_overlap)) {
-      ov <- module_data[[mod]]$enrichment_overlap
-      gl <- module_data[[mod]]$enrichment_genes
-      if (!is.null(ov) && length(ov) > 0) {
-        lines <- c(lines, "Enrichment overlap:")
-        te <- module_data[[mod]]$top_enrichment
-        for (i in seq_along(ov)) {
-          line <- sprintf("  %s: %s", te$geneset[i], ov[i])
-          if (!is.null(gl) && length(gl) >= i) {
-            line <- paste0(line, " \u2014 genes: ", gl[i])
-          }
-          lines <- c(lines, line)
-        }
+  me_cor <- cor(me_data[, me_cols])
+  pairs <- character(0)
+  for (i in seq_len(length(me_cols) - 1)) {
+    for (j in (i + 1):length(me_cols)) {
+      r <- me_cor[i, j]
+      if (!is.na(r) && abs(r) >= 0.7) {
+        pairs <- c(pairs, sprintf("%s ↔ %s: %s",
+                                  display_module(me_cols[i], wgcna),
+                                  display_module(me_cols[j], wgcna),
+                                  omicsai::omicsai_verbalize_r(r)))
       }
     }
+  }
+  if (length(pairs) == 0) return("(no strong correlations detected)")
+  paste(pairs, collapse = "\n")
+}
 
-    # Gene families
-    if (include_families && !is.null(families_text[[mod]])) {
-      lines <- c(lines, sprintf("Gene family enrichment: %s",
-                                paste(families_text[[mod]], collapse = "; ")))
-    }
 
-    paste(lines, collapse = "\n")
+#' Build per-module detail blocks (v03 layout).
+#'
+#' For each module: heading, eigengene profile, dual-trait coordination,
+#' hub genes (BEFORE enrichment), enrichment top-N with Hub overlap column,
+#' optional gene-family enrichment.
+data_module_detail <- function(wgcna, pgx, module_data,
+                               families_text = NULL,
+                               ntop_enrichment = 20L,
+                               ntop_genes = 10L) {
+  module_order <- names(module_data)
+  if (length(module_order) == 0) return("")
+
+  blocks <- vapply(module_order, function(mod) {
+    .render_module_block(module_data[[mod]], mod, wgcna,
+                         families_text   = families_text,
+                         ntop_enrichment = ntop_enrichment,
+                         ntop_genes      = ntop_genes)
   }, character(1))
 
-  module_detail <- paste(module_blocks, collapse = "\n\n")
+  paste(blocks, collapse = "\n\n")
+}
 
-  # Optional sections
-  contrasts_str <- if (!is.null(contrasts_text)) {
-    paste(contrasts_text, collapse = "\n")
-  } else {
-    "(no contrasts available)"
-  }
 
-  module_cors_str <- if (!is.null(module_cors_text) && length(module_cors_text) > 0) {
-    paste(module_cors_text, collapse = "\n")
-  } else {
-    "(no strong correlations detected)"
-  }
+# -----------------------------------------------------------------------------
+# Orchestrator
+# -----------------------------------------------------------------------------
 
-  # --- Render template ---
-  report_data_tmpl <- omicsai::omicsai_load_template(
+#' Build structured report tables from WGCNA results.
+#'
+#' Renders the v03 data block: a single markdown document substituted into
+#' `prompts/wgcna_report_data.md`, plus a structured `data` list for any
+#' downstream callers that want the raw values.
+#'
+#' @return list(text = character, data = list)
+wgcna_build_report_tables <- function(wgcna, pgx,
+                                      n_modules = 8L,
+                                      ntop_enrichment = 20L,
+                                      ntop_genes = 50L,
+                                      include_module_cors = TRUE,
+                                      include_families = TRUE,
+                                      include_contrasts = TRUE) {
+  ## Lazy-fill labels + stats so older PGX files extract cleanly.
+  wgcna <- playbase::wgcna.ensureStats(wgcna)
+
+  modules <- playbase::wgcna.getTopModules(wgcna, min_modules = 5L)
+  modules <- head(modules, n_modules)
+
+  module_data <- .compute_module_data(wgcna, pgx, modules,
+                                      ntop_enrichment = ntop_enrichment,
+                                      ntop_genes = ntop_genes)
+
+  ## Order modules by significant-enrichment count, descending.
+  module_order <- names(sort(
+    vapply(module_data, function(x) x$n_sig, integer(1)),
+    decreasing = TRUE
+  ))
+  module_data <- module_data[module_order]
+  lead_module <- if (length(module_order) > 0) module_order[1] else NA_character_
+
+  families_text <- if (include_families) {
+    .compute_families_text(wgcna, pgx, module_order)
+  } else NULL
+
+  contrasts_block <- if (include_contrasts) data_contrast(pgx)
+                     else "(contrasts omitted)"
+  module_cors <- if (include_module_cors) data_eigen_cor(wgcna, module_order)
+                 else "(module-module correlations omitted)"
+
+  overview_params <- data_overview(wgcna, pgx)
+  modsum <- data_modsummary(wgcna, module_data, lead_module)
+  per_module <- data_module_detail(wgcna, pgx, module_data,
+                                   families_text = families_text,
+                                   ntop_enrichment = ntop_enrichment,
+                                   ntop_genes = ntop_genes)
+
+  tmpl <- omicsai::omicsai_load_template(
     file.path(BOARD_PROMPTS_DIR, "wgcna_report_data.md")
   )
 
-  text <- omicsai::omicsai_substitute_template(report_data_tmpl, list(
-    experiment       = experiment,
-    organism         = organism,
-    n_samples        = as.character(n_samples),
-    sample_groups    = sample_groups,
-    n_features       = as.character(n_features),
-    n_wgcna_features = as.character(n_wgcna_features),
-    wgcna_params     = paste0(network_type,
-                              ", power=", power,
-                              ", minModSize=", min_mod_size,
-                              ", mergeCutHeight=", merge_cut_height),
-    overview_table   = overview_table,
-    module_detail    = module_detail,
-    contrasts        = contrasts_str,
-    module_cors      = module_cors_str
+  text <- omicsai::omicsai_substitute_template(tmpl, c(
+    overview_params,
+    list(
+      contrasts_block            = contrasts_block,
+      modules_summary_table      = modsum$table,
+      modules_summary_footnote   = modsum$footnote,
+      module_module_correlations = module_cors,
+      module_detail              = per_module
+    )
   ))
 
   list(
     text = text,
     data = list(
-      experiment = experiment,
-      organism = organism,
-      n_samples = n_samples,
-      n_features = n_features,
-      n_wgcna_features = n_wgcna_features,
-      modules = module_data
+      experiment       = overview_params$experiment,
+      organism         = overview_params$organism,
+      n_samples        = overview_params$n_samples,
+      n_features_total = overview_params$n_features_total,
+      n_features_used  = overview_params$n_features_used,
+      modules          = module_data
     )
   )
 }
 
 
-#' Build prompt parameters for a single WGCNA module summary
+## MODULE_SUMMARY — verbatim v03 prompt-optim spec, loaded from disk.
+## Source of truth lives at `prompts/wgcna_module_data.md`, copied
+## word-for-word from `tmp/.../candidate/wgcna/data/v03_prompttemplates/data.md`.
+## Edit the file directly to change wording; the R renderer only fills values.
+MODULE_SUMMARY <- omicsai::omicsai_load_template(
+  file.path(BOARD_PROMPTS_DIR, "wgcna_module_data.md")
+)
+
+
+# -- Leaf renderers: one per template placeholder that needs derivation. -----
+# Each returns a single string. No prose, only data → string formatting.
+
+.eigengene_profile_str <- function(md) {
+  if (is.null(md$eigengene_profile)) return("—")
+  paste(sprintf("%s=%s", names(md$eigengene_profile),
+                omicsai::omicsai_format_num(md$eigengene_profile, 2)),
+        collapse = ", ")
+}
+
+.hub_genes_sorted <- function(md, ntop) {
+  if (is.null(md$hub_genes) || nrow(md$hub_genes) == 0) return(NULL)
+  hg <- md$hub_genes
+  mm  <- if ("MM"    %in% colnames(hg)) hg$MM    else rep(NA_real_, nrow(hg))
+  lfc <- if ("logFC" %in% colnames(hg)) hg$logFC else rep(NA_real_, nrow(hg))
+  head(hg[order(-abs(mm), -abs(lfc), na.last = TRUE), , drop = FALSE], ntop)
+}
+
+.hub_genes_table_str <- function(hg) {
+  if (is.null(hg) || nrow(hg) == 0) return("—")
+  paste(omicsai::omicsai_format_mdtable(data.frame(
+    Gene             = paste0("*", hg$symbol, "*"),
+    `Known function` = hg$func,
+    stringsAsFactors = FALSE, check.names = FALSE
+  )), collapse = "\n")
+}
+
+.enrichment_table_str <- function(md, hub_symbols, ntop) {
+  full_gse <- md$full_gse
+  if (!is.data.frame(full_gse) || nrow(full_gse) == 0) return("—")
+
+  ## Sort by overlap (preferred), then q-value, then score.
+  full_gse <- if ("overlap" %in% colnames(full_gse)) {
+    full_gse[order(full_gse$overlap, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  } else if ("overlap_count" %in% colnames(full_gse)) {
+    full_gse[order(full_gse$overlap_count, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  } else if ("q.value" %in% colnames(full_gse)) {
+    full_gse[order(full_gse$q.value, na.last = TRUE), , drop = FALSE]
+  } else if ("score" %in% colnames(full_gse)) {
+    full_gse[order(full_gse$score, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  } else full_gse
+
+  top_n <- head(full_gse, ntop)
+  hub_overlap_col <- if (length(hub_symbols) == 0) {
+    rep("—", nrow(top_n))
+  } else if ("genes" %in% colnames(top_n)) {
+    vapply(top_n$genes, function(g) {
+      gset <- strsplit(as.character(g), "|", fixed = TRUE)[[1]]
+      sprintf("%d/%d", length(intersect(gset, hub_symbols)), length(hub_symbols))
+    }, character(1), USE.NAMES = FALSE)
+  } else {
+    rep(sprintf("0/%d", length(hub_symbols)), nrow(top_n))
+  }
+
+  paste(omicsai::omicsai_format_mdtable(data.frame(
+    Rank         = seq_len(nrow(top_n)),
+    Geneset      = as.character(top_n$geneset),
+    `Hub overlap` = hub_overlap_col,
+    stringsAsFactors = FALSE, check.names = FALSE
+  )), collapse = "\n")
+}
+
+
+#' Render one module's data dict into a MODULE_SUMMARY block.
 #'
-#' Calls extract_module_data() for one module and formats the result into
-#' the template parameters that the summary prompt expects.
+#' Shared by `data_module_detail()` (Report mode, looped) and
+#' `wgcna_build_summary_params()` (Summary mode, single module). The `md`
+#' argument is one element from `.compute_module_data()`'s output. This
+#' function builds only the value dict; MODULE_SUMMARY owns all prose.
+.render_module_block <- function(md, mod_name, wgcna,
+                                 families_text = NULL,
+                                 ntop_enrichment = 20L,
+                                 ntop_genes = 10L) {
+  hg <- .hub_genes_sorted(md, ntop_genes)
+  hub_symbols <- if (!is.null(hg)) as.character(hg$symbol) else character(0)
+
+  fam <- if (!is.null(families_text) && !is.null(families_text[[mod_name]])) {
+    paste(families_text[[mod_name]], collapse = "; ")
+  } else "—"
+
+  overlaps <- if (!is.null(md$enrichment_overlap) && length(md$enrichment_overlap) > 0) {
+    paste(md$enrichment_overlap, collapse = "; ")
+  } else "—"
+
+  na_dash <- function(x) if (is.na(x) || !nzchar(x)) "—" else x
+
+  omicsai::omicsai_substitute_template(MODULE_SUMMARY, list(
+    ME_color                      = display_module(mod_name, wgcna),
+    n_genes                       = as.character(md$size),
+    tier                          = "—",                ## tier classification dropped (epic playbase-fad)
+    eigengene_profile_qualitative = .eigengene_profile_str(md),
+    top_pos_trait                 = na_dash(md$top_pos_trait),
+    top_pos_verbal                = omicsai::omicsai_verbalize_r(md$top_pos_r),
+    top_neg_trait                 = na_dash(md$top_neg_trait),
+    top_neg_verbal                = omicsai::omicsai_verbalize_r(md$top_neg_r),
+    n_sig_terms                   = as.character(md$n_sig),
+    n_total_terms                 = as.character(md$n_total),
+    enrichment_themes_table       = .enrichment_table_str(md, hub_symbols, ntop_enrichment),
+    n_hub                         = as.character(if (is.null(hg)) 0L else nrow(hg)),
+    hub_genes_table               = .hub_genes_table_str(hg),
+    gene_families_summary         = fam,
+    enrichment_overlaps           = overlaps
+  ))
+}
+
+
+# -----------------------------------------------------------------------------
+# Per-module summary mode (single-module, used by the Summary tab)
+# -----------------------------------------------------------------------------
+
+#' Build prompt parameters for a single WGCNA module summary.
 #'
-#' @param wgcna WGCNA results object
-#' @param module Character; module name (e.g., "MEblue")
-#' @param pgx PGX object
+#' Produces the same per-module block shape as Report mode by routing through
+#' `.compute_module_data()` and `.render_module_block()`. The downstream
+#' `{{module_detail}}` placeholder in `wgcna_summary.md` receives the
+#' rendered MODULE_SUMMARY block.
 #'
-#' @return Named list with template parameters:
-#'   module, phenotypes, experiment, genesets, keygenes_section, module_stats
+#' @return Named list: experiment, module, module_detail.
 wgcna_build_summary_params <- function(wgcna, module, pgx) {
-  annot <- wgcna$annot
-  md <- extract_module_data(wgcna, module, pgx)
-  M <- tryCatch(playbase:::wgcna.get_modTraits(wgcna), error = function(e) NULL)
+  wgcna <- playbase::wgcna.ensureStats(wgcna)
 
-  # --- Genesets ---
-  ss <- ""
-  gse <- md$gse
-  if (is.data.frame(gse) && nrow(gse) > 0 &&
-    all(c("geneset", "score", "q.value", "overlap") %in% colnames(gse))) {
-    gse <- gse[order(gse$q.value, gse$score, na.last = TRUE), , drop = FALSE]
-    sig <- gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
-    top_gse <- head(sig, 20)
-    if (nrow(top_gse) > 0) {
-      gset_df <- data.frame(
-        Pathway = top_gse$geneset,
-        Score = top_gse$score,
-        `Q-value` = top_gse$q.value,
-        Overlap = top_gse$overlap,
-        stringsAsFactors = FALSE,
-        check.names = FALSE
-      )
-      gset_table <- omicsai::omicsai_format_mdtable(gset_df, formatters = list(
-        Score = function(x) omicsai::omicsai_format_num(x, 2),
-        `Q-value` = omicsai::omicsai_format_pvalue
-      ))
+  module_data <- .compute_module_data(wgcna, pgx, modules = module)
+  md <- module_data[[module]]
 
-      score_vals <- gse$score[!is.na(gse$score)]
-      score_range <- if (length(score_vals) > 0) {
-        paste0(
-          omicsai::omicsai_format_num(min(score_vals), 2), "-",
-          omicsai::omicsai_format_num(max(score_vals), 2),
-          " (median: ", omicsai::omicsai_format_num(median(score_vals), 2), ")"
-        )
-      } else {
-        "NA"
-      }
-      n_sig <- sum(gse$q.value < 0.05, na.rm = TRUE)
-
-      ss <- omicsai::collapse_lines(
-        "**Top Enriched Pathways (q < 0.05):**",
-        gset_table,
-        paste0(
-          "**Score range:** ", score_range, "  \n",
-          "**Total significant pathways:** ", n_sig, " of ", nrow(gse), " tested"
-        ),
-        sep = "\n\n"
-      )
-    }
-  }
-  if (ss == "" && length(md$fallback_sets) > 0) {
-    ss <- paste0("- ", md$fallback_sets, collapse = "\n")
-  }
-
-  # --- Key genes section (multi-trait approach) ---
-  # Only phenotype-derived traits for summary mode. When phenotypes is "None",
-  # traits is empty and we fall through to the gene-list fallback.
-  # extract_module_data also computes stats for top_trait as a fallback for
-  # report mode — filter those out here.
-  keygenes_section <- ""
-  trait_stats <- md$trait_stats[intersect(names(md$trait_stats), md$traits)]
-
-  if (length(trait_stats) > 0) {
-    base_stats <- trait_stats[[1]]
-    if (!"moduleMembership" %in% colnames(base_stats)) {
-      base_stats$moduleMembership <- NA_real_
-    }
-    if (!"centrality" %in% colnames(base_stats)) {
-      base_stats$centrality <- NA_real_
-    }
-
-    if ("moduleMembership" %in% colnames(base_stats)) {
-      base_stats <- base_stats[order(-abs(base_stats$moduleMembership)), , drop = FALSE]
-    } else if ("score" %in% colnames(base_stats)) {
-      base_stats <- base_stats[order(-base_stats$score), , drop = FALSE]
-    }
-
-    top_genes <- head(base_stats, 50)
-    features <- top_genes$feature
-    symbols <- resolve_symbols(features, annot)
-
-    # Table 1: trait-independent network metrics
-    network_df <- data.frame(
-      Gene = symbols,
-      MM = top_genes$moduleMembership,
-      Centrality = top_genes$centrality,
-      stringsAsFactors = FALSE
-    )
-    network_table <- omicsai::collapse_lines(
-      "### Trait-independent metrics (network structure)",
-      omicsai::omicsai_format_mdtable(network_df, formatters = list(
-        MM = function(x) omicsai::omicsai_format_num(x, 2),
-        Centrality = function(x) omicsai::omicsai_format_num(x, 2)
-      )),
-      sep = "\n\n"
-    )
-
-    # Tables 2..N: per-trait gene-trait associations
-    # Pre-compute module row index for M (constant across traits)
-    mod_row_idx <- if (!is.null(M)) {
-      which(rownames(M) %in% c(module, paste0("ME", module)))
-    } else {
-      integer(0)
-    }
-
-    trait_tables <- vapply(names(trait_stats), function(tr) {
-      gs <- trait_stats[[tr]]
-
-      mod_cor <- NA_real_
-      if (length(mod_row_idx) > 0) {
-        ti <- which(colnames(M) == tr)
-        if (length(ti) > 0) mod_cor <- M[mod_row_idx[1], ti[1]]
-      }
-      cor_label <- if (!is.na(mod_cor)) {
-        paste0(" (module r = ", omicsai::omicsai_format_num(mod_cor, 2), ")")
-      } else {
-        ""
-      }
-
-      ts_vals <- vapply(features, function(f) {
-        idx <- match(f, gs$feature)
-        if (!is.na(idx) && "traitSignificance" %in% colnames(gs)) gs$traitSignificance[idx] else NA_real_
-      }, numeric(1))
-      fc_vals <- vapply(features, function(f) {
-        idx <- match(f, gs$feature)
-        if (!is.na(idx) && "foldChange" %in% colnames(gs)) gs$foldChange[idx] else NA_real_
-      }, numeric(1))
-
-      trait_df <- data.frame(
-        Gene = symbols, TS = ts_vals, logFC = fc_vals,
-        stringsAsFactors = FALSE
-      )
-      omicsai::collapse_lines(
-        paste0("### Gene-trait associations: ", tr, cor_label),
-        omicsai::omicsai_format_mdtable(trait_df, formatters = list(
-          TS = function(x) omicsai::omicsai_format_num(x, 2),
-          logFC = function(x) omicsai::omicsai_format_num(x, 1)
-        )),
-        sep = "\n\n"
-      )
-    }, character(1))
-
-    keygenes_section <- omicsai::collapse_lines(
-      paste0(
-        "**Hub Genes (ranked by module membership, top ",
-        nrow(top_genes), " of ",
-        if (!is.na(md$size)) md$size else nrow(base_stats),
-        " module genes):**"
-      ),
-      network_table,
-      paste(trait_tables, collapse = "\n\n"),
-      paste(
-        "**MM:** Module Membership (correlation with eigengene) — trait-independent  ",
-        "**Centrality:** Intramodular connectivity — trait-independent  ",
-        "**TS:** Trait Significance (gene-trait correlation) — specific to each trait  ",
-        "**logFC:** Log2 fold change — specific to each trait",
-        sep = "\n"
-      ),
-      sep = "\n\n"
-    )
-  } else if (length(md$fallback_genes) > 0) {
-    genes <- head(md$fallback_genes, 15)
-    keygenes_section <- paste0(
-      "The following hub genes show high intramodular connectivity:\n\n",
-      paste(genes, collapse = ", ")
-    )
-  }
-
-  # --- Module statistics ---
-  stat_lines <- c("**Module Statistics:**")
-  if (!is.na(md$size)) {
-    stat_lines <- c(stat_lines, paste0("- **Size:** ", md$size, " genes"))
-  }
-
-  has_pos <- !is.na(md$top_pos_trait)
-  has_neg <- !is.na(md$top_neg_trait)
-  if (has_pos || has_neg) {
-    parts <- character(0)
-    if (has_pos) {
-      parts <- c(parts, sprintf("↑ in %s (%s)",
-        md$top_pos_trait, omicsai::omicsai_verbalize_r(md$top_pos_r)))
-    }
-    if (has_neg) {
-      parts <- c(parts, sprintf("↓ in %s (%s)",
-        md$top_neg_trait, omicsai::omicsai_verbalize_r(md$top_neg_r)))
-    }
-    stat_lines <- c(stat_lines,
-      paste0("- **Trait coordination:** ", paste(parts, collapse = " / ")))
-  }
-
-  if (length(trait_stats) > 0) {
-    mod_row_idx_stats <- if (!is.null(M)) {
-      which(rownames(M) %in% c(module, paste0("ME", module)))
-    } else {
-      integer(0)
-    }
-    for (tr in names(trait_stats)) {
-      if (length(mod_row_idx_stats) > 0) {
-        ti <- which(colnames(M) == tr)
-        if (length(ti) > 0) {
-          trait_cor <- M[mod_row_idx_stats[1], ti[1]]
-          if (!is.na(trait_cor)) {
-            stat_lines <- c(stat_lines, paste0(
-              "- **Trait correlation with ", tr, ":** ", omicsai::omicsai_format_num(trait_cor, 2)
-            ))
-          }
-        }
-      }
-      gs <- trait_stats[[tr]]
-      if ("foldChange" %in% colnames(gs)) {
-        mean_fc <- mean(gs$foldChange, na.rm = TRUE)
-        if (!is.na(mean_fc)) {
-          fc_dir <- ifelse(mean_fc > 0, "upregulated", "downregulated")
-          stat_lines <- c(stat_lines, paste0(
-            "- **Mean expression change (", tr, "):** ",
-            omicsai::omicsai_format_num(abs(mean_fc), 1), "-fold ", fc_dir
-          ))
-        }
-      }
-    }
-  }
-
-  module_stats <- paste(stat_lines, collapse = "\n")
+  module_detail <- .render_module_block(md, module, wgcna)
 
   list(
-    module = module,
-    phenotypes = md$phenotypes,
-    experiment = wgcna$experiment %||% "",
-    genesets = ss,
-    keygenes_section = keygenes_section,
-    module_stats = module_stats
+    experiment    = if (!is.null(wgcna$experiment)) wgcna$experiment else "",
+    module        = module,
+    module_detail = module_detail
   )
 }
 
 
-#' Rank WGCNA modules into signal tiers
-#'
-#' Deterministic classification of modules into strong / moderate / weak
-#' tiers based on enrichment counts, trait correlations, and module size.
-#'
-#' @param wgcna WGCNA results object
-#'
-#' @return A list with elements: strong, moderate, weak, artifact,
-#'   artifact_flags, order, grey_size, classification
-wgcna_rank_modules <- function(wgcna) {
-  M <- playbase:::wgcna.get_modTraits(wgcna)
+# -----------------------------------------------------------------------------
+# Methods section (deterministic appendix)
+# -----------------------------------------------------------------------------
 
-  all_modules <- names(wgcna$me.genes)
-  modules <- setdiff(all_modules, "MEgrey")
-
-  grey_size <- length(wgcna$me.genes[["MEgrey"]])
-
-  classification <- list()
-  for (mod in modules) {
-    # Count significant enrichments
-    gse <- wgcna$gse[[mod]]
-    if (!is.null(gse) && is.data.frame(gse) && "q.value" %in% colnames(gse)) {
-      n_sig <- sum(gse$q.value < 0.05, na.rm = TRUE)
-      n_total <- nrow(gse)
-    } else {
-      n_sig <- 0L
-      n_total <- 0L
-    }
-
-    # Max absolute trait correlation
-    mod_row <- mod
-    if (mod_row %in% rownames(M)) {
-      max_r <- max(abs(M[mod_row, ]), na.rm = TRUE)
-    } else {
-      max_r <- 0
-    }
-
-    # Module size
-    size <- length(wgcna$me.genes[[mod]])
-
-    # Classify tier
-    if (n_sig >= 10 && max_r > 0.7 && size >= 50) {
-      tier <- "strong"
-    } else if (n_sig >= 1) {
-      tier <- "moderate"
-    } else {
-      tier <- "weak"
-    }
-
-    classification[[mod]] <- list(
-      tier = tier,
-      n_sig = n_sig,
-      max_r = max_r,
-      size = size,
-      n_total = n_total
-    )
-  }
-
-  # Artifact detection
-  artifact_flags <- list()
-  for (mod in modules) {
-    af <- classify_artifact(wgcna, mod)
-    if (af$confidence != "none") {
-      artifact_flags[[mod]] <- af
-    }
-  }
-
-  artifact <- names(Filter(function(x) x$confidence == "probable", artifact_flags))
-
-  # Build tier vectors
-  strong <- names(Filter(function(x) x$tier == "strong", classification))
-  moderate <- names(Filter(function(x) x$tier == "moderate", classification))
-  weak <- names(Filter(function(x) x$tier == "weak", classification))
-
-  # Order: strong first, then moderate, then weak
-  order <- c(strong, moderate, weak)
-
-  list(
-    strong = strong,
-    moderate = moderate,
-    weak = weak,
-    artifact = artifact,
-    artifact_flags = artifact_flags,
-    order = order,
-    grey_size = as.integer(grey_size),
-    classification = classification
-  )
-}
-
-
-#' Build deterministic methods section for WGCNA report
-#'
-#' Reads the methods template and fills in WGCNA/PGX parameters using
-#' omicsai::omicsai_substitute_template().
-#'
-#' @param wgcna WGCNA results object
-#' @param pgx PGX object
-#'
-#' @return Character string with the rendered methods section
+#' Build deterministic methods section for WGCNA report.
 wgcna_build_methods <- function(wgcna, pgx) {
   template_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_methods.md")
   template <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
 
-  # Extract values (same logic as prompt_optim/pipeline/build_methods.R)
   n_wgcna <- length(unlist(wgcna$me.genes))
   if (is.null(n_wgcna) || n_wgcna == 0) {
     n_wgcna <- tryCatch(ncol(wgcna$datExpr), error = function(e) NA)
@@ -819,11 +719,15 @@ wgcna_build_methods <- function(wgcna, pgx) {
     tryCatch(nrow(pgx$samples), error = function(e2) NA)
   })
 
-  network_type <- wgcna$networktype %||% wgcna$net$networkType %||% "signed"
-  power <- wgcna$power %||% wgcna$net$power %||% "NA"
-  min_mod_size <- wgcna$minModSize %||% "20"
-  merge_cut_height <- wgcna$mergeCutHeight %||% "0.15"
-  min_kme <- wgcna$minKME %||% "0.3"
+  network_type <- if (!is.null(wgcna$networktype)) wgcna$networktype
+                  else if (!is.null(wgcna$net$networkType)) wgcna$net$networkType
+                  else "signed"
+  power <- if (!is.null(wgcna$power)) wgcna$power
+           else if (!is.null(wgcna$net$power)) wgcna$net$power
+           else "NA"
+  min_mod_size <- if (!is.null(wgcna$minModSize)) wgcna$minModSize else "20"
+  merge_cut_height <- if (!is.null(wgcna$mergeCutHeight)) wgcna$mergeCutHeight else "0.15"
+  min_kme <- if (!is.null(wgcna$minKME)) wgcna$minKME else "0.3"
 
   modules_no_grey <- setdiff(names(wgcna$me.genes), c("grey", "MEgrey"))
   n_modules <- length(modules_no_grey)

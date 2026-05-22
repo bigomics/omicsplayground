@@ -29,7 +29,7 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
 
     # ---- Shared: prompt template paths ----
 
-    summary_data_path   <- file.path(BOARD_PROMPTS_DIR, "wgcna_summary_data.md")
+    summary_data_path   <- file.path(BOARD_PROMPTS_DIR, "wgcna_summary.md")
     interpretation_path <- file.path(BOARD_PROMPTS_DIR, "wgcna_interpretation.md")
 
     # ---- Prompt caches (for instant toggle without regeneration) ----
