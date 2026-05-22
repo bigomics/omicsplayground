@@ -251,13 +251,12 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
         tier          = "copilot-deep",
         tools         = c("search_context", "read_context", "query_wgcna",
                           "manage_pgx", "query_gene_info"),
-        context       = omicsagentovi::ovi_context(
-                          pgx        = pgx,
+        context       = omicsagentovi::RunContext(pgx = pgx),
+        session       = omicsagentovi::AgentSession(
                           session_id = paste0(session$token, "_wgcna_deep")
                         ),
         max_turns     = 50L,
-        system_prompt = bp$system,
-        chat_args     = list(api_args = list(reasoning = list(summary = "auto")))
+        system_prompt = bp$system
       )
 
       deep_cost_warning(NULL)

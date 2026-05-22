@@ -25,10 +25,14 @@ dc_percent <- function(x, digits = 1L) {
 }
 
 ## Internal: split pipe / semicolon / comma separated annotation tokens.
+## L1000 / CMap annotations sometimes ship mixed-encoding bytes; iconv with
+## sub = "" silently drops invalid sequences so strsplit's regex engine
+## can run without "input string is invalid" / "unable to translate" warnings.
 dc_parse_tokens <- function(x) {
   x <- as.character(x %||% "")
   x[is.na(x)] <- ""
-  x <- enc2utf8(x)
+  x <- iconv(x, from = "UTF-8", to = "UTF-8", sub = "")
+  x[is.na(x)] <- ""
   lapply(x, function(s) trimws(strsplit(s, split = "[\\|;,]")[[1]]))
 }
 
