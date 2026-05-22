@@ -6,23 +6,18 @@
 ## ============================================================================
 ## DEPRECATED — legacy per-plot AI summary (NOT the AI Report tab "Summary"
 ## radio). Defines `drugconnectivity_ai_summary_server()` /
-## `drugconnectivity_build_ai_params()`, both wrappers around the simpler
-## AiTextCardServer pipeline. Currently has zero callers in this repository
-## (confirmed against the active branch and feat_summaries) and is kept only
-## as a reference for the parallel WGCNA equivalent (`wgcna_ai_summary.R`)
-## pending the CTO decision noted in the project CLAUDE.md
-## (2026-02-17 reminder).
+## `drugconnectivity_build_ai_params()`, both thin wrappers around the
+## simpler `AiTextCardServer` pipeline. The file has no callers in this
+## repository and is retained only as a reference alongside its sibling
+## `wgcna_ai_summary.R`.
 ##
 ## The replacement is the AI Report tab's Summary mode, implemented in
-## `R/ai.report/ai_text_server.R` (`drugconnectivity_ai_text_server()`):
-## it calls omicsai directly, ingests the same data block as Report mode
-## (including the deterministic Interpretation evidence summary, tier, and
-## evidence hierarchy), and is therefore strictly more capable than this
-## file ever was.
+## `R/ai.report/ai_text_server.R` via `drugconnectivity_ai_text_server()`:
+## it calls omicsai directly and ingests the same data block as Report
+## mode (Interpretation evidence summary, tier, evidence hierarchy),
+## making it strictly more capable than this file ever was.
 ##
-## Do not wire this file into new UI panels. Once the CTO decision lands
-## (or `vv5` cleanup is taken), this file can be deleted along with its
-## sibling `wgcna_ai_summary.R`.
+## Do not wire this file into new UI panels.
 ## ============================================================================
 
 #' Build AI prompt parameters for drug connectivity summary

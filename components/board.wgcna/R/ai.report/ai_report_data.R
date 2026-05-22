@@ -647,7 +647,7 @@ MODULE_SUMMARY <- omicsai::omicsai_load_template(
   omicsai::omicsai_substitute_template(MODULE_SUMMARY, list(
     ME_color                      = display_module(mod_name, wgcna),
     n_genes                       = as.character(md$size),
-    tier                          = "—",                ## tier classification dropped (epic playbase-fad)
+    tier                          = "—",                ## tier classification dropped
     eigengene_profile_qualitative = .eigengene_profile_str(md),
     top_pos_trait                 = na_dash(md$top_pos_trait),
     top_pos_verbal                = omicsai::omicsai_verbalize_r(md$top_pos_r),

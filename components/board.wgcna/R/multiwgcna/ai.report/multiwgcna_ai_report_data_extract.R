@@ -67,9 +67,9 @@ multiwgcna_select_top_enrichment <- function(sig_gse, n) {
 }
 
 multiwgcna_classify_artifact <- function(layer_wgcna, module) {
-  ## Artifact classification was retired with the WGCNA AI-report v03 migration
-  ## (epic omicsplayground-io5); the heuristic was not generalisable.
-  ## Stub retained so multiwgcna_rank_modules() keeps the same row shape.
+  ## Artifact classification was retired with the WGCNA AI-report v03
+  ## migration; the heuristic was not generalisable. Stub retained so
+  ## multiwgcna_rank_modules() keeps the same row shape.
   list(confidence = "none", reason = NULL)
 }
 
