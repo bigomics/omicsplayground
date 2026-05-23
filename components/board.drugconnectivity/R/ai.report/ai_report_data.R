@@ -374,28 +374,20 @@ dc_format_exemplars <- function(dt, n = 3L) {
   paste(entries, collapse = "; ")
 }
 
+## Returns a named list of pre-formatted *values* (no labels, no prose).
+## The labels live in the inner template (drugconnectivity_contrast_data.md).
 dc_evidence_summary_block <- function(ctx) {
-  rel <- ctx$reliability
-  moa_summary <- ctx$moa_summary
+  moa_summary    <- ctx$moa_summary
   target_summary <- ctx$target_summary
 
-  paste(c(
-    "Interpretation evidence summary (primary evidence for report writing):",
-    paste0("- Supported opposing MOA terms: ",
-           dc_format_summary_entries(moa_summary$opposing$supported, n = 3L)),
-    paste0("- Supported mimicking MOA terms: ",
-           dc_format_summary_entries(moa_summary$mimicking$supported, n = 3L)),
-    paste0("- Corroborating opposing targets: ",
-           dc_format_summary_entries(target_summary$opposing$supported, n = 3L)),
-    paste0("- Corroborating mimicking targets: ",
-           dc_format_summary_entries(target_summary$mimicking$supported, n = 3L)),
-    paste0("- Preferred opposing exemplars matching supported MOA terms: ",
-           dc_format_exemplars(ctx$exemplars$opposing, n = 3L)),
-    paste0("- Preferred mimicking exemplars matching supported MOA terms: ",
-           dc_format_exemplars(ctx$exemplars$mimicking, n = 3L)),
-    paste0("- Annotation confidence: ", rel$annotation_confidence,
-           " (", dc_percent(rel$frac_annotated), " annotated)")
-  ), collapse = "\n")
+  list(
+    supported_opposing_moa          = dc_format_summary_entries(moa_summary$opposing$supported, n = 3L),
+    supported_mimicking_moa         = dc_format_summary_entries(moa_summary$mimicking$supported, n = 3L),
+    corroborating_opposing_targets  = dc_format_summary_entries(target_summary$opposing$supported, n = 3L),
+    corroborating_mimicking_targets = dc_format_summary_entries(target_summary$mimicking$supported, n = 3L),
+    preferred_opposing_exemplars    = dc_format_exemplars(ctx$exemplars$opposing, n = 3L),
+    preferred_mimicking_exemplars   = dc_format_exemplars(ctx$exemplars$mimicking, n = 3L)
+  )
 }
 
 ## -----------------------------------------------------------------------------
@@ -406,35 +398,34 @@ dc_evidence_summary_block <- function(ctx) {
 dc_render_contrast_block <- function(ctx, tier_label, ntop = 10L) {
   if (is.null(ctx)) return("")
   rel <- ctx$reliability
-
-  headline_metrics <- paste0(
-    "Drugs tested: ", ctx$n_drugs_tested,
-    " | significant (q<0.05): ", ctx$n_drugs_sig,
-    " | opposing (neg NES): ", ctx$n_neg,
-    " | mimicking (pos NES): ", ctx$n_pos,
-    " | max |NES|: ", omicsai::omicsai_format_num(ctx$max_abs_NES, 2)
-  )
-
-  annotation_coverage <- paste0(
-    dc_percent(rel$frac_annotated),
-    " | sig MOA classes: ", rel$n_sig_moa_classes,
-    " | sig targets: ", rel$n_sig_targets
-  )
+  ev  <- dc_evidence_summary_block(ctx)
 
   template <- omicsai::omicsai_load_template(
     file.path(DRUGCONNECTIVITY_PROMPTS_DIR, "drugconnectivity_contrast_data.md")
   )
 
   omicsai::omicsai_substitute_template(template, list(
-    contrast            = ctx$contrast,
-    tier                = tier_label,
-    headline_metrics    = headline_metrics,
-    annotation_coverage = annotation_coverage,
-    evidence_summary    = dc_evidence_summary_block(ctx),
-    top_opposing_table  = dc_compact_drug_table(ctx$top_opposing, n = ntop),
-    top_mimicking_table = dc_compact_drug_table(ctx$top_mimicking, n = ntop),
-    moa_class_table     = dc_compact_moa_table(ctx$moa_class, n = ntop, label = "MOA Class"),
-    moa_target_table    = dc_compact_moa_table(ctx$moa_target, n = ntop, label = "Target")
+    contrast                        = ctx$contrast,
+    tier                            = tier_label,
+    n_drugs_tested                  = as.character(ctx$n_drugs_tested),
+    n_drugs_sig                     = as.character(ctx$n_drugs_sig),
+    n_neg                           = as.character(ctx$n_neg),
+    n_pos                           = as.character(ctx$n_pos),
+    max_abs_nes                     = omicsai::omicsai_format_num(ctx$max_abs_NES, 2),
+    frac_annotated_pct              = dc_percent(rel$frac_annotated),
+    n_sig_moa_classes               = as.character(rel$n_sig_moa_classes),
+    n_sig_targets                   = as.character(rel$n_sig_targets),
+    annotation_confidence           = rel$annotation_confidence,
+    supported_opposing_moa          = ev$supported_opposing_moa,
+    supported_mimicking_moa         = ev$supported_mimicking_moa,
+    corroborating_opposing_targets  = ev$corroborating_opposing_targets,
+    corroborating_mimicking_targets = ev$corroborating_mimicking_targets,
+    preferred_opposing_exemplars    = ev$preferred_opposing_exemplars,
+    preferred_mimicking_exemplars   = ev$preferred_mimicking_exemplars,
+    top_opposing_table              = dc_compact_drug_table(ctx$top_opposing, n = ntop),
+    top_mimicking_table             = dc_compact_drug_table(ctx$top_mimicking, n = ntop),
+    moa_class_table                 = dc_compact_moa_table(ctx$moa_class, n = ntop, label = "MOA Class"),
+    moa_target_table                = dc_compact_moa_table(ctx$moa_target, n = ntop, label = "Target")
   ))
 }
 

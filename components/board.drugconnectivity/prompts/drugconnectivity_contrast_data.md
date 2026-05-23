@@ -1,12 +1,19 @@
 ### {{contrast}} — {{tier}}
 
 Signal overview (drug counts, direction split, max |NES|):
-{{headline_metrics}}
+Drugs tested: {{n_drugs_tested}} | significant (q<0.05): {{n_drugs_sig}} | opposing (neg NES): {{n_neg}} | mimicking (pos NES): {{n_pos}} | max |NES|: {{max_abs_nes}}
 
 Annotation reliability (fraction of drugs carrying MOA / target metadata, plus significance counts at the MOA-class and target levels):
-{{annotation_coverage}}
+{{frac_annotated_pct}} | sig MOA classes: {{n_sig_moa_classes}} | sig targets: {{n_sig_targets}}
 
-{{evidence_summary}}
+Interpretation evidence summary (primary evidence for report writing):
+- Supported opposing MOA terms: {{supported_opposing_moa}}
+- Supported mimicking MOA terms: {{supported_mimicking_moa}}
+- Corroborating opposing targets: {{corroborating_opposing_targets}}
+- Corroborating mimicking targets: {{corroborating_mimicking_targets}}
+- Preferred opposing exemplars matching supported MOA terms: {{preferred_opposing_exemplars}}
+- Preferred mimicking exemplars matching supported MOA terms: {{preferred_mimicking_exemplars}}
+- Annotation confidence: {{annotation_confidence}} ({{frac_annotated_pct}} annotated)
 
 Top opposing drugs (negative NES — candidate signature reversal for L1000 backends; predicted resistance for sensitivity backends):
 {{top_opposing_table}}
