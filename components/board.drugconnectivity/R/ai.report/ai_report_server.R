@@ -44,10 +44,21 @@ drugconnectivity_ai_report_server <- function(id,
       parent_session = parent_session
     )
 
+    ## Unified report text: picks deep_text when Deep Report was the last
+    ## fired branch, otherwise the normal report_text. Never returns the
+    ## prompt cache so diagram / image always receive actual LLM output.
+    active_report_text <- shiny::reactive({
+      if (isTRUE(text_result$last_deep())) {
+        text_result$deep_text() %||% ""
+      } else {
+        text_result$report_text() %||% ""
+      }
+    })
+
     diagram_result <- AiDiagramCardServer(
       "layout-diagram",
       params_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.drugconnectivity")
@@ -57,7 +68,7 @@ drugconnectivity_ai_report_server <- function(id,
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.drugconnectivity")
@@ -73,7 +84,13 @@ drugconnectivity_ai_report_server <- function(id,
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
-        if (controls$mode() == "report") controls$trigger() else 0
+        if (controls$mode() == "report") {
+          controls$trigger()
+        } else if (isTRUE(text_result$last_deep())) {
+          controls$deep_trigger()
+        } else {
+          0
+        }
       }),
       style = drugconnectivity_diagram_style()
     )
@@ -81,7 +98,7 @@ drugconnectivity_ai_report_server <- function(id,
     AiImageCardServer(
       "layout-infographic",
       params_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()
@@ -94,7 +111,7 @@ drugconnectivity_ai_report_server <- function(id,
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         diag <- diagram_result()

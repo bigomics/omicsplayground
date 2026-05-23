@@ -305,9 +305,8 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       full_report <- paste(response, methods_text, sep = "\n\n")
 
       p$set(message = "Deep Report complete!", value = 1.0)
-      message(sprintf("[INFO][%s] --- [AI-DEEP-REPORT] complete (%d turns)",
-                      format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-                      length(turns)))
+      message(sprintf("[INFO][%s] --- [AI-DEEP-REPORT] complete",
+                      format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
       full_report
     }, ignoreNULL = FALSE)
 

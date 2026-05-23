@@ -66,6 +66,17 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       progress_reactive = report_progress
     )
 
+    ## Unified report text: picks deep_text when Deep Report was the last
+    ## fired branch, otherwise the normal report_text. Never returns the
+    ## prompt cache so diagram / image always receive actual LLM output.
+    active_report_text <- shiny::reactive({
+      if (isTRUE(text_result$last_deep())) {
+        text_result$deep_text() %||% ""
+      } else {
+        text_result$report_text() %||% ""
+      }
+    })
+
     # Update progress when text completes → diagram starts
     shiny::observeEvent(text_result$report_text(), {
       txt <- text_result$report_text()
@@ -78,7 +89,7 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
     diagram_result <- AiDiagramCardServer(
       "layout-diagram",
       params_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.wgcna")
@@ -88,7 +99,7 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       }),
       template_reactive = shiny::reactive("{{content}}"),
       config_reactive = shiny::reactive({
-        txt <- text_result$report_text() %||% ""
+        txt <- active_report_text()
         shiny::req(nzchar(txt))
         organism <- pgx$organism %||% "human"
         board_root <- file.path(OPG, "components/board.wgcna")
@@ -104,16 +115,22 @@ wgcna_ai_report_server <- function(id, wgcna, pgx, parent_session, watermark = F
       }),
       cache = cache,
       trigger_reactive = shiny::reactive({
-        if (controls$mode() == "report") controls$trigger() else 0
+        if (controls$mode() == "report") {
+          controls$trigger()
+        } else if (isTRUE(text_result$last_deep())) {
+          controls$deep_trigger()
+        } else {
+          0
+        }
       }),
       style = wgcna_diagram_style()
     )
 
     # Image / infographic card.
-    # Reads from text_result$text (unified) so Deep Report's output also
-    # feeds the image when the deep button fires. Gated on the opt-in
-    # checkbox; trigger is the OR of Report and Deep Report triggers.
-    image_text_reactive <- shiny::reactive(text_result$text() %||% "")
+    # Reads from active_report_text (last_deep-aware) so Deep Report's
+    # output also feeds the image. Gated on the opt-in checkbox; trigger
+    # covers both Report and Deep Report clicks via image_trigger.
+    image_text_reactive <- shiny::reactive(active_report_text())
     image_params_reactive <- shiny::reactive({
       txt <- image_text_reactive()
       shiny::req(nzchar(txt))
