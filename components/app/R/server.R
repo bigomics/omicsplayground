@@ -903,6 +903,21 @@ app_server <- function(input, output, session) {
       bigdash.hideTab(session, "ideograms-tab")
       bigdash.hideMenuElement(session, "Epigenomics")
     }
+
+    ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)
+    if (!is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics") {
+      is_dmp <- if (!is.null(PGX$dma)) {
+        PGX$dma == "Differentially methylated positions"
+      } else {
+        ## fallback for old pgx files without dma field: CpG probe IDs start with "cg"
+        mean(grepl("^cg[0-9]+", rownames(PGX$X))) > 0.5
+      }
+      if (is_dmp) {
+        bigdash.hideTab(session, "pcsf-tab")
+      } else {
+        bigdash.showTab(session, "pcsf-tab")
+      }
+    }
   }
 
   ## -------------------------------------------------------------
