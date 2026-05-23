@@ -291,7 +291,7 @@ round-trips.
 
 ## Tool surface (use only these)
 
-- `manage_pgx`, `query_wgcna` (Phase A only — do not free-explore)
+- `query_wgcna` (Phase A only — do not free-explore)
 - `query_gene_info` (sparingly, for unfamiliar hubs)
 - `search_context`, `read_context` (Phase B literature only)
 

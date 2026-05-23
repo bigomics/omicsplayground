@@ -250,13 +250,21 @@ wgcna_ai_text_server <- function(id, wgcna, pgx, controls, parent_session,
       agent <- omicsagentovi::Agent(
         tier          = "copilot-deep",
         tools         = c("search_context", "read_context", "query_wgcna",
-                          "manage_pgx", "query_gene_info"),
+                          "query_gene_info"),
         context       = omicsagentovi::RunContext(pgx = pgx),
         session       = omicsagentovi::AgentSession(
                           session_id = paste0(session$token, "_wgcna_deep")
                         ),
+        bindings      = omicsagentovi::RunBindings(data_dir = PGX.DIR),
         max_turns     = 50L,
         system_prompt = bp$system
+      )
+      agent <- omicsagentovi::agent_set_pgx(
+        agent,
+        pgx          = pgx,
+        dataset_name = as.character(pgx$name %||% ""),
+        dataset_path = NULL,
+        data_dir     = PGX.DIR
       )
 
       deep_cost_warning(NULL)

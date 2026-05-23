@@ -196,11 +196,10 @@ Before any PubMed call, run a focused set of passes to:
 
 ### Required call sequence
 
-Always start with a status check and contrast list before any rank
-calls — contrast names vary across datasets and must not be guessed:
+Always list contrasts before any rank calls — contrast names vary
+across datasets and must not be guessed:
 
 ```
-manage_pgx(action="status")
 query_drugs(include_primer=false)                        # lists contrasts + backends
 ```
 
@@ -455,7 +454,6 @@ REJECT:
 
 ## Tool surface (use only these)
 
-- `manage_pgx` — status and dataset overview
 - `query_drugs` — rank, target, moa views (Phase A)
 - `query_de`, `query_pathways` — biological context for Discussion (Phase A)
 - `query_gene_info` — sparingly, for unfamiliar target gene symbols
