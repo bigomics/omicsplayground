@@ -1,99 +1,135 @@
-## What This Analysis Reveals
+# MOFA report — board rules
 
-Multi-Omics Factor Analysis (MOFA) decomposes multi-omics datasets into
-latent factors — axes of shared or modality-specific variation. Each factor
-captures a biological programme that may span transcriptomics, proteomics,
-metabolomics, or other views. The report translates these factors into a
-biological narrative: what programmes dominate the data, which features
-drive them, and how they relate to experimental conditions.
+Total report length: 800–1200 words.
 
-When `## Factor Ranking` is present in the input data, use the tier
-(strong / moderate / weak) to calibrate the depth of each factor's
-treatment.
+## Evidence scope
 
-## Analytical Unit: the Latent Factor
+Your sole evidence is the data block provided with this prompt. You have no
+access to PubMed, external databases, or prior experimental results. All
+biological interpretations must be traceable to the data block (factor
+loadings, variance explained, pathway enrichments, trait correlations).
+Do not introduce claims from parametric knowledge that are not anchored
+in the data block.
 
-Each `### heading` in Main Findings names a **biological programme**
-revealed by the factor — not a factor number alone.
+## Section requirements
 
-Derive the heading from the dominant enrichment theme and the factor
-identity:
+### Highlights
+
+- Exactly **3 bullets**. No more, no less.
+- Each bullet ≤25 words.
+- Declarative; no hedging.
+- No raw weights, NES, or padj values.
+- Together, the three bullets answer: what is the headline multi-omics
+  programme, what is the most surprising finding, and what is the dominant
+  cross-view pattern?
+
+### Overview
+
+- 1–2 paragraphs.
+- Required content: experiment intent, organism, sample count, number of
+  omics views, number of factors extracted, count selected for detailed
+  reporting, signal landscape (use one of: "low-signal", "single-axis",
+  "richly-resolved", "multi-axis").
+- Mention the variance landscape **once**, here. Do not return to it.
+- Do not mention methods details — refer to methods as "see Methods
+  section below" or similar.
+
+### Main findings
+
+The lead findings, GROUPED by biological theme rather than by individual
+factor. Each theme is one h3 subsection; each theme contains the factors
+that fit it as h4 subsubsections.
 
 ```
-GOOD: ### Factor 1: Inflammatory Signaling Axis
-GOOD: ### Factor 3: Epigenetic Remodeling
-BAD:  ### Factor 1
-BAD:  ### Top Weighted Features
+### Theme 1 — [biological framing in 2–4 words]
+1–3 prose paragraphs introducing the theme.
+
+#### Factor 1: [short theme label]
+1–3 prose paragraphs.
+
+#### Factor 3: [short theme label]
+1–3 prose paragraphs.
+
+### Theme 2 — [biological framing]
+#### Factor 2: [short theme label]
+...
 ```
 
-Use the **Factor Ranking** tier to calibrate depth:
-- **Strong / Moderate**: full narrative treatment as individual subsections
-- **Weak**: aggregate into `### Minor Factors` with explicit caveats
-  about low variance explained or absent enrichment
+**Theme heading format:** `### Theme N — [2–4 words]`. Sentence case.
+**Factor heading format:** `#### Factor N: [short theme phrase]`. Theme is
+2–6 words, sentence case, descriptive (e.g. *"Inflammatory signalling
+axis"*), not technical (e.g. *"NES > 2 in MSIGDB"*).
 
-Omit `### Minor Factors` entirely if all factors are strong or moderate.
+**Per-factor length:**
+- Strong: 2–3 paragraphs.
+- Moderate: 1 paragraph.
+- Weak: do NOT get a subsection; aggregate under Minor units.
 
-## Per-Unit Content: Three Narrative Beats (always prose)
+**Per-factor content:**
+- Open with the dominant pathway theme and trait association in plain
+  biological terms (not just the verbal label).
+- Top features: 4–6 named per strong factor, woven with view of origin
+  and functional roles, ≤8 names per paragraph. When a feature has high
+  weight in multiple views, say so explicitly — this is stronger evidence.
+- Pathways: themed plain-English clusters (no IDs).
+- One numeric anchor per paragraph maximum (typically the top NES for
+  the lead enrichment, or top weight for the lead feature).
 
-**Beat 1 — The biological programme (lead sentence)**
-State what biological process the factor captures. Lead with the biology,
-not the feature names.
+**Theme grouping.** Group factors into themes when the enrichment patterns
+and view participation suggest coherent biological programs; otherwise
+list factors directly. Use your judgement.
 
-> GOOD: "Factor 1 captures an inflammatory signalling axis spanning
-> cytokine receptors and NF-κB pathway components across both
-> transcriptomic and proteomic views."
-> BAD: "Factor 1 has 12 features with high weights."
+### Minor units
 
-**Beat 2 — The driving features**
-Name the top weighted features that anchor the factor. For each, weave
-the loading weight, view of origin, and functional annotation into prose.
-When a feature has high weight in multiple views, say so explicitly —
-this is stronger evidence than single-view signal.
+- 1 paragraph (or omit entirely if no weak factors).
+- 1–2 sentences per minor factor: name it, give the dominant view, note
+  enrichment absence or weakness, optionally name 1–2 top features.
+- No themes, no h3 subdivisions.
 
-> GOOD: "*IL6* (weight = 0.91, transcriptome) and its receptor *IL6R*
-> (weight = 0.78, proteome) jointly anchor this factor, consistent with
-> an active JAK-STAT signalling loop."
-> BAD: "IL6 weight 0.91. IL6R weight 0.78."
+### Integrated findings
 
-**Beat 3 — Pathway convergence and confidence**
-Does pathway enrichment corroborate the factor? Name the enriched
-pathway(s) with NES and q-values. State confidence explicitly when:
-- No significant enrichment is detected (padj > 0.05 for all terms)
-- Only a single view contributes to the factor
-- Loading weights are modest (all |weight| < 0.5)
+- 2–4 paragraphs.
+- MUST use at least one of three rhetorical patterns: trade-off,
+  feedback, or contrast.
+- ONLY cite cross-factor relationships that are explicit in the data
+  block (factor correlations, opposing trait associations, shared
+  features across factors). Do not infer relationships not present
+  in the data.
+- This is where opposing programs and view-spanning convergence are
+  explicitly named.
 
-## Cross-Factor Synthesis Paragraph (REQUIRED when > 1 factor)
+### **Discussion**
 
-After all factor subsections, one paragraph with no heading, describing:
-- Whether factors capture shared vs complementary biology
-- Opposing or correlated factor pairs and what they suggest
-- Whether certain views dominate specific factors while others are
-  multi-view
-- The overall biological narrative that emerges from the factor landscape
+- 1–2 paragraphs.
+- Heading in **bold**: `## **Discussion**`.
+- Synthesize the biology revealed by the factors into a coherent
+  narrative — what does the dataset *as a whole* suggest about the
+  underlying multi-omics biology?
+- **No literature references.** This pipeline has no access to PubMed;
+  do not cite papers, authors, or prior work.
+- **No translational implications.** Do not propose drug targets,
+  clinical implications, or therapeutic strategies — those require
+  literature grounding that this pipeline cannot provide.
+- This is purely intra-dataset synthesis. Stay grounded in what the
+  data block contains.
+- **Low-signal datasets** (no factor clears 5 significant pathways AND
+  max |weight| < 0.5): limit the Discussion to **1 paragraph of no more
+  than 3 sentences**.
 
-Every cross-factor claim must be grounded in values from the data.
+### **Conclusion**
 
-## Discussion
-
-1-2 paragraphs interpreting the overall multi-omics integration:
-- What biological programmes does MOFA reveal that single-omics would miss?
-- Which factors are multi-view (shared biology) vs single-view (modality-specific)?
-- Caveats once, briefly: factor count sensitivity, view imbalance
-  (unequal feature counts across modalities), correlation ≠ causation
-
-## Word Limit
-
-800-1200 words total across Main Findings + Discussion + Conclusion.
+- **1 paragraph**.
+- Heading in **bold**: `## **Conclusion**`.
+- Integrative summary; no new claims; no numbers.
+- Do not introduce findings that were not in Main findings or Integrated
+  findings above.
 
 ## Hard Constraints
 
 - Use only facts explicitly present in the input data.
-- Do NOT invent reference numbers or repurpose a reference for a
-  different claim.
+- Do NOT infer causality from factor weights or correlations alone.
 - If a factor has no significant enrichment, state that explicitly and
   keep confidence modest.
-- Do NOT synthesize a numeric range across factors unless the underlying
-  values are explicit in the input data.
 - Do NOT reproduce feature tables or pathway tables — the researcher
   already has them in the interface.
 - Do NOT create bullet lists of feature names with weights; weave them

@@ -3,107 +3,21 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-multiomics_ai_report_controls_ui <- function(id, module_label = "Item:") {
-  ns <- shiny::NS(id)
-
-  shiny::tagList(
-    shiny::radioButtons(
-      ns("mode"),
-      "Mode:",
-      choices = c("Report" = "report", "Summary" = "summary"),
-      selected = "report",
-      inline = TRUE
-    ),
-    shiny::actionButton(
-      ns("generate_btn"),
-      "Generate!",
-      icon = icon("refresh"),
-      class = "btn-outline-primary btn-block",
-      style = "margin-bottom: 10px;"
-    ),
-    shinyjs::hidden(
-      shiny::div(
-        id = ns("summary_controls"),
-        shiny::selectInput(
-          ns("summary_module"),
-          module_label,
-          choices = NULL,
-          width = "100%"
-        ),
-        shiny::radioButtons(
-          ns("summary_style"),
-          "Summary Style:",
-          choices = c("Short Summary" = "short_summary", "Long Summary" = "long_summary"),
-          selected = "short_summary",
-          inline = FALSE
-        )
-      )
-    ),
-
-    # Infographic toggle: always visible in sidebar
-    shiny::checkboxInput(
-      ns("include_infographic"),
-      "Include infographic",
-      value = FALSE
-    )
-    ## NOTE: Infographic style/blocks controls are rendered in the image card's
-    ## hamburger menu (see the board-specific *_ai_report_ui function).
-    ## All are namespaced to this controls module so input$* is still read here.
-  )
-}
-
-multiomics_ai_report_controls_server <- function(id, module_choices = NULL) {
-  moduleServer(id, function(input, output, session) {
-    shiny::observe({
-      mode <- input$mode %||% "report"
-      if (mode == "summary") {
-        shinyjs::show("summary_controls")
-      } else {
-        shinyjs::hide("summary_controls")
-      }
-    })
-
-    shiny::observe({
-      styles <- tryCatch(
-        omicsai::omicsai_available_image_styles(),
-        error = function(e) "bigomics"
-      )
-      shiny::updateSelectInput(
-        session, "image_style",
-        choices = styles,
-        selected = if ("bigomics" %in% styles) "bigomics" else styles[1]
-      )
-    })
-
-    shiny::observe({
-      if (is.null(module_choices)) return()
-      choices <- module_choices()
-      shiny::req(choices)
-      shiny::updateSelectInput(
-        session, "summary_module",
-        choices = choices,
-        selected = choices[1]
-      )
-    })
-
-    trigger <- shiny::reactiveVal(0)
-    shiny::observeEvent(input$generate_btn, {
-      trigger(trigger() + 1)
-    })
-
-    list(
-      trigger = shiny::reactive(trigger()),
-      mode = shiny::reactive(input$mode %||% "report"),
-      summary_style = shiny::reactive(input$summary_style),
-      show_prompt = shiny::reactive(input$show_prompt),
-      selected_module = shiny::reactive(input$summary_module),
-      include_infographic = shiny::reactive(isTRUE(input$include_infographic)),
-      image_style = shiny::reactive(input$image_style %||% "bigomics"),
-      image_blocks = shiny::reactive(input$image_blocks %||% "1")
-    )
-  })
-}
-
+#' Multi-omics AI Report Layout UI
+#'
+#' Shared by MofaBoard and LasagnaBoard. Renders the fixed 3-card layout:
+#' text (left 50%) + diagram and infographic (right 50% stacked).
+#'
+#' @param id Module namespace ID.
+#' @param text_title Title for the text panel.
+#' @param diagram_title Title for the diagram panel.
+#' @param infographic_title Title for the infographic panel.
+#' @param text_options Extra UI rendered in the text card's hamburger menu
+#'   (typically the "Show prompt" checkbox).
+#' @param infographic_options Extra UI rendered in the image card's
+#'   hamburger menu (style / layout pickers).
+#'
+#' @return Shiny tagList.
 multiomics_ai_report_layout_ui <- function(id,
                                            text_title = "AI Report",
                                            diagram_title = "Board Diagram",
@@ -116,16 +30,20 @@ multiomics_ai_report_layout_ui <- function(id,
     col_widths = 12,
     height = "calc(100vh - 180px)",
     row_heights = c("auto", 1),
+
     bs_alert(
       HTML(paste0(
-        "\u26a0\ufe0f <b>Disclaimer:</b> This page contains AI-generated content. ",
+        "⚠️ <b>Disclaimer:</b> This page contains AI-generated content. ",
         "Please verify important information independently."
       )),
       translate = FALSE
     ),
+
     bslib::layout_columns(
       col_widths = c(6, 6),
       height = "calc(100vh - 220px)",
+
+      # LEFT: Text card (shared between summary / report / deep report)
       PlotModuleUI(
         ns("report_text"),
         outputFunc = htmlOutput,
@@ -136,9 +54,12 @@ multiomics_ai_report_layout_ui <- function(id,
         width = c("auto", "100%"),
         download.fmt = c("pdf", "docx", "md")
       ),
+
+      # RIGHT: Diagram + Infographic stacked
       bslib::layout_columns(
         col_widths = 12,
         row_heights = c(1, 1),
+
         AiDiagramCardUI(
           ns("diagram"),
           title = diagram_title,
@@ -146,6 +67,7 @@ multiomics_ai_report_layout_ui <- function(id,
           height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         ),
+
         AiImageCardUI(
           ns("infographic"),
           title = infographic_title,
@@ -159,6 +81,21 @@ multiomics_ai_report_layout_ui <- function(id,
   )
 }
 
+#' Multi-omics AI Report Layout Server
+#'
+#' Renders the text card with whatever content the parent provides via
+#' `text_reactive`. The diagram and image cards are wired by the parent
+#' (via AiDiagramCardServer / AiImageCardServer); this server owns only
+#' the text card and its PDF/docx/md download handlers.
+#'
+#' @param id Module namespace ID.
+#' @param text_reactive Reactive returning markdown text string. The parent
+#'   server is responsible for choosing report-vs-deep-report-vs-prompt-cache.
+#' @param filename Base filename for downloads (no extension).
+#' @param title Document title used in PDF/docx headers.
+#' @param watermark Logical; add watermark to outputs.
+#'
+#' @return invisible(NULL).
 multiomics_ai_report_layout_server <- function(id,
                                                text_reactive,
                                                filename = "multiomics-ai-report",

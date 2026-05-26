@@ -1,153 +1,101 @@
-## LANGUAGE RULES
+# MOFA context
 
-Certainty calibration:
-- Strong evidence (replicated, mechanistic): use "demonstrates", "shows", "reveals"
-- Moderate evidence (statistical): use "suggests", "indicates", "points to"
-- Preliminary or exploratory: use "may", "might", "appears to"
-- Correlational data: use "is associated with", "correlates with"
+## Definitions
 
-Avoid:
-- "proves", "establishes", "clearly demonstrates" (too strong)
-- "causes", "leads to", "drives" (implies causation from correlation)
-- Anthropomorphizing genes: NOT "TP53 wants" but "TP53 functions in"
+- **MOFA (Multi-Omics Factor Analysis)**: an unsupervised factor model
+  that decomposes a stack of omics matrices (sharing the same samples)
+  into latent factors. Each factor is a linear combination of features
+  across one or more omics views; the factor captures a shared or
+  view-specific source of variation.
+- **Factor**: a latent variable indexed `Factor1`, `Factor2`, …. Each
+  factor has per-feature loadings (weights) and per-sample scores. The
+  sign of a factor is arbitrary — direction-of-effect statements must be
+  paired with the trait or contrast they refer to.
+- **Weight (loading)**: the coefficient mapping a feature to a factor.
+  |weight| measures how strongly the feature contributes to the factor;
+  the sign indicates the direction relative to the factor axis. The data
+  block reports it under the `Contribution` column.
+- **View**: one omics modality (transcriptome, proteome, metabolome,
+  geneset, …). A factor that has high-|weight| features in more than one
+  view is a **cross-view factor** — the strongest evidence of integrated
+  multi-omics biology MOFA provides.
+- **Variance explained**: per-factor, per-view fraction of variance
+  captured. A factor with high variance across multiple views captures
+  shared biology; one with high variance in a single view is
+  modality-specific.
+- **NES (Normalised Enrichment Score)**: GSEA effect size for a pathway
+  on a factor's loading vector. The data block reports `Direction &
+  strength` (sign + magnitude as a verbal label); the raw NES is not
+  shown.
+- **padj (adjusted p-value / q-value)**: enrichment significance for a
+  pathway. The data block reports this under the `Significance` column
+  as a verbal label.
+- **Centrality**: per-feature score from the cross-view network — how
+  central the feature is to the multi-omics module supporting the
+  factor. The data block reports it under the `Network role` column.
 
-## NUMERICAL INTERPRETATION
+## Verbal-label inventory (authoritative — used throughout the data block)
 
-P-values in omics context:
-- Omics experiments test thousands of features simultaneously
-- p < 0.05 has high false positive rate; use with caution
-- p < 0.01 still permits many false positives at genome scale
-- FDR/adjusted p-values (q < 0.05) are more reliable for omics
-- Always note whether values are raw or adjusted
+The data block never shows raw numbers for these six quantities; it shows
+verbal labels at fixed thresholds. Treat the label as authoritative.
 
-Fold changes:
-- |FC| < 1.5 (|log2FC| < 0.58): modest, potentially noise
-- |FC| 1.5-2 (|log2FC| 0.58-1): moderate effect
-- |FC| 2-4 (|log2FC| 1-2): substantial effect
-- |FC| > 4 (|log2FC| > 2): strong effect
+- **Factor-trait correlation** (`r`): `strongly correlated` (|r| ≥ 0.9) /
+  `correlated` (≥ 0.7) / `moderately correlated` (≥ 0.5) /
+  `weakly associated` (< 0.5). Sign mirrors to
+  `… anti-correlated`. Missing → `no trait correlation`.
+- **Pathway significance** (`padj`): `highly significant` (padj < 1e-6) /
+  `significant` (< 1e-3) / `nominally significant` (< 0.05) /
+  `not significant`. Missing → `not tested`.
+- **Feature contribution** (`|weight|`): `dominant` (|w| ≥ 1.0) /
+  `strong` (≥ 0.5) / `modest` (≥ 0.25) / `minimal` (< 0.25).
+- **Pathway direction & strength** (`NES`): `up-strong` / `up-moderate` /
+  `up-weak` / `up-nominal` (NES ≥ 0) and the mirrored `down-…` family
+  (NES < 0). Magnitude breaks at |NES| = 2.5 / 1.5 / 0.5.
+- **Per-view variance explained**: `major` (≥ 30%) / `moderate` (≥ 15%) /
+  `minor` (≥ 5%) / `negligible` (< 5%). The raw percentage is shown as
+  a parenthetical anchor on the lead view only.
+- **Network role** (centrality): `hub` (≥ 0.8) / `central` (≥ 0.6) /
+  `intermediate` (≥ 0.3) / `peripheral` (< 0.3).
+- **Strong / Moderate / Weak signal**: tier classification provided in
+  the data block, derived from significant-pathway count, max |NES|,
+  and max |weight|. **Authoritative — do not reclassify.**
+- **Top factors**: the subset selected for detailed reporting. Out of
+  `n_factors_total` extracted, only `n_factors_used` are described in
+  detail; the rest are aggregated under "Minor units".
 
-Enrichment analysis:
-- High enrichment does not equal biological importance
-- Well-studied pathways are over-represented in databases
-- Small gene set overlaps may lack robustness
-- Consider overlap size alongside enrichment score
+## How to read direction
 
-## EXPERIMENT CONTEXT
+A factor's sign is mathematically arbitrary. State direction relative to
+a trait or sample group: *"Factor 1 is elevated in treated samples"* —
+never just *"Factor 1 is positive"*. The data block carries direction
+via trait correlation labels, not via the bare sign of a weight or
+score.
 
-This analysis uses Multi-Omics Factor Analysis (MOFA) to identify latent
-factors that capture the major sources of variation across multiple omics
-data types.
+## Top-feature reporting
+
+- Group features by view of origin when possible; weave functional
+  context into prose rather than listing.
+- Symbol names in italics: *IL6*, *TP53*.
+- Never list more than ~8 feature names in a single paragraph.
+- Prefer named features over feature IDs — if `symbol` is present in
+  the data block, use it.
+
+## Pathway-enrichment reporting
+
+- Translate MSigDB / Reactome / GO IDs into plain-English clusters.
+  Bad: *"GO_0007049 enriched"*. Good: *"Cell cycle machinery enriched"*.
+- A factor without significant enrichment is informative — report it
+  as such, do not omit the factor.
+- NES sign on a factor's GSEA result inherits the factor's arbitrary
+  sign; pair the direction statement with a trait or group, not with
+  the bare NES sign.
+
+## Cross-view evidence
+
+- A feature with high |weight| in two or more views is the strongest
+  multi-omics signal — call it out explicitly.
+- Variance-explained patterns that span views ground "integrated
+  biology" claims; single-view variance-dominated factors are
+  modality-specific and must be hedged accordingly.
 
 Experiment: {{experiment}}
-
-## MOFA-SPECIFIC GUIDANCE
-
-- MOFA factors are latent variables that capture shared and unique sources
-  of variation across multiple data modalities (e.g., transcriptomics,
-  proteomics, metabolomics)
-- Factor loadings (weights) indicate the contribution of each feature to a
-  given factor; high absolute weight means the feature is strongly
-  associated with that factor
-- Factor scores represent sample-level values for each factor and can be
-  correlated with phenotypes/traits
-- Enriched pathways for a factor reveal the biological processes captured
-  by that factor
-- Variance explained per factor and per view indicates which factors and
-  data types drive the main heterogeneity
-
-### Multi-view variance decomposition
-
-- A factor with high variance explained across multiple views captures
-  shared biology; a factor dominated by a single view captures
-  view-specific variation
-- When interpreting a multi-view factor, look for convergent biological
-  themes across the contributing data types
-- A factor driven by a single view is not necessarily less important —
-  it may reflect biology visible only in that modality
-
-## QUANTITATIVE INTERPRETATION GUIDELINES
-
-Definitions and relationships:
-- Factor loadings (weights) quantify the relationship between each feature
-  and a latent factor; features with high absolute loadings are the most
-  important contributors to that factor
-- Factor scores represent each sample's position along a factor axis;
-  differences in scores between conditions suggest the factor captures
-  condition-specific variation
-- Variance explained (R2) measures how much of the total variance in each
-  view is captured by each factor
-- Factor-trait correlation quantifies the association between a factor and
-  a phenotype/trait variable
-
-Important note on thresholds:
-- MOFA does not prescribe universal cutoffs; interpretation depends on the
-  dataset and number of factors
-- Treat any numeric threshold as a guideline, not a rule
-
-Enrichment metrics:
-- NES (Normalized Enrichment Score): |NES| > 2.0 very strong; 1.5-2.0
-  strong; 1.0-1.5 moderate; < 1.0 weak
-- padj < 0.01: high confidence; 0.01-0.05 standard; 0.05-0.10 marginal;
-  > 0.10 not significant
-- Pathway size: larger gene sets provide more robust enrichment estimates;
-  very small sets (< 10) should be interpreted cautiously
-
-Gene/feature metrics:
-- Loading weight: features with the highest absolute weights are key
-  drivers of the factor
-- Centrality: high centrality features are well-connected in the factor's
-  feature network
-- Consider both the magnitude and sign of loadings when interpreting
-  factor biology
-
-### Metric interpretation rules (IMPORTANT)
-
-- **Weights and centrality are factor-specific but view-independent.** A
-  feature's weight describes its role within a given factor regardless of
-  trait. Cite without trait qualifier: "*PLCG2* has a strong loading
-  (weight = 0.85, centrality = 1.12) on Factor 1."
-- **Trait correlations are trait-specific.** Factor-trait correlations are
-  computed relative to one particular phenotype and ALWAYS require stating
-  which trait. Write "Factor 1 correlates with treatment response
-  (r = 0.72)" — never just "r = 0.72" without the trait.
-- **When multiple traits are present**, compare how factors associate
-  across them (e.g., "Factor 1 associates more strongly with survival
-  (r = 0.72) than with age (r = 0.31)").
-
-Integration rules:
-- Prioritize factors with high variance explained and significant trait
-  correlations
-- Favor pathways with strong NES and low padj that are consistent with
-  the top loading features
-- When multiple omics layers contribute to a factor, look for convergent
-  biological themes across data types
-- Treat marginal enrichments or low-weight features as tentative and avoid
-  over-interpretation
-
-Use quantitative values from the tables and avoid causal overclaims.
-
-## Writing Style: Pathway and Gene-Set References
-
-Write the narrative using only natural biological language:
-
-1. **No raw identifiers in prose.** Never embed database accessions or raw
-   pathway names (e.g., GO_CHROMOSOME_SEGREGATION, R-HSA-68886) into the
-   narrative text.
-
-2. **Thematic grouping with inline references.** Cluster enriched pathways
-   into 2-3 biological themes per factor. Pair every theme mention with
-   bracketed [n] references. Never group more than 3 references in a
-   single bracket.
-
-3. **Plain-English descriptions.** Refer to pathways by their biological
-   meaning (e.g., "mitotic prometaphase," "lipid metabolism") rather than
-   database labels.
-
-### Enrichment References
-
-- Reference enrichment terms via [n] brackets in the narrative
-- Use plain-English descriptions in prose: "DNA replication [1,2]"
-  not "REACTOME_DNA_REPLICATION [1]"
-- The Data References section at the end maps [n] to exact term names
-- When >100 terms are significant, summarize by theme
-- When 0 terms are significant, state it explicitly

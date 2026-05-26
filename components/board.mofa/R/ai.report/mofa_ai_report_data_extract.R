@@ -20,13 +20,14 @@ mofa_ai_trait_summary <- function(mofa, factor_name) {
   cors <- sapply(trait_names, function(t) {
     y <- mofa$Y[, t]
     if (!is.numeric(y) || sum(!is.na(y)) < 4) return(NA_real_)
-    tryCatch(cor(factor_scores, y, use = "pairwise.complete.obs"), error = function(e) NA_real_)
+    tryCatch(cor(factor_scores, y, use = "pairwise.complete.obs"),
+             error = function(e) NA_real_)
   })
   cors <- cors[!is.na(cors)]
 
   if (length(cors) == 0) return("None")
 
-  sig <- cors[abs(cors) > 0.3]
+  sig <- cors[abs(cors) >= 0.5]
   picked <- if (length(sig) > 0) {
     sig[order(-abs(sig))]
   } else {
@@ -34,7 +35,7 @@ mofa_ai_trait_summary <- function(mofa, factor_name) {
   }
 
   paste(
-    sprintf("%s (r=%s)", names(picked), omicsai::omicsai_format_num(picked, 2)),
+    sprintf("%s (%s)", names(picked), omicsai::omicsai_verbalize_r(picked)),
     collapse = ", "
   )
 }
