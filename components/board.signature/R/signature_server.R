@@ -39,17 +39,6 @@ SignatureBoard <- function(id, pgx,
     CITRICACIDCYCLE.METABOLITES <- "57288 16947 32805 30887 16810 15380 15741 18012 30797 30744 15346 15846 16908 16238 17877 17552 15996 16526 15377"
     UREACYCLE.METABOLITES <- "15729 16349 16941 16467 16199 17672 17053 18012"
 
-    tab_elements <- list(
-      "Volcano plots" = list(disable = NULL),
-      "Enrichment" = list(disable = NULL),
-      "Overlap/similarity" = list(disable = NULL),
-      "Markers" = list(disable = NULL),
-      "AI Summary" = list(disable = NULL)
-    )
-    shiny::observeEvent(input$tabs1, {
-      bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -540,17 +529,6 @@ SignatureBoard <- function(id, pgx,
       "enrichmentGeneTable",
       organism = pgx$organism,
       getEnrichmentGeneTable = getEnrichmentGeneTable
-    )
-
-    # AI signature summary
-    signature_ai_summary_server(
-      "aiSummary",
-      pgx = pgx,
-      getCurrentMarkers = getCurrentMarkers,
-      getOverlapTable = getOverlapTable,
-      getEnrichmentGeneTable = getEnrichmentGeneTable,
-      session = session,
-      watermark = WATERMARK
     )
   })
 } ## end-of-Board

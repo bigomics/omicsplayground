@@ -35,20 +35,6 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
-    tab_elements <- c(
-      list(
-        "Enrichment" = list(disable = NULL),
-        "Enrichment by comparison" = list(disable = NULL),
-        "Volcano by comparison" = list(disable = NULL),
-        "Volcano by method" = list(disable = NULL),
-        "AI Summary" = list(disable = NULL)
-      ),
-      setNames(list(list(disable = NULL)), as.character(tspan("Gene expression")))
-    )
-    shiny::observeEvent(input$tabs1, {
-      bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -618,17 +604,6 @@ EnrichmentBoard <- function(id, pgx,
       gs_statmethod = shiny::reactive(input$gs_statmethod)
     )
 
-
-    # AI enrichment summary
-
-    enrichment_ai_summary_server(
-      "enrichmentAISummary",
-      pgx = pgx,
-      getFilteredGeneSetTable = getFilteredGeneSetTable,
-      gs_contrast = shiny::reactive(input$gs_contrast),
-      session = session,
-      watermark = WATERMARK
-    )
     ## reactive values to return to parent environment
     outx <- list(selected_gsetmethods = selected_gsetmethods)
     return(outx)

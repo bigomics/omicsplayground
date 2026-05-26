@@ -88,6 +88,7 @@ pgx.system.file <- function(file = ".", package) {
   file.path(dir, file)
 }
 
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 AUTHENTICATION <- "none"
 WATERMARK <- FALSE
 DEVMODE <- FALSE
@@ -194,6 +195,7 @@ opt.default <- list(
   APACHE_COOKIE_PATH = OPG,
   ALLOW_CUSTOM_FC = FALSE,
   DEVMODE = FALSE,
+  USER_LEVEL = 'PRO',  
   ENABLE_MULTIOMICS = TRUE,
   ENABLE_COOKIE_LOGIN = TRUE,
   PUBLIC_DATASETS_LABEL = "Public Datasets"
@@ -282,26 +284,23 @@ if (opt$HUBSPOT_CHECK) {
 ## ------------------------------------------------
 
 BOARDS <- c(
-  "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
+  "welcome", "summary", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics", "copilot"
+  "multiomics"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
-  "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Copilot"
+  "Welcome", "Summary", "Datasets", "DataView", "Clustering", "Expression",
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
-if (!isTRUE(opt$ENABLE_CHIRP)) {
-  MODULES_ENABLED["Copilot"] <- FALSE
-}
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
@@ -344,14 +343,15 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## LLM model setup (profiles defined in components/modules/AiCards.R)
-opt$LLM_MODELS <- llm_model_choices(opt$LLM_MODELS)
+## LLM model setup — playbase filters to providers with available creds
+opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
+opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
 opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 50, opt$LLM_MAXTURNS)
 dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
-
-## Image model setup
-opt$LLM_IMAGE_MODELS <- image_model_choices(opt$LLM_IMAGE_MODELS)
-dbg("[global] Image model choices:", paste(unlist(opt$LLM_IMAGE_MODELS), collapse = ", "))
+dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
+## TODO(edgy_merge_summaries): copilot reads LLM_IMAGE_MODELS, edgy reads
+## IMAGE_MODELS — alias for now until the legacy enable_ai panel is retired.
+opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
 
 ## Copilot tier selection — verify against the omicsagentovi registry
 if (is.null(opt$COPILOT_MODEL)) {

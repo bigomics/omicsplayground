@@ -144,8 +144,7 @@ SingleCellBoard <- function(id, pgx) {
     tab_elements <- list(
       "Cell type" = list(disable = NULL),
       "Mapping" = list(disable = c("clustmethod")),
-      "Markers" = list(disable = NULL),
-      "AI Summary" = list(disable = NULL)
+      "Markers" = list(disable = NULL)
     )
 
     shiny::observeEvent(input$tabs, {
@@ -280,17 +279,6 @@ SingleCellBoard <- function(id, pgx) {
       cytovar2 = shiny::reactive(input$cytovar2),
       nbins = shiny::reactive(input$nbins),
       selectSamplesFromSelectedLevels = selectSamplesFromSelectedLevels,
-      watermark = WATERMARK
-    )
-
-    # AI cell profiling summary
-
-    singlecell_ai_summary_server(
-      "singlecellAISummary",
-      pgx = pgx,
-      refset = shiny::reactive(input$refset),
-      dcmethod = shiny::reactive(input$dcmethod),
-      session = session,
       watermark = WATERMARK
     )
 

@@ -122,21 +122,6 @@ IntersectionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
-    ),
-    shiny::tabPanel(
-      "AI Summary",
-      bslib::layout_columns(
-        col_widths = 12,
-        height = fullH,
-        AiTextCardUI(
-          ns("intersectionAISummary"),
-          title = "AI Intersection Summary",
-          info.text = "AI-generated summary of the contrast intersection analysis for the selected contrasts.",
-          caption = "AI-generated intersection summary.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
     )
   )
 

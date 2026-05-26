@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-DatasetReportUI <- function(id) {
+DatasetReportButton <- function(id) {
   ns <- shiny::NS(id)
   shiny::actionButton(
     ns("show_report_modal"),
@@ -61,7 +61,11 @@ DatasetReportServer <- function(
       )
     })
 
-    showModal <- function() {
+    output$show_report_ui <- shiny::renderUI({
+      showUI()
+    })
+
+    showUI <- function() {
       shiny::req(auth$logged)
       if (is.null(auth$logged) || !auth$logged) {
         return(NULL)
@@ -80,7 +84,7 @@ DatasetReportServer <- function(
         return(NULL)
       }
 
-      body <- shiny::tagList(
+      ui <- shiny::tagList(
         "Create and download a summary report for the current dataset '",
         shiny::tags$b(dataset), "'.",
         "The results in the report are created using default values and are intended only as for quick exploration of your data. For custom analysis, use the interactive dashboards.",
@@ -173,183 +177,18 @@ DatasetReportServer <- function(
             shiny::uiOutput(ns("visreport_thumbnail"))
           )
         )
-      )
+      ) 
 
-      output$download_pdf <- shiny::downloadHandler(
-        filename = function() {
-          ext <- switch(input$output_format,
-            "poster" = "pdf",
-            "slide"  = "pdf",
-            "report" = "html"
-          )
-          paste0(dataset, "-", input$report_type, "-", input$output_format, ".", ext)
-        },
-        content = function(file) {
-          shiny::removeModal()
-
-          shinyalert::shinyalert(
-            title = "Preparing your report!",
-            text = "We are chopping the vegetables, boiling the water and simmering the sauce. Stay with us. Your download will start shortly.",
-            type = "",
-            imageUrl = "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTRpeG8wcTZyOXJxOTRramhsM3p3Z2wwNDVlbm5nNDdnZXlsc3ludyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JSYv0MWRkzOWCk8f0Z/giphy.webp",
-            imageWidth = 300,
-            imageHeight = 200,
-            closeOnEsc = FALSE
-          )
-
-          pgx_path <- auth$user_dir
-          sel_dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
-          sel_dataset <- sub("[.]pgx$", "", sel_dataset)
-          pgx_file <- paste0(sel_dataset, ".pgx")
-
-          user <- ifelse(shiny::isTruthy(auth$email), auth$email, "-")
-
-          ## create a switch statement to replace pdf by poster-typst
-          render_format <- switch(input$output_format,
-            "poster"  = "poster-typst",
-            "slide"   = "pdf",
-            "report " = "html"
-          )
-
-          ## Create a Progress object
-          progress <- shiny::Progress$new()
-          on.exit(progress$close())
-
-          ## quarto does not like output with rel/abs
-          ## path. Also switching to temp folder is safer to
-          ## avoid multiple users using quarto at the same time.
-          cur_wd <- getwd()
-          qdir <- quarto_file_path
-          tmpdir <- tempdir()
-          setwd(tmpdir)
-          file.copy(file.path(qdir, "visreport-dataset.qmd"), ".")
-          file.copy(file.path(qdir, "visreport-comparison.qmd"), ".")
-          file.copy(file.path(qdir, "visreport-bigpage.qmd"), ".")
-          file.copy(file.path(qdir, "_extensions"), ".", recursive = TRUE)
-          file.copy(file.path(qdir, "images"), ".", recursive = TRUE)
-
-          sel_contrasts <- input$sel_contrasts
-          if (input$contrasts_choice == "all") {
-            sel_contrasts <- getContrasts()
-          }
-          dbg("[DatasetReportServer] sel_contrasts = ", sel_contrasts)
-
-          progress$set(message = "Creating report", value = 0)
-
-          if (input$report_type %in% c("dataset-summary", "report")) {
-            progress$inc(0.3, detail = "Creating dataset summary...")
-
-            qmd_file <- "visreport-dataset.qmd"
-            if (input$output_format == "slide") {
-              qmd_file <- "visreport-bigpage.qmd"
-            }
-            all_ct <- paste(sel_contrasts, collapse = ",")
-
-            # Prepare section parameters for dataset reports
-            section_args <- c(
-              "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
-              "-P", paste0("sections_phenotype:", tolower(input$section_phenotype)),
-              "-P", paste0("sections_differential:", tolower(input$section_differential)),
-              "-P", paste0("sections_enrichment:", tolower(input$section_enrichment))
-            )
-
-            system2(
-              "quarto",
-              args = c(
-                "render",
-                file.path(quarto_file_path, qmd_file),
-                "--output -",
-                paste("--to poster-typst"),
-                "-P", shQuote(paste0("pgxdir:", pgx_path)),
-                "-P", shQuote(paste0("comparisons:", all_ct)),
-                "-P", shQuote(paste0("dataset:", sel_dataset)),
-                "-M", shQuote(paste0("user:", user)),
-                "-M", shQuote(paste0("title:", sel_dataset)),
-                section_args
-              ),
-              stdout = file
-            )
-          }
-
-          if (input$report_type == "comparison-summary") {
-            files <- c()
-            ncontrasts <- length(sel_contrasts)
-            for (i in 1:ncontrasts) {
-              ct <- sel_contrasts[i]
-              progress$inc(
-                1 / (ncontrasts + 1),
-                detail = paste0("summarizing comparison ", i, "/", ncontrasts)
-              )
-              tmp <- tempfile()
-
-              # Prepare section parameters for comparison report
-              section_args <- c(
-                "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
-                "-P", paste0("sections_differential:", tolower(input$section_differential)),
-                "-P", paste0("sections_enrichment:", tolower(input$section_enrichment)),
-                "-P", paste0("sections_functional:", tolower(input$section_functional)),
-                "-P", paste0("sections_drug:", tolower(input$section_drug))
-              )
-
-              system2(
-                "quarto",
-                args = c(
-                  "render",
-                  file.path(quarto_file_path, "visreport-comparison.qmd"),
-                  "--output -",
-                  paste("--to", render_format),
-                  "-P", shQuote(paste0("pgxdir:", pgx_path)),
-                  "-P", shQuote(paste0("comparison:", ct)),
-                  "-P", shQuote(paste0("dataset:", sel_dataset)),
-                  "-M", shQuote(paste0("dataset:", sel_dataset)),
-                  "-M", shQuote(paste0("user:", user)),
-                  "-M", shQuote(paste0("title:", ct)),
-                  section_args
-                ),
-                stdout = tmp
-              )
-              files <- c(files, tmp)
-            }
-            ## remove any empty files
-            zero_size_files <- files[file.size(files) == 0]
-            if (length(zero_size_files) > 0) {
-              files <- files[file.size(files) > 0]
-              message("[DatasetReportServer:download_pdf] removed ", length(zero_size_files), " empty file(s)")
-            }
-
-            ## finally merge all pages
-            progress$inc(1 / (ncontrasts + 1), detail = "Merging pages")
-            message("[DatasetReportServer:download_pdf] merging PDF pages...")
-            system2(
-              "pdftk",
-              paste(paste(files, collapse = " "), "cat output", file)
-            )
-            for (i in 1:length(files)) unlink(files[i])
-          }
-
-          ## return to app running folder
-          setwd(cur_wd)
-          unlink(tmpdir)
-
-          record_report_download(input$report_type)
-          shinyalert::shinyalert(
-            title = "Yay! Your report is ready",
-            text = "We finished your report. Please check your downloads folder.",
-            type = "",
-            immediate = TRUE
-          )
-
-          ## for(i in 1:length(files)) unlink(files[i])
-        } ## end-of-content
-      )
-
+      return(ui)
+    }
+    
+    showModal <- function() {      
       modal <- shiny::modalDialog(
         title = NULL,
         bsutils::modalHeader(
           div(class = "modal-title", "Create Summary Report")
         ),
-        body,
-        ## footer = NULL,
+        showUI(),
         footer = shiny::tagList(
           shiny::modalButton("Cancel"),
           shiny::downloadButton(ns("download_pdf"), "Download",
@@ -362,6 +201,176 @@ DatasetReportServer <- function(
 
       shiny::showModal(modal)
     }
+
+    output$download_pdf <- shiny::downloadHandler(
+      filename = function() {
+        ext <- switch(input$output_format,
+          "poster" = "pdf",
+          "slide"  = "pdf",
+          "report" = "html"
+        )
+        dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+        dataset <- sub("[.]pgx$", "", dataset)        
+        paste0(dataset, "-", input$report_type, "-", input$output_format, ".", ext)
+      },
+      content = function(file) {
+        shiny::removeModal()
+
+        shinyalert::shinyalert(
+          title = "Preparing your report!",
+          text = "We are chopping the vegetables, boiling the water and simmering the sauce. Stay with us. Your download will start shortly.",
+          type = "",
+          imageUrl = "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTRpeG8wcTZyOXJxOTRramhsM3p3Z2wwNDVlbm5nNDdnZXlsc3ludyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JSYv0MWRkzOWCk8f0Z/giphy.webp",
+          imageWidth = 300,
+          imageHeight = 200,
+          closeOnEsc = FALSE
+        )
+
+        pgx_path <- auth$user_dir
+        sel_dataset <- pgxtable$data()[pgxtable$rows_selected(), "dataset"]
+        sel_dataset <- sub("[.]pgx$", "", sel_dataset)
+        pgx_file <- paste0(sel_dataset, ".pgx")
+
+        user <- ifelse(shiny::isTruthy(auth$email), auth$email, "-")
+
+        ## create a switch statement to replace pdf by poster-typst
+        render_format <- switch(input$output_format,
+          "poster"  = "poster-typst",
+          "slide"   = "pdf",
+          "report " = "html"
+        )
+
+        ## Create a Progress object
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+
+        ## quarto does not like output with rel/abs
+        ## path. Also switching to temp folder is safer to
+        ## avoid multiple users using quarto at the same time.
+        cur_wd <- getwd()
+        qdir <- quarto_file_path
+        tmpdir <- tempdir()
+        setwd(tmpdir)
+        file.copy(file.path(qdir, "visreport-dataset.qmd"), ".")
+        file.copy(file.path(qdir, "visreport-comparison.qmd"), ".")
+        file.copy(file.path(qdir, "visreport-bigpage.qmd"), ".")
+        file.copy(file.path(qdir, "_extensions"), ".", recursive = TRUE)
+        file.copy(file.path(qdir, "images"), ".", recursive = TRUE)
+
+        sel_contrasts <- input$sel_contrasts
+        if (input$contrasts_choice == "all") {
+          sel_contrasts <- getContrasts()
+        }
+        dbg("[DatasetReportServer] sel_contrasts = ", sel_contrasts)
+
+        progress$set(message = "Creating report", value = 0)
+
+        if (input$report_type %in% c("dataset-summary", "report")) {
+          progress$inc(0.3, detail = "Creating dataset summary...")
+
+          qmd_file <- "visreport-dataset.qmd"
+          if (input$output_format == "slide") {
+            qmd_file <- "visreport-bigpage.qmd"
+          }
+          all_ct <- paste(sel_contrasts, collapse = ",")
+
+          # Prepare section parameters for dataset reports
+          section_args <- c(
+            "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
+            "-P", paste0("sections_phenotype:", tolower(input$section_phenotype)),
+            "-P", paste0("sections_differential:", tolower(input$section_differential)),
+            "-P", paste0("sections_enrichment:", tolower(input$section_enrichment))
+          )
+
+          system2(
+            "quarto",
+            args = c(
+              "render",
+              file.path(quarto_file_path, qmd_file),
+              "--output -",
+              paste("--to poster-typst"),
+              "-P", shQuote(paste0("pgxdir:", pgx_path)),
+              "-P", shQuote(paste0("comparisons:", all_ct)),
+              "-P", shQuote(paste0("dataset:", sel_dataset)),
+              "-M", shQuote(paste0("user:", user)),
+              "-M", shQuote(paste0("title:", sel_dataset)),
+              section_args
+            ),
+            stdout = file
+          )
+        }
+
+        if (input$report_type == "comparison-summary") {
+          files <- c()
+          ncontrasts <- length(sel_contrasts)
+          for (i in 1:ncontrasts) {
+            ct <- sel_contrasts[i]
+            progress$inc(
+              1 / (ncontrasts + 1),
+              detail = paste0("summarizing comparison ", i, "/", ncontrasts)
+            )
+            tmp <- tempfile()
+
+            # Prepare section parameters for comparison report
+            section_args <- c(
+              "-P", paste0("sections_clustering:", tolower(input$section_clustering)),
+              "-P", paste0("sections_differential:", tolower(input$section_differential)),
+              "-P", paste0("sections_enrichment:", tolower(input$section_enrichment)),
+              "-P", paste0("sections_functional:", tolower(input$section_functional)),
+              "-P", paste0("sections_drug:", tolower(input$section_drug))
+            )
+
+            system2(
+              "quarto",
+              args = c(
+                "render",
+                file.path(quarto_file_path, "visreport-comparison.qmd"),
+                "--output -",
+                paste("--to", render_format),
+                "-P", shQuote(paste0("pgxdir:", pgx_path)),
+                "-P", shQuote(paste0("comparison:", ct)),
+                "-P", shQuote(paste0("dataset:", sel_dataset)),
+                "-M", shQuote(paste0("dataset:", sel_dataset)),
+                "-M", shQuote(paste0("user:", user)),
+                "-M", shQuote(paste0("title:", ct)),
+                section_args
+              ),
+              stdout = tmp
+            )
+            files <- c(files, tmp)
+          }
+          ## remove any empty files
+          zero_size_files <- files[file.size(files) == 0]
+          if (length(zero_size_files) > 0) {
+            files <- files[file.size(files) > 0]
+            message("[DatasetReportServer:download_pdf] removed ", length(zero_size_files), " empty file(s)")
+          }
+
+          ## finally merge all pages
+          progress$inc(1 / (ncontrasts + 1), detail = "Merging pages")
+          message("[DatasetReportServer:download_pdf] merging PDF pages...")
+          system2(
+            "pdftk",
+            paste(paste(files, collapse = " "), "cat output", file)
+          )
+          for (i in 1:length(files)) unlink(files[i])
+        }
+
+        ## return to app running folder
+        setwd(cur_wd)
+        unlink(tmpdir)
+
+        record_report_download(input$report_type)
+        shinyalert::shinyalert(
+          title = "Yay! Your report is ready",
+          text = "We finished your report. Please check your downloads folder.",
+          type = "",
+          immediate = TRUE
+        )
+
+        ## for(i in 1:length(files)) unlink(files[i])
+      } ## end-of-content
+    )  ## end of download_pdf
 
     shiny::observeEvent(input$show_report_modal, {
       if (is.null(quarto_file_path) || quarto_file_path == "") {

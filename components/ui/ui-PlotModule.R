@@ -570,8 +570,6 @@ PlotModuleServer <- function(id,
                              download.html = NULL,
                              download.csv = NULL,
                              download.excel = NULL,
-                             download.docx = NULL,
-                             download.md = NULL,
                              download.obj = NULL,
                              download.contrast.name = NULL,
                              pdf.width = 8,
@@ -618,7 +616,7 @@ PlotModuleServer <- function(id,
       ## ------------------------ Click-to-label handler --------------------------------
       ## --------------------------------------------------------------------------------
       ## Plotly click handler (for plotly editor popups)
-      if (!is.null(parent_session) && requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
+      if (requireNamespace("plotly", quietly = TRUE) && any(plotlib %in% "plotly")) {
         observeEvent(plotly::event_data("plotly_click"), {
           shiny::req(parent_session)
           click_data <- plotly::event_data("plotly_click")
@@ -831,7 +829,6 @@ PlotModuleServer <- function(id,
                   dev.off()
                 } else if (plotlib == "image") {
                   p <- func()
-                  dbg("[downloadHandler.PNG] copy image ", p$src, "to PNGFILE", PNGFILE)
                   file.copy(p$src, PNGFILE, overwrite = TRUE)
                 } else if (plotlib == "generic") {
                   ## generic function should produce PNG inside plot func()
@@ -1191,12 +1188,6 @@ PlotModuleServer <- function(id,
           if (input$downloadOption == "html") {
             output$download <- download.html
           }
-          if (input$downloadOption == "docx") {
-            output$download <- download.docx
-          }
-          if (input$downloadOption == "md") {
-            output$download <- download.md
-          }
           if (input$downloadOption == "obj") {
             output$download <- download.obj
           }
@@ -1238,18 +1229,6 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.html
-          }
-          if (input$downloadOption == "docx") {
-            output[[paste0(
-              "download",
-              card
-            )]] <- download.docx
-          }
-          if (input$downloadOption == "md") {
-            output[[paste0(
-              "download",
-              card
-            )]] <- download.md
           }
           if (input$downloadOption == "obj") {
             output[[paste0(
@@ -1381,16 +1360,6 @@ PlotModuleServer <- function(id,
                 scrollZoom = TRUE
               ) %>%
               plotly::plotly_build()
-            if (!is.null(plot$x$data) && length(plot$x$data) > 0) {
-              plot$x$data <- lapply(plot$x$data, function(tr) {
-                type_val <- if (!is.null(tr$type)) tolower(as.character(tr$type)[1]) else ""
-                if (identical(type_val, "bar") && !is.null(tr$mode)) {
-                  tr$mode <- NULL
-                }
-                tr
-              })
-            }
-            plot <- plotly::event_register(plot, "plotly_click")
 
             if (remove_margins == TRUE) {
               plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
@@ -1427,16 +1396,6 @@ PlotModuleServer <- function(id,
                 scrollZoom = TRUE
               ) %>%
               plotly::plotly_build()
-            if (!is.null(plot$x$data) && length(plot$x$data) > 0) {
-              plot$x$data <- lapply(plot$x$data, function(tr) {
-                type_val <- if (!is.null(tr$type)) tolower(as.character(tr$type)[1]) else ""
-                if (identical(type_val, "bar") && !is.null(tr$mode)) {
-                  tr$mode <- NULL
-                }
-                tr
-              })
-            }
-            plot <- plotly::event_register(plot, "plotly_click")
             # Remove toImage button from modebar
             if (inherits(plot$x$config$modeBarButtons, "list")) {
               for (y in seq_along(plot$x$config$modeBarButtons[[1]])) {
@@ -1543,8 +1502,6 @@ PlotModuleServer <- function(id,
         download.html = download.html,
         download.csv = download.csv,
         download.excel = download.excel,
-        download.docx = download.docx,
-        download.md = download.md,
         saveHTML = saveHTML,
         renderFunc = renderFunc
       )

@@ -21,16 +21,17 @@ LoadingUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   board_header <- fillRow(
-    flex = c(NA, NA, 1),
+    flex = c(NA, 1, NA),
     shiny::div(
       id = "navheader-current-section",
-      HTML("Load from Library &nbsp;"),
+      HTML("Data Library &nbsp;"),
       shiny::actionLink(
         ns("module_info"), "",
         icon = shiny::icon("youtube"),
         style = "color: #ccc;"
       )
     ),
+    div(),
     shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats")
   )
 
@@ -38,17 +39,21 @@ LoadingUI <- function(id) {
     "My Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 181px)",
+      height = "calc(100vh - 141px)",
       uiOutput(ns("sharing_alert")),
       div(
+        shiny::actionButton(
+          ns("newuploadbutton"),
+          label = "Upload new",
+          icon = icon("upload"),          
+          class = "btn btn-outline-primary"
+        ),        
         shiny::actionButton(
           ns("loadbutton"),
           label = "Load selected",
           icon = icon("file-import"),
-          class = "btn btn-primary",
-          width = NULL
-        ),
-        DatasetReportUI(id = ns("generate_report"))
+          class = "btn btn-primary"
+        )
       ),
       bslib::layout_columns(
         col_widths = c(8, 4),
@@ -57,7 +62,7 @@ LoadingUI <- function(id) {
           title = "Available datasets",
           info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
           caption = "Table of datasets available in the platform.",
-          height = c("calc(100vh - 340px)", 700),
+          height = c("100vh", 700),
           width = c("100%", "100%")
         ),
         loading_tsne_ui(
@@ -73,7 +78,7 @@ LoadingUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-          height = c("calc(100vh - 340px)", "70vh"),
+          height = c("100vh", "70vh"),
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
@@ -181,6 +186,24 @@ LoadingUI <- function(id) {
     width = "100%"
   )
 
+  sharing_tabpanel <- shiny::tabPanel(
+    "Shared datasets",
+    value = "sharing_tab",
+    bslib::layout_columns(
+      col_widths = 12,
+      #height = "calc(100vh - 181px)",
+      height = "100%",
+      row_heights = c("auto",1),
+      bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refuse each received file, and/or resend a message or cancel your shared datasets using the action buttons on the right of the tables."),
+      bslib::layout_columns(
+        col_widths = c(6,6),
+        height = "100%",
+        upload_module_received_ui(ns("received")),
+        upload_module_shared_ui(ns("shared"))        
+      )
+    )
+  )
+  
   ## ------------------------------------------------------------------------
 
   ## disable/hide public tabpanel if public folder does not exists
@@ -197,7 +220,8 @@ LoadingUI <- function(id) {
       id = ns("tabs"),
       user_tabpanel,
       public_tabpanel,
-      archive_tabpanel
+      archive_tabpanel,
+      sharing_tabpanel      
     )
   )
 }
@@ -206,31 +230,3 @@ LoadingUI <- function(id) {
 ## ====================================================================
 ## ====================================================================
 
-
-SharedDatasetsUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
-
-  tab_content <- bslib::layout_columns(
-    col_widths = 12,
-    height = "calc(100vh - 181px)",
-    bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refust each received file, and/or resend a message or cancel your shared datasets."),
-    bslib::layout_columns(
-      col_widths = 12,
-      height = "calc(100vh - 181px)",
-      uiOutput(ns("sharing_panel_ui"))
-      ##      sharing_tabpanel
-    )
-  )
-
-  div(
-    class = "row",
-    boardHeader(title = "Shared datasets", info_link = ns("loading_sharing")),
-    ##    shiny::tabsetPanel(
-    ##      id = ns("tabs1"),
-    ##      shiny::tabPanel(
-    ##        "Sharing",
-    tab_content
-    ##      ) ## tabPanel
-    ##    ) ## tabsetPanel
-  ) ## div
-}

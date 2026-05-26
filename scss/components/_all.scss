@@ -21,6 +21,10 @@ html {
     min-height: 800px;
   }
 
+  h1 {
+      font-weight: 600;
+  }
+
   h2 {
       font-size: 1.7em;
   }
@@ -203,7 +207,24 @@ html {
       --bs-btn-padding-x: 1.2em;
       --bs-btn-padding-y: 0.6em;      
   }
+
+  .xbtn {
+      background-color: rgba(0, 127, 192, 0.1);
+      color: rgba(40, 110, 182, 0.8);
+      border-radius: 10px;
+      margin: 5px;
+      border: 0px;
+  }
   
+  .xbtn:hover {
+      background-color: rgba(0, 127, 192,0.2);
+      color: black;    
+  }
+  
+  .xbtn-disabled {
+      background-color: rgba(80, 150, 250, 0.1) !important;
+  }
+      
   .run-button,
   .load-button {
     outline: none;
@@ -292,12 +313,13 @@ html {
 
   div#navheader-current-section {
     font-size: 30px;
-    font-weight: 400;
+    font-weight: 600;
     margin: 15px 0 5px 0px;
+    padding-top: 10px;
   }
 
   div#navheader-dataset-stats {
-    margin: 22px 0px 0px 40px;
+    margin: 32px 0px 0px 40px;
     font-size: 24px;
     color: #3181DE;
   }
@@ -333,6 +355,10 @@ html {
     padding: 0
   }
 
+  .action-label:hover {
+      //background-color: #FFFFFF22;
+  }
+  
   #emailLinkWrapper {
     display: none;
     padding-left: 20rem;
@@ -348,6 +374,12 @@ html {
     line-height: 1.1em;
   }
 
+  #reportTA textarea.form-control {
+    font-size: 1.15em;
+    line-height: 1.1em;
+    padding: 50px 100px 50px 120px;
+  }
+
   // used in loader
   .shiny-input-text.form-control {
     padding: .375rem .75rem;
@@ -357,6 +389,10 @@ html {
 
   .form-group {
       margin-bottom: 0.3rem; 
+  }
+
+  .form-check-input:checked, .shiny-input-container .checkbox input:checked {
+      background-color: aliceblue;
   }
   
 }

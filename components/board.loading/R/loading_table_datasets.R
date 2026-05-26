@@ -330,7 +330,7 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    shiny::observeEvent(loadbutton(), {
+    shiny::observeEvent( loadbutton(), {
       pgxfile <- table_selected_pgx()
       # Make sure there is a row selected
       if (is.null(pgxfile)) {
@@ -342,7 +342,9 @@ loading_table_datasets_server <- function(id,
         return(NULL)
       }
 
+      dbg("[loading_table_datasets_server] calling loadAndActivatePGX:")
       loadAndActivatePGX(pgxfile)
+      dbg("[loading_table_datasets_server] exit!")
     })
 
     ## ---------------------------- create table module -----------------------------------
@@ -564,6 +566,7 @@ loading_table_datasets_server <- function(id,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
+        selection = list(mode='single', selected=1),
         options = list(
           dom = "ft",
           pageLength = 9999,

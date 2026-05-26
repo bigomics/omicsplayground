@@ -206,21 +206,6 @@ CompareUI <- function(id) {
           )
         )
       )
-    ),
-    shiny::tabPanel(
-      "AI Summary",
-      bslib::layout_columns(
-        col_widths = 12,
-        height = fullH,
-        AiTextCardUI(
-          ns("compareAISummary"),
-          title = "AI Comparison Summary",
-          info.text = "AI-generated summary of the fold-change comparison between the two selected contrasts.",
-          caption = "AI-generated comparison summary.",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto", "100%")
-        )
-      )
     )
   )
 

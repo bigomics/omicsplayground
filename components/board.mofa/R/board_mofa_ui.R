@@ -45,18 +45,7 @@ MofaInputs <- function(id) {
           mofa_report_inputs(ns("mofa_report"))
         )
       )
-    ),
-    shinyjs::hidden(
-      bslib::accordion(
-        id = ns("ai_report_accordion"),
-        open = FALSE,
-        bslib::accordion_panel(
-          "AI Report Options",
-          icon = icon("robot", lib = "font-awesome"),
-          mofa_ai_report_inputs_ui(ns("ai_report"))
-        )
-      )
-    )
+    )    
   )
 }
 
@@ -296,14 +285,34 @@ MofaUI <- function(id) {
   ) ## tabPanel
 
   ## ----------------------------------------------------------------
-
-  panel6 <- shiny::tabPanel(
-    
-    "AI Report✨",
+  panel5 <- shiny::tabPanel(
+    "AI Summary✨",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 180px)",
-      mofa_ai_report_ui(ns("ai_report"))
+      row_heights = c("auto", 1),
+      ##bs_alert( htmlOutput(ns("cmap_alert")), translate=FALSE),
+      ##htmlOutput(ns("cmap_alert")), 
+      div(class="alert alert-primary p-2", 
+        mofa_report_bullets_ui(ns("mofa_report"))),
+      bslib::layout_columns(
+        col_widths = c(7,5),
+        height = "calc(100vh - 180px)",            
+        mofa_report_summary_ui(
+          ns("mofa_report"),
+          title = "Summary",
+          caption = "AI-generated summary",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        ),                        
+        mofa_report_infographic_ui(
+          ns("mofa_report"),
+          title = "Infographic",
+          caption = "AI-generated infographic",
+          height = c("100%", TABLE_HEIGHT_MODAL),
+          width = c("auto","100%")
+        )
+      )
     )
   )
 
@@ -317,7 +326,7 @@ MofaUI <- function(id) {
       panel2,
       panel3,
       panel4,
-      panel6
+      panel5      
     )
   )
 

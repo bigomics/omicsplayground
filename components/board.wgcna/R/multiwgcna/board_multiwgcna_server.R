@@ -39,12 +39,27 @@ MultiWGCNA_Board <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Dendrograms" = list(disable = c("phenotype", "module", "condition", "lasagna_options", "ai_report_accordion")),
-      "Module-Trait" = list(disable = c("phenotype", "module", "condition", "wgcna_options", "lasagna_options", "ai_report_accordion")),
-      "Module correlation" = list(disable = c("phenotype", "module", "wgcna_options", "lasagna_options", "ai_report_accordion")),
-      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "ai_report_accordion")),
-      "Feature Table" = list(disable = c("layers", "condition", "wgcna_options", "lasagna_options", "ai_report_accordion")),
-      "AI Report✨" = list(disable = c("phenotype", "module", "condition", "layers", "wgcna_options", "lasagna_options"))
+      "Dendrograms" = list(disable = c(
+        "phenotype", "module", "condition", "lasagna_options",
+        "report_options"
+      )),
+      "Module-Trait" = list(disable = c(
+        "phenotype", "module", "condition", "wgcna_options",
+        "lasagna_options", "report_options"
+      )),
+      "Module correlation" = list(disable = c(
+        "phenotype", "module", "wgcna_options",
+        "lasagna_options", "report_options"
+      )),
+      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "report_options")),
+      "Feature Table" = list(disable = c(
+        "layers", "condition", "wgcna_options",
+        "lasagna_options", "report_options"
+      )),
+      "AI Report✨" = list(disable = c(
+        "phenotype", "module", "condition", "layers",
+        "lasagna_options", "wgcna_options"
+      ))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -54,7 +69,7 @@ MultiWGCNA_Board <- function(id, pgx) {
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
-    
+
     r_multiwgcna <- shiny::eventReactive(
       {
         list(input$compute, pgx$X)
@@ -62,7 +77,7 @@ MultiWGCNA_Board <- function(id, pgx) {
       {
         shiny::req(pgx$X)
         shiny::validate(shiny::need(
-          pgx$datatype %in% c("multi-omics","multiomics"),
+          pgx$datatype %in% c("multi-omics", "multiomics"),
           "ERROR: not multi-omics data"
         ))
 
@@ -82,6 +97,8 @@ MultiWGCNA_Board <- function(id, pgx) {
         samples <- pgx$samples
         contrasts <- pgx$contrasts
         
+        llm_model <- getUserOption(session, "llm_model")
+        
         obj.wgcna <- playbase::wgcna.compute_multiomics(
           dataX = dataX,
           samples = samples,
@@ -100,12 +117,13 @@ MultiWGCNA_Board <- function(id, pgx) {
           gset.ntop = 1000,
           gset.methods = c("gsetcor", "xcor", "fisher"),
           annot = pgx$genes,
-          GMT = pgx$GMT,  
+          GMT = pgx$GMT,
           report = TRUE,
-          ai_model = NULL,
+          #ai_model = NULL,
+          ai_model = llm_model,
           experiment = pgx$description,
           progress = progress
-        )         
+        )
         shiny::removeModal()
 
         wgcna <- obj.wgcna$layers
@@ -198,11 +216,21 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    multiwgcna_ai_report_server(
-      "ai_report",
-      mwgcna = r_multiwgcna,
-      pgx = pgx,
-      parent_session = session,
+    # Enrichment plot
+    wgcna_html_module_summary_server(
+      "multiwgcnaSummary",
+      wgcna = r_multiwgcna,
+      multi = TRUE,
+      r_annot = reactive(pgx$genes),
+      r_module = shiny::reactive(input$module),
+      watermark = WATERMARK
+    )
+
+    wgcna_html_report_server(
+      id = "multiwgcnaReport",
+      wgcna = r_multiwgcna,
+      multi = TRUE,
+      r_annot = reactive(pgx$genes),
       watermark = WATERMARK
     )
 

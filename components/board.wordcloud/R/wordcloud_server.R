@@ -12,14 +12,6 @@ WordCloudBoard <- function(id, pgx) {
 <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=2irSbCjCBRgQf5Wd&amp;start=190' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>
 "), js = FALSE)
 
-    tab_elements <- list(
-      "Word Cloud" = list(disable = NULL),
-      "AI Summary" = list(disable = NULL)
-    )
-    shiny::observeEvent(input$tabs, {
-      bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
-
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -130,17 +122,6 @@ WordCloudBoard <- function(id, pgx) {
       wc_contrast = shiny::reactive(input$wc_contrast),
       wordcloud_enrichmentTable = wordcloud_enrichmentTable,
       getCurrentWordEnrichment = getCurrentWordEnrichment
-    )
-
-    # AI keyword enrichment summary
-
-    wordcloud_ai_summary_server(
-      "wordcloud_ai_summary",
-      pgx = pgx,
-      getCurrentWordEnrichment = getCurrentWordEnrichment,
-      r_contrast = shiny::reactive(input$wc_contrast),
-      session = session,
-      watermark = WATERMARK
     )
   })
 }

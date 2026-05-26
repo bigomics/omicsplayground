@@ -54,14 +54,16 @@ const unloadSidebar = () => {
 	$('.sidebar-content')
 		.children()
 		.each((index, el) => {
-			if(index == 0 || index == 1){
-				$(el).show();
-				return;
-			}
 			if($(el).hasClass('collapse')){
 				$(el).removeClass('show');
+				$(el).hide();
+				return;
 			}
-			$(el).hide();
+			if($(el).hasClass('nodisp')){
+				$(el).hide();
+				return;
+			}
+			$(el).show();
 		});
         $('#sidebar-help-container').hide();
 }
@@ -228,7 +230,7 @@ Shiny.addCustomMessageHandler('show-tabs', (msg) => {
       }
 		});
 
-	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
+//	$('.tab-trigger[data-target="dataview-tab"]').trigger('click');
 	$('#sidebar-help-container').show();
 	}, 1000);
 });

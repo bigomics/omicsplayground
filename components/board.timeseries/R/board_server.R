@@ -31,8 +31,7 @@ TimeSeriesBoard <- function(id,
       "Statistics" = list(
         enable = NULL,
         disable = c("timefactor", "module", "knn")
-      ),
-      "AI Summary" = list(disable = NULL)
+      )
     )
 
     shiny::observeEvent(input$tabs1, {
@@ -177,18 +176,6 @@ TimeSeriesBoard <- function(id,
       data = timeseries_full,
       contrast = shiny::reactive(input$contrast),
       timevar = shiny::reactive(input$timevar),
-      watermark = WATERMARK
-    )
-
-
-    # AI cluster summary
-    timeseries_ai_summary_server(
-      "aiSummary",
-      pgx = pgx,
-      data = timeseries_filtered,
-      r_module = shiny::reactive(input$module),
-      r_contrast = shiny::reactive(input$contrast),
-      session = session,
       watermark = WATERMARK
     )
   })

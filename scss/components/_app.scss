@@ -1,0 +1,72 @@
+
+#app .col-sm-1.well {
+    width: 75px;
+    background-color: #2c3e50;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-left: 21px;
+    height: 100vh;
+}
+
+#app .col-sm-11 {
+    width: calc(100% - 75px);
+    height: 100vh;
+    padding: 0px;
+}
+
+#app-sidebar {
+//    white-space: pre-line;
+    height: calc(100vh - 35px);
+    margin-top: -15px;
+}
+
+#app-sidebar .nav {
+    --bs-nav-link-padding-x: 1rem;
+    --bs-nav-link-padding-y: 0rem;
+}
+
+#app-sidebar .nav-link {
+    color: #ccc;
+    text-align: center;
+    font-size: 0.8em;
+    padding: 15px 0 4px 0;
+    white-space: normal;
+}
+
+#app-sidebar .nav-link.active {
+    color: #fff;
+    background-color: #568;    
+    border-radius: 10px;
+}
+
+#app-sidebar .nav-link.disabled {
+    color: #888;
+    display: block !important;
+}
+
+#app-sidebar .nav-item {
+    --bs-nav-link-padding-x: 0px;
+    --bs-nav-link-padding-y: 0px;
+    width: 60px;
+    padding-top: 5px;
+    line-height: 1.2em;
+}
+
+#app-sidebar .dropdown-toggle::after {
+    display: none;
+}
+
+#app-sidebar i {
+    font-size: 28px;
+}
+
+#app .col-sm-11>.tab-content {
+    margin-top: -15px;
+    height: 100%;
+}
+
+#app .col-sm-11>.tab-content>.tab-pane {
+    background-color: #F7FAFD;
+    height: calc(100vh + 15px);
+}

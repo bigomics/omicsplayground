@@ -3,19 +3,16 @@
 ## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
 ##
 
-for (f in list.files(file.path(OPG, "components/board.wgcna/R/multiwgcna/ai.report"),
-                     pattern = "\\.R$", full.names = TRUE)) source(f)
-
 MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
     shinyjs::hidden(
       shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL)
     ),
-    shinyjs::hidden(    
+    shinyjs::hidden(
       shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL)
     ),
-    shinyjs::hidden(    
+    shinyjs::hidden(
       shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)
     ),
     shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
@@ -44,8 +41,8 @@ MultiWGCNA_Inputs <- function(id) {
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
-          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
-          shiny::checkboxInput(ns("addgsets"),"add genesets",FALSE),          
+          shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
+          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
           shiny::br(),
           shiny::actionButton(ns("compute"), "Compute",
             size = "xs",
@@ -68,12 +65,12 @@ MultiWGCNA_Inputs <- function(id) {
     ),
     shinyjs::hidden(
       bslib::accordion(
-        id = ns("ai_report_accordion"),
-        open = FALSE,
+        id = ns("report_options"),
+        open = TRUE,
         bslib::accordion_panel(
-          "AI Report Options",
-          icon = icon("robot", lib = "font-awesome"),
-          multiwgcna_ai_report_inputs_ui(ns("ai_report"))
+          "Report options",
+          icon = icon("cog", lib = "glyphicon"),
+          wgcna_report_inputs(ns("multiwgcnaReport"))
         )
       )
     )
@@ -215,11 +212,11 @@ MultiWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(3, 4, 5),
             height = "100vh",
-            AiTextCardUI(
+            wgcna_html_module_summary_ui(
               id = ns("multiwgcnaSummary"),
               title = "Summary",
-              caption = "AI-generated summary of selected WGCNA module.",
-              info.text = "Summary. Description about selected WGCNA module.",
+              info.text = "Summary. Description about selected WGCNA module. The data type and its WGCNA modules can be selected under 'Module' in the drop-down menu on the right.",
+              caption = "Information about the selected WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
@@ -254,12 +251,45 @@ MultiWGCNA_UI <- function(id) {
         )
       ),
 
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "AI Report✨",
-        multiwgcna_ai_report_ui(ns("ai_report"))
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto", 1),
+          # bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          div(class = "alert alert-primary p-2", wgcna_report_bullets_ui(ns("multiwgcnaReport"))),
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            height = "calc(100vh - 180px)",
+            wgcna_html_report_ui(
+              ns("multiwgcnaReport"),
+              title = "AI Report",
+              caption = "AI summary report",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              wgcna_report_diagram_ui(
+                ns("multiwgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI generated diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_report_infographic_ui(
+                ns("multiwgcnaReport"),
+                title = "Graphical Abstract",
+                caption = "AI-generated infographic",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            )
+          )
+        )
       )
-
-      
     ) ## end tabsetPanel
   ) ## end div
 }

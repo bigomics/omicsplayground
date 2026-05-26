@@ -39,8 +39,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "Graph" = list(
         enable = NULL,
         disable = NULL
-      ),
-      "AI Summary" = list(disable = NULL)
+      )
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
@@ -293,19 +292,6 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       gene = reactive(input$gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
       pgx = pgx,
-      watermark = WATERMARK
-    )
-
-    # AI correlation summary
-
-    correlation_ai_summary_server(
-      "correlationAISummary",
-      pgx = pgx,
-      getGeneCorr = getGeneCorr,
-      getPartialCorrelation = getPartialCorrelation,
-      sel_gene = shiny::reactive(input$gene),
-      gene_filter = shiny::reactive(input$cor_filter),
-      session = session,
       watermark = WATERMARK
     )
   })

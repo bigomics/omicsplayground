@@ -35,14 +35,16 @@ WgcnaBoard <- function(id, pgx) {
         easyClose = TRUE
       ))
     })
-    
+
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WGCNA" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
-      "Eigengenes" = list(disable = c("selected_module", "selected_trait", "ai_report_accordion")),
-      "Modules" = list(disable = c("ai_report_accordion")),
-      "Enrichment" = list(disable = c("selected_trait", "ai_report_accordion")),
-      "AI Report✨" = list(disable = c("selected_module", "selected_trait", "compare_accordion"))
+      "WGCNA" = list(disable = c("selected_module", "selected_trait", "report_options")),
+      "Eigengenes" = list(disable = c("selected_module", "selected_trait", "report_options")),
+      "Modules" = list(disable = c("report_options")),
+      "Enrichment" = list(disable = c("selected_trait", "report_options")),
+      "AI Report✨" = list(disable = c("selected_module", "selected_trait",
+        "compare_accordion")
+      )
     )
 
     shiny::observeEvent(input$tabs, {
@@ -54,13 +56,12 @@ WgcnaBoard <- function(id, pgx) {
     ##   showtab <- ifelse(ai_model=='', FALSE, TRUE)
     ##   toggleTab("wgcna-tabs", "AI Report✨", showtab) ## too slow
     ## })
-    
+
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
     ## ================================================================================
 
     compute_wgcna <- function() {
-
       pgx.showSmallModal("Recalculating WGCNA with new parameters...")
 
       progress <- shiny::Progress$new()
@@ -84,57 +85,59 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
       
       llm_model <- getUserOption(session,'llm_model')
-      img_model <- NULL
+      img_model <- NULL  # skip infographics
       #img_model <- "google:gemini-3.1-flash-image-preview"
       out <- playbase::wgcna.init(
-        out, llm=llm_model, img_model=img_model, annot=pgx$genes,
-        progress = progress )
-      
+        out, llm = llm_model, img_model = img_model,
+        annot = pgx$genes, progress = progress
+      )
+
       shiny::removeModal()
       out
     }
 
-    wgcna <- shiny::reactiveVal({
+    ncompute = 0
+    
+    wgcna <- shiny::eventReactive({
+      list(input$compute, pgx$X)
+    },{
       require(WGCNA)
-      all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
+      all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
+        any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
+      has_wgcna <- "wgcna" %in% names(pgx) && all_req      
+      compute_clicked <- (input$compute != ncompute) 
+      
       # Use pre-computed results only if they exist, conditions are
       # met, AND we're not forcing recomputation
-      if ("wgcna" %in% names(pgx) && all.req) {
-        message("[wgcna] >>> using pre-computed WGCNA results...")
+      if (!compute_clicked && has_wgcna) {
+        dbg("[WgcnaBoard] >>> using pre-computed WGCNA results...")
         out <- pgx$wgcna
         ## old style had these settings
         if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
         if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
         if (is.null(pgx$wgcna$power)) out$power <- 6
       } else {
-        message("[wgcna] >>> COMPUTE1")
+        if (compute_clicked) dbg("[WgcnaBoard] compute_clicked!")
+        if (!has_wgcna) dbg("[WgcnaBoard] WGCNA needs update!")
+        dbg("[WgcnaBoard] >>> recomputing WGCNA results")
         out <- compute_wgcna()
       }
-      out
-    })
 
-    shiny::observeEvent(input$compute,
-      {
-        message("[wgcna] >>> COMPUTE2")
-        wgcna(compute_wgcna())
-      },
-      ignoreInit = TRUE
-    )
-
-    shiny::observeEvent(wgcna(), {
       ## update Inputs
-      me <- sort(names(wgcna()$me.genes))
+      me <- sort(names(out$me.genes))
       shiny::updateSelectInput(session, "selected_module",
-        choices = me,
-        sel = me[1]
+        choices = me, sel = me[1]
       )
-      tt <- sort(colnames(wgcna()$datTraits))
-      shiny::updateSelectInput(session, "selected_trait",
-        choices = tt,
-        selected = tt[1]
-      )
-    })
 
+      tt <- sort(colnames(out$datTraits))
+      shiny::updateSelectInput(session, "selected_trait",
+        choices = tt, selected = tt[1]
+      )
+      
+      ncompute <<- input$compute      
+      return(out)
+    })
+   
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -309,38 +312,24 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
-    ## TODO: bring back AI summary card in Modules tab if requested
-    ## AI summary moved to AI Report tab (Summary mode)
-
-    ## ===== AI MICROSUMMARY =====
-    micro_cache <- omicsai::omicsai_cache_init("mem")
-    wgcna_micro_tabs <- c("WGCNA", "Eigengenes", "Modules", "Enrichment")
-    MicrosummaryServer(
-      "micro",
-      tab_reactive = shiny::reactive(input$tabs),
-      params_fn = function(tab) {
-        w <- wgcna()
-        if (is.null(w)) return(NULL)
-        wgcna_microsummary_params(
-          tab = tab,
-          wgcna = w,
-          pgx = pgx,
-          selected_module = input$selected_module
-        )
-      },
-      cache = micro_cache,
-      board_name = "WGCNA",
-      tab_names = wgcna_micro_tabs,
-      static_texts = WGCNA_STATIC_TEXTS,
-      invalidate_reactive = wgcna,
-      enabled_reactive = session$userData$enable_ai
+    # Module summary
+    wgcna_html_module_summary_server(
+      "moduleSummary",
+      wgcna = wgcna,
+      multi = FALSE,
+      r_module = shiny::reactive(input$selected_module),
+      watermark = WATERMARK
     )
 
-    ## ===== AI REPORT =====
-    wgcna_ai_report_server("ai_report",
-      wgcna = wgcna, pgx = pgx,
-      parent_session = session, watermark = WATERMARK
+    # Report
+    wgcna_html_report_server(
+      id = "wgcnaReport",
+      wgcna = wgcna,
+      multi = FALSE,
+      r_annot = shiny::reactive(pgx$genes),
+      watermark = WATERMARK
     )
+
 
     return(NULL)
   })

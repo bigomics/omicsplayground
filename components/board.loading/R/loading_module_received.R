@@ -5,6 +5,24 @@
 
 upload_module_received_ui <- function(id, height = 720) {
   ns <- shiny::NS(id)
+
+  info.text = "Table with received datasets."
+  caption = "Table with received datasets."
+  height = c("100%", 700)
+  width = c("auto", "100%")
+  title = "Received datasets"
+  options = NULL
+
+  TableModuleUI(
+    ns("table"),
+    info.text = info.text,
+    caption = caption,
+    width = width,
+    height = height,
+    title = title,
+    options = options
+  )
+
 }
 
 
@@ -78,14 +96,12 @@ upload_module_received_server <- function(id,
         }
       )
 
-      receivedPGXtable <- shiny::eventReactive(
-        c(getReceivedFiles()),
-        {
+      get_received_table <- function() {
           received_files <- getReceivedFiles()
           if (is.null(received_files) || length(received_files) == 0) {
             df <- data.frame(
               Dataset = "-",
-              To = "-",
+              "Received from" = "-",
               Actions = "-"
             )
             ## return(NULL)
@@ -125,7 +141,7 @@ upload_module_received_server <- function(id,
 
             df <- data.frame(
               Dataset = received_pgx,
-              From = received_from,
+              "Received from" = received_from,
               Actions = paste(accept_btns, decline_btns)
             )
           }
@@ -142,6 +158,13 @@ upload_module_received_server <- function(id,
             )
           ) %>%
             DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
+      }
+      
+      
+      receivedPGXtable <- shiny::eventReactive(
+        c(getReceivedFiles()),
+        {
+          get_received_table() 
         }
       )
 
@@ -206,6 +229,11 @@ upload_module_received_server <- function(id,
         ignoreInit = TRUE
       )
 
+      table_module <- TableModuleServer(
+        "table",
+        func = get_received_table,
+        selector = "single"
+      )
 
       ## list of reactive objects acts like API or public function interface
       rlist <- list(

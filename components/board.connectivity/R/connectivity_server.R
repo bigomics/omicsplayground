@@ -23,17 +23,6 @@ ConnectivityBoard <- function(
       <br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=m4qEXCuQJo6o-A9o&amp;start=38' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
-    tab_elements <- list(
-      "FC correlation" = list(disable = NULL),
-      "FC Heatmap" = list(disable = NULL),
-      "Meta-network" = list(disable = NULL),
-      "AI Summary" = list(disable = NULL)
-    )
-
-    shiny::observeEvent(input$tabs1, {
-      bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
@@ -548,17 +537,6 @@ ConnectivityBoard <- function(
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast
-    )
-
-    # AI connectivity summary
-    connectivity_ai_summary_server(
-      "connectivityAISummary",
-      pgx = pgx,
-      getConnectivityScores = getConnectivityScores,
-      cumEnrichmentTable = cumEnrichmentTable,
-      r_contrast = shiny::reactive(input$contrast),
-      session = session,
-      watermark = WATERMARK
     )
   }) ## end of moduleserver
 } ## end-of-Board

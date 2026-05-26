@@ -21,14 +21,6 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
-    tab_elements <- list(
-      "TCGA survival" = list(disable = NULL),
-      "AI Summary" = list(disable = NULL)
-    )
-    shiny::observeEvent(input$tabs1, {
-      bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
@@ -65,18 +57,6 @@ TcgaBoard <- function(id, pgx) {
       contrast = shiny::reactive(input$contrast),
       sigtype = shiny::reactive(input$sigtype),
       genelist = shiny::reactive(input$genelist),
-      watermark = WATERMARK
-    )
-
-    # AI TCGA summary
-
-    tcga_ai_summary_server(
-      "tcgaAISummary",
-      pgx = pgx,
-      contrast = shiny::reactive(input$contrast),
-      sigtype = shiny::reactive(input$sigtype),
-      genelist = shiny::reactive(input$genelist),
-      session = session,
       watermark = WATERMARK
     )
   })

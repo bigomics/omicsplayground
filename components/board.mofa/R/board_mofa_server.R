@@ -42,12 +42,13 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "show_types", "ai_report_accordion")),
-      "Response" = list(disable = c("show_types", "ai_report_accordion")),
-      "Weights" = list(disable = c("ai_report_accordion")),
-      "Enrichment" = list(disable = c("show_types", "ai_report_accordion")),
-      "gsetMOFA" = list(disable = c("show_types", "ai_report_accordion")),
-      "AI Report✨" = list(disable = c("selected_factor", "show_types", "data_type_accordion"))
+      "Overview" = list(disable = c("selected_factor", "show_types","report_options")),
+      "Response" = list(disable = c("show_types","report_options")),
+      "Weights" = list(disable = c("report_options")),
+      "Enrichment" = list(disable = c("show_types","report_options")),
+      "gsetMOFA" = list(disable = c("show_types","report_options")),
+      "AI Summary✨" = list(disable = c("selected_factor", "show_types","options_accordion")
+      )
     )
 
     shiny::observeEvent(input$tabs, {
@@ -313,24 +314,6 @@ MofaBoard <- function(id, pgx) {
       "mofa_report",
       pgx = pgx,
       mofa = mofa
-    )
-
-    # AI factor summary
-    mofa_ai_summary_server(
-      "factorSummary",
-      mofa = mofa,
-      pgx = pgx,
-      r_factor = shiny::reactive(input$selected_factor),
-      session = session,
-      watermark = WATERMARK
-    )
-
-    mofa_ai_report_server(
-      "ai_report",
-      mofa_reactive = mofa,
-      pgx = pgx,
-      parent_session = session,
-      watermark = WATERMARK
     )
 
     return(NULL)
