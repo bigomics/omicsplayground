@@ -91,12 +91,21 @@ COPY dev/Rprofil[e] /root/.Rprofile
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
-# Install omicsai (private repo, using BuildKit secret mount)
+# Install private bigomics packages (using BuildKit secret mount)
+#   omicsai        -> providers
+#   omicspgx       -> API
+#   omicspgxmcp    -> tools
+#   omicsplots     -> plotting tools
+#   omicsagentovi  -> the agent
 #------------------------------------------------------------
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
     if [ -n "$GITHUB_PAT" ]; then \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgx')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgxmcp')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsplots')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsagentovi')" && \
       rm -f /root/.Rhistory; \
     fi
 
