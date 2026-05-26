@@ -870,12 +870,14 @@ app_server <- function(input, output, session) {
 
   opg_server(input, output, session, PGX, env, auth)
   
-  CopilotBoardServer("copilot", pgx = PGX, pgx_dir = PGX.DIR,
-    chat_dir = CHAT.DIR,
-    docs_dir = DOCS.DIR,
-    maxturns = opt$LLM_MAXTURNS,
-    tiers = opt$COPILOT_MODEL,
-    is_data_loaded = NULL)
+  if (copilot_packages_ok()) {
+    CopilotBoardServer("copilot", pgx = PGX, pgx_dir = PGX.DIR,
+      chat_dir = CHAT.DIR,
+      docs_dir = DOCS.DIR,
+      maxturns = opt$LLM_MAXTURNS,
+      tiers = opt$COPILOT_MODEL,
+      is_data_loaded = NULL)
+  }
 
   StudioServer("studio", pgx = PGX)
   

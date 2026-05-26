@@ -33,6 +33,36 @@ COPILOT_STARTERS <- c(
 #' @export
 .COPILOT_MAX_TURNS   <- Inf
 
+# ---- Required in-house packages --------------------------------------------
+#' Required in-house packages for the Copilot to boot.
+#' Missing any one of these hides the Copilot nav entry and skips the server
+#' wiring. Install from GitHub: `remotes::install_github("bigomics/<pkg>")`.
+#' @export
+COPILOT_REQUIRED_PKGS <- c(
+  "omicsai", "omicsagentovi", "omicspgx", "omicspgxmcp", "omicsplots"
+)
+
+#' Check that every package in `COPILOT_REQUIRED_PKGS` is installed.
+#'
+#' Logs a single multi-line message listing the missing packages and the
+#' install command. Returns `TRUE` only when every package is available.
+#' @export
+copilot_packages_ok <- function() {
+  missing <- Filter(
+    function(p) !requireNamespace(p, quietly = TRUE),
+    COPILOT_REQUIRED_PKGS
+  )
+  if (length(missing) > 0L) {
+    lines <- c(
+      "[copilot] disabled - missing in-house packages:",
+      sprintf("  remotes::install_github(\"bigomics/%s\")", missing)
+    )
+    message(paste(lines, collapse = "\n"))
+    return(FALSE)
+  }
+  TRUE
+}
+
 # ---- Functions --------------------------------------------------------------
 
 #' Is the Copilot board enabled?
