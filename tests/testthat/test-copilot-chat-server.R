@@ -345,6 +345,110 @@ test_that("input$tier_choice triggers tier_clicked reactiveVal", {
 })
 
 # ===========================================================================
+# starters — pushed inline as an assistant suggestion bubble after greeting
+# ===========================================================================
+
+test_that("first chat_event post triggers a starter suggestion bubble", {
+  appended <- list()
+  local_mocked_bindings(
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    chat_append = function(id, ...) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv,
+      starters        = shiny::reactive(c("Summarize findings", "Top biomarkers"))
+    ), {
+      ev_rv(list(type = "post", role = "assistant", text = "Hi"))
+      session$flushReact()
+      # Expect 2 messages: greeting + starter bubble.
+      expect_equal(length(appended), 2L)
+      expect_equal(appended[[1]]$content, "Hi")
+      expect_match(appended[[2]]$content, "copilot-starter-list", fixed = TRUE)
+      expect_match(appended[[2]]$content, "suggestion submit",    fixed = TRUE)
+      expect_match(appended[[2]]$content, "Summarize findings",   fixed = TRUE)
+      expect_match(appended[[2]]$content, "Top biomarkers",       fixed = TRUE)
+    }
+  )
+})
+
+test_that("reset event re-seeds the starter bubble", {
+  appended <- list()
+  local_mocked_bindings(
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    chat_append = function(id, ...) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv,
+      starters        = shiny::reactive(c("Q1", "Q2"))
+    ), {
+      ev_rv(list(type = "reset", role = "assistant", text = "Welcome"))
+      session$flushReact()
+      # Expect 2 messages: greeting + starter bubble.
+      expect_equal(length(appended), 2L)
+      expect_equal(appended[[1]]$content, "Welcome")
+      expect_match(appended[[2]]$content, "Q1", fixed = TRUE)
+      expect_match(appended[[2]]$content, "Q2", fixed = TRUE)
+    }
+  )
+})
+
+test_that("subsequent posts after the first do not re-append starters", {
+  appended <- list()
+  local_mocked_bindings(
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    chat_append = function(id, ...) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv,
+      starters        = shiny::reactive(c("Q1", "Q2"))
+    ), {
+      ev_rv(list(type = "post", role = "assistant", text = "Hi"))
+      session$flushReact()
+      ev_rv(list(type = "post", role = "user", text = "hello"))
+      session$flushReact()
+      ev_rv(list(type = "post", role = "assistant", text = "reply"))
+      session$flushReact()
+      # Greeting + starter bubble + 2 follow-up posts = 4 messages.
+      expect_equal(length(appended), 4L)
+      # No additional starter bubble on subsequent posts.
+      expect_false(any(grepl("copilot-starter-list",
+                              vapply(appended[3:4], function(m) m$content, character(1)),
+                              fixed = TRUE)))
+    }
+  )
+})
+
+# ===========================================================================
 # Public surface shape
 # ===========================================================================
 

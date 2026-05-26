@@ -92,7 +92,8 @@ CopilotBoardServer <- function(
         run_ctrl$dispatch(run_request_abort(reason))
       },
       tier_choices = tier_choices_rx,
-      current_tier = tier
+      current_tier = tier,
+      starters     = shiny::reactive(COPILOT_STARTERS)
     )
 
     # ---- Run controller ----

@@ -8,6 +8,19 @@
 #' @export
 COPILOT_TIERS <- c("copilot-default", "copilot-fast", "copilot-deep")
 
+# ---- Starter questions (chat-column suggestion strip, mimics edgy) ---------
+#' Hardcoded starter questions rendered as a one-shot button strip in the chat
+#' column. Strip is dismissed (`shinyjs::hide`) on first user message, then
+#' re-shown on `chat_event` type `reset` (new chat).
+#' @export
+COPILOT_STARTERS <- c(
+  "Summarize main findings",
+  "What pathways are involved?",
+  "Show top biomarkers",
+  "Find references",
+  "Get differential expression top genes"
+)
+
 # ---- Option name constants --------------------------------------------------
 #' @export
 .OPT_COPILOT_TRACE       <- "copilot.trace"

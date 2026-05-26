@@ -34,6 +34,11 @@
 #' @param current_tier Optional reactive()/reactiveVal() returning the active
 #'   tier id -- used to keep the radio selection and the trigger label in sync
 #'   with the orchestrator's state.
+#' @param starters Optional reactive() returning a character vector of starter
+#'   questions to render as a one-shot button strip above the chat input.
+#'   The strip is dismissed via `shinyjs::hide` on the first user message
+#'   (typed or button) and re-shown on a `reset` chat event. When NULL or
+#'   empty, no strip is rendered.
 #'
 #' @return list(user_input, stream_done, last_error, on_tool_request,
 #'   push_event=NULL, tier_clicked) where `tier_clicked` is a reactiveVal
@@ -47,7 +52,8 @@ CopilotChatServer <- function(
   run_status   = NULL,
   on_abort     = NULL,
   tier_choices = NULL,
-  current_tier = NULL
+  current_tier = NULL,
+  starters     = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
@@ -107,6 +113,37 @@ CopilotChatServer <- function(
       })
     }
 
+    # ---- Starter suggestions ----
+    # Pushed inline as an assistant chat message after every greeting:
+    #   <ul class='copilot-starter-list'>
+    #     <li class='suggestion submit'>...</li>
+    #   </ul>
+    # shinychat handles the click → auto-submit into input$chat_user_input,
+    # which flows through the existing user-input observer.
+    .starter_bubble <- function() {
+      if (is.null(starters)) return("")
+      qs <- tryCatch(starters(), error = function(e) NULL)
+      if (is.null(qs) || length(qs) == 0L) return("")
+      qs <- as.character(qs)
+      escaped <- htmltools::htmlEscape(qs)
+      items <- paste0(
+        "<li class='suggestion submit'>", escaped, "</li>",
+        collapse = ""
+      )
+      paste0("<ul class='copilot-starter-list'>", items, "</ul>")
+    }
+
+    .post_starters <- function() {
+      html <- shiny::isolate(.starter_bubble())
+      if (!nzchar(html)) return(invisible())
+      shinychat::chat_append_message(
+        "chat",
+        list(role = "assistant", content = html),
+        chunk = FALSE
+      )
+      log_trace("copilot.starter.posted", n = length(shiny::isolate(starters())))
+    }
+
     # ---- Internal post helper ----
     .post <- function(role, text) {
       shinychat::chat_append_message(
@@ -116,13 +153,22 @@ CopilotChatServer <- function(
       )
     }
 
+    # First-greeting one-shot: the board emits the initial greeting as a
+    # `post` event from its onFlushed hook. We can't distinguish "greeting"
+    # from other assistant posts, so we tag the first ever event as the
+    # greeting and append starters once.
+    first_event_seen <- shiny::reactiveVal(FALSE)
+
     # ---- chat_event observer ----
     shiny::observeEvent(chat_event(), ignoreNULL = TRUE, {
       event <- chat_event()
       if (is.null(event) || is.null(event$type)) return()
+      is_first <- !shiny::isolate(first_event_seen())
+      if (is_first) first_event_seen(TRUE)
       switch(event$type,
         post = {
           .post(event$role %||% "assistant", event$text %||% "")
+          if (is_first) .post_starters()
         },
         clear = {
           shinychat::chat_clear("chat")
@@ -137,6 +183,8 @@ CopilotChatServer <- function(
               chunk = FALSE
             )
           }
+          # Re-seed starter pills for the new chat.
+          .post_starters()
         },
         stream = {
           result <- shinychat::chat_append("chat", event$async_gen)

@@ -84,6 +84,11 @@ copilot_run_controller <- function(
   session
 ) {
 
+  # ---- Follow-up suggestion generator (side LLM call, runtime-optional) ----
+  # Returns NULL if `omicsai` is not installed — downstream code guards on
+  # this and skips the feature silently.
+  followup_gen <- tryCatch(make_followup_generator(), error = function(e) NULL)
+
   # ---- Bindings factory (closes over session + host integration handles) ----
   .build_bindings <- function() {
     build_run_bindings(
@@ -184,6 +189,44 @@ copilot_run_controller <- function(
               omicsagentovi::session_is_dirty(updated@session)) {
             save_ctrl$on_run_settled()
           }
+
+          # ---- Follow-up suggestion bubble ---------------------------------
+          # Gates: completed status, non-empty text, generator available.
+          # On any failure, silently skip — never block the chat.
+          status_ok <- identical(result$status %||% "completed", "completed") &&
+                       !is.null(result$text) && nzchar(result$text)
+          if (!status_ok) {
+            log_trace("copilot.followup.skipped", reason = "non_completed_or_empty")
+            return(invisible())
+          }
+          if (is.null(followup_gen)) {
+            log_trace("copilot.followup.skipped", reason = "no_generator")
+            return(invisible())
+          }
+          p <- tryCatch(followup_gen$generate(result$text),
+                        error = function(e) NULL)
+          if (is.null(p)) {
+            log_info("copilot.followup.failed", phase = "generate_call")
+            return(invisible())
+          }
+          promises::then(p,
+            onFulfilled = function(qs) {
+              if (length(qs) == 0L) {
+                log_trace("copilot.followup.skipped", reason = "empty_result")
+                return(invisible())
+              }
+              chat_event(list(
+                type = "post",
+                role = "assistant",
+                text = format_followup_bubble(qs)
+              ))
+            },
+            onRejected = function(e) {
+              log_info("copilot.followup.failed",
+                       phase = "promise_reject",
+                       msg = conditionMessage(e))
+            }
+          )
         }
       ),
       error = function(e) {

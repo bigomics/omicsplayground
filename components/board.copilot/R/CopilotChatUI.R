@@ -63,6 +63,34 @@ shiny-chat-input textarea { min-height: 42px !important; }
 /* When streaming, hide shinychat's send button so the stop button reads
    as a morph rather than a sibling. */
 .copilot-streaming shiny-chat-input .shiny-chat-btn-send { display: none; }
+/* Starter suggestions — pushed inline as an assistant chat message holding
+   <ul class='copilot-starter-list'><li class='suggestion submit'>…</li>…</ul>.
+   shinychat handles auto-submit on click; this CSS just stacks one per row
+   and styles the pills. */
+.copilot-starter-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.copilot-starter-list li.suggestion {
+  background-color: var(--bs-tertiary-bg, rgba(0,0,0,0.04));
+  color: var(--bs-secondary-color, #6c757d);
+  border: 1px solid var(--bs-border-color, rgba(0,0,0,0.1));
+  border-radius: 16px;
+  font-size: 0.85em;
+  padding: 2px 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  display: inline-block;
+}
+.copilot-starter-list li.suggestion:hover {
+  background-color: var(--bs-secondary-bg, rgba(0,0,0,0.08));
+  color: var(--bs-body-color, #212529);
+}
 "
 
 #' Copilot Chat UI
