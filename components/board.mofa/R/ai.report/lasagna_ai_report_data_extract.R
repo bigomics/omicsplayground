@@ -55,18 +55,23 @@ lasagna_ai_extract_context <- function(res, contrast, pgx, ntop = 12L) {
   }
 
   list(
-    contrast = contrast,
+    contrast   = contrast,
     experiment = multiomics_ai_experiment_label(pgx),
-    network = list(
-      n_nodes = igraph::vcount(graph),
-      n_edges = igraph::ecount(graph),
-      n_layers = length(unique(nodes$layer)),
+    network    = list(
+      n_nodes       = igraph::vcount(graph),
+      n_edges       = igraph::ecount(graph),
+      n_layers      = length(unique(nodes$layer)),
       n_inter_edges = sum(inter_edge, na.rm = TRUE),
       n_intra_edges = sum(!inter_edge, na.rm = TRUE)
     ),
     layer_counts = layer_counts,
-    top_nodes = top_nodes,
-    top_edges = top_edges,
-    caveats = caveats
+    ## Full node/edge tables exposed for community-detection in data.R
+    ## (.lasagna_compute_modules). top_nodes/top_edges remain for callers
+    ## that only need the headline picks.
+    nodes_all  = nodes,
+    edges_all  = edges,
+    top_nodes  = top_nodes,
+    top_edges  = top_edges,
+    caveats    = caveats
   )
 }

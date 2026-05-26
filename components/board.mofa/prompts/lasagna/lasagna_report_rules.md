@@ -1,93 +1,127 @@
-## What This Analysis Reveals
+# LASAGNA report — board rules
 
-LASAGNA constructs a stacked multi-layer network from multiple omics
-modalities for a single experimental contrast. The network reveals
-which biological programmes are supported by coordinated cross-omics
-evidence — not just differential expression in one modality, but
-convergent signal across transcriptomics, proteomics, metabolomics,
-or other layers.
+Total report length: 800–1200 words.
 
-The report translates this network topology into a biological narrative:
-what cross-layer modules dominate, which nodes bridge modalities, and
-how confident we can be in the integration signal.
+## Evidence scope
 
-## Analytical Unit: the Cross-Layer Functional Module
+Your sole evidence is the data block provided with this prompt. You have no
+access to PubMed, external databases, or prior experimental results. All
+biological interpretations must be traceable to the data block (community
+structure, layer participation, cross-layer edges, hub-node identities).
+Do not introduce claims from parametric knowledge that are not anchored
+in the data block.
 
-Since LASAGNA operates on a single contrast, the analytical units are
-the 1-3 dominant **biological programmes** emerging from the multi-layer
-network topology — not contrasts, not individual nodes.
+## Section requirements
 
-Each `### heading` in Main Findings names a biological programme, not a
-method concept:
+### Highlights
+
+- Exactly **3 bullets**. No more, no less.
+- Each bullet ≤25 words.
+- Declarative; no hedging.
+- No raw centrality, ρ, or edge-weight values.
+- Together, the three bullets answer: what is the dataset's headline
+  cross-layer programme, what is the most surprising finding, and what
+  is the dominant inter-modality bridge?
+
+### Overview
+
+- 1–2 paragraphs.
+- Required content: experiment intent, organism, sample count, contrast
+  name, number of omics layers, node and edge counts, count of
+  cross-layer modules detected, count selected for detailed reporting,
+  signal landscape (use one of: "fragmented", "single-layer-dominated",
+  "balanced", "richly-bridged").
+- Mention the inter-layer edge fraction **once**, here. Do not return
+  to it.
+- Do not mention methods details — refer to methods as "see Methods
+  section below" or similar.
+
+### Main findings
+
+The lead findings, GROUPED by biological programme rather than by
+individual module ID. Each programme is one h3 subsection; each
+programme contains the modules that fit it as h4 subsubsections.
 
 ```
-GOOD: ### Kinase–Transcription Factor Relay
-GOOD: ### Lipid Metabolism Convergence
-BAD:  ### Network Evidence
-BAD:  ### Top Hub Genes
+### Theme 1 — [biological framing in 2–4 words]
+1–3 prose paragraphs introducing the theme.
+
+#### M1: [short theme label]
+1–3 prose paragraphs.
+
+#### M3: [short theme label]
+1–3 prose paragraphs.
+
+### Theme 2 — [biological framing]
+#### M2: [short theme label]
+...
 ```
 
-Use network density and inter-layer signal to classify modules:
-- **Well-supported**: multiple inter-layer edges, balanced layer
-  participation, high-centrality hubs → full narrative treatment
-- **Sparse or single-layer-dominated**: few inter-layer edges, nodes
-  confined to one modality → aggregate into `### Minor Signals` with
-  explicit caveats about weak integration evidence
+**Theme heading format:** `### Theme N — [2–4 words]`. Sentence case.
+**Module heading format:** `#### M<N>: [short theme phrase]`. Theme is
+2–6 words, sentence case, descriptive (e.g. *"Kinase–TF relay"*),
+not technical (e.g. *"5 cross-layer edges"*).
 
-Omit `### Minor Signals` entirely if all modules are well-supported.
+**Per-module length:**
+- Strong: 2–3 paragraphs.
+- Moderate: 1 paragraph.
+- Weak: do NOT get a subsection; aggregate under Minor units.
 
-## Per-Unit Content: Three Narrative Beats (always prose)
+**Per-module content:**
+- Open with the biological programme the module captures in plain
+  language; lead with biology, not with node names.
+- Top nodes: 4–6 named per strong module, woven with layer of origin
+  and functional role, ≤8 names per paragraph. Cross-layer bridges
+  (hubs connecting two or more layers) called out explicitly — this is
+  the strongest evidence LASAGNA provides.
+- Layer participation: state whether the module is multi-layer or
+  dominated by one layer.
+- One numeric anchor per paragraph maximum (typically the node count
+  for the lead module).
 
-**Beat 1 — The biological programme (lead sentence)**
-State what functional module the network topology reveals. Lead with the
-biology, not the node names.
+**Theme grouping.** Group modules into themes when biology suggests
+coherent groups; otherwise list modules directly. Use your judgement.
 
-> GOOD: "The network centres on a kinase–transcription factor relay where
-> phosphoproteome hubs converge on transcriptomic effectors of cell cycle
-> entry."
-> BAD: "8 nodes with high centrality were identified across two layers."
+### Minor units
 
-**Beat 2 — The cross-layer evidence**
-Name the top nodes that anchor the module. For each, weave centrality,
-layer of origin, fold change, and functional annotation into prose. When
-a node bridges multiple layers via inter-layer edges, say so explicitly —
-this is the strongest evidence LASAGNA provides.
+- 1 paragraph (or omit entirely if no weak modules).
+- 1–2 sentences per minor module: name it, give the dominant layer,
+  note absence of cross-layer evidence, optionally name 1–2 top nodes.
+- No themes, no h3 subdivisions.
 
-> GOOD: "*CDK2* (centrality = 0.92, phosphoproteome, logFC = +1.8) links
-> to *E2F1* (centrality = 0.85, transcriptome) via a strong cross-layer
-> edge, consistent with phosphorylation-driven transcriptional
-> activation."
-> BAD: "CDK2 centrality 0.92. E2F1 centrality 0.85."
+### Integrated findings
 
-**Beat 3 — Layer convergence and confidence**
-Does the module draw from multiple layers or is it dominated by one?
-State the layer participation balance. Flag confidence explicitly when:
-- The module is driven by a single omics layer
-- Inter-layer edges are few or absent
-- Network is overall sparse (< 50 nodes)
+- 2–4 paragraphs.
+- MUST use at least one of three rhetorical patterns: trade-off,
+  feedback, or contrast.
+- ONLY cite cross-module bridges, opposing programmes, or shared hub
+  nodes that are explicit in the data block. Do not infer topology
+  not present.
+- This is where layer-spanning convergence and inter-module hand-offs
+  are explicitly named.
 
-## Cross-Unit Synthesis Paragraph (REQUIRED when > 1 module)
+### **Discussion**
 
-After all module subsections, one paragraph with no heading, describing:
-- How modules relate to each other in the network
-- Whether cross-layer bridges connect otherwise separate modules
-- Whether the network tells a coherent multi-omics story or fragments
-  into modality-specific clusters
-- The overall biological narrative for the contrast
+- 1–2 paragraphs.
+- Heading in **bold**: `## **Discussion**`.
+- Synthesise the biology revealed by the multi-layer network into a
+  coherent narrative — what does the dataset *as a whole* suggest
+  about the underlying cross-omics biology?
+- **No literature references.** This pipeline has no access to PubMed.
+- **No translational implications.** Do not propose drug targets,
+  clinical implications, or therapeutic strategies.
+- Stay grounded in what the data block contains.
+- **Sparse networks** (data block flagged `fragmented` or fewer than
+  5 inter-layer edges): limit the Discussion to **1 paragraph of no
+  more than 3 sentences**.
 
-Every cross-unit claim must be grounded in values from the data.
+### **Conclusion**
 
-## Discussion
-
-1-2 paragraphs interpreting the overall multi-layer integration:
-- What does the cross-layer topology reveal that single-omics would miss?
-- Which nodes are genuine multi-omics hubs vs single-layer artefacts?
-- Caveats once, briefly: network sparsity, layer imbalance (unequal node
-  counts across modalities), PPI backbone bias, correlation ≠ causation
-
-## Word Limit
-
-600-1000 words total across Main Findings + Discussion + Conclusion.
+- **1 paragraph**.
+- Heading in **bold**: `## **Conclusion**`.
+- Integrative summary; no new claims; no numbers.
+- Do not introduce findings that were not in Main findings or Integrated
+  findings above.
 
 ## Hard Constraints
 
@@ -95,7 +129,6 @@ Every cross-unit claim must be grounded in values from the data.
 - Do NOT infer causality from network topology alone.
 - If the network is sparse or lacks inter-layer edges, state that
   explicitly and keep confidence modest.
-- Do NOT synthesize numeric summaries not present in the input data.
 - Do NOT reproduce node tables or edge tables — the researcher already
   has them in the interface.
 - Do NOT create bullet lists of node names with centrality scores; weave

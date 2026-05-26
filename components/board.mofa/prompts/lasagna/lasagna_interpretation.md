@@ -1,111 +1,88 @@
-## LANGUAGE RULES
+# LASAGNA context
 
-Certainty calibration:
-- Strong evidence (replicated, mechanistic): use "demonstrates", "shows", "reveals"
-- Moderate evidence (statistical): use "suggests", "indicates", "points to"
-- Preliminary or exploratory: use "may", "might", "appears to"
-- Correlational data: use "is associated with", "correlates with"
+## Definitions
 
-Avoid:
-- "proves", "establishes", "clearly demonstrates" (too strong)
-- "causes", "leads to", "drives" (implies causation from correlation)
-- Anthropomorphizing genes: NOT "TP53 wants" but "TP53 functions in"
+- **LASAGNA (Layered Stacked Analysis of Gene Network Architecture)**:
+  builds a stacked multi-layer network from multiple omics modalities
+  for a single experimental contrast. Each modality contributes a
+  layer of nodes; cross-layer edges connect features from different
+  modalities that show coordinated behaviour.
+- **Layer**: one omics modality (transcriptome, proteome, metabolome,
+  …). Nodes inherit a layer label from their feature prefix.
+- **Inter-layer edge**: an edge connecting nodes from different
+  modalities. **These are the integrative signal — they reveal biology
+  invisible to any single omics layer.**
+- **Intra-layer edge**: an edge connecting nodes within one modality.
+  Provides modality-specific context.
+- **Module (community)**: a densely-connected subgraph of the network,
+  identified by community detection (Louvain on the undirected version
+  of the graph). Modules with members from multiple layers are
+  **cross-layer modules**; modules confined to one modality are
+  **single-layer modules** and are aggregated under Minor units.
+- **Hub node**: a node with high centrality within its module. The
+  strongest hubs are those that also have at least one inter-layer
+  edge — these are **cross-layer hubs** and are the strongest
+  candidates for biological drivers.
+- **Edge strength (ρ)**: per-edge correlation between the two endpoint
+  features. In the data block, raw `ρ` is replaced with one of seven
+  verbal labels mirroring the omicsai `r` verbaliser.
+- **Strong / Moderate / Weak signal**: module tier classification
+  provided in the data block, derived from node count, cross-layer
+  edge count, and number of layers spanned. **Authoritative — do not
+  reclassify.**
+- **Top modules**: the subset selected for detailed reporting. Out of
+  `n_modules_total` detected, only `n_modules_used` are described in
+  detail; the remainder are aggregated under "Minor units".
 
-## NUMERICAL INTERPRETATION
+## How to read direction
 
-P-values in omics context:
-- Omics experiments test thousands of features simultaneously
-- p < 0.05 has high false positive rate; use with caution
-- p < 0.01 still permits many false positives at genome scale
-- FDR/adjusted p-values (q < 0.05) are more reliable for omics
-- Always note whether values are raw or adjusted
+LASAGNA edges are undirected; no directional claim can be made from
+topology alone. State biological hand-offs only when the underlying
+mechanism (e.g. phosphorylation → transcription) is well-established
+for the named hub pair and only as a hypothesis, never as a finding.
 
-Fold changes:
-- |FC| < 1.5 (|log2FC| < 0.58): modest, potentially noise
-- |FC| 1.5-2 (|log2FC| 0.58-1): moderate effect
-- |FC| 2-4 (|log2FC| 1-2): substantial effect
-- |FC| > 4 (|log2FC| > 2): strong effect
+## Hub node reporting
 
-Enrichment analysis:
-- High enrichment does not equal biological importance
-- Well-studied pathways are over-represented in databases
-- Small gene set overlaps may lack robustness
-- Consider overlap size alongside enrichment score
+- Group hubs by layer of origin when possible; weave functional
+  context into prose rather than listing.
+- Symbol names in italics: *CDK2*, *E2F1*.
+- Never list more than ~8 hub names in a single paragraph.
+- Cross-layer hubs (hubs with at least one inter-layer edge) are the
+  strongest evidence — call them out explicitly.
 
-## LASAGNA-SPECIFIC GUIDANCE
+## Verbal-label inventory (authoritative — used throughout the data block)
 
-LASAGNA (Layered Stacked Analysis of Gene Network Architecture) builds a
-stacked multi-layer network from multiple omics modalities for a single
-experimental contrast. Each omics type contributes a layer of nodes and
-intra-layer edges; cross-layer edges connect features from different
-modalities that show coordinated behaviour.
+The data block never shows raw numbers for these quantities; it shows
+verbal labels at fixed thresholds. Treat the label as authoritative.
 
-Key concepts:
-- **Inter-layer edges** represent cross-omics associations (e.g., a
-  transcript correlated with a protein). These are the integrative signal
-  — they reveal biology invisible to any single omics layer.
-- **Intra-layer edges** represent within-modality associations (e.g.,
-  co-expressed genes). These provide modality-specific context.
-- **Cross-layer hub nodes** have high centrality across multiple layers
-  and are stronger candidates for biological drivers than nodes confined
-  to a single layer.
-- **Layer participation** counts indicate how many nodes each omics
-  modality contributes. Balanced participation suggests genuine
-  multi-omics integration; single-layer dominance means the network is
-  mostly driven by one modality.
+- **Edge strength** (`ρ`): `strongly correlated` (|ρ| ≥ 0.9) /
+  `correlated` (≥ 0.7) / `moderately correlated` (≥ 0.5) /
+  `weakly associated` (< 0.5). Sign mirrors to `… anti-correlated`.
+- **Network role** (centrality): `hub` (≥ 0.8) / `central` (≥ 0.6) /
+  `intermediate` (≥ 0.3) / `peripheral` (< 0.3).
+- **Layer participation** (per layer, % of module nodes): `dominant`
+  (≥ 60%) / `major` (≥ 30%) / `minor` (≥ 10%) / `marginal` (< 10%).
+- **Cross-layer connectivity** (per module): `rich-bridged` (≥ 10
+  inter-layer edges) / `well-bridged` (≥ 5) / `lightly-bridged` (≥ 1) /
+  `single-layer` (0).
+- **Network density** (whole graph): `dense` (≥ 0.1) / `moderate`
+  (≥ 0.02) / `sparse` (≥ 0.005) / `fragmented` (< 0.005).
 
-### Network density and confidence
+## How to read per-module sections
 
-- A dense network (many edges per node, multiple layers connected) supports
-  confident interpretation of cross-layer biology
-- A sparse network (few edges, low inter-layer count) should be interpreted
-  conservatively — the integration signal may be weak or driven by noise
-- Networks with zero or very few inter-layer edges provide no cross-omics
-  integration evidence; state this explicitly
+Each module's data block carries five evidence channels — treat them
+together, not in isolation:
 
-### Quantitative interpretation
-
-Node metrics:
-- Centrality: high centrality nodes are topological hubs; a node with high
-  centrality in the multi-layer network is better connected across the
-  integration than a high-centrality node in a single layer
-- Fold change: the differential expression magnitude in the selected
-  contrast; always state the contrast when citing logFC values
-
-Edge metrics:
-- Edge weight reflects the strength of association between connected nodes
-- Inter-layer edge weight is the key integrative metric — prioritize strong
-  cross-layer connections over strong within-layer connections
-
-### Interpretation rules
-
-- Inter-layer edges indicate cross-omics association patterns, not causal
-  direction
-- Node-level fold changes and correlations support prioritization of
-  candidate drivers
-- Sparse connectivity or low inter-layer signal should be interpreted
-  conservatively
-- A node appearing as a hub in multiple layers is stronger evidence than
-  a hub in a single layer
-
-## Writing Style: Pathway and Gene-Set References
-
-Write the narrative using only natural biological language:
-
-1. **No raw identifiers in prose.** Never embed database accessions or raw
-   pathway names into the narrative text.
-
-2. **Thematic grouping with inline references.** Cluster enriched pathways
-   into biological themes. Pair every theme mention with bracketed [n]
-   references. Never group more than 3 references in a single bracket.
-
-3. **Plain-English descriptions.** Refer to pathways by their biological
-   meaning rather than database labels.
-
-### Enrichment References
-
-- Reference enrichment terms via [n] brackets in the narrative
-- Use plain-English descriptions in prose: "DNA replication [1,2]"
-  not "REACTOME_DNA_REPLICATION [1]"
-- The Data References section at the end maps [n] to exact term names
-- When 0 terms are significant, state it explicitly
+1. **Layer participation** + **Cross-layer connectivity**: tell you
+   whether the module's biology spans modalities (the integrated
+   signal LASAGNA was designed to surface) or is confined to one.
+2. **Trait coordination**: the mean signed ρ across all module
+   members vs the contrast. A `strongly correlated` module is
+   responsive to the contrast; a `weakly associated` module is
+   present in the network but not driven by the comparison.
+3. **Top hub nodes**: the named anchors; cite hubs flagged
+   `Cross-layer: yes` first — they are the strongest evidence.
+4. **Top cross-layer edges**: the explicit bridges between layers.
+5. **Partner modules**: modules sharing hubs / members. A shared hub
+   between two strong modules is grounds for a single integrated
+   theme spanning both; weave them in the same `### Theme` heading.
