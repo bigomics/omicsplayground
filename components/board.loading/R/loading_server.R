@@ -354,7 +354,8 @@ LoadingBoard <- function(id,
       }
 
       ## ----------------- update PGX object ---------------------------------
-      slots0 <- names(loaded_pgx)
+      kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
+      size0 <- object.size(loaded_pgx[kk])
       shiny::withProgress(message = "Initializing. Please wait...", value = 0.33, {
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
@@ -369,11 +370,11 @@ LoadingBoard <- function(id,
 
         ## if PGX object has been updated with pgx.initialize, we save
         ## the updated object (but only if loading from user directory)
-        slots1 <- names(loaded_pgx)
+        kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
+        size1 <- object.size(loaded_pgx[kk])
         is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
-        if (length(slots1) != length(slots0) && is_user_dir) {
-          info("[loadAndActivatePGX] saving updated PGX")
-          new_slots <- setdiff(slots1, slots0)
+        if (size1 != size0 && is_user_dir) {        
+          info("[loadAndActivatePGX] WARNING: initialized PGX changed! saving updated PGX")
           savePGX(loaded_pgx, file = pgxfile)
         }
 
