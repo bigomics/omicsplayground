@@ -152,12 +152,20 @@ app_ui <- function(x) {
           icon = icon("clapperboard"),
           div(StudioUI("studio"), class = "px-4 py-0")          
         ),
+        bslib::nav_panel(
+          #title = HTML("AI&nbsp;Copilot"),
+          title = HTML("ObiOne"),          
+          value = "Copilot",
+          icon = icon("robot"),
+          div(CopilotUI("copilot"), class = "px-4 py-0")
+        ),
         if (copilot_packages_ok()) {
           bslib::nav_panel(
-            title = HTML("AI&nbsp;Copilot"),
-            value = "Copilot",
+            #title = HTML("AI&nbsp;Copilot"),            
+            title = HTML("ObiTwo"),
+            value = "Copilot2",
             icon = icon("robot"),
-            div(CopilotBoardUI("copilot"), class = "px-4 py-0")
+            div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
           )
         },
         if(isTRUE(opt$DEVMODE)) {

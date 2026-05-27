@@ -64,7 +64,8 @@ CopilotBoardUI <- function(id) {
 
   board <- OmicsBoardUI(
     id = ns("board"),
-    title = "AI Copilot",
+    #title = "AI Copilot",
+    title = "ObiTwo Copilot",    
     info = FALSE,
     ui
   )

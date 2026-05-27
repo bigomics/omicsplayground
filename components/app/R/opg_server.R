@@ -154,6 +154,7 @@ opg_server <- function(input, output, session, PGX, env, auth) {
       shinyjs::enable(selector = "a[data-value='Dashboard']")
       shinyjs::enable(selector = "a[data-value='Studio']")
       shinyjs::enable(selector = "a[data-value='Copilot']")
+      shinyjs::enable(selector = "a[data-value='Copilot2']")      
       
       shiny::withProgress(
         message = "Preparing your dashboard (server)...",
