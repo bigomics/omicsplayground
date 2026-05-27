@@ -267,12 +267,29 @@ upload_module_normalization_server <- function(
               methods = methods,
               evaluate = FALSE, ## no score computation
               xlist.init = xlist.init,
-              ntop = 1000
+              ntop = 1000,
+              npc = 5
             )
           }
         )
 
         return(res)
+      })
+
+      ## Trim PC selector choices to the number of PCs actually computed.
+      shiny::observeEvent(results_correction_methods(), {
+        res <- results_correction_methods()
+        shiny::req(res, res$pos, length(res$pos) > 0)
+        npc_avail <- ncol(res$pos[[1]])
+        out.res <- results_outlier_methods()
+        if (!is.null(out.res) && !is.null(out.res$pos[["pca"]])) {
+          npc_avail <- min(npc_avail, ncol(out.res$pos[["pca"]]))
+        }
+        choices <- paste0("PC", seq_len(max(2, npc_avail)))
+        sel.x <- if (input$bec_xpc %in% choices) input$bec_xpc else choices[1]
+        sel.y <- if (input$bec_ypc %in% choices) input$bec_ypc else choices[min(2, length(choices))]
+        shiny::updateSelectInput(session, "bec_xpc", choices = choices, selected = sel.x)
+        shiny::updateSelectInput(session, "bec_ypc", choices = choices, selected = sel.y)
       })
 
       ## Remove?
@@ -303,11 +320,12 @@ upload_module_normalization_server <- function(
           ## standard dim reduction methods
           pos <- list()
           set.seed(1234)
-          pca <- irlba::irlba(scaledX, nu = 2, nv = 0)
-          pos[["pca"]] <- pca$u
+          npc <- max(2, min(5, min(dim(scaledX)) - 1))
+          pca <- irlba::irlba(scaledX, nu = npc, nv = 0)
+          pos[["pca"]] <- pca$u[, seq_len(npc), drop = FALSE]
           for (i in 1:length(pos)) {
             rownames(pos[[i]]) <- rownames(scaledX)
-            colnames(pos[[i]]) <- paste0(names(pos)[i], "_", 1:2)
+            colnames(pos[[i]]) <- paste0(names(pos)[i], "_", seq_len(ncol(pos[[i]])))
           }
           pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
           out$pos <- pos
@@ -608,7 +626,7 @@ upload_module_normalization_server <- function(
         z0 <- as.numeric(input$outlier_threshold)
         zscore <- res$z.outlier
         Z <- res$Z
-        pos <- res$pos[["pca"]]
+        pos <- res$pos[["pca"]][, 1:2, drop = FALSE]
         plottype <- "pca"
         if (plottype == "pca") {
           par(mfrow = c(1, 2), mar = c(3.2, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -645,6 +663,14 @@ upload_module_normalization_server <- function(
 
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
+        xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
+        ypc <- as.integer(sub("PC", "", if (is.null(input$bec_ypc)) "PC2" else input$bec_ypc))
+        shiny::req(!is.na(xpc), !is.na(ypc))
+        pos.list <- lapply(pos.list, function(p) {
+          if (is.null(p) || ncol(p) < max(xpc, ypc)) return(NULL)
+          p[, c(xpc, ypc), drop = FALSE]
+        })
+
         colorby_var <- input$colorby_var
         colorby_var <- intersect(colorby_var, colnames(samples))
         col1 <- factor(samples[, colorby_var])
@@ -680,10 +706,11 @@ upload_module_normalization_server <- function(
         }
 
         for (m in methods) {
-          if (m %in% names(pos.list)) {
+          if (m %in% names(pos.list) && !is.null(pos.list[[m]])) {
             plot(pos.list[[m]],
               col = color, cex = cex1,
-              pch = 20, las = 1, xlab = "PCA_1", ylab = "PCA_2"
+              pch = 20, las = 1,
+              xlab = paste0("PC", xpc), ylab = paste0("PC", ypc)
             )
           } else {
             plot.new()
@@ -723,6 +750,17 @@ upload_module_normalization_server <- function(
         kk <- intersect(rownames(pos0), rownames(pos1))
         pos0 <- pos0[kk, , drop = FALSE]
         pos1 <- pos1[kk, , drop = FALSE]
+
+        xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
+        ypc <- as.integer(sub("PC", "", if (is.null(input$bec_ypc)) "PC2" else input$bec_ypc))
+        shiny::req(!is.na(xpc), !is.na(ypc))
+        npc.avail <- min(ncol(pos0), ncol(pos1))
+        if (max(xpc, ypc) > npc.avail) {
+          xpc <- min(xpc, npc.avail)
+          ypc <- min(ypc, npc.avail)
+        }
+        pos0 <- pos0[, c(xpc, ypc), drop = FALSE]
+        pos1 <- pos1[, c(xpc, ypc), drop = FALSE]
 
         pheno <- playbase::contrasts2pheno(r_contrasts(), r_samples())
         pheno <- pheno[rownames(pos0)]
@@ -767,8 +805,8 @@ upload_module_normalization_server <- function(
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
           main = "uncorrected", cex.main = cex.main,
-          xlab = paste0("PC1 (", round(pos0.varexp[1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos0.varexp[2], 2), "%)")
+          xlab = paste0("PC", xpc, " (", round(pos0.varexp[xpc], 2), "%)"),
+          ylab = paste0("PC", ypc, " (", round(pos0.varexp[ypc], 2), "%)")
         )
 
         if (is.num) {
@@ -778,8 +816,8 @@ upload_module_normalization_server <- function(
           col = color, pch = 20, cex = cex1, las = 1,
           cex.axis = cex.axis, cex.lab = cex.lab,
           main = method, cex.main = cex.main,
-          xlab = paste0("PC1 (", round(pos1.varexp[[method]][1], 2), "%)"),
-          ylab = paste0("PC2 (", round(pos1.varexp[[method]][2], 2), "%)")
+          xlab = paste0("PC", xpc, " (", round(pos1.varexp[[method]][xpc], 2), "%)"),
+          ylab = paste0("PC", ypc, " (", round(pos1.varexp[[method]][ypc], 2), "%)")
         )
 
         if (is.num) {
@@ -935,6 +973,18 @@ upload_module_normalization_server <- function(
             choices = metadata_vars,
             selected = metadata_vars[1],
             inline = FALSE
+          ),
+          shiny::selectInput(
+            ns("bec_xpc"),
+            label = "X-axis:",
+            choices = paste0("PC", 1:5),
+            selected = "PC1"
+          ),
+          shiny::selectInput(
+            ns("bec_ypc"),
+            label = "Y-axis:",
+            choices = paste0("PC", 1:5),
+            selected = "PC2"
           )
         )
 

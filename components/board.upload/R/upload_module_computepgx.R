@@ -1114,6 +1114,18 @@ upload_module_computepgx_server <- function(
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
 
+        ## Resolve proteomics subtype from is.olink / is.nulisa reactives
+        datatype_subtype <- NULL
+        if (upload_datatype() == "proteomics") {
+          if (is.olink()) {
+            datatype_subtype <- "Olink NPX"
+          } else if (is.nulisa()) {
+            datatype_subtype <- "Nulisa NPQ"
+          } else {
+            datatype_subtype <- "MS"
+          }
+        }
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1164,6 +1176,7 @@ upload_module_computepgx_server <- function(
           libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),
+          datatype_subtype = datatype_subtype,
           description = input$selected_description,
           metadata = user_metadata,
           creator = creator,
