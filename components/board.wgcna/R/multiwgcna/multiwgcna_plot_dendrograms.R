@@ -16,9 +16,14 @@ multiwgcna_plot_dendrograms_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(
+      inputId = ns("showtom"),
+      label = "Show TOM heatmap",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
-      value = TRUE
+      value = FALSE
     ),
     shiny::checkboxInput(
       inputId = ns("showcontrasts"),
@@ -54,37 +59,19 @@ multiwgcna_plot_dendrograms_server <- function(id,
 
       shiny::req(length(wgcna) > 0)
 
-      nw <- length(wgcna)
-      onerow <- TRUE
-      if (onerow) {
-        nr <- 1
-        nc <- nw
-      } else {
-        nc <- ceiling(sqrt(nw))
-        nr <- ceiling(nw / nc)
-      }
-      dr <- ifelse(input$showtraits || input$showcontrasts, 0.3, 1)
-
-      ## Need to set layout manually
-      layout.matrix <- matrix(1:(2 * nr * nc), nrow = nr * 2, ncol = nc)
-      graphics::layout(
-        mat = layout.matrix,
-        heights = rep(c(1 * dr, 1), nr),
-        widths = rep(1, nc)
+      playbase::wgcna.plotMultiDendroAndColors(
+        wgcna, 
+        show.traits = input$showtraits,
+        show.contrasts = input$showcontrasts,
+        show.tom = input$showtom,
+        show.kme = 0, use.tree = 0,
+        colorHeight = 0.5,
+        main = names(wgcna),
+        marAll = c(1,7,1.5,0),
+        cex = 0.7 
       )
-      i <- 1
-      for (i in 1:length(wgcna)) {
-        power <- wgcna[[i]]$net$power
-        playbase::wgcna.plotDendroAndColors(
-          wgcna = wgcna[[i]],
-          main = paste0("Dendrogram for ", names(wgcna)[i], " (p=", power, ")"),
-          show.traits = input$showtraits,
-          show.contrasts = input$showcontrasts,
-          marAll = c(1, 7, 1, 0),
-          # use.tree = input$clusterby,
-          setLayout = FALSE
-        )
-      }
+
+      
     }
 
     PlotModuleServer(
