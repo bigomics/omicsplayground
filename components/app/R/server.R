@@ -50,6 +50,16 @@ app_server <- function(input, output, session) {
     }
   })
 
+  if (!copilot_packages_ok()) {
+    shinyalert::shinyalert(
+      title = "Missing packages",
+      text = "Copilot will be disabled",
+      immediate = TRUE,
+      showCancelButton = FALSE,
+      showConfirmButton = TRUE
+    )      
+  }
+
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
