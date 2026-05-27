@@ -121,6 +121,9 @@ multiwgcna_table_modulegenes_server <- function(id,
       colnames(df) <- sub("traitSignificance", "TS", colnames(df))
 
       numeric.cols <- which(sapply(df, class) == "numeric")
+      feature.cols <- intersect(c("feature","symbol"),colnames(df))
+      js.ellipsis20 <- paste0("$.fn.dataTable.render.ellipsis(20, false)")
+      js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")      
 
       DT::datatable(
         df,
@@ -140,9 +143,12 @@ multiwgcna_table_modulegenes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              # targets = c(1), ## without rownames column 2 is target 1
-              targets = c("feature"), ## without rownames column 2 is target 1
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 80, false )")
+              targets = feature.cols,
+              render = DT::JS(js.ellipsis20)
+            ),
+            list(
+              targets = intersect(c("title"), colnames(df)),
+              render = DT::JS(js.ellipsis40)
             )
           )
         ) ## end of options.list

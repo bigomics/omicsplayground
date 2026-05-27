@@ -39,7 +39,7 @@ MultiWGCNA_Inputs <- function(id) {
             2000
           ),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
-            choices = c(5, 10, 20, 40, 100), selected = 10
+            choices = c(5, 10, 20, 40, 100), selected = 20
           ),
           shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
           shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
