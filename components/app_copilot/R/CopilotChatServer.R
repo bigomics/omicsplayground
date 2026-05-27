@@ -130,7 +130,7 @@ CopilotChatServer <- function(
         "<li class='suggestion submit'>", escaped, "</li>",
         collapse = ""
       )
-      paste0("<ul class='copilot-starter-list'>", items, "</ul>")
+      paste0("<ul class='copilot-starter-list-DISABLED'>", items, "</ul>")
     }
 
     .post_starters <- function() {

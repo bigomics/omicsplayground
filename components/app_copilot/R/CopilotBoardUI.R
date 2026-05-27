@@ -14,25 +14,43 @@
 CopilotBoardUI <- function(id) {
   ns <- shiny::NS(id)
 
-  bslib::layout_columns(
-    col_widths = c(3, 5, 4),
+  ui <- bslib::layout_columns(
+    col_widths = c(3, 6, 3),
     style = "height: calc(100vh - 80px);",
 
     # ---- Left column: datasets / history / docs ----
-    bslib::card(
-      full_screen = FALSE,
-      bslib::card_header(
-        shiny::actionButton(
-          ns("new_chat"),
-          label = "New chat",
-          icon  = shiny::icon("plus"),
-          class = "btn-sm btn-outline-secondary w-100"
-        )
+    bslib::layout_columns(
+      col_widths = 12,
+      row_heights = c(2,1),
+      bslib::card(
+        height = "calc(100% - 40px)",        
+        bslib::layout_columns(
+          col_widths = 12,
+          row_heights = c(1,NA),
+          bslib::navset_underline(
+            #bslib::nav_panel("Datasets", CopilotDatasetsUI(ns("datasets"))),
+            bslib::nav_panel("Dataset",            
+              shiny::uiOutput(ns("dataset_info"))
+            ),
+            bslib::nav_panel("Settings",
+              CopilotChatSettings(ns("chat"))
+            ),
+            bslib::nav_panel("History",
+              CopilotHistoryUI(ns("history"))
+            )
+          ),
+          shiny::actionButton(
+            ns("new_chat"),
+            label = "New chat",
+            icon  = shiny::icon("plus"),
+            class = "btn-sm btn-outline-secondary w-100"
+          )
+        ),        
       ),
-      bslib::navset_underline(
-        bslib::nav_panel("Datasets", CopilotDatasetsUI(ns("datasets"))),
-        bslib::nav_panel("History",  CopilotHistoryUI(ns("history"))),
-        bslib::nav_panel("Docs",     CopilotDocsUI(ns("docs")))
+      bslib::card(
+        bslib::navset_underline(
+          bslib::nav_panel("Sources", CopilotDocsUI(ns("docs")))
+        )
       )
     ),
 
@@ -42,6 +60,15 @@ CopilotBoardUI <- function(id) {
     # ---- Right column: evidence ----
     CopilotEvidenceUI(ns("evidence"))
   )
+
+
+  board <- OmicsBoardUI(
+    id = ns("board"),
+    title = "AI Copilot",
+    info = FALSE,
+    ui
+  )
+  return(board)
 }
 
 #' Copilot Board Sidebar Inputs (empty — left column is internal)

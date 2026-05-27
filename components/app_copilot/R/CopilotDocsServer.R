@@ -9,10 +9,13 @@
 CopilotDocsUI <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(
-    style = "padding: 8px;",
+    style = "padding: 12px 0px;",
     shiny::fileInput(
-      ns("upload"), "Upload documents",
+      ns("upload"),
+      #label = "Upload documents",
+      label = NULL,
       accept   = c(".txt", ".pdf", ".md"),
+      buttonLabel = "Upload...",
       multiple = TRUE,
       width    = "100%"
     ),
@@ -86,6 +89,7 @@ CopilotDocsServer <- function(id, docs_dir) {
     output$docs_table <- DT::renderDataTable({
       df <- .doc_files()
       if (nrow(df) == 0L) {
+        return(NULL)
         df <- data.frame(Name = "No documents uploaded", Size = "")
       }
       DT::datatable(

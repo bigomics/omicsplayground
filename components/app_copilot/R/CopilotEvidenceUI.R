@@ -21,20 +21,20 @@ CopilotEvidenceUI <- function(id) {
   iheatmapr_output_id <- ns("evidence_iheatmapr")
 
   shiny::div(
-    style = "padding: 8px; height: 100%; overflow-y: auto;",
+    style = "padding: 0px; height: 100%; overflow-y: auto;",
 
-    # ---- Dataset context card (visible when a dataset is loaded) ----
-    shiny::conditionalPanel(
-      condition = paste0("output['", ns("has_dataset"), "']"),
-      bslib::card(
-        class = "mb-2",
-        bslib::card_header("Dataset Info", class = "py-1 px-2 fw-bold"),
-        bslib::card_body(
-          class = "p-2",
-          shiny::uiOutput(ns("dataset_info"))
-        )
-      )
-    ),
+    ## # ---- Dataset context card (visible when a dataset is loaded) ----
+    ## shiny::conditionalPanel(
+    ##   condition = paste0("output['", ns("has_dataset"), "']"),
+    ##   bslib::card(
+    ##     class = "mb-2",
+    ##     bslib::card_header("Dataset Info", class = "py-1 px-2 fw-bold"),
+    ##     bslib::card_body(
+    ##       class = "p-2",
+    ##       shiny::uiOutput(ns("dataset_info"))
+    ##     )
+    ##   )
+    ## ),
 
     # ---- Plot card ----
     # Header mirrors the standard PlotModuleUI look: a `plotmodule-header`
@@ -43,14 +43,16 @@ CopilotEvidenceUI <- function(id) {
     # `zoom-button` classes so they pick up the project's existing CSS.
     bslib::card(
       class = "mb-2",
+      min_height = 500,
       bslib::as.card_item(shiny::div(
         shiny::fillRow(
           flex = c(1, NA, NA),
           class = "plotmodule-header",
+          height = "33px",
           shiny::div(
             class = "plotmodule-title",
             style = "white-space: nowrap; overflow: hidden; text-overflow: clip;",
-            "Evidence Plot"
+            "Plot output"
           ),
           shiny::div(
             class = "download-button", title = "download",
@@ -114,7 +116,7 @@ CopilotEvidenceUI <- function(id) {
       )),
       bslib::card_body(
         class = "p-2",
-
+        
         # Empty state — shown when no artifact exists
         shiny::conditionalPanel(
           condition = paste0("!output['", ns("has_plot"), "']"),

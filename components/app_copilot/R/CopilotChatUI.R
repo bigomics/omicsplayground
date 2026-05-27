@@ -93,6 +93,7 @@ shiny-chat-input textarea { min-height: 42px !important; }
 }
 "
 
+
 #' Copilot Chat UI
 #'
 #' bslib::card composing the chat region. The tier popover trigger is a
@@ -113,6 +114,7 @@ CopilotChatUI <- function(id) {
       class = "copilot-chat-body position-relative",
       shinychat::chat_ui(
         ns("chat"),
+        width       = "100%",
         height      = "100%",
         fill        = TRUE,
         placeholder = "Ask a question about your data…"
@@ -121,26 +123,26 @@ CopilotChatUI <- function(id) {
       # Borderless actionLink trigger opens a popover with radioButtons so the
       # selection lives in the chat module's own namespace (fixing the dead
       # observer that previously read input$tier from the board namespace).
-      shiny::div(
-        id    = ns("tier_wrap"),
-        class = "copilot-chat-tier-wrap",
-        bslib::popover(
-          shiny::actionLink(
-            ns("tier_btn"),
-            label = shiny::uiOutput(ns("tier_label"), inline = TRUE),
-            class = "copilot-tier-trigger"
-          ),
-          shiny::radioButtons(
-            ns("tier_choice"),
-            label        = NULL,
-            choiceNames  = unname(vapply(COPILOT_TIERS, copilot_tier_label, character(1))),
-            choiceValues = unname(COPILOT_TIERS),
-            selected     = COPILOT_TIERS[[1]]
-          ),
-          placement = "top",
-          id        = ns("tier_pop")
-        )
-      ),
+      ## shiny::div(
+      ##   id    = ns("tier_wrap"),
+      ##   class = "copilot-chat-tier-wrap",
+      ##   bslib::popover(
+      ##     shiny::actionLink(
+      ##       ns("tier_btn"),
+      ##       label = shiny::uiOutput(ns("tier_label"), inline = TRUE),
+      ##       class = "copilot-tier-trigger"
+      ##     ),
+      ##     shiny::radioButtons(
+      ##       ns("tier_choice"),
+      ##       label        = NULL,
+      ##       choiceNames  = unname(vapply(COPILOT_TIERS, copilot_tier_label, character(1))),
+      ##       choiceValues = unname(COPILOT_TIERS),
+      ##       selected     = COPILOT_TIERS[[1]]
+      ##     ),
+      ##     placement = "top",
+      ##     id        = ns("tier_pop")
+      ##   )
+      ## ),
       # Overlaid stop button — same coordinates as shinychat's send button.
       # Hidden by default; the chat server toggles visibility on run_status.
       shinyjs::hidden(
@@ -156,5 +158,19 @@ CopilotChatUI <- function(id) {
         )
       )
     )
+  )
+}
+
+CopilotChatSettings <- function(id) {
+  ns <- shiny::NS(id)
+  tagList(
+    br(),
+    shiny::radioButtons(ns("model_type"),"Model:", c("default","fast","deep think"),
+      inline=TRUE),
+    br(),
+    shiny::radioButtons(ns("answer_type"),"Answer:", c("short","detailed"), inline=TRUE),
+    br(),
+    shiny::checkboxInput(ns("use_reports"),"Use reports", TRUE),
+    shiny::checkboxInput(ns("use_tools"),"Use tools", TRUE)  
   )
 }

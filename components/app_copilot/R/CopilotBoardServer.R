@@ -33,6 +33,44 @@ CopilotBoardServer <- function(
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
+    # --- Board
+    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL) 
+    
+    # ---- Dataset context card output ----
+    output$dataset_info <- shiny::renderUI({
+      shiny::validate(shiny::need(
+        !is.null(pgx) && !is.null(pgx$X),
+        "No dataset loaded yet."
+      ))
+      ##pgx <- local_pgx()
+
+      n_samples <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
+      n_genes   <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
+      organism  <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
+      dataname  <- if (!is.null(pgx$name)) pgx$name else "unknown"
+      description  <- if (!is.null(pgx$description)) pgx$description else "none"            
+
+      contrasts <- "none"
+      if (!is.null(pgx$contrasts)) {
+        ct <- colnames(pgx$contrasts)
+        if (length(ct) > 3L) {
+          contrasts <- paste(c(ct[1:3], paste0("+ ", length(ct) - 3L, " more")), collapse = ", ")
+        } else {
+          contrasts <- paste(ct, collapse = ", ")
+        }
+      }
+
+      shiny::tags$div(
+        style = "font-size: 0.85em; line-height: 1.6em; padding: 1.3em 0.6em;",
+        shiny::tags$div(shiny::strong("Dataset: "),  dataname),
+        shiny::tags$div(shiny::strong("Description: "),  description),
+        shiny::tags$div(shiny::strong("Organism: "),  organism),                
+        shiny::tags$div(shiny::strong("Samples: "),   n_samples),
+        shiny::tags$div(shiny::strong("Genes: "),     n_genes),
+        shiny::tags$div(shiny::strong("Contrasts: "), contrasts)
+      )
+    })
+
     # ---- Reactive state (board-owned) ----
     agent_rv                  <- shiny::reactiveVal(NULL)
     tier                      <- shiny::reactiveVal(tiers[[1]])
@@ -173,39 +211,39 @@ CopilotBoardServer <- function(
     }, ignoreNULL = TRUE)
 
     # Source 3: human dataset picker (CopilotDatasetsServer selection)
-    shiny::observeEvent(datasets$selected(), {
-      path <- datasets$selected()
-      shiny::req(path)
-      if (!is.null(restore_inflight())) return()
-      loaded <- tryCatch(
-        {
-          pgx_obj <- playbase::pgx.load(path)
-          pgx_obj <- playbase::pgx.initialize(pgx_obj)
-          pgx_obj
-        },
-        error = function(e) {
-          shiny::showNotification(
-            copilot_msg("switch_failed", msg = conditionMessage(e)),
-            type = "error", session = session
-          )
-          NULL
-        }
-      )
-      if (is.null(loaded)) return()
-      # Push into global pgx so other boards see it.
-      sync_rv_from_list(pgx, loaded)
-      class(loaded) <- unique(c("pgx", class(loaded)))
-      run_ctrl$apply_dataset(
-        pgx_val  = loaded,
-        name     = tools::file_path_sans_ext(basename(path)),
-        path     = path,
-        data_dir = pgx_dir
-      )
-      bigdash.showTabsGoToDataView(session)
-      if (!is.null(is_data_loaded)) {
-        is_data_loaded(shiny::isolate(is_data_loaded()) + 1L)
-      }
-    }, ignoreNULL = TRUE)
+    ## shiny::observeEvent(datasets$selected(), {
+    ##   path <- datasets$selected()
+    ##   shiny::req(path)
+    ##   if (!is.null(restore_inflight())) return()
+    ##   loaded <- tryCatch(
+    ##     {
+    ##       pgx_obj <- playbase::pgx.load(path)
+    ##       pgx_obj <- playbase::pgx.initialize(pgx_obj)
+    ##       pgx_obj
+    ##     },
+    ##     error = function(e) {
+    ##       shiny::showNotification(
+    ##         copilot_msg("switch_failed", msg = conditionMessage(e)),
+    ##         type = "error", session = session
+    ##       )
+    ##       NULL
+    ##     }
+    ##   )
+    ##   if (is.null(loaded)) return()
+    ##   # Push into global pgx so other boards see it.
+    ##   sync_rv_from_list(pgx, loaded)
+    ##   class(loaded) <- unique(c("pgx", class(loaded)))
+    ##   run_ctrl$apply_dataset(
+    ##     pgx_val  = loaded,
+    ##     name     = tools::file_path_sans_ext(basename(path)),
+    ##     path     = path,
+    ##     data_dir = pgx_dir
+    ##   )
+    ##   bigdash.showTabsGoToDataView(session)
+    ##   if (!is.null(is_data_loaded)) {
+    ##     is_data_loaded(shiny::isolate(is_data_loaded()) + 1L)
+    ##   }
+    ## }, ignoreNULL = TRUE)
 
     # ---- History panel: restore trigger ----
     shiny::observeEvent(history$on_restore(), {
