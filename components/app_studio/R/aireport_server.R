@@ -268,20 +268,19 @@ AiReportServer <- function(id, pgx) {
       dbg("[AiReportServer] input.nav = ", input$nav)
       dbg("[AiReportServer] input.navset = ", input$navset)
       
-      progress <- shiny::Progress$new()
-      on.exit(progress$close())
-      
       ## compute reports (if missing)
       llm_model = "groq:openai/gpt-oss-120b"
       img_model = "google:gemini-3.1-flash-image-preview"
       llm_model <- getUserOption(session, "llm_model")
       img_model <- getUserOption(session, "img_model")      
       img_model <- NULL
-
+      if (llm_model=="") llm_model <- NULL
+            
       if (!is.null(llm_model) && llm_model != "") {
-        dbg("[AiReportServer] updating reports...")
-        dbg("[AiReportServer] llm_model = ", llm_model)
-        #dbg("[AiReportServer] img_model = ", img_model)
+        dbg("[AiReportServer] updating reports using llm = ", llm_model)
+
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
         progress$set(message = "Please wait. Updating reports...", value = 0.3)
         
         pgx <- playbase::pgx.update_reports(
@@ -325,6 +324,7 @@ AiReportServer <- function(id, pgx) {
       list(pgx$X, input$clear)
     }, {
       clear_files()
+      update_nav(pgx)      
       updateCheckboxInput(session, "force", value = FALSE)      
       updateActionButton(session, "generate", label = "Generate reports")
     })

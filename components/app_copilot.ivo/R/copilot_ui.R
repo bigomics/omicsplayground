@@ -1,13 +1,13 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
 CopilotUI <- function(id) {
   ns <- shiny::NS(id)
 
-  sysprompt <- "You are computational biologist and will be asked questions about the following experiment. Make specific observations if you can."
+  SYSPROMPT <- "You are computational biologist and will be asked questions about the following omics experiment."
 
   examples_card <- bslib::navset_underline(
     bslib::nav_panel(
@@ -19,11 +19,15 @@ CopilotUI <- function(id) {
       shiny::actionButton(ns("show_biomarkers"), "Show top biomarkers", width = "100%", class = "xbtn"),
       shiny::actionButton(ns("find_references"), "Find references", width = "100%", class = "xbtn"),
       shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width = "100%", class = "xbtn")
-    ),
+    )
+  )
+
+  input_card <- bslib::navset_underline(
     bslib::nav_panel(
       "Settings",
       br(),
-      shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = sysprompt, height = 100, width = "100%"),
+      shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = SYSPROMPT,
+        height = 100, width = "100%"),
       br(),
       shiny::radioButtons(ns("response_length"), "Response length:",
         choices = c("shorter","longer"), selected="shorter", inline = TRUE
@@ -31,13 +35,10 @@ CopilotUI <- function(id) {
       br(),      
       shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),
       br(),      
-      actionButton(ns("reset"), "Reset model")
-    )
-  )
-
-  input_card <- bslib::navset_underline(
+      actionButton(ns("reset"), "Apply")
+    ),
     bslib::nav_panel(
-      "Input sources",
+      "Context",
       br(),
       shiny::checkboxGroupInput(ns("context"), "Dataset context:",
         choices = NULL, inline = TRUE
@@ -71,7 +72,8 @@ CopilotUI <- function(id) {
     bslib::nav_panel(
       "Info",
       height = "600px",
-      div(style="height: 300px;")
+      ##div(style="height: 300px;")
+      copilot_info_ui(ns("info"))
     )
   )
 
@@ -108,7 +110,7 @@ CopilotUI <- function(id) {
   board <- OmicsBoardUI(
     id = ns("board"),
     #title = "AI Copilot",
-    title = "ObiOne Copilot",    
+    title = "Obi-One Copilot",    
     ui
   )
   

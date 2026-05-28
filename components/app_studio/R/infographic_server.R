@@ -27,6 +27,14 @@ InfographicUI <- function(id) {
     id = ns("navset"),
     #bslib::nav_panel(title = "DE", p("DE tab content.")),
     #bslib::nav_panel(title = "Enrichment", p("Enrichment tab content.")),
+    bslib::nav_panel(title = "Summary",
+      bslib::card(
+        min_height = 600,
+        full_screen = TRUE,
+        div(shiny::imageOutput(ns("summary"), height="100%", width="100%"),
+          height="100%", width="100%", style = "text-align: center;")
+      )
+    ),
     bslib::nav_panel(title = "WGCNA",
       bslib::card(
         min_height = 600,
@@ -83,14 +91,11 @@ InfographicServer <- function(id, pgx) {
       nav_toggle(pgx$drugs,"L1000")
       nav_toggle(pgx$wgcna_mox,"moxWGCNA")      
       nav_toggle(pgx$wgcna,"WGCNA")
+      nav_toggle(pgx$report,"Summary")      
     })
     
     ## ------------- generate infographics ---------------
     shiny::observeEvent( input$generate, {
-
-      progress <- shiny::Progress$new()
-      on.exit(progress$close())
-      progress$set(message = "Please wait. Rendering infographics...", value = 0.3)
 
       img_model = "google:gemini-3.1-flash-image-preview"
       llm_model = "groq:openai/gpt-oss-120b"
@@ -100,10 +105,18 @@ InfographicServer <- function(id, pgx) {
       dbg("[InfographicServer] llm_model = ", llm_model)
       dbg("[InfographicServer] img_model = ", img_model)      
       
-      if (is.null(llm_model) || is.null(img_model)) return(NULL)     
+      if (llm_model=="") llm_model <- NULL
+      if (img_model=="") img_model <- NULL      
+      if (is.null(llm_model) || is.null(img_model)) return(NULL)
+
+      progress <- shiny::Progress$new()
+      on.exit(progress$close())
+      progress$set(message = "Please wait. Rendering infographics...", value = 0.3)
+
       pgx <- playbase::pgx.update_infographics(
         pgx, force = input$force,
-        llm_model=llm_model, img_model=img_model)       
+        llm_model = llm_model, img_model = img_model)
+            
     }) 
 
     ##--------------- outputs -----------------
@@ -135,6 +148,14 @@ InfographicServer <- function(id, pgx) {
       img <- pgx$mofa$report$infographic
       shiny::validate(need(!is.null(img),"missing MOFA infographic"))      
       target <- file.path(tmpdir, "infographic-mofa.png")
+      png::writePNG(img, target = target)
+      list(src = target, height = "auto", width = "100%")
+    }, deleteFile = FALSE)
+
+    output$summary <- renderImage({
+      img <- pgx$report$infographic
+      shiny::validate(need(!is.null(img),"missing Summary infographic"))      
+      target <- file.path(tmpdir, "infographic-summary.png")
       png::writePNG(img, target = target)
       list(src = target, height = "auto", width = "100%")
     }, deleteFile = FALSE)

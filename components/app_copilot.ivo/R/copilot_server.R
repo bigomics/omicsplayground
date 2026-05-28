@@ -18,11 +18,23 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     chat <- NULL
 
     OmicsBoard("board", pgx, title="CoPilot", infotext = NULL) 
+    copilot_info_module("info", pgx)
     
     ## count number of interactionsy
     n_turns <- reactiveVal(0)
 
+    ## -------------- upon new dataset
     observeEvent(list(pgx$X, names(pgx)), {
+
+      ## ---------- update reports -------------
+      llm_model <- getUserOption(session, "llm_model")
+      shiny::req(llm_model)
+      shiny::withProgress(message = "updating reports...", value = 0.33, {
+        pgx <- playbase::pgx.update_reports(pgx, llm_model, img_model=NULL)
+        ##pgx <- playbase::pgx.update_infographics(pgx, llm_model, img_model)
+      })
+
+      ## ---------- get sections -------------      
       sel.sections <- c("description", "dataset_info", "compute_settings")
       PGX.SECTIONS <- c(
         "gx.meta" = "differential_expression",
@@ -36,6 +48,10 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         choices = sel.sections, selected = sel.sections)
     })
 
+
+    
+
+    ##----------- create new chatbot
     new_chatbot <- function() {
         shiny::req(dim(pgx$X))        
 
@@ -51,7 +67,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           return(NULL)
         }
         shiny::req(ai_model, input$context)        
-        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
+
         sysprompt <- input$sysprompt
         sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet.")
 
@@ -63,7 +79,8 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         } else {
           ##
         }
-          
+
+        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
         sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
         dbg("Creating new chatbot", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
@@ -84,7 +101,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       },
       {
         shinychat::chat_clear("chat")
-        mesg <- paste("👋 I'm **ObiOne**. Ask me anything about your data!")        
+        mesg <- paste("👋 I'm **Obi-One**. Ask me anything about your data!")        
         shinychat::chat_append("chat", mesg)
         new_chatbot()
       },
@@ -120,8 +137,16 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         return(NULL)
       }
 
-      ## add response length
+      ## always end with period
       question <- paste(trimws(sub("[.]$","",question)),".")
+
+      ## show question
+      if (showq) {
+        mesg <- list(role = "user", content = question)
+        shinychat::chat_append_message("chat", mesg, chunk = FALSE)
+      }
+
+      ## add response length
       if(input$response_length == "shorter") {
         question <- paste(question, "Answer brief and succint.")
       } else if(input$response_length == "longer") {
@@ -130,10 +155,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         ##
       }
       
-      if (showq) {
-        mesg <- list(role = "user", content = question)
-        shinychat::chat_append_message("chat", mesg, chunk = FALSE)
-      }
       response <- chat$chat_async(question)
       shinychat::chat_append("chat", response) %...>% {
         if (suggest && !is.new) {
@@ -170,7 +191,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     })
 
     observeEvent(input$ask_pathways, {
-      ask_copilot("List the top enriched pathways and elaborate how they make sense in light of the experiment",
+      ask_copilot("Describe the top enriched pathways and elaborate how they make sense in light of the experiment",
         suggest = input$followup
       )
     })

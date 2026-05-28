@@ -154,7 +154,7 @@ app_ui <- function(x) {
         ),
         bslib::nav_panel(
           #title = HTML("AI&nbsp;Copilot"),
-          title = HTML("ObiOne"),          
+          title = HTML("Obi&#8209;One"),          
           value = "Copilot",
           icon = icon("robot"),
           div(CopilotUI("copilot"), class = "px-4 py-0")
@@ -162,7 +162,7 @@ app_ui <- function(x) {
         if (copilot_packages_ok()) {
           bslib::nav_panel(
             #title = HTML("AI&nbsp;Copilot"),            
-            title = HTML("ObiTwo"),
+            title = HTML("Obi&#8209;Two"),
             value = "Copilot2",
             icon = icon("robot"),
             div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
