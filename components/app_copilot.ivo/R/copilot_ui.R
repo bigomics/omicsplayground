@@ -23,7 +23,7 @@ CopilotUI <- function(id) {
     bslib::nav_panel(
       "Settings",
       br(),
-      shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = sysprompt, height = 120, width = "100%"),
+      shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = sysprompt, height = 100, width = "100%"),
       br(),
       shiny::radioButtons(ns("response_length"), "Response length:",
         choices = c("shorter","longer"), selected="shorter", inline = TRUE
@@ -107,7 +107,8 @@ CopilotUI <- function(id) {
 
   board <- OmicsBoardUI(
     id = ns("board"),
-    title = "AI Copilot",
+    #title = "AI Copilot",
+    title = "ObiOne Copilot",    
     ui
   )
   

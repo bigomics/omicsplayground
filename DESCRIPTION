@@ -10,7 +10,13 @@ URL: https://github.com/bigomics/omicsplayground
 BugReports: https://github.com/bigomics/omicsplayground/issues
 Encoding: UTF-8
 LazyData: true
-Suggests: 
+Suggests:
+    commonmark,
+    omicsagentovi,
+    omicsai,
+    omicspgx,
+    omicspgxmcp,
+    omicsplots,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
@@ -39,6 +45,7 @@ Imports:
     jsonlite,
     magrittr,
     markdown,
+    mirai,
     miniUI,
     openxlsx,
     pairsD3,

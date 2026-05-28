@@ -12,7 +12,7 @@
 #' Note: pgx needs to be reactiveValues
 #'
 #'
-CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100) {
+CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     chat <- NULL
@@ -21,53 +21,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     
     ## count number of interactionsy
     n_turns <- reactiveVal(0)
-
-    #' Observe the copilot button and show the modal AI dialog.
-    #'
-    observeEvent(input.click(), {
-      ai_model <- getUserOption(session, "llm_model")
-
-      if (is.null(ai_model) || ai_model == "") {
-        shinyalert::shinyalert(
-          title = "Oops...",
-          text = "Please enable AI/LLM in user settings.",
-          size = "xs",
-          showCancelButton = FALSE
-        )
-        return(NULL)
-      }
-
-      if (is.null(pgx) || is.null(pgx$X)) {
-        shinyalert::shinyalert(
-          title = "Oops...",
-          text = "First load a dataset before using Omics Copilot",
-          size = "xs",
-          showCancelButton = FALSE
-        )
-        return(NULL)
-      }
-
-      shiny::showModal(modalDialog2(
-        title = NULL,
-        CopilotUI(id, layout = layout),
-        size = "fullscreen",
-        easyClose = FALSE,
-        fade = FALSE,
-        footer = div(
-          class = "ai-modal-footer",
-          style = "width: 100%;",
-          fluidRow(
-            column(3, ""),
-            column(6,
-              align = "center",
-              "AI disclaimer. This page contains AI-generated content. Please verify important info.",
-              style = "align-self: flex-end; color: #888;"
-            ),
-            column(3, div(shiny::modalButton("Dismiss"), style = "text-align: right;"))
-          )
-        )
-      ))
-    })
 
     observeEvent(list(pgx$X, names(pgx)), {
       sel.sections <- c("description", "dataset_info", "compute_settings")
@@ -117,8 +70,8 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
 
         if (!is.null(chat)) {
           ## ------------ still experimential --------
-          #        register_tools(chat)
-          #        register_mcp(chat)
+          # register_tools(chat)
+          # register_mcp(chat)
         }
         
     }
@@ -127,11 +80,11 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
     ## On modal open or reset, create new chatbot
     observeEvent(
       {
-        list(input$reset, input.click())
+        list(input$reset)
       },
       {
         shinychat::chat_clear("chat")
-        mesg <- paste("👋 Hi. I'm **Copilot**, your AI-powered thinking partner. Ask me anything about your data!")        
+        mesg <- paste("👋 I'm **ObiOne**. Ask me anything about your data!")        
         shinychat::chat_append("chat", mesg)
         new_chatbot()
       },

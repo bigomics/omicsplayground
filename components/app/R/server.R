@@ -50,6 +50,16 @@ app_server <- function(input, output, session) {
     }
   })
 
+  if (!copilot_packages_ok()) {
+    shinyalert::shinyalert(
+      title = "Missing packages",
+      text = "Copilot will be disabled",
+      immediate = TRUE,
+      showCancelButton = FALSE,
+      showConfirmButton = TRUE
+    )      
+  }
+
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -200,6 +210,7 @@ app_server <- function(input, output, session) {
   shinyjs::disable(selector = "a[data-value='Dashboard']")
   shinyjs::disable(selector = "a[data-value='Studio']")
   shinyjs::disable(selector = "a[data-value='Copilot']")
+  shinyjs::disable(selector = "a[data-value='Copilot2']")  
   
   ## Modules needed from the start
   recompute_pgx <- shiny::reactiveVal(NULL)
@@ -870,8 +881,17 @@ app_server <- function(input, output, session) {
 
   opg_server(input, output, session, PGX, env, auth)
   
-  CopilotServer("copilot", pgx = PGX, input.click = reactive(NULL),
+  CopilotServer("copilot", pgx = PGX, 
     layout = "fixed", maxturns = opt$LLM_MAXTURNS)
+
+  if (copilot_packages_ok()) {
+    CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
+      chat_dir = CHAT.DIR,
+      docs_dir = DOCS.DIR,
+      maxturns = opt$LLM_MAXTURNS,
+      tiers = opt$COPILOT_MODEL,
+      is_data_loaded = NULL)
+  }
 
   StudioServer("studio", pgx = PGX)
   

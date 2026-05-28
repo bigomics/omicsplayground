@@ -25,7 +25,7 @@ if (Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-options(shiny.maxRequestSize = 2048 * 1024^2) ## max 2GB (previously 999Mb) upload
+options(shiny.maxRequestSize = 999 * 1024^2) ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
 # 1. The header scrolls with the X scroll bar
@@ -62,6 +62,14 @@ FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
 APPDIR <- file.path(OPG, "components/app/R")
 PGX.DIR <- file.path(OPG, "data")
+## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
+options(omicspgxmcp.data_dir = PGX.DIR)
+## Persistent copilot chat sessions + uploaded docs — siblings of the pgx
+## files under data/. Anchored on OPG so they never depend on runtime cwd.
+CHAT.DIR <- file.path(OPG, "data", "chats")
+DOCS.DIR <- file.path(OPG, "data", "docs_sources")
+dir.create(CHAT.DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(DOCS.DIR, recursive = TRUE, showWarnings = FALSE)
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
@@ -164,7 +172,6 @@ opt.default <- list(
   ENABLE_PUBLIC_LOAD = FALSE,
   ENABLE_PUBLIC_DELETE = FALSE,
   ENABLE_UPLOAD = TRUE,
-  ENABLE_ADMIN = FALSE,
   ENABLE_USERDIR = TRUE,
   ENABLE_USER_SHARE = TRUE,
   ENABLE_USER_LOCK = TRUE,
@@ -280,7 +287,7 @@ BOARDS <- c(
   "welcome", "summary", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics" 
+  "multiomics"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
@@ -336,14 +343,33 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## Filter LLM models with available models, add all local models(?)
+## LLM model setup — playbase filters to providers with available creds
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-LOCAL_MODELS <- playbase::ai.get_ollama_models()
 opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 50, opt$LLM_MAXTURNS)
+dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
+dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
+## TODO(edgy_merge_summaries): copilot reads LLM_IMAGE_MODELS, edgy reads
+## IMAGE_MODELS — alias for now until the legacy enable_ai panel is retired.
+opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
+
+## Copilot tier selection — verify against the omicsagentovi registry
+if (is.null(opt$COPILOT_MODEL)) {
+  opt$COPILOT_MODEL <- "copilot-default"
+}
+if (requireNamespace("omicsagentovi", quietly = TRUE)) {
+  .valid_tiers <- omicsagentovi::ovi_copilot_tiers()
+  .bad_tiers <- setdiff(opt$COPILOT_MODEL, .valid_tiers)
+  if (length(.bad_tiers) > 0L) {
+    warning(sprintf(
+      "[global] COPILOT_MODEL has unknown tiers: %s. Valid: %s. Dropping unknown entries.",
+      paste(.bad_tiers, collapse = ", "), paste(.valid_tiers, collapse = ", ")
+    ))
+    opt$COPILOT_MODEL <- intersect(opt$COPILOT_MODEL, .valid_tiers)
+  }
+  if (length(opt$COPILOT_MODEL) == 0L) opt$COPILOT_MODEL <- "copilot-default"
+  rm(.valid_tiers, .bad_tiers)
+}
 
 ## Setup reticulate
-tryCatch(
-  reticulate::use_miniconda("r-reticulate"),
-  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
-)
+## reticulate::use_virtualenv("reticulate")
