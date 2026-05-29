@@ -63,7 +63,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     ##----------- create new chatbot
     new_chatbot <- function() {
         shiny::req(dim(pgx$X), input$style, input$sysprompt)        
-        shiny::req(ai_model, input$context)
         
         ai_model <- getUserOption(session, "llm_model")
         if (is.null(ai_model) || ai_model == "") {
@@ -76,10 +75,11 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           #shinychat::chat_append("chat", "Oops...")
           return(NULL)
         }
+        shiny::req(ai_model, input$context)
         
         sysprompt <- paste("You are a",input$style,"explaining omics data.")
         sysprompt <- paste(sysprompt, input$sysprompt)
-        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Avoid use of table, bullet points or extensive text formatting unless asked. Prefer continuous prose in short paragraphs.")
+        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Avoid use of tables, bullet points or extensive text formatting unless asked. Prefer continuous prose in short paragraphs.")
 
         ## add response length
         if(input$response_length == "short") {
