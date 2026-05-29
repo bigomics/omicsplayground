@@ -49,9 +49,10 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
 
     STYLES <- list(
-      "scientist" = "Answer like a scientist explaining to a student. Use academic language.",
-      "teacher" = "Answer like a high school teacher explaining to a 10 year old. Use simple language and explain with simple analogies.",
-      "poet" = "Answer like a poet with a short poem."
+      "biologist" = "Answer like a biologist. Use academic language. Emphasize the biological story.",
+      "bioinformatician" = "Answer like a bioinformatician. Brag about algorithms, numbers and p-values.",
+      "teacher" = "Explain like a high school teacher to a 10 year old. Use simple kid-friendly language and explain with simple visual analogies.",
+      "poet" = "Answer like a poet with a short poem in simple layman's terms."
     )
 
     observeEvent( input$style, {
@@ -79,7 +80,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         
         sysprompt <- paste("You are a",input$style,"explaining omics data.")
         sysprompt <- paste(sysprompt, input$sysprompt)
-        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Avoid use of tables, bullet points or extensive text formatting unless asked. Prefer continuous prose in short paragraphs.")
+        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Avoid excessive use of tables orbullet points unless asked. Prefer answering like a conversation.")
 
         ## add response length
         if(input$response_length == "short") {
