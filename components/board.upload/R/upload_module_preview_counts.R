@@ -630,7 +630,7 @@ upload_table_preview_counts_server <- function(id,
 
         if (upload_datatype() == "scRNA-seq") {
           if (file.ext %in% c("h5", "h5ad")) {
-            df <- tryCatch(
+            h5_result <- tryCatch(
               {
                 playbase::read_h5_counts(datafile)
               },
@@ -638,6 +638,8 @@ upload_table_preview_counts_server <- function(id,
                 NULL
               }
             )
+            df <- h5_result[["counts"]]
+            df.samples <- h5_result[["samples"]]
             if (is.null(df)) {
               shinyalert::shinyalert(
                 title = "Error",
@@ -767,6 +769,9 @@ upload_table_preview_counts_server <- function(id,
       }
 
       if (upload_datatype() == "proteomics" && is.olink() && !is.null(df.samples)) {
+        uploaded$samples.csv <- df.samples
+      }
+      if (file.ext %in% c("h5", "h5ad") && exists("df.samples", inherits = FALSE) && !is.null(df.samples)) {
         uploaded$samples.csv <- df.samples
       }
 
