@@ -284,8 +284,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
         
         progress <- shiny::Progress$new()
         on.exit(progress$close())
-        progress$set(message = "Please wait. Updating reports...", value = 0.3)
-<<<<<<< HEAD
+        progress$set(message = "Please wait. Updating AI reports...", value = 0.3)
 
         pgx_list <- shiny::reactiveValuesToList(pgx)
         pgx_list <- playbase::pgx.update_reports(
@@ -302,17 +301,6 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
 
         ## persist to disk if user owns this dataset
         if (!is.null(save_pgx)) save_pgx(pgx)
-      }
-      update_nav(pgx)      
-=======
->>>>>>> edgy
-
-        ##pgx.showSmallModal("Please wait. Updating reports...")
-        pgx <- playbase::pgx.update_reports(
-          pgx, force = input$force, llm_model, img_model = NULL,
-          select = c("wgcna","mofa","cmap","summary") )
-        ##shiny::removeModal()
-
       }
 
       update_nav(pgx)      

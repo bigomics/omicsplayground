@@ -323,31 +323,29 @@ LoadingBoard <- function(id,
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
 
-      has_reports <- !is.null(pgx$report$report) ||
-        !is.null(pgx$wgcna$report$report) ||
-        !is.null(pgx$mofa$report$report) ||
-        !is.null(pgx$drugs[[1]]$report$report)
+      has_reports <- playbase::pgx.has_reports(pgx)
       if (has_reports) return(invisible(NULL))
 
       ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
       shinyalert::shinyalert(
-        title = "No AI reports found",
+        title = "Missing AI reports",
         text = paste0("Dataset '", ds_name,
-          "' has no AI reports. Would you like to compute them now (2-3 min)?"),
+          "' has missing AI reports. Would you like to compute them now (2-3 min)?"),
         type = "info",
         showCancelButton = TRUE,
         confirmButtonText = "Yes",
         cancelButtonText = "No",
         callbackR = function(confirmed) {
           if (!isTRUE(confirmed)) return(NULL)
-          shiny::withProgress(message = "updating reports...", value = 0.33, {
+          shiny::withProgress(message = "Please wait. Generating AI reports...",
+            value = 0.33, {
             pgx_list <- shiny::reactiveValuesToList(pgx)
             pgx_list <- playbase::pgx.update_reports(
               pgx_list, llm_model = llm_model, img_model = NULL,
               select = c("wgcna", "mofa", "cmap", "summary")
             )
             shiny::isolate({
-              for (slot in c("report", "wgcna", "mofa", "drugs")) {
+              for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
                 if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
               }
             })
