@@ -415,12 +415,15 @@ opg_server <- function(input, output, session, PGX, env, auth) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta && is.multiomics)
+    #bigdash.toggleTab(session, "mwgcna-tab", show.beta && is.multiomics)
+    bigdash.toggleTab(session, "mwgcna-tab", is.multiomics)
+    bigdash.toggleTab(session, "wgcna-tab", !is.multiomics || show.beta)
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
     toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
     toggleTab("wgcna-tabs", "AI Report✨", show.beta)
+    toggleTab("mwgcna-tabs", "AI Report✨", show.beta)
     toggleTab("drug-tabs", "AI Summary✨", show.beta)     
 
     ## Control tab to only be displayed if there is custom fc + baseline fc

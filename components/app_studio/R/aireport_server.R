@@ -203,7 +203,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
 
     updatePDF <- function(rpt, rptname, pdfname) {
       if(has.changed(rptname, rpt)) {
-        shiny::withProgress(message = "updating PDF...", value = 0.7, {
+        shiny::withProgress(message = "Rendering PDF...", value = 0.7, {
           file <- file.path(pdf_tempdir, pdfname)
           playbase::markdownToPDF(rpt, file=file, logo=logopath, quiet=TRUE)
         })
@@ -262,11 +262,11 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
     ##---------------------------------------------------------------
     
     shiny::observeEvent({
-      input$generate
+      list(input$generate, pgx$X, pgx$name)
     }, {
-
-      dbg("[AiReportServer] input.nav = ", input$nav)
-      dbg("[AiReportServer] input.navset = ", input$navset)
+      shiny::req(pgx$X, pgx$name)
+      ##shiny::req(!is.null(input$generate))
+      dbg("[[AiReportServer]] is.null(input$generate)", is.null(input$generate))
       
       ## compute reports (if missing)
       llm_model = "groq:openai/gpt-oss-120b"
@@ -275,13 +275,17 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       img_model <- getUserOption(session, "img_model")      
       img_model <- NULL
       if (llm_model=="") llm_model <- NULL
-            
+
+      has.reports <- playbase::pgx.has_reports(pgx)
+      dbg("[AiReportServer] has.reports = ", has.reports)
+      
       if (!is.null(llm_model) && llm_model != "") {
         dbg("[AiReportServer] updating reports using llm = ", llm_model)
-
+        
         progress <- shiny::Progress$new()
         on.exit(progress$close())
         progress$set(message = "Please wait. Updating reports...", value = 0.3)
+<<<<<<< HEAD
 
         pgx_list <- shiny::reactiveValuesToList(pgx)
         pgx_list <- playbase::pgx.update_reports(
@@ -300,7 +304,18 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
         if (!is.null(save_pgx)) save_pgx(pgx)
       }
       update_nav(pgx)      
+=======
+>>>>>>> edgy
 
+        ##pgx.showSmallModal("Please wait. Updating reports...")
+        pgx <- playbase::pgx.update_reports(
+          pgx, force = input$force, llm_model, img_model = NULL,
+          select = c("wgcna","mofa","cmap","summary") )
+        ##shiny::removeModal()
+
+      }
+
+      update_nav(pgx)      
       clear_files()
 
       rpt_wgcna <- pgx$wgcna$report$report

@@ -310,11 +310,11 @@ MofaBoard <- function(id, pgx) {
       selected_pathway = enrichmentTable_selected
     )
 
-    mofa_report_server(
-      "mofa_report",
-      pgx = pgx,
-      mofa = mofa
-    )
+    ## mofa_report_server(
+    ##   "mofa_report",
+    ##   pgx = pgx,
+    ##   mofa = mofa
+    ## )
 
     return(NULL)
   })

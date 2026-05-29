@@ -32,7 +32,7 @@ AppSettingsUI <- function(id) {
             bslib::card_header("App settings"),
             bslib::card_body(
               gap = '0.3em',
-              bslib::input_switch("enable_beta", "Enable beta features", value=TRUE),
+              bslib::input_switch("enable_beta", "Enable beta features", value=FALSE),
               bslib::input_switch("enable_info", "Show info boxes", value=TRUE),
               bslib::input_switch("menu_basic",  "Basic menu", value=initial_is_basic),
               selector_switch(
