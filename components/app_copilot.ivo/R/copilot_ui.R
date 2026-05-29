@@ -21,18 +21,19 @@ CopilotUI <- function(id) {
       shiny::actionButton(ns("get_expression"), "Get expression of MTOR", width = "100%", class = "xbtn")
     )
   )
-
+  
   input_card <- bslib::navset_underline(
     bslib::nav_panel(
       "Settings",
       br(),
-      shiny::textAreaInput(ns("sysprompt"), "System prompt:", value = SYSPROMPT,
-        height = 100, width = "100%"),
-      br(),
+      shiny::selectInput(ns("style"), "Style:",
+        choices = c("scientist","teacher","poet"), selected="scientist", 
+      ),
+      shiny::textAreaInput(ns("sysprompt"), NULL, value = "",
+        height = 80, width = "100%"),
       shiny::radioButtons(ns("response_length"), "Response length:",
         choices = c("shorter","longer"), selected="shorter", inline = TRUE
       ),
-      br(),      
       shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),
       br(),      
       actionButton(ns("reset"), "Apply")
