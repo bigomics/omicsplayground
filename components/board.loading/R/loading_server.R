@@ -18,6 +18,7 @@ LoadingBoard <- function(id,
                          load_uploaded_data,
                          recompute_pgx,
                          new_upload,
+                         save_pgx = NULL,
                          parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -318,23 +319,6 @@ LoadingBoard <- function(id,
       }
     }
 
-    savePGX <- function(pgx, file) {
-      req(auth$logged)
-      if (!auth$logged) {
-        warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")
-        return(NULL)
-      }
-      file <- paste0(sub("[.]pgx$", "", file), ".pgx") ## add/replace .pgx
-      pgxdir <- auth$user_dir
-      if (dir.exists(pgxdir)) {
-        file1 <- file.path(pgxdir, file)
-        playbase::pgx.save(pgx, file = file1)
-      } else {
-        warning("[LoadingBoard::savePGX] ***ERROR*** pgxdir not found : ", pgxdir)
-      }
-      return(NULL)
-    }
-
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
@@ -367,8 +351,8 @@ LoadingBoard <- function(id,
                 if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
               }
             })
-            if (isTRUE(is_user_dir)) {
-              try(savePGX(pgx_list, file = pgxfile), silent = TRUE)
+            if (isTRUE(is_user_dir) && !is.null(save_pgx)) {
+              save_pgx(pgx)
             }
           })
         }
@@ -413,9 +397,9 @@ LoadingBoard <- function(id,
         kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
         size1 <- object.size(loaded_pgx[kk])
         is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
-        if (size1 != size0 && is_user_dir) {        
+        if (size1 != size0 && is_user_dir && !is.null(save_pgx)) {
           info("[loadAndActivatePGX] WARNING: initialized PGX changed! saving updated PGX")
-          savePGX(loaded_pgx, file = pgxfile)
+          save_pgx(loaded_pgx)
         }
 
         ## Copying to pgx list to reactiveValues in
