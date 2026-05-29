@@ -26,7 +26,7 @@ CopilotUI <- function(id) {
     bslib::nav_panel(
       "Settings",
       br(),
-      shiny::selectInput(ns("style"), "Style:",
+      shiny::selectInput(ns("role"), "Style:",
         choices = c("biologist","bioinformatician","teacher","poet"), selected="biologist", 
       ),
       shiny::textAreaInput(ns("sysprompt"), NULL, value = "",

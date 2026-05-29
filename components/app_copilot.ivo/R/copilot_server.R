@@ -52,18 +52,18 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       "biologist" = "Answer like a biologist. Use academic language. Emphasize the biological story.",
       "bioinformatician" = "Answer like a bioinformatician. Brag about algorithms, numbers and p-values.",
       "teacher" = "Explain like a high school teacher to a 10 year old. Use simple kid-friendly language and explain with simple visual analogies.",
-      "poet" = "Answer like a poet with a short poem in simple layman's terms."
+      "poet" = "Answer like a poet with a short rhyming poem in simple layman's terms."
     )
 
-    observeEvent( input$style, {
-      shiny::req(input$style)
-      this.style <- STYLES[[input$style]]
+    observeEvent( input$role, {
+      shiny::req(input$role)
+      this.style <- STYLES[[input$role]]
       shiny::updateTextAreaInput(session, "sysprompt", value = this.style)
     })
 
     ##----------- create new chatbot
     new_chatbot <- function() {
-        shiny::req(dim(pgx$X), input$style, input$sysprompt)        
+        shiny::req(dim(pgx$X), input$role, input$sysprompt)        
         
         ai_model <- getUserOption(session, "llm_model")
         if (is.null(ai_model) || ai_model == "") {
@@ -78,9 +78,9 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         }
         shiny::req(ai_model, input$context)
         
-        sysprompt <- paste("You are a",input$style,"explaining omics data.")
+        sysprompt <- paste("You are a",input$role,"explaining omics data.")
         sysprompt <- paste(sysprompt, input$sysprompt)
-        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Avoid excessive use of tables orbullet points unless asked. Prefer answering like a conversation.")
+        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Refrain from excessive use of tables or bullet points unless asked. Prefer answering in continuous prose like a conversation.")
 
         ## add response length
         if(input$response_length == "short") {
@@ -112,7 +112,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       },
       {
         shinychat::chat_clear("chat")
-        mesg <- paste("👋 I'm **Obi-One**. Ask me anything about your data!")        
+        mesg <- paste0("👋 I'm **Obi-One** the ",input$role,". Ask me anything about your data!")        
         shinychat::chat_append("chat", mesg)
         new_chatbot()
       },
