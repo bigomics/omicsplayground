@@ -103,8 +103,8 @@ RUN --mount=type=secret,id=GITHUB_PAT \
     if [ -n "$GITHUB_PAT" ]; then \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgx')" && \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgxmcp')" && \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsplots')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgxmcp')" && \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsagentovi')" && \
       rm -f /root/.Rhistory; \
     fi
