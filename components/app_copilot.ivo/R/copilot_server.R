@@ -27,15 +27,13 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     observeEvent(list(pgx$X, names(pgx)), {
 
       ## ---------- update reports -------------
-      llm_model <- getUserOption(session, "llm_model")
-      shiny::req(llm_model)
-      shiny::withProgress(message = "updating reports...", value = 0.33, {
-        dbg("[CopilotServer] updating reports...")        
-        pgx <- playbase::pgx.update_reports(pgx, llm_model, img_model=NULL)
-        ##pgx <- playbase::pgx.update_infographics(pgx, llm_model, img_model)
-      })
+      ## Auto report generation is now centralized in LoadingBoard
+      ## (board.loading/R/loading_server.R::maybe_offer_ai_reports).
+      ## A single load-time observer prompts the user and triggers
+      ## playbase::pgx.update_reports() + pgx.save() when accepted.
+      ## See PR discussion: load issue, not a copilot issue.
 
-      ## ---------- get sections -------------      
+      ## ---------- get sections -------------
       sel.sections <- c("description", "dataset_info", "compute_settings")
       PGX.SECTIONS <- c(
         "gx.meta" = "differential_expression",

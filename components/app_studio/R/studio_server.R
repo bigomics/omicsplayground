@@ -12,7 +12,7 @@
 #' Note: pgx needs to be reactiveValues
 #'
 #'
-StudioServer <- function(id, pgx) {
+StudioServer <- function(id, pgx, save_pgx = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -63,7 +63,7 @@ StudioServer <- function(id, pgx) {
     ## ----------------- output -------------------------------
     VisReportServer("poster", pgx, output_format="poster")
     VisReportServer("slide", pgx, output_format="slide")
-    AiReportServer("aireport", pgx)         
+    AiReportServer("aireport", pgx, save_pgx = save_pgx)
     InfographicServer("infographic", pgx)
     
   }) ## end moduleServer

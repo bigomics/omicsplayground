@@ -839,6 +839,26 @@ app_server <- function(input, output, session) {
   ## Standard modules
   ## -------------------------------------------------------------
 
+  ## Single audited save path for voluntary report regeneration.
+  ## Owner check = file must live in auth$user_dir. Public / shared
+  ## datasets become a silent no-op.
+  save_current_pgx <- function(pgx) {
+    if (!isTRUE(auth$logged)) return(invisible(FALSE))
+    if (is.null(pgx$name)) return(invisible(FALSE))
+    pgxdir <- auth$user_dir
+    if (!dir.exists(pgxdir)) return(invisible(FALSE))
+    file <- paste0(sub("[.]pgx$", "", pgx$name), ".pgx")
+    full <- file.path(pgxdir, file)
+    if (!file.exists(full)) return(invisible(FALSE))
+    pgx_obj <- if (methods::is(pgx, "reactivevalues")) {
+      shiny::reactiveValuesToList(pgx)
+    } else {
+      pgx
+    }
+    try(playbase::pgx.save(pgx_obj, file = full), silent = TRUE)
+    invisible(TRUE)
+  }
+
   env$load <- LoadingBoard(
     id = "load",
     pgx = PGX,
@@ -850,6 +870,7 @@ app_server <- function(input, output, session) {
     load_uploaded_data = load_uploaded_data,
     recompute_pgx = recompute_pgx,
     new_upload = new_upload,
+    save_pgx = save_current_pgx,
     parent = session
   )
 
@@ -893,7 +914,7 @@ app_server <- function(input, output, session) {
       is_data_loaded = NULL)
   }
 
-  StudioServer("studio", pgx = PGX)
+  StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)
   
   AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 
   

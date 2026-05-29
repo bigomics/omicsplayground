@@ -18,6 +18,7 @@ LoadingBoard <- function(id,
                          load_uploaded_data,
                          recompute_pgx,
                          new_upload,
+                         save_pgx = NULL,
                          parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -318,21 +319,42 @@ LoadingBoard <- function(id,
       }
     }
 
-    savePGX <- function(pgx, file) {
-      req(auth$logged)
-      if (!auth$logged) {
-        warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")
-        return(NULL)
-      }
-      file <- paste0(sub("[.]pgx$", "", file), ".pgx") ## add/replace .pgx
-      pgxdir <- auth$user_dir
-      if (dir.exists(pgxdir)) {
-        file1 <- file.path(pgxdir, file)
-        playbase::pgx.save(pgx, file = file1)
-      } else {
-        warning("[LoadingBoard::savePGX] ***ERROR*** pgxdir not found : ", pgxdir)
-      }
-      return(NULL)
+    maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
+      llm_model <- getUserOption(session, "llm_model")
+      if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
+
+      has_reports <- playbase::pgx.has_reports(pgx)
+      if (has_reports) return(invisible(NULL))
+
+      ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
+      shinyalert::shinyalert(
+        title = "Missing AI reports",
+        text = paste0("Dataset '", ds_name,
+          "' has missing AI reports. Would you like to compute them now (2-3 min)?"),
+        type = "info",
+        showCancelButton = TRUE,
+        confirmButtonText = "Yes",
+        cancelButtonText = "No",
+        callbackR = function(confirmed) {
+          if (!isTRUE(confirmed)) return(NULL)
+          shiny::withProgress(message = "Please wait. Generating AI reports...",
+            value = 0.33, {
+            pgx_list <- shiny::reactiveValuesToList(pgx)
+            pgx_list <- playbase::pgx.update_reports(
+              pgx_list, llm_model = llm_model, img_model = NULL,
+              select = c("wgcna", "mofa", "cmap", "summary")
+            )
+            shiny::isolate({
+              for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
+                if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
+              }
+            })
+            if (isTRUE(is_user_dir) && !is.null(save_pgx)) {
+              save_pgx(pgx)
+            }
+          })
+        }
+      )
     }
 
     loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
@@ -373,9 +395,9 @@ LoadingBoard <- function(id,
         kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
         size1 <- object.size(loaded_pgx[kk])
         is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
-        if (size1 != size0 && is_user_dir) {        
+        if (size1 != size0 && is_user_dir && !is.null(save_pgx)) {
           info("[loadAndActivatePGX] WARNING: initialized PGX changed! saving updated PGX")
-          savePGX(loaded_pgx, file = pgxfile)
+          save_pgx(loaded_pgx)
         }
 
         ## Copying to pgx list to reactiveValues in
@@ -395,7 +417,10 @@ LoadingBoard <- function(id,
       ## clean up
       gc()
       remove(loaded_pgx)
-      
+
+      ## ----------------- AI reports: offer to compute if missing -----------
+      maybe_offer_ai_reports(pgxfile, is_user_dir)
+
       ## notify new data uploaded
       if (is.null(is_data_loaded())) {
         is_data_loaded(1)
