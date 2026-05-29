@@ -16,10 +16,10 @@ StudioUI <- function(id) {
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
         row_heights = "26px",
-        shiny::actionButton(ns("show_infographic"), "Infographic", width = "100%",
-          class = "xbtn", icon = icon("image")),
         shiny::actionButton(ns("show_reports"), "Reports", width = "100%",
           class = "xbtn", icon = icon("file-lines")),
+        shiny::actionButton(ns("show_infographic"), "Infographic", width = "100%",
+          class = "xbtn", icon = icon("image")),
         shiny::actionButton(ns("show_poster"), "Poster", width = "100%",
           class = "xbtn", icon = icon("note-sticky")),
         shiny::actionButton(ns("show_slidedeck"), "Slide deck", width = "100%",
@@ -35,12 +35,12 @@ StudioUI <- function(id) {
   settings_card <- bslib::navset_hidden(
     id = ns("settings"),
     bslib::nav_panel(
-      "Infographic",
-      InfographicSettings(ns("infographic"))
-    ),
-    bslib::nav_panel(
       "Reports",
       AiReportSettings(ns("aireport"))
+    ),
+    bslib::nav_panel(
+      "Infographic",
+      InfographicSettings(ns("infographic"))
     ),
     bslib::nav_panel(
       "Poster",
@@ -63,12 +63,12 @@ StudioUI <- function(id) {
   output_panel <- bslib::navset_hidden(
     id = ns("studiopanel"),
     bslib::nav_panel(
-      "Infographic",
-      InfographicUI(ns("infographic"))
-    ),
-    bslib::nav_panel(
       "Reports",
       AiReportUI(ns("aireport"))
+    ),
+    bslib::nav_panel(
+      "Infographic",
+      InfographicUI(ns("infographic"))
     ),
     bslib::nav_panel(
       "Poster",
@@ -90,7 +90,7 @@ StudioUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 9),
-    height = "calc(100vh - 80px)",    
+    height = "calc(100vh - 76px)",    
     fill = TRUE,
     ## left sidebar
     bslib::layout_columns(

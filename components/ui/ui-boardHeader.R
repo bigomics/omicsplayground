@@ -14,7 +14,7 @@ boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
       flex = c(NA, 1, NA),
       shiny::div(
         id = "navheader-current-section",
-        HTML(paste0(title, " &nbsp;")),
+        HTML(paste0(title, "&nbsp;")),
         withTooltip(
           shiny::actionLink(
             inputId = info_link,
@@ -55,7 +55,7 @@ OmicsBoardUI <- function(id, title, ..., info=TRUE) {
       style = "margin-top: -6px;",
       shiny::div(
         id = "navheader-current-section",
-        HTML(paste0(title, " &nbsp;")),
+        HTML(paste0(title, "&nbsp;")),
         div.link
       ),
       shiny::uiOutput(ns("current_dataset")),
@@ -97,7 +97,7 @@ OmicsBoard <- function(id, pgx, title, infotext=NULL) {
     shiny::observeEvent(input$board_info, {
       if(!is.null(infotext)) {
         shiny::showModal(shiny::modalDialog(
-          title = shiny::HTML(paste0("<strong>",title,"Board</strong>")),
+          title = shiny::HTML(paste0("<strong>",title,"&nbsp;Board</strong>")),
           shiny::HTML(infotext),
           easyClose = TRUE, size = "xl"
         ))

@@ -20,21 +20,23 @@ WgcnaBoard <- function(id, pgx) {
 </ol>
 ", js = FALSE)
 
+    youtube_link <-
+      '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=WUBozFwNdZbwpT69" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
+
+    ## shiny::observeEvent(input$info, {
+    ##   shiny::showModal(shiny::modalDialog(
+    ##     title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
+    ##     shiny::HTML(infotext),
+    ##     size = "xl",
+    ##     easyClose = TRUE
+    ##   ))
+    ## })
+
+    OmicsBoard("board", pgx, title="WGCNA", infotext = youtube_link) 
+    
     ## ================================================================================
     ## ========================== OBSERVE FUNCTIONS ===================================
     ## ================================================================================
-
-    infotext <-
-      '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=WUBozFwNdZbwpT69" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -85,8 +87,9 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
       
       llm_model <- getUserOption(session,'llm_model')
+      img_model <- "google:gemini-3.1-flash-image-preview"
+      llm_model <- NULL  # skip report here
       img_model <- NULL  # skip infographics
-      #img_model <- "google:gemini-3.1-flash-image-preview"
       out <- playbase::wgcna.init(
         out, llm = llm_model, img_model = img_model,
         annot = pgx$genes, progress = progress
@@ -99,12 +102,12 @@ WgcnaBoard <- function(id, pgx) {
     ncompute = 0
     
     wgcna <- shiny::eventReactive({
-      list(input$compute, pgx$X)
+      list(input$compute, pgx$X, pgx$name, pgx$wgcna)
     },{
       require(WGCNA)
       all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
         any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
-      has_wgcna <- "wgcna" %in% names(pgx) && all_req      
+      has_wgcna <- ("wgcna" %in% names(pgx) && all_req)      
       compute_clicked <- (input$compute != ncompute) 
       
       # Use pre-computed results only if they exist, conditions are

@@ -415,7 +415,8 @@ opg_server <- function(input, output, session, PGX, env, auth) {
     bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
     bigdash.toggleTab(session, "consensus-tab", show.beta)
     bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
-    bigdash.toggleTab(session, "mwgcna-tab", show.beta && is.multiomics)
+    #bigdash.toggleTab(session, "mwgcna-tab", show.beta && is.multiomics)
+    bigdash.toggleTab(session, "mwgcna-tab", is.multiomics)
 
     ## hide beta subtabs..
     toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow

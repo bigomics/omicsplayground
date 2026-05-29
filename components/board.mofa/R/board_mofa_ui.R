@@ -325,8 +325,8 @@ MofaUI <- function(id) {
       panel1,
       panel2,
       panel3,
-      panel4,
-      panel5      
+      panel4
+      #panel5      
     )
   )
 

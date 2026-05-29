@@ -30,6 +30,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       llm_model <- getUserOption(session, "llm_model")
       shiny::req(llm_model)
       shiny::withProgress(message = "updating reports...", value = 0.33, {
+        dbg("[CopilotServer] updating reports...")        
         pgx <- playbase::pgx.update_reports(pgx, llm_model, img_model=NULL)
         ##pgx <- playbase::pgx.update_infographics(pgx, llm_model, img_model)
       })
