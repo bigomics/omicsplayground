@@ -108,7 +108,7 @@ AiReportUI <- function(id) {
 }
 
 
-AiReportServer <- function(id, pgx) {
+AiReportServer <- function(id, pgx, save_pgx = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     
@@ -284,14 +284,23 @@ AiReportServer <- function(id, pgx) {
         
         progress <- shiny::Progress$new()
         on.exit(progress$close())
-        progress$set(message = "Please wait. Updating reports...", value = 0.3)
+        progress$set(message = "Please wait. Updating AI reports...", value = 0.3)
 
-        ##pgx.showSmallModal("Please wait. Updating reports...")
-        pgx <- playbase::pgx.update_reports(
-          pgx, force = input$force, llm_model, img_model = NULL,
-          select = c("wgcna","mofa","cmap","summary") )
-        ##shiny::removeModal()
+        pgx_list <- shiny::reactiveValuesToList(pgx)
+        pgx_list <- playbase::pgx.update_reports(
+          pgx_list, force = input$force, llm_model = llm_model, img_model = NULL,
+          select = c("wgcna", "mofa", "cmap", "summary"))
 
+        ## patch report slots back into reactiveValues so other modules
+        ## see the new content without reload
+        shiny::isolate({
+          for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
+            if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
+          }
+        })
+
+        ## persist to disk if user owns this dataset
+        if (!is.null(save_pgx)) save_pgx(pgx)
       }
 
       update_nav(pgx)      
