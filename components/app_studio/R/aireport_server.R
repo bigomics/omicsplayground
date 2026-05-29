@@ -286,11 +286,11 @@ AiReportServer <- function(id, pgx) {
         on.exit(progress$close())
         progress$set(message = "Please wait. Updating reports...", value = 0.3)
 
-        pgx.showSmallModal("Please wait. Updating reports...")
+        ##pgx.showSmallModal("Please wait. Updating reports...")
         pgx <- playbase::pgx.update_reports(
           pgx, force = input$force, llm_model, img_model = NULL,
           select = c("wgcna","mofa","cmap","summary") )
-        shiny::removeModal()
+        ##shiny::removeModal()
 
       }
 
