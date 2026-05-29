@@ -49,21 +49,30 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
 
     STYLES <- list(
-      "biologist" = "Answer like a biologist. Use academic language. Emphasize the biological story.",
+      "biologist" = "Answer like a biologist. Use academic language. Focus on the biological story.",
       "bioinformatician" = "Answer like a bioinformatician. Brag about algorithms, numbers and p-values.",
-      "teacher" = "Explain like a high school teacher to a 10 year old. Use simple kid-friendly language and explain with simple visual analogies.",
-      "poet" = "Answer like a poet with a short rhyming poem in simple layman's terms."
+      "teacher" = "Explain it like a high school teacher would to a 10-year-old. Use simple language and explain with simple, vivid comparisons.",
+      "poet" = "Answer like a poet with a rhymed poem using simple layman's terms."
     )
 
+    NICKNAMES <- list(
+      "biologist" = "bubbly biologist",
+      "bioinformatician" = "brainy bioinformatician",
+      "teacher" = "twinkly teacher",
+      "poet" = "punny poet"
+    )
+    
     observeEvent( input$role, {
       shiny::req(input$role)
       this.style <- STYLES[[input$role]]
       shiny::updateTextAreaInput(session, "sysprompt", value = this.style)
     })
-
+    
     ##----------- create new chatbot
     new_chatbot <- function() {
-        shiny::req(dim(pgx$X), input$role, input$sysprompt)        
+        shiny::req(dim(pgx$X))
+        shiny::req(isTruthy(input$role))
+        shiny::req(isTruthy(input$sysprompt))                        
         
         ai_model <- getUserOption(session, "llm_model")
         if (is.null(ai_model) || ai_model == "") {
@@ -78,7 +87,8 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         }
         shiny::req(ai_model, input$context)
         
-        sysprompt <- paste("You are a",input$role,"explaining omics data.")
+        my_role <- NICKNAMES[[input$role]]
+        sysprompt <- paste("You are a",my_role,"explaining omics data.")
         sysprompt <- paste(sysprompt, input$sysprompt)
         sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Refrain from excessive use of tables or bullet points unless asked. Prefer answering in continuous prose like a conversation.")
 
@@ -93,7 +103,7 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
         content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
         sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
-        dbg("Creating new chatbot", ai_model)
+        dbg("[new_chatbot] Creating new chatbot", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
 
         if (!is.null(chat)) {
@@ -112,7 +122,8 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       },
       {
         shinychat::chat_clear("chat")
-        mesg <- paste0("👋 I'm **Obi-One** the ",input$role,". Ask me anything about your data!")        
+        my_role <- NICKNAMES[[input$role]]
+        mesg <- paste0("👋 I'm **Obi-One** the ",my_role,". Ask me anything about your data!")        
         shinychat::chat_append("chat", mesg)
         new_chatbot()
       },

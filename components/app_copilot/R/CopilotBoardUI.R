@@ -15,7 +15,7 @@ CopilotBoardUI <- function(id) {
   ns <- shiny::NS(id)
 
   ui <- bslib::layout_columns(
-    col_widths = c(3, 6, 3),
+    col_widths = c(3, 5, 4),
     style = "height: calc(100vh - 80px);",
 
     # ---- Left column: datasets / history / docs ----

@@ -27,7 +27,13 @@ CopilotUI <- function(id) {
       "Settings",
       br(),
       shiny::selectInput(ns("role"), "Style:",
-        choices = c("biologist","bioinformatician","teacher","poet"), selected="biologist", 
+        choices = c(
+          "Bubbly biologist" = "biologist",
+          "Brainy bioinformatician" = "bioinformatician",
+          "Twinkly teacher" = "teacher",
+          "Punny poet" = "poet"
+        ),
+        selected="biologist", 
       ),
       shiny::textAreaInput(ns("sysprompt"), NULL, value = "",
         height = 80, width = "100%"),

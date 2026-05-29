@@ -18,7 +18,7 @@ COPILOT_STARTERS <- c(
   "What pathways are involved?",
   "Show top biomarkers",
   "Find references",
-  "Get differential expression top genes"
+  "Show a volcano plot"
 )
 
 # ---- Option name constants --------------------------------------------------
