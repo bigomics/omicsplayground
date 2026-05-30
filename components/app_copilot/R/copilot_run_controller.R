@@ -132,16 +132,18 @@ copilot_run_controller <- function(
     current <- shiny::isolate(agent())
     if (!is.null(current)) {
       ctx_pgx <- tryCatch(current@context@pgx, error = function(e) NULL)
-      if (!is.null(ctx_pgx)) return(ctx_pgx)
+      if (!is.null(ctx_pgx)) {
+        # Defensive normalisation: if an upstream code path (restore,
+        # legacy plumbing) leaked a reactiveValues into the agent's
+        # context, this is the last line of defence before .pgx_check
+        # blows up on the next omicspgx call.
+        return(copilot_normalize_pgx(ctx_pgx,
+                                     source = "run_controller/.current_pgx/agent"))
+      }
     }
-    has_data <- tryCatch(
-      !is.null(shiny::isolate(pgx$name)) && !is.null(shiny::isolate(pgx$X)),
-      error = function(e) FALSE
-    )
-    if (!isTRUE(has_data)) return(NULL)
-    snapshot <- shiny::reactiveValuesToList(pgx)
-    class(snapshot) <- unique(c("pgx", class(snapshot)))
-    snapshot
+    # Fallback: snapshot the global pgx reactiveValues through the
+    # centralised normaliser.
+    copilot_normalize_pgx(pgx, source = "run_controller/.current_pgx/global")
   }
 
   # ------------------------------------------------------------------------
@@ -412,6 +414,10 @@ copilot_run_controller <- function(
   # apply_dataset — shared dataset-change controller
   # ------------------------------------------------------------------------
   apply_dataset <- function(pgx_val, name, path, data_dir) {
+    # Funnel every caller through the normaliser so a stray reactiveValues
+    # can never reach RunContext / agent_set_pgx.
+    pgx_val <- copilot_normalize_pgx(pgx_val,
+                                     source = "run_controller/apply_dataset")
     if (is.null(pgx_val)) return(invisible(NULL))
 
     current <- shiny::isolate(agent())

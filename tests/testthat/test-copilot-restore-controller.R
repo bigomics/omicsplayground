@@ -16,7 +16,14 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
 }
 
 # ---- Source dependencies ----
-.board_dir <- if (dir.exists("components/board.copilot/R")) {
+# Historical name was `board.copilot`; the live module is `app_copilot`.
+# Prefer the current name and fall back to the legacy one so test fixtures
+# from older branches keep working.
+.board_dir <- if (dir.exists("components/app_copilot/R")) {
+  "components/app_copilot/R"
+} else if (dir.exists("../../components/app_copilot/R")) {
+  "../../components/app_copilot/R"
+} else if (dir.exists("components/board.copilot/R")) {
   "components/board.copilot/R"
 } else {
   "../../components/board.copilot/R"
@@ -26,6 +33,12 @@ source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
 source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
 source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
 source(file.path(.board_dir, "copilot_bindings.R"),           local = TRUE)
+# Centralised pgx normaliser; the restore controller funnels every
+# leak-prone pgx source through it before handing off to agent_set_pgx.
+source(file.path(.board_dir, "copilot_pgx_normalize.R"),       local = TRUE)
+# Context-block staging providers (current_dataset, future AI report, etc.)
+# are invoked by .complete_restore after agent reconstruction.
+source(file.path(.board_dir, "copilot_context_blocks.R"),      local = TRUE)
 source(file.path(.board_dir, "copilot_restore_controller.R"), local = TRUE)
 
 library(omicsagentovi)
@@ -74,7 +87,12 @@ make_chat_event_capture <- function() {
 # Unit: .replay_transcript — pushes one replay event with filtered records
 # ===========================================================================
 
-test_that(".replay_transcript with 0 records pushes 0 events", {
+test_that(".replay_transcript with 0 records still emits one replay event with clear_first=TRUE", {
+  # Restore-controller invariant: every call to .replay_transcript MUST
+  # emit exactly one replay event, even with zero records, because the
+  # event is what clears the "Restoring…" placeholder from chat. A
+  # separate `clear` event would coalesce with this one at the
+  # reactiveVal layer and be lost — see the "append on restore" bug.
   agent <- make_stub_agent()
   cap <- make_chat_event_capture()
 
@@ -85,7 +103,11 @@ test_that(".replay_transcript with 0 records pushes 0 events", {
 
   n <- .replay_transcript(agent, cap$writer)
   expect_equal(n, 0L)
-  expect_length(cap$events(), 0L)
+  expect_length(cap$events(), 1L)
+  ev <- cap$events()[[1]]
+  expect_equal(ev$type, "replay")
+  expect_true(isTRUE(ev$clear_first))
+  expect_length(ev$records, 0L)
 })
 
 test_that(".replay_transcript with N visible records pushes a single replay event with those records", {
@@ -110,6 +132,7 @@ test_that(".replay_transcript with N visible records pushes a single replay even
 
   ev <- cap$events()[[1]]
   expect_equal(ev$type, "replay")
+  expect_true(isTRUE(ev$clear_first))
   expect_length(ev$records, 3L)
   expect_equal(vapply(ev$records, function(r) r@role, character(1)),
                c("user", "assistant", "user"))
@@ -363,10 +386,13 @@ test_that("start() happy path: chat clear + post events pushed, evidence cleared
       expect_equal(shiny::isolate(restore_inflight()), "test-session-id")
       expect_true(evidence_cleared)
 
-      # At least two events: clear then post
-      expect_true(length(events) >= 2L)
-      expect_equal(events[[1]]$type, "clear")
-      expect_equal(events[[2]]$type, "post")
+      # restore_controller emits a single atomic `reset` event (clear +
+      # placeholder post in one observer firing). Two back-to-back writes
+      # to chat_event would coalesce at the reactiveVal layer and the
+      # `clear` would be lost — that was the "append on restore" bug.
+      expect_true(length(events) >= 1L)
+      expect_equal(events[[1]]$type, "reset")
+      expect_true(nzchar(events[[1]]$text %||% ""))
 
       expect_equal(shiny::isolate(ctrl$status()), "restoring")
     }
@@ -425,17 +451,32 @@ test_that("after task starts with NULL local_pgx: inflight set, status restoring
   )
 })
 
-test_that("after task starts with non-NULL local_pgx: inflight set, status restoring", {
+test_that("non-NULL local_pgx triggers the sync fast path: restore completes inside session$onFlushed", {
+  # Sync fast path contract: when local_pgx is non-NULL, ovi_restore runs
+  # inside session$onFlushed and .complete_restore fires immediately after.
+  # By the time flushReact() returns, the controller has already cleared
+  # restore_inflight and dropped status back to "idle". (The pre-fix
+  # assertion checked the "restoring" mid-state — that only holds in the
+  # async path; for the sync path the right invariant is post-completion.)
   store            <- make_fake_store()
+  restored_agent   <- make_stub_agent()
   agent_rv         <- shiny::reactiveVal(make_stub_agent())
   run_status_rv    <- shiny::reactiveVal("idle")
   restore_inflight <- shiny::reactiveVal(NULL)
   chat_event_rv    <- shiny::reactiveVal(NULL)
-  fake_pgx <- list(name = "test-dataset")
+  # copilot_normalize_pgx now requires both $name and $X to consider a
+  # value a usable PGX — incomplete shapes get treated as "no dataset
+  # yet" and return NULL. Give the fake both fields so agent_set_pgx
+  # actually fires on the sync path.
+  fake_pgx <- list(name = "test-dataset", X = matrix(1, 2, 2))
+  agent_set_pgx_called <- FALSE
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) make_stub_agent(),
-    agent_set_pgx = function(agent, pgx, ...) agent,
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) restored_agent,
+    agent_set_pgx = function(agent, pgx, ...) {
+      agent_set_pgx_called <<- TRUE
+      agent
+    },
     session_transcript = function(agent_session, view = "user") list(),
     .package = "omicsagentovi"
   )
@@ -462,8 +503,12 @@ test_that("after task starts with non-NULL local_pgx: inflight set, status resto
     expr = {
       ctrl$start("test-session-id")
       session$flushReact()
-      expect_equal(shiny::isolate(restore_inflight()), "test-session-id")
-      expect_equal(shiny::isolate(ctrl$status()), "restoring")
+      # Sync path complete: inflight cleared, status idle, pgx injected,
+      # restored agent committed.
+      expect_null(shiny::isolate(restore_inflight()))
+      expect_equal(shiny::isolate(ctrl$status()), "idle")
+      expect_true(agent_set_pgx_called)
+      expect_identical(shiny::isolate(agent_rv()), restored_agent)
     }
   )
 })
@@ -508,18 +553,28 @@ test_that("failure during start() leaves agent() unchanged (previous_agent prese
   )
 })
 
-test_that("agent_set_pgx throws during injection: restore completes with no-pgx agent, inflight cleared", {
+test_that("agent_set_pgx throws during injection: restore still completes, agent committed without pgx", {
+  # Resilience contract: if agent_set_pgx errors (e.g. omicspgx accessor
+  # blows up on a malformed dataset), .complete_restore must log and
+  # proceed — the rest of the restore (context block staging, transcript
+  # replay) must still land, and the controller must reach idle. We
+  # supply a well-shaped fake_pgx so the normaliser lets it through; the
+  # MOCKED agent_set_pgx is what throws.
   store            <- make_fake_store()
-  original_agent   <- make_stub_agent()
-  agent_rv         <- shiny::reactiveVal(original_agent)
+  restored_agent   <- make_stub_agent()
+  agent_rv         <- shiny::reactiveVal(make_stub_agent())
   run_status_rv    <- shiny::reactiveVal("idle")
   restore_inflight <- shiny::reactiveVal(NULL)
   chat_event_rv    <- shiny::reactiveVal(NULL)
-  fake_pgx <- list(name = "bad-dataset")
+  fake_pgx <- list(name = "bad-dataset", X = matrix(1, 2, 2))
+  set_pgx_attempted <- FALSE
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) make_stub_agent(),
-    agent_set_pgx = function(agent, pgx, ...) stop("agent_set_pgx: simulated failure"),
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) restored_agent,
+    agent_set_pgx = function(agent, pgx, ...) {
+      set_pgx_attempted <<- TRUE
+      stop("agent_set_pgx: simulated failure")
+    },
     session_transcript = function(agent_session, view = "user") list(),
     .package = "omicsagentovi"
   )
@@ -547,8 +602,13 @@ test_that("agent_set_pgx throws during injection: restore completes with no-pgx 
       ctrl$start("test-session-id")
       session$flushReact()
 
-      expect_equal(shiny::isolate(restore_inflight()), "test-session-id")
-      expect_equal(shiny::isolate(ctrl$status()), "restoring")
+      # Injection was attempted (the normaliser accepted the fake_pgx).
+      expect_true(set_pgx_attempted)
+      # And restoration still completed cleanly — failure of the pgx
+      # inject must not strand inflight or block agent commit.
+      expect_null(shiny::isolate(restore_inflight()))
+      expect_equal(shiny::isolate(ctrl$status()), "idle")
+      expect_identical(shiny::isolate(agent_rv()), restored_agent)
     }
   )
 })

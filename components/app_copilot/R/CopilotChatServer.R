@@ -202,6 +202,13 @@ CopilotChatServer <- function(
         },
         replay = {
           records <- event$records %||% list()
+          # Atomic clear+replay: the restore controller sets clear_first
+          # so the "Restoring…" placeholder is dropped in the same observer
+          # firing as the records append. A separate `clear` event would
+          # coalesce with this one at the reactiveVal layer and be lost.
+          if (isTRUE(event$clear_first)) {
+            shinychat::chat_clear("chat")
+          }
           # Prefer content_text_visible (no injected preamble) so the user
           # sees only what they typed on replay; fall back to content_text
           # for records saved before omicsagentovi 0.5.0 added the split.

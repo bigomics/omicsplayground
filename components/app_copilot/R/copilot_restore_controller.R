@@ -39,9 +39,12 @@
   records <- omicsagentovi::session_transcript(agent@session, view = "user")
   # Drop empty-content records (keep filter semantics from Phase 3).
   records <- Filter(function(r) nzchar(r@content_text), records)
-  if (length(records) > 0L) {
-    chat_event(list(type = "replay", records = records))
-  }
+  # Always emit the event (even with zero records) and instruct the chat
+  # module to clear first — this drops the "Restoring…" placeholder line
+  # before the historical messages land. clear_first is consumed by
+  # CopilotChatServer's replay handler in the same observer firing, so
+  # there is no chance of the reactiveVal write coalescing away the clear.
+  chat_event(list(type = "replay", clear_first = TRUE, records = records))
   length(records)
 }
 
@@ -139,14 +142,21 @@ copilot_restore_controller <- function(
   .complete_restore <- function(restored, session_id, restore_mode = "async") {
     if (is.null(restored)) return(invisible(NULL))
 
-    current_pgx <- tryCatch(shiny::isolate(local_pgx()), error = function(e) NULL)
-    # `current_pgx` is typically a reactiveValues-like object; field reads
-    # must also be isolated when this runs outside a reactive consumer
-    # (e.g. the sync fast path firing from session$onFlushed).
+    raw_pgx <- tryCatch(shiny::isolate(local_pgx()), error = function(e) NULL)
+    # Read $name BEFORE normalisation: on a reactiveValues the field
+    # lookup still works, and after normalisation we still want the same
+    # name; doing it here keeps NA-handling symmetric with the old behaviour.
     pgx_name <- tryCatch(
-      shiny::isolate(current_pgx$name),
+      shiny::isolate(raw_pgx$name),
       error = function(e) NA_character_
     )
+
+    # Funnel the global reactiveValues through the centralised normaliser
+    # so agent@context@pgx is ALWAYS a classed list (or NULL). Bypassing
+    # this (as the pre-fix code did) leaks a `reactivevalues` object into
+    # the agent context and trips omicspgx::.pgx_check on the next call.
+    current_pgx <- copilot_normalize_pgx(raw_pgx,
+                                         source = "restore_controller/.complete_restore")
 
     if (!is.null(current_pgx)) {
       restore_status("attaching_dataset")
@@ -229,9 +239,14 @@ copilot_restore_controller <- function(
     # Clear evidence panel if wired (Phase 5)
     if (!is.null(evidence)) evidence$clear()
 
-    # Clear chat and show placeholder via the event bus.
-    chat_event(list(type = "clear"))
-    chat_event(list(type = "post", role = "assistant",
+    # Clear chat AND post placeholder atomically. Two back-to-back writes
+    # to a reactiveVal in the same flush cycle coalesce — only the second
+    # value reaches the observer, which dropped the "clear" and left the
+    # previous chat in place. The `reset` event type bundles clear+post
+    # in a single observer firing (see CopilotChatServer chat_event
+    # handler). Restoring without this is exactly the "appends to current
+    # conversation" bug.
+    chat_event(list(type = "reset", role = "assistant",
                     text = copilot_msg("restore_started")))
 
     has_local_pgx <- !is.null(tryCatch(local_pgx(), error = function(e) NULL))
