@@ -314,6 +314,7 @@ splashscreen.buttons <- function(ns) {
     ),
     div(
       class = "btn-group",
+      style = "margin-left: auto;",
       role = "group",
       div(
         class = "btn-group",
