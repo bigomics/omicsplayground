@@ -23,29 +23,26 @@ CopilotBoardUI <- function(id) {
       col_widths = 12,
       row_heights = c(2,1),
       bslib::card(
-        height = "calc(100% - 40px)",        
-        bslib::layout_columns(
-          col_widths = 12,
-          row_heights = c(1,NA),
-          bslib::navset_underline(
-            #bslib::nav_panel("Datasets", CopilotDatasetsUI(ns("datasets"))),
-            bslib::nav_panel("Dataset",            
-              shiny::uiOutput(ns("dataset_info"))
-            ),
-            bslib::nav_panel("Settings",
-              CopilotChatSettings(ns("chat"))
-            ),
-            bslib::nav_panel("History",
-              CopilotHistoryUI(ns("history"))
-            )
+        height = "calc(100% - 40px)",
+        shiny::actionButton(
+          ns("new_chat"),
+          label = "New chat",
+          icon  = shiny::icon("plus"),
+          class = "btn-sm btn-outline-secondary w-100",
+          style = "margin-bottom: 8px;"
+        ),
+        bslib::navset_underline(
+          #bslib::nav_panel("Datasets", CopilotDatasetsUI(ns("datasets"))),
+          bslib::nav_panel("Dataset",
+            shiny::uiOutput(ns("dataset_info"))
           ),
-          shiny::actionButton(
-            ns("new_chat"),
-            label = "New chat",
-            icon  = shiny::icon("plus"),
-            class = "btn-sm btn-outline-secondary w-100"
+          bslib::nav_panel("Settings",
+            CopilotChatSettings(ns("chat"))
+          ),
+          bslib::nav_panel("History",
+            CopilotHistoryUI(ns("history"))
           )
-        ),        
+        )
       ),
       bslib::card(
         bslib::navset_underline(
