@@ -32,15 +32,22 @@ CopilotUI <- function(id) {
           "Brainy bioinformatician" = "bioinformatician",
           "Twinkly teacher" = "teacher",
           "Punny poet" = "poet"
+          ## "custom"
         ),
         selected="biologist", 
       ),
-      shiny::textAreaInput(ns("sysprompt"), NULL, value = "",
-        height = 80, width = "100%"),
+      shiny::conditionalPanel(
+        "input.role == 'custom'",
+        ns = ns,
+        shiny::textAreaInput(ns("roleprompt"), NULL, value = "",
+          height = 80, width = "100%"),
+        ),
       shiny::radioButtons(ns("response_length"), "Response length:",
-        choices = c("shorter","longer"), selected="shorter", inline = TRUE
+        choices = c("short","long"), selected="short", inline = TRUE
       ),
-      shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),
+      ##shiny::checkboxInput(ns("usetools"), "Use tools", FALSE),
+      shiny::checkboxInput(ns("fullquestion"), "Show full question", FALSE),      
+      shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),      
       br(),      
       actionButton(ns("reset"), "Apply")
     ),

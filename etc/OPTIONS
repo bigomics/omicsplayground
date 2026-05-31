@@ -35,13 +35,13 @@ HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
 
-LLM_MODELS           = google:gemini-2.5-flash;groq:openai/gpt-oss-20b;groq:openai/gpt-oss-120b;openai:gpt-5.4-nano;openai:gpt-5.4-mini;xai:grok-4-1-fast-non-reasoning;google:gemini-3-flash-preview;google:gemini-3.1-flash-lite-preview
+LLM_MODELS           = groq:openai/gpt-oss-120b;openai:gpt-5.4-nano;openai:gpt-5.4-mini;xai:grok-4-1-fast-non-reasoning;google:gemini-3-flash-preview;google:gemini-3.1-flash-lite-preview
 LLM_IMAGE_MODELS     = gemini-3.1-flash-image-preview;gemini-3-pro-image-preview
 # TODO(edgy_merge_summaries): IMAGE_MODELS is a temporary alias kept for the
 # edgy legacy enable_ai/llm_model/img_model block in board.user/appsettings_server.R.
 # Collapse to LLM_IMAGE_MODELS once the legacy AI settings panel is retired.
 IMAGE_MODELS         = google:gemini-3.1-flash-image-preview;google:gemini-3-pro-image-preview
-LLM_MAXTURNS         = 10
+LLM_MAXTURNS         = 1000
 PUBLIC_DATASETS_LABEL = Team Datasets
 COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 

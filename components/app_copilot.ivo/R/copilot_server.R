@@ -46,13 +46,12 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       shiny::updateCheckboxGroupInput(session, "context",
         choices = sel.sections, selected = sel.sections)
     })
-
-
+    
     STYLES <- list(
       "biologist" = "Answer like a biologist. Use academic language. Focus on the biological story.",
       "bioinformatician" = "Answer like a bioinformatician. Brag about algorithms, numbers and p-values.",
       "teacher" = "Explain it like a high school teacher would to a 10-year-old. Use simple language and explain with simple, vivid comparisons.",
-      "poet" = "Answer like a poet with a rhymed poem using simple layman's terms."
+      "poet" = "Answer like a poet with a poem using plain simple layman's terms. Style like a limmerick but must rhyme."
     )
 
     NICKNAMES <- list(
@@ -62,17 +61,39 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       "poet" = "punny poet"
     )
     
-    observeEvent( input$role, {
-      shiny::req(input$role)
-      this.style <- STYLES[[input$role]]
-      shiny::updateTextAreaInput(session, "sysprompt", value = this.style)
+    get_sysprompt <- reactive({
+      shiny::req(input$role, input$response_length)
+
+      my_role <- NICKNAMES[[input$role]]
+      if(my_role == "custom") {
+        roleprompt <- input$roleprompt
+      } else {
+        roleprompt <- STYLES[[input$role]]
+      }
+
+      ## add role style
+      sysprompt <- paste("You are a", my_role, "explaining omics data.", roleprompt)
+
+      ## extra directions
+      sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Refrain from excessive use of tables or bullet points unless asked. Prefer answering in continuous prose like a conversation.")
+      
+      ## add response length
+      if(input$response_length == "short") {
+        sysprompt <- paste(sysprompt, "Keep your answer short.")
+      } else if(input$response_length == "long") {
+        sysprompt <- paste(sysprompt, "Answer in detail.")
+      } else {
+        ##
+      }      
+      return(sysprompt)
     })
+
     
     ##----------- create new chatbot
     new_chatbot <- function() {
         shiny::req(dim(pgx$X))
         shiny::req(isTruthy(input$role))
-        shiny::req(isTruthy(input$sysprompt))                        
+        shiny::req(isTruthy(input$context))                                
         
         ai_model <- getUserOption(session, "llm_model")
         if (is.null(ai_model) || ai_model == "") {
@@ -85,30 +106,19 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           #shinychat::chat_append("chat", "Oops...")
           return(NULL)
         }
-        shiny::req(ai_model, input$context)
+        shiny::req(ai_model)
         
-        my_role <- NICKNAMES[[input$role]]
-        sysprompt <- paste("You are a",my_role,"explaining omics data.")
-        sysprompt <- paste(sysprompt, input$sysprompt)
-        sysprompt <- paste(sysprompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore requests for plotting and say creating images is not supported yet. Refrain from excessive use of tables or bullet points unless asked. Prefer answering in continuous prose like a conversation.")
-
-        ## add response length
-        if(input$response_length == "short") {
-          sysprompt <- paste(sysprompt, "Answer brief and succint.")
-        } else if(input$response_length == "longer") {
-          sysprompt <- paste(sysprompt, "Answer in detail.")
-        } else {
-          ##
-        }
-
-        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
-        sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
+        ## get role prompt and paste entire report as context
+        sysprompt <- get_sysprompt()
+        report <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
+        sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", report, "</report>", collapse = " ")
         dbg("[new_chatbot] Creating new chatbot", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
 
-        if (!is.null(chat)) {
+        usetools=FALSE
+        if (!is.null(chat) && usetools) {
           ## ------------ still experimential --------
-          # register_tools(chat)
+          register_tools(chat)
           # register_mcp(chat)
         }
         
@@ -161,20 +171,16 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
       ## always end with period
       question <- paste(trimws(sub("[.]$","",question)),".")
+      just_question <- question
+      
+      ## add system prompt to be sure
+      question <- paste(question, get_sysprompt())
 
       ## show question
       if (showq) {
-        mesg <- list(role = "user", content = question)
+        q <- ifelse(input$fullquestion, question, just_question)
+        mesg <- list(role = "user", content = q)
         shinychat::chat_append_message("chat", mesg, chunk = FALSE)
-      }
-
-      ## add response length
-      if(input$response_length == "shorter") {
-        question <- paste(question, "Answer brief and succint.")
-      } else if(input$response_length == "longer") {
-        question <- paste(question, "Answer in detail.")
-      } else {
-        ##
       }
       
       response <- chat$chat_async(question)
@@ -188,12 +194,18 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
     ## ----------------- tools -------------------------------
     register_tools <- function(chat) {
-      if (is.null(chat)) {
-        return(NULL)
-      }
-      chat$register_tool(playbase::ai.tool_get_current_time)
-      chat$register_tool(playbase::ai.tool_get_expression)
+      if (is.null(chat)) return(NULL)
+
+      chat$register_tool( playbase::ai.tool_get_current_time )
+      ##chat$register_tool(playbase::ai.tool_get_expression)
       # chat$register_tool( playbase::ai.tool_plot_volcano )
+      
+      pgxlist <- pgx
+      pgxlist <- shiny::reactiveValuesToList(shiny::isolate(pgx))
+      obi.tools <- obi.get_tools(pgxlist, group=NULL, names=NULL)
+      for (tool in obi.tools) chat$register_tool(tool)
+      dbg("[CopilotServer] registered", length(obi.tools),"tools")
+
     }
 
     ## ------------ MAIN USER INTERACTION LOOP --------------------
