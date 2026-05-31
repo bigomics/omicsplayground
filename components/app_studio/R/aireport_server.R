@@ -258,69 +258,78 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
 
     
     ##---------------------------------------------------------------
-    ## --------- main observer: generate reports --------------------
+    ## --------- refresh observer: pgx load -------------------------
     ##---------------------------------------------------------------
-    
-    shiny::observeEvent({
-      list(input$generate, pgx$X, pgx$name)
-    }, {
+    ## On dataset change, only refresh the Studio UI from whatever
+    ## reports the pgx already carries. Auto-generation on load is
+    ## owned by LoadingBoard's yes/no prompt
+    ## (board.loading/R/loading_server.R::maybe_offer_ai_reports).
+
+    shiny::observeEvent(list(pgx$X, pgx$name), {
       shiny::req(pgx$X, pgx$name)
-      ##shiny::req(!is.null(input$generate))
-      dbg("[[AiReportServer]] is.null(input$generate)", is.null(input$generate))
-      
-      ## compute reports (if missing)
-      llm_model = "groq:openai/gpt-oss-120b"
-      img_model = "google:gemini-3.1-flash-image-preview"
-      llm_model <- getUserOption(session, "llm_model")
-      img_model <- getUserOption(session, "img_model")      
-      img_model <- NULL
-      if (llm_model=="") llm_model <- NULL
+      dbg("[AiReportServer] pgx load refresh (no auto-generation)")
 
-      has.reports <- playbase::pgx.has_reports(pgx)
-      dbg("[AiReportServer] has.reports = ", has.reports)
-      
-      if (!is.null(llm_model) && llm_model != "") {
-        dbg("[AiReportServer] updating reports using llm = ", llm_model)
-        
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message = "Please wait. Updating AI reports...", value = 0.3)
-
-        pgx_list <- shiny::reactiveValuesToList(pgx)
-        pgx_list <- playbase::pgx.update_reports(
-          pgx_list, force = input$force, llm_model = llm_model, img_model = NULL,
-          select = c("wgcna", "mofa", "cmap", "summary"))
-
-        ## patch report slots back into reactiveValues so other modules
-        ## see the new content without reload
-        shiny::isolate({
-          for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
-            if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
-          }
-        })
-
-        ## persist to disk if user owns this dataset
-        if (!is.null(save_pgx)) save_pgx(pgx)
-      }
-
-      update_nav(pgx)      
+      update_nav(pgx)
       clear_files()
 
-      rpt_wgcna <- pgx$wgcna$report$report
-      rpt_wgcna2 <- pgx$wgcna_mox$report$report      
-      rpt_mofa <- pgx$mofa$report$report
-      rpt_cmap <- pgx$drugs[[1]]$report$report      
-      rpt_summary <- pgx$report$report
-      
-      updateTextAreaInput(session, "edit_wgcna", value = rpt_wgcna)
-      updateTextAreaInput(session, "edit_wgcna2", value = rpt_wgcna2)
-      updateTextAreaInput(session, "edit_mofa", value = rpt_mofa)
-      updateTextAreaInput(session, "edit_cmap", value = rpt_cmap)
-      updateTextAreaInput(session, "edit_summary", value = rpt_summary)
+      updateTextAreaInput(session, "edit_wgcna",   value = pgx$wgcna$report$report)
+      updateTextAreaInput(session, "edit_wgcna2",  value = pgx$wgcna_mox$report$report)
+      updateTextAreaInput(session, "edit_mofa",    value = pgx$mofa$report$report)
+      updateTextAreaInput(session, "edit_cmap",    value = pgx$drugs[[1]]$report$report)
+      updateTextAreaInput(session, "edit_summary", value = pgx$report$report)
 
       updateCheckboxInput(session, "force", value = FALSE)
-      updateActionButton(session, "generate", label = "Reset reports")      
+      label <- if (isTRUE(playbase::pgx.has_reports(pgx))) "Reset reports" else "Generate reports"
+      updateActionButton(session, "generate", label = label)
     })
+
+    ##---------------------------------------------------------------
+    ## --------- main observer: generate reports --------------------
+    ##---------------------------------------------------------------
+    ## Only the Generate button triggers report computation. PGX
+    ## load is handled by the refresh observer above and must not
+    ## re-enter this path, otherwise we re-introduce the silent
+    ## auto-generation that LoadingBoard's prompt is meant to gate.
+
+    shiny::observeEvent(input$generate, {
+      shiny::req(pgx$X, pgx$name)
+
+      llm_model <- getUserOption(session, "llm_model")
+      if (is.null(llm_model) || llm_model == "") {
+        return(NULL)
+      }
+
+      dbg("[AiReportServer] updating reports using llm = ", llm_model)
+
+      progress <- shiny::Progress$new()
+      on.exit(progress$close())
+      progress$set(message = "Please wait. Updating AI reports...", value = 0.3)
+
+      pgx_list <- shiny::reactiveValuesToList(pgx)
+      pgx_list <- playbase::pgx.update_reports(
+        pgx_list, force = input$force, llm_model = llm_model, img_model = NULL,
+        select = c("wgcna", "mofa", "cmap", "summary"))
+
+      shiny::isolate({
+        for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
+          if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
+        }
+      })
+
+      if (!is.null(save_pgx)) save_pgx(pgx)
+
+      update_nav(pgx)
+      clear_files()
+
+      updateTextAreaInput(session, "edit_wgcna",   value = pgx$wgcna$report$report)
+      updateTextAreaInput(session, "edit_wgcna2",  value = pgx$wgcna_mox$report$report)
+      updateTextAreaInput(session, "edit_mofa",    value = pgx$mofa$report$report)
+      updateTextAreaInput(session, "edit_cmap",    value = pgx$drugs[[1]]$report$report)
+      updateTextAreaInput(session, "edit_summary", value = pgx$report$report)
+
+      updateCheckboxInput(session, "force", value = FALSE)
+      updateActionButton(session, "generate", label = "Reset reports")
+    }, ignoreInit = TRUE)
     
     ##-------------------------------------------------
     ##------------ other observers --------------------

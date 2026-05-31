@@ -185,6 +185,8 @@ CopilotBoardServer <- function(
       # adds dataset_path to the notification_sink payload). p$name_arg
       # is the raw LLM input — could be a basename — and must not be
       # stored as a locator path or restore will fail to re-load.
+      # apply_dataset() funnels pgx_val through copilot_normalize_pgx()
+      # internally — no need to snapshot here.
       run_ctrl$apply_dataset(
         pgx_val  = p$pgx,
         name     = p$dataset_name,
@@ -194,17 +196,16 @@ CopilotBoardServer <- function(
       pgx_loaded_event(NULL)
     }, ignoreNULL = TRUE)
 
-    # Source 2: global PGX from other boards. Materialise reactiveValues into
-    # a plain list with class "pgx" — tools run outside the reactive domain
-    # and downstream package code expects a plain list.
+    # Source 2: global PGX from other boards. apply_dataset() funnels
+    # pgx_val through copilot_normalize_pgx(), which handles the
+    # reactiveValues -> classed list snapshot. We pass `pgx` directly
+    # so there's only one snapshot site.
     shiny::observeEvent(pgx$name, {
       shiny::req(pgx$name, !is.null(pgx$X))
       if (!is.null(restore_inflight())) return()
-      snapshot <- shiny::reactiveValuesToList(pgx)
-      class(snapshot) <- unique(c("pgx", class(snapshot)))
       run_ctrl$apply_dataset(
-        pgx_val  = snapshot,
-        name     = as.character(pgx$name[[1]]),
+        pgx_val  = pgx,
+        name     = as.character(shiny::isolate(pgx$name)[[1]]),
         path     = NULL,
         data_dir = pgx_dir
       )
