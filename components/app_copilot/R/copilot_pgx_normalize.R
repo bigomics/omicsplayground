@@ -23,9 +23,6 @@
 #   - reactiveValues are isolated + snapshot-listed exactly once
 #   - the class stamp is always applied
 #   - one place to add tracing or extra coercions
-
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 #' Normalise a pgx-shaped value into a classed pgx list
 #'
 #' Accepts `NULL`, a `shiny::reactiveValues`, a plain `list`, or an

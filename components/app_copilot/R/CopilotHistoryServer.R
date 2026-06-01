@@ -5,11 +5,6 @@
 # is responsible for actually invoking restore/delete and for bumping
 # `history_invalidation_tick` so the panel refreshes.
 
-# ---- Local null-coalescing operator ----------------------------------------
-if (!exists("%||%")) {
-  `%||%` <- function(a, b) if (is.null(a)) b else a
-}
-
 #' Render a relative-time label for an ISO-8601 UTC timestamp.
 #'
 #' Kept in this file for now; future migration to a shared helper is a

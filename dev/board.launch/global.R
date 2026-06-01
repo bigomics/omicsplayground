@@ -186,7 +186,8 @@ opt.default <- list(
   DEVMODE = FALSE,
   ENABLE_MULTIOMICS = TRUE,
   ENABLE_COOKIE_LOGIN = TRUE,
-  PUBLIC_DATASETS_LABEL = "Public Datasets"
+  PUBLIC_DATASETS_LABEL = "Public Datasets",
+  LLM_MAXTURNS = 100
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -335,7 +336,7 @@ i18n$set_translation_language("RNA-seq")
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
 # opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
   
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
