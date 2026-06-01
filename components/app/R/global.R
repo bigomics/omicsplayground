@@ -198,7 +198,8 @@ opt.default <- list(
   USER_LEVEL = 'PRO',  
   ENABLE_MULTIOMICS = TRUE,
   ENABLE_COOKIE_LOGIN = TRUE,
-  PUBLIC_DATASETS_LABEL = "Public Datasets"
+  PUBLIC_DATASETS_LABEL = "Public Datasets",
+  LLM_MAXTURNS = 100
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
