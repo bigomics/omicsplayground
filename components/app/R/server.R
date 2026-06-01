@@ -809,15 +809,42 @@ app_server <- function(input, output, session) {
   shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   ## Startup Message
-  dbg("[MAIN] showing startup modal")
-  observeEvent(auth$logged, {
-    if (auth$logged) {
-      shinyjs::delay(500, {
-        #ui.showStartupModal()
-        #ui.showAboutModal()
-      })
-    }
-  })
+  ## dbg("[MAIN] showing startup modal")
+  ## observeEvent(auth$logged, {
+  ##   if (auth$logged) {
+  ##     shinyjs::delay(500, {
+  ##       ## skip startup modal if the user has pending shared datasets:
+  ##       ## the "New dataset received!" alert takes precedence
+  ##       pgx_shared_dir <- stringr::str_replace_all(PGX.DIR, c("data" = "data_shared"))
+  ##       has_received <- FALSE
+  ##       if (!is.null(auth$email) && nzchar(auth$email) && dir.exists(pgx_shared_dir)) {
+  ##         received <- dir(
+  ##           path = pgx_shared_dir,
+  ##           pattern = paste0("__to__", auth$email, "__from__.*__$"),
+  ##           ignore.case = TRUE
+  ##         )
+  ##         has_received <- length(received) > 0
+  ##       }
+  ##       ## read startup messages
+  ##       ## msg_file <- file.path(ETC, "MESSAGES")
+  ##       ## if (!has_received && file.exists(msg_file)) {
+  ##       ##   msg <- readLines(msg_file)
+  ##       ##   msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
+  ##       ##   if (FALSE  && length(msg) > 0) {
+  ##       ##     msg <- c(msg[[1]], sample(msg, min(4, length(msg))))
+  ##       ##     STARTUP_MESSAGES <- msg
+  ##       ##     shiny::showModal(
+  ##       ##       ui.startupModal(
+  ##       ##         id = "startup_modal",
+  ##       ##         messages = STARTUP_MESSAGES,
+  ##       ##         title = "BigOmics Highlights"
+  ##       ##       )
+  ##       ##     )
+  ##       ##   }
+  ##       ## }        
+  ##     })
+  ##   }
+  ## })
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Reset inactivity counter when there is user activity (a click on the UI)

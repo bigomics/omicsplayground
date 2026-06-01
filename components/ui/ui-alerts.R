@@ -4,11 +4,19 @@
 ##
 
 BIGOMICS_CONTACT_US_URL <- "https://bigomics.ch/contact-us/"
+BIGOMICS_PRICING_URL <- "https://bigomics.ch/pricing/"
 
 contact_us_callback_js <- function() {
   sprintf(
     "function(value) { if (value === true) { window.open('%s', '_blank'); } }",
     BIGOMICS_CONTACT_US_URL
+  )
+}
+
+upgrade_callback_js <- function() {
+  sprintf(
+    "function(value) { if (value === true) { window.open('%s', '_blank'); } }",
+    BIGOMICS_PRICING_URL
   )
 }
 
@@ -60,7 +68,9 @@ shinyalert_storage_full <- function(numpgx = NULL, maxpgx = NULL, user_level = N
       text = shiny::HTML(msg),
       html = TRUE,
       type = "warning",
+      showCancelButton = TRUE,
       confirmButtonText = "Contact us",
+      cancelButtonText = "Cancel",
       confirmButtonCol = "#337ab7",
       callbackJS = contact_us_callback_js()
     )
@@ -107,4 +117,93 @@ shinyalert_max_samples_reached <- function(max_samples,
     text = msg,
     type = "error"
   )
+}
+
+## Check if a dataset's size exceeds the user's plan limits. Mirrors the
+## grey-out logic in loading_table_datasets.R (MAX_GENES, MAX_SAMPLES for
+## non-scRNAseq, multi-omics when ENABLE_MULTIOMICS is off).
+dataset_exceeds_limits <- function(nsamples, ngenes, datatype, opts) {
+  if (is.null(opts)) {
+    return(FALSE)
+  }
+  dt <- as.character(datatype)
+  if (!is.null(opts$MAX_GENES) && !is.na(ngenes) && ngenes > opts$MAX_GENES) {
+    return(TRUE)
+  }
+  if (!is.null(opts$MAX_SAMPLES) && !is.na(nsamples) &&
+    !identical(dt, "scRNAseq") && nsamples > opts$MAX_SAMPLES) {
+    return(TRUE)
+  }
+  if (!isTRUE(opts$ENABLE_MULTIOMICS) && identical(dt, "multi-omics")) {
+    return(TRUE)
+  }
+  FALSE
+}
+
+## Hard-block alert when importing/accepting a dataset that exceeds plan
+## limits. Upgrade button opens the pricing page in a new tab.
+shinyalert_exceeds_plan_limits <- function() {
+  shinyalert::shinyalert(
+    title = "Dataset exceeds plan limits",
+    text = "This dataset can't be imported because it exceeds your plan limits. Upgrade to analyze larger datasets.",
+    type = "warning",
+    showCancelButton = TRUE,
+    confirmButtonText = "Upgrade now",
+    cancelButtonText = "Cancel",
+    confirmButtonCol = "#337ab7",
+    callbackJS = upgrade_callback_js()
+  )
+}
+
+## Shown when delete is disabled (free tier). Paid users delete normally
+## upstream and never see this alert.
+shinyalert_delete_without_limits <- function() {
+  shinyalert::shinyalert(
+    title = "Delete without limits",
+    text = "Running out of space? The free plan limits deletions, but upgrading gives you unlimited control.",
+    type = "warning",
+    showCancelButton = TRUE,
+    confirmButtonText = "Upgrade now",
+    cancelButtonText = "Later",
+    confirmButtonCol = "#337ab7",
+    callbackJS = upgrade_callback_js()
+  )
+}
+
+## user_level: auth$level from AuthenticationModule ("free", "starter", "premium", ...)
+shinyalert_max_contrasts_reached <- function(max_contrasts, user_level = NULL) {
+  x_str <- if (!is.null(max_contrasts) && length(max_contrasts) && !is.na(max_contrasts)) {
+    as.character(max_contrasts)
+  } else {
+    "X"
+  }
+  is_free <- auth_user_level_is_free(user_level)
+  if (is_free) {
+    msg <- paste0(
+      "You have reached the maximum number of contrasts allowed in your free plan. ",
+      "Please upload a new contrasts file with a maximum of ", x_str,
+      " contrasts or upgrade to analyze larger datasets"
+    )
+    shinyalert::shinyalert(
+      title = "Maximum contrasts reached",
+      text = msg,
+      type = "error",
+      showCancelButton = TRUE,
+      confirmButtonText = "Upgrade now",
+      cancelButtonText = "Cancel",
+      confirmButtonCol = "#337ab7",
+      callbackJS = upgrade_callback_js()
+    )
+  } else {
+    msg <- paste0(
+      "You have reached the maximum number of contrasts allowed for your account. ",
+      "Please upload a new contrasts file with a maximum of ", x_str,
+      " contrasts or contact support."
+    )
+    shinyalert_ok_contact_us(
+      title = "Maximum contrasts reached",
+      text = msg,
+      type = "error"
+    )
+  }
 }

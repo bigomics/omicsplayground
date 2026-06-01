@@ -83,6 +83,7 @@ app_ui <- function(x) {
       ))
     }
 
+
     signout_link <- nav_signout(
       "Sign out", href = NULL, onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
     )
