@@ -27,34 +27,9 @@ upload_module_received_server <- function(id,
       }
 
       # keep navbar badges in sync with the count of pending received datasets
+      # (JS lives in static/shared-badges.js, styles in scss/components/_navbar.scss)
       update_shared_badges <- function(n) {
-        shinyjs::runjs(sprintf(
-          "(function(n){
-            var sub = document.querySelector('a[data-target=\"sharing-tab\"]');
-            if (sub) {
-              var oldSub = sub.querySelector('.shared-pending-badge');
-              if (oldSub) oldSub.remove();
-              if (n > 0) {
-                var b = document.createElement('span');
-                b.className = 'shared-pending-badge';
-                b.style.cssText = 'display:inline-block;background:#dc3545;color:#fff;border-radius:10px;padding:0 6px;margin-left:6px;font-size:11px;font-weight:600;line-height:16px;vertical-align:middle;';
-                b.textContent = n;
-                sub.appendChild(b);
-              }
-            }
-            document.querySelectorAll('.nav-link.dropdown-toggle').forEach(function(el){
-              if (el.textContent.trim().indexOf('Datasets') !== 0) return;
-              var oldDot = el.querySelector('.shared-pending-dot');
-              if (oldDot) oldDot.remove();
-              if (n > 0) {
-                var d = document.createElement('span');
-                d.className = 'shared-pending-dot';
-                d.style.cssText = 'display:inline-block;background:#dc3545;border-radius:50%%;width:8px;height:8px;margin-left:6px;vertical-align:middle;';
-                el.appendChild(d);
-              }
-            });
-          })(%d);", n
-        ))
+        shinyjs::runjs(sprintf("updateSharedBadges(%d);", n))
       }
 
       ## ------------ get received files
