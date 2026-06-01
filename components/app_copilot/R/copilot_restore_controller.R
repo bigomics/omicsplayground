@@ -18,9 +18,6 @@
 # See .active_plans/refactor_copilot/restore_controller/specs.md for the
 # full contract.
 
-# ---- Null-coalescing operator ----
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 # --------------------------------------------------------------------------
 # Internal helpers (file-local, prefixed `.`)
 # --------------------------------------------------------------------------

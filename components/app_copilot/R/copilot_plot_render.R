@@ -11,11 +11,6 @@
 #   3. copilot_prerender_ggplot/copilot_prerender_plotly as appropriate
 #   4. evidence_api$append_artifact(record)
 
-# ---- Null-coalescing operator (local — avoids dependency on run_controller.R) ----
-if (!exists("%||%")) {
-  `%||%` <- function(a, b) if (is.null(a)) b else a
-}
-
 #' Detect the plot kind from an R plot object
 #'
 #' @param plot_obj Any R object returned by an agent visualisation tool.

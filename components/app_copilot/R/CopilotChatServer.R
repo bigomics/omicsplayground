@@ -7,9 +7,6 @@
 #
 # See .active_plans/refactor_copilot/chat/specs.md for the full contract.
 
-# ---- Null-coalescing operator ----
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 #' Copilot Chat Module Server
 #'
 #' Owns shinychat I/O. Observes `chat_event` and dispatches `post`, `clear`,
