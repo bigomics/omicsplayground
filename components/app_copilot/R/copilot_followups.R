@@ -129,8 +129,3 @@ format_followup_bubble <- function(questions) {
   )
   paste0("<ul>", items, "</ul>")
 }
-
-# ---- internal null-coalesce (file is sourced standalone in tests) ----------
-if (!exists("%||%", mode = "function")) {
-  `%||%` <- function(a, b) if (is.null(a)) b else a
-}

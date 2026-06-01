@@ -20,9 +20,6 @@
 # or session reset. The composed preamble persists in chat$get_turns() for
 # the remainder of the conversation, so each provider should be brief —
 # tens of lines, not kilobytes — or rely on prompt-caching at the provider.
-
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 # ---- Block providers -----------------------------------------------------
 
 # Each entry: name (string) -> function(agent) -> character(1) | NULL.

@@ -30,8 +30,6 @@ COPILOT_STARTERS <- c(
 # ---- Numeric limits ---------------------------------------------------------
 #' @export
 .COPILOT_MAX_HISTORY <- 100L
-#' @export
-.COPILOT_MAX_TURNS   <- Inf
 
 # ---- Required in-house packages --------------------------------------------
 #' Required in-house packages for the Copilot to boot.

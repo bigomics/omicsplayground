@@ -9,11 +9,6 @@
 # controller) call `$clear_plots()` or `$update_table()`, never write to
 # plot_history directly.
 
-# ---- Null-coalescing operator (local) ----
-if (!exists("%||%")) {
-  `%||%` <- function(a, b) if (is.null(a)) b else a
-}
-
 #' Copilot Evidence Module Server
 #'
 #' Manages the artifact display panel: plot renderers, carousel, results table,

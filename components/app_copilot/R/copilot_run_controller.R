@@ -8,9 +8,6 @@
 # See .active_plans/refactor_copilot/run_controller/specs.md for the full
 # contract.
 
-# ---- Null-coalescing operator ----
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 # ---- Request constructors (pure helpers — no reactives) ----
 
 #' @export

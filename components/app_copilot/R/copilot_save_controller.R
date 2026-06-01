@@ -69,7 +69,8 @@
 #'   each successful save.
 #' @param session           Shiny session object — used for `onFlushed`.
 #' @param max_history       Maximum saved sessions to keep after pruning.
-#'   Defaults to `getOption("copilot.max_history", 20L)`.
+#'   Defaults to `copilot_max_history()` (reads `copilot.max_history` option,
+#'   falls back to `.COPILOT_MAX_HISTORY`).
 #'
 #' @return `list(on_run_settled = function(), status = reactive)`
 #' @export
@@ -78,7 +79,7 @@ copilot_save_controller <- function(
   agent,
   history_invalidation_tick,
   session,
-  max_history = getOption("copilot.max_history", 20L)
+  max_history = copilot_max_history()
 ) {
 
   # ---- Internal state ----
