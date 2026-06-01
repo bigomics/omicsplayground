@@ -346,7 +346,7 @@ i18n$set_translation_language("RNA-seq")
 ## LLM model setup — playbase filters to providers with available creds
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 50, opt$LLM_MAXTURNS)
+## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
 dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
 dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
 ## TODO(edgy_merge_summaries): copilot reads LLM_IMAGE_MODELS, edgy reads

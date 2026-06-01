@@ -41,7 +41,7 @@ LLM_IMAGE_MODELS     = gemini-3.1-flash-image-preview;gemini-3-pro-image-preview
 # edgy legacy enable_ai/llm_model/img_model block in board.user/appsettings_server.R.
 # Collapse to LLM_IMAGE_MODELS once the legacy AI settings panel is retired.
 IMAGE_MODELS         = google:gemini-3.1-flash-image-preview;google:gemini-3-pro-image-preview
-LLM_MAXTURNS         = 1000
+LLM_MAXTURNS         = 100
 PUBLIC_DATASETS_LABEL = Team Datasets
 COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 
