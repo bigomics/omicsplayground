@@ -74,6 +74,8 @@ CopilotBoardServer <- function(
     # ---- Reactive state (board-owned) ----
     agent_rv                  <- shiny::reactiveVal(NULL)
     tier                      <- shiny::reactiveVal(tiers[[1]])
+    style                     <- shiny::reactiveVal(COPILOT_STYLES[[1]])
+    custom                    <- shiny::reactiveVal("")
     run_status                <- shiny::reactiveVal("idle")
     history_invalidation_tick <- shiny::reactiveVal(0L)
     restore_inflight          <- shiny::reactiveVal(NULL)
@@ -92,7 +94,9 @@ CopilotBoardServer <- function(
       store                     = chat_store,
       agent                     = agent_rv,
       history_invalidation_tick = history_invalidation_tick,
-      session                   = session
+      session                   = session,
+      style                     = style,
+      custom                    = custom
     )
 
     # ---- Restore controller ----
@@ -119,19 +123,22 @@ CopilotBoardServer <- function(
     tier_choices_rx <- shiny::reactive({
       stats::setNames(tiers, vapply(tiers, copilot_tier_label, character(1)))
     })
+    style_choices_rx <- shiny::reactive(COPILOT_STYLE_LABELS)
     chat_mod <- CopilotChatServer(
       "chat",
       on_user_message = function(text) {
         run_ctrl$dispatch(run_request_ask(text, show_user_msg = TRUE))
       },
-      chat_event   = shiny::reactive(chat_event_rv()),
-      run_status   = shiny::reactive(run_status()),
-      on_abort     = function(reason) {
+      chat_event    = shiny::reactive(chat_event_rv()),
+      run_status    = shiny::reactive(run_status()),
+      on_abort      = function(reason) {
         run_ctrl$dispatch(run_request_abort(reason))
       },
-      tier_choices = tier_choices_rx,
-      current_tier = tier,
-      starters     = shiny::reactive(COPILOT_STARTERS)
+      tier_choices  = tier_choices_rx,
+      current_tier  = tier,
+      style_choices = style_choices_rx,
+      current_style = style,
+      starters      = shiny::reactive(COPILOT_STARTERS)
     )
 
     # ---- Run controller ----
@@ -150,7 +157,9 @@ CopilotBoardServer <- function(
       docs_dir             = docs_dir,
       pgx_loaded_event     = pgx_loaded_event,
       maxturns             = maxturns,
-      session              = session
+      session              = session,
+      style                = style,
+      custom               = custom
     )
 
     # ---- Panel modules (datasets / history / docs) ----
@@ -175,6 +184,56 @@ CopilotBoardServer <- function(
       if (identical(new_tier, shiny::isolate(tier()))) return()
       run_ctrl$dispatch(run_request_tier(new_tier))
     }, ignoreInit = TRUE)
+
+    # Style + custom-text observers: rebuild the system prompt from fragments
+    # and live-swap it onto the active ellmer Chat (via $set_system_prompt)
+    # so the change takes effect on the next user message — no full reset
+    # required (chat history is preserved). The S7 `system_prompt` slot is
+    # updated in lockstep so the next session_save() persists the new prompt.
+    .apply_style_to_live_agent <- function(agent, new_style, new_custom) {
+      if (is.null(agent)) return(agent)
+      new_prompt <- tryCatch(
+        omicsagentovi::ovi_build_system_prompt(style = new_style, custom = new_custom),
+        error = function(e) {
+          log_info("copilot.style.build_failed", msg = conditionMessage(e))
+          NULL
+        }
+      )
+      if (is.null(new_prompt)) return(agent)
+      tryCatch(agent@chat$set_system_prompt(new_prompt),
+               error = function(e) {
+                 log_info("copilot.style.live_swap_failed", msg = conditionMessage(e))
+               })
+      agent <- tryCatch(S7::set_props(agent, system_prompt = new_prompt),
+                        error = function(e) agent)
+      tryCatch(omicsagentovi::session_mark_changed(agent, source = "style"),
+               error = function(e) agent)
+    }
+
+    shiny::observeEvent(chat_mod$style_clicked(), {
+      new_style <- chat_mod$style_clicked()
+      shiny::req(new_style)
+      if (identical(new_style, shiny::isolate(style()))) return()
+      style(new_style)
+      current <- shiny::isolate(agent_rv())
+      if (!is.null(current)) {
+        agent_rv(.apply_style_to_live_agent(
+          current, new_style, shiny::isolate(custom())
+        ))
+      }
+    }, ignoreInit = TRUE)
+
+    shiny::observeEvent(chat_mod$custom_text(), {
+      new_custom <- chat_mod$custom_text() %||% ""
+      if (identical(new_custom, shiny::isolate(custom()))) return()
+      custom(new_custom)
+      current <- shiny::isolate(agent_rv())
+      if (!is.null(current)) {
+        agent_rv(.apply_style_to_live_agent(
+          current, shiny::isolate(style()), new_custom
+        ))
+      }
+    }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
     # ---- Dataset-change observers (route through run_ctrl$apply_dataset) ----
     # Source 1: pgx_loaded_event trampoline (manage_pgx tool via notification_sink)
@@ -211,45 +270,26 @@ CopilotBoardServer <- function(
       )
     }, ignoreNULL = TRUE)
 
-    # Source 3: human dataset picker (CopilotDatasetsServer selection)
-    ## shiny::observeEvent(datasets$selected(), {
-    ##   path <- datasets$selected()
-    ##   shiny::req(path)
-    ##   if (!is.null(restore_inflight())) return()
-    ##   loaded <- tryCatch(
-    ##     {
-    ##       pgx_obj <- playbase::pgx.load(path)
-    ##       pgx_obj <- playbase::pgx.initialize(pgx_obj)
-    ##       pgx_obj
-    ##     },
-    ##     error = function(e) {
-    ##       shiny::showNotification(
-    ##         copilot_msg("switch_failed", msg = conditionMessage(e)),
-    ##         type = "error", session = session
-    ##       )
-    ##       NULL
-    ##     }
-    ##   )
-    ##   if (is.null(loaded)) return()
-    ##   # Push into global pgx so other boards see it.
-    ##   sync_rv_from_list(pgx, loaded)
-    ##   class(loaded) <- unique(c("pgx", class(loaded)))
-    ##   run_ctrl$apply_dataset(
-    ##     pgx_val  = loaded,
-    ##     name     = tools::file_path_sans_ext(basename(path)),
-    ##     path     = path,
-    ##     data_dir = pgx_dir
-    ##   )
-    ##   bigdash.showTabsGoToDataView(session)
-    ##   if (!is.null(is_data_loaded)) {
-    ##     is_data_loaded(shiny::isolate(is_data_loaded()) + 1L)
-    ##   }
-    ## }, ignoreNULL = TRUE)
-
     # ---- History panel: restore trigger ----
     shiny::observeEvent(history$on_restore(), {
       sid <- history$on_restore()
       shiny::req(sid)
+      # Seed the style/custom reactives from the saved session metadata so
+      # the radios reflect the restored session (and the next Agent build —
+      # e.g. tier change after restore — uses the restored style).
+      meta <- tryCatch(
+        omicsagentovi::ovi_session_meta(session_id = sid, session_dir = chat_dir),
+        error = function(e) NULL
+      )
+      if (!is.null(meta)) {
+        saved_style <- meta$style[[1L]]
+        if (!is.na(saved_style) && nzchar(saved_style) &&
+            saved_style %in% COPILOT_STYLES) {
+          style(saved_style)
+        }
+        saved_custom <- meta$custom[[1L]]
+        custom(if (is.na(saved_custom)) "" else saved_custom)
+      }
       restore_ctrl$start(sid)
       history$on_restore(NULL)   # consume edge
     }, ignoreNULL = TRUE)

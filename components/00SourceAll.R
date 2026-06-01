@@ -14,6 +14,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app_copilot/R/copilot_logger.R',encoding='UTF-8')
   source('app_copilot/R/copilot_messages.R',encoding='UTF-8')
   source('app_copilot/R/copilot_options.R',encoding='UTF-8')
+  source('app_copilot/R/copilot_pgx_normalize.R',encoding='UTF-8')
   source('app_copilot/R/copilot_plot_render.R',encoding='UTF-8')
   source('app_copilot/R/copilot_restore_controller.R',encoding='UTF-8')
   source('app_copilot/R/copilot_run_controller.R',encoding='UTF-8')

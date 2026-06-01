@@ -78,13 +78,35 @@ copilot_run_controller <- function(
   docs_dir,
   pgx_loaded_event,
   maxturns         = Inf,
-  session
+  session,
+  style            = NULL,
+  custom           = NULL
 ) {
 
   # ---- Follow-up suggestion generator (side LLM call, runtime-optional) ----
   # Returns NULL if `omicsai` is not installed — downstream code guards on
   # this and skips the feature silently.
   followup_gen <- tryCatch(make_followup_generator(), error = function(e) NULL)
+
+  # ---- System-prompt resolver ----
+  # Single source for the system prompt used at every Agent() construction
+  # site (.do_reset and apply_dataset). Reads the live style/custom reactives
+  # when wired, falls back to the option-driven default otherwise. A build
+  # failure (bad fragment, etc.) is logged and falls back so we never block
+  # Agent construction on a prompt assembly issue.
+  .resolve_system_prompt <- function() {
+    if (is.null(style)) return(copilot_system_prompt())
+    tryCatch(
+      omicsagentovi::ovi_build_system_prompt(
+        style  = shiny::isolate(style()),
+        custom = if (!is.null(custom)) shiny::isolate(custom()) else NULL
+      ),
+      error = function(e) {
+        log_info("copilot.run.prompt_build_failed", msg = conditionMessage(e))
+        copilot_system_prompt()
+      }
+    )
+  }
 
   # ---- Bindings factory (closes over session + host integration handles) ----
   .build_bindings <- function() {
@@ -281,7 +303,11 @@ copilot_run_controller <- function(
     if (!is.null(current) &&
         omicsagentovi::session_is_dirty(current@session)) {
       saved <- tryCatch(
-        omicsagentovi::session_save(store, current),
+        omicsagentovi::session_save(
+          store, current,
+          style  = if (!is.null(style))  shiny::isolate(style())  else NULL,
+          custom = if (!is.null(custom)) shiny::isolate(custom()) else NULL
+        ),
         error = function(e) {
           log_info("copilot.run.presave_failed", msg = conditionMessage(e))
           current
@@ -314,7 +340,7 @@ copilot_run_controller <- function(
       new_agent <- tryCatch(
         omicsagentovi::Agent(
           tier          = the_tier,
-          system_prompt = copilot_system_prompt(),
+          system_prompt = .resolve_system_prompt(),
           context       = omicsagentovi::RunContext(pgx = pgx_val),
           session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
           bindings      = bindings
@@ -427,7 +453,7 @@ copilot_run_controller <- function(
       new_agent <- tryCatch(
         omicsagentovi::Agent(
           tier          = shiny::isolate(tier()),
-          system_prompt = copilot_system_prompt(),
+          system_prompt = .resolve_system_prompt(),
           context       = omicsagentovi::RunContext(pgx = pgx_val),
           session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
           bindings      = bindings

@@ -46,11 +46,13 @@ CopilotChatServer <- function(
   id,
   on_user_message,
   chat_event,
-  run_status   = NULL,
-  on_abort     = NULL,
-  tier_choices = NULL,
-  current_tier = NULL,
-  starters     = NULL
+  run_status    = NULL,
+  on_abort      = NULL,
+  tier_choices  = NULL,
+  current_tier  = NULL,
+  style_choices = NULL,
+  current_style = NULL,
+  starters      = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
@@ -59,6 +61,8 @@ CopilotChatServer <- function(
     stream_done_rv <- shiny::reactiveVal(0L)
     last_error_rv  <- shiny::reactiveVal(NULL)
     tier_clicked   <- shiny::reactiveVal(NULL)
+    style_clicked  <- shiny::reactiveVal(NULL)
+    custom_text_rv <- shiny::reactiveVal("")
 
     # ---- tier choices update ----
     if (!is.null(tier_choices)) {
@@ -92,6 +96,39 @@ CopilotChatServer <- function(
       shiny::req(input$tier_choice)
       tier_clicked(input$tier_choice)
     }, ignoreInit = TRUE)
+
+    # ---- style choices update ----
+    if (!is.null(style_choices)) {
+      shiny::observe({
+        ch <- style_choices()
+        shiny::req(ch)
+        shiny::updateRadioButtons(
+          session, "style_choice",
+          choiceNames  = unname(ch),
+          choiceValues = names(ch),
+          selected     = shiny::isolate(
+            if (!is.null(current_style)) current_style() else character(0)
+          )
+        )
+      })
+    }
+
+    # ---- style_choice observer ----
+    shiny::observeEvent(input$style_choice, {
+      shiny::req(input$style_choice)
+      style_clicked(input$style_choice)
+      # Toggle the custom-style textbox visibility.
+      if (identical(input$style_choice, "custom")) {
+        shinyjs::show("custom_text_wrap")
+      } else {
+        shinyjs::hide("custom_text_wrap")
+      }
+    }, ignoreInit = FALSE)
+
+    # ---- custom_text observer (debounced via reactive) ----
+    shiny::observeEvent(input$custom_text, {
+      custom_text_rv(input$custom_text %||% "")
+    }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
     # ---- run_status: morph send button into stop button while streaming ----
     # When run_status() == "streaming" we add the .copilot-streaming class on
@@ -331,7 +368,9 @@ CopilotChatServer <- function(
       last_error      = shiny::reactive(last_error_rv()),
       on_tool_request = .on_tool_request,
       push_event      = NULL,
-      tier_clicked    = tier_clicked
+      tier_clicked    = tier_clicked,
+      style_clicked   = style_clicked,
+      custom_text     = shiny::reactive(custom_text_rv())
     )
   })
 }
