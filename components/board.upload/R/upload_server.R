@@ -526,12 +526,8 @@ UploadBoard <- function(id,
           if (ncol(checked) > MAXCONTRASTS) {
             status <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
             checked <- NULL
-            # pop up telling user max contrasts reached
-            shinyalert::shinyalert(
-              title = "Maximum contrasts reached",
-              text = paste("You have reached the maximum number of contrasts allowed. Please upload a new contrasts file with a maximum of", MAXCONTRASTS, "contrasts."),
-              type = "error"
-            )
+            # pop up telling user max contrasts reached (ui-alerts.R)
+            shinyalert_max_contrasts_reached(MAXCONTRASTS, auth$level)
           }
         }
 
