@@ -1407,9 +1407,22 @@ app_server <- function(input, output, session) {
   observeEvent(auth$logged, {
     if (auth$logged) {
       shinyjs::delay(500, {
+        ## skip startup modal if the user has pending shared datasets:
+        ## the "New dataset received!" alert takes precedence
+        pgx_shared_dir <- stringr::str_replace_all(PGX.DIR, c("data" = "data_shared"))
+        has_received <- FALSE
+        if (!is.null(auth$email) && nzchar(auth$email) && dir.exists(pgx_shared_dir)) {
+          received <- dir(
+            path = pgx_shared_dir,
+            pattern = paste0("__to__", auth$email, "__from__.*__$"),
+            ignore.case = TRUE
+          )
+          has_received <- length(received) > 0
+        }
+
         ## read startup messages
         msg_file <- file.path(ETC, "MESSAGES")
-        if (file.exists(msg_file)) {
+        if (!has_received && file.exists(msg_file)) {
           msg <- readLines(msg_file)
           msg <- msg[msg != "" & substr(msg, 1, 1) != "#"]
           if (length(msg) > 0) {

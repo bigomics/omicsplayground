@@ -19,12 +19,17 @@ upload_module_received_server <- function(id,
 
       nr_ds_received <- reactiveVal(0)
 
-      # function that listed to input new_dataset_received
-      show_shared_tab <- function() {
-        if (input$new_dataset_received) {
-          bigdash.selectTab(session, "load-tab")
-          shinyjs::runjs('$("[data-value=\'Sharing\']").click();')
+      # callbackR for the "New dataset received" modal: jump to Shared datasets
+      show_shared_tab <- function(value) {
+        if (isTRUE(value)) {
+          bigdash.selectTab(session, "sharing-tab")
         }
+      }
+
+      # keep navbar badges in sync with the count of pending received datasets
+      # (JS lives in static/shared-badges.js, styles in scss/components/_navbar.scss)
+      update_shared_badges <- function(n) {
+        shinyjs::runjs(sprintf("updateSharedBadges(%d);", n))
       }
 
       ## ------------ get received files
@@ -48,14 +53,15 @@ upload_module_received_server <- function(id,
             shinyalert::shinyalert(
               "New dataset received!",
               paste(
-                "You have received a dataset from another user. Please accept or decline it in the Sharing panel."
+                "You have received a dataset from another user.",
+                "Click below to view and accept it."
               ),
-              showConfirmButton = FALSE,
-              ##            confirmButtonText = "Go to shared datasets",
+              showConfirmButton = TRUE,
+              confirmButtonText = "Go to shared datasets",
+              confirmButtonCol = "#337ab7",
               showCancelButton = TRUE,
-              cancelButtonText = "OK",
-              inputId = "new_dataset_received"
-              ##              callbackR = show_shared_tab
+              cancelButtonText = "Later",
+              callbackR = show_shared_tab
             )
           }
           nr_ds_received(current_ds_received)
@@ -77,6 +83,12 @@ upload_module_received_server <- function(id,
           return(pgxfiles)
         }
       )
+
+      # refresh navbar badges whenever the pending-shares count changes
+      shiny::observe({
+        files <- getReceivedFiles()
+        update_shared_badges(if (is.null(files)) 0L else length(files))
+      })
 
       receivedPGXtable <- shiny::eventReactive(
         c(getReceivedFiles()),
