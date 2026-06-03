@@ -244,6 +244,9 @@ upload_module_normalization_server <- function(
         if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
+        ## Top-1000 most variable features by default, or all if toggled.
+        ntop_features <- if (isTRUE(input$bec_full_features)) Inf else 1000
+
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
         shiny::updateSelectInput(
@@ -267,7 +270,7 @@ upload_module_normalization_server <- function(
               methods = methods,
               evaluate = FALSE, ## no score computation
               xlist.init = xlist.init,
-              ntop = 1000,
+              ntop = ntop_features,
               npc = 5
             )
           }
@@ -1095,6 +1098,10 @@ upload_module_normalization_server <- function(
                 shiny::checkboxInput(ns("batchcorrect"),
                   label = "Remove batch effects",
                   value = default_batchcorrect
+                ),
+                shiny::checkboxInput(ns("bec_full_features"),
+                  label = "Use all features for BC preview (slower)",
+                  value = FALSE
                 ),
                 shiny::conditionalPanel(
                   "input.batchcorrect == true",
