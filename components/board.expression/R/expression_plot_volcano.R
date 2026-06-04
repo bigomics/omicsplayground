@@ -290,5 +290,10 @@ expression_plot_volcano_server <- function(id,
         download.contrast.name = comp1
       )
     })
+
+    list(
+      cutoff_type = shiny::reactive(input$cutoff_type),
+      hyperbola_k = shiny::reactive(input$hyperbola_k)
+    )
   }) ## end of moduleServer
 }

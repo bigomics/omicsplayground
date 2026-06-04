@@ -3,7 +3,11 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-ui.showStartupModal <- function(title = "BigOmics Highlights") {
+ui.startupModal <- function(...) {
+  ui.showStartupModal(...)
+}
+
+ui.showStartupModal <- function(title = "BigOmics Highlights", ...) {  
 
   ## read startup messages
   msg_file <- file.path(ETC, "MESSAGES")

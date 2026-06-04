@@ -294,7 +294,19 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (!is.null(input$gx_showall) && !input$gx_showall) {
         n <- length(tests)
         ## sel <- which(res$stars == playbase::star.symbols(n))
-        if (input$show_pv) {
+        ct <- if (exists("volcano_cutoff")) volcano_cutoff$cutoff_type() else NULL
+        if (!is.null(ct) && ct == "hyperbolic") {
+          ## Match playbase::ggVolcano hyperbola: y uses pval_cap-floored
+          ## meta.p / meta.q on the same scale as the plot.
+          cap <- pval_cap()
+          if (input$show_pv) {
+            y <- -log10(pmax(res$meta.p, cap) + cap)
+          } else {
+            y <- -log10(pmax(res$meta.q, cap) + cap)
+          }
+          k <- volcano_cutoff$hyperbola_k()
+          sel <- which(hyperbolic_significance(res$logFC, y, psig = fdr, lfc = lfc, k = k))
+        } else if (input$show_pv) {
           sel <- which(res$meta.p <= fdr & abs(res$logFC) >= lfc)
         } else {
           sel <- which(res$meta.q <= fdr & abs(res$logFC) >= lfc)
@@ -413,7 +425,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     # Plotting ###
 
     # tab differential expression > Plot ####
-    expression_plot_volcano_server(
+    volcano_cutoff <- expression_plot_volcano_server(
       id = "plots_volcano",
       comp1 = shiny::reactive(input$gx_contrast),
       fdr = shiny::reactive(input$gx_fdr),

@@ -384,7 +384,7 @@ upload_module_makecontrast_server <- function(
         }
 
         if (!is.null(rv_contr()) && ncol(rv_contr()) >= auth$options$MAX_COMPARISONS) {
-          shinyalert::shinyalert("ERROR", paste0("You have reached the maximum number of ", auth$options$MAX_COMPARISONS, " comparisons. Please delete some comparisons before adding a new one."))
+          shinyalert_max_contrasts_reached(auth$options$MAX_COMPARISONS, auth$level)
           shiny::updateTextInput(session, "newname", value = "")
           return(NULL)
         }
