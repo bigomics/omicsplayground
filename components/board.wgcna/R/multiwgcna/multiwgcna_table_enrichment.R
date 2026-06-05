@@ -29,12 +29,11 @@ multiwgcna_table_enrichment_server <- function(id,
                                                r_wgcna,
                                                r_module = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-    
     table_df <- function() {
       wgcna <- r_wgcna()
       module <- r_module()
       shiny::req(module)
-      if(!module %in% names(wgcna$gsea)) {
+      if (!module %in% names(wgcna$gsea)) {
         return(NULL)
       }
       df <- wgcna$gsea[[module]]
@@ -43,8 +42,9 @@ multiwgcna_table_enrichment_server <- function(id,
 
     render_table <- function(full = TRUE) {
       df <- table_df()
-      ##shiny::req(df)
-      shiny::validate(shiny::need(!is.null(df),
+      ## shiny::req(df)
+      shiny::validate(shiny::need(
+        !is.null(df),
         "no enrichment data"
       ))
 

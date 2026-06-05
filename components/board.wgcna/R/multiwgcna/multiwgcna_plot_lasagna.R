@@ -52,12 +52,11 @@ multiwgcna_plot_lasagna_server <- function(id,
                                            r_phenotype = reactive(NULL),
                                            r_layers = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-
     lasagna_model <- reactive({
       wgcna <- mwgcna()
-      
-      ##obj <- wgcna$lasagna
-      
+
+      ## obj <- wgcna$lasagna
+
       ## Get eigengene matrices
       ww <- lapply(wgcna$layers, function(w) t(w$net$MEs))
       ww <- lapply(ww, function(w) w[!grepl("[A-Z]{2}grey$", rownames(w)), , drop = FALSE])
@@ -142,6 +141,6 @@ multiwgcna_plot_lasagna_server <- function(id,
       add.watermark = FALSE
     )
 
-    ##return(lasagna_model)
+    ## return(lasagna_model)
   })
 }

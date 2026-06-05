@@ -24,7 +24,9 @@
 #' @return A single colour string.
 get_editor_color <- function(input, id, default) {
   val <- input[[id]]
-  if (!is.null(val)) return(val)
+  if (!is.null(val)) {
+    return(val)
+  }
   if (grepl("^#", default)) default else get_color_theme()[[default]]
 }
 
@@ -38,7 +40,7 @@ get_editor_color <- function(input, id, default) {
 extract_volcano_colors <- function(input,
                                    notsig = "#707070AA",
                                    notsel = "#cccccc88") {
-  col_up   <- get_editor_color(input, "color_up",   "primary")
+  col_up <- get_editor_color(input, "color_up", "primary")
   col_down <- get_editor_color(input, "color_down", "secondary")
   colors <- c(up = col_up, notsig = notsig, down = col_down)
   if (!is.null(notsel)) colors <- c(colors, notsel = notsel)
@@ -54,7 +56,7 @@ extract_volcano_colors <- function(input,
 #' @param mid   Default midpoint colour (default \code{"grey90"}).
 #' @return Character vector of length 3.
 extract_heatmap_colors <- function(input, mid = "grey90") {
-  col_up   <- get_editor_color(input, "color_up",   "primary")
+  col_up <- get_editor_color(input, "color_up", "primary")
   col_down <- get_editor_color(input, "color_down", "secondary")
   c(col_down, mid, col_up)
 }
@@ -68,8 +70,8 @@ extract_heatmap_colors <- function(input, mid = "grey90") {
 #' @return Character vector of length 3.
 extract_heatmap_lmh_colors <- function(input) {
   c(
-    get_editor_color(input, "color_low",  "secondary"),
-    get_editor_color(input, "color_mid",  "neutral"),
+    get_editor_color(input, "color_low", "secondary"),
+    get_editor_color(input, "color_mid", "neutral"),
     get_editor_color(input, "color_high", "primary")
   )
 }
@@ -92,13 +94,19 @@ extract_heatmap_lmh_colors <- function(input) {
 #'   through \code{playbase::map_probes(pgx$genes, ...)}.
 #' @return Character vector of resolved labels, or \code{defaults}.
 get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL) {
-  if (!isTRUE(input$custom_labels)) return(defaults)
+  if (!isTRUE(input$custom_labels)) {
+    return(defaults)
+  }
 
   label_text <- input$label_features
-  if (is.null(label_text) || !nzchar(trimws(label_text))) return(defaults)
+  if (is.null(label_text) || !nzchar(trimws(label_text))) {
+    return(defaults)
+  }
 
   resolved <- parse_label_features(label_text, feature_names)
-  if (is.null(resolved) || length(resolved) == 0) return(defaults)
+  if (is.null(resolved) || length(resolved) == 0) {
+    return(defaults)
+  }
 
   if (!is.null(pgx)) {
     resolved <- playbase::map_probes(pgx$genes, resolved)
@@ -127,10 +135,10 @@ apply_editor_theme <- function(p, input,
                                margin_default = 10,
                                aspect_ratio_default = 0.5) {
   if (isTRUE(input$margin_checkbox)) {
-    mt <- ifelse(is.na(input$margin_top),    margin_default, input$margin_top)
-    mr <- ifelse(is.na(input$margin_right),  margin_default, input$margin_right)
+    mt <- ifelse(is.na(input$margin_top), margin_default, input$margin_top)
+    mr <- ifelse(is.na(input$margin_right), margin_default, input$margin_right)
     mb <- ifelse(is.na(input$margin_bottom), margin_default, input$margin_bottom)
-    ml <- ifelse(is.na(input$margin_left),   margin_default, input$margin_left)
+    ml <- ifelse(is.na(input$margin_left), margin_default, input$margin_left)
     p <- p + ggplot2::theme(
       plot.margin = ggplot2::margin(t = mt, r = mr, b = mb, l = ml, unit = "pt")
     )
@@ -142,6 +150,43 @@ apply_editor_theme <- function(p, input,
   }
 
   p
+}
+
+
+## ---------------------------------------------------------------
+## 3b. Aspect ratio (plotly)
+## ---------------------------------------------------------------
+
+#' Apply editor aspect-ratio to a plotly figure.
+#'
+#' Uses JavaScript to dynamically resize the plotly figure based on
+#' the container width and the requested aspect ratio, so the result
+#' is responsive.
+#'
+#' @param fig   A plotly figure object.
+#' @param input Shiny input list.
+#' @param aspect_ratio_default Default aspect ratio (default 0.8).
+#' @return The (possibly modified) plotly figure.
+apply_plotly_editor_theme <- function(fig, input,
+                                      aspect_ratio_default = 0.8) {
+  if (!isTRUE(input$aspect_ratio_checkbox)) return(fig)
+  ar <- if (is.null(input$aspect_ratio) || is.na(input$aspect_ratio)) {
+    aspect_ratio_default
+  } else {
+    input$aspect_ratio
+  }
+  htmlwidgets::onRender(fig, sprintf("
+    function(el) {
+      var w = el.offsetWidth;
+      if (w > 0) {
+        var desired = Math.round(w * %f);
+        var container = el.closest('.popup-plot') || el.parentElement;
+        var maxH = container ? container.clientHeight : window.innerHeight * 0.8;
+        var h = Math.min(desired, maxH);
+        Plotly.relayout(el, {height: h, width: Math.round(h / %f)});
+      }
+    }
+  ", ar, ar))
 }
 
 
@@ -159,8 +204,6 @@ apply_editor_theme <- function(p, input,
 extract_ggprism_params <- function(input) {
   list(
     use_ggprism           = isTRUE(input$use_ggprism),
-    ggprism_palette       = if (is.null(input$ggprism_palette)) "black_and_white" else input$ggprism_palette,
-    ggprism_colors        = isTRUE(input$ggprism_colors),
     ggprism_border        = isTRUE(input$ggprism_border),
     ggprism_axis_guide    = if (is.null(input$ggprism_axis_guide)) "default" else input$ggprism_axis_guide,
     ggprism_show_legend   = isTRUE(input$ggprism_show_legend),
@@ -168,6 +211,207 @@ extract_ggprism_params <- function(input) {
     ggprism_legend_y      = if (is.null(input$ggprism_legend_y) || is.na(input$ggprism_legend_y)) 0.95 else input$ggprism_legend_y,
     ggprism_legend_border = isTRUE(input$ggprism_legend_border)
   )
+}
+
+
+## ---------------------------------------------------------------
+## 4b. ggprism theme application (reusable for any ggplot)
+## ---------------------------------------------------------------
+
+#' Apply ggprism theme settings to a ggplot object.
+#'
+#' Takes a ggplot and the params list from \code{extract_ggprism_params()}
+#' and applies theme_prism, axis guides, and legend positioning.
+#'
+#' @param p  A ggplot2 plot object.
+#' @param gp Named list from \code{extract_ggprism_params()}.
+#' @param base_size Base font size for theme_prism (default 14).
+#' @return The (possibly modified) ggplot2 plot object.
+apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
+                                x_angle = NULL) {
+  if (!isTRUE(gp$use_ggprism)) return(p)
+
+  p <- p +
+    ggprism::theme_prism(
+      palette = "black_and_white",
+      base_size = base_size,
+      base_family = base_family,
+      border = gp$ggprism_border
+    )
+
+  if (isTRUE(gp$ggprism_border)) {
+    p <- p + ggplot2::theme(
+      panel.border = ggplot2::element_rect(fill = NA, colour = "black", linewidth = 1)
+    )
+  }
+
+  if (!is.null(x_angle)) {
+    p <- p + ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = x_angle, hjust = 1, vjust = 0.5)
+    )
+  }
+
+  ## Axis guides -- minor-tick guides (prism_minor, prism_offset_minor)
+  ## require a continuous scale and crash on discrete/categorical x-axes
+  ## with "Cannot create zero-length unit vector".  Apply them to y only;
+  ## for x fall back to the safe offset guide.
+  if (gp$ggprism_axis_guide == "prism_minor") {
+    p <- p + ggplot2::guides(
+      y = ggprism::guide_prism_minor()
+    )
+  } else if (gp$ggprism_axis_guide == "prism_offset") {
+    p <- p + ggplot2::guides(
+      x = ggprism::guide_prism_offset(),
+      y = ggprism::guide_prism_offset()
+    )
+  } else if (gp$ggprism_axis_guide == "prism_offset_minor") {
+    p <- p + ggplot2::guides(
+      x = ggprism::guide_prism_offset(),
+      y = ggprism::guide_prism_offset_minor()
+    )
+  }
+
+  ## Legend positioning
+  if (isTRUE(gp$ggprism_show_legend)) {
+    just_x <- if (gp$ggprism_legend_x > 0.5) 1 else 0
+    just_y <- if (gp$ggprism_legend_y > 0.5) 1 else 0
+
+    legend_bg <- if (isTRUE(gp$ggprism_legend_border)) {
+      ggplot2::element_rect(fill = "white", colour = "black", linewidth = 0.5)
+    } else {
+      ggplot2::element_rect(fill = "white", colour = NA)
+    }
+
+    p <- p + ggplot2::theme(
+      legend.position = "inside",
+      legend.position.inside = c(gp$ggprism_legend_x, gp$ggprism_legend_y),
+      legend.justification = c(just_x, just_y),
+      legend.title = ggplot2::element_blank(),
+      legend.background = legend_bg
+    )
+  }
+
+  p
+}
+
+
+## ---------------------------------------------------------------
+## 4c. Render ggplot as static image inside a plotly container
+## ---------------------------------------------------------------
+
+#' Render a ggplot2 plot as a static PNG image embedded in a plotly figure.
+#'
+#' Avoids \code{ggplotly()} conversion so that ggprism styling is
+#' preserved pixel-perfectly.  The result is a plotly object that
+#' displays the rasterised ggplot as a layout image.
+#'
+#' @param p  A ggplot2 plot object.
+#' @param width  Image width in inches.  Default 8.
+#' @param height Image height in inches. Default 5.
+#' @param dpi    Resolution.  Default 400.
+#' @return A plotly object suitable for \code{renderPlotly}.
+ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
+  tmpfile <- tempfile(fileext = ".png")
+  on.exit(unlink(tmpfile), add = TRUE)
+  ggplot2::ggsave(tmpfile, p, width = width, height = height, dpi = dpi, bg = "white")
+  encoded <- base64enc::base64encode(tmpfile)
+  src <- paste0("data:image/png;base64,", encoded)
+
+  plotly::plot_ly(type = "scatter", mode = "markers",
+                  x = 0, y = 0, marker = list(opacity = 0),
+                  hoverinfo = "none", showlegend = FALSE) %>%
+    plotly::layout(
+      images = list(list(
+        source = src,
+        xref = "paper", yref = "paper",
+        x = 0, y = 1,
+        sizex = 1, sizey = 1,
+        xanchor = "left", yanchor = "top",
+        layer = "below"
+      )),
+      xaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+                    range = c(0, 1), fixedrange = TRUE),
+      yaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+                    range = c(0, 1), fixedrange = TRUE),
+      margin = list(l = 0, r = 0, t = 0, b = 0),
+      plot_bgcolor = "white",
+      paper_bgcolor = "white"
+    ) %>%
+    plotly::config(displayModeBar = FALSE)
+}
+
+
+## ---------------------------------------------------------------
+## 4d. Prism-style plotly layout (no ggplot2 needed)
+## ---------------------------------------------------------------
+
+#' Apply prism-style layout to a plotly figure.
+#'
+#' Translates ggprism visual settings into plotly layout properties:
+#' clean white background, optional border, tick styles, legend
+#' positioning, and optional prism palette bar colors.
+#'
+#' @param fig A plotly figure object.
+#' @param gp  Named list from \code{extract_ggprism_params()}.
+#' @return The (possibly modified) plotly figure.
+apply_prism_plotly <- function(fig, gp) {
+  if (!isTRUE(gp$use_ggprism)) return(fig)
+
+  ## --- Base theme: clean white background, outside ticks ---
+  axis_base <- list(
+    showgrid = FALSE,
+    zeroline = FALSE,
+    ticks = "outside",
+    showline = TRUE,
+    linecolor = "#000000",
+    linewidth = 1
+  )
+
+  ## --- Border: mirror axes on all four sides ---
+  if (isTRUE(gp$ggprism_border)) {
+    axis_base$mirror <- TRUE
+  }
+
+  ## --- Axis guide styles ---
+  guide <- gp$ggprism_axis_guide
+  if (guide == "prism_minor") {
+    axis_base$minor <- list(ticks = "outside", showgrid = FALSE)
+  } else if (guide == "prism_offset") {
+    ## Offset: axis line doesn't extend to the plot edge
+    axis_base$showline <- TRUE
+    axis_base$mirror <- FALSE
+  } else if (guide == "prism_offset_minor") {
+    axis_base$showline <- TRUE
+    axis_base$mirror <- FALSE
+    axis_base$minor <- list(ticks = "outside", showgrid = FALSE)
+  }
+
+  ## --- Legend ---
+  legend_cfg <- list(visible = FALSE)
+  if (isTRUE(gp$ggprism_show_legend)) {
+    legend_cfg <- list(
+      visible = TRUE,
+      x = gp$ggprism_legend_x,
+      y = gp$ggprism_legend_y,
+      xanchor = if (gp$ggprism_legend_x > 0.5) "right" else "left",
+      yanchor = if (gp$ggprism_legend_y > 0.5) "top" else "bottom",
+      bgcolor = "rgba(255,255,255,0.9)",
+      bordercolor = if (isTRUE(gp$ggprism_legend_border)) "#000000" else "rgba(0,0,0,0)",
+      borderwidth = if (isTRUE(gp$ggprism_legend_border)) 1 else 0
+    )
+  }
+
+  fig <- plotly::layout(
+    fig,
+    plot_bgcolor = "#FFFFFF",
+    paper_bgcolor = "#FFFFFF",
+    xaxis = axis_base,
+    yaxis = axis_base,
+    legend = legend_cfg,
+    font = list(family = "Arial, Helvetica, sans-serif", color = "#000000")
+  )
+
+  fig
 }
 
 
@@ -205,15 +449,36 @@ extract_label_settings <- function(input, defaults = list()) {
   }
 
   list(
-    label_size         = safe("label_size",         dfl$label_size),
-    marker_size        = safe("marker_size",        dfl$marker_size),
-    axis_text_size     = safe("axis_text_size",     dfl$axis_text_size),
-    box_padding        = safe("box_padding",        dfl$box_padding,        null_na = TRUE),
+    label_size         = safe("label_size", dfl$label_size),
+    marker_size        = safe("marker_size", dfl$marker_size),
+    axis_text_size     = safe("axis_text_size", dfl$axis_text_size),
+    box_padding        = safe("box_padding", dfl$box_padding, null_na = TRUE),
     min_segment_length = safe("min_segment_length", dfl$min_segment_length, null_na = TRUE),
-    label_box          = safe("label_box",          dfl$label_box),
-    segment_linetype   = safe("segment_linetype",   dfl$segment_linetype,   cast = as.integer),
-    hyperbola_k        = safe("hyperbola_k",        dfl$hyperbola_k)
+    label_box          = safe("label_box", dfl$label_box),
+    segment_linetype   = safe("segment_linetype", dfl$segment_linetype, cast = as.integer),
+    hyperbola_k        = safe("hyperbola_k", dfl$hyperbola_k)
   )
+}
+
+
+#' Hyperbolic significance mask matching playbase::ggVolcano.
+#'
+#' Returns a logical vector flagging points that lie above the hyperbola
+#' (y - -log10(psig)) * (|fc| - lfc) > k, with |fc| > lfc.
+#'
+#' @param fc Effect size (log2FC) vector.
+#' @param y  Already -log10-transformed significance vector.
+#' @param psig Significance threshold on the original scale (FDR/p).
+#' @param lfc Log fold-change threshold (vertical asymptote).
+#' @param k Hyperbola curvature.
+#' @return Logical vector the same length as \code{fc}.
+hyperbolic_significance <- function(fc, y, psig, lfc, k = 1) {
+  if (is.null(k) || is.na(k)) k <- 1
+  psig_t <- -log10(psig)
+  sig <- (y - psig_t) * (abs(fc) - lfc) > k
+  sig[abs(fc) <= lfc] <- FALSE
+  sig[is.na(sig)] <- FALSE
+  sig
 }
 
 
@@ -297,7 +562,9 @@ get_custom_palette_colors <- function(input, n, fallback_colors = NULL) {
 resolve_palette_colors <- function(input, n, fallback_colors = NULL) {
   palette <- input$palette
   if (is.null(palette) || palette %in% c("original", "default", "")) {
-    if (!is.null(fallback_colors)) return(rep_len(fallback_colors, n))
+    if (!is.null(fallback_colors)) {
+      return(rep_len(fallback_colors, n))
+    }
     return(NULL)
   }
   if (palette == "custom") {

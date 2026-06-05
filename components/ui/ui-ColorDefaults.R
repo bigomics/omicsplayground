@@ -8,18 +8,18 @@
 ## ---------------------------------------------------------------
 
 COLOR_THEME_DEFAULTS <- list(
-  primary    = "#f23451",   # Up / High
-  secondary  = "#3181de",   # Down / Low / scatter_color
-  neutral    = "#eeeeee",   # Mid (heatmap midpoint)
-  ns_color   = "#eeeeee",   # Not significant dots
-  bar_color  = "#A6CEE3",   # Bar color
-  accent     = "#e3a45a",   # Significant in one (color_one)
-  success    = "#5B9B5B",   # Significant in both (color_both)
-  line       = "#00EE00",   # Enrichment line
+  primary    = "#f23451", # Up / High
+  secondary  = "#3181de", # Down / Low / scatter_color
+  neutral    = "#eeeeee", # Mid (heatmap midpoint)
+  ns_color   = "#eeeeee", # Not significant dots
+  bar_color  = "#A6CEE3", # Bar color
+  accent     = "#e3a45a", # Significant in one (color_one)
+  success    = "#5B9B5B", # Significant in both (color_both)
+  line       = "#00EE00", # Enrichment line
   palette    = "default",
-  palette_c1 = "#3181de",   # Custom gradient start
-  palette_c2 = "#eeeeee",   # Custom gradient middle
-  palette_c3 = "#f23451"    # Custom gradient end
+  palette_c1 = "#3181de", # Custom gradient start
+  palette_c2 = "#eeeeee", # Custom gradient middle
+  palette_c3 = "#f23451" # Custom gradient end
 )
 
 ## Maps theme keys to the editor input IDs they control
@@ -61,7 +61,9 @@ get_color_theme <- function() {
 
 #' Save the colour theme to a user directory as JSON.
 save_color_theme <- function(theme_list, user_dir) {
-  if (is.null(user_dir) || !dir.exists(user_dir)) return(invisible(NULL))
+  if (is.null(user_dir) || !dir.exists(user_dir)) {
+    return(invisible(NULL))
+  }
   path <- file.path(user_dir, "color_theme.json")
   jsonlite::write_json(theme_list, path, auto_unbox = TRUE, pretty = TRUE)
   invisible(path)
@@ -69,9 +71,13 @@ save_color_theme <- function(theme_list, user_dir) {
 
 #' Load colour theme from a user directory. Returns NULL if file missing/invalid.
 load_color_theme <- function(user_dir) {
-  if (is.null(user_dir)) return(NULL)
+  if (is.null(user_dir)) {
+    return(NULL)
+  }
   path <- file.path(user_dir, "color_theme.json")
-  if (!file.exists(path)) return(NULL)
+  if (!file.exists(path)) {
+    return(NULL)
+  }
   tryCatch(
     jsonlite::read_json(path, simplifyVector = TRUE),
     error = function(e) NULL

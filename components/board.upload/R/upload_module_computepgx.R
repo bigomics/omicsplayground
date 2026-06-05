@@ -31,6 +31,8 @@ upload_module_computepgx_server <- function(
   upload_description,
   upload_datatype,
   meth_type,
+  is.olink = shiny::reactive(FALSE),
+  is.nulisa = shiny::reactive(FALSE),
   upload_organism,
   upload_gx_methods,
   upload_gset_methods,
@@ -132,6 +134,9 @@ upload_module_computepgx_server <- function(
       EXTRA.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
+        } else if (is.olink() || is.nulisa()) {
+          mm <- c("drug connectivity" = "drugs",
+            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
         } else {
           c1 <- grepl("methylomics", upload_datatype(), ignore.case = TRUE)
           c2 <- grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)
@@ -171,6 +176,8 @@ upload_module_computepgx_server <- function(
           mm <- c("wgcna", "mofa")
         } else if (grepl("methylomics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("drugs", "connectivity", "wgcna")
+        } else if (is.olink() || is.nulisa()) {
+          mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
         } else {
           mm <- c("deconv", "drugs", "wordcloud", "connectivity", "wgcna")
         }
@@ -1132,6 +1139,18 @@ upload_module_computepgx_server <- function(
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
 
+        ## Resolve proteomics subtype from is.olink / is.nulisa reactives
+        datatype_subtype <- NULL
+        if (upload_datatype() == "proteomics") {
+          if (is.olink()) {
+            datatype_subtype <- "Olink NPX"
+          } else if (is.nulisa()) {
+            datatype_subtype <- "Nulisa NPQ"
+          } else {
+            datatype_subtype <- "MS"
+          }
+        }
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1184,6 +1203,7 @@ upload_module_computepgx_server <- function(
           libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),
+          datatype_subtype = datatype_subtype,
           description = input$selected_description,
           metadata = user_metadata,
           creator = creator,

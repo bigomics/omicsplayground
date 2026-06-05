@@ -137,7 +137,7 @@ expression_plot_maplot_server <- function(id,
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
 
-      col_up   <- get_editor_color(input, "color_up",   "primary")
+      col_up <- get_editor_color(input, "color_up", "primary")
       col_down <- get_editor_color(input, "color_down", "secondary")
 
       lab.genes <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]])

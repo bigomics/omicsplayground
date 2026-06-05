@@ -212,7 +212,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     }
 
     plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress, col = NULL,
-                                   dim_others = TRUE) {
+                                  dim_others = TRUE) {
       par(mar = c(1.6, 1.5, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mar = c(1.1, 1.0, 0.5, 0), oma = c(1, 1, 0, 0) * 2)
       par(mgp = c(1.35, 0.5, 0), las = 0, cex.axis = 0.85, cex.lab = 0.9, xpd = TRUE)

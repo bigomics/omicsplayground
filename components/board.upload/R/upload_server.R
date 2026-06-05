@@ -97,7 +97,7 @@ UploadBoard <- function(id,
         shiny::selectInput(
           ns("proteomics_type"),
           label = "Proteomics type:",
-          choices = c("MS", "Olink NPX"),
+          choices = c("MS", "Olink NPX", "Nulisa NPQ"),
           selected = "MS",
           width = "150px"
         )
@@ -128,7 +128,6 @@ UploadBoard <- function(id,
         NULL
       }
     })
-
     
     meth_type <- shiny::reactive({
       req(upload_datatype())
@@ -136,6 +135,15 @@ UploadBoard <- function(id,
         return(input$methylomics_type)
       } else {
         return(NULL)
+      }
+    })
+    
+    is.nulisa <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
+        return(input$proteomics_type == "Nulisa NPQ")
+      } else {
+        return(FALSE)
       }
     })
 
@@ -286,7 +294,8 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         olink <- is.olink()
-        if (olink) {
+        nulisa <- is.nulisa()
+        if (olink || nulisa) {
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
@@ -315,7 +324,7 @@ UploadBoard <- function(id,
             checked_for_log(TRUE)
           }
         }
-        return(list(res = res, olink = olink))
+        return(list(res = res, olink = olink, nulisa = nulisa))
       }
     )
 
@@ -328,6 +337,7 @@ UploadBoard <- function(id,
         checked <- NULL
         res <- uploaded_counts()$res
         olink <- uploaded_counts()$olink
+        nulisa <- uploaded_counts()$nulisa
         if (is.null(res)) {
           return(list(status = "Missing counts.csv", matrix = NULL))
         }
@@ -348,7 +358,7 @@ UploadBoard <- function(id,
           vv <- range(res$df, na.rm = TRUE)
           is.meth.beta <- all(vv >= 0 & vv <= 1)
         }
-        if (olink || is.meth.beta) {
+        if (olink || nulisa || is.meth.beta) 
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {
@@ -365,11 +375,11 @@ UploadBoard <- function(id,
           }
         }
 
-        # For data != Olink NPX, no further negative values allowed (in the linear space).
+        # For data != Olink NPX and != NULISA NPQ, no further negative values allowed (in the linear space).
         # Set any negatives to zero and inform the user. Store value.
         # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
         negs <- sum(res$df < 0, na.rm = TRUE)
-        if (negs > 0 && !olink) {
+        if (negs > 0 && !olink && !nulisa) {
           res$df <- pmax(res$df, 0)
           ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
           shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
@@ -536,12 +546,8 @@ UploadBoard <- function(id,
           if (ncol(checked) > MAXCONTRASTS) {
             status <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
             checked <- NULL
-            # pop up telling user max contrasts reached
-            shinyalert::shinyalert(
-              title = "Maximum contrasts reached",
-              text = paste("You have reached the maximum number of contrasts allowed. Please upload a new contrasts file with a maximum of", MAXCONTRASTS, "contrasts."),
-              type = "error"
-            )
+            # pop up telling user max contrasts reached (ui-alerts.R)
+            shinyalert_max_contrasts_reached(MAXCONTRASTS, auth$level)
           }
         }
 
@@ -1294,7 +1300,8 @@ UploadBoard <- function(id,
       r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      meth_type = meth_type,
+      is.nulisa = is.nulisa,
+      meth_type = meth_type,  
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx
@@ -1358,6 +1365,8 @@ UploadBoard <- function(id,
       upload_description = upload_description,
       upload_datatype = upload_datatype,
       meth_type = meth_type,
+      is.olink = is.olink,
+      is.nulisa = is.nulisa,
       upload_organism = upload_organism,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,

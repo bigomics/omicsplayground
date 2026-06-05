@@ -111,10 +111,12 @@ drugconnectivity_plot_actmap_server <- function(id,
         }
         score <- sign(score) * abs(score)**3 ## fudging
         score <- score / (1e-8 + max(abs(score), na.rm = TRUE))
-
+        
         if (NCOL(score) > 1) {
           d1 <- as.dist(1 - cor(t(score), use = "pairwise"))
           d2 <- as.dist(1 - cor(score, use = "pairwise"))
+          d1 <- dist(score) ## euclidean
+          d2 <- dist(t(score))
           d1[is.na(d1)] <- 1
           d2[is.na(d2)] <- 1
           ii <- hclust(d1)$order
@@ -128,15 +130,15 @@ drugconnectivity_plot_actmap_server <- function(id,
         colnames(score) <- substring(colnames(score), 1, 30)
         rownames(score) <- substring(rownames(score), 1, 50)
 
-        col_up   <- get_editor_color(input, "color_up", "primary")
+        col_up <- get_editor_color(input, "color_up", "primary")
         col_down <- get_editor_color(input, "color_down", "secondary")
         pal <- grDevices::colorRampPalette(c(col_down, "white", col_up))(5)
         color.scale <- list(
-          list(0,    pal[[1]]),
+          list(0, pal[[1]]),
           list(0.25, pal[[2]]),
-          list(0.5,  pal[[3]]),
+          list(0.5, pal[[3]]),
           list(0.75, pal[[4]]),
-          list(1,    pal[[5]])
+          list(1, pal[[5]])
         )
         x_axis <- colnames(score)
         y_axis <- rownames(score)
@@ -179,8 +181,7 @@ drugconnectivity_plot_actmap_server <- function(id,
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
-
-        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 20)
+        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 40, nfc = 20)
       })
 
       plot.RENDER2 <- shiny::reactive({
@@ -188,8 +189,8 @@ drugconnectivity_plot_actmap_server <- function(id,
         pgx <- res$pgx
         dsea_contrast <- res$dsea_contrast
         dsea_method <- res$dsea_method
-
-        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 50, nfc = 100, colorbar = TRUE)
+        dseaPlotActmap(pgx, dsea_method, dsea_contrast, nterms = 40, nfc = 100,
+          colorbar = TRUE)
       })
 
       plot_data_csv <- function() {

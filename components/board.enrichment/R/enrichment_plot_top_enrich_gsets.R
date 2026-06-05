@@ -132,7 +132,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
-      qv.col <- grep("meta.q|q$", colnames(rpt))[1]
+      qv.col <- grep("meta.q|meta.p|q$", colnames(rpt))[1]
       fx <- rpt[, fx.col]
       qv <- rpt[, qv.col]
       names(qv) <- names(fx) <- rownames(rpt)

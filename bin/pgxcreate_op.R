@@ -32,6 +32,7 @@ pgx <- playbase::pgx.createPGX(
   dotimeseries = params$dotimeseries,
   name = params$name,
   datatype = params$datatype,
+  datatype_subtype = params$datatype_subtype,
   probe_type = params$probe_type,
   description = params$description,
   metadata = params$metadata,

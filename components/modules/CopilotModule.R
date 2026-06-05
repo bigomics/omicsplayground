@@ -164,11 +164,10 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
       {
         req(dim(pgx$X))
 
-        content <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
+        content <- playbase::rpt.create_full_report(pgx, sections = input$context, collate = TRUE)
         prompt <- input$prompt
         prompt <- paste(prompt, "Refuse to answer any question that is not about biology or not related to this experiment. Ignore request for plotting and say creating images is not supported yet.")
         prompt <- paste(prompt, "\nThis is the experiment report: <report>", content, "</report>", collapse = " ")
-
         ai_model <- getUserOption(session, "llm_model")
         req(ai_model)
 
@@ -236,7 +235,6 @@ CopilotServer <- function(id, pgx, input.click, layout = "fixed", maxturns = 100
 
     ## ------------ MAIN USER INTERACTION LOOP --------------------
     session$onFlushed(function() {
-      dbg("[CopilotModule] onFlushed")
       mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
       shinychat::chat_append("chat", mesg)
     }, once = TRUE)

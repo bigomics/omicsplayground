@@ -73,6 +73,7 @@ app_ui <- function(x) {
         shiny::tags$script(src = "custom/close-message.js"),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
         visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
@@ -101,6 +102,14 @@ app_ui <- function(x) {
           "Exit",
           onClick = "shinyproxy_logout();",
           link = "/login"
+        )
+      } else if (opt$AUTHENTICATION %in% c("shinyproxy-sso", "shinyproxy-sso-admin")) {
+        ## Upstream-header auth (e.g. ShinyProxy + SAML). Hit /logout so
+        ## ShinyProxy clears its session and triggers the IdP SLO via the
+        ## configured saml.logout-url, then bounce back to /login.
+        logout.tab <- bigdash::navbarDropdownItem(
+          "Logout",
+          link = "/logout"
         )
       } else if (opt$AUTHENTICATION == "apache-cookie") {
         ## For apache SSO we need to redirect to /mellon/logout for SSO logout
@@ -155,7 +164,7 @@ app_ui <- function(x) {
       ## filter disabled modules
       ENABLED["welcome"] <<- TRUE
       ENABLED["load"] <<- TRUE
-      
+
       dbg("names(menu_tree) = ", names(menu_tree))
       dbg("names.ENABLED = ", names(ENABLED))
       menu_tree <- menu_tree[MODULES_ENABLED]
@@ -315,10 +324,12 @@ app_ui <- function(x) {
                 "App settings",
                 "usersettings-tab"
               ),
-              if (isTRUE(opt$ENABLE_ADMIN)) bigdash::navbarDropdownTab(
-                "Admin panel",
-                "admin-tab"
-              ),
+              if (isTRUE(opt$ENABLE_ADMIN)) {
+                bigdash::navbarDropdownTab(
+                  "Admin panel",
+                  "admin-tab"
+                )
+              },
               upgrade.tab,
               tags$li(
                 actionLink("navbar_about", "About")
@@ -574,10 +585,12 @@ app_ui <- function(x) {
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
           ),
-          if (isTRUE(opt$ENABLE_ADMIN)) bigdash::bigTabItem(
-            "admin-tab",
-            AdminPanelUI("admin_panel")
-          ),
+          if (isTRUE(opt$ENABLE_ADMIN)) {
+            bigdash::bigTabItem(
+              "admin-tab",
+              AdminPanelUI("admin_panel")
+            )
+          },
           bigdash::bigTabItem(
             "sharing-tab",
             SharedDatasetsUI("load")

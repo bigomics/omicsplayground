@@ -36,7 +36,7 @@ clustering_plot_phenoplot_ui <- function(
     height = height,
     editor = TRUE,
     ns_parent = ns,
-    plot_type = "clustering"
+    plot_type = "clustering_prism"
   )
 }
 
@@ -160,32 +160,99 @@ clustering_plot_phenoplot_server <- function(id,
       return(plt)
     }
 
+    create_gg_plots <- function(cex = 1) {
+      pd <- plot_data()
+      showlabels <- input$showlabels
+      pheno <- selected_phenotypes()
+      shiny::validate(shiny::need(length(pheno) > 0, "Please select at least one phenotype."))
+      pheno <- pheno[which(pheno %in% colnames(pd))]
+      shiny::req(length(pheno) > 0)
+      Y <- pd[, pheno, drop = FALSE]
+      pos <- pd[, c("x", "y")]
+
+      cex1 <- 0.8 * cex
+      cex1 <- cex1 * ifelse(length(pheno) > 6, 0.8, 1)
+      cex1 <- cex1 * ifelse(length(pheno) > 12, 0.8, 1)
+
+      base_clrs <- resolve_palette_colors(input, 8, fallback_colors = omics_pal_d("muted_light")(8))
+      gp <- extract_ggprism_params(input)
+
+      plts <- list()
+      for (i in 1:min(20, length(pheno))) {
+        colvar <- factor(Y[, pheno[i]])
+        colvar[which(colvar %in% c(NA, "", " ", "NA", "na"))] <- NA
+        colvar <- factor(as.character(colvar))
+        klrpal <- rep(base_clrs, 10)
+        tt <- tolower(pheno[i])
+
+        p <- playbase::pgx.scatterPlotXY.GGPLOT(
+          pos,
+          var = colvar,
+          col = klrpal,
+          cex = cex1,
+          xlab = "",
+          ylab = "",
+          title = tt,
+          cex.title = cex * 1.2,
+          cex.clust = cex * 1.1,
+          label.clusters = showlabels
+        )
+        p <- apply_ggprism_theme(p, gp)
+        p <- apply_editor_theme(p, input)
+        plts[[length(plts) + 1]] <- p
+      }
+      plts
+    }
+
     plotly.RENDER <- function() {
-      plt <- create_plots(cex = 0.85)
-      nc <- floor(sqrt(length(plt)))
-      combined_plots <- plotly::subplot(
-        plt,
-        nrows = nc,
-        margin = 0.04
-      )
-      combined_plots <- plotly::layout(combined_plots,
-        margin = list(t = 40)
-      )
-      return(combined_plots)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        plts <- create_gg_plots(cex = 0.85)
+        shiny::req(length(plts) > 0)
+        nc <- floor(sqrt(length(plts)))
+        if (nc < 1) nc <- 1
+        combined <- patchwork::wrap_plots(plts, ncol = nc)
+        nr <- ceiling(length(plts) / nc)
+        ggplot_as_plotly_image(combined, width = nc * 3, height = nr * 3)
+      } else {
+        plt <- create_plots(cex = 0.85)
+        nc <- floor(sqrt(length(plt)))
+        combined_plots <- plotly::subplot(
+          plt,
+          nrows = nc,
+          margin = 0.04
+        )
+        combined_plots <- plotly::layout(combined_plots,
+          margin = list(t = 40)
+        )
+        return(apply_plotly_editor_theme(combined_plots, input))
+      }
     }
 
     plotly_modal.RENDER <- function() {
-      plt <- create_plots(cex = 1.3)
-      nc <- ceiling(sqrt(length(plt)))
-      combined_plots <- plotly::subplot(
-        plt,
-        nrows = nc,
-        margin = 0.04
-      )
-      combined_plots <- plotly::layout(combined_plots,
-        margin = list(t = 40)
-      )
-      return(combined_plots)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        plts <- create_gg_plots(cex = 1.3)
+        shiny::req(length(plts) > 0)
+        nc <- ceiling(sqrt(length(plts)))
+        combined <- patchwork::wrap_plots(plts, ncol = nc)
+        nr <- ceiling(length(plts) / nc)
+        ggplot_as_plotly_image(combined, width = nc * 4, height = nr * 4)
+      } else {
+        plt <- create_plots(cex = 1.3)
+        nc <- ceiling(sqrt(length(plt)))
+        combined_plots <- plotly::subplot(
+          plt,
+          nrows = nc,
+          margin = 0.04
+        )
+        combined_plots <- plotly::layout(combined_plots,
+          margin = list(t = 40)
+        )
+        return(apply_plotly_editor_theme(combined_plots, input))
+      }
     }
 
     PlotModuleServer(

@@ -148,7 +148,11 @@ loading_table_datasets_server <- function(id,
         "dataset", "description", "organism", "datatype", "nsamples",
         "nfeatures", "nsets", "conditions", "date", "creator"
       )
-      metadata_cols <- grep("^metadata_", colnames(df), value = TRUE)
+      metadata_cols <- if (isTRUE(auth$options$ENABLE_METADATA)) {
+        grep("^metadata_", colnames(df), value = TRUE)
+      } else {
+        character(0)
+      }
       kk <- intersect(c(core_cols, metadata_cols), colnames(df))
       df <- df[, kk, drop = FALSE]
       df
@@ -468,6 +472,18 @@ loading_table_datasets_server <- function(id,
           width = "100%",
           onclick = paste0('Shiny.onInputChange(\"', ns("changedesc_pgx"), '\",this.id,{priority: "event"});')
         )
+        edit_metadata_menuitem <- NULL
+        if (isTRUE(auth$options$ENABLE_METADATA) && length(METADATA_OPTIONS$fields) > 0) {
+          edit_metadata_menuitem <- shiny::actionButton(
+            ns(paste0("edit_metadata_row_", i)),
+            label = "Edit metadata",
+            icon = shiny::icon("tags"),
+            class = "btn btn-outline-dark",
+            style = "border: none;",
+            width = "100%",
+            onclick = paste0('Shiny.onInputChange(\"', ns("edit_metadata_pgx"), '\",this.id,{priority: "event"});')
+          )
+        }
 
         new_menu <- DropdownMenu(
           div(
@@ -485,6 +501,7 @@ loading_table_datasets_server <- function(id,
               ),
               changename_pgx_menuitem,
               changedesc_pgx_menuitem,
+              edit_metadata_menuitem,
               recompute_pgx_menuitem,
               share_public_menuitem,
               import_archive_menuitem,
@@ -542,8 +559,10 @@ loading_table_datasets_server <- function(id,
         datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
       }
 
-      # Add the exceed limits flag to the dataframe
+      # Add the exceed limits flag + reason for the hover tooltip
       df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
+      df$exceed_reason <- ""
+      df$exceed_reason[df$exceeds_limits] <- "This dataset exceeds your plan limits. Upgrade to analyze it."
 
       DT::datatable(
         df,
@@ -565,17 +584,37 @@ loading_table_datasets_server <- function(id,
             "function(row, data, displayNum, displayIndex) {
               var colNames = %s;
 
-              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              // Find the exceeds_limits / exceed_reason column indexes (add 1 for rownames column offset)
               var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
               if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
+              var exceedReasonIdx = colNames.indexOf('exceed_reason');
+              if(exceedReasonIdx >= 0) exceedReasonIdx += 1;
 
-              // Check if this row exceeds limits
               var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
+              var reason = (exceedReasonIdx >= 0) ? data[exceedReasonIdx] : '';
 
               if(exceedsLimits) {
                 $(row).css('opacity', '0.5');
-                $(row).css('pointer-events', 'none');
+                $(row).css('cursor', 'not-allowed');
                 $('button', row).prop('disabled', true);
+
+                // Bootstrap tooltip on hover
+                if(reason) {
+                  $(row).attr('title', reason);
+                  $(row).attr('data-bs-toggle', 'tooltip');
+                  $(row).attr('data-bs-placement', 'top');
+                  $(row).attr('data-bs-trigger', 'hover');
+                  if(typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    bootstrap.Tooltip.getOrCreateInstance(row);
+                  }
+                }
+
+                // Prevent row selection / clicks from reaching DT handlers
+                $(row).off('click.greyed mousedown.greyed').on('click.greyed mousedown.greyed', function(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  return false;
+                });
               }
             }",
             jsonlite::toJSON(colnames(df))
@@ -594,7 +633,8 @@ loading_table_datasets_server <- function(id,
             ),
             list(sortable = FALSE, targets = ncol(df)),
             list(visible = FALSE, targets = c(
-              match("exceeds_limits", colnames(df))
+              match("exceeds_limits", colnames(df)),
+              match("exceed_reason", colnames(df))
             )) # Hide helper columns
           )
         ) ## end of options.list
@@ -846,6 +886,130 @@ loading_table_datasets_server <- function(id,
       )
     })
 
+    ## ---------------- EDIT METADATA PGX ----------------
+    observeEvent(input$edit_metadata_pgx, {
+      shiny::req(isTRUE(auth$options$ENABLE_METADATA))
+      shiny::req(length(METADATA_OPTIONS$fields) > 0)
+
+      sel <- as.numeric(stringr::str_split(input$edit_metadata_pgx, "_row_")[[1]][2])
+      df <- getFilteredPGXINFO()
+      pgx_name <- as.character(df$dataset[sel])
+
+      field_inputs <- lapply(METADATA_OPTIONS$fields, function(field) {
+        input_id <- ns(paste0("edit_metadata_", field$id))
+        col_name <- paste0("metadata_", field$id)
+        current <- if (col_name %in% colnames(df)) df[sel, col_name] else NA
+        current_val <- if (is.null(current) || is.na(current) ||
+          !nzchar(as.character(current))) {
+          NULL
+        } else {
+          as.character(current)
+        }
+
+        label_html <- shiny::tags$p(
+          paste0(field$label, if (isTRUE(field$required)) " *" else ""),
+          style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"
+        )
+
+        if (field$type == "multiselect") {
+          sel_vals <- if (!is.null(current_val)) {
+            trimws(strsplit(current_val, ",")[[1]])
+          } else {
+            NULL
+          }
+          shiny::div(
+            label_html,
+            shiny::selectInput(
+              input_id,
+              label = NULL,
+              choices = field$choices,
+              selected = sel_vals,
+              multiple = TRUE
+            )
+          )
+        } else {
+          shiny::div(
+            label_html,
+            shiny::selectInput(
+              input_id,
+              label = NULL,
+              choices = c("Select..." = "", field$choices),
+              selected = if (!is.null(current_val)) current_val else ""
+            )
+          )
+        }
+      })
+
+      shiny::showModal(shiny::modalDialog(
+        title = paste0("Edit metadata for '", pgx_name, "'"),
+        size = "xl",
+        easyClose = FALSE,
+        shiny::tags$style(shiny::HTML(
+          ".modal-xl { max-width: 90vw; } .modal-xl .modal-body { min-height: 60vh; }"
+        )),
+        shiny::div(
+          style = "display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 40px; padding: 10px;",
+          field_inputs
+        ),
+        footer = shiny::tagList(
+          shiny::modalButton("Cancel"),
+          shiny::actionButton(
+            ns("edit_metadata_save"),
+            "Save",
+            class = "btn-primary"
+          )
+        )
+      ))
+    })
+
+    observeEvent(input$edit_metadata_save, {
+      shiny::req(input$edit_metadata_pgx)
+      sel <- as.numeric(stringr::str_split(input$edit_metadata_pgx, "_row_")[[1]][2])
+      df <- getFilteredPGXINFO()
+      pgxfile <- as.character(df$dataset[sel])
+      pgxfile <- paste0(sub("[.]pgx$", "", pgxfile), ".pgx")
+
+      user_metadata <- lapply(METADATA_OPTIONS$fields, function(field) {
+        value <- input[[paste0("edit_metadata_", field$id)]]
+        if (is.null(value) || (length(value) == 1 && !nzchar(value))) {
+          return(NULL)
+        }
+        value
+      })
+      names(user_metadata) <- sapply(METADATA_OPTIONS$fields, function(f) f$id)
+      user_metadata <- user_metadata[!sapply(user_metadata, is.null)]
+      if (length(user_metadata) == 0) user_metadata <- NULL
+
+      pgx_path <- file.path(auth$user_dir, pgxfile)
+      pgx <- playbase::pgx.load(pgx_path, verbose = FALSE)
+      pgx$metadata <- user_metadata
+      playbase::pgx.save(pgx, file = pgx_path)
+      remove(pgx)
+
+      pgxinfo <- getPGXINFO()
+      row_edited <- match(
+        sub("[.]pgx$", "", pgxfile),
+        sub("[.]pgx$", "", pgxinfo$dataset)
+      )
+      for (field in METADATA_OPTIONS$fields) {
+        col_name <- paste0("metadata_", field$id)
+        if (!col_name %in% colnames(pgxinfo)) {
+          pgxinfo[[col_name]] <- NA_character_
+        }
+        val <- user_metadata[[field$id]]
+        if (is.null(val)) {
+          pgxinfo[row_edited, col_name] <- NA_character_
+        } else {
+          pgxinfo[row_edited, col_name] <- paste(val, collapse = ", ")
+        }
+      }
+      fname <- file.path(auth$user_dir, "datasets-info.csv")
+      write.csv(pgxinfo, fname)
+
+      shiny::removeModal()
+      reload_pgxdir(reload_pgxdir() + 1)
+    })
+
     ## ---------------- DOWNLOAD PGX FILE ----------------
     observeEvent(input$download_pgx,
       {
@@ -911,18 +1075,7 @@ loading_table_datasets_server <- function(id,
             inputId = "confirmdelete"
           )
         } else {
-          msg <- paste(
-            "Deleting is disabled.",
-            "Please <a href='https://events.bigomics.ch/upgrade' target='_blank'>",
-            "<b><u>upgrade</u></b></a> your account to enable it."
-          )
-          shinyalert::shinyalert(
-            title = "Oops!",
-            text = HTML(msg),
-            showCancelButton = TRUE,
-            showConfirmButton = FALSE,
-            html = TRUE
-          )
+          shinyalert_delete_without_limits() ## ui-alerts.R
         }
       },
       ignoreNULL = TRUE,

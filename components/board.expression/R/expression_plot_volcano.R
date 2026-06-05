@@ -185,7 +185,6 @@ expression_plot_volcano_server <- function(id,
         highlight <- label_features
       }
 
-      # Custom colors (used when ggprism_colors is FALSE)
       plot_colors <- extract_volcano_colors(input)
 
       ls <- extract_label_settings(input)
@@ -219,8 +218,6 @@ expression_plot_volcano_server <- function(id,
         use_hyperbola = use_hyperbola,
         hyperbola_k = ls$hyperbola_k,
         use_ggprism = gp$use_ggprism,
-        ggprism_palette = gp$ggprism_palette,
-        ggprism_colors = gp$ggprism_colors,
         ggprism_border = gp$ggprism_border,
         ggprism_axis_guide = gp$ggprism_axis_guide,
         ggprism_show_legend = gp$ggprism_show_legend,
@@ -293,5 +290,10 @@ expression_plot_volcano_server <- function(id,
         download.contrast.name = comp1
       )
     })
+
+    list(
+      cutoff_type = shiny::reactive(input$cutoff_type),
+      hyperbola_k = shiny::reactive(input$hyperbola_k)
+    )
   }) ## end of moduleServer
 }

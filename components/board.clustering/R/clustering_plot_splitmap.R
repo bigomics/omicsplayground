@@ -126,7 +126,9 @@ clustering_plot_splitmap_server <- function(id,
     ## Editor: get custom group order for split heatmaps
     get_splitx_order <- function() {
       custom_order <- input$hm_group_order
-      if (is.null(custom_order) || length(custom_order) == 0) return(NULL)
+      if (is.null(custom_order) || length(custom_order) == 0) {
+        return(NULL)
+      }
       custom_order
     }
 
