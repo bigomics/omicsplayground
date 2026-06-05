@@ -539,7 +539,13 @@ loading_table_datasets_server <- function(id,
       cro_emails <- get_cro_emails()
 
       if (!is.null(auth$options$MAX_GENES)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > auth$options$MAX_GENES)
+        ## Methylomics uses its own feature limit (EPIC array can have up to 850K probes)
+        max_genes <- ifelse(
+          df$datatype == "methylomics",
+          auth$options$MAX_METH_FEATURES,
+          auth$options$MAX_GENES
+        )
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > max_genes)
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (

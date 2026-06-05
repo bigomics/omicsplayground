@@ -16,7 +16,6 @@ UploadUI <- function(id) {
         tabsetPanel(
           id = ns("upload_tabs"),
           type = "tabs",
-          # Upload your own data tab
           tabPanel(
             "Upload your data",
             value = "upload",
@@ -36,13 +35,15 @@ UploadUI <- function(id) {
                     "mRNA microarray",
                     "proteomics",
                     "scRNA-seq",
+                    "methylomics",
                     "metabolomics (beta)" = "metabolomics",
                     "multi-omics (beta)" = "multi-omics"
                   ),
                   selected = DEFAULTS$datatype,
                   width = "400px"
                 ),
-                shiny::uiOutput(ns("proteomics_subtype_ui"))
+                shiny::uiOutput(ns("proteomics_subtype_ui")),
+                shiny::uiOutput(ns("methylomics_subtype_ui"))
               ),
               div(
                 p("Organism:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),

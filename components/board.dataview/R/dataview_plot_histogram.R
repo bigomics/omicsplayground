@@ -39,15 +39,17 @@ dataview_plot_histogram_server <- function(id,
     .gx.histogram <- function(gx, n = 1000, main = "", ylim = NULL, plot = TRUE) {
       jj <- 1:nrow(gx)
       if (length(jj) > n) jj <- sample(jj, n, replace = TRUE)
+      xlab <- "Expression (log2)"
+      if (grepl("methylomics", DATATYPEPGX, ignore.case = TRUE)) xlab <- "Beta values"
       h0 <- hist(as.vector(c(gx[jj], min(gx, na.rm = TRUE), max(gx, na.rm = TRUE))),
         breaks = 120,
         plot = plot,
         main = main,
         border = FALSE,
         col = "grey",
-        freq = FALSE, #
+        freq = FALSE,
         xlim = c(min(gx, na.rm = TRUE), max(gx, na.rm = TRUE)),
-        xlab = "expression (log2)",
+        xlab = xlab,
         cex.lab = 1
       )
       i <- 1
@@ -107,7 +109,9 @@ dataview_plot_histogram_server <- function(id,
         sample = as.vector(mapply(rep, colnames(hist)[-c(1, 2)], nrow(hist)))
       )
 
-      if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
+      if (grepl("methylomics", DATATYPEPGX, ignore.case = TRUE)) {
+        xlab <- "Beta values"
+      } else if (grepl("proteomics", DATATYPEPGX, ignore.case = TRUE)) {
         xlab <- "Abundance"
       } else {
         xlab <- "Expression"

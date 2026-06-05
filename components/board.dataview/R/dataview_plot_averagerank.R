@@ -75,6 +75,7 @@ dataview_plot_averagerank_server <- function(id,
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         ylab <- tspan("average counts (log2)", js = FALSE)
+        if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") ylab <- "average Beta values"
       }
 
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
