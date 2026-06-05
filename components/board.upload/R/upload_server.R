@@ -358,7 +358,7 @@ UploadBoard <- function(id,
           vv <- range(res$df, na.rm = TRUE)
           is.meth.beta <- all(vv >= 0 & vv <= 1)
         }
-        if (olink || nulisa || is.meth.beta) 
+        if (olink || nulisa || is.meth.beta) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {

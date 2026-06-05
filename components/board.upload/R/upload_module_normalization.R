@@ -333,11 +333,6 @@ upload_module_normalization_server <- function(
           out$pos <- pos
           out$corX <- corX
           out
-        }
-        pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
-        out$pos <- pos
-        out$corX <- corX
-        out
       }
       )
 
