@@ -79,7 +79,9 @@ copilot_save_controller <- function(
   agent,
   history_invalidation_tick,
   session,
-  max_history = copilot_max_history()
+  max_history = copilot_max_history(),
+  style       = NULL,
+  custom      = NULL
 ) {
 
   # ---- Internal state ----
@@ -114,10 +116,20 @@ copilot_save_controller <- function(
     }
 
     updated_agent <- tryCatch(
-      omicsagentovi::session_save(store, current),
+      omicsagentovi::session_save(
+        store, current,
+        style  = if (!is.null(style))  shiny::isolate(style())  else NULL,
+        custom = if (!is.null(custom)) shiny::isolate(custom()) else NULL
+      ),
       error = function(e) {
+        # Surface to both the structured log (telemetry) and the R console
+        # (server-side dev/ops visibility). The end user is intentionally
+        # not notified — session_save failures are infra-level and the chat
+        # itself remains usable.
         log_info("copilot.save_failed",
           reason = reason, msg = conditionMessage(e))
+        message(sprintf("[copilot.save_failed] reason=%s msg=%s",
+                        reason, conditionMessage(e)))
         save_status("failed")
         NULL
       }

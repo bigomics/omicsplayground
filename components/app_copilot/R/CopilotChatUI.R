@@ -161,16 +161,52 @@ CopilotChatUI <- function(id) {
   )
 }
 
+#' Copilot chat settings panel (tier + style controls)
+#'
+#' Renders the user-facing knobs for the chat module. Hosts two radio groups
+#' plus an optional free-text style box. Input ids — `tier_choice`,
+#' `style_choice`, `custom_text` — are namespaced under the chat module so
+#' `CopilotChatServer()` observes them directly.
+#'
+#' The custom-style textbox is hidden via `shinyjs::hidden` and toggled on
+#' when `style_choice == "custom"`. A small caption under the style radio
+#' reminds the user that the choice applies to the next message.
+#' @export
 CopilotChatSettings <- function(id) {
   ns <- shiny::NS(id)
-  tagList(
-    br(),
-    shiny::radioButtons(ns("model_type"),"Model:", c("default","fast","deep think"),
-      inline=TRUE),
-    br(),
-    shiny::radioButtons(ns("answer_type"),"Answer:", c("short","detailed"), inline=TRUE),
-    br(),
-    shiny::checkboxInput(ns("use_reports"),"Use reports", TRUE),
-    shiny::checkboxInput(ns("use_tools"),"Use tools", TRUE)  
+  shiny::tagList(
+    shiny::br(),
+    shiny::radioButtons(
+      ns("tier_choice"), "Model tier:",
+      choiceNames  = unname(vapply(COPILOT_TIERS, copilot_tier_label, character(1))),
+      choiceValues = unname(COPILOT_TIERS),
+      selected     = COPILOT_TIERS[[1]],
+      inline       = TRUE
+    ),
+    shiny::br(),
+    shiny::radioButtons(
+      ns("style_choice"), "Answer style:",
+      choiceNames  = unname(COPILOT_STYLE_LABELS),
+      choiceValues = unname(COPILOT_STYLES),
+      selected     = COPILOT_STYLES[[1]],
+      inline       = TRUE
+    ),
+    shinyjs::hidden(
+      shiny::div(
+        id = ns("custom_text_wrap"),
+        shiny::textAreaInput(
+          ns("custom_text"),
+          label       = "Custom style instructions:",
+          value       = "",
+          rows        = 3,
+          width       = "100%",
+          placeholder = "e.g. Be punchy. Use one-line answers."
+        )
+      )
+    ),
+    shiny::tags$small(
+      class = "text-muted",
+      "Style changes apply to the next message."
+    )
   )
 }
