@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## Wrap an editor modal body with a top "Reset to defaults" button and a
