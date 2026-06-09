@@ -48,7 +48,7 @@ correlation_plot_cor_graph_ui <- function(
     outputFunc2 = visNetwork::visNetworkOutput,
     width = width,
     height = height,
-    download.fmt = c("png", "pdf", "csv", "svg"),
+    download.fmt = c("png", "pdf", "csv", "svg", "cx2"),
     editor = TRUE,
     ns_parent = ns,
     plot_type = "correlation_matrix"
@@ -167,6 +167,22 @@ correlation_plot_cor_graph_server <- function(
       return(visdata)
     }
 
+    ## CX2 export for Cytoscape (mirrors the visNetwork attributes)
+    cx2_content <- function(file) {
+      gr <- plot_data()
+      shiny::req(gr)
+      if (input$as_mst) {
+        gr <- igraph::mst(gr)
+      }
+      igraph::V(gr)$label <- playbase::probe2symbol(
+        igraph::V(gr)$name, pgx$genes, "gene_name", fill_na = TRUE
+      )
+      xy <- igraph::layout_with_kk(gr)
+      igraph::V(gr)$x <- xy[, 1]
+      igraph::V(gr)$y <- xy[, 2]
+      write_cx2(gr, file)
+    }
+
     PlotModuleServer(
       "plot",
       plotlib = "visnetwork",
@@ -175,7 +191,10 @@ correlation_plot_cor_graph_server <- function(
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark,
-      parent_session = session
+      parent_session = session,
+      download.handlers = list(
+        cx2 = list(ext = "cx2", content = cx2_content)
+      )
     )
   }) ## end of moduleServer
 }

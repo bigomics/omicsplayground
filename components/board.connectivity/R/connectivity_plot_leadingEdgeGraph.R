@@ -51,6 +51,7 @@ connectivity_plot_leadingEdgeGraph_ui <- function(
     plotlib = "visnetwork",
     info.text = info.text,
     options = plot_opts,
+    download.fmt = c("png", "pdf", "svg", "cx2"),
     height = height,
     width = width
   )
@@ -127,7 +128,7 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         return(gr)
       })
 
-      plot_RENDER <- shiny::reactive({
+      leadingEdgeGraphStyled <- shiny::reactive({
         gr <- getLeadingEdgeGraph()
         if (is.null(gr)) {
           return(NULL)
@@ -148,7 +149,6 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
 
         ii <- match(igraph::V(gr)$name, rownames(cumFC))
         cumFC <- cumFC[ii, , drop = FALSE]
-        fontsize <- 22
         fc <- fc / max(abs(fc))
 
         sizevar <- input$LEgraph_sizevar
@@ -177,11 +177,21 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         igraph::V(gr)$title <- paste0("<b>", gene, "</b><br>", playdata::GENE_TITLE[toupper(gene)])
         igraph::V(gr)$size <- vsize ## rather small
         igraph::V(gr)$color <- vcolor
+        fc[is.na(fc)] <- 0
+        igraph::V(gr)$foldchange <- fc
 
         ew <- abs(igraph::E(gr)$weight)
         igraph::E(gr)$width <- 1.5 * (0.2 + 10 * (ew / max(ew, na.rm = TRUE))**2)
         igraph::E(gr)$color <- "#DDD" ## lightgrey
 
+        return(gr)
+      })
+
+      plot_RENDER <- shiny::reactive({
+        gr <- leadingEdgeGraphStyled()
+        if (is.null(gr)) {
+          return(NULL)
+        }
         visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
 
         ## ------------------ plot using visNetwork (zoomable) -----------------
@@ -189,12 +199,21 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
           nodes = visdata$nodes,
           edges = visdata$edges
         ) %>%
-          visNetwork::visNodes(font = list(size = fontsize)) %>%
+          visNetwork::visNodes(font = list(size = 22)) %>%
           visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
           visNetwork::visIgraphLayout(layout = "layout_nicely")
         graph
       })
 
+      ## CX2 export for Cytoscape (mirrors the visNetwork attributes)
+      cx2_content <- function(file) {
+        gr <- leadingEdgeGraphStyled()
+        shiny::req(gr)
+        xy <- igraph::layout_nicely(gr)
+        igraph::V(gr)$x <- xy[, 1]
+        igraph::V(gr)$y <- xy[, 2]
+        write_cx2(gr, file)
+      }
 
       plt <- PlotModuleServer(
         "plot",
@@ -204,7 +223,10 @@ connectivity_plot_leadingEdgeGraph_server <- function(id,
         csvFunc = getLeadingEdgeGraph,
         pdf.height = 8, pdf.width = 8,
         res = c(90, 100),
-        add.watermark = watermark
+        add.watermark = watermark,
+        download.handlers = list(
+          cx2 = list(ext = "cx2", content = cx2_content)
+        )
       )
       return(getLeadingEdgeGraph)
     } ## end of moduleServer

@@ -56,6 +56,7 @@ connectivity_plot_enrichmentGraph_ui <- function(
     info.text = info.text,
     caption = caption,
     options = plot_opts,
+    download.fmt = c("png", "pdf", "svg", "cx2"),
     width = width,
     height = height
   )
@@ -121,7 +122,7 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         return(gr)
       })
 
-      plot_RENDER <- shiny::reactive({
+      enrichmentGraphStyled <- shiny::reactive({
         gr <- getEnrichmentGraph()
         if (is.null(gr)) {
           return(NULL)
@@ -147,7 +148,6 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         cumFC <- cumEnrichmentTable()
         cumFC <- cumFC[igraph::V(gr)$name, ]
         fc <- cumFC[, 1]
-        fontsize <- 18
         fc <- fc / max(abs(fc))
 
         sizevar <- input$enrichGraph_sizevar
@@ -182,11 +182,20 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         igraph::V(gr)$title <- paste0("<b>", vname, "</b><br>", pw.genes)
         igraph::V(gr)$size <- vsize ## rather small
         igraph::V(gr)$color <- vcolor
+        igraph::V(gr)$foldchange <- fc
 
         ew <- abs(igraph::E(gr)$weight)
         igraph::E(gr)$width <- 1.5 * (0.2 + 10 * (ew / max(ew, na.rm = TRUE))**2)
         igraph::E(gr)$color <- "#DDD" ## lightgrey
 
+        return(gr)
+      })
+
+      plot_RENDER <- shiny::reactive({
+        gr <- enrichmentGraphStyled()
+        if (is.null(gr)) {
+          return(NULL)
+        }
         visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
 
         ## ------------------ plot using visNetwork (zoomable) -----------------
@@ -194,12 +203,21 @@ connectivity_plot_enrichmentGraph_server <- function(id,
           nodes = visdata$nodes,
           edges = visdata$edges
         ) %>%
-          visNetwork::visNodes(font = list(size = fontsize)) %>%
+          visNetwork::visNodes(font = list(size = 18)) %>%
           visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
           visNetwork::visIgraphLayout(layout = "layout_nicely")
         graph
       })
 
+      ## CX2 export for Cytoscape (mirrors the visNetwork attributes)
+      cx2_content <- function(file) {
+        gr <- enrichmentGraphStyled()
+        shiny::req(gr)
+        xy <- igraph::layout_nicely(gr)
+        igraph::V(gr)$x <- xy[, 1]
+        igraph::V(gr)$y <- xy[, 2]
+        write_cx2(gr, file)
+      }
 
       PlotModuleServer(
         "plot",
@@ -209,7 +227,10 @@ connectivity_plot_enrichmentGraph_server <- function(id,
         csvFunc = getEnrichmentGraph,
         pdf.height = 8, pdf.width = 8,
         res = c(90, 100),
-        add.watermark = watermark
+        add.watermark = watermark,
+        download.handlers = list(
+          cx2 = list(ext = "cx2", content = cx2_content)
+        )
       )
     } ## end of moduleServer
   )

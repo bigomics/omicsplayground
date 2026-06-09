@@ -356,7 +356,7 @@ pcsf_genepanel_server <- function(id,
         igraph::V(g)$x <- res$layout[, 1]
         igraph::V(g)$y <- res$layout[, 2]
       }
-      pcsf.write_cx2(g, file)
+      write_cx2(g, file)
     }
 
     PlotModuleServer(

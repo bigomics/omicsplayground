@@ -30,7 +30,7 @@ mofa_plot_modulegraph_ui <- function(
     height = height,
     width = width,
     plotlib = "visnetwork",
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg", "cx2")
   )
 }
 
@@ -41,7 +41,7 @@ mofa_plot_modulegraph_server <- function(id,
                                          filter_types = reactive(NULL),
                                          watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    plot.RENDER <- function(springLength = 25) {
+    moduleGraphData <- shiny::reactive({
       graphs <- mofa()$graphs
       k <- input_k()
       shiny::req(k %in% names(graphs$features))
@@ -51,7 +51,6 @@ mofa_plot_modulegraph_server <- function(id,
         "Please select at least one datatype"
       ))
 
-      par(mar = c(0, 0, 0, 0))
       gr <- graphs$features[[k]]
       vtype <- sub(":.*", "", igraph::V(gr)$name)
       gr <- igraph::subgraph(gr, vids = vtype %in% filter_types())
@@ -62,7 +61,13 @@ mofa_plot_modulegraph_server <- function(id,
       ## set labels
       vlabel <- pgx$genes[igraph::V(gr)$name, "gene_name"]
       igraph::V(gr)$label <- vlabel
+      gr
+    })
 
+    plot.RENDER <- function(springLength = 25) {
+      gr <- moduleGraphData()
+
+      par(mar = c(0, 0, 0, 0))
       vis <- playbase::mofa.plot_module(
         gr,
         mst = input$mst,
@@ -88,6 +93,23 @@ mofa_plot_modulegraph_server <- function(id,
       plot.RENDER(springLength = 50)
     }
 
+    ## CX2 export for Cytoscape (mirrors the visNetwork attributes)
+    cx2_content <- function(file) {
+      gr <- moduleGraphData()
+      shiny::req(gr)
+      ## mirror the displayed network's mst / singleton-removal options
+      if (input$mst) {
+        gr <- igraph::mst(gr)
+      }
+      if (input$rm_singles) {
+        gr <- igraph::delete_vertices(gr, which(igraph::degree(gr) == 0))
+      }
+      xy <- igraph::layout_nicely(gr)
+      igraph::V(gr)$x <- xy[, 1]
+      igraph::V(gr)$y <- xy[, 2]
+      write_cx2(gr, file)
+    }
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -95,7 +117,10 @@ mofa_plot_modulegraph_server <- function(id,
       plotlib = "visnetwork",
       pdf.width = 8, pdf.height = 8,
       res = c(80, 100),
-      add.watermark = watermark
+      add.watermark = watermark,
+      download.handlers = list(
+        cx2 = list(ext = "cx2", content = cx2_content)
+      )
     )
   })
 }

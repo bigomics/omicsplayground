@@ -47,7 +47,7 @@ functional_plot_go_network_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = plot_opts,
-    download.fmt = c("pdf", "png", "svg"),
+    download.fmt = c("pdf", "png", "svg", "cx2"),
     height = height,
     width = width
   )
@@ -77,7 +77,7 @@ functional_plot_go_network_server <- function(id,
         return(res)
       })
 
-      plot_RENDER <- shiny::reactive({
+      goGraphData <- shiny::reactive({
         res <- plot_data()
         comparison <- res$fa_contrast
         require(igraph)
@@ -152,6 +152,18 @@ functional_plot_go_network_server <- function(id,
           if (length(jj) > 0) igraph::V(sub2)$color[jj] <- NA
         }
 
+        return(list(graph = sub2, pos = pos, score = score))
+      })
+
+      plot_RENDER <- shiny::reactive({
+        d <- goGraphData()
+        if (is.null(d)) {
+          return(NULL)
+        }
+        sub2 <- d$graph
+        pos <- d$pos
+        score <- d$score
+
         gr <- visNetwork::toVisNetworkData(sub2)
         gr$nodes$color[is.na(gr$nodes$color)] <- "#F9F9F9"
         gr$nodes$value <- pmax(abs(gr$nodes$value), 0.001)
@@ -195,6 +207,17 @@ functional_plot_go_network_server <- function(id,
           visNetwork::visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE)
       })
 
+      ## CX2 export for Cytoscape (mirrors the visNetwork attributes)
+      cx2_content <- function(file) {
+        d <- goGraphData()
+        shiny::req(d)
+        g <- d$graph
+        ## same x/y scaling as the render, so the tree keeps its vertical spread
+        igraph::V(g)$x <- d$pos[, 1] * 60
+        igraph::V(g)$y <- d$pos[, 2] * 90
+        write_cx2(g, file)
+      }
+
       PlotModuleServer(
         "plot",
         plotlib = "visnetwork",
@@ -202,7 +225,10 @@ functional_plot_go_network_server <- function(id,
         csvFunc = plot_data,
         res = 72,
         pdf.width = 10, pdf.height = 8,
-        add.watermark = watermark
+        add.watermark = watermark,
+        download.handlers = list(
+          cx2 = list(ext = "cx2", content = cx2_content)
+        )
       )
     } ## end of moduleServer
   )
