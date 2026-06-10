@@ -461,6 +461,30 @@ extract_label_settings <- function(input, defaults = list()) {
 }
 
 
+#' Extract custom axis limits from Shiny input (volcano editor).
+#'
+#' Reads the \code{axis_limits_checkbox} toggle and the \code{xlim_max} /
+#' \code{ylim_max} numeric inputs. The x-axis is symmetric (the view spans
+#' \code{c(-xlim_max, xlim_max)}); the y-axis is capped at \code{ylim_max}
+#' with the lower bound left at 0. Either field may be left blank to keep
+#' that axis auto-scaled.
+#'
+#' @param input Shiny input object.
+#' @return Named list with \code{xlim} (length-2 numeric vector or NULL) and
+#'   \code{ymax} (single numeric or NULL).
+extract_axis_limits <- function(input) {
+  use  <- isTRUE(input$axis_limits_checkbox)
+  xmax <- input$xlim_max
+  ymax <- input$ylim_max
+  ok_x <- use && !is.null(xmax) && !is.na(xmax) && xmax > 0
+  ok_y <- use && !is.null(ymax) && !is.na(ymax) && ymax > 0
+  list(
+    xlim = if (ok_x) c(-xmax, xmax) else NULL,
+    ymax = if (ok_y) ymax else NULL
+  )
+}
+
+
 #' Hyperbolic significance mask matching playbase::ggVolcano.
 #'
 #' Returns a logical vector flagging points that lie above the hyperbola
