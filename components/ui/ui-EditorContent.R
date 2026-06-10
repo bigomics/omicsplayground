@@ -111,6 +111,20 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               ns = ns_parent
             )
           ),
+          bslib::accordion_panel(
+            "Axis Limits",
+            checkboxInput(ns_parent("axis_limits_checkbox"), "Custom axis limits", value = FALSE),
+            conditionalPanel(
+              condition = "input.axis_limits_checkbox",
+              ns = ns_parent,
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                numericInput(ns_parent("xlim_max"), "X max (±)", value = NA, min = 0, step = 0.5),
+                numericInput(ns_parent("ylim_max"), "Y max", value = NA, min = 0, step = 1)
+              ),
+              shiny::helpText("X axis spans ± the value. Leave a field blank to auto-scale that axis.")
+            )
+          ),
 
           # Additional Settings
           bslib::accordion_panel(
