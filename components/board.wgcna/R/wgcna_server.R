@@ -87,7 +87,7 @@ WgcnaBoard <- function(id, pgx) {
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
       
       llm_model <- getUserOption(session,'llm_model')
-      img_model <- "google:gemini-3.1-flash-image-preview"
+      img_model <- "gemini-3.1-flash-image-preview"
       llm_model <- NULL  # skip report here
       img_model <- NULL  # skip infographics
       out <- playbase::wgcna.init(

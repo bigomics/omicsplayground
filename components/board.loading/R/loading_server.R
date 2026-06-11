@@ -323,8 +323,14 @@ LoadingBoard <- function(id,
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
 
-      has_reports <- playbase::pgx.has_reports(pgx)
-      if (has_reports) return(invisible(NULL))
+      pgx_list <- shiny::reactiveValuesToList(pgx)
+      report_modules <- ai_report_modules_for_pgx(pgx_list)
+      ## Do not require every possible module report. Some modules are optional
+      ## or can fail independently; any valid pgx$ai report is enough to avoid
+      ## prompting on every load.
+      if (!ai_report_needs_generation(pgx_list)) {
+        return(invisible(NULL))
+      }
 
       ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
       shinyalert::shinyalert(
@@ -340,17 +346,25 @@ LoadingBoard <- function(id,
           shiny::withProgress(message = "Please wait. Generating AI reports...",
             value = 0.33, {
             pgx_list <- shiny::reactiveValuesToList(pgx)
-            pgx_list <- playbase::pgx.update_reports(
-              pgx_list, llm_model = llm_model, img_model = NULL,
-              select = c("wgcna", "mofa", "cmap", "summary")
+            pgx_list <- ai_report_generate(
+              pgx_list,
+              llm_model = llm_model,
+              img_model = NULL,
+              select = report_modules,
+              report_type = "normal",
+              on_error = "warn"
             )
-            shiny::isolate({
-              for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
-                if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
-              }
-            })
-            if (isTRUE(is_user_dir) && !is.null(save_pgx)) {
+            updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
+            if (isTRUE(updated) && isTRUE(is_user_dir) && !is.null(save_pgx)) {
               save_pgx(pgx)
+            }
+            if (isTRUE(updated)) {
+              shinyalert::shinyalert(
+                title = "AI reports ready",
+                text = "Your AI reports are ready.",
+                type = "success",
+                confirmButtonText = "OK"
+              )
             }
           })
         }

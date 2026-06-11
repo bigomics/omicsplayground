@@ -371,6 +371,7 @@ if(!file.exists('00SourceAll.R')) {
   source('board.wordcloud/R/wordcloud_table_enrichment.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_table_leading_edge.R',encoding='UTF-8')
   source('board.wordcloud/R/wordcloud_ui.R',encoding='UTF-8')
+  source('modules/AiReports.R',encoding='UTF-8')
   source('modules/AuthenticationModule_functions.R',encoding='UTF-8')
   source('modules/AuthenticationModule_ui.R',encoding='UTF-8')
   source('modules/AuthenticationModule.R',encoding='UTF-8')

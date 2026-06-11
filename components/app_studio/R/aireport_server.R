@@ -47,6 +47,7 @@ AiReportUI <- function(id) {
 
   preview_ui <- bslib::navset_tab(
     id = ns("navset_preview"),
+    selected = "Summary",
     bslib::nav_panel(title = "Summary",
       shiny::div( shiny::htmlOutput(ns("summary")) %>% bigLoaders::useSpinner(),
         style="align-items: center;")
@@ -57,10 +58,6 @@ AiReportUI <- function(id) {
     ),
     bslib::nav_panel(title = "moxWGCNA",
       shiny::div( shiny::htmlOutput(ns("wgcna2")) %>% bigLoaders::useSpinner(),
-        style="align-items: center;")
-    ),
-    bslib::nav_panel(title = "L1000",
-      shiny::div( shiny::htmlOutput(ns("cmap")) %>% bigLoaders::useSpinner(),
         style="align-items: center;")
     ),
     bslib::nav_panel(title = "MOFA",
@@ -77,6 +74,9 @@ AiReportUI <- function(id) {
     )
   )
 
+  ## Local UI factory for the edit tabs.
+  ## Kept inside AiReportUI because it only depends on this module namespace
+  ## and avoids repeating the same textAreaInput boilerplate seven times.
   text_area <- function(id) {
     div( shiny::textAreaInput(ns(id), NULL, value = "",
       height = "calc(100vh - 160px)", width = "100%"),
@@ -85,10 +85,10 @@ AiReportUI <- function(id) {
   
   edit_ui <- bslib::navset_tab(
     id = ns("navset_edit"),
+    selected = "Summary",
     bslib::nav_panel(title = "Summary", text_area("edit_summary")),
     bslib::nav_panel(title = "WGCNA", text_area("edit_wgcna")),
     bslib::nav_panel(title = "moxWGCNA", text_area("edit_wgcna2")),
-    bslib::nav_panel(title = "L1000", text_area("edit_cmap")),
     bslib::nav_panel(title = "MOFA", text_area("edit_mofa")),
     bslib::nav_panel(title = "DE", text_area("edit_de")),
     bslib::nav_panel(title = "Enrichment", text_area("edit_enrichment"))
@@ -96,6 +96,7 @@ AiReportUI <- function(id) {
 
   ui <- bslib::navset_hidden(
     id = ns("navset"),
+    selected = "Preview",
     bslib::nav_panel(title = "Preview", preview_ui),    
     bslib::nav_panel(title = "Edit", edit_ui),
     header = tagList(
@@ -122,7 +123,6 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
     mofa_pdf <- file.path(pdf_tempdir,"report-mofa.pdf")
     wgcna_pdf <- file.path(pdf_tempdir,"report-wgcna.pdf")
     wgcna2_pdf <- file.path(pdf_tempdir,"report-wgcna2.pdf")      
-    cmap_pdf <- file.path(pdf_tempdir,"report-cmap.pdf")
     summary_pdf <- file.path(pdf_tempdir,"report-summary.pdf")      
 
     shiny::addResourcePath('pdf', pdf_tempdir)
@@ -132,31 +132,176 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       unlink(mofa_pdf)
       unlink(wgcna_pdf)
       unlink(wgcna2_pdf)
-      unlink(cmap_pdf)
       unlink(summary_pdf)      
+      unlink(Sys.glob(file.path(pdf_tempdir, "report-drugs_*.pdf")))
       removeResourcePath('pdf')
     })
+
+    dynamic_drug_tabs <- character(0)
+
+    ## Local edit-control factory for drug tabs inserted at runtime.
+    ## It mirrors the static edit text areas but must run inside the server
+    ## module so the dynamically generated ids receive the session namespace.
+    drug_text_area <- function(id) {
+      div(shiny::textAreaInput(ns(id), NULL, value = "",
+        height = "calc(100vh - 160px)", width = "100%"),
+        id = "reportTA", style = "font-size: 1em;")
+    }
     
-    update_nav <- function(pgx) {
-      nav_toggle <- function(x,target) {
-        if(is.null(x)) {
-          bslib::nav_hide("navset_preview",target)
-          bslib::nav_hide("navset_edit",target)          
-        }
-        if(!is.null(x)) {
-          bslib::nav_show("navset_preview",target)
-          bslib::nav_select("navset_preview",target)          
-          bslib::nav_show("navset_edit",target)
-          bslib::nav_select("navset_edit",target)          
+    ## Capture the current reactive PGX state as a plain list.
+    ## Async report generation cannot safely carry reactiveValues into futures,
+    ## so all downstream helpers operate on this immutable snapshot.
+    pgx_snapshot <- function() {
+      shiny::reactiveValuesToList(pgx)
+    }
+
+    ## Read one AI report body from the normalized pgx$ai module schema.
+    ## Missing reports are represented as empty strings so Shiny text areas
+    ## can be refreshed without null checks at every call site.
+    report_text <- function(module, pgx_list = pgx_snapshot()) {
+      entry <- ai_report_get_module(pgx_list, module)
+      if (is.null(entry)) "" else entry$report
+    }
+
+    ## Insert one Preview/Edit tab pair per concrete pgx$ai$drugs_* slot.
+    ## Drug reports are generated as multiple independent reports, so the UI
+    ## must not use a synthetic concatenated "drugs" report.
+    sync_drug_tabs <- function(pgx_list = pgx_snapshot()) {
+      for (slot in dynamic_drug_tabs) {
+        try(bslib::nav_remove("navset_preview", target = slot), silent = TRUE)
+        try(bslib::nav_remove("navset_edit", target = slot), silent = TRUE)
+      }
+      dynamic_drug_tabs <<- character(0)
+
+      drug_slots <- ai_report_drug_slots(pgx_list)
+      target <- "moxWGCNA"
+      for (slot in drug_slots) {
+        label <- ai_report_drug_label(pgx_list, slot)
+        output_id <- paste0("preview_", slot)
+        input_id <- paste0("edit_", slot)
+        pdfname <- paste0("report-", slot, ".pdf")
+
+        bslib::nav_insert("navset_preview",
+          target = target,
+          position = "after",
+          nav = bslib::nav_panel(
+            title = label,
+            value = slot,
+            shiny::div(shiny::htmlOutput(ns(output_id)) %>%
+              bigLoaders::useSpinner(), style = "align-items: center;")
+          )
+        )
+        bslib::nav_insert("navset_edit",
+          target = target,
+          position = "after",
+          nav = bslib::nav_panel(
+            title = label,
+            value = slot,
+            drug_text_area(input_id)
+          )
+        )
+
+        local({
+          slot_i <- slot
+          input_i <- input_id
+          output_i <- output_id
+          pdf_i <- pdfname
+          label_i <- label
+          output[[output_i]] <- renderUI({
+            updatePDF(input[[input_i]], slot_i, pdf_i)
+            shiny::validate(need(file.exists(file.path(pdf_tempdir, pdf_i)),
+              paste("missing", label_i, "report")))
+            return(pdf.iframe(pdf_i))
+          })
+        })
+
+        dynamic_drug_tabs <<- c(dynamic_drug_tabs, slot)
+        target <- slot
+      }
+      invisible(drug_slots)
+    }
+
+    ## Push current report text into the edit-mode text areas.
+    ## This centralizes module name mapping, because static UI tab names differ
+    ## from pgx$ai module keys for summary, enrichment, and moxWGCNA.
+    update_report_inputs <- function(pgx_list = pgx_snapshot()) {
+      updateTextAreaInput(session, "edit_wgcna",
+        value = report_text("wgcna", pgx_list))
+      updateTextAreaInput(session, "edit_wgcna2",
+        value = report_text("wgcna_mox", pgx_list))
+      updateTextAreaInput(session, "edit_mofa",
+        value = report_text("mofa", pgx_list))
+      updateTextAreaInput(session, "edit_summary",
+        value = report_text("combined", pgx_list))
+      updateTextAreaInput(session, "edit_de",
+        value = report_text("de", pgx_list))
+      updateTextAreaInput(session, "edit_enrichment",
+        value = report_text("pathways", pgx_list))
+      for (slot in ai_report_drug_slots(pgx_list)) {
+        updateTextAreaInput(session, paste0("edit_", slot),
+          value = ai_report_get(pgx_list, slot)$report)
+      }
+    }
+
+    ## Pick the Generate/Reset button label from report availability.
+    ## Keeping this as one helper prevents load, clear, success, and error
+    ## observers from drifting in their button state logic.
+    report_button_label <- function(pgx_list = pgx_snapshot()) {
+      if (ai_report_has(pgx_list)) "Reset reports" else "Generate reports"
+    }
+
+    ## Show only tabs backed by reports present in pgx$ai.
+    ## This replaced the old slot-specific logic so the UI follows the new
+    ## report schema instead of legacy pgx$report and module$report paths.
+    update_nav <- function(pgx_list = pgx_snapshot()) {
+      drug_slots <- sync_drug_tabs(pgx_list)
+      drug_reports <- lapply(drug_slots, function(slot) ai_report_get(pgx_list, slot))
+      names(drug_reports) <- drug_slots
+
+      reports <- c(
+        list(
+          Summary = ai_report_get_module(pgx_list, "combined"),
+          WGCNA = ai_report_get_module(pgx_list, "wgcna"),
+          moxWGCNA = ai_report_get_module(pgx_list, "wgcna_mox")
+        ),
+        drug_reports,
+        list(
+          MOFA = ai_report_get_module(pgx_list, "mofa"),
+          DE = ai_report_get_module(pgx_list, "de"),
+          Enrichment = ai_report_get_module(pgx_list, "pathways")
+        )
+      )
+      available <- names(reports)[!vapply(reports, is.null, logical(1))]
+      selected <- if (length(available)) available[[1L]] else NULL
+
+      for (target in names(reports)) {
+        if (is.null(reports[[target]])) {
+          bslib::nav_hide("navset_preview", target)
+          bslib::nav_hide("navset_edit", target)
+        } else {
+          bslib::nav_show("navset_preview", target,
+            select = identical(target, selected))
+          bslib::nav_show("navset_edit", target,
+            select = identical(target, selected))
         }
       }
-      nav_toggle(pgx$gset.meta,"Enrichment")
-      nav_toggle(pgx$gx.meta,"DE")
-      nav_toggle(pgx$mofa,"MOFA")      
-      nav_toggle(pgx$drugs,"L1000")
-      nav_toggle(pgx$wgcna_mox,"moxWGCNA")      
-      nav_toggle(pgx$wgcna,"WGCNA")
-      nav_toggle(pgx$report,"Summary")
+      if (!is.null(selected)) {
+        bslib::nav_select("navset",
+          if (isTRUE(input$edit_mode)) "Edit" else "Preview")
+      }
+      invisible(selected)
+    }
+
+    ## Refresh all visible report controls from one PGX snapshot.
+    ## Used after dataset load, pgx$ai updates, and async completion so those
+    ## paths cannot accidentally diverge in UI state handling.
+    refresh_report_ui <- function(pgx_list = pgx_snapshot()) {
+      update_nav(pgx_list)
+      clear_files()
+      update_report_inputs(pgx_list)
+      updateCheckboxInput(session, "force", value = FALSE)
+      updateActionButton(session, "generate",
+        label = report_button_label(pgx_list))
     }
 
     has.warned=0
@@ -179,19 +324,29 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
     })
     
     ## ----------------------- PDF outputs -------------------------
+    ## Track letter counts to detect text changes before re-rendering PDFs.
+    ## This is local because the cache only serves the current Shiny session
+    ## and depends on transient edit text, temp files, and logo state.
     countLetters <- function(text) {
       az <- c(letters, LETTERS)
       cc <- sapply(az, function(s) sum(gregexpr(s,text)[[1]]>0))
       cc[az]
     }
 
-    char_counts <- c( "wgcna" = 0, "wgcna2" = 0, "mofa" = 0, "cmap" = 0,
+    char_counts <- c( "wgcna" = 0, "wgcna2" = 0, "mofa" = 0,
       "summary" = 0, "de" = 0, "enrichment" = 0)    
     letter_counts = rep(list(countLetters("")), length(names(char_counts)))
     names(letter_counts) <- names(char_counts)
     
+    ## Decide whether a report needs a fresh PDF render.
+    ## The helper updates the local cache counters as a side effect, keeping
+    ## the renderUI blocks short and consistent across all report tabs.
     has.changed <- function(what, now) {
       if(is.null(now)) now <- ""
+      if (is.na(char_counts[what])) char_counts[what] <<- 0
+      if (is.null(letter_counts[[what]])) {
+        letter_counts[[what]] <<- countLetters("")
+      }
       ct <- nchar(now)
       changed1 <- (!is.null(now) && ct != char_counts[what])
       char_counts[what] <<- ct
@@ -201,6 +356,9 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       return(changed1 || changed2)
     }
 
+    ## Render markdown to the temp PDF only when report text changed.
+    ## Kept local because it closes over the session tempdir, logo path, and
+    ## per-tab cache counters used by has.changed().
     updatePDF <- function(rpt, rptname, pdfname) {
       if(has.changed(rptname, rpt)) {
         shiny::withProgress(message = "Rendering PDF...", value = 0.7, {
@@ -210,6 +368,9 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       }
     }
 
+    ## Build the PDF preview iframe for a generated temp PDF.
+    ## This isolates the resource-path URL convention so each renderUI block
+    ## only names the PDF it wants to display.
     pdf.iframe <- function(pdfname) {
       HTML(paste0('<embed style="height: calc(100vh - 200px); width: calc(100% - 20px)" src="pdf/',pdfname,'" type="application/pdf" />'))      
     }
@@ -232,12 +393,6 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       return(pdf.iframe("report-wgcna2.pdf"))
     })
 
-    output$cmap <- renderUI({
-      updatePDF(input$edit_cmap, "cmap", "report-cmap.pdf")                  
-      shiny::validate(need(file.exists(cmap_pdf),"missing L1000 report"))            
-      return(pdf.iframe("report-cmap.pdf"))
-    })
-    
     output$mofa <- renderUI({
       updatePDF(input$edit_mofa, "mofa", "report-mofa.pdf")                        
       shiny::validate(need(file.exists(mofa_pdf),"missing mofa report"))            
@@ -245,18 +400,39 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
     })
 
     output$de <- renderUI({
-      ## updatePDF(input$edit_de, "de", "report-de.pdf")                        
+      updatePDF(input$edit_de, "de", "report-de.pdf")
       shiny::validate(need(file.exists(de_pdf),"missing DE report"))            
       return(pdf.iframe("report-de.pdf"))
     })
 
     output$enrichment <- renderUI({
-      ## updatePDF(input$edit_enrichment, "de", "report-enrichment.pdf")      
+      updatePDF(input$edit_enrichment, "enrichment", "report-enrichment.pdf")
       shiny::validate(need(file.exists(enrichment_pdf),"missing Enrichment report"))
       return(pdf.iframe("report-enrichment.pdf"))
     })
 
-    
+    ## Run report generation outside the Shiny event loop.
+    ## The task returns a dataset token with the PGX result so stale async
+    ## completions can be ignored if the user switches datasets mid-run.
+    report_task <- shiny::ExtendedTask$new(
+      function(pgx_list, llm_model, force, select, token) {
+        promises::future_promise({
+          list(
+            token = token,
+            pgx = ai_report_generate(
+              pgx_list,
+              llm_model = llm_model,
+              force = force,
+              select = select,
+              img_model = NULL,
+              report_type = "normal",
+              on_error = "warn"
+            )
+          )
+        }, seed = TRUE)
+      }
+    )
+
     ##---------------------------------------------------------------
     ## --------- refresh observer: pgx load -------------------------
     ##---------------------------------------------------------------
@@ -268,20 +444,14 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
     shiny::observeEvent(list(pgx$X, pgx$name), {
       shiny::req(pgx$X, pgx$name)
       dbg("[AiReportServer] pgx load refresh (no auto-generation)")
-
-      update_nav(pgx)
-      clear_files()
-
-      updateTextAreaInput(session, "edit_wgcna",   value = pgx$wgcna$report$report)
-      updateTextAreaInput(session, "edit_wgcna2",  value = pgx$wgcna_mox$report$report)
-      updateTextAreaInput(session, "edit_mofa",    value = pgx$mofa$report$report)
-      updateTextAreaInput(session, "edit_cmap",    value = pgx$drugs[[1]]$report$report)
-      updateTextAreaInput(session, "edit_summary", value = pgx$report$report)
-
-      updateCheckboxInput(session, "force", value = FALSE)
-      label <- if (isTRUE(playbase::pgx.has_reports(pgx))) "Reset reports" else "Generate reports"
-      updateActionButton(session, "generate", label = label)
+      refresh_report_ui(pgx_snapshot())
     })
+
+    shiny::observeEvent(pgx$ai, {
+      shiny::req(pgx$X, pgx$name)
+      dbg("[AiReportServer] pgx$ai refresh")
+      refresh_report_ui(pgx_snapshot())
+    }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
     ##---------------------------------------------------------------
     ## --------- main observer: generate reports --------------------
@@ -299,36 +469,78 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
         return(NULL)
       }
 
+      if (identical(report_task$status(), "running")) {
+        shiny::showNotification("AI report generation is already running.",
+          type = "message", session = session)
+        return(NULL)
+      }
+
+      pgx_list <- pgx_snapshot()
+      report_modules <- ai_report_modules_for_pgx(pgx_list)
+      if (!length(report_modules)) {
+        shiny::showNotification("No reportable modules found in this dataset.",
+          type = "warning", session = session)
+        return(NULL)
+      }
+
       dbg("[AiReportServer] updating reports using llm = ", llm_model)
+      updateActionButton(session, "generate", label = "Generating...")
+      report_task$invoke(
+        pgx_list,
+        llm_model,
+        isTRUE(input$force),
+        report_modules,
+        ai_report_dataset_token(pgx_list)
+      )
+    }, ignoreInit = TRUE)
 
-      progress <- shiny::Progress$new()
-      on.exit(progress$close())
-      progress$set(message = "Please wait. Updating AI reports...", value = 0.3)
-
-      pgx_list <- shiny::reactiveValuesToList(pgx)
-      pgx_list <- playbase::pgx.update_reports(
-        pgx_list, force = input$force, llm_model = llm_model, img_model = NULL,
-        select = c("wgcna", "mofa", "cmap", "summary"))
-
-      shiny::isolate({
-        for (slot in c("report", "wgcna", "wgcna_mox", "mofa", "drugs")) {
-          if (!is.null(pgx_list[[slot]])) pgx[[slot]] <- pgx_list[[slot]]
+    shiny::observeEvent(report_task$result(), {
+      result <- tryCatch(
+        report_task$result(),
+        error = function(e) {
+          shiny::showNotification(conditionMessage(e),
+            type = "error", session = session)
+          NULL
         }
-      })
+      )
+      if (is.null(result) || is.null(result$pgx)) return(NULL)
 
-      if (!is.null(save_pgx)) save_pgx(pgx)
+      current_pgx <- pgx_snapshot()
+      if (!identical(result$token, ai_report_dataset_token(current_pgx))) {
+        shiny::showNotification(
+          "AI reports finished for a previous dataset; result was ignored.",
+          type = "warning", session = session)
+        updateActionButton(session, "generate",
+          label = report_button_label(current_pgx))
+        return(NULL)
+      }
 
-      update_nav(pgx)
-      clear_files()
+      updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, result$pgx))
+      if (isTRUE(updated) && !is.null(save_pgx)) save_pgx(pgx)
 
-      updateTextAreaInput(session, "edit_wgcna",   value = pgx$wgcna$report$report)
-      updateTextAreaInput(session, "edit_wgcna2",  value = pgx$wgcna_mox$report$report)
-      updateTextAreaInput(session, "edit_mofa",    value = pgx$mofa$report$report)
-      updateTextAreaInput(session, "edit_cmap",    value = pgx$drugs[[1]]$report$report)
-      updateTextAreaInput(session, "edit_summary", value = pgx$report$report)
+      refresh_report_ui(pgx_snapshot())
+      shinyalert::shinyalert(
+        title = "AI reports ready",
+        text = "Your AI reports are ready.",
+        type = "success",
+        confirmButtonText = "OK"
+      )
+    }, ignoreNULL = TRUE)
 
-      updateCheckboxInput(session, "force", value = FALSE)
-      updateActionButton(session, "generate", label = "Reset reports")
+    shiny::observeEvent(report_task$status(), {
+      status <- report_task$status()
+      if (identical(status, "running")) {
+        updateActionButton(session, "generate", label = "Generating...")
+        return(NULL)
+      }
+      if (identical(status, "error")) {
+        err <- tryCatch(report_task$result(), error = function(e) e)
+        msg <- if (inherits(err, "error")) conditionMessage(err) else
+          "AI report generation failed."
+        shiny::showNotification(msg, type = "error", session = session)
+        updateActionButton(session, "generate",
+          label = report_button_label())
+      }
     }, ignoreInit = TRUE)
     
     ##-------------------------------------------------
@@ -343,27 +555,35 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       file.copy(file$datapath, logopath, overwrite=TRUE)
     })
 
-    shiny::observeEvent({
-      list(pgx$X, input$clear)
-    }, {
+    shiny::observeEvent(input$clear, {
       clear_files()
-      update_nav(pgx)      
+      update_nav()
       updateCheckboxInput(session, "force", value = FALSE)      
       updateActionButton(session, "generate", label = "Generate reports")
-    })
+    }, ignoreInit = TRUE)
 
+    ## Clear edit text, cached PDFs, and local change counters.
+    ## This is session-local cleanup, not PGX mutation, so the helper stays
+    ## inside the server module where temp paths and UI ids are available.
     clear_files <- function() {
       dbg("[clear_files] clearing files!")
       updateTextAreaInput(session, "edit_wgcna", value = "")
       updateTextAreaInput(session, "edit_wgcna2", value = "")
       updateTextAreaInput(session, "edit_mofa", value = "")
-      updateTextAreaInput(session, "edit_cmap", value = "")
       updateTextAreaInput(session, "edit_summary", value = "")
+      updateTextAreaInput(session, "edit_de", value = "")
+      updateTextAreaInput(session, "edit_enrichment", value = "")
+      for (slot in dynamic_drug_tabs) {
+        updateTextAreaInput(session, paste0("edit_", slot), value = "")
+      }
       unlink(file.path(pdf_tempdir,"report-wgcna.pdf"))
       unlink(file.path(pdf_tempdir,"report-wgcna2.pdf"))
-      unlink(file.path(pdf_tempdir,"report-cmap.pdf"))
       unlink(file.path(pdf_tempdir,"report-mofa.pdf"))
-      unlink(file.path(pdf_tempdir,"report-summary.pdf"))            
+      unlink(file.path(pdf_tempdir,"report-summary.pdf"))
+      unlink(file.path(pdf_tempdir,"report-de.pdf"))
+      unlink(file.path(pdf_tempdir,"report-enrichment.pdf"))
+      unlink(file.path(pdf_tempdir,
+        paste0("report-", dynamic_drug_tabs, ".pdf")))
       char_counts <<- char_counts * 0
       letter_counts <<- lapply(letter_counts, function(x) x*0)
     }

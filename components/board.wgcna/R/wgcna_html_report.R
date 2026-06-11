@@ -84,7 +84,7 @@ wgcna_report_infographic_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
-  img_models <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
+  img_models <- omicsai::omicsai_image_models(opt$IMAGE_MODELS)
   options <- shiny::tagList(
     shiny::checkboxInput(ns("use_diagram"), "Use diagram", TRUE),
     shiny::selectInput(ns("img_model"), "AI model:", choices = img_models),

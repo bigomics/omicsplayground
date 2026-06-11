@@ -97,7 +97,7 @@ InfographicServer <- function(id, pgx) {
     ## ------------- generate infographics ---------------
     shiny::observeEvent( input$generate, {
 
-      img_model = "google:gemini-3.1-flash-image-preview"
+      img_model = "gemini-3.1-flash-image-preview"
       llm_model = "groq:openai/gpt-oss-120b"
       img_model <- getUserOption(session, "img_model")
       llm_model <- getUserOption(session, "llm_model")      
