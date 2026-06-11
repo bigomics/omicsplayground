@@ -80,7 +80,9 @@ copilot_run_controller <- function(
   maxturns         = Inf,
   session,
   style            = NULL,
-  custom           = NULL
+  custom           = NULL,
+  report_context   = NULL,
+  tools_enabled    = NULL
 ) {
 
   # ---- Follow-up suggestion generator (side LLM call, runtime-optional) ----
@@ -119,6 +121,50 @@ copilot_run_controller <- function(
       data_dir         = pgx_dir,
       pgx_loaded_event = pgx_loaded_event
     )
+  }
+
+  .tools_are_enabled <- function() {
+    if (is.null(tools_enabled)) return(TRUE)
+    value <- tryCatch(shiny::isolate(tools_enabled()), error = function(e) TRUE)
+    isTRUE(value)
+  }
+
+  .sync_runtime_controls <- function(agent_value) {
+    if (is.null(agent_value)) return(agent_value)
+    tryCatch({
+      agent_value@runtime$tools_enabled <- .tools_are_enabled()
+      agent_value
+    }, error = function(e) {
+      log_info("copilot.run.runtime_sync_failed", msg = conditionMessage(e))
+      agent_value
+    })
+  }
+
+  .selected_report_slots <- function() {
+    if (is.null(report_context) ||
+        !is.function(report_context[["selected_reports"]])) {
+      return(character(0))
+    }
+    slots <- tryCatch(
+      shiny::isolate(report_context$selected_reports()),
+      error = function(e) character(0)
+    )
+    slots <- tryCatch(as.character(slots), error = function(e) character(0))
+    slots[!is.na(slots) & nzchar(slots)]
+  }
+
+  .mark_reports_consumed <- function(slots) {
+    if (is.null(report_context) ||
+        !is.function(report_context[["mark_consumed"]])) {
+      return(invisible(NULL))
+    }
+    tryCatch(
+      report_context$mark_consumed(slots),
+      error = function(e) {
+        log_info("copilot.run.report_consume_failed", msg = conditionMessage(e))
+      }
+    )
+    invisible(NULL)
   }
 
   # ---- Session id generator ----
@@ -190,6 +236,19 @@ copilot_run_controller <- function(
           text = copilot_msg("max_turns", n = maxturns)))
         return(invisible(NULL))
       }
+    }
+
+    current <- .sync_runtime_controls(current)
+    selected_reports <- .selected_report_slots()
+    if (length(selected_reports)) {
+      staged <- .copilot_stage_ai_report_context(current, selected_reports)
+      current <- .sync_runtime_controls(staged$agent)
+      agent(current)
+      if (isTRUE(staged$staged) && length(staged$slots)) {
+        .mark_reports_consumed(staged$slots)
+      }
+    } else {
+      agent(current)
     }
 
     # Optionally post user message into chat
@@ -372,6 +431,7 @@ copilot_run_controller <- function(
         )
         # Stage context blocks (current_dataset, future providers) so the
         # LLM sees host-prepared context on the first user turn.
+        new_agent <- .sync_runtime_controls(new_agent)
         new_agent <- .copilot_stage_context_blocks(new_agent)
       }
     }
@@ -482,6 +542,7 @@ copilot_run_controller <- function(
             new_agent
           }
         )
+        new_agent <- .sync_runtime_controls(new_agent)
         new_agent <- .copilot_stage_context_blocks(new_agent)
       }
       agent(new_agent)
@@ -506,6 +567,7 @@ copilot_run_controller <- function(
       )
       if (!is.null(updated)) {
         # Re-stage context blocks so the next turn sees the new dataset.
+        updated <- .sync_runtime_controls(updated)
         updated <- .copilot_stage_context_blocks(updated)
         agent(updated)
       }

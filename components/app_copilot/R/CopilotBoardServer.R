@@ -88,6 +88,18 @@ CopilotBoardServer <- function(
     # ---- Evidence module (constructed first so $append_artifact is available
     # when run/restore bindings factories run) ----
     evidence <- CopilotEvidenceServer("evidence", local_pgx = shiny::reactive(pgx))
+    reports  <- CopilotReportsServer("reports", pgx = pgx)
+
+    .set_agent_tools_enabled <- function(agent, enabled) {
+      if (is.null(agent)) return(agent)
+      tryCatch({
+        agent@runtime$tools_enabled <- isTRUE(enabled)
+        agent
+      }, error = function(e) {
+        log_info("copilot.tools.toggle_failed", msg = conditionMessage(e))
+        agent
+      })
+    }
 
     # ---- Save controller ----
     save_ctrl <- copilot_save_controller(
@@ -159,7 +171,9 @@ CopilotBoardServer <- function(
       maxturns             = maxturns,
       session              = session,
       style                = style,
-      custom               = custom
+      custom               = custom,
+      report_context       = reports,
+      tools_enabled        = reports$tools_enabled
     )
 
     # ---- Panel modules (datasets / history / docs) ----
@@ -170,6 +184,21 @@ CopilotBoardServer <- function(
       history_invalidation_tick = shiny::reactive(history_invalidation_tick())
     )
     docs     <- CopilotDocsServer("docs", docs_dir = docs_dir)
+
+    shiny::observeEvent(pgx$name, {
+      reports$refresh()
+    }, ignoreNULL = FALSE)
+
+    shiny::observeEvent(pgx$ai, {
+      reports$refresh()
+    }, ignoreNULL = FALSE)
+
+    shiny::observeEvent(reports$tools_enabled(), {
+      current <- shiny::isolate(agent_rv())
+      if (!is.null(current)) {
+        agent_rv(.set_agent_tools_enabled(current, reports$tools_enabled()))
+      }
+    }, ignoreInit = FALSE)
 
     # ---- Run dispatch observers (new chat / tier change) ----
     shiny::observeEvent(input$new_chat, {

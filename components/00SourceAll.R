@@ -29,6 +29,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app_copilot/R/CopilotEvidenceServer.R',encoding='UTF-8')
   source('app_copilot/R/CopilotEvidenceUI.R',encoding='UTF-8')
   source('app_copilot/R/CopilotHistoryServer.R',encoding='UTF-8')
+  source('app_copilot/R/CopilotReportsServer.R',encoding='UTF-8')
   source('app_prism/R/prism_server.R',encoding='UTF-8')
   source('app_prism/R/prism_ui.R',encoding='UTF-8')
   source('app_studio/R/aireport_server.R',encoding='UTF-8')
