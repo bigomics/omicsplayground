@@ -163,6 +163,46 @@ ai_report_generate <- function(pgx,
   )
 }
 
+ai_report_update_text <- function(pgx, reports) {
+  if (is.null(pgx) || !is.list(pgx)) return(pgx)
+  ai <- .ai_report_ai_slot(pgx)
+  if (is.null(ai)) return(pgx)
+
+  reports <- reports[!is.na(names(reports)) & nzchar(names(reports))]
+  if (!length(reports)) return(pgx)
+
+  for (slot in names(reports)) {
+    if (!is.list(ai[[slot]])) next
+    value <- tryCatch(as.character(reports[[slot]])[[1L]],
+      error = function(e) NA_character_)
+    if (is.na(value)) next
+    ai[[slot]]$report <- value
+  }
+
+  pgx$ai <- ai
+  pgx
+}
+
+ai_report_merge_into_reactive <- function(pgx_rv, ai) {
+  if (is.null(pgx_rv)) return(invisible(FALSE))
+
+  ai_slot <- if (is.list(ai) && !is.null(ai$ai) && is.list(ai$ai)) ai$ai else ai
+  probe <- list(ai = ai_slot)
+  slots <- ai_report_slots(probe)
+  if (is.null(ai_slot) || !is.list(ai_slot) || !length(slots)) {
+    return(invisible(FALSE))
+  }
+
+  current <- pgx_rv$ai
+  if (is.null(current) || !is.list(current)) current <- list()
+  for (slot in slots) {
+    current[[slot]] <- ai_slot[[slot]]
+  }
+  if (!is.null(ai_slot$meta)) current$meta <- ai_slot$meta
+  pgx_rv$ai <- current
+  invisible(TRUE)
+}
+
 ai_report_copy_into_reactive <- function(pgx_rv, ai) {
   if (is.null(pgx_rv)) return(invisible(FALSE))
 

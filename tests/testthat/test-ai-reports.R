@@ -85,6 +85,56 @@ test_that("ai_report_get reads dynamic report and prompt slots", {
   expect_null(de$prompt)
 })
 
+test_that("ai_report_update_text edits pgx$ai reports only", {
+  pgx <- list(
+    report = list(report = "old summary"),
+    wgcna = list(report = list(report = "old wgcna")),
+    ai = list(
+      combined = list(report = "Combined report", prompt = "combined prompt"),
+      wgcna = list(report = "WGCNA report"),
+      meta = list(llm_model = "test")
+    )
+  )
+
+  updated <- ai_report_update_text(pgx, c(
+    combined = "Edited summary",
+    wgcna = "Edited WGCNA",
+    missing = "Ignored report"
+  ))
+
+  expect_equal(updated$ai$combined$report, "Edited summary")
+  expect_equal(updated$ai$combined$prompt, "combined prompt")
+  expect_equal(updated$ai$wgcna$report, "Edited WGCNA")
+  expect_null(updated$ai$missing)
+  expect_equal(updated$ai$meta$llm_model, "test")
+  expect_equal(updated$report$report, "old summary")
+  expect_equal(updated$wgcna$report$report, "old wgcna")
+})
+
+test_that("ai_report_merge_into_reactive preserves existing pgx$ai slots", {
+  pgx_rv <- new.env(parent = emptyenv())
+  pgx_rv$ai <- list(
+    de = list(report = "DE report"),
+    combined = list(report = "Combined report"),
+    meta = list(llm_model = "old")
+  )
+
+  result <- list(ai = list(
+    pathways = list(report = "Pathway report"),
+    drugs_L1000 = list(report = "Drug report"),
+    meta = list(llm_model = "new")
+  ))
+
+  expect_true(ai_report_merge_into_reactive(pgx_rv, result))
+  expect_equal(pgx_rv$ai$de$report, "DE report")
+  expect_equal(pgx_rv$ai$combined$report, "Combined report")
+  expect_equal(pgx_rv$ai$pathways$report, "Pathway report")
+  expect_equal(pgx_rv$ai$drugs_L1000$report, "Drug report")
+  expect_equal(pgx_rv$ai$meta$llm_model, "new")
+
+  expect_false(ai_report_merge_into_reactive(pgx_rv, list(ai = list())))
+})
+
 test_that("ai_report_get_module maps static UI modules only", {
   pgx <- list(ai = list(
     combined = list(report = "Combined report"),
