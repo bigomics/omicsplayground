@@ -17,45 +17,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     ns <- session$ns
     chat <- NULL
 
-    # DEBUG: Obi-One trace sink
-    .obi_one_debug <- function(event, ...) {
-      data <- list(...)
-      compact <- function(x) {
-        if (is.null(x)) return("NULL")
-        if (length(x) == 0L) return("<empty>")
-        y <- tryCatch(as.character(x), error = function(e) "<unprintable>")
-        y <- y[!is.na(y)]
-        if (!length(y)) return("NA")
-        y <- paste(utils::head(y, 6L), collapse = ",")
-        if (nchar(y) > 300L) y <- paste0(substr(y, 1L, 300L), "...")
-        y
-      }
-      rec <- c(
-        list(
-          time = Sys.time(),
-          event = event,
-          session_token = tryCatch(session$token, error = function(e) NA_character_)
-        ),
-        data
-      )
-      if (!exists(".OBI_ONE_DEBUG", envir = .GlobalEnv, inherits = FALSE)) {
-        .OBI_ONE_DEBUG <<- list()
-      }
-      .OBI_ONE_DEBUG[[length(.OBI_ONE_DEBUG) + 1L]] <<- rec
-      .OBI_ONE_LAST <<- rec
-      msg <- paste(
-        names(data),
-        vapply(data, compact, character(1)),
-        sep = "=",
-        collapse = "; "
-      )
-      message("[Obi-One DEBUG] ", event, if (nzchar(msg)) paste0(": ", msg))
-      invisible(rec)
-    }
-
-    # DEBUG: module startup
-    .obi_one_debug("module_start", id = id)
-
     OmicsBoard("board", pgx, title="CoPilot", infotext = NULL) 
     copilot_info_module("info", pgx)
     
@@ -64,15 +25,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
     ## -------------- upon new dataset
     observeEvent(list(pgx$X, names(pgx)), {
-      # DEBUG: dataset observer
-      .obi_one_debug(
-        "dataset_observer",
-        pgx_name = tryCatch(pgx$name, error = function(e) NA_character_),
-        pgx_names = tryCatch(names(pgx), error = function(e) character(0)),
-        ai_slots = tryCatch(ai_report_slots(shiny::reactiveValuesToList(pgx)),
-                            error = function(e) paste("ERROR", conditionMessage(e)))
-      )
-
       ## ---------- update reports -------------
       ## Auto report generation is now centralized in LoadingBoard
       ## (board.loading/R/loading_server.R::maybe_offer_ai_reports).
@@ -92,12 +44,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       sel.sections <- as.character(sel.sections)
       shiny::updateCheckboxGroupInput(session, "context",
         choices = sel.sections, selected = sel.sections)
-      # DEBUG: dataset context choices
-      .obi_one_debug(
-        "context_choices_updated",
-        choices = sel.sections,
-        selected = sel.sections
-      )
     })
     
     STYLES <- list(
@@ -144,21 +90,12 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     
     ##----------- create new chatbot
     new_chatbot <- function() {
-        # DEBUG: chatbot construction start
-        .obi_one_debug(
-          "new_chatbot_start",
-          input_role = tryCatch(input$role, error = function(e) NA_character_),
-          input_context = tryCatch(input$context, error = function(e) character(0)),
-          has_pgx_x = tryCatch(!is.null(pgx$X), error = function(e) FALSE)
-        )
         shiny::req(dim(pgx$X))
         shiny::req(isTruthy(input$role))
         shiny::req(isTruthy(input$context))                                
         
         ai_model <- getUserOption(session, "llm_model")
         if (is.null(ai_model) || ai_model == "") {
-          # DEBUG: no model configured
-          .obi_one_debug("new_chatbot_no_model")
           shinyalert::shinyalert(
             title = "Oops...",
             text = "Please enable AI/LLM in user settings.",
@@ -178,17 +115,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           sections = input$context,
           collate = TRUE
         )
-        # DEBUG: report context formatted
-        .OBI_ONE_LAST_PGX <<- pgx_list
-        .OBI_ONE_LAST_REPORT_CONTEXT <<- report
-        .OBI_ONE_LAST_SYSPROMPT_BASE <<- sysprompt
-        .obi_one_debug(
-          "report_context_formatted",
-          ai_slots = tryCatch(ai_report_slots(pgx_list),
-                              error = function(e) paste("ERROR", conditionMessage(e))),
-          selected_context = input$context,
-          report_chars = if (is.null(report)) 0 else nchar(report)
-        )
         if (!is.null(report) && nzchar(report)) {
           sysprompt <- paste(
             sysprompt,
@@ -198,21 +124,9 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
             collapse = " "
           )
         }
-        context_chars <- if (is.null(report)) 0 else nchar(report)
-        .OBI_ONE_LAST_SYSPROMPT <<- sysprompt
-        # DEBUG: chat creation call
-        .obi_one_debug(
-          "chat_create_call",
-          model = ai_model,
-          report_context_chars = context_chars,
-          sysprompt_chars = nchar(sysprompt)
-        )
         chat <<- tryCatch(
           playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt),
           error = function(e) {
-            # DEBUG: chat creation error
-            .OBI_ONE_LAST_ERROR <<- e
-            .obi_one_debug("chat_create_error", message = conditionMessage(e))
             dbg("[new_chatbot] ERROR: ", conditionMessage(e))
             shinyalert::shinyalert(
               title = "AI Copilot error",
@@ -224,8 +138,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           }
         )
         if (is.null(chat)) {
-          # DEBUG: chat creation returned NULL
-          .obi_one_debug("chat_create_null", model = ai_model)
           shinyalert::shinyalert(
             title = "AI Copilot error",
             text = paste("Could not create chat for model:", ai_model),
@@ -234,14 +146,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
           )
           return(NULL)
         }
-        # DEBUG: chat created
-        .OBI_ONE_CHAT <<- chat
-        .obi_one_debug(
-          "chat_created",
-          chat_class = class(chat),
-          has_chat_async = is.function(tryCatch(chat$chat_async, error = function(e) NULL)),
-          has_chat = is.function(tryCatch(chat$chat, error = function(e) NULL))
-        )
 
         usetools=FALSE
         if (!is.null(chat) && usetools) {
@@ -259,31 +163,19 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         list(input$reset)
       },
       {
-        # DEBUG: reset observer
-        .obi_one_debug(
-          "reset_observer",
-          reset = tryCatch(input$reset, error = function(e) NA),
-          role = tryCatch(input$role, error = function(e) NA_character_)
-        )
         shinychat::chat_clear("chat")
         my_role <- NICKNAMES[[input$role]]
         mesg <- paste0("👋 I'm **Obi-One** the ",my_role,". Ask me anything about your data!")        
         shinychat::chat_append("chat", mesg)
-        # DEBUG: reset greeting appended
-        .obi_one_debug("reset_greeting_appended", message = mesg)
         new_chatbot()
       },
       ignoreNULL = FALSE
     )
 
     append_suggestions <- function(chat, num = 3) {
-      # DEBUG: follow-up suggestion call
-      .obi_one_debug("append_suggestions_start", num = num)
       ff <- tryCatch(
         chat$chat(paste("Suggest", num, "short follow-up questions. Just return the questions as clean enumerated list, do not use bold or italics.")),
         error = function(e) {
-          .OBI_ONE_LAST_ERROR <<- e
-          .obi_one_debug("append_suggestions_error", message = conditionMessage(e))
           NULL
         }
       )
@@ -294,19 +186,9 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       qq <- paste("<p><ul>\n", paste(qq, collapse = "\n"), "\n</ul>")
       mesg <- list(role = "assistant", content = qq)
       shinychat::chat_append_message("chat", mesg, chunk = TRUE, operation = "append")
-      # DEBUG: follow-up suggestion appended
-      .obi_one_debug("append_suggestions_done", chars = nchar(qq))
     }
 
     ask_copilot <- function(question, showq = TRUE, suggest = TRUE) {
-      # DEBUG: ask start
-      .obi_one_debug(
-        "ask_start",
-        question = question,
-        showq = showq,
-        suggest = suggest,
-        chat_is_null = is.null(chat)
-      )
       is.new = FALSE
       if (is.null(chat)) {
         ##return(NULL)
@@ -331,31 +213,17 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
       
       ## add system prompt to be sure
       question <- paste(question, get_sysprompt())
-      .OBI_ONE_LAST_QUESTION <<- question
-      # DEBUG: question prepared
-      .obi_one_debug(
-        "ask_question_prepared",
-        question_chars = nchar(question),
-        fullquestion = tryCatch(input$fullquestion, error = function(e) NA)
-      )
 
       ## show question
       if (showq) {
         q <- ifelse(input$fullquestion, question, just_question)
         mesg <- list(role = "user", content = q)
         shinychat::chat_append_message("chat", mesg, chunk = FALSE)
-        # DEBUG: visible question appended
-        .obi_one_debug("ask_user_message_appended", chars = nchar(q))
       }
       
-      # DEBUG: chat_async call
-      .obi_one_debug("chat_async_call")
       response <- tryCatch(
         chat$chat_async(question),
         error = function(e) {
-          # DEBUG: chat_async synchronous error
-          .OBI_ONE_LAST_ERROR <<- e
-          .obi_one_debug("chat_async_sync_error", message = conditionMessage(e))
           dbg("[ask_copilot] ERROR: ", conditionMessage(e))
           shinychat::chat_append(
             "chat",
@@ -365,32 +233,19 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         }
       )
       if (is.null(response)) return(NULL)
-      .OBI_ONE_LAST_RESPONSE_PROMISE <<- response
-      # DEBUG: response promise returned
-      .obi_one_debug("chat_async_returned", response_class = class(response))
       append_result <- tryCatch(
         shinychat::chat_append("chat", response),
         error = function(e) {
-          .OBI_ONE_LAST_ERROR <<- e
-          .obi_one_debug("chat_append_error", message = conditionMessage(e))
           NULL
         }
       )
       if (is.null(append_result)) return(NULL)
-      .OBI_ONE_LAST_APPEND_RESULT <<- append_result
-      # DEBUG: shinychat append returned
-      .obi_one_debug("chat_append_returned", append_result_class = class(append_result))
       append_result %...>% {
-        # DEBUG: response fulfilled
-        .obi_one_debug("response_fulfilled")
         if (suggest && !is.new) {
           append_suggestions(chat, num = 2)
         }
         n_turns(n_turns() + 1)
       } %...!% (function(e) {
-        # DEBUG: response rejected
-        .OBI_ONE_LAST_ERROR <<- e
-        .obi_one_debug("response_rejected", message = conditionMessage(e))
         dbg("[ask_copilot] ERROR: ", conditionMessage(e))
         shinychat::chat_append(
           "chat",
@@ -419,17 +274,9 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     session$onFlushed(function() {
       mesg <- paste("👋 Hi, I'm **BigOmics Copilot**! Ask me about your data")
       shinychat::chat_append("chat", mesg)
-      # DEBUG: first flush greeting
-      .obi_one_debug("on_flushed_greeting", message = mesg)
     }, once = TRUE)
 
     observeEvent(input$chat_user_input, {
-      # DEBUG: chat input observer
-      .obi_one_debug(
-        "chat_user_input_observer",
-        input = input$chat_user_input,
-        chat_is_null = is.null(chat)
-      )
       ask_copilot(input$chat_user_input, showq = FALSE, suggest = input$followup)
     })
 
