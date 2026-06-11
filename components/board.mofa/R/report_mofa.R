@@ -57,7 +57,7 @@ mofa_report_infographic_ui <- function(
   width) {
   ns <- shiny::NS(id)
   
-  img_models <- playbase::ai.get_image_models()   
+  img_models <- omicsai::omicsai_image_models(opt$IMAGE_MODELS)
   options <- shiny::tagList(
     shiny::selectInput(ns("img_model"),"AI model:",choices=img_models),
     shiny::actionButton(ns("generate_infographic"),"Generate")

@@ -25,7 +25,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
 
     ## -------------- upon new dataset
     observeEvent(list(pgx$X, names(pgx)), {
-
       ## ---------- update reports -------------
       ## Auto report generation is now centralized in LoadingBoard
       ## (board.loading/R/loading_server.R::maybe_offer_ai_reports).
@@ -108,12 +107,45 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         }
         shiny::req(ai_model)
         
-        ## get role prompt and paste entire report as context
+        ## get role prompt and paste precomputed AI reports as context
         sysprompt <- get_sysprompt()
-        report <- playbase::ai.create_report(pgx, sections = input$context, collate = TRUE)
-        sysprompt <- paste(sysprompt, "\nThis is the experiment report: <report>", report, "</report>", collapse = " ")
-        dbg("[new_chatbot] Creating new chatbot", ai_model)
-        chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
+        pgx_list <- shiny::reactiveValuesToList(pgx)
+        report <- playbase::ai.build_report_context(
+          pgx_list,
+          sections = input$context,
+          collate = TRUE
+        )
+        if (!is.null(report) && nzchar(report)) {
+          sysprompt <- paste(
+            sysprompt,
+            "\nThis is the precomputed experiment report: <report>",
+            report,
+            "</report>",
+            collapse = " "
+          )
+        }
+        chat <<- tryCatch(
+          playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt),
+          error = function(e) {
+            dbg("[new_chatbot] ERROR: ", conditionMessage(e))
+            shinyalert::shinyalert(
+              title = "AI Copilot error",
+              text = conditionMessage(e),
+              size = "xs",
+              showCancelButton = FALSE
+            )
+            NULL
+          }
+        )
+        if (is.null(chat)) {
+          shinyalert::shinyalert(
+            title = "AI Copilot error",
+            text = paste("Could not create chat for model:", ai_model),
+            size = "xs",
+            showCancelButton = FALSE
+          )
+          return(NULL)
+        }
 
         usetools=FALSE
         if (!is.null(chat) && usetools) {
@@ -141,7 +173,13 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     )
 
     append_suggestions <- function(chat, num = 3) {
-      ff <- chat$chat(paste("Suggest", num, "short follow-up questions. Just return the questions as clean enumerated list, do not use bold or italics."))
+      ff <- tryCatch(
+        chat$chat(paste("Suggest", num, "short follow-up questions. Just return the questions as clean enumerated list, do not use bold or italics.")),
+        error = function(e) {
+          NULL
+        }
+      )
+      if (is.null(ff)) return(NULL)
       qq <- sub("1. ", "", strsplit(ff, split = "\n[2-9][.] ")[[1]])
       qq <- trimws(qq)
       qq <- paste("  <li class='suggestion submit'>", qq, "</li>")
@@ -183,13 +221,37 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         shinychat::chat_append_message("chat", mesg, chunk = FALSE)
       }
       
-      response <- chat$chat_async(question)
-      shinychat::chat_append("chat", response) %...>% {
+      response <- tryCatch(
+        chat$chat_async(question),
+        error = function(e) {
+          dbg("[ask_copilot] ERROR: ", conditionMessage(e))
+          shinychat::chat_append(
+            "chat",
+            paste("AI Copilot error:", conditionMessage(e))
+          )
+          NULL
+        }
+      )
+      if (is.null(response)) return(NULL)
+      append_result <- tryCatch(
+        shinychat::chat_append("chat", response),
+        error = function(e) {
+          NULL
+        }
+      )
+      if (is.null(append_result)) return(NULL)
+      append_result %...>% {
         if (suggest && !is.new) {
           append_suggestions(chat, num = 2)
         }
         n_turns(n_turns() + 1)
-      }
+      } %...!% (function(e) {
+        dbg("[ask_copilot] ERROR: ", conditionMessage(e))
+        shinychat::chat_append(
+          "chat",
+          paste("AI Copilot error:", conditionMessage(e))
+        )
+      })
     }
 
     ## ----------------- tools -------------------------------
@@ -215,7 +277,6 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     }, once = TRUE)
 
     observeEvent(input$chat_user_input, {
-      req(!is.null(chat))
       ask_copilot(input$chat_user_input, showq = FALSE, suggest = input$followup)
     })
 

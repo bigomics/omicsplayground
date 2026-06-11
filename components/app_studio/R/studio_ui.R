@@ -34,6 +34,7 @@ StudioUI <- function(id) {
 
   settings_card <- bslib::navset_hidden(
     id = ns("settings"),
+    selected = "Reports",
     bslib::nav_panel(
       "Reports",
       AiReportSettings(ns("aireport"))
@@ -62,6 +63,7 @@ StudioUI <- function(id) {
 
   output_panel <- bslib::navset_hidden(
     id = ns("studiopanel"),
+    selected = "Reports",
     bslib::nav_panel(
       "Reports",
       AiReportUI(ns("aireport"))
@@ -117,4 +119,3 @@ StudioUI <- function(id) {
   
   return(board)
 }
-

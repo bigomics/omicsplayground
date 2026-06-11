@@ -48,8 +48,13 @@ copilot_normalize_pgx <- function(pgx, source = "unknown") {
   # regression somewhere upstream that we want to see in the logs.
   if (inherits(pgx, "reactivevalues")) {
     if (exists("log_info", mode = "function")) {
+      source_label <- if (is.null(source) || is.na(source) || !nzchar(source)) {
+        "unknown"
+      } else {
+        source
+      }
       log_info("copilot.pgx.normalize_coerce",
-               source = source %||% "unknown")
+               source = source_label)
     }
     pgx <- tryCatch(
       shiny::isolate(shiny::reactiveValuesToList(pgx)),

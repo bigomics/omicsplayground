@@ -344,15 +344,16 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## LLM model setup — playbase filters to providers with available creds
-opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
+## LLM model setup. Model availability is owned by omicsai because report and
+## infographic generation use the omicsai provider path.
+opt$LLM_MODELS <- omicsai::ai.get_models(opt$LLM_MODELS)
+image_models <- opt$LLM_IMAGE_MODELS
+if (is.null(image_models) || !length(image_models)) image_models <- opt$IMAGE_MODELS
+opt$IMAGE_MODELS <- omicsai::omicsai_image_models(image_models)
+opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
 ## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
 dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
 dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
-## TODO(edgy_merge_summaries): copilot reads LLM_IMAGE_MODELS, edgy reads
-## IMAGE_MODELS — alias for now until the legacy enable_ai panel is retired.
-opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
 
 ## Copilot tier selection — verify against the omicsagentovi registry
 if (is.null(opt$COPILOT_MODEL)) {
