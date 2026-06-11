@@ -45,7 +45,7 @@ CopilotUI <- function(id) {
       shiny::radioButtons(ns("response_length"), "Response length:",
         choices = c("short","long"), selected="short", inline = TRUE
       ),
-      ##shiny::checkboxInput(ns("usetools"), "Use tools", FALSE),
+      shiny::checkboxInput(ns("usetools"), "Use tools", FALSE),
       shiny::checkboxInput(ns("fullquestion"), "Show full question", FALSE),      
       shiny::checkboxInput(ns("followup"), "Suggest follow-up questions", TRUE),      
       br(),      

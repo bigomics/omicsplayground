@@ -115,11 +115,22 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
         dbg("[new_chatbot] Creating new chatbot", ai_model)
         chat <<- playbase::ai.create_ellmer_chat(ai_model, system_prompt = sysprompt)
 
-        usetools=FALSE
+        usetools <- FALSE
+        usetools <- input$usetools
         if (!is.null(chat) && usetools) {
           ## ------------ still experimential --------
-          register_tools(chat)
-          # register_mcp(chat)
+          not_recommended_llm <- grepl("groq", ai_model)
+          if (not_recommended_llm) {
+            shinyalert::shinyalert(
+              title = "Oops...",
+              text = "Only OpenAI, xAI and Gemini are recommended.",
+              size = "xs",
+              showCancelButton = FALSE
+            )
+          } else {
+            register_tools(chat)
+            # register_mcp(chat)
+          }
         }
         
     }
@@ -195,7 +206,8 @@ CopilotServer <- function(id, pgx, layout = "fixed", maxturns = 100) {
     ## ----------------- tools -------------------------------
     register_tools <- function(chat) {
       if (is.null(chat)) return(NULL)
-
+      dbg("[CopilotServer:register_tools] registering tools...")
+      
       chat$register_tool( playbase::ai.tool_get_current_time )
       ##chat$register_tool(playbase::ai.tool_get_expression)
       # chat$register_tool( playbase::ai.tool_plot_volcano )
