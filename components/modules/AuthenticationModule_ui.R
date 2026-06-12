@@ -384,14 +384,6 @@ splashscreen.buttons <- function(ns) {
               href = "https://hub.docker.com/r/bigomics/omicsplayground",
               target = "_blank"
             )
-          ),
-          tags$li(
-            shiny::tags$a(
-              "Buy us a coffee!",
-              class = "dropdown-item",
-              href = "https://www.buymeacoffee.com/bigomics",
-              target = "_blank"
-            )
           )
         )
       )
