@@ -215,8 +215,12 @@ copilot_run_controller <- function(
   # .run_ask
   # ------------------------------------------------------------------------
   .run_ask <- function(request) {
+    copilot_debug_timing("run.ask.enter",
+      text_nchar = nchar(request$text %||% "", type = "chars"),
+      show_user_msg = isTRUE(request$show_user_msg))
     current <- shiny::isolate(agent())
     if (is.null(current)) {
+      copilot_debug_timing("run.ask.no_agent")
       chat_event(list(type = "post", role = "assistant",
                       text = copilot_msg("no_dataset")))
       return(invisible(NULL))
@@ -232,18 +236,26 @@ copilot_run_controller <- function(
                            function(r) identical(r@role, "user"),
                            logical(1)))
       if (n_user >= maxturns) {
+        copilot_debug_timing("run.ask.max_turns", n_user = n_user)
         chat_event(list(type = "post", role = "assistant",
           text = copilot_msg("max_turns", n = maxturns)))
         return(invisible(NULL))
       }
     }
 
+    copilot_debug_timing("run.ask.before_runtime_sync")
     current <- .sync_runtime_controls(current)
     selected_reports <- .selected_report_slots()
+    copilot_debug_timing("run.ask.after_report_selection",
+      n_selected_reports = length(selected_reports),
+      tools_enabled = .tools_are_enabled())
     if (length(selected_reports)) {
       staged <- .copilot_stage_ai_report_context(current, selected_reports)
       current <- .sync_runtime_controls(staged$agent)
       agent(current)
+      copilot_debug_timing("run.ask.after_report_stage",
+        staged = isTRUE(staged$staged),
+        n_slots = length(staged$slots))
       if (isTRUE(staged$staged) && length(staged$slots)) {
         .mark_reports_consumed(staged$slots)
       }
@@ -253,21 +265,29 @@ copilot_run_controller <- function(
 
     # Optionally post user message into chat
     if (isTRUE(request$show_user_msg)) {
+      copilot_debug_timing("run.ask.before_user_post")
       chat_event(list(type = "post", role = "user", text = request$text))
+      copilot_debug_timing("run.ask.after_user_post")
     }
 
+    copilot_debug_timing("run.ask.before_agent_prompt_stream")
     gen <- tryCatch(
       omicsagentovi::agent_prompt_stream(
         current,
         request$text,
         on_tool_request = chat_on_tool_request,
         on_done = function(result) {
+          copilot_debug_timing("run.on_done.enter",
+            status = result$status %||% "NULL",
+            text_nchar = nchar(result$text %||% "", type = "chars"))
           if (!is.null(result$agent)) agent(result$agent)
           run_status(result$status %||% "completed")
           updated <- shiny::isolate(agent())
           if (!is.null(updated) &&
               omicsagentovi::session_is_dirty(updated@session)) {
+            copilot_debug_timing("run.on_done.before_save")
             save_ctrl$on_run_settled()
+            copilot_debug_timing("run.on_done.after_save_request")
           }
 
           # ---- Follow-up suggestion bubble ---------------------------------
@@ -277,16 +297,20 @@ copilot_run_controller <- function(
                        !is.null(result$text) && nzchar(result$text)
           if (!status_ok) {
             log_trace("copilot.followup.skipped", reason = "non_completed_or_empty")
+            copilot_debug_timing("run.on_done.exit", reason = "non_completed_or_empty")
             return(invisible())
           }
           if (is.null(followup_gen)) {
             log_trace("copilot.followup.skipped", reason = "no_generator")
+            copilot_debug_timing("run.on_done.exit", reason = "no_generator")
             return(invisible())
           }
+          copilot_debug_timing("run.on_done.before_followup")
           p <- tryCatch(followup_gen$generate(result$text),
                         error = function(e) NULL)
           if (is.null(p)) {
             log_info("copilot.followup.failed", phase = "generate_call")
+            copilot_debug_timing("run.on_done.exit", reason = "followup_generate_failed")
             return(invisible())
           }
           promises::then(p,
@@ -310,6 +334,8 @@ copilot_run_controller <- function(
         }
       ),
       error = function(e) {
+        copilot_debug_timing("run.ask.stream_invoke_error",
+          msg = conditionMessage(e))
         log_info("copilot.run.stream_invoke_failed", msg = conditionMessage(e))
         run_status("failed")
         chat_event(list(type = "post", role = "assistant",
@@ -319,8 +345,11 @@ copilot_run_controller <- function(
     )
     if (is.null(gen)) return(invisible(NULL))
 
+    copilot_debug_timing("run.ask.after_agent_prompt_stream")
     run_status("streaming")
+    copilot_debug_timing("run.ask.before_stream_event")
     chat_event(list(type = "stream", async_gen = gen))
+    copilot_debug_timing("run.ask.after_stream_event")
     invisible(NULL)
   }
 
@@ -328,9 +357,12 @@ copilot_run_controller <- function(
   # .run_abort
   # ------------------------------------------------------------------------
   .run_abort <- function(request) {
+    copilot_debug_timing("run.abort.enter",
+      reason = request$reason %||% "User stopped the run")
     current <- shiny::isolate(agent())
     if (is.null(current)) {
       log_info("copilot.run.abort_skipped", reason = "no_agent")
+      copilot_debug_timing("run.abort.no_agent")
       return(invisible(NULL))
     }
     rs_status <- tryCatch(
@@ -345,10 +377,12 @@ copilot_run_controller <- function(
       omicsagentovi::agent_request_abort(current, request$reason %||% "User stopped the run"),
       error = function(e) {
         log_info("copilot.run.abort_failed", msg = conditionMessage(e))
+        copilot_debug_timing("run.abort.error", msg = conditionMessage(e))
         FALSE
       }
     )
     log_info("copilot.run.abort_result", ok = isTRUE(ok))
+    copilot_debug_timing("run.abort.exit", ok = isTRUE(ok))
     # run_status will be flipped to "aborted" by the stream's on_done callback.
     invisible(NULL)
   }

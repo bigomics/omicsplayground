@@ -27,6 +27,47 @@ log_trace <- function(event, ...) {
   invisible(NULL)
 }
 
+#' Capture a Shiny-side timing probe for live debugging.
+#'
+#' Writes a compact event into `.GlobalEnv$copilot_timing_trace` and mirrors the
+#' latest snapshot to `.GlobalEnv$trace` for quick MCPR inspection. If a
+#' host-provided `do_global_export()` helper exists, it is called as well.
+#'
+#' @param event character(1) dotted event name.
+#' @param ... Named values to attach to the probe.
+#' @export
+copilot_debug_timing <- function(event, ...) {
+  fields <- list(...)
+  snapshot <- list(
+    event = as.character(event)[[1L]],
+    wall_time = Sys.time(),
+    proc_elapsed = unname(proc.time()[["elapsed"]]),
+    fields = fields
+  )
+
+  previous <- get0("copilot_timing_trace", envir = .GlobalEnv,
+                   ifnotfound = list())
+  assign("copilot_timing_trace", c(previous, list(snapshot)),
+         envir = .GlobalEnv)
+
+  exported <- NULL
+  if (exists("do_global_export", mode = "function", inherits = TRUE)) {
+    exported <- tryCatch(
+      do_global_export(),
+      error = function(e) {
+        list(error = conditionMessage(e), snapshot = snapshot)
+      }
+    )
+  }
+
+  # DEBUG: timings
+  trace <- if (is.null(exported)) snapshot else exported
+  assign("trace", trace, envir = .GlobalEnv)
+
+  log_trace("copilot.debug_timing", event = event)
+  invisible(snapshot)
+}
+
 # ---- Internal emit ---------------------------------------------------------
 
 .copilot_log_emit <- function(event, ..., type = "INFO") {

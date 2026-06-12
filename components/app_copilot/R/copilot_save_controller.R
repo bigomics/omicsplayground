@@ -89,9 +89,16 @@ copilot_save_controller <- function(
 
   # ---- Save request ----
   .request_save <- function(reason) {
+    copilot_debug_timing("save.request.enter", reason = reason)
     current <- shiny::isolate(agent())
-    if (is.null(current)) return(invisible(NULL))
-    if (!omicsagentovi::session_is_dirty(current@session)) return(invisible(NULL))
+    if (is.null(current)) {
+      copilot_debug_timing("save.request.no_agent", reason = reason)
+      return(invisible(NULL))
+    }
+    if (!omicsagentovi::session_is_dirty(current@session)) {
+      copilot_debug_timing("save.request.not_dirty", reason = reason)
+      return(invisible(NULL))
+    }
 
     if (identical(shiny::isolate(save_status()), "saving")) {
       # A save is already queued (or just running). Skip — the next settled
@@ -99,22 +106,35 @@ copilot_save_controller <- function(
       log_info("copilot.save_skipped_busy",
         reason = reason,
         dirty_gen = current@session@dirty_generation)
+      copilot_debug_timing("save.request.skipped_busy",
+        reason = reason,
+        dirty_gen = current@session@dirty_generation)
       return(invisible(NULL))
     }
 
+    copilot_debug_timing("save.request.before_on_flushed",
+      reason = reason,
+      dirty_gen = current@session@dirty_generation)
     save_status("saving")
     session$onFlushed(function() .do_save(reason), once = TRUE)
+    copilot_debug_timing("save.request.after_on_flushed", reason = reason)
     invisible(NULL)
   }
 
   # ---- Actual save body — runs on the main thread after flush ----
   .do_save <- function(reason) {
+    copilot_debug_timing("save.do.enter", reason = reason)
     current <- shiny::isolate(agent())
     if (is.null(current)) {
       save_status("idle")
+      copilot_debug_timing("save.do.no_agent", reason = reason)
       return(invisible(NULL))
     }
 
+    copilot_debug_timing("save.do.before_session_save",
+      reason = reason,
+      session_id = current@session@session_id,
+      dirty_gen = current@session@dirty_generation)
     updated_agent <- tryCatch(
       omicsagentovi::session_save(
         store, current,
@@ -131,10 +151,17 @@ copilot_save_controller <- function(
         message(sprintf("[copilot.save_failed] reason=%s msg=%s",
                         reason, conditionMessage(e)))
         save_status("failed")
+        copilot_debug_timing("save.do.session_save_error",
+          reason = reason,
+          msg = conditionMessage(e))
         NULL
       }
     )
     if (is.null(updated_agent)) return(invisible(NULL))
+    copilot_debug_timing("save.do.after_session_save",
+      reason = reason,
+      session_id = updated_agent@session@session_id,
+      saved_gen = updated_agent@session@saved_generation)
 
     # Only write back if the active session hasn't been replaced while we
     # were preparing the save (e.g. tier change between scheduling and
@@ -142,16 +169,25 @@ copilot_save_controller <- function(
     latest <- shiny::isolate(agent())
     if (!is.null(latest) &&
         identical(latest@session@session_id, updated_agent@session@session_id)) {
+      copilot_debug_timing("save.do.before_agent_writeback",
+        session_id = updated_agent@session@session_id)
       agent(updated_agent)
+      copilot_debug_timing("save.do.after_agent_writeback",
+        session_id = updated_agent@session@session_id)
     }
 
+    copilot_debug_timing("save.do.before_prune", max_history = max_history)
     .prune_sessions(store, max_history)
+    copilot_debug_timing("save.do.after_prune", max_history = max_history)
     history_invalidation_tick(shiny::isolate(history_invalidation_tick()) + 1L)
     save_status("idle")
 
     log_info("copilot.save_complete",
       session_id = updated_agent@session@session_id,
       saved_gen  = updated_agent@session@saved_generation)
+    copilot_debug_timing("save.do.exit",
+      reason = reason,
+      session_id = updated_agent@session@session_id)
     invisible(NULL)
   }
 

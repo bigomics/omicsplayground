@@ -63,8 +63,16 @@ build_run_bindings <- function(
     NULL
   } else {
     impl <- function(pgx, plot_type, args, artifact) {
+      copilot_debug_timing("bindings.plot_callback.enter",
+        plot_type = plot_type %||% "unknown",
+        n_args = length(args))
       tryCatch({
+        copilot_debug_timing("bindings.plot_callback.before_build",
+          plot_type = plot_type %||% "unknown")
         plot_obj <- copilot_build_plot(pgx, plot_type, args)
+        copilot_debug_timing("bindings.plot_callback.after_build",
+          plot_type = plot_type %||% "unknown",
+          plot_class = paste(class(plot_obj), collapse = "/"))
         kind     <- copilot_detect_plot_kind(plot_obj)
         if (is.null(kind)) {
           stop("unrecognised plot class: ", paste(class(plot_obj), collapse = " "))
@@ -72,15 +80,25 @@ build_run_bindings <- function(
 
         prerendered_path <- NULL
         if (identical(kind, "ggplot")) {
+          copilot_debug_timing("bindings.plot_callback.before_prerender_ggplot",
+            plot_type = plot_type %||% "unknown")
           prerendered_path <- tryCatch(
             copilot_prerender_ggplot(plot_obj),
             error = function(e) {
               message("[CopilotBindings] prerender_ggplot failed: ", conditionMessage(e))
+              copilot_debug_timing("bindings.plot_callback.prerender_ggplot_error",
+                msg = conditionMessage(e))
               NULL
             }
           )
+          copilot_debug_timing("bindings.plot_callback.after_prerender_ggplot",
+            has_path = !is.null(prerendered_path))
         } else if (identical(kind, "plotly")) {
+          copilot_debug_timing("bindings.plot_callback.before_prerender_plotly",
+            plot_type = plot_type %||% "unknown")
           plot_obj <- copilot_prerender_plotly(plot_obj)
+          copilot_debug_timing("bindings.plot_callback.after_prerender_plotly",
+            plot_type = plot_type %||% "unknown")
         }
 
         label <- trimws(paste(
@@ -101,7 +119,13 @@ build_run_bindings <- function(
           label            = label,
           timestamp        = Sys.time()
         )
+        copilot_debug_timing("bindings.plot_callback.before_append_artifact",
+          kind = kind,
+          label = label)
         evidence_api$append_artifact(record)
+        copilot_debug_timing("bindings.plot_callback.exit",
+          kind = kind,
+          label = label)
       }, error = function(e) {
         # Artifact failures are UI failures, not run failures (overview §5).
         # Surface as a warning notification; do not propagate so the stream
@@ -121,6 +145,9 @@ build_run_bindings <- function(
           log_info("copilot.bindings.plot_callback_failed",
                    msg = conditionMessage(e))
         }
+        copilot_debug_timing("bindings.plot_callback.error",
+          plot_type = plot_type %||% "unknown",
+          msg = conditionMessage(e))
       })
     }
     # Wrap for reactive-domain safety (callback fires from tool-execution thread)
@@ -144,12 +171,21 @@ build_run_bindings <- function(
     NULL
   } else {
     function(level, payload) {
+      copilot_debug_timing("bindings.notification.enter",
+        level = level %||% "NULL",
+        payload_names = paste(names(payload) %||% character(0), collapse = ","))
       if (identical(level, "pgx_loaded")) {
         if (!is.null(pgx_loaded_event)) {
+          copilot_debug_timing("bindings.notification.before_pgx_loaded_event",
+            dataset_name = payload$dataset_name %||% "NULL")
           pgx_loaded_event(payload)  # write to reactiveVal — safe from any thread
+          copilot_debug_timing("bindings.notification.after_pgx_loaded_event",
+            dataset_name = payload$dataset_name %||% "NULL")
         }
       }
       # All other levels: no-op (forward-compatible placeholder).
+      copilot_debug_timing("bindings.notification.exit",
+        level = level %||% "NULL")
       invisible(NULL)
     }
   }

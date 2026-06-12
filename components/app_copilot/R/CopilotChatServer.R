@@ -312,6 +312,9 @@ CopilotChatServer <- function(
     # Passed by run_controller as on_tool_request argument to agent_prompt_stream.
     # Fires once per tool start, during streaming.
     .on_tool_request <- function(req) {
+      copilot_debug_timing("chat.tool_request.enter",
+        name = req$name %||% "unknown",
+        n_args = length(req$arguments))
       log_trace("copilot.chat.tool_request",
         name     = req$name %||% "unknown",
         n_args   = length(req$arguments),
@@ -343,12 +346,18 @@ CopilotChatServer <- function(
           error = function(e2) "(error formatting arguments)"
         )
       })
+      copilot_debug_timing("chat.tool_request.after_format",
+        name = req$name %||% "unknown",
+        args_nchar = nchar(args_text, type = "chars"))
 
       marker <- paste0(
         '<details><summary>\U0001F527 ', req$name %||% "tool", '</summary>',
         '<pre>', args_text, '</pre>',
         '</details>'
       )
+      copilot_debug_timing("chat.tool_request.before_append",
+        name = req$name %||% "unknown",
+        marker_nchar = nchar(marker, type = "chars"))
       tryCatch(
         shinychat::chat_append_message(
           "chat",
@@ -357,8 +366,13 @@ CopilotChatServer <- function(
         ),
         error = function(e) {
           log_info("copilot.chat.tool_marker_failed", msg = conditionMessage(e))
+          copilot_debug_timing("chat.tool_request.append_error",
+            name = req$name %||% "unknown",
+            msg = conditionMessage(e))
         }
       )
+      copilot_debug_timing("chat.tool_request.exit",
+        name = req$name %||% "unknown")
     }
 
     # ---- Public API ----
