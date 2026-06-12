@@ -40,24 +40,15 @@ WgcnaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WGCNA" = list(disable = c("selected_module", "selected_trait", "report_options")),
-      "Eigengenes" = list(disable = c("selected_module", "selected_trait", "report_options")),
-      "Modules" = list(disable = c("report_options")),
-      "Enrichment" = list(disable = c("selected_trait", "report_options")),
-      "AI Report✨" = list(disable = c("selected_module", "selected_trait",
-        "compare_accordion")
-      )
+      "WGCNA" = list(disable = c("selected_module", "selected_trait")),
+      "Eigengenes" = list(disable = c("selected_module", "selected_trait")),
+      "Modules" = list(disable = c()),
+      "Enrichment" = list(disable = c("selected_trait"))
     )
 
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
-    ## shiny::observe({
-    ##   ai_model <- getUserOption(session,'llm_model')
-    ##   showtab <- ifelse(ai_model=='', FALSE, TRUE)
-    ##   toggleTab("wgcna-tabs", "AI Report✨", showtab) ## too slow
-    ## })
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
@@ -79,20 +70,16 @@ WgcnaBoard <- function(id, pgx) {
         power = as.numeric(input$power),
         numericlabels = FALSE,
         summary = TRUE,
-        ai_model = NULL,
         progress = progress
       )
 
       message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
-      
-      llm_model <- getUserOption(session,'llm_model')
-      img_model <- "gemini-3.1-flash-image-preview"
-      llm_model <- NULL  # skip report here
-      img_model <- NULL  # skip infographics
+
       out <- playbase::wgcna.init(
-        out, llm = llm_model, img_model = img_model,
-        annot = pgx$genes, progress = progress
+        out,
+        annot = pgx$genes,
+        progress = progress
       )
 
       shiny::removeModal()
@@ -323,16 +310,6 @@ WgcnaBoard <- function(id, pgx) {
       r_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
-
-    # Report
-    wgcna_html_report_server(
-      id = "wgcnaReport",
-      wgcna = wgcna,
-      multi = FALSE,
-      r_annot = shiny::reactive(pgx$genes),
-      watermark = WATERMARK
-    )
-
 
     return(NULL)
   })
