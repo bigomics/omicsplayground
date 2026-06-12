@@ -64,7 +64,7 @@ StudioServer <- function(id, pgx, save_pgx = NULL) {
     VisReportServer("poster", pgx, output_format="poster")
     VisReportServer("slide", pgx, output_format="slide")
     AiReportServer("aireport", pgx, save_pgx = save_pgx)
-    InfographicServer("infographic", pgx)
+    InfographicServer("infographic", pgx, save_pgx = save_pgx)
     
   }) ## end moduleServer
 }

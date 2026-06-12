@@ -230,3 +230,91 @@ test_that("ai_report_copy_into_reactive does not copy old report slots", {
   expect_equal(pgx_rv$ai$wgcna$report, "New WGCNA report")
   expect_equal(pgx_rv$wgcna$report$report, "old wgcna")
 })
+
+test_that("ai_infographic_set stores image bytes and metadata under pgx$ai", {
+  img <- tempfile(fileext = ".png")
+  writeBin(as.raw(c(137, 80, 78, 71, 13, 10, 26, 10)), img)
+  result <- structure(list(
+    path = img,
+    prompt = "draw report",
+    metadata = list(model = "gemini-test", cached = FALSE)
+  ), class = "omicsai_image_result")
+
+  pgx <- list(ai = list(combined = list(report = "Combined report")))
+  updated <- ai_infographic_set(pgx, "combined", result,
+    style = "bigomics", n_blocks = 2)
+
+  stored <- updated$ai$combined$infographic
+  expect_equal(stored$status, "done")
+  expect_type(stored$bytes, "raw")
+  expect_gt(length(stored$bytes), 0)
+  expect_equal(stored$content_type, "image/png")
+  expect_equal(stored$prompt, "draw report")
+  expect_equal(stored$model, "gemini-test")
+  expect_equal(stored$style, "bigomics")
+  expect_equal(stored$n_blocks, 2)
+  expect_equal(ai_infographic_slots(updated), "combined")
+})
+
+test_that("ai_infographic_get and render tolerate missing and error states", {
+  pgx <- list(ai = list(
+    combined = list(report = "Combined report"),
+    wgcna = list(
+      report = "WGCNA report",
+      infographic = list(status = "error", error = "provider failed")
+    )
+  ))
+
+  expect_null(ai_infographic_get(pgx, "combined"))
+  expect_equal(ai_infographic_get(pgx, "wgcna")$error, "provider failed")
+  expect_equal(ai_infographic_slots(pgx), "wgcna")
+})
+
+test_that("ai_infographic_friendly_error hides provider internals", {
+  raw_error <- paste(
+    "Error in .image_api_call(prompt = full_prompt):",
+    "No image data in Gemini response"
+  )
+
+  expect_match(ai_infographic_friendly_error(raw_error),
+    "server seems saturated", fixed = TRUE)
+  expect_false(grepl(
+    "\\.image_api_call|Gemini",
+    ai_infographic_friendly_error(raw_error)
+  ))
+  expect_match(ai_infographic_friendly_error("HTTP 429 rate limit"),
+    "rate limit", fixed = TRUE)
+  expect_match(ai_infographic_friendly_error(""),
+    "Please try again", fixed = TRUE)
+})
+
+test_that("ai_infographic_set stores friendly errors", {
+  pgx <- list(ai = list(pathways = list(report = "Enrichment report")))
+  updated <- ai_infographic_set(
+    pgx,
+    "pathways",
+    NULL,
+    status = "error",
+    error = "No image data in Gemini response"
+  )
+
+  stored <- updated$ai$pathways$infographic
+  expect_equal(stored$status, "error")
+  expect_match(stored$error, "server seems saturated", fixed = TRUE)
+  expect_false(grepl("Gemini", stored$error))
+})
+
+test_that("ai_infographic_render_value writes stored bytes to a temp file", {
+  tmpdir <- tempfile()
+  img <- list(
+    status = "done",
+    bytes = as.raw(c(1, 2, 3, 4)),
+    content_type = "image/png"
+  )
+
+  rendered <- ai_infographic_render_value(img, tmpdir, "combined")
+  expect_true(file.exists(rendered$src))
+  expect_equal(readBin(rendered$src, "raw", n = 4), img$bytes)
+  expect_equal(rendered$contentType, "image/png")
+  expect_equal(rendered$width, "100%")
+})
