@@ -303,11 +303,12 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Module summary
-    wgcna_html_module_summary_server(
+    wgcna_module_ai_summary_server(
       "moduleSummary",
       wgcna = wgcna,
-      multi = FALSE,
+      pgx = pgx,
       r_module = shiny::reactive(input$selected_module),
+      parent_session = session,
       watermark = WATERMARK
     )
 
