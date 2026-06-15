@@ -44,8 +44,8 @@ CopilotBoardServer <- function(
       ))
       ##pgx <- local_pgx()
 
-      n_samples <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
-      n_genes   <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
+      n_samples  <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
+      n_features <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
       organism  <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
       dataname  <- if (!is.null(pgx$name)) pgx$name else "unknown"
       description  <- if (!is.null(pgx$description)) pgx$description else "none"            
@@ -66,7 +66,7 @@ CopilotBoardServer <- function(
         shiny::tags$div(shiny::strong("Description: "),  description),
         shiny::tags$div(shiny::strong("Organism: "),  organism),                
         shiny::tags$div(shiny::strong("Samples: "),   n_samples),
-        shiny::tags$div(shiny::strong("Genes: "),     n_genes),
+        shiny::tags$div(shiny::strong(tspan("Genes: ")), n_features),
         shiny::tags$div(shiny::strong("Contrasts: "), contrasts)
       )
     })

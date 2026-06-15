@@ -373,8 +373,8 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
       ))
       pgx <- local_pgx()
 
-      n_samples <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
-      n_genes   <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
+      n_samples  <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
+      n_features <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
       organism  <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
 
       contrasts <- "none"
@@ -391,7 +391,7 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
         style = "font-size: 0.85em; line-height: 1.6;",
         shiny::tags$div(shiny::icon("dna"),               shiny::strong(" Organism: "),  organism),
         shiny::tags$div(shiny::icon("vials"),             shiny::strong(" Samples: "),   n_samples),
-        shiny::tags$div(shiny::icon("bars"),              shiny::strong(" Genes: "),     n_genes),
+        shiny::tags$div(shiny::icon("bars"),              shiny::strong(tspan(" Genes: ")), n_features),
         shiny::tags$div(shiny::icon("arrows-left-right"), shiny::strong(" Contrasts: "), contrasts)
       )
     })
