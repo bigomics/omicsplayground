@@ -226,7 +226,7 @@ correlation_plot_scattercorr_server <- function(id,
               inherit = FALSE
             )
         }
-        plt %>%
+        plt <- plt %>%
           # Legend
           plotly::layout(
             legend = list(orientation = "h", bgcolor = "transparent"),
