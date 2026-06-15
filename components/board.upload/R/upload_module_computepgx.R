@@ -531,6 +531,17 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
+                div(
+                  style = "margin-top:12px;",
+                  shiny::checkboxInput(
+                    ns("create_ai_reports"),
+                    label = withTooltip(
+                      shiny::span("Create AI reports"),
+                      "Reports can also be generated later from AI Studio."
+                    ),
+                    value = TRUE
+                  )
+                )
               ),
               bslib::card(
                 fileInput2(
@@ -1126,6 +1137,20 @@ upload_module_computepgx_server <- function(
           }
         }
 
+        create_ai_reports <- is.null(input$create_ai_reports) || isTRUE(input$create_ai_reports)
+        llm_model <- getUserOption(session, "llm_model")
+        ai_features <- NULL
+        if (create_ai_reports && !is.null(llm_model) && nzchar(llm_model)) {
+          ai_features <- list(
+            reports = list(
+              llm_model = llm_model,
+              img_model = NULL,
+              report_type = "normal",
+              on_error = "warn"
+            )
+          )
+        }
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1182,6 +1207,7 @@ upload_module_computepgx_server <- function(
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder,
+          ai_features = ai_features,
           ETC = ETC,
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
