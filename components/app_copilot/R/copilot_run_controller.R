@@ -82,6 +82,7 @@ copilot_run_controller <- function(
   style            = NULL,
   custom           = NULL,
   report_context   = NULL,
+  doc_context      = NULL,
   tools_enabled    = NULL
 ) {
 
@@ -167,6 +168,49 @@ copilot_run_controller <- function(
     invisible(NULL)
   }
 
+  .selected_doc_names <- function() {
+    if (is.null(doc_context) ||
+        !is.function(doc_context[["selected_docs"]])) {
+      return(character(0))
+    }
+    docs <- tryCatch(
+      shiny::isolate(doc_context$selected_docs()),
+      error = function(e) character(0)
+    )
+    docs <- tryCatch(as.character(docs), error = function(e) character(0))
+    docs[!is.na(docs) & nzchar(docs)]
+  }
+
+  .mark_docs_consumed <- function(docs) {
+    if (is.null(doc_context) ||
+        !is.function(doc_context[["mark_consumed"]])) {
+      return(invisible(NULL))
+    }
+    tryCatch(
+      doc_context$mark_consumed(docs),
+      error = function(e) {
+        log_info("copilot.run.doc_consume_failed", msg = conditionMessage(e))
+      }
+    )
+    invisible(NULL)
+  }
+
+  .reset_context_panels <- function() {
+    if (!is.null(report_context) &&
+        is.function(report_context[["reset_consumed"]])) {
+      tryCatch(report_context$reset_consumed(), error = function(e) {
+        log_info("copilot.run.report_reset_failed", msg = conditionMessage(e))
+      })
+    }
+    if (!is.null(doc_context) &&
+        is.function(doc_context[["reset_consumed"]])) {
+      tryCatch(doc_context$reset_consumed(), error = function(e) {
+        log_info("copilot.run.doc_reset_failed", msg = conditionMessage(e))
+      })
+    }
+    invisible(NULL)
+  }
+
   # ---- Session id generator ----
   # AgentSession's default session_id is NA_character_, which makes the
   # sessions/turns/transcript_records save fail with NOT NULL constraint
@@ -243,13 +287,21 @@ copilot_run_controller <- function(
     if (length(selected_reports)) {
       staged <- .copilot_stage_ai_report_context(current, selected_reports)
       current <- .sync_runtime_controls(staged$agent)
-      agent(current)
       if (isTRUE(staged$staged) && length(staged$slots)) {
         .mark_reports_consumed(staged$slots)
       }
-    } else {
-      agent(current)
     }
+    selected_docs <- .selected_doc_names()
+    if (length(selected_docs)) {
+      doc_staged <- .copilot_stage_user_docs_context(
+        current, docs_dir, selected_docs
+      )
+      current <- .sync_runtime_controls(doc_staged$agent)
+      if (isTRUE(doc_staged$staged) && length(doc_staged$docs)) {
+        .mark_docs_consumed(doc_staged$docs)
+      }
+    }
+    agent(current)
 
     # Optionally post user message into chat
     if (isTRUE(request$show_user_msg)) {
@@ -283,7 +335,29 @@ copilot_run_controller <- function(
             log_trace("copilot.followup.skipped", reason = "no_generator")
             return(invisible())
           }
-          p <- tryCatch(followup_gen$generate(result$text),
+          # Snapshot what reports will be attached on the user's NEXT click.
+          # `.selected_report_slots()` reads the report panel's
+          # ticked-minus-consumed set; by on_done time the slots used in
+          # THIS turn have already been moved into `consumed` (see
+          # .mark_reports_consumed call earlier in .run_ask), so this returns
+          # the post-turn attached set — exactly what the helper should
+          # ground report-related suggestions on.
+          attached_slots <- tryCatch(.selected_report_slots(),
+                                     error = function(e) character(0))
+          followup_payload <- tryCatch(
+            build_followup_payload(
+              agent                 = result$agent,
+              last_text             = result$text,
+              attached_report_slots = attached_slots
+            ),
+            error = function(e) {
+              log_info("copilot.followup.failed",
+                       phase = "payload_build",
+                       msg = conditionMessage(e))
+              list(last_text = result$text)
+            }
+          )
+          p <- tryCatch(followup_gen$generate(followup_payload),
                         error = function(e) NULL)
           if (is.null(p)) {
             log_info("copilot.followup.failed", phase = "generate_call")
@@ -447,6 +521,10 @@ copilot_run_controller <- function(
       copilot_msg("greeting_active")
     }
     chat_event(list(type = "reset", role = "assistant", text = greeting))
+
+    # New chat / tier change starts a fresh conversation — context tickboxes
+    # should re-arm so previously-staged reports/docs can be sent again.
+    .reset_context_panels()
 
     run_status("idle")
     invisible(NULL)

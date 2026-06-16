@@ -84,3 +84,108 @@ test_that("explicit report slot selection controls included reports", {
   expect_match(out, "DE report", fixed = TRUE)
   expect_false(grepl("Combined report", out, fixed = TRUE))
 })
+
+test_that("user docs context concatenates selected files as labeled sections", {
+  tmp <- tempfile("copilot_docs_")
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+
+  writeLines("alpha body", file.path(tmp, "alpha.txt"))
+  writeLines(c("# Beta", "beta body"), file.path(tmp, "beta.md"))
+
+  built <- .copilot_user_docs_context(tmp, c("alpha.txt", "beta.md"))
+
+  expect_match(built$text, "## alpha.txt", fixed = TRUE)
+  expect_match(built$text, "alpha body", fixed = TRUE)
+  expect_match(built$text, "## beta.md", fixed = TRUE)
+  expect_match(built$text, "beta body", fixed = TRUE)
+  expect_setequal(built$docs, c("alpha.txt", "beta.md"))
+})
+
+test_that("user docs context applies no character cap", {
+  tmp <- tempfile("copilot_docs_")
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+
+  big <- paste(rep("x", 50000L), collapse = "")
+  writeLines(big, file.path(tmp, "big.txt"))
+
+  built <- .copilot_user_docs_context(tmp, "big.txt")
+
+  expect_gt(nchar(built$text, type = "chars"), 50000L)
+  expect_false(grepl("[truncated]", built$text, fixed = TRUE))
+})
+
+test_that("user docs context skips missing or empty files", {
+  tmp <- tempfile("copilot_docs_")
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+
+  writeLines("only one", file.path(tmp, "ok.txt"))
+
+  built <- .copilot_user_docs_context(tmp, c("ok.txt", "missing.txt"))
+
+  expect_match(built$text, "ok.txt", fixed = TRUE)
+  expect_false(grepl("missing.txt", built$text, fixed = TRUE))
+  expect_setequal(built$docs, "ok.txt")
+})
+
+test_that("user docs context returns NULL text when nothing usable", {
+  tmp <- tempfile("copilot_docs_")
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+
+  built <- .copilot_user_docs_context(tmp, c("nope.txt"))
+
+  expect_null(built$text)
+  expect_length(built$docs, 0L)
+})
+
+# ===========================================================================
+# .copilot_dataset_context_text — extracted helper shared by the
+# current_dataset provider and the follow-up payload builder.
+# ===========================================================================
+
+.make_dataset_agent <- function(name, organism, samples, genes, contrasts,
+                                description) {
+  CtxC <- S7::new_class("DatasetCtxStub",
+                        properties = list(
+                          pgx          = S7::class_any,
+                          dataset_name = S7::class_character
+                        ))
+  AgC  <- S7::new_class("DatasetAgentStub",
+                        properties = list(context = CtxC))
+  pgx  <- structure(
+    list(
+      samples     = matrix(0, nrow = samples, ncol = 1L),
+      X           = matrix(0, nrow = genes,   ncol = 1L),
+      contrasts   = setNames(vector("list", length(contrasts)), contrasts),
+      organism    = organism,
+      description = description
+    ),
+    class = "pgx"
+  )
+  AgC(context = CtxC(pgx = pgx, dataset_name = name))
+}
+
+test_that(".copilot_dataset_context_text builds labeled lines for a full pgx", {
+  agent <- .make_dataset_agent(
+    name        = "example-data",
+    organism    = "Homo sapiens",
+    samples     = 12L,
+    genes       = 18000L,
+    contrasts   = c("act48h_vs_notact", "ctrl_vs_treated"),
+    description = "Activation timecourse."
+  )
+  out <- .copilot_dataset_context_text(agent)
+  expect_match(out, "name: example-data",             fixed = TRUE)
+  expect_match(out, "organism: Homo sapiens",         fixed = TRUE)
+  expect_match(out, "samples: 12",                    fixed = TRUE)
+  expect_match(out, "genes: 18000",                   fixed = TRUE)
+  expect_match(out, "act48h_vs_notact, ctrl_vs_treated", fixed = TRUE)
+  expect_match(out, "description: Activation",        fixed = TRUE)
+})
+
+test_that(".copilot_dataset_context_text returns NULL for NULL agent / no pgx", {
+  expect_null(.copilot_dataset_context_text(NULL))
+})

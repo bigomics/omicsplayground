@@ -3,10 +3,10 @@
 ## Tests for copilot_followups.R — parse_followup_list, format_followup_bubble,
 ## make_followup_generator.
 
-.board_dir <- if (dir.exists("components/board.copilot/R")) {
-  "components/board.copilot/R"
+.board_dir <- if (dir.exists("components/app_copilot/R")) {
+  "components/app_copilot/R"
 } else {
-  "../../components/board.copilot/R"
+  "../../components/app_copilot/R"
 }
 
 source(file.path(.board_dir, "copilot_followups.R"), local = TRUE)
@@ -126,4 +126,109 @@ test_that("generate(empty) resolves to character(0) without calling the LLM", {
   promises::then(p, onFulfilled = function(v) result <<- v)
   later::run_now(2)
   expect_equal(result, character(0))
+})
+
+test_that("generate accepts a payload list with empty last_text", {
+  skip_if_not_installed("omicsai")
+  skip_if_not_installed("promises")
+  gen <- make_followup_generator()
+  if (is.null(gen)) skip("omicsai not loadable in this env")
+
+  result <- NULL
+  p <- gen$generate(list(last_text = ""))
+  promises::then(p, onFulfilled = function(v) result <<- v)
+  later::run_now(2)
+  expect_equal(result, character(0))
+})
+
+# ===========================================================================
+# render_followup_prompt — sectioned template substitution
+# ===========================================================================
+
+test_that("render_followup_prompt substitutes every named block", {
+  payload <- list(
+    last_text           = "The most upregulated gene is KCNN4.",
+    dataset_context     = "name: example\norganism: Homo sapiens",
+    tool_catalog        = "- query_de: differential expression",
+    available_reports   = "- de (Differential Expression): top genes",
+    recent_tool_outputs = list(list(name = "query_de", text = "Headline:\nstrong DE"))
+  )
+  out <- render_followup_prompt(payload, n = 2L)
+
+  expect_match(out, "Exactly 2 questions", fixed = TRUE)
+  expect_match(out, "KCNN4",                fixed = TRUE)
+  expect_match(out, "Homo sapiens",         fixed = TRUE)
+  expect_match(out, "query_de: differential", fixed = TRUE)
+  expect_match(out, "Differential Expression", fixed = TRUE)
+  expect_match(out, "## query_de",          fixed = TRUE)
+  expect_match(out, "strong DE",            fixed = TRUE)
+})
+
+test_that("render_followup_prompt fills missing blocks with '(none available)'", {
+  payload <- list(
+    last_text = "hello",
+    dataset_context = "",
+    tool_catalog = "",
+    available_reports = "",
+    recent_tool_outputs = list()
+  )
+  out <- render_followup_prompt(payload, n = 2L)
+
+  expect_match(out, "(none available)", fixed = TRUE)
+  expect_match(out, "(none)",           fixed = TRUE)   # tool outputs block
+  expect_match(out, "hello",            fixed = TRUE)
+})
+
+test_that("render_followup_prompt encodes the anti-hallucination rules", {
+  payload <- list(last_text = "x", dataset_context = "", tool_catalog = "",
+                  available_reports = "", recent_tool_outputs = list())
+  out <- render_followup_prompt(payload, n = 2L)
+  expect_match(out, "NEVER output JSON",            fixed = TRUE)
+  expect_match(out, "Never invent",                 fixed = TRUE)
+  expect_match(out, "wet-lab metadata",             fixed = TRUE)
+  expect_match(out, "show_omics_plot",              fixed = TRUE)
+})
+
+test_that("render_followup_prompt encodes the plot-suggestion hard rule", {
+  payload <- list(last_text = "x", dataset_context = "", tool_catalog = "",
+                  available_reports = "", recent_tool_outputs = list())
+  out <- render_followup_prompt(payload, n = 2L)
+  # Headline of the rule
+  expect_match(out, "PLOT-SUGGESTION HARD RULE", fixed = TRUE)
+  # The empty-case prohibition must be present verbatim
+  expect_match(out, "DO NOT SUGGEST ANY PLOTTING FOLLOW-UP", fixed = TRUE)
+  # Forbidden phrases must be enumerated
+  expect_match(out, "volcano plot",   fixed = TRUE)
+  expect_match(out, "heatmap",        fixed = TRUE)
+  expect_match(out, "show_omics_plot", fixed = TRUE)
+  # Discovery-question escape hatch is also there
+  expect_match(out, "list the available contrasts", fixed = TRUE)
+})
+
+test_that("render_followup_prompt encodes the reports hard rule", {
+  payload <- list(last_text = "x", dataset_context = "", tool_catalog = "",
+                  available_reports = "", recent_tool_outputs = list())
+  out <- render_followup_prompt(payload, n = 2L)
+  # Headline + gate semantics
+  expect_match(out, "REPORTS HARD RULE",                 fixed = TRUE)
+  expect_match(out, "Attached precomputed reports",      fixed = TRUE)
+  expect_match(out, "TICKED by the user",                fixed = TRUE)
+  # Both-empty case spelled out
+  expect_match(out, "BOTH the `Recent tool outputs`",    fixed = TRUE)
+  expect_match(out, "pure",                              fixed = TRUE)
+  expect_match(out, "tool-discovery",                    fixed = TRUE)
+})
+
+test_that("render_followup_prompt enforces user-voice phrasing", {
+  payload <- list(last_text = "x", dataset_context = "", tool_catalog = "",
+                  available_reports = "", recent_tool_outputs = list())
+  out <- render_followup_prompt(payload, n = 2L)
+  # Positive voice signals
+  expect_match(out, "user's own voice",        fixed = TRUE)
+  expect_match(out, "Can you",                 fixed = TRUE)
+  expect_match(out, "Show me",                 fixed = TRUE)
+  # Anti-patterns explicitly called out
+  expect_match(out, "Would you like to see",   fixed = TRUE)
+  expect_match(out, "Are you interested in",   fixed = TRUE)
+  expect_match(out, "user IS the asker",       fixed = TRUE)
 })
