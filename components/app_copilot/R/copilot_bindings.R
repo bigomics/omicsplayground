@@ -5,7 +5,7 @@
 # Agent is needed). Returns a typed RunBindings S7 object the package can consume.
 #
 # All callback signatures verified against actual call sites in omicsagentovi:
-#   plot_callback:     tool-show-plot.R:79     — function(pgx, plot_type, args, artifact)
+#   plot_callback:     tool-show-plot.R        — function(pgx, plot_type, args, artifact, plot_result = NULL)
 #   notification_sink: tool-manage-pgx.R:202   — function(level, payload)
 #   progress_callback: NEVER CALLED            — stub only
 
@@ -54,7 +54,7 @@ build_run_bindings <- function(
   data_dir <- .normalise_dir(data_dir)
 
   # ---- plot_callback ----
-  # Receives (pgx, plot_type, args, artifact) from the package (tool-show-plot.R:79).
+  # Receives (pgx, plot_type, args, artifact, plot_result) from the package.
   # Builds the plot from the recipe using the board-side renderer, then hands a
   # fully-rendered record to evidence_api$append_artifact(record) (single-arg).
   # Errors are UI failures, not run failures (overview §5): caught locally and
@@ -62,9 +62,17 @@ build_run_bindings <- function(
   plot_cb <- if (is.null(evidence_api)) {
     NULL
   } else {
-    impl <- function(pgx, plot_type, args, artifact) {
+    impl <- function(pgx, plot_type, args, artifact, plot_result = NULL) {
       tryCatch({
-        plot_obj <- copilot_build_plot(pgx, plot_type, args)
+        has_plot_result <- is.list(plot_result) && !is.null(plot_result$plot)
+        if (has_plot_result) {
+          plot_obj <- plot_result$plot
+          if (!is.null(plot_result$plot_type)) {
+            plot_type <- plot_result$plot_type
+          }
+        } else {
+          plot_obj <- copilot_build_plot(pgx, plot_type, args)
+        }
         kind     <- copilot_detect_plot_kind(plot_obj)
         if (is.null(kind)) {
           stop("unrecognised plot class: ", paste(class(plot_obj), collapse = " "))

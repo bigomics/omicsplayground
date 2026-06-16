@@ -11,6 +11,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app_copilot.ivo/R/utils.R',encoding='UTF-8')
   source('app_copilot/R/copilot_bindings.R',encoding='UTF-8')
   source('app_copilot/R/copilot_context_blocks.R',encoding='UTF-8')
+  source('app_copilot/R/copilot_followups_inputs.R',encoding='UTF-8')
   source('app_copilot/R/copilot_followups.R',encoding='UTF-8')
   source('app_copilot/R/copilot_logger.R',encoding='UTF-8')
   source('app_copilot/R/copilot_messages.R',encoding='UTF-8')

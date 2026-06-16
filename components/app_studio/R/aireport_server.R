@@ -457,8 +457,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       total = 0L,
       done = 0L,
       failed = 0L,
-      noncombined_left = 0L,
-      pending_combined = FALSE,
+      queue = character(0),
       progress = NULL,
       changed = FALSE
     )
@@ -489,6 +488,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
         report_jobs$progress <- NULL
       }
       report_jobs$running <- FALSE
+      report_jobs$queue <- character(0)
       updateActionButton(session, "generate",
         label = report_button_label(pgx_snapshot()))
       if (isTRUE(report_jobs$changed) && !is.null(save_pgx)) save_pgx(pgx)
@@ -496,6 +496,18 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       if (!is.null(message)) {
         shiny::showNotification(message, type = type, session = session)
       }
+    }
+
+    launch_next_report_job <- function(llm_model, run_id) {
+      if (!isTRUE(report_jobs$running) ||
+          !identical(run_id, report_jobs$run_id)) {
+        return(NULL)
+      }
+      if (!length(report_jobs$queue)) return(NULL)
+
+      module <- report_jobs$queue[[1L]]
+      report_jobs$queue <- report_jobs$queue[-1L]
+      launch_report_job(module, llm_model, run_id)
     }
 
     launch_report_job <- function(module, llm_model, run_id) {
@@ -549,21 +561,10 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
           }
 
           report_jobs$done <- report_jobs$done + 1L
-          if (!identical(result$module, "combined")) {
-            report_jobs$noncombined_left <- report_jobs$noncombined_left - 1L
-          }
           report_progress(paste("Finished", report_module_labels(result$module)))
           info("[AiReportServer] report job complete: module=", result$module,
             " done=", report_jobs$done, "/", report_jobs$total,
             " updated=", updated)
-
-          if (report_jobs$noncombined_left == 0L &&
-              isTRUE(report_jobs$pending_combined)) {
-            info("[AiReportServer] launching combined report after module jobs")
-            report_jobs$pending_combined <- FALSE
-            launch_report_job("combined", llm_model, run_id)
-            return(NULL)
-          }
 
           if (report_jobs$done >= report_jobs$total) {
             if (report_jobs$failed > 0L) {
@@ -578,6 +579,8 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
                 confirmButtonText = "OK"
               )
             }
+          } else {
+            launch_next_report_job(llm_model, run_id)
           }
           NULL
         },
@@ -593,23 +596,15 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
             " error=", conditionMessage(err))
           report_jobs$failed <- report_jobs$failed + 1L
           report_jobs$done <- report_jobs$done + 1L
-          if (!identical(module, "combined")) {
-            report_jobs$noncombined_left <- report_jobs$noncombined_left - 1L
-          }
           report_progress(paste("Failed", label))
           shiny::showNotification(conditionMessage(err),
             type = "error", session = session)
 
-          if (report_jobs$noncombined_left == 0L &&
-              isTRUE(report_jobs$pending_combined)) {
-            info("[AiReportServer] launching combined report after failed module jobs")
-            report_jobs$pending_combined <- FALSE
-            launch_report_job("combined", llm_model, run_id)
-            return(NULL)
-          }
           if (report_jobs$done >= report_jobs$total) {
             finish_report_jobs("AI report generation completed with errors.",
               type = "error")
+          } else {
+            launch_next_report_job(llm_model, run_id)
           }
           NULL
         }
@@ -634,22 +629,14 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       report_jobs$done <- 0L
       report_jobs$failed <- 0L
       report_jobs$changed <- FALSE
-      report_jobs$pending_combined <- "combined" %in% modules
 
       first_modules <- setdiff(modules, "combined")
-      report_jobs$noncombined_left <- length(first_modules)
+      report_jobs$queue <- c(first_modules, intersect(modules, "combined"))
       report_jobs$progress <- shiny::Progress$new(session, min = 0, max = 1)
       report_progress("Starting selected reports")
       updateActionButton(session, "generate", label = "Generating...")
 
-      if (length(first_modules)) {
-        for (module in first_modules) {
-          launch_report_job(module, llm_model, run_id)
-        }
-      } else if (isTRUE(report_jobs$pending_combined)) {
-        report_jobs$pending_combined <- FALSE
-        launch_report_job("combined", llm_model, run_id)
-      }
+      launch_next_report_job(llm_model, run_id)
       invisible(NULL)
     }
 
