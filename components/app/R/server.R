@@ -934,8 +934,7 @@ app_server <- function(input, output, session) {
 
   if (copilot_packages_ok()) {
     CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
-      chat_dir = CHAT.DIR,
-      docs_dir = DOCS.DIR,
+      auth = auth,
       maxturns = opt$LLM_MAXTURNS,
       tiers = opt$COPILOT_MODEL,
       is_data_loaded = NULL)

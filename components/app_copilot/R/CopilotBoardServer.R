@@ -12,8 +12,10 @@
 #' @param id         Module namespace id.
 #' @param pgx        Global PGX reactiveValues shared across all boards.
 #' @param pgx_dir    Path to directory containing .pgx dataset files.
-#' @param chat_dir   Path for persisting chat sessions (SessionStore root).
-#' @param docs_dir   Path for uploaded documents.
+#' @param auth       Auth module reactiveValues (must expose `$user_dir`).
+#'   `chat_dir` and `docs_dir` are derived from `auth$user_dir` so they
+#'   follow the canonical user-scoped path convention used by
+#'   board.loading / board.compare / board.connectivity.
 #' @param maxturns   Maximum user turns per session.
 #' @param tiers      Character vector of tier identifiers (first = default).
 #'   Defaults to `COPILOT_TIERS` from `copilot_options.R`.
@@ -25,16 +27,30 @@ CopilotBoardServer <- function(
   id,
   pgx            = NULL,
   pgx_dir        = NULL,
-  chat_dir,
-  docs_dir,
+  auth,
   maxturns       = Inf,
   tiers          = COPILOT_TIERS,
   is_data_loaded = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
+    # ---- Resolve user-scoped paths from auth$user_dir ----
+    # auth$user_dir is populated by AuthenticationModule before boards are
+    # wired (PGX.DIR for NoAuth / ENABLE_USERDIR=FALSE, PGX.DIR/<email>
+    # otherwise). We snapshot it once at module init — within a session
+    # the user_dir doesn't change, and the SessionStore + downstream
+    # controllers expect a plain character path, not a reactive.
+    user_dir <- shiny::isolate(auth$user_dir)
+    if (is.null(user_dir) || !nzchar(user_dir)) {
+      stop("CopilotBoardServer: auth$user_dir is not set", call. = FALSE)
+    }
+    chat_dir <- file.path(user_dir, "chats")
+    docs_dir <- file.path(user_dir, "docs_sources")
+    dir.create(chat_dir, recursive = TRUE, showWarnings = FALSE)
+    dir.create(docs_dir, recursive = TRUE, showWarnings = FALSE)
+
     # --- Board
-    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL) 
+    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL)
     
     # ---- Dataset context card output ----
     output$dataset_info <- shiny::renderUI({

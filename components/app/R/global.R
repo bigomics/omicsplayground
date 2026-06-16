@@ -64,12 +64,9 @@ APPDIR <- file.path(OPG, "components/app/R")
 PGX.DIR <- file.path(OPG, "data")
 ## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
 options(omicspgxmcp.data_dir = PGX.DIR)
-## Persistent copilot chat sessions + uploaded docs — siblings of the pgx
-## files under data/. Anchored on OPG so they never depend on runtime cwd.
-CHAT.DIR <- file.path(OPG, "data", "chats")
-DOCS.DIR <- file.path(OPG, "data", "docs_sources")
-dir.create(CHAT.DIR, recursive = TRUE, showWarnings = FALSE)
-dir.create(DOCS.DIR, recursive = TRUE, showWarnings = FALSE)
+## Persistent copilot chat sessions + uploaded docs are anchored on
+## auth$user_dir at session time (resolved inside CopilotBoardServer),
+## matching the convention used by board.loading / compare / connectivity.
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
