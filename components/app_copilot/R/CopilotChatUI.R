@@ -110,6 +110,16 @@ CopilotChatUI <- function(id) {
     class = "copilot-chat-card",
     style = "height: calc(100vh - 80px);",
     shiny::tags$head(shiny::tags$style(shiny::HTML(.COPILOT_CHAT_CSS))),
+    bs_alert(
+      shiny::HTML(paste0(
+        "<b>AI-generated content.</b> This experimental assistant may produce ",
+        "incomplete or inaccurate interpretations. Verify important findings ",
+        "independently; prompts and selected dataset context may be processed ",
+        "by the configured LLM provider."
+      )),
+      closable = FALSE,
+      style = "warning"
+    ),
     shiny::div(
       class = "copilot-chat-body position-relative",
       shinychat::chat_ui(
