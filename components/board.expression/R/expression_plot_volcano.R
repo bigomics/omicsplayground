@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -133,6 +133,7 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
+      al <- extract_axis_limits(input)
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -152,7 +153,9 @@ expression_plot_volcano_server <- function(id,
         marker.size = marker.size,
         showlegend = FALSE,
         color_up_down = TRUE,
-        colors = extract_volcano_colors(input)
+        colors = extract_volcano_colors(input),
+        xlim = al$xlim,
+        ylim = if (!is.null(al$ymax)) c(0, al$ymax) else NULL
       )
       plt
     }
@@ -194,6 +197,9 @@ expression_plot_volcano_server <- function(id,
       ## ggprism settings
       gp <- extract_ggprism_params(input)
 
+      ## Axis limits
+      al <- extract_axis_limits(input)
+
       p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -211,6 +217,8 @@ expression_plot_volcano_server <- function(id,
         title = NULL,
         axis.text.size = ls$axis_text_size,
         colors = plot_colors,
+        xlim = al$xlim,
+        ylim = al$ymax,
         box.padding = ls$box_padding,
         min.segment.length = ls$min_segment_length,
         label.box = ls$label_box,
@@ -237,6 +245,7 @@ expression_plot_volcano_server <- function(id,
 
       names <- pd$features
       ls <- extract_label_settings(input)
+      al <- extract_axis_limits(input)
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -254,6 +263,8 @@ expression_plot_volcano_server <- function(id,
         marker.size = 1.8,
         showlegend = FALSE,
         title = NULL,
+        xlim = al$xlim,
+        ylim = al$ymax,
         box.padding = ls$box_padding,
         min.segment.length = ls$min_segment_length,
         label.box = ls$label_box,
