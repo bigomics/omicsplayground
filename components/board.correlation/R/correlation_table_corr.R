@@ -85,7 +85,7 @@ correlation_table_corr_server <- function(id,
         df,
         rownames = FALSE, #
         extensions = c("Buttons", "Scroller"),
-        selection = list(mode = "single", target = "row", selected = 1),
+        selection = list(mode = "single", target = "row"),
         class = "compact cell-border stripe hover",
         plugins = "scrollResize",
         fillContainer = TRUE,
@@ -120,7 +120,7 @@ correlation_table_corr_server <- function(id,
       "table",
       func = cor_table.RENDER,
       func2 = cor_table.RENDER_modal,
-      selector = "none"
+      selector = "single"
     )
   }) ## end of moduleServer
 }
