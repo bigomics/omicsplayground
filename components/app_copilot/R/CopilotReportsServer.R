@@ -142,6 +142,11 @@ CopilotReportsServer <- function(id, pgx) {
       invisible(NULL)
     }
 
+    reset_consumed <- function() {
+      consumed(character(0))
+      invisible(NULL)
+    }
+
     tools_enabled <- shiny::reactive({
       is.null(input$tools_enabled) || isTRUE(input$tools_enabled)
     })
@@ -209,6 +214,7 @@ CopilotReportsServer <- function(id, pgx) {
     list(
       selected_reports = selected_reports,
       mark_consumed = mark_consumed,
+      reset_consumed = reset_consumed,
       tools_enabled = tools_enabled,
       refresh = refresh
     )

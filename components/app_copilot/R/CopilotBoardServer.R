@@ -147,6 +147,9 @@ CopilotBoardServer <- function(
       session          = session
     )
 
+    # ---- Docs panel (constructed before run_ctrl so doc_context can be wired) ----
+    docs <- CopilotDocsServer("docs", docs_dir = docs_dir)
+
     # ---- Chat module ----
     tier_choices_rx <- shiny::reactive({
       stats::setNames(tiers, vapply(tiers, copilot_tier_label, character(1)))
@@ -189,17 +192,18 @@ CopilotBoardServer <- function(
       style                = style,
       custom               = custom,
       report_context       = reports,
+      doc_context          = docs,
       tools_enabled        = reports$tools_enabled
     )
 
-    # ---- Panel modules (datasets / history / docs) ----
+    # ---- Panel modules (datasets / history) ----
+    # docs is constructed above so doc_context can be passed into run_ctrl.
     datasets <- CopilotDatasetsServer("datasets", pgx_dir = pgx_dir)
     history  <- CopilotHistoryServer(
       "history",
       session_dir               = chat_dir,
       history_invalidation_tick = shiny::reactive(history_invalidation_tick())
     )
-    docs     <- CopilotDocsServer("docs", docs_dir = docs_dir)
 
     shiny::observeEvent(pgx$name, {
       reports$refresh()
@@ -335,6 +339,11 @@ CopilotBoardServer <- function(
         saved_custom <- meta$custom[[1L]]
         custom(if (is.na(saved_custom)) "" else saved_custom)
       }
+      # Restoring a saved session starts a fresh chat from the user's POV —
+      # re-arm both context tickboxes so previously-staged blocks can be
+      # sent again under the restored agent.
+      if (is.function(reports$reset_consumed)) reports$reset_consumed()
+      if (is.function(docs$reset_consumed)) docs$reset_consumed()
       restore_ctrl$start(sid)
       history$on_restore(NULL)   # consume edge
     }, ignoreNULL = TRUE)
