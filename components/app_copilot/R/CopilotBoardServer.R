@@ -12,10 +12,11 @@
 #' @param id         Module namespace id.
 #' @param pgx        Global PGX reactiveValues shared across all boards.
 #' @param pgx_dir    Path to directory containing .pgx dataset files.
-#' @param auth       Auth module reactiveValues (must expose `$user_dir`).
-#'   `chat_dir` and `docs_dir` are derived from `auth$user_dir` so they
-#'   follow the canonical user-scoped path convention used by
-#'   board.loading / board.compare / board.connectivity.
+#' @param auth       Auth module reactiveValues (must expose `$user_dir` and
+#'   `$email`). Copilot's `chat_dir` and `docs_dir` are always scoped to the
+#'   per-user folder `<pgx_dir>/<email>` when an email is known, independent
+#'   of ENABLE_USERDIR (see the path-resolution block below); with no email
+#'   it falls back to `auth$user_dir`.
 #' @param maxturns   Maximum user turns per session.
 #' @param tiers      Character vector of tier identifiers (first = default).
 #'   Defaults to `COPILOT_TIERS` from `copilot_options.R`.
@@ -34,16 +35,30 @@ CopilotBoardServer <- function(
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    # ---- Resolve user-scoped paths from auth$user_dir ----
+    # ---- Resolve user-scoped paths ----
     # The caller (server.R) gates this module's construction on auth$logged,
-    # so by the time we run auth$user_dir holds the finalized path (PGX.DIR
-    # for NoAuth / ENABLE_USERDIR=FALSE, PGX.DIR/<email> otherwise) rather
-    # than the bare pre-login PGX.DIR. We snapshot it once at module init —
-    # within a session the user_dir doesn't change, and the SessionStore +
-    # downstream controllers expect a plain character path, not a reactive.
+    # so auth$user_dir / auth$email hold their finalized values by the time
+    # we run. We snapshot them once at init — within a session they don't
+    # change, and the SessionStore + downstream controllers expect plain
+    # character paths, not reactives.
+    #
+    # Copilot chats and uploaded docs are personal, so they always live in
+    # the per-user folder <pgx_dir>/<email> when an email is known —
+    # independent of ENABLE_USERDIR. That flag only governs *dataset*
+    # storage; when it is off it collapses auth$user_dir to the shared
+    # PGX.DIR, which would otherwise scatter every user's chats/docs into one
+    # place. Deriving the path from <pgx_dir>/<email> keeps Copilot pinned to
+    # the user's own folder either way (when ENABLE_USERDIR is on this is the
+    # same path auth$user_dir already points at). With no email (anonymous)
+    # we fall back to auth$user_dir.
     user_dir <- shiny::isolate(auth$user_dir)
+    email    <- shiny::isolate(auth$email)
     if (is.null(user_dir) || !nzchar(user_dir)) {
       stop("CopilotBoardServer: auth$user_dir is not set", call. = FALSE)
+    }
+    if (!is.null(email) && nzchar(email) &&
+        !is.null(pgx_dir) && nzchar(pgx_dir)) {
+      user_dir <- file.path(pgx_dir, email)
     }
     chat_dir <- file.path(user_dir, "chats")
     docs_dir <- file.path(user_dir, "docs_sources")
