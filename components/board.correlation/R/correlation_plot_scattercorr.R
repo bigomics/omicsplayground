@@ -106,12 +106,20 @@ correlation_plot_scattercorr_server <- function(id,
       this.gene <- sel_gene()
       NTOP <- 50
       R <- getGeneCorr()
-      sel <- cor_table$rownames_current()
-      sel <- head(intersect(sel, rownames(R)), NTOP)
+
+      ## Decoupled from the table search/filter. With a table row selected, show
+      ## a single scatter (settings feature vs the selected feature); otherwise
+      ## show the top-N correlated features as a grid.
+      selected <- intersect(cor_table$rownames_selected(), rownames(R))
+      if (length(selected) > 0) {
+        sel <- selected[1]
+      } else {
+        sel <- head(rownames(R), NTOP)
+      }
       shiny::req(sel)
       rho <- R[sel, "cor"]
 
-      if (length(rho) == 1) names(rho) <- rownames(R)[1]
+      if (length(rho) == 1) names(rho) <- sel
       pp <- unique(c(this.gene, names(rho)))
       X <- pgx$X[pp, , drop = FALSE]
 
@@ -301,7 +309,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- ncol <- 3
       } else if (input$layout == "4x4") {
         nrow <- ncol <- 4
@@ -319,7 +329,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN2 <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- 3
         ncol <- 5
       } else if (input$layout == "4x4") {
