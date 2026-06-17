@@ -933,11 +933,23 @@ app_server <- function(input, output, session) {
     layout = "fixed", maxturns = opt$LLM_MAXTURNS)
 
   if (copilot_packages_ok()) {
-    CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
-      auth = auth,
-      maxturns = opt$LLM_MAXTURNS,
-      tiers = opt$COPILOT_MODEL,
-      is_data_loaded = NULL)
+    # Defer wiring until login completes: CopilotBoardServer snapshots
+    # auth$user_dir once at init to derive its chats/ and docs_sources/
+    # folders. Pre-login auth$user_dir is the bare PGX.DIR, so wiring at
+    # session start would scope every user's chats/docs to PGX.DIR. Gating
+    # on auth$logged guarantees auth$user_dir holds the finalized
+    # (per-email when ENABLE_USERDIR) path. Guard ensures we wire once even
+    # if auth$logged toggles (logout -> login).
+    copilot_wired <- FALSE
+    observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged) || copilot_wired) return()
+      copilot_wired <<- TRUE
+      CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
+        auth = auth,
+        maxturns = opt$LLM_MAXTURNS,
+        tiers = opt$COPILOT_MODEL,
+        is_data_loaded = NULL)
+    })
   }
 
   StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)

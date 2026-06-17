@@ -35,11 +35,12 @@ CopilotBoardServer <- function(
   shiny::moduleServer(id, function(input, output, session) {
 
     # ---- Resolve user-scoped paths from auth$user_dir ----
-    # auth$user_dir is populated by AuthenticationModule before boards are
-    # wired (PGX.DIR for NoAuth / ENABLE_USERDIR=FALSE, PGX.DIR/<email>
-    # otherwise). We snapshot it once at module init — within a session
-    # the user_dir doesn't change, and the SessionStore + downstream
-    # controllers expect a plain character path, not a reactive.
+    # The caller (server.R) gates this module's construction on auth$logged,
+    # so by the time we run auth$user_dir holds the finalized path (PGX.DIR
+    # for NoAuth / ENABLE_USERDIR=FALSE, PGX.DIR/<email> otherwise) rather
+    # than the bare pre-login PGX.DIR. We snapshot it once at module init —
+    # within a session the user_dir doesn't change, and the SessionStore +
+    # downstream controllers expect a plain character path, not a reactive.
     user_dir <- shiny::isolate(auth$user_dir)
     if (is.null(user_dir) || !nzchar(user_dir)) {
       stop("CopilotBoardServer: auth$user_dir is not set", call. = FALSE)
