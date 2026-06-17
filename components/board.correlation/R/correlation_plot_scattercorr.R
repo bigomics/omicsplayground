@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -226,7 +226,7 @@ correlation_plot_scattercorr_server <- function(id,
               inherit = FALSE
             )
         }
-        plt %>%
+        plt <- plt %>%
           # Legend
           plotly::layout(
             legend = list(orientation = "h", bgcolor = "transparent"),

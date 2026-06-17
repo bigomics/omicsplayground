@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 loading_table_datasets_ui <- function(
@@ -539,7 +539,13 @@ loading_table_datasets_server <- function(id,
       cro_emails <- get_cro_emails()
 
       if (!is.null(auth$options$MAX_GENES)) {
-        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > auth$options$MAX_GENES)
+        ## Methylomics uses its own feature limit (EPIC array can have up to 850K probes)
+        max_genes <- ifelse(
+          df$datatype == "methylomics",
+          auth$options$MAX_METH_FEATURES,
+          auth$options$MAX_GENES
+        )
+        datasets_exceed_limits <- datasets_exceed_limits | (df$nfeatures > max_genes)
       }
       if (!is.null(auth$options$MAX_SAMPLES)) {
         datasets_exceed_limits <- datasets_exceed_limits | (
@@ -553,8 +559,10 @@ loading_table_datasets_server <- function(id,
         datasets_exceed_limits <- datasets_exceed_limits | (df$datatype == "multi-omics")
       }
 
-      # Add the exceed limits flag to the dataframe
+      # Add the exceed limits flag + reason for the hover tooltip
       df$exceeds_limits <- datasets_exceed_limits | (seq_len(nrow(df)) > df_cap)
+      df$exceed_reason <- ""
+      df$exceed_reason[df$exceeds_limits] <- "This dataset exceeds your plan limits. Upgrade to analyze it."
 
       DT::datatable(
         df,
@@ -576,17 +584,37 @@ loading_table_datasets_server <- function(id,
             "function(row, data, displayNum, displayIndex) {
               var colNames = %s;
 
-              // Find the exceeds_limits column index (add 1 for rownames column offset)
+              // Find the exceeds_limits / exceed_reason column indexes (add 1 for rownames column offset)
               var exceedsLimitsIdx = colNames.indexOf('exceeds_limits');
               if(exceedsLimitsIdx >= 0) exceedsLimitsIdx += 1;
+              var exceedReasonIdx = colNames.indexOf('exceed_reason');
+              if(exceedReasonIdx >= 0) exceedReasonIdx += 1;
 
-              // Check if this row exceeds limits
               var exceedsLimits = (exceedsLimitsIdx >= 0) ? (data[exceedsLimitsIdx] === 'TRUE' || data[exceedsLimitsIdx] === true) : false;
+              var reason = (exceedReasonIdx >= 0) ? data[exceedReasonIdx] : '';
 
               if(exceedsLimits) {
                 $(row).css('opacity', '0.5');
-                $(row).css('pointer-events', 'none');
+                $(row).css('cursor', 'not-allowed');
                 $('button', row).prop('disabled', true);
+
+                // Bootstrap tooltip on hover
+                if(reason) {
+                  $(row).attr('title', reason);
+                  $(row).attr('data-bs-toggle', 'tooltip');
+                  $(row).attr('data-bs-placement', 'top');
+                  $(row).attr('data-bs-trigger', 'hover');
+                  if(typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    bootstrap.Tooltip.getOrCreateInstance(row);
+                  }
+                }
+
+                // Prevent row selection / clicks from reaching DT handlers
+                $(row).off('click.greyed mousedown.greyed').on('click.greyed mousedown.greyed', function(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  return false;
+                });
               }
             }",
             jsonlite::toJSON(colnames(df))
@@ -605,7 +633,8 @@ loading_table_datasets_server <- function(id,
             ),
             list(sortable = FALSE, targets = ncol(df)),
             list(visible = FALSE, targets = c(
-              match("exceeds_limits", colnames(df))
+              match("exceeds_limits", colnames(df)),
+              match("exceed_reason", colnames(df))
             )) # Hide helper columns
           )
         ) ## end of options.list
@@ -1046,18 +1075,7 @@ loading_table_datasets_server <- function(id,
             inputId = "confirmdelete"
           )
         } else {
-          msg <- paste(
-            "Deleting is disabled.",
-            "Please <a href='https://events.bigomics.ch/upgrade' target='_blank'>",
-            "<b><u>upgrade</u></b></a> your account to enable it."
-          )
-          shinyalert::shinyalert(
-            title = "Oops!",
-            text = HTML(msg),
-            showCancelButton = TRUE,
-            showConfirmButton = FALSE,
-            html = TRUE
-          )
+          shinyalert_delete_without_limits() ## ui-alerts.R
         }
       },
       ignoreNULL = TRUE,

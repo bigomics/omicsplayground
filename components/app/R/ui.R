@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 app_ui <- function(x) {
@@ -73,6 +73,7 @@ app_ui <- function(x) {
         shiny::tags$script(src = "custom/close-message.js"),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
         visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
@@ -156,7 +157,8 @@ app_ui <- function(x) {
           tcga = "TCGA survival (beta)"
         ),
         "MultiOmics" = MODULE.multiomics$module_menu(),
-        "WGCNA" = MODULE.wgcna$module_menu()
+        "WGCNA" = MODULE.wgcna$module_menu(),
+        "Epigenomics" = MODULE.epigenomics$module_menu()
       )
 
       ## filter disabled modules
@@ -193,7 +195,7 @@ app_ui <- function(x) {
           tab.names <- names(menu_tree[[i]])
           tab.titles <- menu_tree[[i]]
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+          if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
             menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
           } else {
             menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
@@ -551,6 +553,11 @@ app_ui <- function(x) {
             "preservation-tab",
             "Preservation WGCNA",
             tspan("Preservation analysis using the WGCNA framework")
+          ),
+          bigdash::sidebarTabHelp(
+            "ideograms-tab",
+            "Beta Ideograms",
+            tspan("Epigenomics visualizations and analyses for methylomics data.")
           ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),

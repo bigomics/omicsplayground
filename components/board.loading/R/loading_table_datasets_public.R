@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 loading_table_datasets_public_ui <- function(
@@ -182,7 +182,8 @@ loading_table_datasets_public_server <- function(id,
 
     observeEvent(input$importbutton, {
       selected_row <- pgxtable_public$rows_selected()
-      pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
+      row_data <- pgxtable_public$data()[selected_row, ]
+      pgx_name <- row_data[, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
       pgx_path <- auth$user_dir
       new_pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
@@ -205,6 +206,19 @@ loading_table_datasets_public_server <- function(id,
           )
         )
         return()
+      }
+
+      cols <- colnames(row_data)
+      get_num <- function(col) {
+        if (col %in% cols) suppressWarnings(as.numeric(row_data[, col])) else NA_real_
+      }
+      nsamples <- get_num("nsamples")
+      ngenes <- get_num("ngenes")
+      if (is.na(ngenes)) ngenes <- get_num("nfeatures")
+      datatype <- if ("datatype" %in% cols) as.character(row_data[, "datatype"]) else ""
+      if (dataset_exceeds_limits(nsamples, ngenes, datatype, auth$options)) {
+        shinyalert_exceeds_plan_limits() ## ui-alerts.R
+        return(NULL)
       }
 
       ## Copy the file from Public folder to user folder

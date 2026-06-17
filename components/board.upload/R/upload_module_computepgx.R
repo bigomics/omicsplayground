@@ -1,7 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -32,6 +30,7 @@ upload_module_computepgx_server <- function(
   upload_name,
   upload_description,
   upload_datatype,
+  meth_type,
   is.olink = shiny::reactive(FALSE),
   is.nulisa = shiny::reactive(FALSE),
   upload_organism,
@@ -135,21 +134,22 @@ upload_module_computepgx_server <- function(
       EXTRA.METHODS <- function() {
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
-        } else if (grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c(
-            "drug connectivity" = "drugs", "wordcloud",
-            "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
-          )
         } else if (is.olink() || is.nulisa()) {
-          mm <- c(
-            "drug connectivity" = "drugs",
-            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
-          )
+          mm <- c("drug connectivity" = "drugs",
+            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
         } else {
-          mm <- c(
-            "celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
-            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
-          )
+          c1 <- grepl("methylomics", upload_datatype(), ignore.case = TRUE)
+          c2 <- grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)
+          if (c1) {
+            mm <- c("drug connectivity" = "drugs",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          } else if (c2) {
+            mm <- c("drug connectivity" = "drugs", "wordcloud",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          } else {
+            mm <- c("celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
+              "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          }
         }
         return(mm)
       }
@@ -172,9 +172,10 @@ upload_module_computepgx_server <- function(
           }
         }
 
-        ## Default selection based on datatype
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
+        } else if (grepl("methylomics", upload_datatype(), ignore.case = TRUE)) {
+          mm <- c("drugs", "connectivity", "wgcna")
         } else if (is.olink() || is.nulisa()) {
           mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
         } else {
@@ -369,7 +370,8 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-          if (!is.null(probetype()) && probetype() == "running") {
+
+          if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
               shiny::tags$h4(
@@ -419,7 +421,7 @@ upload_module_computepgx_server <- function(
                     shiny::span(
                       "Exclude void features:",
                       inline_info_button(
-                        "Exclude void features that match certain patterns. Please specify a list of patterns. Note: patterns are matched at the beginning or the end of their symbol, not in the middle of the symbol name. Case is ignored."
+                        "Exclude features matching specific patterns. Please specify a list of patterns. Note: patterns are matched only at the start or end of their symbol. Case is ignored."
                       )
                     ),
                     FALSE
@@ -433,7 +435,16 @@ upload_module_computepgx_server <- function(
                     shiny::textInput(ns("exclude_genes"), NULL, "LOC ORF RIK")
                   )
                 ),
-              ),
+                if (upload_datatype() == "methylomics") {
+                  div(
+                    style = "margin-top:-24px;",
+                    shiny::checkboxInput(
+                      ns("remove.xy.probes"),
+                      shiny::span("Remove X and Y probes", inline_info_button("In methylation array, remove X- and Y-linked CpG probes.")),
+                      FALSE)
+                  )
+                },
+                ),
               if (upload_datatype() == "scRNA-seq") {
                 bslib::card(
                   shiny::checkboxGroupInput(
@@ -485,6 +496,17 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
+                if (upload_datatype() == "methylomics") {
+                  shiny::radioButtons(
+                    inputId = ns("diff_meth"),
+                    label = shiny::HTML("<h4>Methylomics analysis:</h4>"),
+                    choices = c(
+                      "Differentially methylated positions",
+                      "Differentially methylated regions"
+                    ),
+                    selected = "Differentially methylated positions",
+                  )
+                },
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -734,12 +756,9 @@ upload_module_computepgx_server <- function(
           shiny::HTML("<b>Data type:</b>", upload_datatype()),
           shiny::HTML("<br><b>Organism:</b>", upload_organism()),
           shiny::HTML("<br><b>Probe type:</b>", probetype())
-          ## shiny::HTML("<b>Name:</b><br>", upload_name()),
-          ## shiny::HTML("<b>Description:</b><br>", upload_description())
         )
       })
 
-      # handle ah task result
       output$probetype_result <- shiny::renderUI({
         p <- probetype()
         if (is.null(p) || p == "error") {
@@ -802,8 +821,6 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      # Input name and description. NEED CHECK!!! seems not to
-      # work. 18.11.24IK.
       shiny::observeEvent(list(metaRT(), compute_settings), {
         meta <- metaRT()
         pgx_info <- compute_settings
@@ -1024,6 +1041,11 @@ upload_module_computepgx_server <- function(
         max.genes <- as.integer(auth$options$MAX_GENES)
         max.genesets <- as.integer(auth$options$MAX_GENESETS)
 
+        ## Methylomics (EPIC array) can have up to 850K probes
+        if (upload_datatype() == "methylomics") {
+          max.genes <- as.integer(auth$options$MAX_METH_FEATURES)
+        }
+
         ## get selected methods from input
         gx.methods <- input$gene_methods
         dotimeseries <- FALSE
@@ -1041,7 +1063,8 @@ upload_module_computepgx_server <- function(
         append.symbol <- ("append.symbol" %in% flt)
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
-        average.duplicated <- ("average.duplicated" %in% flt) ## new
+        average.duplicated <- ("average.duplicated" %in% flt)
+        remove.xy.probes <- ("remove.xy.probes" %in% flt)
         batch.correct.method <- "no_batch_correct"
         batch.pars <- "<autodetect>"
         if (class(compute_settings$bc_method) == "list") {
@@ -1101,6 +1124,8 @@ upload_module_computepgx_server <- function(
         if (!any(hb_threshold)) hb_threshold <- FALSE
         covariates <- input$regress_covariates
         if (!is.null(covariates)) covariates <- as.character(covariates)
+        dma <- input$diff_meth # dma = differential meth. analysis
+        if (!is.null(dma)) dma <- as.character(dma)
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1113,6 +1138,18 @@ upload_module_computepgx_server <- function(
           regress_ribo = ifelse("Ribosomal expression" %in% covariates, TRUE, FALSE),
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
+
+        ## Resolve proteomics subtype from is.olink / is.nulisa reactives
+        datatype_subtype <- NULL
+        if (upload_datatype() == "proteomics") {
+          if (is.olink()) {
+            datatype_subtype <- "Olink NPX"
+          } else if (is.nulisa()) {
+            datatype_subtype <- "Nulisa NPQ"
+          } else {
+            datatype_subtype <- "MS"
+          }
+        }
 
         ## Define create_pgx function arguments
         params <- list(
@@ -1130,7 +1167,6 @@ upload_module_computepgx_server <- function(
           #-------- preprocess options ---------
           norm_method = norm_method(),
           settings = list(
-            ## compute settings only for info
             imputation_method = compute_settings$imputation_method,
             bc_method = compute_settings$bc_method,
             remove_outliers = compute_settings$remove_outliers,
@@ -1141,6 +1177,8 @@ upload_module_computepgx_server <- function(
           prune.samples = TRUE,
           filter.genes = filter.genes,
           exclude.genes = exclude_genes,
+          remove.xy.probes = remove.xy.probes, ## NEW
+          meth_type = meth_type(), ## NEW
           only.known = remove.unknown,
           average.duplicated = average.duplicated,
           only.proteincoding = only.proteincoding,
@@ -1148,7 +1186,8 @@ upload_module_computepgx_server <- function(
           convert.hugo = append.symbol, ## should be renamed
           batch.correct.method = batch.correct.method,
           batch.pars = batch.pars,
-          covariates = covariates, ## NEW
+          covariates = covariates,
+          dma = dma, ## NEW
           ## ---------
           do.cluster = TRUE,
           cluster.contrasts = FALSE,
@@ -1164,6 +1203,7 @@ upload_module_computepgx_server <- function(
           libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),
+          datatype_subtype = datatype_subtype,
           description = input$selected_description,
           metadata = user_metadata,
           creator = creator,

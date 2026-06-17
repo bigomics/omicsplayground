@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## ---------------------------------------------------------------
@@ -470,6 +470,51 @@ extract_label_settings <- function(input, defaults = list()) {
     segment_linetype   = safe("segment_linetype", dfl$segment_linetype, cast = as.integer),
     hyperbola_k        = safe("hyperbola_k", dfl$hyperbola_k)
   )
+}
+
+
+#' Extract custom axis limits from Shiny input (volcano editor).
+#'
+#' Reads the \code{axis_limits_checkbox} toggle and the \code{xlim_max} /
+#' \code{ylim_max} numeric inputs. The x-axis is symmetric (the view spans
+#' \code{c(-xlim_max, xlim_max)}); the y-axis is capped at \code{ylim_max}
+#' with the lower bound left at 0. Either field may be left blank to keep
+#' that axis auto-scaled.
+#'
+#' @param input Shiny input object.
+#' @return Named list with \code{xlim} (length-2 numeric vector or NULL) and
+#'   \code{ymax} (single numeric or NULL).
+extract_axis_limits <- function(input) {
+  use  <- isTRUE(input$axis_limits_checkbox)
+  xmax <- input$xlim_max
+  ymax <- input$ylim_max
+  ok_x <- use && !is.null(xmax) && !is.na(xmax) && xmax > 0
+  ok_y <- use && !is.null(ymax) && !is.na(ymax) && ymax > 0
+  list(
+    xlim = if (ok_x) c(-xmax, xmax) else NULL,
+    ymax = if (ok_y) ymax else NULL
+  )
+}
+
+
+#' Hyperbolic significance mask matching playbase::ggVolcano.
+#'
+#' Returns a logical vector flagging points that lie above the hyperbola
+#' (y - -log10(psig)) * (|fc| - lfc) > k, with |fc| > lfc.
+#'
+#' @param fc Effect size (log2FC) vector.
+#' @param y  Already -log10-transformed significance vector.
+#' @param psig Significance threshold on the original scale (FDR/p).
+#' @param lfc Log fold-change threshold (vertical asymptote).
+#' @param k Hyperbola curvature.
+#' @return Logical vector the same length as \code{fc}.
+hyperbolic_significance <- function(fc, y, psig, lfc, k = 1) {
+  if (is.null(k) || is.na(k)) k <- 1
+  psig_t <- -log10(psig)
+  sig <- (y - psig_t) * (abs(fc) - lfc) > k
+  sig[abs(fc) <= lfc] <- FALSE
+  sig[is.na(sig)] <- FALSE
+  sig
 }
 
 
