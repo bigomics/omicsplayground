@@ -84,7 +84,7 @@ UploadBoard <- function(id,
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
-      
+
       if (opt$ENABLE_MULTIOMICS) {
         shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
       } else {
@@ -128,7 +128,7 @@ UploadBoard <- function(id,
         NULL
       }
     })
-    
+
     meth_type <- shiny::reactive({
       req(upload_datatype())
       if (upload_datatype() == "methylomics" && !is.null(input$methylomics_type)) {
@@ -137,7 +137,7 @@ UploadBoard <- function(id,
         return(NULL)
       }
     })
-    
+
     is.nulisa <- shiny::reactive({
       req(upload_datatype())
       if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
@@ -300,9 +300,9 @@ UploadBoard <- function(id,
         } else {
           if ("e29" %in% names(res$checks)) {
             is.meth.beta <- FALSE
-            if (upload_datatype() == "methylomics") { 
+            if (upload_datatype() == "methylomics") {
               vv <- range(df0, na.rm = TRUE)
-              is.meth.beta <- all(vv>=0 & vv<=1)
+              is.meth.beta <- all(vv >= 0 & vv <= 1)
             }
             if (!is.meth.beta) {
               shinyalert::shinyalert(
@@ -653,7 +653,6 @@ UploadBoard <- function(id,
         )
       )
       return(wizard)
-
     })
 
     ## --------------------------------------------------------
@@ -746,7 +745,8 @@ UploadBoard <- function(id,
       upload_datatype(input$selected_datatype)
       if (input$selected_datatype == "methylomics") {
         shiny::updateSelectizeInput(session, "selected_organism",
-          choices = c("Human" = "Human"), selected = "Human")
+          choices = c("Human" = "Human"), selected = "Human"
+        )
       } else {
         all_species <- playbase::allSpecies(col = "species_name")
         common_name <- playbase::allSpecies(col = "display_name")
@@ -1187,10 +1187,9 @@ UploadBoard <- function(id,
         }
 
         if (upload_datatype() != "methylomics") {
-
           probetype(detected_probetype) ## set RV
           info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
-          
+
           if (!is.null(detected_probetype) && detected_probetype == "error") {
             info("[UploadBoard] ExtendedTask result has ERROR")
             shinyalert::shinyalert(
@@ -1208,8 +1207,8 @@ UploadBoard <- function(id,
 
           ## wrong datatype. just give warning. or should we change datatype?
           if (detected_probetype != "error" &&
-                any(grepl("PROT", detected_probetype)) &&
-                !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+            any(grepl("PROT", detected_probetype)) &&
+            !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
             shinyalert::shinyalert(
               title = "Is this proteomics data?",
               text = paste0(
@@ -1221,11 +1220,9 @@ UploadBoard <- function(id,
               html = TRUE
             )
           }
-
         } else {
           probetype("CpG probes")
         }
-
       }
     )
 
@@ -1301,7 +1298,7 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.nulisa = is.nulisa,
-      meth_type = meth_type,  
+      meth_type = meth_type,
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx

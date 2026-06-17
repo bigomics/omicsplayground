@@ -7,7 +7,6 @@ dataview_table_beta_ui <- function(id,
                                    title,
                                    info.text,
                                    caption) {
-
   ns <- shiny::NS(id)
 
   TableModuleUI(
@@ -26,11 +25,8 @@ dataview_table_beta_server <- function(id,
                                        r.samples = reactive(""),
                                        r.pheno = reactive(""),
                                        scrollY) {
-
   moduleServer(id, function(input, output, session) {
-
     table_data <- shiny::reactive({
-
       shiny::req(pgx$X, pgx$genes, pgx$samples)
       X <- playbase::mToBeta(pgx$X)
       Y <- pgx$samples
@@ -38,15 +34,21 @@ dataview_table_beta_server <- function(id,
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(annot) <- sub("_.*", "", rownames(annot))
       kk <- intersect(rownames(X), rownames(annot))
-      if (length(kk) == 0) return(NULL)
+      if (length(kk) == 0) {
+        return(NULL)
+      }
       samples <- r.samples()
-      if (!all(samples %in% colnames(X))) return(NULL)
+      if (!all(samples %in% colnames(X))) {
+        return(NULL)
+      }
       X <- X[kk, samples, drop = FALSE]
       annot <- annot[kk, , drop = FALSE]
       Y <- Y[samples, , drop = FALSE]
 
       kk <- grep("chr|chromosome|chrom", tolower(colnames(annot)))[1]
-      if (is.na(kk)) return(NULL)
+      if (is.na(kk)) {
+        return(NULL)
+      }
       chr_vals <- as.character(annot[, kk])
       keep <- !is.na(chr_vals) & chr_vals != "" & !grepl("cen", tolower(chr_vals))
       annot <- annot[keep, , drop = FALSE]
@@ -61,7 +63,9 @@ dataview_table_beta_server <- function(id,
       chrom_colmeans <- function(M) {
         do.call(rbind, lapply(chroms, function(chr) {
           jj <- which(annot$chrom_tmp == chr)
-          if (length(jj) == 0) return(matrix(rep(NA, ncol(M)), nrow = 1))
+          if (length(jj) == 0) {
+            return(matrix(rep(NA, ncol(M)), nrow = 1))
+          }
           matrix(round(colMeans(M[jj, , drop = FALSE], na.rm = TRUE), 3), nrow = 1)
         }))
       }
@@ -74,14 +78,17 @@ dataview_table_beta_server <- function(id,
         dt <- cbind(Ave = round(rowMeans(as.matrix(dt), na.rm = TRUE), 3), dt)
       } else {
         pheno <- intersect(pheno, colnames(Y))[1]
-        if (is.na(pheno)) return(NULL)
+        if (is.na(pheno)) {
+          return(NULL)
+        }
         pheno <- as.character(Y[, pheno])
         kk <- which(!is.na(pheno) & pheno != "")
         pheno <- pheno[kk]
         X <- X[, kk, drop = FALSE]
         groups <- sort(unique(pheno))
-        M <- do.call(cbind, lapply(groups, function(g)
-          rowMeans(X[, pheno == g, drop = FALSE], na.rm = TRUE)))
+        M <- do.call(cbind, lapply(groups, function(g) {
+          rowMeans(X[, pheno == g, drop = FALSE], na.rm = TRUE)
+        }))
         colnames(M) <- groups
         dt <- as.data.frame(chrom_colmeans(M))
         colnames(dt) <- paste0("Ave.", groups)
@@ -91,7 +98,6 @@ dataview_table_beta_server <- function(id,
       rownames(dt) <- chroms
 
       return(dt)
-
     })
 
     table.RENDER <- function() {
@@ -141,5 +147,4 @@ dataview_table_beta_server <- function(id,
       selector = "none"
     )
   })
-
 }

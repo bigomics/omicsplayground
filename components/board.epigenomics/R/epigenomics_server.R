@@ -2,7 +2,6 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 EpigenomicsBoard <- function(id, pgx) {
-
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -23,7 +22,8 @@ EpigenomicsBoard <- function(id, pgx) {
       sex.chr <- intersect(c("X", "Y"), chroms)
       chroms <- paste0("chr", c(sort(as.numeric(setdiff(chroms, sex.chr))), sex.chr))
       shiny::updateSelectizeInput(session, "select_chromosome",
-        choices = chroms, selected = chroms[1:4], server = T)
+        choices = chroms, selected = chroms[1:4], server = T
+      )
       shiny::updateSelectizeInput(session, "search_gene", choices = rownames(pgx$X), server = T)
       shiny::updateSelectInput(session, "data_samplefilter", choices = colnames(pgx$X))
       Y <- pgx$samples
@@ -67,7 +67,9 @@ EpigenomicsBoard <- function(id, pgx) {
       pgx,
       r.chromosome = chromosomes,
       r.samples = samples,
-      r.pheno = shiny::reactive({input$select_pheno}),
+      r.pheno = shiny::reactive({
+        input$select_pheno
+      }),
       watermark = WATERMARK
     )
 
@@ -75,15 +77,19 @@ EpigenomicsBoard <- function(id, pgx) {
       "methyltable",
       pgx,
       r.samples = samples,
-      r.pheno = shiny::reactive({input$select_pheno}),
+      r.pheno = shiny::reactive({
+        input$select_pheno
+      }),
       scrollY = "30vh"
     )
-    
+
     epigenomics_plot_beta_dist_server(
       "betaDist",
       pgx,
       r.samples = samples,
-      r.pheno = shiny::reactive({input$select_pheno}),
+      r.pheno = shiny::reactive({
+        input$select_pheno
+      }),
       watermark = WATERMARK
     )
 
@@ -92,10 +98,10 @@ EpigenomicsBoard <- function(id, pgx) {
       pgx,
       r.chromosome = chromosomes_all,
       r.samples = samples,
-      r.pheno = shiny::reactive({input$select_pheno}),
+      r.pheno = shiny::reactive({
+        input$select_pheno
+      }),
       watermark = WATERMARK
     )
-
   })
-
 }

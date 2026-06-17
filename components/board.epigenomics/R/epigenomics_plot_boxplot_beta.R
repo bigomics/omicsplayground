@@ -11,7 +11,6 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
                                              info.methods,
                                              info.references,
                                              info.extra_link) {
-
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -44,7 +43,6 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
     editor = TRUE,
     plot_type = "boxplot_methyl"
   )
-
 }
 
 epigenomics_plot_boxplot_beta_server <- function(id,
@@ -53,9 +51,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
                                                  r.samples = reactive(""),
                                                  r.pheno = reactive(""),
                                                  watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     grouped <- shiny::reactive({
       pv <- r.pheno()
       !is.null(pv) && length(pv) == 1 && pv != "" && pv != "<ungrouped>"
@@ -75,9 +71,13 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
       pv <- pd$pheno
-      if (is.null(pv) || length(pv) != 1 || pv == "" || pv == "<ungrouped>") return(character(0))
+      if (is.null(pv) || length(pv) != 1 || pv == "" || pv == "<ungrouped>") {
+        return(character(0))
+      }
       kk <- which(colnames(pd$samples) == pv)
-      if (length(kk) == 0) return(character(0))
+      if (length(kk) == 0) {
+        return(character(0))
+      }
       vec <- as.character(pd$samples[, kk[1]])
       lvls <- sort(unique(vec[!is.na(vec) & vec != ""]))
       if (length(lvls) < 2) character(0) else lvls
@@ -95,7 +95,6 @@ epigenomics_plot_boxplot_beta_server <- function(id,
     })
 
     plot_data <- shiny::reactive({
-
       shiny::req(pgx$X, pgx$genes, pgx$samples)
       X <- playbase::mToBeta(pgx$X)
       Y <- pgx$samples
@@ -103,17 +102,21 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(annot) <- sub("_.*", "", rownames(annot))
       kk <- intersect(rownames(X), rownames(annot))
-      if (length(kk) == 0) return(NULL)
+      if (length(kk) == 0) {
+        return(NULL)
+      }
       samples <- r.samples()
-      if (!all(samples %in% colnames(X))) return(NULL)
+      if (!all(samples %in% colnames(X))) {
+        return(NULL)
+      }
       X <- X[kk, samples, drop = FALSE]
       annot <- annot[kk, , drop = FALSE]
       Y <- Y[samples, , drop = FALSE]
-      
+
       if (input$remove_sex_chr) {
         kk <- grep("chr|chromosome|chrom", tolower(colnames(annot)))[1]
         chroms <- paste0("chr", sub("^chr", "", sub("[pq].*", "", annot[, kk])))
-        kk <- which(chroms %in% c("chrX","chrY"))
+        kk <- which(chroms %in% c("chrX", "chrY"))
         if (length(kk) > 0) {
           X <- X[-kk, , drop = FALSE]
           annot <- annot[-kk, , drop = FALSE]
@@ -121,11 +124,9 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       }
 
       return(list(X = X, samples = Y, annot = annot, pheno = r.pheno()))
-
     })
 
     plot.RENDER <- function() {
-
       res <- plot_data()
       shiny::req(res)
 
@@ -133,7 +134,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       samples <- res[["samples"]]
       pheno <- res[["pheno"]]
       annot <- res[["annot"]]
-      
+
       if (!is.null(pheno) & pheno != "<ungrouped>") {
         kk <- which(colnames(samples) == pheno)
         if (length(kk) > 0) {
@@ -149,14 +150,17 @@ epigenomics_plot_boxplot_beta_server <- function(id,
         }
       }
 
-      n_groups   <- if (is.character(pheno) && length(pheno) > 1) length(unique(pheno)) else 0
-      box_color  <- get_editor_color(input, "box_color", "bar_color")
+      n_groups <- if (is.character(pheno) && length(pheno) > 1) length(unique(pheno)) else 0
+      box_color <- get_editor_color(input, "box_color", "bar_color")
       group_clrs <- if (n_groups >= 2) {
         resolve_palette_colors(
-          input, n = n_groups,
+          input,
+          n = n_groups,
           fallback_colors = omics_pal_d("muted_light")(n_groups)
         )
-      } else NULL
+      } else {
+        NULL
+      }
 
       playbase::plotMethylOverview(
         X, annot, pheno,
@@ -164,7 +168,6 @@ epigenomics_plot_boxplot_beta_server <- function(id,
         box_color = box_color,
         group_colors = group_clrs
       )
-
     }
 
     PlotModuleServer(
@@ -179,7 +182,5 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       add.watermark = watermark,
       parent_session = session
     )
-
   })
-
 }

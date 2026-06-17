@@ -759,7 +759,7 @@ upload_table_preview_counts_server <- function(id,
         jj <- which(!is.na(rownames(df)) & rownames(df) != "")
         df <- df[jj, , drop = FALSE]
       }
-      
+
       file.ext <- tools::file_ext(input$counts_csv$name)
       if (is.null(df) & file.ext != "h5") {
         data_error_modal(path = datafile, data_type = "counts")

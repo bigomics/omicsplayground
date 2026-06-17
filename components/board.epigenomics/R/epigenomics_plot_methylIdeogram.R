@@ -11,7 +11,6 @@ epigenomics_plot_methylIdeogram_ui <- function(id,
                                                info.methods,
                                                info.references,
                                                info.extra_link) {
-  
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
@@ -59,7 +58,6 @@ epigenomics_plot_methylIdeogram_ui <- function(id,
     editor = TRUE,
     plot_type = "scatterplot"
   )
-
 }
 
 epigenomics_plot_methylIdeogram_server <- function(id,
@@ -68,9 +66,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
                                                    r.samples = reactive(""),
                                                    r.pheno = reactive(""),
                                                    watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-
     shiny::observe({
       pheno_val <- r.pheno()
       if (is.null(pheno_val) || pheno_val == "<ungrouped>") {
@@ -81,26 +77,29 @@ epigenomics_plot_methylIdeogram_server <- function(id,
         shinyjs::hide("remove_probecounts_bar_wrap")
       }
     })
-    
-    plot_data <- shiny::reactive({     
 
+    plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)        
+      X <- playbase::mToBeta(pgx$X)
       genes <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(genes) <- sub("_.*", "", rownames(genes))
 
       kk <- intersect(rownames(X), rownames(genes))
-      if (length(kk) == 0) return(NULL)
+      if (length(kk) == 0) {
+        return(NULL)
+      }
       samples <- r.samples()
-      if (!all(samples %in% colnames(X))) return(NULL)
+      if (!all(samples %in% colnames(X))) {
+        return(NULL)
+      }
 
       annot <- genes[kk, , drop = FALSE]
       pos_col <- colnames(annot)[grep("^pos$|position|location", tolower(colnames(annot)))[1]]
       if (!is.na(pos_col)) {
         annot[[pos_col]] <- as.numeric(sub(";.*", "", as.character(annot[[pos_col]])))
       }
-      
+
       return(list(
         X = X[kk, samples, drop = FALSE],
         samples = pgx$samples[samples, , drop = FALSE],
@@ -109,11 +108,9 @@ epigenomics_plot_methylIdeogram_server <- function(id,
         pheno = r.pheno(),
         dma = pgx$dma
       ))
-
     })
 
     plot.RENDER <- function() {
-
       res <- plot_data()
       shiny::req(res)
 
@@ -123,7 +120,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       annot <- res[["annot"]]
       chromosomes <- res[["chromosomes"]]
       dma <- res[["dma"]]
-      
+
       if (!is.null(pheno) && pheno != "<ungrouped>") {
         kk <- which(colnames(samples) == pheno)
         if (length(kk) > 0) {
@@ -140,7 +137,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       } else {
         pheno <- NULL
       }
-      
+
       if (!is.null(dma)) {
         loess_bins <- 5L
         bin_size <- 1e6
@@ -149,16 +146,18 @@ epigenomics_plot_methylIdeogram_server <- function(id,
           bin_size <- 2e6
         }
       }
-            
+
       playbase::plotMethylIdeogram(X, annot, pheno, chromosomes,
         bin_size = bin_size,
         probe_count_bars = !input$remove_probecounts_bar,
         pheno_lines = input$show_pheno_lines,
-        loess_bins = loess_bins)
-
+        loess_bins = loess_bins
+      )
     }
-  
-    modal_plot.RENDER <- function() { plot.RENDER() }
+
+    modal_plot.RENDER <- function() {
+      plot.RENDER()
+    }
 
     PlotModuleServer(
       "pltmod",
@@ -175,7 +174,5 @@ epigenomics_plot_methylIdeogram_server <- function(id,
       add.watermark = watermark,
       parent_session = session
     )
-
   })
-
 }

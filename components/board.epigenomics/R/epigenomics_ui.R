@@ -2,11 +2,9 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 EpigenomicsInputs <- function(id) {
-
   ns <- shiny::NS(id)
 
   bigdash::tabSettings(
-
     shiny::conditionalPanel(
       condition = sprintf("input['%s'] === 'Methylation ideograms'", ns("tabs")),
       withTooltip(
@@ -42,7 +40,6 @@ EpigenomicsInputs <- function(id) {
       "Remove specified samples",
       placement = "top"
     ),
-
     withTooltip(
       shiny::selectInput(
         inputId = ns("select_pheno"),
@@ -59,11 +56,9 @@ EpigenomicsUI <- function(id) {
   ns <- shiny::NS(id)
 
   div(
-    boardHeader(title = "Epigenomics", info_link = ns("board_info")), 
+    boardHeader(title = "Epigenomics", info_link = ns("board_info")),
     tabs <- shiny::tabsetPanel(
-
       id = ns("tabs"),
-
       shiny::tabPanel(
         "Methylomics landscape",
         bslib::layout_columns(
@@ -72,7 +67,7 @@ EpigenomicsUI <- function(id) {
           bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
           bslib::layout_columns(
             col_widths = 12,
-            row_heights = list(1.33, 1),            
+            row_heights = list(1.33, 1),
             bslib::layout_columns(
               col_widths = c(6, 6),
               epigenomics_plot_beta_dist_ui(
@@ -114,7 +109,6 @@ EpigenomicsUI <- function(id) {
           )
         )
       ),
-
       shiny::tabPanel(
         "Methylation ideograms",
         bslib::layout_columns(
