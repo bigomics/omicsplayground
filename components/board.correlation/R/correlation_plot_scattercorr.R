@@ -198,18 +198,25 @@ correlation_plot_scattercorr_server <- function(id,
             gene2,
             " Expression:</b> %{y}<extra></extra>"
           )
-        ) %>%
-          # Add the points
-          plotly::add_trace(
-            x = x,
-            y = y,
-            color = pheno,
-            colors = COL,
-            type = "scatter",
-            mode = "markers",
-            marker = list(size = markersize),
-            showlegend = (i == 1)
-          ) %>%
+        )
+        # Add the points. One trace per group with a shared legendgroup so
+        # that toggling a group in the legend hides/shows it across all subplots.
+        for (j in seq_along(levels(pheno))) {
+          g <- levels(pheno)[j]
+          sel.j <- which(pheno == g)
+          plt <- plt %>%
+            plotly::add_trace(
+              x = x[sel.j],
+              y = y[sel.j],
+              name = g,
+              legendgroup = g,
+              type = "scatter",
+              mode = "markers",
+              marker = list(size = markersize, color = COL[j]),
+              showlegend = (i == 1)
+            )
+        }
+        plt <- plt %>%
           # Add the regression line
           plotly::add_trace(
             data = newdata,
