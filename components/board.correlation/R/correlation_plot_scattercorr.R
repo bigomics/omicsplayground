@@ -106,12 +106,20 @@ correlation_plot_scattercorr_server <- function(id,
       this.gene <- sel_gene()
       NTOP <- 50
       R <- getGeneCorr()
-      sel <- cor_table$rownames_current()
-      sel <- head(intersect(sel, rownames(R)), NTOP)
+
+      ## Decoupled from the table search/filter. With a table row selected, show
+      ## a single scatter (settings feature vs the selected feature); otherwise
+      ## show the top-N correlated features as a grid.
+      selected <- intersect(cor_table$rownames_selected(), rownames(R))
+      if (length(selected) > 0) {
+        sel <- selected[1]
+      } else {
+        sel <- head(rownames(R), NTOP)
+      }
       shiny::req(sel)
       rho <- R[sel, "cor"]
 
-      if (length(rho) == 1) names(rho) <- rownames(R)[1]
+      if (length(rho) == 1) names(rho) <- sel
       pp <- unique(c(this.gene, names(rho)))
       X <- pgx$X[pp, , drop = FALSE]
 
@@ -190,18 +198,25 @@ correlation_plot_scattercorr_server <- function(id,
             gene2,
             " Expression:</b> %{y}<extra></extra>"
           )
-        ) %>%
-          # Add the points
-          plotly::add_trace(
-            x = x,
-            y = y,
-            color = pheno,
-            colors = COL,
-            type = "scatter",
-            mode = "markers",
-            marker = list(size = markersize),
-            showlegend = (i == 1)
-          ) %>%
+        )
+        # Add the points. One trace per group with a shared legendgroup so
+        # that toggling a group in the legend hides/shows it across all subplots.
+        for (j in seq_along(levels(pheno))) {
+          g <- levels(pheno)[j]
+          sel.j <- which(pheno == g)
+          plt <- plt %>%
+            plotly::add_trace(
+              x = x[sel.j],
+              y = y[sel.j],
+              name = g,
+              legendgroup = g,
+              type = "scatter",
+              mode = "markers",
+              marker = list(size = markersize, color = COL[j]),
+              showlegend = (i == 1)
+            )
+        }
+        plt <- plt %>%
           # Add the regression line
           plotly::add_trace(
             data = newdata,
@@ -301,7 +316,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- ncol <- 3
       } else if (input$layout == "4x4") {
         nrow <- ncol <- 4
@@ -319,7 +336,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN2 <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- 3
         ncol <- 5
       } else if (input$layout == "4x4") {
