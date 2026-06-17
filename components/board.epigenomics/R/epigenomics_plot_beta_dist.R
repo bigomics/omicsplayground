@@ -11,7 +11,6 @@ epigenomics_plot_beta_dist_ui <- function(id,
                                           info.methods,
                                           info.references,
                                           info.extra_link) {
-  
   ns <- shiny::NS(id)
 
   PlotModuleUI(
@@ -31,7 +30,6 @@ epigenomics_plot_beta_dist_ui <- function(id,
     editor = TRUE,
     plot_type = "correlation_matrix"
   )
-
 }
 
 epigenomics_plot_beta_dist_server <- function(id,
@@ -39,20 +37,21 @@ epigenomics_plot_beta_dist_server <- function(id,
                                               r.samples = reactive(""),
                                               r.pheno = reactive(""),
                                               watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-    
     plot_data <- shiny::reactive({
-
       shiny::req(pgx$X, pgx$genes, pgx$samples)
       X <- playbase::mToBeta(pgx$X)
       genes <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(genes) <- sub("_.*", "", rownames(genes))
       kk <- intersect(rownames(X), rownames(genes))
-      if (length(kk) == 0) return(NULL)
+      if (length(kk) == 0) {
+        return(NULL)
+      }
       samples <- r.samples()
-      if (!all(samples %in% colnames(X))) return(NULL)
+      if (!all(samples %in% colnames(X))) {
+        return(NULL)
+      }
 
       return(list(
         X = X[kk, samples, drop = FALSE],
@@ -60,11 +59,9 @@ epigenomics_plot_beta_dist_server <- function(id,
         annot = genes[kk, , drop = FALSE],
         pheno = r.pheno()
       ))
-
     })
 
     plot.RENDER <- function() {
-
       res <- plot_data()
       shiny::req(res)
 
@@ -90,7 +87,7 @@ epigenomics_plot_beta_dist_server <- function(id,
         pheno <- NULL
       }
 
-      up_color   <- get_editor_color(input, "color_up",   "#d73027")
+      up_color <- get_editor_color(input, "color_up", "#d73027")
       down_color <- get_editor_color(input, "color_down", "#4575b4")
 
       playbase::plotMethylOverview(
@@ -99,9 +96,8 @@ epigenomics_plot_beta_dist_server <- function(id,
         up_color = up_color,
         down_color = down_color
       )
-
     }
-  
+
     PlotModuleServer(
       "pltmod",
       plotlib = "ggplot",
@@ -114,7 +110,5 @@ epigenomics_plot_beta_dist_server <- function(id,
       add.watermark = watermark,
       parent_session = session
     )
-
   })
-
 }
