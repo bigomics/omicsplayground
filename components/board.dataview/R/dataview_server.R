@@ -356,7 +356,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         n.detected.features <- apply(counts, 2, function(x) length(which(x > 0)))
 
         ## get variation per group
-        #log2counts <- log2(1 + counts)
+        # log2counts <- log2(1 + counts)
         is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
         log2counts <- if (is.meth) playbase::mToBeta(counts) else log2(1 + counts)
         varx <- apply(log2counts, 1, var)
@@ -387,7 +387,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           }
           log2counts <- log2(offset + counts)
         }
-        
+
         names(total.counts) <- substring(names(total.counts), 1, 30)
         colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
         colnames(prop.counts) <- substring(colnames(prop.counts), 1, 30)

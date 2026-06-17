@@ -135,20 +135,28 @@ upload_module_computepgx_server <- function(
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
         } else if (is.olink() || is.nulisa()) {
-          mm <- c("drug connectivity" = "drugs",
-            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+          mm <- c(
+            "drug connectivity" = "drugs",
+            "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+          )
         } else {
           c1 <- grepl("methylomics", upload_datatype(), ignore.case = TRUE)
           c2 <- grepl("scRNA-seq", upload_datatype(), ignore.case = TRUE)
           if (c1) {
-            mm <- c("drug connectivity" = "drugs",
-              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+            mm <- c(
+              "drug connectivity" = "drugs",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+            )
           } else if (c2) {
-            mm <- c("drug connectivity" = "drugs", "wordcloud",
-              "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+            mm <- c(
+              "drug connectivity" = "drugs", "wordcloud",
+              "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+            )
           } else {
-            mm <- c("celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
-              "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna")
+            mm <- c(
+              "celltype deconvolution" = "deconv", "drug connectivity" = "drugs",
+              "wordcloud", "experiment similarity" = "connectivity", "WGCNA" = "wgcna"
+            )
           }
         }
         return(mm)
@@ -370,7 +378,6 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-
           if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
@@ -441,10 +448,11 @@ upload_module_computepgx_server <- function(
                     shiny::checkboxInput(
                       ns("remove.xy.probes"),
                       shiny::span("Remove X and Y probes", inline_info_button("In methylation array, remove X- and Y-linked CpG probes.")),
-                      FALSE)
+                      FALSE
+                    )
                   )
                 },
-                ),
+              ),
               if (upload_datatype() == "scRNA-seq") {
                 bslib::card(
                   shiny::checkboxGroupInput(

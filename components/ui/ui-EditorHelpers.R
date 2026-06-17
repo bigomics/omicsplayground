@@ -485,7 +485,7 @@ extract_label_settings <- function(input, defaults = list()) {
 #' @return Named list with \code{xlim} (length-2 numeric vector or NULL) and
 #'   \code{ymax} (single numeric or NULL).
 extract_axis_limits <- function(input) {
-  use  <- isTRUE(input$axis_limits_checkbox)
+  use <- isTRUE(input$axis_limits_checkbox)
   xmax <- input$xlim_max
   ymax <- input$ylim_max
   ok_x <- use && !is.null(xmax) && !is.na(xmax) && xmax > 0

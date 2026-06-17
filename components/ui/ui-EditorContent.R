@@ -79,54 +79,53 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                   ct$secondary
                 )
               )
-            )
-          ),
+            ),
 
-          # Axis Options
-          bslib::accordion_panel(
-            "Text sizes",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              numericInput(ns_parent("label_size"), "Labels", value = 4),
-              numericInput(ns_parent("marker_size"), "Points", value = 1),
-              numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
-            )
-          ),
-          bslib::accordion_panel(
-            "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
-            conditionalPanel(
-              condition = "input.margin_checkbox",
-              ns = ns_parent,
-              numericInput(ns_parent("margin_left"), "Left", value = 10),
-              numericInput(ns_parent("margin_right"), "Right", value = 10),
-              numericInput(ns_parent("margin_top"), "Top", value = 10),
-              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
-            )
-          ),
-          bslib::accordion_panel(
-            "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-            conditionalPanel(
-              condition = "input.aspect_ratio_checkbox",
-              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
-              ns = ns_parent
-            )
-          ),
-          bslib::accordion_panel(
-            "Axis Limits",
-            checkboxInput(ns_parent("axis_limits_checkbox"), "Custom axis limits", value = FALSE),
-            conditionalPanel(
-              condition = "input.axis_limits_checkbox",
-              ns = ns_parent,
+            # Axis Options
+            bslib::accordion_panel(
+              "Text sizes",
               bslib::layout_column_wrap(
                 width = 1 / 2,
-                numericInput(ns_parent("xlim_max"), "X max (±)", value = NA, min = 0, step = 0.5),
-                numericInput(ns_parent("ylim_max"), "Y max", value = NA, min = 0, step = 1)
-              ),
-              shiny::helpText("X axis spans ± the value. Leave a field blank to auto-scale that axis.")
-            )
-          ),
+                numericInput(ns_parent("label_size"), "Labels", value = 4),
+                numericInput(ns_parent("marker_size"), "Points", value = 1),
+                numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
+              )
+            ),
+            bslib::accordion_panel(
+              "Margins",
+              checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+              conditionalPanel(
+                condition = "input.margin_checkbox",
+                ns = ns_parent,
+                numericInput(ns_parent("margin_left"), "Left", value = 10),
+                numericInput(ns_parent("margin_right"), "Right", value = 10),
+                numericInput(ns_parent("margin_top"), "Top", value = 10),
+                numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+              )
+            ),
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+              conditionalPanel(
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
+                ns = ns_parent
+              )
+            ),
+            bslib::accordion_panel(
+              "Axis Limits",
+              checkboxInput(ns_parent("axis_limits_checkbox"), "Custom axis limits", value = FALSE),
+              conditionalPanel(
+                condition = "input.axis_limits_checkbox",
+                ns = ns_parent,
+                bslib::layout_column_wrap(
+                  width = 1 / 2,
+                  numericInput(ns_parent("xlim_max"), "X max (±)", value = NA, min = 0, step = 0.5),
+                  numericInput(ns_parent("ylim_max"), "Y max", value = NA, min = 0, step = 1)
+                ),
+                shiny::helpText("X axis spans ± the value. Leave a field blank to auto-scale that axis.")
+              )
+            ),
 
             # Axis Options
             bslib::accordion_panel(
