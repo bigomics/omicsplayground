@@ -21,6 +21,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
 # RUN apt update && apt install -y fonts-lato
+RUN apt update && apt install -y libpoppler-cpp-dev
 
 #------------------------------------------------------------
 # Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
@@ -91,12 +92,21 @@ COPY dev/Rprofil[e] /root/.Rprofile
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
-# Install omicsai (private repo, using BuildKit secret mount)
+# Install private bigomics packages (using BuildKit secret mount)
+#   omicsai        -> providers
+#   omicspgx       -> API
+#   omicspgxmcp    -> tools
+#   omicsplots     -> plotting tools
+#   omicsagentovi  -> the agent
 #------------------------------------------------------------
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
     if [ -n "$GITHUB_PAT" ]; then \
       GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgx')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsplots')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgxmcp')" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsagentovi')" && \
       rm -f /root/.Rhistory; \
     fi
 

@@ -668,24 +668,24 @@ upload_table_preview_counts_server <- function(id,
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
             df0 <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_Olink_NPX(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (!is.null(df0)) {
               df <- df0[["counts"]]
               df.samples <- df0[["samples"]]
             } else {
               df0 <- tryCatch(
-              {
-                playbase::read_counts(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
+                {
+                  playbase::read_counts(datafile)
+                },
+                error = function(w) {
+                  NULL
+                }
               )
               if (!is.null(df0)) df <- df0
             }

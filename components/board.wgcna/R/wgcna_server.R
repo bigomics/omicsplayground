@@ -42,9 +42,10 @@ WgcnaBoard <- function(id, pgx) {
       "Eigengenes" = list(disable = c("selected_module", "selected_trait", "report_options")),
       "Modules" = list(disable = c("report_options")),
       "Enrichment" = list(disable = c("selected_trait", "report_options")),
-      "AI Report✨" = list(disable = c("selected_module", "selected_trait",
-        "compare_accordion")
-      )
+      "AI Report✨" = list(disable = c(
+        "selected_module", "selected_trait",
+        "compare_accordion"
+      ))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -83,12 +84,13 @@ WgcnaBoard <- function(id, pgx) {
 
       message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
-      
-      llm_model <- getUserOption(session,'llm_model')
-      img_model <- NULL  # skip infographics
-      #img_model <- "google:gemini-3.1-flash-image-preview"
+
+      llm_model <- getUserOption(session, "llm_model")
+      img_model <- NULL # skip infographics
+      # img_model <- "google:gemini-3.1-flash-image-preview"
       out <- playbase::wgcna.init(
-        out, llm = llm_model, img_model = img_model,
+        out,
+        llm = llm_model, img_model = img_model,
         annot = pgx$genes, progress = progress
       )
 
@@ -96,48 +98,51 @@ WgcnaBoard <- function(id, pgx) {
       out
     }
 
-    ncompute = 0
-    
-    wgcna <- shiny::eventReactive({
-      list(input$compute, pgx$X)
-    },{
-      require(WGCNA)
-      all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
-        any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
-      has_wgcna <- "wgcna" %in% names(pgx) && all_req      
-      compute_clicked <- (input$compute != ncompute) 
-      
-      # Use pre-computed results only if they exist, conditions are
-      # met, AND we're not forcing recomputation
-      if (!compute_clicked && has_wgcna) {
-        dbg("[WgcnaBoard] >>> using pre-computed WGCNA results...")
-        out <- pgx$wgcna
-        ## old style had these settings
-        if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
-        if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
-        if (is.null(pgx$wgcna$power)) out$power <- 6
-      } else {
-        if (compute_clicked) dbg("[WgcnaBoard] compute_clicked!")
-        if (!has_wgcna) dbg("[WgcnaBoard] WGCNA needs update!")
-        dbg("[WgcnaBoard] >>> recomputing WGCNA results")
-        out <- compute_wgcna()
+    ncompute <- 0
+
+    wgcna <- shiny::eventReactive(
+      {
+        list(input$compute, pgx$X)
+      },
+      {
+        require(WGCNA)
+        all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
+          any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
+        has_wgcna <- "wgcna" %in% names(pgx) && all_req
+        compute_clicked <- (input$compute != ncompute)
+
+        # Use pre-computed results only if they exist, conditions are
+        # met, AND we're not forcing recomputation
+        if (!compute_clicked && has_wgcna) {
+          dbg("[WgcnaBoard] >>> using pre-computed WGCNA results...")
+          out <- pgx$wgcna
+          ## old style had these settings
+          if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+          if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+          if (is.null(pgx$wgcna$power)) out$power <- 6
+        } else {
+          if (compute_clicked) dbg("[WgcnaBoard] compute_clicked!")
+          if (!has_wgcna) dbg("[WgcnaBoard] WGCNA needs update!")
+          dbg("[WgcnaBoard] >>> recomputing WGCNA results")
+          out <- compute_wgcna()
+        }
+
+        ## update Inputs
+        me <- sort(names(out$me.genes))
+        shiny::updateSelectInput(session, "selected_module",
+          choices = me, sel = me[1]
+        )
+
+        tt <- sort(colnames(out$datTraits))
+        shiny::updateSelectInput(session, "selected_trait",
+          choices = tt, selected = tt[1]
+        )
+
+        ncompute <<- input$compute
+        return(out)
       }
+    )
 
-      ## update Inputs
-      me <- sort(names(out$me.genes))
-      shiny::updateSelectInput(session, "selected_module",
-        choices = me, sel = me[1]
-      )
-
-      tt <- sort(colnames(out$datTraits))
-      shiny::updateSelectInput(session, "selected_trait",
-        choices = tt, selected = tt[1]
-      )
-      
-      ncompute <<- input$compute      
-      return(out)
-    })
-   
 
     ## ================================================================================
     ## =========================== MODULES ============================================

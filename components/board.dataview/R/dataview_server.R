@@ -134,7 +134,9 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     annot <- shiny::reactive({
       annot <- NULL
       shiny::req(input$data_groupby)
-      if (input$data_groupby == "<ungrouped>") return(annot)
+      if (input$data_groupby == "<ungrouped>") {
+        return(annot)
+      }
       kk <- grep("class", tolower(colnames(pgx$genes)))
       if (length(kk) > 0) {
         kk <- unique(colnames(pgx$genes)[kk])
@@ -142,7 +144,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       }
       return(annot)
     })
-    
+
     dataview_module_geneinfo_server(
       "geneinfo",
       pgx,

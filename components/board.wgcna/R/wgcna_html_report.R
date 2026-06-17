@@ -137,7 +137,8 @@ wgcna_report_inputs <- function(id) {
         ns("downloadPDF"),
         label = "Download",
         class = "btn-outline-primary",
-        style = "width: 100%;")
+        style = "width: 100%;"
+      )
     )
   )
 }
@@ -152,14 +153,14 @@ wgcna_html_report_server <- function(id,
     ns <- session$ns
     btn_count <- reactiveVal(0)
 
-    observeEvent( wgcna(), {
+    observeEvent(wgcna(), {
       btn_count(runif(1))
-      shinyjs::disable("downloadPDF") 
+      shinyjs::disable("downloadPDF")
     })
 
     observeEvent(input$generate_btn, {
       btn_count(btn_count() + 1)
-      shinyjs::disable("downloadPDF") 
+      shinyjs::disable("downloadPDF")
     })
 
     get_report <- shiny::eventReactive(
@@ -290,7 +291,7 @@ wgcna_html_report_server <- function(id,
 
     text.RENDER <- function() {
       txt <- contents_text()
-      if(is.null(txt)) shinyjs::disable("downloadPDF") 
+      if (is.null(txt)) shinyjs::disable("downloadPDF")
       shiny::validate(shiny::need(!is.null(txt), "Please enable AI and generate report."))
       res <- markdown::markdownToHTML(txt, fragment.only = TRUE)
       out <- shiny::div(class = "gene-info", shiny::HTML(res))
@@ -324,7 +325,7 @@ wgcna_html_report_server <- function(id,
     diag_count <- reactiveVal(0)
 
     ## reset count on new data
-    observeEvent( wgcna(), {
+    observeEvent(wgcna(), {
       diag_count(runif(1))
     })
 
@@ -333,21 +334,21 @@ wgcna_html_report_server <- function(id,
     })
 
     get_diagram <- reactive({
-
       rpt <- get_report()
       shiny::validate(shiny::need(!is.null(rpt), "Report not available"))
 
       ## for the moment we need explicit user generate
-      ##shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))      
-      
-      llm_model <- getUserOption(session,'llm_model')        
+      ## shiny::validate(shiny::need(btn_count() > 1, "Please generate report"))
+
+      llm_model <- getUserOption(session, "llm_model")
       this_wgcna <- wgcna()
       graph <- this_wgcna$graph
       if (diag_count() < 1) {
         dg <- rpt$diagram
       } else if (!is.null(llm_model) && llm_model != "") {
         dg <- playbase::wgcna.create_diagram(
-          rpt$report, llm_model, graph = graph, rankdir = "LR"
+          rpt$report, llm_model,
+          graph = graph, rankdir = "LR"
         )
       } else {
         dg <- NULL
@@ -392,9 +393,9 @@ wgcna_html_report_server <- function(id,
 
     # Store and trigger the generated image path
     infographic_path <- reactiveVal(NULL)
-    
+
     ## reset infographic upon new data
-    observeEvent( wgcna(), {
+    observeEvent(wgcna(), {
       infographic_path(NULL)
     })
 
@@ -427,29 +428,32 @@ wgcna_html_report_server <- function(id,
     }) ## |> bslib::bind_task_button("generate_infographic")
 
     # Trigger the ExtendedTask when button is clicked
-    observeEvent({
-      c(input$generate_infographic, get_report())
-    }, {
-      rpt <- get_report()      
-      if(is.null(rpt)) {
-        infographic_path(NULL)        
-        return(NULL)
+    observeEvent(
+      {
+        c(input$generate_infographic, get_report())
+      },
+      {
+        rpt <- get_report()
+        if (is.null(rpt)) {
+          infographic_path(NULL)
+          return(NULL)
+        }
+        has.model <- length(input$img_model) > 0 && input$img_model[1] != ""
+        shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))
+        report <- rpt$report
+        diagram <- rpt$diagram
+        if (!input$use_diagram) diagram <- NULL
+        model <- input$img_model
+        dbg("start infographic task...")
+        infographic_task$invoke(report, diagram, model)
       }
-      has.model <- length(input$img_model)>0 && input$img_model[1]!=""
-      shiny::validate(shiny::need(has.model, "No Gemini image model available. Please set your GEMINI_API_KEY"))      
-      report <- rpt$report
-      diagram <- rpt$diagram
-      if(!input$use_diagram) diagram <- NULL
-      model <- input$img_model
-      dbg("start infographic task...")
-      infographic_task$invoke(report, diagram, model)
-    })
-    
+    )
+
     # Update reactive value when task status changes. This show a kind
     # of progress message
     observeEvent(infographic_task$status(), {
       status <- infographic_task$status()
-      if(status != "success") {
+      if (status != "success") {
         msg <- "..."
         if (status == "initial") msg <- "waiting for diagram..."
         if (status == "running") msg <- "generating image ..."

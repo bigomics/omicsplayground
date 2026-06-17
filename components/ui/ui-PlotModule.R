@@ -605,11 +605,14 @@ PlotModuleServer <- function(id,
       ## domain so it prefixes/strips with the parent ns and dispatches
       ## the resulting update*Input calls to the right session.
       if (!is.null(parent_session)) {
-        shiny::observeEvent(parent_session$input$editor_reset, {
-          shiny::withReactiveDomain(parent_session, {
-            shinyjs::reset("editor_inputs")
-          })
-        }, ignoreInit = TRUE)
+        shiny::observeEvent(parent_session$input$editor_reset,
+          {
+            shiny::withReactiveDomain(parent_session, {
+              shinyjs::reset("editor_inputs")
+            })
+          },
+          ignoreInit = TRUE
+        )
       }
 
       ## --------------------------------------------------------------------------------

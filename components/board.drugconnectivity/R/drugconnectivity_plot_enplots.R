@@ -84,7 +84,7 @@ drugconnectivity_plot_enplots_server <- function(id,
         if (is.null(dsea_contrast)) {
           return(NULL)
         }
-        
+
         ## filter with table selection/search
         if (length(ii) > 0) {
           dt <- dt[ii, , drop = FALSE]
@@ -103,20 +103,19 @@ drugconnectivity_plot_enplots_server <- function(id,
           return(NULL)
         }
 
-        sel.drugs <- rownames(dt)        
+        sel.drugs <- rownames(dt)
         dcontrast <- dsea_contrast()
         dmethod <- dsea_method()
         nplots <- min(nrow(dt), 16)
 
-        if(1) {
-
+        if (1) {
           playbase::pgx.plotDrugConnectivity(
             pgx,
             contrast = dcontrast,
             db = dmethod,
             drugs = sel.drugs,
-            nplots = nplots)
-
+            nplots = nplots
+          )
         } else {
           ## rank vector for enrichment plots
           dsea <- pgx$drugs[[dmethod]]
@@ -142,11 +141,11 @@ drugconnectivity_plot_enplots_server <- function(id,
             par(oma = c(0, 1.6, 0, 0))
             par(mfrow = c(nc, nc), mar = c(0.3, 1.0, 1.3, 0), mgp = c(1.9, 0.6, 0))
           }
-          
-          col_up   <- get_editor_color(input, "color_up", "primary")
+
+          col_up <- get_editor_color(input, "color_up", "primary")
           col_down <- get_editor_color(input, "color_down", "secondary")
           col_line <- get_editor_color(input, "color_line", "line")
-          
+
           for (i in 1:nrow(dt)) {
             dx <- rownames(dt)[i]
             gmtdx <- grep(dx, names(rnk), fixed = TRUE, value = TRUE) ## L1000 naming
@@ -169,10 +168,8 @@ drugconnectivity_plot_enplots_server <- function(id,
             }
           }
         } ## broken
-
-
       }
-      
+
       PlotModuleServer(
         "plot",
         plotlib = "base", # does not use plotly
