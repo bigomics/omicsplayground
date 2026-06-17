@@ -1,3 +1,14 @@
+### v4.1.10+master260617 (2026-06-17)
+
+-  fix(correlation): decouple table search from plots, add row-select drill-down [view](https://github.com/bigomics/omicsplayground/commit/1dbe6b20f4a0dc130d191d1275d6b5f1e231bd55)
+-  fix(correlation): sync legend toggling across scatter subplots [view](https://github.com/bigomics/omicsplayground/commit/6fc455d8087f7cefe3cb1b7ed527c758cd38882b)
+-  fix: signature contrast selection after IA filtering [view](https://github.com/bigomics/omicsplayground/commit/3b254776c4516cff3e435492bcf798d0688ab9ec)
+-  changelog [view](https://github.com/bigomics/omicsplayground/commit/64ebc4d27558fd403469f6ccd8a8ad6f628e52a8)
+-  hotfix: missing ) [view](https://github.com/bigomics/omicsplayground/commit/8c12abf71047e5f650b9b5d747d433be219ecb55)
+-  Update version to v4.1.9+devel260617 [view](https://github.com/bigomics/omicsplayground/commit/d1fc9e9f1bd90081ccfe125d2c26fe8b1cfae5dd)
+-  Update version to v4.1.10+master260617 [view](https://github.com/bigomics/omicsplayground/commit/0b0ae47ffe7fea4162b58be52b70aea7e3aca5fb)
+
+
 ### v4.1.9+master260617 (2026-06-17)
 
 -  Add methylomics as new datatype [view](https://github.com/bigomics/omicsplayground/commit/9495bef5041e6fbc64dadddcab237b3be39f33df)
