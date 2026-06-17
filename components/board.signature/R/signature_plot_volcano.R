@@ -88,16 +88,13 @@ signature_plot_volcano_server <- function(id,
     plot_data <- shiny::reactive({
       shiny::req(sigCalculateGSEA())
 
-      ## filter with table selection/search
-      ii <- enrichmentContrastTable$rows_selected()
-      if (is.null(ii)) {
-        ii <- enrichmentContrastTable$rows_all()
-      }
-      shiny::req(ii)
-
       # Input vars
       gsea <- sigCalculateGSEA()
-      ct <- rownames(gsea$output)[ii]
+      ct <- signature_get_enrichment_contrasts(enrichmentContrastTable)
+      shiny::req(ct)
+      ct <- ct[ct %in% rownames(gsea$output)]
+      shiny::req(ct)
+
       mm <- selected_gxmethods()
       meta <- playbase::pgx.getMetaMatrix(pgx, methods = mm)
       fc <- meta$fc[, ct, drop = FALSE]

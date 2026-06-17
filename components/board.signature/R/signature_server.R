@@ -443,11 +443,15 @@ SignatureBoard <- function(id, pgx,
       gset <- markers$symbols
       features <- markers$features
 
-      i <- enrichmentContrastTable$rows_selected()
-      if (is.null(i) || length(i) == 0) {
+      contr <- signature_get_enrichment_contrasts(enrichmentContrastTable, selected_only = TRUE)
+      if (is.null(contr) || length(contr) == 0) {
         return(NULL)
       }
-      contr <- rownames(gsea$output)[i]
+      contr <- contr[contr %in% rownames(gsea$output)]
+      if (length(contr) == 0) {
+        return(NULL)
+      }
+      contr <- contr[1]
 
       # Get metaFC mat
       meta <- playbase::pgx.getMetaMatrix(pgx)
