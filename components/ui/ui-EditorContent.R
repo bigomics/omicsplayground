@@ -79,8 +79,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                   ct$secondary
                 )
               )
-            )
-          ),
+            ),
 
           # Axis Options
           bslib::accordion_panel(
