@@ -92,25 +92,6 @@ COPY dev/Rprofil[e] /root/.Rprofile
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
-# Install private bigomics packages (using BuildKit secret mount)
-#   omicsai        -> providers
-#   omicspgx       -> API
-#   omicspgxmcp    -> tools
-#   omicsplots     -> plotting tools
-#   omicsagentovi  -> the agent
-#------------------------------------------------------------
-RUN --mount=type=secret,id=GITHUB_PAT \
-    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
-    if [ -n "$GITHUB_PAT" ]; then \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgx')" && \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsplots')" && \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicspgxmcp')" && \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsagentovi')" && \
-      rm -f /root/.Rhistory; \
-    fi
-
-#------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
 # (ARG BRANCH declared here so branch changes don't invalidate
 #  any of the package install layers above)
@@ -186,6 +167,18 @@ RUN if [ $update_bigdash = true ]; then \
        R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
     fi \
 fi
+
+#------------------------------------------------------------
+# Install private bigomics packages (using BuildKit secret mount)
+# Installed below CACHEBUST_CODE so the latest commit is pulled on
+# every build (these are updated frequently).
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicsai', 'bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      rm -f /root/.Rhistory; \
+    fi
 
 #------------------------------------------------------------
 # Install PlotNeuralNet for neural network visualization # NEEDS TO BE MOVED TO BASE
