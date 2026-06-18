@@ -109,6 +109,17 @@ RUN rm -fr /omicsplayground  \
 #RUN Rscript dev/requirements.R
 
 #------------------------------------------------------------
+# Install omicsai (private, must be before playbase) using
+# BuildKit secret mount
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      rm -f /root/.Rhistory; \
+    fi
+
+#------------------------------------------------------------
 # Install fresh playbase (from same BRANCH)
 #------------------------------------------------------------
 # check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
@@ -176,7 +187,7 @@ fi
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
     if [ -n "$GITHUB_PAT" ]; then \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicsai', 'bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
       rm -f /root/.Rhistory; \
     fi
 
