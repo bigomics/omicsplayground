@@ -73,6 +73,7 @@ pgx <- playbase::pgx.computePGX(
   cluster.contrasts = params$cluster.contrasts,
   pgx.dir = params$pgx.save.folder,
   libx.dir = params$libx.dir,
+  ai_features = params$ai_features,
   user_input_dir = temp_dir
 )
 

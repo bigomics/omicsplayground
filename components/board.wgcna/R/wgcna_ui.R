@@ -36,17 +36,6 @@ WgcnaInputs <- function(id) {
           )
         )
       )
-    ),
-    shinyjs::hidden(
-      bslib::accordion(
-        id = ns("report_options"),
-        open = TRUE,
-        bslib::accordion_panel(
-          "Report options",
-          icon = icon("cog", lib = "glyphicon"),
-          wgcna_report_inputs(ns("wgcnaReport"))
-        )
-      )
     )
   )
 }
@@ -210,7 +199,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           height = "100%",
           col_widths = c(3, 9),
-          wgcna_html_module_summary_ui(
+          wgcna_module_ai_summary_ui(
             id = ns("moduleSummary"),
             title = "(a) Summary",
             info.text = "",
@@ -304,52 +293,7 @@ WgcnaUI <- function(id) {
           )
         ) ## end layout_columns (left column)
       ) ## end layout_columns (page)
-    ), ## end tabPanel
-
-
-    ## ----------------------------------------------------------------
-    shiny::tabPanel(
-      "AI Report✨",
-      bslib::layout_columns(
-        col_widths = 12,
-        height = "calc(100vh - 180px)",
-        row_heights = c("auto", 1),
-        #          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently."), translate=FALSE),
-        div(
-          class = "alert alert-primary p-2",
-          wgcna_report_bullets_ui(ns("wgcnaReport"))
-        ),
-        bslib::layout_columns(
-          col_widths = c(6, 6),
-          height = "calc(100vh - 180px)",
-          wgcna_html_report_ui(
-            ns("wgcnaReport"),
-            title = "AI Report",
-            caption = "AI-generated summary report",
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
-          ),
-          bslib::layout_columns(
-            col_widths = 12,
-            row_heights = c(1, 1),
-            wgcna_report_diagram_ui(
-              ns("wgcnaReport"),
-              title = "Module Diagram",
-              caption = "AI-generated module diagram",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            wgcna_report_infographic_ui(
-              ns("wgcnaReport"),
-              title = "Graphical Abstract",
-              caption = "AI-generated graphical abstract",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
-      )
-    )
+    ) ## end tabPanel
   )
 
   OmicsBoardUI(
