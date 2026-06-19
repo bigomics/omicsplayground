@@ -245,6 +245,9 @@ upload_module_normalization_server <- function(
         if (any(grepl("<autodetect>", batch.pars))) batch.pars <- "<autodetect>"
         if (any(grepl("<none>", batch.pars))) batch.pars <- NULL
 
+        ## Top-1000 most variable features by default, or all if toggled.
+        ntop_features <- if (isTRUE(input$bec_full_features)) Inf else 1000
+
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
         shiny::updateSelectInput(
@@ -268,7 +271,7 @@ upload_module_normalization_server <- function(
               methods = methods,
               evaluate = FALSE, ## no score computation
               xlist.init = xlist.init,
-              ntop = 1000,
+              ntop = ntop_features,
               npc = 5
             )
           }
@@ -1150,10 +1153,23 @@ upload_module_normalization_server <- function(
                     shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                  ),
-                  shiny::checkboxInput(ns("batchcorrect"),
-                    label = "Remove batch effects",
-                    value = default_batchcorrect
+                ),
+                shiny::checkboxInput(ns("batchcorrect"),
+                  label = "Remove batch effects",
+                  value = default_batchcorrect
+                ),
+                shiny::checkboxInput(ns("bec_full_features"),
+                  label = "Use all features for BC preview (slower)",
+                  value = FALSE
+                ),
+                shiny::conditionalPanel(
+                  "input.batchcorrect == true",
+                  ns = ns,
+                  shiny::selectInput(
+                    ns("bec_method"),
+                    label = "Select method:",
+                    choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
+                    selected = default_bec_method
                   ),
                   shiny::conditionalPanel(
                     "input.batchcorrect == true",
