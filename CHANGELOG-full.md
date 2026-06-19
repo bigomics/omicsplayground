@@ -1,3 +1,12 @@
+### v4.1.11+master260619 (2026-06-19)
+
+-  feat(upload): toggle full vs top-1000 features in QC/BC batch-correction preview [view](https://github.com/bigomics/omicsplayground/commit/51eeae57fcccaef7c401b265b9a5777f3fa368fd)
+-  changelog2 [view](https://github.com/bigomics/omicsplayground/commit/22adeed437f17758ea90cd2b3b32b9a33204f8be)
+-  docker: always install omics* packages and upate them [view](https://github.com/bigomics/omicsplayground/commit/55ae821e56075fea0bbd2cb83a626c46dad731af)
+-  docker: omicsai before playbase [view](https://github.com/bigomics/omicsplayground/commit/7431289acca41d1afd264b9b40ac948e5c0e3c59)
+-  Update version to v4.1.11+master260619 [view](https://github.com/bigomics/omicsplayground/commit/53581d69714f47e991482d8a1e65285961674a66)
+
+
 ### v4.1.10+master260617 (2026-06-17)
 
 -  fix(correlation): decouple table search from plots, add row-select drill-down [view](https://github.com/bigomics/omicsplayground/commit/1dbe6b20f4a0dc130d191d1275d6b5f1e231bd55)
