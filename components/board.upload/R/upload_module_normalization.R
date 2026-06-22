@@ -1153,23 +1153,14 @@ upload_module_normalization_server <- function(
                     shiny::HTML("<a href='https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction' target='_blank' class='info-link' style='margin-left: 15px;'>
                       <i class='fa-solid fa-circle-info info-icon' style='color: blue; font-size: 20px;'></i>
                       </a>")
-                ),
-                shiny::checkboxInput(ns("batchcorrect"),
-                  label = "Remove batch effects",
-                  value = default_batchcorrect
-                ),
-                shiny::checkboxInput(ns("bec_full_features"),
-                  label = "Use all features for BC preview (slower)",
-                  value = FALSE
-                ),
-                shiny::conditionalPanel(
-                  "input.batchcorrect == true",
-                  ns = ns,
-                  shiny::selectInput(
-                    ns("bec_method"),
-                    label = "Select method:",
-                    choices = c("ComBat", "limma", "NPM" = "NPM", "RUV" = "RUV", "SVA" = "SVA"),
-                    selected = default_bec_method
+                  ),
+                  shiny::checkboxInput(ns("batchcorrect"),
+                    label = "Remove batch effects",
+                    value = default_batchcorrect
+                  ),
+                  shiny::checkboxInput(ns("bec_full_features"),
+                    label = "Use all features for BC preview (slower)",
+                    value = FALSE
                   ),
                   shiny::conditionalPanel(
                     "input.batchcorrect == true",
@@ -1192,10 +1183,10 @@ upload_module_normalization_server <- function(
                         options = list(placeholder = "Select...")
                       ),
                       shiny::br()
-                    )
-                  ),
-                  br(),
-                  shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
+                    ),
+                    br(),
+                    shiny::HTML("<div style='margin-top: 10px;'><a href='https://academic.oup.com/bioinformatics/article/41/3/btaf084/8042340' target='_blank' style='color: #0066cc; text-decoration: none;'>Learn about NPM <i class='fa-solid fa-external-link' style='font-size: 12px;'></i></a></div>")
+                  )
                 )
               ))
             )),

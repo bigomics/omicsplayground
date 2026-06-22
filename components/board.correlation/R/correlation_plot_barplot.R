@@ -110,7 +110,8 @@ correlation_plot_barplot_server <- function(id,
       ## Remember the selected feature (as plotted symbol label) for highlighting.
       if (length(selected) > 0) {
         attr(pd, "highlight") <- playbase::probe2symbol(
-          selected[1], pgx$genes, labeltype(), fill_na = TRUE
+          selected[1], pgx$genes, labeltype(),
+          fill_na = TRUE
         )
       }
 
