@@ -52,6 +52,8 @@ opg_server <- function(input, output, session, PGX, env, auth) {
     # depending on datatpye, subset modules enabled and create modules active,
     if (tolower(PGX$datatype) == "multi-omics") {
       MODULES_ACTIVE <- MODULES_MULTIOMICS
+    } else if (tolower(PGX$datatype) == "methylomics") {
+      MODULES_ACTIVE <- MODULES_METHYLOMICS
     } else {
       MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
     }
@@ -63,6 +65,7 @@ opg_server <- function(input, output, session, PGX, env, auth) {
       bigdash.hideMenuElement(session, "SystemsBio")
       bigdash.hideMenuElement(session, "MultiOmics")
       bigdash.hideMenuElement(session, "WGCNA")
+      bigdash.hideMenuElement(session, "Epigenomics")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -121,6 +124,13 @@ opg_server <- function(input, output, session, PGX, env, auth) {
         })
         bigdash.hideMenuElement(session, "WGCNA")
         loaded$wgcna <- 0
+      }
+      if (x == "Epigenomics") {
+        lapply(names(MODULE.epigenomics$module_menu()), function(x) {
+          bigdash.removeTab(session, paste0(x, "-tab"))
+        })
+        bigdash.hideMenuElement(session, "Epigenomics")
+        loaded$epigenomics <- 0
       }
     })
 
@@ -256,6 +266,16 @@ opg_server <- function(input, output, session, PGX, env, auth) {
             })
           }
 
+          if (MODULES_TO_LOAD["Epigenomics"] && exists("MODULE.epigenomics")) {
+            info("[SERVER:UI:1] initializing Epigenomics module")
+            mod <- MODULE.epigenomics
+            insertBigTabUI(mod$module_ui())
+            bigdash.showMenuElement(session, "Epigenomics")
+            lapply(names(MODULE.epigenomics$module_menu()), function(x) {
+              bigdash.showTab(session, paste0(x, "-tab"))
+            })
+          }
+
           MODULES_LOADED <<- MODULES_ACTIVE
 
           if (env$load$is_data_loaded() > 0) {
@@ -327,7 +347,8 @@ opg_server <- function(input, output, session, PGX, env, auth) {
     compare = 0,
     systems = 0,
     multiomics = 0,
-    wgcna = 0
+    wgcna = 0,
+    epigenomics = 0
   )
 
   observeEvent(input$nav, {
@@ -399,6 +420,14 @@ opg_server <- function(input, output, session, PGX, env, auth) {
       loaded$wgcna <- 1
       tab_control()
     }
+    if (input$nav %in% c("ideograms-tab") && loaded$epigenomics == 0) {
+      info("[SERVER:UI:2] reacted: calling Epigenomics module")
+      mod <- MODULE.epigenomics
+      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
+      mod$module_server(PGX)
+      loaded$epigenomics <- 1
+      tab_control()
+    }
   })
 
 
@@ -457,7 +486,28 @@ opg_server <- function(input, output, session, PGX, env, auth) {
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
     }
-    
+
+    ## Show Epigenomics only for methylomics data
+    if (!is.null(PGX$datatype) && tolower(PGX$datatype) != "methylomics") {
+      bigdash.hideTab(session, "ideograms-tab")
+      bigdash.hideMenuElement(session, "Epigenomics")
+    }
+
+    ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)
+    if (!is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics") {
+      is_dmp <- if (!is.null(PGX$dma)) {
+        PGX$dma == "Differentially methylated positions"
+      } else {
+        ## fallback for old pgx files without dma field: CpG probe IDs start with "cg"
+        mean(grepl("^cg[0-9]+", rownames(PGX$X))) > 0.5
+      }
+      if (is_dmp) {
+        bigdash.hideTab(session, "pcsf-tab")
+      } else {
+        bigdash.showTab(session, "pcsf-tab")
+      }
+    }
+
   }
 
   ## -------------------------------------------------------------

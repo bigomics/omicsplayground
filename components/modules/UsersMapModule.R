@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2020-2026 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 UsersMapInputs <- function(id) {

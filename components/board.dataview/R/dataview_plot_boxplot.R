@@ -1,5 +1,5 @@
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 dataview_plot_boxplot_ui <- function(
   id,
@@ -42,9 +42,7 @@ dataview_plot_boxplot_server <- function(id,
                                          r.annot = reactive(""),
                                          r.data_type,
                                          watermark = FALSE) {
-
   moduleServer(id, function(input, output, session) {
-    
     shiny::observe({
       annot <- r.annot()
       display <- if (is.null(annot)) "none" else ""
@@ -59,11 +57,11 @@ dataview_plot_boxplot_server <- function(id,
         shiny::updateRadioButtons(
           session,
           "group_by_feature_class",
-          choices = c("<ungrouped>", colnames(annot)) 
+          choices = c("<ungrouped>", colnames(annot))
         )
       }
     })
-    
+
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
@@ -71,7 +69,7 @@ dataview_plot_boxplot_server <- function(id,
       shiny::req(res)
       list(counts = res$log2counts, sample = colnames(res$log2counts), annot = annot)
     })
-    
+
     output$rank_list <- shiny::renderUI({
       res <- plot_data()
       shiny::req(res)
@@ -208,7 +206,6 @@ dataview_plot_boxplot_server <- function(id,
 
       if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
-
     }
 
     modal_plotly.RENDER <- function() {

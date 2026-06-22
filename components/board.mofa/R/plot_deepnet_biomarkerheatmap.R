@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 plot_deepnet_biomarkerheatmap_ui <- function(
@@ -47,7 +47,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       annot <- NULL
       if (add_annot[1]) {
-        annot <- pgx$samples[colnames(net$X[[1]]),,drop=FALSE]
+        annot <- pgx$samples[colnames(net$X[[1]]), , drop = FALSE]
       }
 
       # set labels
@@ -79,9 +79,9 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       annot <- NULL
-      
+
       if (add_annot[2]) {
-        annot <- pgx$samples[colnames(net$X[[1]]),,drop=FALSE]
+        annot <- pgx$samples[colnames(net$X[[1]]), , drop = FALSE]
       }
 
       playbase::deep.plotBiomarkerHeatmap(

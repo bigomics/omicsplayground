@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -82,18 +82,18 @@ correlation_plot_barplot_server <- function(id,
     plot_data <- shiny::reactive({
       df <- getPartialCorrelation()
       R <- getGeneCorr()
-
-      sel <- cor_table$rownames_current()
-      shiny::req(sel)
-
-      ## cor_table!=R mismatch!!!
-      if (length(sel) > nrow(R)) {
-        return(NULL)
-      }
+      shiny::req(R)
 
       NTOP <- 40 ## how many genes to show in barplot
-      sel <- intersect(sel, rownames(R))
-      sel <- head(sel, NTOP)
+      ## Top-N correlated features, ranked by correlation. Independent of the
+      ## table search/filter.
+      sel <- head(rownames(R), NTOP)
+
+      ## Force-inject the table-selected feature, even when it falls outside the
+      ## top-N, so the selection always has a bar to highlight.
+      selected <- intersect(cor_table$rownames_selected(), rownames(R))
+      if (length(selected) > 0) sel <- unique(c(sel, selected))
+
       rho <- R[sel, "cor"]
       if (length(sel) == 1) names(rho) <- sel
 
@@ -106,6 +106,13 @@ correlation_plot_barplot_server <- function(id,
         "correlation" = rho,
         "partial correlation" = prho
       )
+
+      ## Remember the selected feature (as plotted symbol label) for highlighting.
+      if (length(selected) > 0) {
+        attr(pd, "highlight") <- playbase::probe2symbol(
+          selected[1], pgx$genes, labeltype(), fill_na = TRUE
+        )
+      }
 
       return(pd)
     })
@@ -130,6 +137,7 @@ correlation_plot_barplot_server <- function(id,
     render_barplot <- function() {
       pd <- plot_data()
       shiny::req(pd)
+      highlight <- attr(pd, "highlight") ## table-selected feature, if any
 
       ## Editor: bar ordering
       bars_order <- input$bars_order
@@ -152,16 +160,24 @@ correlation_plot_barplot_server <- function(id,
         showlegend = FALSE
       )
 
-      ## Editor: palette override
+      ## Editor: palette override; highlight the table-selected feature's bars
       n_series <- 2
       COL <- resolve_palette_colors(input, n_series)
-      if (!is.null(COL)) {
+      do_highlight <- !is.null(highlight) && highlight %in% rownames(pd)
+      if (!is.null(COL) || do_highlight) {
         fig <- plotly::plotly_build(fig)
         bar_idx <- 1
         for (i in seq_along(fig$x$data)) {
           if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
-            fig$x$data[[i]]$marker$color <- COL[bar_idx]
-            bar_idx <- min(bar_idx + 1, n_series)
+            if (!is.null(COL)) {
+              fig$x$data[[i]]$marker$color <- COL[bar_idx]
+              bar_idx <- min(bar_idx + 1, n_series)
+            }
+            if (do_highlight) {
+              xv <- as.character(fig$x$data[[i]]$x)
+              fig$x$data[[i]]$marker$line$width <- ifelse(xv == highlight, 2, 0)
+              fig$x$data[[i]]$marker$line$color <- "black"
+            }
           }
         }
       }

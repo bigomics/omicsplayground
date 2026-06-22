@@ -1,11 +1,7 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-
-## ---------------------------------------------------
-## COUNTS UPLOAD (for wizard dialog)
-## ---------------------------------------------------
 
 upload_table_preview_counts_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -531,16 +527,18 @@ upload_table_preview_counts_server <- function(id,
       if (ncol(counts) > 500) counts <- counts[, sample(ncol(counts), 500), drop = FALSE]
       if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
-      if (!is_logscale()) {
+      if (!is_logscale() && upload_datatype() != "methylomics") {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(prior + xx)
       }
       suppressWarnings(dc <- reshape2::melt(xx))
       dc$value[dc$value == 0] <- NA
       tt2 <- paste(n_genes, tspan("genes x", js = FALSE), n_samples, "samples")
+      xlab <- "counts (log2)"
+      if (upload_datatype() == "methylomics") xlab <- "Beta values"
       ggplot2::ggplot(dc, ggplot2::aes(x = value, color = Var2)) +
         ggplot2::geom_density() +
-        ggplot2::xlab(tspan("counts (log2)", js = FALSE)) +
+        ggplot2::xlab(tspan(xlab, js = FALSE)) +
         ggplot2::theme(legend.position = "none") +
         ggplot2::ggtitle(toupper(tspan("Counts", js = FALSE)), subtitle = tt2)
     })
@@ -552,11 +550,13 @@ upload_table_preview_counts_server <- function(id,
       if (ncol(counts) > 40) counts <- counts[, sample(ncol(counts), 40), drop = FALSE]
       if (inherits(counts, "sparseMatrix")) counts <- as.matrix(counts)
       xx <- counts
-      if (!is_logscale()) {
+      if (!is_logscale() && upload_datatype() != "methylomics") {
         prior <- min(xx[xx > 0], na.rm = TRUE)
         xx <- log2(pmax(xx, 0) + prior)
       }
-      boxplot(xx, ylab = tspan("counts (log2)", js = FALSE))
+      ylab <- "counts (log2)"
+      if (upload_datatype() == "methylomics") ylab <- "Beta values"
+      boxplot(xx, ylab = tspan(ylab, js = FALSE))
     })
 
     # error pop-up alert
@@ -580,7 +580,7 @@ upload_table_preview_counts_server <- function(id,
     # pass counts to uploaded when uploaded
     observeEvent(input$counts_csv, {
       ext <- tools::file_ext(input$counts_csv$name)
-      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "multi-omics")
+      dtypes <- c("RNA-seq", "mRNA microarray", "proteomics", "metabolomics", "lipidomics", "methylomics", "multi-omics")
       c1 <- (!(upload_datatype() %in% dtypes && ext %in% c("csv", "RData")))
       c2 <- (!(upload_datatype() == "scRNA-seq" && ext %in% c("csv", "h5", "h5ad", "gz", "zip")))
       c3 <- (!(upload_datatype() == "proteomics" && is.olink() && ext %in% c("csv", "parquet")))
@@ -668,24 +668,24 @@ upload_table_preview_counts_server <- function(id,
           df.samples <- NULL
           if (upload_datatype() == "proteomics" && is.olink()) {
             df0 <- tryCatch(
-            {
-              playbase::read_Olink_NPX(datafile)
-            },
-            error = function(w) {
-              NULL
-            }
+              {
+                playbase::read_Olink_NPX(datafile)
+              },
+              error = function(w) {
+                NULL
+              }
             )
             if (!is.null(df0)) {
               df <- df0[["counts"]]
               df.samples <- df0[["samples"]]
             } else {
               df0 <- tryCatch(
-              {
-                playbase::read_counts(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
+                {
+                  playbase::read_counts(datafile)
+                },
+                error = function(w) {
+                  NULL
+                }
               )
               if (!is.null(df0)) df <- df0
             }
@@ -752,6 +752,12 @@ upload_table_preview_counts_server <- function(id,
             NULL
           }
         )
+      }
+
+      ## Precheck methylation: hope to filter probes & samples
+      if (!is.null(df) && upload_datatype() == "methylomics") {
+        jj <- which(!is.na(rownames(df)) & rownames(df) != "")
+        df <- df[jj, , drop = FALSE]
       }
 
       file.ext <- tools::file_ext(input$counts_csv$name)

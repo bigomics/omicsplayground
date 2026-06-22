@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -71,14 +71,11 @@ signature_plot_enplots_server <- function(id,
       }
 
       ## filter with table selection/search
-      ii <- enrichmentContrastTable$rows_selected()
-      if (is.null(ii)) {
-        ii <- enrichmentContrastTable$rows_all()
-      }
+      ct <- signature_get_enrichment_contrasts(enrichmentContrastTable)
+      shiny::req(ct)
+      ct <- ct[ct %in% rownames(gsea$output)]
+      shiny::req(ct)
 
-      shiny::req(ii)
-
-      ct <- rownames(gsea$output)[ii]
       F <- as.matrix(gsea$F[, ct, drop = FALSE])
       qv <- gsea$output[ct, "q"]
       gset <- gsea$gset

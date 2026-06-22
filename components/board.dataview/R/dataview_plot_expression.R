@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_expression_ui <- function(
@@ -92,10 +92,14 @@ dataview_plot_expression_server <- function(id,
         gx <- pgx$counts[pp, samples]
         gx[which(is.na(gx))] <- 0
         ylab <- tspan("Counts", js = FALSE)
+        if (pgx$datatype == "methylomics") ylab <- tspan("Beta values", js = FALSE)
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
         gx[which(is.na(gx))] <- 0
         ylab <- tspan("Counts (log2)", js = FALSE)
+        if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") {
+          ylab <- tspan("Beta values", js = FALSE)
+        }
       }
 
       pd <- list(

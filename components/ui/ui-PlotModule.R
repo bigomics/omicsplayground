@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -605,11 +605,14 @@ PlotModuleServer <- function(id,
       ## domain so it prefixes/strips with the parent ns and dispatches
       ## the resulting update*Input calls to the right session.
       if (!is.null(parent_session)) {
-        shiny::observeEvent(parent_session$input$editor_reset, {
-          shiny::withReactiveDomain(parent_session, {
-            shinyjs::reset("editor_inputs")
-          })
-        }, ignoreInit = TRUE)
+        shiny::observeEvent(parent_session$input$editor_reset,
+          {
+            shiny::withReactiveDomain(parent_session, {
+              shinyjs::reset("editor_inputs")
+            })
+          },
+          ignoreInit = TRUE
+        )
       }
 
       ## --------------------------------------------------------------------------------
