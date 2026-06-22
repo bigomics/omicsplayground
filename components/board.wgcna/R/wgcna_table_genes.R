@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 wgcna_table_genes_ui <- function(
@@ -88,7 +88,7 @@ wgcna_table_genes_server <- function(id,
 
       js.ellipsis <- paste0("$.fn.dataTable.render.ellipsis( ", ellipsis.len, ", false )")
       js.ellipsis20 <- paste0("$.fn.dataTable.render.ellipsis(20, false)")
-      js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")      
+      js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")
 
       feature.cols <- intersect(c("feature","symbol"),colnames(df))
       

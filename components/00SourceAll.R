@@ -1,8 +1,8 @@
 ## Generated automatically: do not edit by hand
 
-message('source all called from wd = ',getwd())
-if(!file.exists('00SourceAll.R')) {
-  message('WARNING: not in source folder. skipping.')
+message("source all called from wd = ", getwd())
+if (!file.exists("00SourceAll.R")) {
+  message("WARNING: not in source folder. skipping.")
 } else {
   message('Note: sourcing all code...')
   source('app_copilot.ivo/R/copilot_server.R',encoding='UTF-8')
@@ -146,6 +146,13 @@ if(!file.exists('00SourceAll.R')) {
   source('board.enrichment/R/enrichment_table_gset_enrich_all_contrasts.R',encoding='UTF-8')
   source('board.enrichment/R/enrichment_table_n_sig_gsets.R',encoding='UTF-8')
   source('board.enrichment/R/enrichment_ui.R',encoding='UTF-8')
+  source('board.epigenomics/R/__init.R',encoding='UTF-8')
+  source('board.epigenomics/R/dataview_table_samples.R',encoding='UTF-8')
+  source('board.epigenomics/R/epigenomics_plot_beta_dist.R',encoding='UTF-8')
+  source('board.epigenomics/R/epigenomics_plot_boxplot_beta.R',encoding='UTF-8')
+  source('board.epigenomics/R/epigenomics_plot_methylIdeogram.R',encoding='UTF-8')
+  source('board.epigenomics/R/epigenomics_server.R',encoding='UTF-8')
+  source('board.epigenomics/R/epigenomics_ui.R',encoding='UTF-8')
   source('board.expression/R/__init.R',encoding='UTF-8')
   source('board.expression/R/expression_plot_barplot.R',encoding='UTF-8')
   source('board.expression/R/expression_plot_fc_fc.R',encoding='UTF-8')

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## Wrap an editor modal body with a top "Reset to defaults" button and a
@@ -50,7 +50,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   ## expression_boxplot use scatter_color (→ secondary theme); all other
   ## bar plots use bar_color.
   bar_color_input_id <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) "scatter_color" else "bar_color"
-  bar_color_init     <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary    else ct$bar_color
+  bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary else ct$bar_color
 
   # Default editor content
   volcano_content <- shiny::div(
@@ -60,148 +60,195 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(
-                ns_parent("color_up"), "Up",
-                ct$primary
-              ),
-              colourpicker::colourInput(
-                ns_parent("color_down"), "Down",
-                ct$secondary
-              )
-            )
-          ),
-
-          # Axis Options
-          bslib::accordion_panel(
-            "Text sizes",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              numericInput(ns_parent("label_size"), "Labels", value = 4),
-              numericInput(ns_parent("marker_size"), "Points", value = 1),
-              numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
-            )
-          ),
-          bslib::accordion_panel(
-            "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
-            conditionalPanel(
-              condition = "input.margin_checkbox",
-              ns = ns_parent,
-              numericInput(ns_parent("margin_left"), "Left", value = 10),
-              numericInput(ns_parent("margin_right"), "Right", value = 10),
-              numericInput(ns_parent("margin_top"), "Top", value = 10),
-              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
-            )
-          ),
-          bslib::accordion_panel(
-            "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-            conditionalPanel(
-              condition = "input.aspect_ratio_checkbox",
-              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
-              ns = ns_parent
-            )
-          ),
-
-          # Additional Settings
-          bslib::accordion_panel(
-            "Labels",
-            checkboxInput(ns_parent("color_selection"), "Color just selection", value = FALSE),
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = ""),
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              numericInput(ns_parent("box_padding"), "Box padding", value = 0.1, min = 0, step = 0.05),
-              numericInput(ns_parent("min_segment_length"), "Min segment", value = 0, min = 0, step = 0.1)
-            ),
-            shiny::helpText("Box padding: distance from labels to points. Min segment: 0 forces lines to always appear."),
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              checkboxInput(ns_parent("label_box"), "Box around labels", value = TRUE),
-              selectInput(ns_parent("segment_linetype"), "Line type", choices = 1:6, selected = 1)
-            ),
-            shiny::helpText("Line types: 1=solid, 2=dashed, 3=dotted, 4=dotdash, 5=longdash, 6=twodash")
-          ),
-          # ggprism Theme
-          bslib::accordion_panel(
-            "Prism Theme",
-            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
-            conditionalPanel(
-              condition = "input.use_ggprism",
-              ns = ns_parent,
-              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              shiny::hr(),
-              shiny::tags$label("Axis guides"),
-              selectInput(
-                ns_parent("ggprism_axis_guide"),
-                NULL,
-                choices = c(
-                  "Default" = "default",
-                  "Minor ticks" = "prism_minor",
-                  "Offset axis" = "prism_offset",
-                  "Offset + minor ticks" = "prism_offset_minor"
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(
+                  ns_parent("color_up"), "Up",
+                  ct$primary
                 ),
-                selected = "default"
-              ),
-              shiny::hr(),
-              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+                colourpicker::colourInput(
+                  ns_parent("color_down"), "Down",
+                  ct$secondary
+                )
+              )
+            ),
+
+            # Axis Options
+            bslib::accordion_panel(
+              "Text sizes",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                numericInput(ns_parent("label_size"), "Labels", value = 4),
+                numericInput(ns_parent("marker_size"), "Points", value = 1),
+                numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
+              )
+            ),
+            bslib::accordion_panel(
+              "Margins",
+              checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
               conditionalPanel(
-                condition = "input.ggprism_show_legend",
+                condition = "input.margin_checkbox",
+                ns = ns_parent,
+                numericInput(ns_parent("margin_left"), "Left", value = 10),
+                numericInput(ns_parent("margin_right"), "Right", value = 10),
+                numericInput(ns_parent("margin_top"), "Top", value = 10),
+                numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+              )
+            ),
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+              conditionalPanel(
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
+                ns = ns_parent
+              )
+            ),
+            bslib::accordion_panel(
+              "Axis Limits",
+              checkboxInput(ns_parent("axis_limits_checkbox"), "Custom axis limits", value = FALSE),
+              conditionalPanel(
+                condition = "input.axis_limits_checkbox",
                 ns = ns_parent,
                 bslib::layout_column_wrap(
                   width = 1 / 2,
-                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
-                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                  numericInput(ns_parent("xlim_max"), "X max (±)", value = NA, min = 0, step = 0.5),
+                  numericInput(ns_parent("ylim_max"), "Y max", value = NA, min = 0, step = 1)
                 ),
-                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
-                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                shiny::helpText("X axis spans ± the value. Leave a field blank to auto-scale that axis.")
+              )
+            ),
+
+            # Axis Options
+            bslib::accordion_panel(
+              "Text sizes",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                numericInput(ns_parent("label_size"), "Labels", value = 4),
+                numericInput(ns_parent("marker_size"), "Points", value = 1),
+                numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
+              )
+            ),
+            bslib::accordion_panel(
+              "Margins",
+              checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+              conditionalPanel(
+                condition = "input.margin_checkbox",
+                ns = ns_parent,
+                numericInput(ns_parent("margin_left"), "Left", value = 10),
+                numericInput(ns_parent("margin_right"), "Right", value = 10),
+                numericInput(ns_parent("margin_top"), "Top", value = 10),
+                numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
+              )
+            ),
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
+              conditionalPanel(
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
+                ns = ns_parent
+              )
+            ),
+
+            # Additional Settings
+            bslib::accordion_panel(
+              "Labels",
+              checkboxInput(ns_parent("color_selection"), "Color just selection", value = FALSE),
+              checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+              textAreaInput(ns_parent("label_features"), "Label features", value = ""),
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                numericInput(ns_parent("box_padding"), "Box padding", value = 0.1, min = 0, step = 0.05),
+                numericInput(ns_parent("min_segment_length"), "Min segment", value = 0, min = 0, step = 0.1)
+              ),
+              shiny::helpText("Box padding: distance from labels to points. Min segment: 0 forces lines to always appear."),
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                checkboxInput(ns_parent("label_box"), "Box around labels", value = TRUE),
+                selectInput(ns_parent("segment_linetype"), "Line type", choices = 1:6, selected = 1)
+              ),
+              shiny::helpText("Line types: 1=solid, 2=dashed, 3=dotted, 4=dotdash, 5=longdash, 6=twodash")
+            ),
+            # ggprism Theme
+            bslib::accordion_panel(
+              "Prism Theme",
+              checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+              conditionalPanel(
+                condition = "input.use_ggprism",
+                ns = ns_parent,
+                checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+                shiny::hr(),
+                shiny::tags$label("Axis guides"),
+                selectInput(
+                  ns_parent("ggprism_axis_guide"),
+                  NULL,
+                  choices = c(
+                    "Default" = "default",
+                    "Minor ticks" = "prism_minor",
+                    "Offset axis" = "prism_offset",
+                    "Offset + minor ticks" = "prism_offset_minor"
+                  ),
+                  selected = "default"
+                ),
+                shiny::hr(),
+                checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+                conditionalPanel(
+                  condition = "input.ggprism_show_legend",
+                  ns = ns_parent,
+                  bslib::layout_column_wrap(
+                    width = 1 / 2,
+                    numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                    numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                  ),
+                  shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                  checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                )
+              )
+            ),
+
+            # Hyperbolic Cutoff
+            bslib::accordion_panel(
+              "Significance Cutoff",
+              shiny::radioButtons(
+                ns_parent("cutoff_type"),
+                "Cutoff type:",
+                choices = c(
+                  "Rectangular (traditional)" = "rectangular",
+                  "Hyperbolic" = "hyperbolic"
+                ),
+                selected = "rectangular"
+              ),
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("cutoff_type"), "'] == 'hyperbolic'"),
+                shiny::numericInput(
+                  ns_parent("hyperbola_k"),
+                  "Curvature (k):",
+                  value = 1,
+                  min = 0.1,
+                  max = 10,
+                  step = 0.1
+                ),
+                shiny::helpText("Smaller k = tighter curve (more stringent)")
               )
             )
           ),
-
-          # Hyperbolic Cutoff
-          bslib::accordion_panel(
-            "Significance Cutoff",
-            shiny::radioButtons(
-              ns_parent("cutoff_type"),
-              "Cutoff type:",
-              choices = c(
-                "Rectangular (traditional)" = "rectangular",
-                "Hyperbolic" = "hyperbolic"
-              ),
-              selected = "rectangular"
-            ),
-            shiny::conditionalPanel(
-              condition = paste0("input['", ns_parent("cutoff_type"), "'] == 'hyperbolic'"),
-              shiny::numericInput(
-                ns_parent("hyperbola_k"),
-                "Curvature (k):",
-                value = 1,
-                min = 0.1,
-                max = 10,
-                step = 0.1
-              ),
-              shiny::helpText("Smaller k = tighter curve (more stringent)")
-            )
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -214,80 +261,81 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          # Text Sizes
-          bslib::accordion_panel(
-            "Labels",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              numericInput(ns_parent("label_size"), "Label size:", value = 10),
-              numericInput(ns_parent("annot_cex"), "Annotation size:", value = 12)
-            ),
-            shiny::numericInput(
-              ns_parent("column_names_rot"),
-              "Column names rotation",
-              value = 45,
-              min = 0,
-              max = 90
-            ),
-            shiny::numericInput(
-              ns_parent("rownames_width"),
-              "Row names width",
-              value = 40,
-              min = 10,
-              max = 200
-            )
-          ),
-          # Color Scheme
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(
-                ns_parent("color_high"), "High",
-                ct$primary
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            # Text Sizes
+            bslib::accordion_panel(
+              "Labels",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                numericInput(ns_parent("label_size"), "Label size:", value = 10),
+                numericInput(ns_parent("annot_cex"), "Annotation size:", value = 12)
               ),
-              colourpicker::colourInput(
-                ns_parent("color_mid"), "Mid",
-                ct$neutral
+              shiny::numericInput(
+                ns_parent("column_names_rot"),
+                "Column names rotation",
+                value = 45,
+                min = 0,
+                max = 90
               ),
-              colourpicker::colourInput(
-                ns_parent("color_low"), "Low",
-                ct$secondary
+              shiny::numericInput(
+                ns_parent("rownames_width"),
+                "Row names width",
+                value = 40,
+                min = 10,
+                max = 200
+              )
+            ),
+            # Color Scheme
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(
+                  ns_parent("color_high"), "High",
+                  ct$primary
+                ),
+                colourpicker::colourInput(
+                  ns_parent("color_mid"), "Mid",
+                  ct$neutral
+                ),
+                colourpicker::colourInput(
+                  ns_parent("color_low"), "Low",
+                  ct$secondary
+                )
+              )
+            ),
+            # Group Order (for split heatmaps)
+            bslib::accordion_panel(
+              "Group Order",
+              shiny::uiOutput(ns_parent("hm_group_order_ui"))
+            ),
+            # Margins
+            bslib::accordion_panel(
+              "Margins",
+              checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
+              conditionalPanel(
+                condition = "input.margin_checkbox==true",
+                ns = ns_parent,
+                numericInput(ns_parent("margin_left"), "Left", value = 10),
+                numericInput(ns_parent("margin_right"), "Right", value = 10),
+                numericInput(ns_parent("margin_top"), "Top", value = 10),
+                numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
               )
             )
           ),
-          # Group Order (for split heatmaps)
-          bslib::accordion_panel(
-            "Group Order",
-            shiny::uiOutput(ns_parent("hm_group_order_ui"))
-          ),
-          # Margins
-          bslib::accordion_panel(
-            "Margins",
-            checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
-            conditionalPanel(
-              condition = "input.margin_checkbox==true",
-              ns = ns_parent,
-              numericInput(ns_parent("margin_left"), "Left", value = 10),
-              numericInput(ns_parent("margin_right"), "Right", value = 10),
-              numericInput(ns_parent("margin_top"), "Top", value = 10),
-              numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
-            )
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -300,102 +348,103 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          # Color Scheme
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1,
-              colourpicker::colourInput(
-                ns_parent(bar_color_input_id), "Bar Color",
-                bar_color_init
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            # Color Scheme
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1,
+                colourpicker::colourInput(
+                  ns_parent(bar_color_input_id), "Bar Color",
+                  bar_color_init
+                )
               )
-            )
-          ),
-
-          # Bars Order
-          bslib::accordion_panel(
-            "Bars Order",
-            shiny::selectInput(
-              ns_parent("bars_order"),
-              "Sort bars by:",
-              choices = c(
-                "Alphabetical" = "alphabetical",
-                "Value (ascending)" = "ascending",
-                "Value (descending)" = "descending",
-                "Custom (shuffle the order)" = "custom"
-              ),
-              selected = bars_order_default
             ),
-            shiny::conditionalPanel(
-              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
-              shiny::div(
-                shiny::uiOutput(ns_parent("rank_list"))
-              )
-            )
-          ),
-          # Aspect Ratio
-          bslib::accordion_panel(
-            "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-            conditionalPanel(
-              condition = "input.aspect_ratio_checkbox",
-              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
-              ns = ns_parent
-            )
-          ),
-          # ggprism Theme
-          bslib::accordion_panel(
-            "Prism Theme",
-            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
-            conditionalPanel(
-              condition = "input.use_ggprism",
-              ns = ns_parent,
-              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              shiny::hr(),
-              shiny::tags$label("Axis guides"),
-              selectInput(
-                ns_parent("ggprism_axis_guide"),
-                NULL,
+
+            # Bars Order
+            bslib::accordion_panel(
+              "Bars Order",
+              shiny::selectInput(
+                ns_parent("bars_order"),
+                "Sort bars by:",
                 choices = c(
-                  "Default" = "default",
-                  "Minor ticks" = "prism_minor",
-                  "Offset axis" = "prism_offset",
-                  "Offset + minor ticks" = "prism_offset_minor"
+                  "Alphabetical" = "alphabetical",
+                  "Value (ascending)" = "ascending",
+                  "Value (descending)" = "descending",
+                  "Custom (shuffle the order)" = "custom"
                 ),
-                selected = "default"
+                selected = bars_order_default
               ),
-              shiny::hr(),
-              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+                shiny::div(
+                  shiny::uiOutput(ns_parent("rank_list"))
+                )
+              )
+            ),
+            # Aspect Ratio
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
               conditionalPanel(
-                condition = "input.ggprism_show_legend",
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+                ns = ns_parent
+              )
+            ),
+            # ggprism Theme
+            bslib::accordion_panel(
+              "Prism Theme",
+              checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+              conditionalPanel(
+                condition = "input.use_ggprism",
                 ns = ns_parent,
-                bslib::layout_column_wrap(
-                  width = 1 / 2,
-                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
-                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+                shiny::hr(),
+                shiny::tags$label("Axis guides"),
+                selectInput(
+                  ns_parent("ggprism_axis_guide"),
+                  NULL,
+                  choices = c(
+                    "Default" = "default",
+                    "Minor ticks" = "prism_minor",
+                    "Offset axis" = "prism_offset",
+                    "Offset + minor ticks" = "prism_offset_minor"
+                  ),
+                  selected = "default"
                 ),
-                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
-                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                shiny::hr(),
+                checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+                conditionalPanel(
+                  condition = "input.ggprism_show_legend",
+                  ns = ns_parent,
+                  bslib::layout_column_wrap(
+                    width = 1 / 2,
+                    numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                    numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                  ),
+                  shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                  checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -408,34 +457,35 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          # Color Scheme
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1,
-              colourpicker::colourInput(
-                ns_parent("scatter_color"), "Point Color",
-                ct$secondary
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            # Color Scheme
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1,
+                colourpicker::colourInput(
+                  ns_parent("scatter_color"), "Point Color",
+                  ct$secondary
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -448,63 +498,64 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(
-                ns_parent("color_low"), "Low color",
-                ct$secondary
-              ),
-              colourpicker::colourInput(
-                ns_parent("color_high"), "High color",
-                ct$primary
-              )
-            )
-          ),
-          if (subplot_order) {
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
             bslib::accordion_panel(
-              "Subplot Order",
-              shiny::selectInput(
-                ns_parent("subplot_order"),
-                "Sort subplots by:",
-                choices = c(
-                  "Alphabetical" = "alphabetical",
-                  "Custom (shuffle the order)" = "custom"
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(
+                  ns_parent("color_low"), "Low color",
+                  ct$secondary
                 ),
-                selected = "alphabetical"
-              ),
-              shiny::conditionalPanel(
-                condition = paste0("input['", ns_parent("subplot_order"), "'] == 'custom'"),
-                shiny::div(
-                  shiny::uiOutput(ns_parent("rank_list"))
+                colourpicker::colourInput(
+                  ns_parent("color_high"), "High color",
+                  ct$primary
                 )
               )
+            ),
+            if (subplot_order) {
+              bslib::accordion_panel(
+                "Subplot Order",
+                shiny::selectInput(
+                  ns_parent("subplot_order"),
+                  "Sort subplots by:",
+                  choices = c(
+                    "Alphabetical" = "alphabetical",
+                    "Custom (shuffle the order)" = "custom"
+                  ),
+                  selected = "alphabetical"
+                ),
+                shiny::conditionalPanel(
+                  condition = paste0("input['", ns_parent("subplot_order"), "'] == 'custom'"),
+                  shiny::div(
+                    shiny::uiOutput(ns_parent("rank_list"))
+                  )
+                )
+              )
+            },
+            bslib::accordion_panel(
+              "Labels",
+              if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = color_selection_default),
+              checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+              textAreaInput(ns_parent("label_features"), "Label features", value = "")
             )
-          },
-          bslib::accordion_panel(
-            "Labels",
-            if (color_selection) checkboxInput(ns_parent("color_selection"), "Color just selected", value = color_selection_default),
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -517,41 +568,42 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(
-                ns_parent("color_up"), "Up (positive)",
-                ct$primary
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(
+                  ns_parent("color_up"), "Up (positive)",
+                  ct$primary
+                ),
+                colourpicker::colourInput(
+                  ns_parent("color_down"), "Down (negative)",
+                  ct$secondary
+                )
               ),
               colourpicker::colourInput(
-                ns_parent("color_down"), "Down (negative)",
-                ct$secondary
+                ns_parent("color_line"), "Enrichment line",
+                ct$line
               )
-            ),
-            colourpicker::colourInput(
-              ns_parent("color_line"), "Enrichment line",
-              ct$line
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -564,37 +616,38 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            shiny::selectInput(
-              ns_parent("palette"), "Color palette",
-              choices = c(
-                "default", "muted_light", "light", "dark",
-                "super_light", "super_dark", "muted", "expanded",
-                "highlight_blue", "highlight_red", "highlight_orange",
-                "custom", "custom_gradient"
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              shiny::selectInput(
+                ns_parent("palette"), "Color palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom", "custom_gradient"
+                ),
+                selected = ct$palette
               ),
-              selected = ct$palette
-            ),
-            shiny::uiOutput(ns_parent("custom_palette_ui"))
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
+            )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -607,81 +660,82 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            shiny::selectInput(
-              ns_parent("palette"), "Color palette",
-              choices = c(
-                "default", "muted_light", "light", "dark",
-                "super_light", "super_dark", "muted", "expanded",
-                "highlight_blue", "highlight_red", "highlight_orange",
-                "custom", "custom_gradient"
-              ),
-              selected = ct$palette
-            ),
-            shiny::uiOutput(ns_parent("custom_palette_ui"))
-          ),
-          bslib::accordion_panel(
-            "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-            conditionalPanel(
-              condition = "input.aspect_ratio_checkbox",
-              numericInput(ns_parent("aspect_ratio"), NULL, value = 1.0, min = 0.1, max = 10, step = 0.1),
-              ns = ns_parent
-            )
-          ),
-          bslib::accordion_panel(
-            "Prism Theme",
-            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
-            conditionalPanel(
-              condition = "input.use_ggprism",
-              ns = ns_parent,
-              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              shiny::hr(),
-              shiny::tags$label("Axis guides"),
-              selectInput(
-                ns_parent("ggprism_axis_guide"),
-                NULL,
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              shiny::selectInput(
+                ns_parent("palette"), "Color palette",
                 choices = c(
-                  "Default" = "default",
-                  "Minor ticks" = "prism_minor",
-                  "Offset axis" = "prism_offset",
-                  "Offset + minor ticks" = "prism_offset_minor"
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom", "custom_gradient"
                 ),
-                selected = "default"
+                selected = ct$palette
               ),
-              shiny::hr(),
-              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
+            ),
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
               conditionalPanel(
-                condition = "input.ggprism_show_legend",
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 1.0, min = 0.1, max = 10, step = 0.1),
+                ns = ns_parent
+              )
+            ),
+            bslib::accordion_panel(
+              "Prism Theme",
+              checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+              conditionalPanel(
+                condition = "input.use_ggprism",
                 ns = ns_parent,
-                bslib::layout_column_wrap(
-                  width = 1 / 2,
-                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
-                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+                shiny::hr(),
+                shiny::tags$label("Axis guides"),
+                selectInput(
+                  ns_parent("ggprism_axis_guide"),
+                  NULL,
+                  choices = c(
+                    "Default" = "default",
+                    "Minor ticks" = "prism_minor",
+                    "Offset axis" = "prism_offset",
+                    "Offset + minor ticks" = "prism_offset_minor"
+                  ),
+                  selected = "default"
                 ),
-                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
-                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                shiny::hr(),
+                checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+                conditionalPanel(
+                  condition = "input.ggprism_show_legend",
+                  ns = ns_parent,
+                  bslib::layout_column_wrap(
+                    width = 1 / 2,
+                    numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                    numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                  ),
+                  shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                  checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -694,57 +748,58 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            shiny::selectInput(
-              ns_parent("palette"), "Color palette",
-              choices = c(
-                "default", "muted_light", "light", "dark",
-                "super_light", "super_dark", "muted", "expanded",
-                "highlight_blue", "highlight_red", "highlight_orange",
-                "custom", "custom_gradient"
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              shiny::selectInput(
+                ns_parent("palette"), "Color palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom", "custom_gradient"
+                ),
+                selected = ct$palette
               ),
-              selected = ct$palette
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
             ),
-            shiny::uiOutput(ns_parent("custom_palette_ui"))
-          ),
-          bslib::accordion_panel(
-            "Bars Order",
-            shiny::selectInput(
-              ns_parent("bars_order"),
-              "Sort bars by:",
-              choices = c(
-                "Alphabetical" = "alphabetical",
-                "Value (ascending)" = "ascending",
-                "Value (descending)" = "descending",
-                "Custom (shuffle the order)" = "custom"
+            bslib::accordion_panel(
+              "Bars Order",
+              shiny::selectInput(
+                ns_parent("bars_order"),
+                "Sort bars by:",
+                choices = c(
+                  "Alphabetical" = "alphabetical",
+                  "Value (ascending)" = "ascending",
+                  "Value (descending)" = "descending",
+                  "Custom (shuffle the order)" = "custom"
+                ),
+                selected = bars_order_default
               ),
-              selected = bars_order_default
-            ),
-            shiny::conditionalPanel(
-              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
-              shiny::div(
-                shiny::uiOutput(ns_parent("rank_list"))
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+                shiny::div(
+                  shiny::uiOutput(ns_parent("rank_list"))
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -757,37 +812,38 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(
-                ns_parent("color_low"), "Low color",
-                ct$secondary
-              ),
-              colourpicker::colourInput(
-                ns_parent("color_high"), "High color",
-                ct$primary
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(
+                  ns_parent("color_low"), "Low color",
+                  ct$secondary
+                ),
+                colourpicker::colourInput(
+                  ns_parent("color_high"), "High color",
+                  ct$primary
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -800,44 +856,45 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            colourpicker::colourInput(
-              ns_parent("color_both"), "Significant in both",
-              ct$success
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              colourpicker::colourInput(
+                ns_parent("color_both"), "Significant in both",
+                ct$success
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_one"), "Significant in one",
+                ct$accent
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_ns"), "Not significant",
+                ct$ns_color
+              )
             ),
-            colourpicker::colourInput(
-              ns_parent("color_one"), "Significant in one",
-              ct$accent
-            ),
-            colourpicker::colourInput(
-              ns_parent("color_ns"), "Not significant",
-              ct$ns_color
+            bslib::accordion_panel(
+              "Labels",
+              checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
+              checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+              textAreaInput(ns_parent("label_features"), "Label features", value = "")
             )
           ),
-          bslib::accordion_panel(
-            "Labels",
-            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -850,39 +907,40 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            colourpicker::colourInput(
-              ns_parent("color_point"), "Point color",
-              "#222222"
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              colourpicker::colourInput(
+                ns_parent("color_point"), "Point color",
+                "#222222"
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_highlight"), "Highlight color",
+                "#f23451"
+              )
             ),
-            colourpicker::colourInput(
-              ns_parent("color_highlight"), "Highlight color",
-              "#f23451"
+            bslib::accordion_panel(
+              "Labels",
+              checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+              textAreaInput(ns_parent("label_features"), "Label features", value = "")
             )
           ),
-          bslib::accordion_panel(
-            "Labels",
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -895,38 +953,39 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            colourpicker::colourInput(
-              ns_parent("color_fill"), "Fill color",
-              "#b8d4f0"
-            ),
-            colourpicker::colourInput(
-              ns_parent("rank_color_line"), "Line color",
-              ct$secondary
-            ),
-            colourpicker::colourInput(
-              ns_parent("color_highlight"), "Highlight color",
-              "#e3a45a"
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              colourpicker::colourInput(
+                ns_parent("color_fill"), "Fill color",
+                "#b8d4f0"
+              ),
+              colourpicker::colourInput(
+                ns_parent("rank_color_line"), "Line color",
+                ct$secondary
+              ),
+              colourpicker::colourInput(
+                ns_parent("color_highlight"), "Highlight color",
+                "#e3a45a"
+              )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -939,60 +998,77 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
-              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+                colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+              )
+            ),
+            bslib::accordion_panel(
+              "Labels",
+              checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
+              checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
+              textAreaInput(ns_parent("label_features"), "Label features", value = "")
             )
           ),
-          bslib::accordion_panel(
-            "Labels",
-            checkboxInput(ns_parent("color_selection"), "Color just selected", value = FALSE),
-            checkboxInput(ns_parent("custom_labels"), "Custom labels", value = FALSE),
-            textAreaInput(ns_parent("label_features"), "Label features", value = "")
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFuncWithClick(outputFunc[[2]], ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFuncWithClick(outputFunc, ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
 
-  # Correlation matrix: up/down colors only
-  correlation_matrix_content <- shiny::div(
+  # Boxplot (methylation): single box color when ungrouped, palette when grouped.
+  # The two divs are toggled by the server based on grouping state via shinyjs.
+  boxplot_methyl_content <- shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "1fr 5fr"),
         bslib::accordion(
           id = ns("plot_options_accordion"),
           bslib::accordion_panel(
             "Color Scheme",
-            bslib::layout_column_wrap(
-              width = 1 / 2,
-              colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
-              colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+            shiny::div(
+              id = ns_parent("box_color_panel"),
+              colourpicker::colourInput(
+                ns_parent("box_color"), "Box color",
+                ct$bar_color
+              )
+            ),
+            shiny::div(
+              id = ns_parent("group_color_panel"),
+              shiny::selectInput(
+                ns_parent("palette"), "Color palette",
+                choices = c(
+                  "default", "muted_light", "light", "dark",
+                  "super_light", "super_dark", "muted", "expanded",
+                  "highlight_blue", "highlight_red", "highlight_orange",
+                  "custom", "custom_gradient"
+                ),
+                selected = ct$palette
+              ),
+              shiny::uiOutput(ns_parent("custom_palette_ui"))
             )
           )
         ),
@@ -1007,6 +1083,43 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
           }
         )
       )
+    )
+  )
+
+  # Correlation matrix: up/down colors only
+  correlation_matrix_content <- shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              bslib::layout_column_wrap(
+                width = 1 / 2,
+                colourpicker::colourInput(ns_parent("color_up"), "Up", ct$primary),
+                colourpicker::colourInput(ns_parent("color_down"), "Down", ct$secondary)
+              )
+            )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
+          )
+        )
       )
     )
   )
@@ -1023,113 +1136,114 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
       title = title,
       size = "fullscreen",
       footer = NULL,
-      editorModalBody(ns_parent,
-      bslib::layout_column_wrap(
-        style = bslib::css(grid_template_columns = "1fr 5fr"),
-        bslib::accordion(
-          id = ns("plot_options_accordion"),
-          bslib::accordion_panel(
-            "Color Scheme",
-            shiny::conditionalPanel(
-              condition = ungrouped_cond,
-              colourpicker::colourInput(
-                ns_parent(bar_color_input_id), "Bar Color",
-                bar_color_init
+      editorModalBody(
+        ns_parent,
+        bslib::layout_column_wrap(
+          style = bslib::css(grid_template_columns = "1fr 5fr"),
+          bslib::accordion(
+            id = ns("plot_options_accordion"),
+            bslib::accordion_panel(
+              "Color Scheme",
+              shiny::conditionalPanel(
+                condition = ungrouped_cond,
+                colourpicker::colourInput(
+                  ns_parent(bar_color_input_id), "Bar Color",
+                  bar_color_init
+                )
+              ),
+              shiny::conditionalPanel(
+                condition = grouped_cond,
+                shiny::selectInput(
+                  ns_parent("palette"), "Group palette",
+                  choices = c(
+                    "default", "muted_light", "light", "dark",
+                    "super_light", "super_dark", "muted", "expanded",
+                    "highlight_blue", "highlight_red", "highlight_orange",
+                    "custom"
+                  ),
+                  selected = ct$palette
+                ),
+                shiny::uiOutput(ns_parent("custom_palette_ui"))
               )
             ),
-            shiny::conditionalPanel(
-              condition = grouped_cond,
+            bslib::accordion_panel(
+              "Bars Order",
               shiny::selectInput(
-                ns_parent("palette"), "Group palette",
+                ns_parent("bars_order"),
+                "Sort bars by:",
                 choices = c(
-                  "default", "muted_light", "light", "dark",
-                  "super_light", "super_dark", "muted", "expanded",
-                  "highlight_blue", "highlight_red", "highlight_orange",
-                  "custom"
+                  "Alphabetical" = "alphabetical",
+                  "Value (ascending)" = "ascending",
+                  "Value (descending)" = "descending",
+                  "Custom (shuffle the order)" = "custom"
                 ),
-                selected = ct$palette
+                selected = bars_order_default
               ),
-              shiny::uiOutput(ns_parent("custom_palette_ui"))
-            )
-          ),
-          bslib::accordion_panel(
-            "Bars Order",
-            shiny::selectInput(
-              ns_parent("bars_order"),
-              "Sort bars by:",
-              choices = c(
-                "Alphabetical" = "alphabetical",
-                "Value (ascending)" = "ascending",
-                "Value (descending)" = "descending",
-                "Custom (shuffle the order)" = "custom"
-              ),
-              selected = bars_order_default
+              shiny::conditionalPanel(
+                condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
+                shiny::div(
+                  shiny::uiOutput(ns_parent("rank_list"))
+                )
+              )
             ),
-            shiny::conditionalPanel(
-              condition = paste0("input['", ns_parent("bars_order"), "'] == 'custom'"),
-              shiny::div(
-                shiny::uiOutput(ns_parent("rank_list"))
-              )
-            )
-          ),
-          # Aspect Ratio
-          bslib::accordion_panel(
-            "Aspect Ratio",
-            checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-            conditionalPanel(
-              condition = "input.aspect_ratio_checkbox",
-              numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
-              ns = ns_parent
-            )
-          ),
-          # ggprism Theme
-          bslib::accordion_panel(
-            "Prism Theme",
-            checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
-            conditionalPanel(
-              condition = "input.use_ggprism",
-              ns = ns_parent,
-              checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
-              shiny::hr(),
-              shiny::tags$label("Axis guides"),
-              selectInput(
-                ns_parent("ggprism_axis_guide"),
-                NULL,
-                choices = c(
-                  "Default" = "default",
-                  "Minor ticks" = "prism_minor",
-                  "Offset axis" = "prism_offset",
-                  "Offset + minor ticks" = "prism_offset_minor"
-                ),
-                selected = "default"
-              ),
-              shiny::hr(),
-              checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+            # Aspect Ratio
+            bslib::accordion_panel(
+              "Aspect Ratio",
+              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
               conditionalPanel(
-                condition = "input.ggprism_show_legend",
+                condition = "input.aspect_ratio_checkbox",
+                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.8, min = 0.1, max = 10, step = 0.1),
+                ns = ns_parent
+              )
+            ),
+            # ggprism Theme
+            bslib::accordion_panel(
+              "Prism Theme",
+              checkboxInput(ns_parent("use_ggprism"), "Use ggprism theme", value = FALSE),
+              conditionalPanel(
+                condition = "input.use_ggprism",
                 ns = ns_parent,
-                bslib::layout_column_wrap(
-                  width = 1 / 2,
-                  numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
-                  numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                checkboxInput(ns_parent("ggprism_border"), "Add border", value = FALSE),
+                shiny::hr(),
+                shiny::tags$label("Axis guides"),
+                selectInput(
+                  ns_parent("ggprism_axis_guide"),
+                  NULL,
+                  choices = c(
+                    "Default" = "default",
+                    "Minor ticks" = "prism_minor",
+                    "Offset axis" = "prism_offset",
+                    "Offset + minor ticks" = "prism_offset_minor"
+                  ),
+                  selected = "default"
                 ),
-                shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
-                checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                shiny::hr(),
+                checkboxInput(ns_parent("ggprism_show_legend"), "Show legend", value = FALSE),
+                conditionalPanel(
+                  condition = "input.ggprism_show_legend",
+                  ns = ns_parent,
+                  bslib::layout_column_wrap(
+                    width = 1 / 2,
+                    numericInput(ns_parent("ggprism_legend_x"), "X position", value = 0.95, min = 0, max = 1, step = 0.05),
+                    numericInput(ns_parent("ggprism_legend_y"), "Y position", value = 0.95, min = 0, max = 1, step = 0.05)
+                  ),
+                  shiny::helpText("Position: 0 = left/bottom, 1 = right/top"),
+                  checkboxInput(ns_parent("ggprism_legend_border"), "Legend border", value = FALSE)
+                )
               )
             )
+          ),
+          shiny::div(
+            class = "popup-plot",
+            if (cards) {
+              outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
+                bigLoaders::useSpinner()
+            } else {
+              outputFunc(ns("renderfigure_2"), height = "80vh") %>%
+                bigLoaders::useSpinner()
+            }
           )
-        ),
-        shiny::div(
-          class = "popup-plot",
-          if (cards) {
-            outputFunc[[2]](ns("renderfigure_2"), width = width.2, height = height.2) %>%
-              bigLoaders::useSpinner()
-          } else {
-            outputFunc(ns("renderfigure_2"), height = "80vh") %>%
-              bigLoaders::useSpinner()
-          }
         )
-      )
       )
     )
   )
@@ -1153,6 +1267,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "scatter_highlight" = scatter_highlight_content,
     "rank_plot" = rank_plot_content,
     "correlation_matrix" = correlation_matrix_content,
-    "scatter_updown" = scatter_updown_content
+    "scatter_updown" = scatter_updown_content,
+    "boxplot_methyl" = boxplot_methyl_content
   )
 }
