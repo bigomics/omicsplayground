@@ -21,7 +21,8 @@ prism_ui <- function(id) {
   title <- div("BigOmics Prism", style="font-size: 18px;")
   
   ui <- bslib::page_fluid(
-    div(class = "navbar navbar-static-top", div(title, class = "container-fluid")),
+    div(class = "navbar navbar-static-top", div(title, class = "container-fluid"),
+      style="margin-top: 24px;"),
     bslib::layout_columns(      
       col_widths = c(3,9),
       class = "p-3",
