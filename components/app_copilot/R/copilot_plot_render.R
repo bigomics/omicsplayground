@@ -1,12 +1,13 @@
 # copilot_plot_render.R — Recipe renderer for Copilot evidence plots
 #
 # Pure helpers: no reactive dependencies, no Shiny state.
-# This IS the board-side recipe renderer. The package (omicsagentovi) delivers
-# recipes (plot_type + args); this module executes them.
+# This is the board-side plot result adapter. The package (omicsagentovi)
+# normally delivers a prebuilt plot_result; recipe fallback is normalized into
+# the same omicspgxmcp shared plot contract.
 #
 # Called from the plot_callback closure in copilot_bindings.R, which receives
 # (pgx, plot_type, args, artifact) from the package and calls:
-#   1. copilot_build_plot(pgx, plot_type, args)   -> R plot object
+#   1. plot_result$plot or copilot_build_plot(pgx, plot_type, args)
 #   2. copilot_detect_plot_kind(plot_obj)          -> "ggplot"|"plotly"|"iheatmapr"|NULL
 #   3. copilot_prerender_ggplot/copilot_prerender_plotly as appropriate
 #   4. evidence_api$append_artifact(record)
@@ -36,70 +37,71 @@ copilot_parse_features <- function(features) {
 
 #' Build a copilot evidence plot from a PGX object
 #'
-#' Dispatches to the appropriate omicspgxmcp / playbase renderer based
-#' on \code{plot_type}. The PGX must already be class-tagged (plain list
-#' with class "pgx") — coercion via `copilot_as_pgx` has been removed
-#' because the agent context guarantees this at the boundary.
+#' Normalizes older webapp recipe names into the shared omicspgxmcp plot
+#' contract and delegates all plot construction to `pgx_build_omics_plot()`.
 #'
 #' @param pgx A PGX-shaped list (class already set by apply_dataset boundary).
-#' @param plot_type Character scalar — one of "pca", "tsne", "volcano",
-#'   "heatmap", "ma", "barplot_de", "enrichment_dotplot".
-#' @param args Named list with optional \code{contrast}, \code{features},
-#'   and \code{collection} entries.
+#' @param plot_type Character scalar plot type or compatibility alias.
+#' @param args Named list with `params`, `contrast`, or older recipe fields.
 #' @return A plot object (ggplot, plotly, or iheatmapr).
 copilot_build_plot <- function(pgx, plot_type, args) {
-  # NOTE: copilot_as_pgx() call removed — PGX is already class-tagged at
-  # the agent context boundary (copilot_server.R global observer + run
-  # controller .current_pgx). Calling it here would double-coerce.
-  plot_type  <- tolower(trimws(plot_type))
-  contrast   <- if (!is.null(args$contrast))   args$contrast   else NULL
-  features   <- copilot_parse_features(if (!is.null(args$features)) args$features else NULL)
-  collection <- if (!is.null(args$collection)) args$collection else NULL
+  request <- copilot_normalize_plot_request(plot_type, args)
+  omicspgxmcp::pgx_build_omics_plot(
+    pgx = pgx,
+    plot_type = request$plot_type,
+    params = request$params,
+    target = request$target,
+    include_renderer_args = FALSE
+  )$plot
+}
 
-  switch(plot_type,
-    pca = {
-      params    <- omicspgxmcp:::new_plot_params("scatter", params = list(method = "pca"))
-      extracted <- omicspgxmcp:::.extract_scatter_data(pgx, params)
-      do.call(omicsplots::pgx.plot_scatter, extracted$renderer_args)
-    },
-    tsne = {
-      params    <- omicspgxmcp:::new_plot_params("scatter", params = list(method = "tsne"))
-      extracted <- omicspgxmcp:::.extract_scatter_data(pgx, params)
-      do.call(omicsplots::pgx.plot_scatter, extracted$renderer_args)
-    },
-    volcano = {
-      params    <- omicspgxmcp:::new_plot_params("volcano", contrast = contrast, params = list())
-      extracted <- omicspgxmcp:::.extract_volcano_data(pgx, params)
-      do.call(
-        omicsplots::pgx.plot_volcano,
-        c(extracted$renderer_args, list(show_sample_badge = FALSE))
-      )
-    },
-    heatmap = {
-      params    <- omicspgxmcp:::new_plot_params(
-        "heatmap",
-        contrast = contrast,
-        params   = list(genes = features)
-      )
-      extracted <- omicspgxmcp:::.extract_heatmap_data(pgx, params)
-      do.call(omicsplots::pgx.plot_heatmap, extracted$renderer_args)
-    },
-    ma = {
-      playbase::pgx.plotMA(pgx, contrast = contrast, plotlib = "ggplot")
-    },
-    barplot_de = {
-      params    <- omicspgxmcp:::new_plot_params(
-        "barplot",
-        contrast = contrast,
-        params   = list(what = "de")
-      )
-      extracted <- omicspgxmcp:::.extract_barplot_data(pgx, params)
-      do.call(omicsplots::pgx.plot_barplot, extracted$renderer_args)
-    },
-    enrichment_dotplot = {
-      playbase::pgx.plotEnrichmentDotPlot(pgx, contrast = contrast, filter = collection)
-    },
-    stop(sprintf("Unsupported copilot plot type: %s", plot_type), call. = FALSE)
+copilot_normalize_plot_request <- function(plot_type, args) {
+  raw_type <- tolower(trimws(plot_type))
+  params <- args$params %||% list()
+  if (!is.list(params)) params <- as.list(params)
+
+  if (!is.null(args$contrast) && is.null(params$contrast)) {
+    params$contrast <- args$contrast
+  }
+  if (!is.null(args$title) && is.null(params$title)) {
+    params$title <- args$title
+  }
+
+  if (identical(raw_type, "pca")) {
+    plot_type <- "scatter"
+    params$method <- "pca"
+  } else if (identical(raw_type, "tsne")) {
+    plot_type <- "scatter"
+    params$method <- "tsne"
+  } else if (identical(raw_type, "barplot_de")) {
+    plot_type <- "barplot"
+    params$what <- "de"
+  } else if (identical(raw_type, "enrichment_dotplot")) {
+    plot_type <- "dotplot"
+    params$what <- "enrichment"
+    if (!is.null(params$collection) && is.null(params$query)) {
+      params$query <- params$collection
+    }
+    params$collection <- NULL
+    if (!is.null(args$collection) && is.null(params$query)) {
+      params$query <- args$collection
+    }
+  } else if (identical(raw_type, "corrplot")) {
+    plot_type <- "corrmat"
+  } else if (identical(raw_type, "maplot")) {
+    plot_type <- "ma"
+  } else {
+    plot_type <- raw_type
+  }
+
+  if (!is.null(args$features) && is.null(params$genes)) {
+    params$genes <- copilot_parse_features(args$features)
+  }
+
+  list(
+    plot_type = plot_type,
+    params = params,
+    target = args$target %||% "user"
   )
 }
 

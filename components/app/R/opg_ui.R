@@ -87,7 +87,7 @@ opg_ui <- function() {
         tab.names <- names(tree[[i]])
         tab.titles <- tree[[i]]
         menu.id <- names(tree)[i]
-        if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+        if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
           menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
         } else {
           menu[[menu.id]] <- sidebar_menu_with_items(tree[[i]], menu.id)
@@ -309,6 +309,11 @@ opg_ui <- function() {
           "Preservation WGCNA",
           tspan("Preservation analysis using the WGCNA framework")
         ),
+        bigdash::sidebarTabHelp(
+          "ideograms-tab",
+          "Beta Ideograms",
+          tspan("Epigenomics visualizations and analyses for methylomics data.")
+        ),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
@@ -383,7 +388,8 @@ opg_ui <- function() {
       tcga = "TCGA survival (beta)"
     ),
     "MultiOmics" = MODULE.multiomics$module_menu(),
-    "WGCNA" = MODULE.wgcna$module_menu()
+    "WGCNA" = MODULE.wgcna$module_menu(),
+    "Epigenomics" = MODULE.epigenomics$module_menu()
   )
 
   info("[opg_ui] >>> creating UI")

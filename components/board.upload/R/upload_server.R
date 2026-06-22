@@ -1,5 +1,5 @@
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 UploadBoard <- function(id,
                         pgx_dir,
@@ -8,13 +8,11 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     loaded_samples <- shiny::reactiveVal(FALSE)
@@ -22,7 +20,6 @@ UploadBoard <- function(id,
     orig_sample_matrix <- shiny::reactiveVal(NULL)
     orig_counts_matrix <- shiny::reactiveVal(NULL)
     vars_selected <- shiny::reactiveVal(NULL)
-    # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
@@ -89,9 +86,9 @@ UploadBoard <- function(id,
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
       } else {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
       }
     })
 
@@ -115,6 +112,29 @@ UploadBoard <- function(id,
         return(input$proteomics_type == "Olink NPX")
       } else {
         return(FALSE)
+      }
+    })
+
+    output$methylomics_subtype_ui <- shiny::renderUI({
+      if (upload_datatype() == "methylomics") {
+        shiny::selectInput(
+          ns("methylomics_type"),
+          label = "Methylomics platform:",
+          choices = c("450K array", "EPIC array"),
+          selected = "450K array",
+          width = "150px"
+        )
+      } else {
+        NULL
+      }
+    })
+
+    meth_type <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "methylomics" && !is.null(input$methylomics_type)) {
+        return(input$methylomics_type)
+      } else {
+        return(NULL)
       }
     })
 
@@ -160,13 +180,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
-      ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
-      ## object again.  We should skip saving and pass the filename to
-      ## pgxfile to be sure the filename is correct.
-
-      ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
-      ## -------------- save PGX file/object ---------------
-      # Old pgx does not have name slot, overwrite it with file name
       if (is.null(new_pgx$name)) {
         new_pgx$name <- sub("[.]pgx$", "", input$upload_files$name)
       }
@@ -176,9 +189,6 @@ UploadBoard <- function(id,
       pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-      ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ## switch 'pgx' as standard name. Actually saving as RDS
-      ## would have been better...
       dbg("[UploadBoard:observe:uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
@@ -289,18 +299,27 @@ UploadBoard <- function(id,
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
-            shinyalert::shinyalert(
-              title = paste("Log-scale detected"),
-              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-              html = TRUE,
-              confirmButtonText = "Yes",
-              showCancelButton = TRUE,
-              cancelButtonText = "No",
-              inputId = "logCorrectCounts",
-              closeOnEsc = FALSE,
-              immediate = FALSE,
-              callbackR = function(x) checked_for_log(TRUE)
-            )
+            is.meth.beta <- FALSE
+            if (upload_datatype() == "methylomics") {
+              vv <- range(df0, na.rm = TRUE)
+              is.meth.beta <- all(vv >= 0 & vv <= 1)
+            }
+            if (!is.meth.beta) {
+              shinyalert::shinyalert(
+                title = paste("Log-scale detected"),
+                text = '<span style="font-size: 1.5em;">Please confirm:</span>',
+                html = TRUE,
+                confirmButtonText = "Yes",
+                showCancelButton = TRUE,
+                cancelButtonText = "No",
+                inputId = "logCorrectCounts",
+                closeOnEsc = FALSE,
+                immediate = FALSE,
+                callbackR = function(x) checked_for_log(TRUE)
+              )
+            } else {
+              checked_for_log(TRUE)
+            }
           } else {
             checked_for_log(TRUE)
           }
@@ -334,7 +353,12 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        if (olink || nulisa) {
+        is.meth.beta <- FALSE
+        if (upload_datatype() == "methylomics" && "e29" %in% names(res$checks)) {
+          vv <- range(res$df, na.rm = TRUE)
+          is.meth.beta <- all(vv >= 0 & vv <= 1)
+        }
+        if (olink || nulisa || is.meth.beta) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {
@@ -459,7 +483,6 @@ UploadBoard <- function(id,
         }
 
         ## -------------- cross-check with counts ------------------
-        # initialize results
         res_samples <- NULL
         res_counts <- NULL
 
@@ -498,7 +521,6 @@ UploadBoard <- function(id,
         list(uploaded$contrasts.csv, uploaded$samples.csv)
       },
       {
-        ## get uploaded counts
         df0 <- uploaded$contrasts.csv
         if (is.null(df0)) {
           return(list(status = "Missing contrasts.csv", matrix = NULL))
@@ -506,7 +528,6 @@ UploadBoard <- function(id,
 
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-        # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         write_check_output(res$checks, "CONTRASTS", raw_dir())
         checked <- res$df
@@ -517,7 +538,6 @@ UploadBoard <- function(id,
           status <- "ERROR: invalid contrast. please check your input file."
         }
 
-        ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
         ## -------------- max contrast check ------------------
@@ -720,12 +740,22 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
+      if (input$selected_datatype == "methylomics") {
+        shiny::updateSelectizeInput(session, "selected_organism",
+          choices = c("Human" = "Human"), selected = "Human"
+        )
+      } else {
+        all_species <- playbase::allSpecies(col = "species_name")
+        common_name <- playbase::allSpecies(col = "display_name")
+        names(all_species) <- paste0(all_species, " (", common_name, ")")
+        names(all_species)[all_species == "No organism"] <- "<custom organism>"
+        shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+        shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
+      }
     })
 
-    # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
     })
@@ -821,10 +851,8 @@ UploadBoard <- function(id,
 
           summary_checks <- summary_checks[find_content]
 
-
           # get the names of each list within summary checks
           get_all_codes <- sapply(summary_checks, function(x) names(x))
-
 
           # check if any any code is error code
           error_list <- playbase::PGX_CHECKS
@@ -1016,7 +1044,6 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          # upload_datatype(NULL)  ## not good! crash on new upload
           upload_organism(input$selected_organism)
           upload_name(NULL)
           upload_description(NULL)
@@ -1159,38 +1186,42 @@ UploadBoard <- function(id,
           detected_probetype <- paste(detected[[organism]], collapse = "+")
         }
 
-        probetype(detected_probetype) ## set RV
-        info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
+        if (upload_datatype() != "methylomics") {
+          probetype(detected_probetype) ## set RV
+          info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
 
-        if (detected_probetype == "error") {
-          info("[UploadBoard] ExtendedTask result has ERROR")
-          shinyalert::shinyalert(
-            title = "Probes not recognized!",
-            text = paste0(
-              "Error. Your probes do not match any probe type for <b>",
-              organism, "</b>. Please check your probe names and select ",
-              "another organism. ", paste(alt.text, collapse = " ")
-            ),
-            type = "error",
-            size = "s",
-            html = TRUE
-          )
-        }
+          if (!is.null(detected_probetype) && detected_probetype == "error") {
+            info("[UploadBoard] ExtendedTask result has ERROR")
+            shinyalert::shinyalert(
+              title = "Probes not recognized!",
+              text = paste0(
+                "Error. Your probes do not match any probe type for <b>",
+                organism, "</b>. Please check your probe names and select ",
+                "another organism. ", paste(alt.text, collapse = " ")
+              ),
+              type = "error",
+              size = "s",
+              html = TRUE
+            )
+          }
 
-        ## wrong datatype. just give warning. or should we change datatype?
-        if (detected_probetype != "error" &&
-          any(grepl("PROT", detected_probetype)) &&
-          !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
-          shinyalert::shinyalert(
-            title = "Is this proteomics data?",
-            text = paste0(
-              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
-              "<b>", upload_datatype(), "</b> as data type."
-            ),
-            type = "warning",
-            size = "s",
-            html = TRUE
-          )
+          ## wrong datatype. just give warning. or should we change datatype?
+          if (detected_probetype != "error" &&
+            any(grepl("PROT", detected_probetype)) &&
+            !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+            shinyalert::shinyalert(
+              title = "Is this proteomics data?",
+              text = paste0(
+                "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+                "<b>", upload_datatype(), "</b> as data type."
+              ),
+              type = "warning",
+              size = "s",
+              html = TRUE
+            )
+          }
+        } else {
+          probetype("CpG probes")
         }
       }
     )
@@ -1267,6 +1298,7 @@ UploadBoard <- function(id,
       upload_datatype = upload_datatype,
       is.olink = is.olink,
       is.nulisa = is.nulisa,
+      meth_type = meth_type,
       is.count = TRUE,
       height = height,
       recompute_pgx = recompute_pgx
@@ -1282,7 +1314,6 @@ UploadBoard <- function(id,
       height = height
     )
 
-    ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
     sc_compute_settings <- reactiveValues()
 
@@ -1330,6 +1361,7 @@ UploadBoard <- function(id,
       upload_name = upload_name,
       upload_description = upload_description,
       upload_datatype = upload_datatype,
+      meth_type = meth_type,
       is.olink = is.olink,
       is.nulisa = is.nulisa,
       upload_organism = upload_organism,

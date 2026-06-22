@@ -34,17 +34,6 @@ MofaInputs <- function(id) {
           shiny::actionButton(ns("compute"), "Compute!")
         )
       )
-    ),
-    shinyjs::hidden(
-      bslib::accordion(
-        id = ns("report_options"),
-        open = TRUE,
-        bslib::accordion_panel(
-          "Report options",
-          icon = icon("cog", lib = "glyphicon"),
-          mofa_report_inputs(ns("mofa_report"))
-        )
-      )
     )    
   )
 }
@@ -284,38 +273,6 @@ MofaUI <- function(id) {
     )
   ) ## tabPanel
 
-  ## ----------------------------------------------------------------
-  panel5 <- shiny::tabPanel(
-    "AI Summary✨",
-    bslib::layout_columns(
-      col_widths = 12,
-      height = "calc(100vh - 180px)",
-      row_heights = c("auto", 1),
-      ##bs_alert( htmlOutput(ns("cmap_alert")), translate=FALSE),
-      ##htmlOutput(ns("cmap_alert")), 
-      div(class="alert alert-primary p-2", 
-        mofa_report_bullets_ui(ns("mofa_report"))),
-      bslib::layout_columns(
-        col_widths = c(7,5),
-        height = "calc(100vh - 180px)",            
-        mofa_report_summary_ui(
-          ns("mofa_report"),
-          title = "Summary",
-          caption = "AI-generated summary",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto","100%")
-        ),                        
-        mofa_report_infographic_ui(
-          ns("mofa_report"),
-          title = "Infographic",
-          caption = "AI-generated infographic",
-          height = c("100%", TABLE_HEIGHT_MODAL),
-          width = c("auto","100%")
-        )
-      )
-    )
-  )
-
   #  shiny::div(
   bslib::page_fillable(
     fillable_mobile = FALSE, # not working here...
@@ -326,7 +283,6 @@ MofaUI <- function(id) {
       panel2,
       panel3,
       panel4
-      #panel5      
     )
   )
 

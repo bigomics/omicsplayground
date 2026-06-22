@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 AuthenticationUI <- function(id) {
@@ -197,14 +197,16 @@ AuthenticationModuleHeader <- function(id,
       }
 
       is_logged <- nzchar(email)
-      username  <- email
-      level     <- ""
-      limit     <- ""
-      is_admin  <- FALSE
+      username <- email
+      level <- ""
+      limit <- ""
+      is_admin <- FALSE
 
       if (!is_logged) {
-        warning("[AuthenticationModuleHeader] no upstream user header found (",
-                header_name, "); user not logged in")
+        warning(
+          "[AuthenticationModuleHeader] no upstream user header found (",
+          header_name, "); user not logged in"
+        )
       }
 
       ## Optional privilege lookup against CREDENTIALS file. Gated by
@@ -235,8 +237,10 @@ AuthenticationModuleHeader <- function(id,
               if ("ADMIN" %in% colnames(cred)) {
                 is_admin <- isTRUE(as.logical(cred$ADMIN))
               }
-              message("[AuthenticationModuleHeader] credentials matched for ", email,
-                      " (level=", level, ", ADMIN=", is_admin, ")")
+              message(
+                "[AuthenticationModuleHeader] credentials matched for ", email,
+                " (level=", level, ", ADMIN=", is_admin, ")"
+              )
             }
           } else {
             message("[AuthenticationModuleHeader] no credentials row for ", email)
@@ -250,7 +254,8 @@ AuthenticationModuleHeader <- function(id,
           shiny::tagList(
             shiny::tags$h1("Access denied", style = "color:white;font-family:lato;"),
             shiny::p("Your account is not authorized for this application.",
-                     style = "font-size:15px;")
+              style = "font-size:15px;"
+            )
           ),
           bg_color = "#004c7d"
         )

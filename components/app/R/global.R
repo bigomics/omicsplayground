@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -64,12 +64,9 @@ APPDIR <- file.path(OPG, "components/app/R")
 PGX.DIR <- file.path(OPG, "data")
 ## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
 options(omicspgxmcp.data_dir = PGX.DIR)
-## Persistent copilot chat sessions + uploaded docs — siblings of the pgx
-## files under data/. Anchored on OPG so they never depend on runtime cwd.
-CHAT.DIR <- file.path(OPG, "data", "chats")
-DOCS.DIR <- file.path(OPG, "data", "docs_sources")
-dir.create(CHAT.DIR, recursive = TRUE, showWarnings = FALSE)
-dir.create(DOCS.DIR, recursive = TRUE, showWarnings = FALSE)
+## Persistent copilot chat sessions + uploaded docs are anchored on
+## auth$user_dir at session time (resolved inside CopilotBoardServer),
+## matching the convention used by board.loading / compare / connectivity.
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
@@ -188,6 +185,7 @@ opt.default <- list(
   MAX_COMPARISONS = 20,
   MAX_GENES = 20000,
   MAX_GENESETS = 5000,
+  MAX_METH_FEATURES = 450000,
   MAX_SHARED_QUEUE = 3,
   MAX_SESSIONS = 2,
   TIMEOUT = 0,
@@ -288,7 +286,7 @@ BOARDS <- c(
   "welcome", "summary", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics"
+  "multiomics", "ideograms"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
@@ -296,14 +294,16 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Summary", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Epigenomics"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
+if (is.null(opt$MODULES_METHYLOMICS)) opt$MODULES_METHYLOMICS <- setdiff(MODULES, "MultiOmics")
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
+MODULES_METHYLOMICS <- array(MODULES %in% opt$MODULES_METHYLOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
 ## ------------------------------------------------
@@ -344,15 +344,16 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## LLM model setup — playbase filters to providers with available creds
-opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
+## LLM model setup. Model availability is owned by omicsai because report and
+## infographic generation use the omicsai provider path.
+opt$LLM_MODELS <- omicsai::ai.get_models(opt$LLM_MODELS)
+image_models <- opt$LLM_IMAGE_MODELS
+if (is.null(image_models) || !length(image_models)) image_models <- opt$IMAGE_MODELS
+opt$IMAGE_MODELS <- omicsai::omicsai_image_models(image_models)
+opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
 ## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
 dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
 dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
-## TODO(edgy_merge_summaries): copilot reads LLM_IMAGE_MODELS, edgy reads
-## IMAGE_MODELS — alias for now until the legacy enable_ai panel is retired.
-opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
 
 ## Copilot tier selection — verify against the omicsagentovi registry
 if (is.null(opt$COPILOT_MODEL)) {

@@ -3,7 +3,7 @@
 ##
 ## Make PGX file from CSV files
 ##
-## (c) 2023 BigOmics Analytics
+## (c) 2023-2026 BigOmics Analytics
 ##
 
 message("[create PGX process] : starting process")
@@ -39,7 +39,10 @@ pgx <- playbase::pgx.createPGX(
   creator = params$creator,
   batch.correct.method = params$batch.correct.method,
   batch.pars = params$batch.pars,
-  covariates = params$covariates, ## new
+  covariates = params$covariates,
+  dma = params$dma, ## new
+  remove.xy.probes = params$remove.xy.probes, ## new
+  meth_type = params$meth_type, ## new
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
@@ -73,13 +76,12 @@ pgx <- playbase::pgx.computePGX(
   cluster.contrasts = params$cluster.contrasts,
   pgx.dir = params$pgx.save.folder,
   libx.dir = params$libx.dir,
+  ai_features = params$ai_features,
   user_input_dir = temp_dir
 )
 
 # embed opg version
 pgx$versions$omicsplayground_version <- scan(file.path(OPG, "VERSION"), character())[1]
-
-# annotate pgx
 
 message("[ComputePgxServer:@compute] initialize object\n")
 

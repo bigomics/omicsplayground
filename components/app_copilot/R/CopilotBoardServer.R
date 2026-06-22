@@ -12,8 +12,11 @@
 #' @param id         Module namespace id.
 #' @param pgx        Global PGX reactiveValues shared across all boards.
 #' @param pgx_dir    Path to directory containing .pgx dataset files.
-#' @param chat_dir   Path for persisting chat sessions (SessionStore root).
-#' @param docs_dir   Path for uploaded documents.
+#' @param auth       Auth module reactiveValues (must expose `$user_dir` and
+#'   `$email`). Copilot's `chat_dir` and `docs_dir` are always scoped to the
+#'   per-user folder `<pgx_dir>/<email>` when an email is known, independent
+#'   of ENABLE_USERDIR (see the path-resolution block below); with no email
+#'   it falls back to `auth$user_dir`.
 #' @param maxturns   Maximum user turns per session.
 #' @param tiers      Character vector of tier identifiers (first = default).
 #'   Defaults to `COPILOT_TIERS` from `copilot_options.R`.
@@ -25,16 +28,45 @@ CopilotBoardServer <- function(
   id,
   pgx            = NULL,
   pgx_dir        = NULL,
-  chat_dir,
-  docs_dir,
+  auth,
   maxturns       = Inf,
   tiers          = COPILOT_TIERS,
   is_data_loaded = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
+    # ---- Resolve user-scoped paths ----
+    # The caller (server.R) gates this module's construction on auth$logged,
+    # so auth$user_dir / auth$email hold their finalized values by the time
+    # we run. We snapshot them once at init — within a session they don't
+    # change, and the SessionStore + downstream controllers expect plain
+    # character paths, not reactives.
+    #
+    # Copilot chats and uploaded docs are personal, so they always live in
+    # the per-user folder <pgx_dir>/<email> when an email is known —
+    # independent of ENABLE_USERDIR. That flag only governs *dataset*
+    # storage; when it is off it collapses auth$user_dir to the shared
+    # PGX.DIR, which would otherwise scatter every user's chats/docs into one
+    # place. Deriving the path from <pgx_dir>/<email> keeps Copilot pinned to
+    # the user's own folder either way (when ENABLE_USERDIR is on this is the
+    # same path auth$user_dir already points at). With no email (anonymous)
+    # we fall back to auth$user_dir.
+    user_dir <- shiny::isolate(auth$user_dir)
+    email    <- shiny::isolate(auth$email)
+    if (is.null(user_dir) || !nzchar(user_dir)) {
+      stop("CopilotBoardServer: auth$user_dir is not set", call. = FALSE)
+    }
+    if (!is.null(email) && nzchar(email) &&
+        !is.null(pgx_dir) && nzchar(pgx_dir)) {
+      user_dir <- file.path(pgx_dir, email)
+    }
+    chat_dir <- file.path(user_dir, "chats")
+    docs_dir <- file.path(user_dir, "docs_sources")
+    dir.create(chat_dir, recursive = TRUE, showWarnings = FALSE)
+    dir.create(docs_dir, recursive = TRUE, showWarnings = FALSE)
+
     # --- Board
-    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL) 
+    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL)
     
     # ---- Dataset context card output ----
     output$dataset_info <- shiny::renderUI({
@@ -44,8 +76,8 @@ CopilotBoardServer <- function(
       ))
       ##pgx <- local_pgx()
 
-      n_samples <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
-      n_genes   <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
+      n_samples  <- if (!is.null(pgx$X)) ncol(pgx$X) else "?"
+      n_features <- if (!is.null(pgx$X)) nrow(pgx$X) else "?"
       organism  <- if (!is.null(pgx$organism)) pgx$organism else "unknown"
       dataname  <- if (!is.null(pgx$name)) pgx$name else "unknown"
       description  <- if (!is.null(pgx$description)) pgx$description else "none"            
@@ -66,7 +98,7 @@ CopilotBoardServer <- function(
         shiny::tags$div(shiny::strong("Description: "),  description),
         shiny::tags$div(shiny::strong("Organism: "),  organism),                
         shiny::tags$div(shiny::strong("Samples: "),   n_samples),
-        shiny::tags$div(shiny::strong("Genes: "),     n_genes),
+        shiny::tags$div(shiny::strong(tspan("Genes: ")), n_features),
         shiny::tags$div(shiny::strong("Contrasts: "), contrasts)
       )
     })
@@ -88,6 +120,18 @@ CopilotBoardServer <- function(
     # ---- Evidence module (constructed first so $append_artifact is available
     # when run/restore bindings factories run) ----
     evidence <- CopilotEvidenceServer("evidence", local_pgx = shiny::reactive(pgx))
+    reports  <- CopilotReportsServer("reports", pgx = pgx)
+
+    .set_agent_tools_enabled <- function(agent, enabled) {
+      if (is.null(agent)) return(agent)
+      tryCatch({
+        agent@runtime$tools_enabled <- isTRUE(enabled)
+        agent
+      }, error = function(e) {
+        log_info("copilot.tools.toggle_failed", msg = conditionMessage(e))
+        agent
+      })
+    }
 
     # ---- Save controller ----
     save_ctrl <- copilot_save_controller(
@@ -118,6 +162,9 @@ CopilotBoardServer <- function(
       chat_event       = chat_event_rv,
       session          = session
     )
+
+    # ---- Docs panel (constructed before run_ctrl so doc_context can be wired) ----
+    docs <- CopilotDocsServer("docs", docs_dir = docs_dir)
 
     # ---- Chat module ----
     tier_choices_rx <- shiny::reactive({
@@ -159,17 +206,35 @@ CopilotBoardServer <- function(
       maxturns             = maxturns,
       session              = session,
       style                = style,
-      custom               = custom
+      custom               = custom,
+      report_context       = reports,
+      doc_context          = docs,
+      tools_enabled        = reports$tools_enabled
     )
 
-    # ---- Panel modules (datasets / history / docs) ----
+    # ---- Panel modules (datasets / history) ----
+    # docs is constructed above so doc_context can be passed into run_ctrl.
     datasets <- CopilotDatasetsServer("datasets", pgx_dir = pgx_dir)
     history  <- CopilotHistoryServer(
       "history",
       session_dir               = chat_dir,
       history_invalidation_tick = shiny::reactive(history_invalidation_tick())
     )
-    docs     <- CopilotDocsServer("docs", docs_dir = docs_dir)
+
+    shiny::observeEvent(pgx$name, {
+      reports$refresh()
+    }, ignoreNULL = FALSE)
+
+    shiny::observeEvent(pgx$ai, {
+      reports$refresh()
+    }, ignoreNULL = FALSE)
+
+    shiny::observeEvent(reports$tools_enabled(), {
+      current <- shiny::isolate(agent_rv())
+      if (!is.null(current)) {
+        agent_rv(.set_agent_tools_enabled(current, reports$tools_enabled()))
+      }
+    }, ignoreInit = FALSE)
 
     # ---- Run dispatch observers (new chat / tier change) ----
     shiny::observeEvent(input$new_chat, {
@@ -290,6 +355,11 @@ CopilotBoardServer <- function(
         saved_custom <- meta$custom[[1L]]
         custom(if (is.na(saved_custom)) "" else saved_custom)
       }
+      # Restoring a saved session starts a fresh chat from the user's POV —
+      # re-arm both context tickboxes so previously-staged blocks can be
+      # sent again under the restored agent.
+      if (is.function(reports$reset_consumed)) reports$reset_consumed()
+      if (is.function(docs$reset_consumed)) docs$reset_consumed()
       restore_ctrl$start(sid)
       history$on_restore(NULL)   # consume edge
     }, ignoreNULL = TRUE)

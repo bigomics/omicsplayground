@@ -48,9 +48,8 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Drug enrichment" = list(disable = c("aiui")),
-      "Connectivity map (beta)" = list(disable = c("aiui")),
-      "AI Summary✨" = list(disable = c("filter_table","contrast"))
+      "Drug enrichment" = list(disable = c()),
+      "Connectivity map (beta)" = list(disable = c())
     )
 
     shiny::observeEvent(input$tabs, {
@@ -218,15 +217,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       "cmap_table",
       getActiveDSEA
     )
-
-    drugconnectivity_report_server(
-      "cmap_report",
-      pgx = pgx,
-      drugs = get_pgx_drugs,
-      rdb = reactive(input$method)
-    )
-    
-
 
   })
 }

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 ## Start from base image, update git code and add data
@@ -21,6 +21,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 # Install any extra Ubuntu libs (should be moved to playbase)
 #------------------------------------------------------------
 # RUN apt update && apt install -y fonts-lato
+RUN apt update && apt install -y libpoppler-cpp-dev
 
 #------------------------------------------------------------
 # Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
@@ -91,16 +92,6 @@ COPY dev/Rprofil[e] /root/.Rprofile
 # RUN R -e "install.packages('plotly')"
 
 #------------------------------------------------------------
-# Install omicsai (private repo, using BuildKit secret mount)
-#------------------------------------------------------------
-RUN --mount=type=secret,id=GITHUB_PAT \
-    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
-    if [ -n "$GITHUB_PAT" ]; then \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
-      rm -f /root/.Rhistory; \
-    fi
-
-#------------------------------------------------------------
 # Download fresh omicsplayground code from GitHub
 # (ARG BRANCH declared here so branch changes don't invalidate
 #  any of the package install layers above)
@@ -116,6 +107,17 @@ RUN rm -fr /omicsplayground  \
 # Run auto-install script
 #WORKDIR /omicsplayground
 #RUN Rscript dev/requirements.R
+
+#------------------------------------------------------------
+# Install omicsai (private, must be before playbase) using
+# BuildKit secret mount
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      rm -f /root/.Rhistory; \
+    fi
 
 #------------------------------------------------------------
 # Install fresh playbase (from same BRANCH)
@@ -176,6 +178,18 @@ RUN if [ $update_bigdash = true ]; then \
        R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
     fi \
 fi
+
+#------------------------------------------------------------
+# Install private bigomics packages (using BuildKit secret mount)
+# Installed below CACHEBUST_CODE so the latest commit is pulled on
+# every build (these are updated frequently).
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      rm -f /root/.Rhistory; \
+    fi
 
 #------------------------------------------------------------
 # Install PlotNeuralNet for neural network visualization # NEEDS TO BE MOVED TO BASE

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 enrichment_plot_volcano_ui <- function(
@@ -129,6 +129,7 @@ enrichment_plot_volcano_server <- function(id,
     plotly.RENDER <- function(marker.size = 3, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
+      al <- extract_axis_limits(input)
       playbase::plotlyVolcano( ## in use
         x = pd[["x"]],
         y = pd[["y"]],
@@ -147,7 +148,9 @@ enrichment_plot_volcano_server <- function(id,
         displayModeBar = FALSE,
         showlegend = FALSE,
         color_up_down = TRUE,
-        colors = extract_volcano_colors(input)
+        colors = extract_volcano_colors(input),
+        xlim = al$xlim,
+        ylim = if (!is.null(al$ymax)) c(0, al$ymax) else NULL
       ) %>%
         plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
     }
@@ -188,6 +191,9 @@ enrichment_plot_volcano_server <- function(id,
       ## Editor: ggprism settings
       gp <- extract_ggprism_params(input)
 
+      ## Editor: axis limits
+      al <- extract_axis_limits(input)
+
       p <- playbase::ggVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -205,6 +211,8 @@ enrichment_plot_volcano_server <- function(id,
         axis.text.size = ls$axis_text_size,
         showlegend = FALSE,
         colors = plot_colors,
+        xlim = al$xlim,
+        ylim = al$ymax,
         box.padding = ls$box_padding,
         min.segment.length = ls$min_segment_length,
         label.box = ls$label_box,
@@ -229,6 +237,7 @@ enrichment_plot_volcano_server <- function(id,
     base.RENDER.modal <- function() {
       pd <- plot_data()
       shiny::req(pd)
+      al <- extract_axis_limits(input)
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -245,7 +254,9 @@ enrichment_plot_volcano_server <- function(id,
         label.cex = 6,
         axis.text.size = 24,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        xlim = al$xlim,
+        ylim = al$ymax
       )
     }
 

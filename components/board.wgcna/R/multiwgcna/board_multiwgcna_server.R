@@ -40,24 +40,19 @@ MultiWGCNA_Board <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Dendrograms" = list(disable = c(
-        "phenotype", "module", "condition", "lasagna_options",
-        "report_options"
+        "phenotype", "module", "condition", "lasagna_options"
       )),
       "Module-Trait" = list(disable = c(
         "phenotype", "module", "condition", "wgcna_options",
-        "lasagna_options", "report_options"
+        "lasagna_options"
       )),
       "Module correlation" = list(disable = c(
         "phenotype", "module", "wgcna_options",
-        "lasagna_options", "report_options"
+        "lasagna_options"
       )),
-      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "report_options")),
+      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options")),
       "Feature Table" = list(disable = c(
         "layers", "condition", "wgcna_options",
-        "lasagna_options", "report_options"
-      )),
-      "AI Report✨" = list(disable = c(
-        "phenotype", "module", "condition", "layers",
         "lasagna_options", "wgcna_options"
       ))
     )
@@ -88,8 +83,6 @@ MultiWGCNA_Board <- function(id, pgx) {
       samples <- pgx$samples
       contrasts <- pgx$contrasts
       
-      llm_model <- getUserOption(session, "llm_model")
-      
       wgcna <- playbase::wgcna.compute_multiomics(
         dataX = dataX,
         samples = samples,
@@ -109,9 +102,6 @@ MultiWGCNA_Board <- function(id, pgx) {
         gset.methods = c("gsetcor", "xcor", "fisher"),
         annot = pgx$genes,
         GMT = pgx$GMT,
-        report = TRUE,
-        #ai_model = NULL,
-        ai_model = llm_model,
         experiment = pgx$description,
         progress = progress
       )
@@ -242,14 +232,6 @@ MultiWGCNA_Board <- function(id, pgx) {
       multi = TRUE,
       r_annot = reactive(pgx$genes),
       r_module = shiny::reactive(input$module),
-      watermark = WATERMARK
-    )
-
-    wgcna_html_report_server(
-      id = "multiwgcnaReport",
-      wgcna = r_multiwgcna,
-      multi = TRUE,
-      r_annot = reactive(pgx$genes),
       watermark = WATERMARK
     )
 

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## ---------------------------------------------------------------
@@ -169,7 +169,9 @@ apply_editor_theme <- function(p, input,
 #' @return The (possibly modified) plotly figure.
 apply_plotly_editor_theme <- function(fig, input,
                                       aspect_ratio_default = 0.8) {
-  if (!isTRUE(input$aspect_ratio_checkbox)) return(fig)
+  if (!isTRUE(input$aspect_ratio_checkbox)) {
+    return(fig)
+  }
   ar <- if (is.null(input$aspect_ratio) || is.na(input$aspect_ratio)) {
     aspect_ratio_default
   } else {
@@ -229,7 +231,9 @@ extract_ggprism_params <- function(input) {
 #' @return The (possibly modified) ggplot2 plot object.
 apply_ggprism_theme <- function(p, gp, base_size = 14, base_family = "lato",
                                 x_angle = NULL) {
-  if (!isTRUE(gp$use_ggprism)) return(p)
+  if (!isTRUE(gp$use_ggprism)) {
+    return(p)
+  }
 
   p <- p +
     ggprism::theme_prism(
@@ -317,9 +321,11 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
   encoded <- base64enc::base64encode(tmpfile)
   src <- paste0("data:image/png;base64,", encoded)
 
-  plotly::plot_ly(type = "scatter", mode = "markers",
-                  x = 0, y = 0, marker = list(opacity = 0),
-                  hoverinfo = "none", showlegend = FALSE) %>%
+  plotly::plot_ly(
+    type = "scatter", mode = "markers",
+    x = 0, y = 0, marker = list(opacity = 0),
+    hoverinfo = "none", showlegend = FALSE
+  ) %>%
     plotly::layout(
       images = list(list(
         source = src,
@@ -329,10 +335,14 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
         xanchor = "left", yanchor = "top",
         layer = "below"
       )),
-      xaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
-                    range = c(0, 1), fixedrange = TRUE),
-      yaxis = list(visible = FALSE, showgrid = FALSE, zeroline = FALSE,
-                    range = c(0, 1), fixedrange = TRUE),
+      xaxis = list(
+        visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+        range = c(0, 1), fixedrange = TRUE
+      ),
+      yaxis = list(
+        visible = FALSE, showgrid = FALSE, zeroline = FALSE,
+        range = c(0, 1), fixedrange = TRUE
+      ),
       margin = list(l = 0, r = 0, t = 0, b = 0),
       plot_bgcolor = "white",
       paper_bgcolor = "white"
@@ -355,7 +365,9 @@ ggplot_as_plotly_image <- function(p, width = 8, height = 5, dpi = 400) {
 #' @param gp  Named list from \code{extract_ggprism_params()}.
 #' @return The (possibly modified) plotly figure.
 apply_prism_plotly <- function(fig, gp) {
-  if (!isTRUE(gp$use_ggprism)) return(fig)
+  if (!isTRUE(gp$use_ggprism)) {
+    return(fig)
+  }
 
   ## --- Base theme: clean white background, outside ticks ---
   axis_base <- list(
@@ -457,6 +469,30 @@ extract_label_settings <- function(input, defaults = list()) {
     label_box          = safe("label_box", dfl$label_box),
     segment_linetype   = safe("segment_linetype", dfl$segment_linetype, cast = as.integer),
     hyperbola_k        = safe("hyperbola_k", dfl$hyperbola_k)
+  )
+}
+
+
+#' Extract custom axis limits from Shiny input (volcano editor).
+#'
+#' Reads the \code{axis_limits_checkbox} toggle and the \code{xlim_max} /
+#' \code{ylim_max} numeric inputs. The x-axis is symmetric (the view spans
+#' \code{c(-xlim_max, xlim_max)}); the y-axis is capped at \code{ylim_max}
+#' with the lower bound left at 0. Either field may be left blank to keep
+#' that axis auto-scaled.
+#'
+#' @param input Shiny input object.
+#' @return Named list with \code{xlim} (length-2 numeric vector or NULL) and
+#'   \code{ymax} (single numeric or NULL).
+extract_axis_limits <- function(input) {
+  use <- isTRUE(input$axis_limits_checkbox)
+  xmax <- input$xlim_max
+  ymax <- input$ylim_max
+  ok_x <- use && !is.null(xmax) && !is.na(xmax) && xmax > 0
+  ok_y <- use && !is.null(ymax) && !is.na(ymax) && ymax > 0
+  list(
+    xlim = if (ok_x) c(-xmax, xmax) else NULL,
+    ymax = if (ok_y) ymax else NULL
   )
 }
 

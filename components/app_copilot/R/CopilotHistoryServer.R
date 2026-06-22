@@ -129,7 +129,6 @@ CopilotHistoryServer <- function(id, session_dir,
       if (nrow(df) == 0L) {
         return(data.frame(Dataset = character(0),
                           Briefing = character(0),
-                          Turns = integer(0),
                           Updated = character(0),
                           stringsAsFactors = FALSE))
       }
@@ -146,7 +145,6 @@ CopilotHistoryServer <- function(id, session_dir,
       data.frame(
         Dataset  = dataset,
         Briefing = briefing,
-        Turns    = df$n_turns,
         Updated  = updated,
         stringsAsFactors = FALSE
       )
@@ -157,7 +155,6 @@ CopilotHistoryServer <- function(id, session_dir,
       if (nrow(df) == 0L) {
         empty <- data.frame(Dataset  = "No conversations yet",
                             Briefing = "",
-                            Turns    = "",
                             Updated  = "")
         return(DT::datatable(empty, selection = "none", rownames = FALSE,
                              options = list(dom = "t", paging = FALSE)))

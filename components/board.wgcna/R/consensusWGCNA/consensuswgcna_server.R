@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ConsensusWGCNA_Board <- function(id, pgx) {
@@ -184,9 +184,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
           addCombined = FALSE,
           compute.stats = TRUE,
           compute.enrichment = TRUE,
-          summary = TRUE,
-          ai_model = NULL,
-          experiment = pgx$description,
           gsea.mingenes = 5,
           gsea.ntop = 1000,
           progress = progress,

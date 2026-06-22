@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 MultiWGCNA_Inputs <- function(id) {
@@ -60,17 +60,6 @@ MultiWGCNA_Inputs <- function(id) {
           "Lasagna options",
           icon = icon("cog", lib = "glyphicon"),
           multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna"))
-        )
-      )
-    ),
-    shinyjs::hidden(
-      bslib::accordion(
-        id = ns("report_options"),
-        open = TRUE,
-        bslib::accordion_panel(
-          "Report options",
-          icon = icon("cog", lib = "glyphicon"),
-          wgcna_report_inputs(ns("multiwgcnaReport"))
         )
       )
     )
@@ -246,46 +235,6 @@ MultiWGCNA_UI <- function(id) {
               info.text = "Table of gene sets constructed from features mapped in the selected module. The data type and the WGCNA module can be selected under 'Module' in the drop-down menu on the right. Gene set enrichment score, q value, and feature overlap are reported.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            )
-          )
-        )
-      ),
-
-      ## ----------------------------------------------------------------
-      shiny::tabPanel(
-        "AI Report✨",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
-          # bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
-          div(class = "alert alert-primary p-2", wgcna_report_bullets_ui(ns("multiwgcnaReport"))),
-          bslib::layout_columns(
-            col_widths = c(6, 6),
-            height = "calc(100vh - 180px)",
-            wgcna_html_report_ui(
-              ns("multiwgcnaReport"),
-              title = "AI Report",
-              caption = "AI summary report",
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            ),
-            bslib::layout_columns(
-              col_widths = 12,
-              wgcna_report_diagram_ui(
-                ns("multiwgcnaReport"),
-                title = "Module Diagram",
-                caption = "AI generated diagram",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              ),
-              wgcna_report_infographic_ui(
-                ns("multiwgcnaReport"),
-                title = "Graphical Abstract",
-                caption = "AI-generated infographic",
-                height = c("100%", TABLE_HEIGHT_MODAL),
-                width = c("auto", "100%")
-              )
             )
           )
         )

@@ -21,7 +21,7 @@ CopilotBoardUI <- function(id) {
     # ---- Left column: datasets / history / docs ----
     bslib::layout_columns(
       col_widths = 12,
-      row_heights = c(2,1),
+      row_heights = c(5,4),
       bslib::card(
         height = "calc(100% - 40px)",
         shiny::actionButton(
@@ -45,8 +45,15 @@ CopilotBoardUI <- function(id) {
         )
       ),
       bslib::card(
+        height = "100%",
         bslib::navset_underline(
-          bslib::nav_panel("Sources", CopilotDocsUI(ns("docs")))
+          bslib::nav_panel(
+            "Context",
+            bslib::navset_underline(
+              bslib::nav_panel("Documents", CopilotDocsUI(ns("docs"))),
+              bslib::nav_panel("Reports", CopilotReportsUI(ns("reports")))
+            )
+          )
         )
       )
     ),

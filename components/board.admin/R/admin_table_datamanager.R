@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -355,7 +355,9 @@ admin_table_datamanager_server <- function(id, auth) {
 
     selected_files <- reactive({
       rows <- selected_rows()
-      if (is.null(rows)) return(NULL)
+      if (is.null(rows)) {
+        return(NULL)
+      }
       rows$full_path
     })
 
