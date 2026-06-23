@@ -23,11 +23,7 @@ StudioUI <- function(id) {
         shiny::actionButton(ns("show_poster"), "Poster", width = "100%",
           class = "xbtn", icon = icon("note-sticky")),
         shiny::actionButton(ns("show_slidedeck"), "Slide deck", width = "100%",
-          class = "xbtn", icon = icon("film")),
-        shiny::actionButton(ns("show_podcast"), "Podcast", width = "100%",
-          class = "xbtn xbtn-disabled disabled", icon = icon("headphones")),
-        shiny::actionButton(ns("show_quiz"), "Quiz", width = "100%",
-          class = "xbtn xbtn-disabled disabled", icon = icon("quora"))
+          class = "xbtn", icon = icon("film"))
       )
     )
   )
@@ -50,14 +46,6 @@ StudioUI <- function(id) {
     bslib::nav_panel(
       "Slide deck",
       VisReportSettings(ns("slide"), output_format="slide", type="comparison")
-    ),
-    bslib::nav_panel(
-      "Podcast",
-      div()
-    ),
-    bslib::nav_panel(
-      "Quiz",
-      div()
     )
   )
 
@@ -79,14 +67,6 @@ StudioUI <- function(id) {
     bslib::nav_panel(
       "Slide deck",
       VisReportUI(ns("slide"), output_format="slide", type="comparison")
-    ),
-    bslib::nav_panel(
-      "Podcast",
-      div()
-    ),
-    bslib::nav_panel(
-      "Quiz",
-      div()
     )
   )
 
