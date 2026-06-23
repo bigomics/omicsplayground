@@ -2,7 +2,7 @@
 ## NOTE: This is not a real shiny module (yet...). We should move as
 ## much as possible OPG server related code here.
 
-opg_server <- function(input, output, session, PGX, env, auth) {
+opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
 
