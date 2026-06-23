@@ -147,6 +147,14 @@ app_ui <- function(x) {
           icon = icon("chart-line"),
           opg_ui()
         ),
+        if (isTRUE(opt$ENABLE_ACROSS)) {
+          bslib::nav_panel(
+            title = HTML("Across&nbsp;datasets"),
+            value = "AcrossDatasets",
+            icon = icon("layer-group"),
+            div(AcrossUI("across"), class = "px-4 py-0")
+          )
+        },
         bslib::nav_panel(
           title = HTML("AI&nbsp;Studio"),
           value="Studio",

@@ -575,6 +575,56 @@ app_server <- function(input, output, session) {
         bigdash.toggleMenuItem(session, "admin-tab", is_admin)
         dbg("[SERVER] ADMIN status for user = ", is_admin)
       }
+
+      ## Across-datasets: keep this user's TileDB counts database up to date.
+      ## The needUpdate() guard is cheap (reads a metadata file) and runs on the
+      ## main thread; the potentially heavy (re)build runs in a background worker
+      ## so it never blocks login. tryCatch guards against playbase builds that
+      ## predate the TileDB functions. Writes to <user_dir>/counts_tiledb, which
+      ## is exactly where AcrossBoard reads from.
+      if (isTRUE(opt$ENABLE_ACROSS)) {
+        udir <- auth$user_dir
+        need_build <- !is.null(udir) && dir.exists(udir) &&
+          isTRUE(tryCatch(playbase::tiledb.needUpdate(udir), error = function(e) FALSE))
+        if (need_build) {
+          info("[SERVER] ENABLE_ACROSS: updating TileDB in background for ", udir)
+          ## Persistent toast while the background build runs; replaced by a
+          ## short confirmation (or a warning) when the promise resolves.
+          tiledb_notif_id <- "tiledb_backfill"
+          shiny::showNotification(
+            ui = shiny::tagList(
+              shiny::icon("database"),
+              " Updating your datasets database for Across-datasets analysis…"
+            ),
+            duration = NULL,
+            closeButton = FALSE,
+            type = "message",
+            id = tiledb_notif_id,
+            session = session
+          )
+          promises::future_promise(
+            {
+              playbase::tiledb.updateDatasetFolder(udir, verbose = TRUE)
+              TRUE
+            },
+            seed = TRUE
+          ) %...>% (function(ok) {
+            shiny::removeNotification(tiledb_notif_id, session = session)
+            shiny::showNotification(
+              "Datasets database is ready for Across-datasets analysis.",
+              duration = 5, type = "message", session = session
+            )
+            info("[SERVER] TileDB backfill complete for ", udir)
+          }) %...!% (function(err) {
+            shiny::removeNotification(tiledb_notif_id, session = session)
+            shiny::showNotification(
+              "Could not update the datasets database for Across-datasets analysis.",
+              duration = 8, type = "warning", session = session
+            )
+            warning("[SERVER] TileDB backfill failed: ", conditionMessage(err))
+          })
+        }
+      }
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
@@ -957,6 +1007,10 @@ app_server <- function(input, output, session) {
   }
 
   StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)
+
+  if (isTRUE(opt$ENABLE_ACROSS)) {
+    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir))
+  }
   
   AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 
   
