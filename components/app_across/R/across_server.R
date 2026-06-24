@@ -67,9 +67,29 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       )
     })
 
-    available_genes <- reactive({
+    ## Every feature in the database (used when no dataset filter is active).
+    all_genes <- reactive({
       req(tiledb_path())
       playbase::listGenesTileDB(tiledb_path())
+    })
+
+    ## Features per dataset, so the selector can be narrowed to the chosen
+    ## datasets. Empty list for databases built before per-dataset gene tracking.
+    genes_by_dataset <- reactive({
+      req(tiledb_path())
+      playbase::listGenesByDatasetTileDB(tiledb_path())
+    })
+
+    ## Features offered in the selector: the union of features present in the
+    ## selected datasets, or every feature when nothing is selected (= all
+    ## datasets). Falls back to the global list when per-dataset info is absent,
+    ## so older databases keep working (just unfiltered).
+    available_genes <- reactive({
+      sel <- selected_datasets()
+      gbd <- genes_by_dataset()
+      if (length(sel) == 0 || length(gbd) == 0) return(all_genes())
+      genes <- sort(unique(unlist(gbd[intersect(sel, names(gbd))])))
+      if (length(genes) == 0) all_genes() else genes
     })
 
     phenotypes_by_dataset <- reactive({
@@ -356,11 +376,16 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       hideModal()
     })
 
+    ## Refresh the feature selector whenever the available features change (e.g.
+    ## after the dataset selection narrows). Keep only the still-valid picks so
+    ## features from no-longer-selected datasets are flushed instead of lingering.
     shiny::observe({
       genes <- available_genes()
-      if (length(genes) > 0) {
-        shiny::updateSelectizeInput(session, "selected_genes", choices = genes, server = TRUE)
-      }
+      keep <- intersect(shiny::isolate(input$selected_genes), genes)
+      shiny::updateSelectizeInput(
+        session, "selected_genes",
+        choices = genes, selected = keep, server = TRUE
+      )
     })
 
     ## Split-by-phenotype selector. Single-select in "Shared" (intersection)
