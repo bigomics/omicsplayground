@@ -30,15 +30,15 @@ AcrossInputs <- function(id) {
     withTooltip(
       shiny::selectizeInput(
         ns("selected_genes"),
-        "Select genes:",
+        "Select features:",
         choices = NULL,
         multiple = TRUE,
         options = list(
           maxItems = 10,
-          placeholder = "Type gene names..."
+          placeholder = "Type feature names..."
         )
       ),
-      "Select up to 10 genes to query across selected datasets.",
+      "Select up to 10 features to query across selected datasets.",
       placement = "right", options = list(container = "body")
     ),
     shiny::br(),
@@ -49,7 +49,7 @@ AcrossInputs <- function(id) {
         class = "btn-outline-primary",
         icon = icon("search")
       ),
-      "Click to query selected genes across selected datasets.",
+      "Click to query selected features across selected datasets.",
       placement = "right"
     ),
     shiny::br(),
@@ -61,7 +61,7 @@ AcrossInputs <- function(id) {
         "Split by Phenotype",
         icon = icon("th-list", lib = "glyphicon"),
         shiny::tags$small(
-          shiny::tags$em("Expression is always shown per dataset. Optionally split each dataset into sub-groups by a phenotype.")
+          shiny::tags$em("Values are always shown per dataset. Optionally split each dataset into sub-groups by a phenotype.")
         ),
         shiny::br(),
         shiny::br(),
@@ -118,7 +118,7 @@ AcrossInputs <- function(id) {
             selected = "linear",
             inline = TRUE
           ),
-          "Select scale for expression values.",
+          "Select scale for feature values.",
           placement = "right", options = list(container = "body")
         )
       )
@@ -145,19 +145,19 @@ AcrossUI <- function(id) {
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
-      "Expression by Sample",
+      "By Sample",
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("View gene expression values across all samples from multiple datasets stored in the TileDB database."),
+        bs_alert("View feature values for selected features across all samples from your datasets."),
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
           across_plot_barplot_ui(
             id = ns("barplot"),
-            title = "Expression by Sample",
-            info.text = "Bar plot showing expression values for selected genes across all samples. Samples are colored by their source dataset.",
-            info.methods = "Expression values are retrieved from a TileDB database containing counts from multiple PGX files. Values are displayed as raw counts or log2-transformed based on the scale setting.",
+            title = "By Sample",
+            info.text = "Bar plot showing values for selected features across all samples. Samples are colored by their source dataset.",
+            info.methods = "Feature values are gathered from across your datasets. Values are displayed as raw counts or log2-transformed based on the scale setting.",
             info.extra_link = NULL,
             width = c("auto", "100%"),
             height = c("100%", "75vh")
@@ -166,19 +166,19 @@ AcrossUI <- function(id) {
       )
     ),
     shiny::tabPanel(
-      "Expression by Dataset",
+      "By Dataset",
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("Compare gene expression distributions across different datasets using boxplots."),
+        bs_alert("Compare feature value distributions across your datasets using boxplots."),
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
           across_plot_boxplot_ui(
             id = ns("boxplot"),
             title = "Distribution by Dataset",
-            info.text = "Boxplot showing the distribution of expression values for selected genes across different datasets.",
-            info.methods = "Expression values are grouped by source dataset and displayed as boxplots. Jittered points can be overlaid to show individual sample values.",
+            info.text = "Boxplot showing the distribution of values for selected features across your datasets.",
+            info.methods = "Feature values are grouped by source dataset and displayed as boxplots. Jittered points can be overlaid to show individual sample values.",
             info.extra_link = NULL,
             width = c("auto", "100%"),
             height = c("100%", "75vh")
@@ -191,13 +191,13 @@ AcrossUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
-        bs_alert("View and download the raw expression data for selected genes."),
+        bs_alert("View and download the raw data for selected features."),
         bslib::layout_columns(
           col_widths = 12,
           height = fullH,
         across_table_data_ui(
           id = ns("datatable"),
-          title = "Expression Data",
+          title = "Feature Data",
             height = c("100%", "75vh"),
             width = c("auto", "100%")
           )

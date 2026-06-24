@@ -12,14 +12,14 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     tabH <- "70vh"
 
     infotext <- tspan(
-      "The <strong>Across Datasets</strong> module enables users to query gene expression
-      across multiple datasets stored in a TileDB database. This allows comparing expression
-      levels of specific genes across all available experiments without loading individual files.
+      "The <strong>Across Datasets</strong> module lets you compare feature values
+      across all of your datasets at once, without loading each one individually. Compare
+      the levels of specific features across every available experiment side by side.
       <br><br>
-      Features:
+      What you can do:
       <ul>
-        <li>Query up to 10 genes simultaneously</li>
-        <li>View expression as bar plots colored by dataset</li>
+        <li>Query up to 10 features at once</li>
+        <li>View values as bar plots colored by dataset</li>
         <li>Compare distributions with boxplots</li>
         <li>Split each dataset into sub-groups by phenotype</li>
         <li>Download data tables with phenotype annotations</li>
@@ -123,9 +123,9 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         shiny::HTML(
           "<p><b>What is a z-score?</b><br>
           A z-score standardizes each feature's values <i>within a dataset</i>: for every
-          gene we subtract that gene's mean across the dataset's samples and divide by its
+          feature we subtract that feature's mean across the dataset's samples and divide by its
           standard deviation. The result has mean&nbsp;0 and standard deviation&nbsp;1, so a
-          z-score of <b>+2</b> means &ldquo;two standard deviations above this gene's average
+          z-score of <b>+2</b> means &ldquo;two standard deviations above this feature's average
           in that dataset&rdquo; and <b>&minus;1</b> means &ldquo;one SD below average&rdquo;,
           independent of the original units.</p>
           <p><b>Why use it to compare across datasets?</b><br>
@@ -133,7 +133,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
           experiments differ in sequencing depth, platform, normalization and dynamic range,
           so the same absolute value can mean very different things. Standardizing per dataset
           removes these dataset-specific scale and batch effects and puts every dataset on the
-          same unit-free scale. That lets you compare a gene's <i>relative</i> expression
+          same unit-free scale. That lets you compare a feature's <i>relative</i> expression
           pattern (high vs. low, and how variable) on equal footing across experiments &mdash;
           which is exactly what across-datasets analysis needs.</p>
           <p>Use <b>Counts</b> when you care about absolute levels within a single dataset;
@@ -402,12 +402,12 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     output$db_info <- shiny::renderText({
       path <- tiledb_path()
-      if (is.null(path)) return("No TileDB database found")
+      if (is.null(path)) return("No datasets found")
       metadata_path <- paste0(path, "_metadata.rds")
       if (!file.exists(metadata_path)) return("Database found (no metadata)")
       metadata <- readRDS(metadata_path)
       n_pheno <- if (!is.null(metadata$n_phenotypes)) metadata$n_phenotypes else 0
-      paste0(metadata$n_genes, " genes, ", metadata$n_samples, " samples, ",
+      paste0(metadata$n_genes, " features, ", metadata$n_samples, " samples, ",
              metadata$n_files, " datasets, ", n_pheno, " phenotypes")
     })
 
@@ -426,7 +426,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       ds_for_pheno <- if (length(sel_datasets) > 0) sel_datasets else names(pheno_by_ds)
       all_phenotypes <- sort(unique(unlist(pheno_by_ds[ds_for_pheno])))
 
-      shiny::withProgress(message = "Querying TileDB...", value = 0.3, {
+      shiny::withProgress(message = "Querying your datasets...", value = 0.3, {
         ## Push the dataset selection down to TileDB: query only the samples that
         ## belong to the selected datasets (samples are "<dataset>::<sample>").
         ## Falls back to all samples (gene push-down only) if unavailable.
