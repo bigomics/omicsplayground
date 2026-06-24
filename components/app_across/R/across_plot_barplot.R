@@ -17,12 +17,12 @@ across_plot_barplot_ui <- function(id,
     withTooltip(
       shiny::radioButtons(
         inputId = ns("multigene_display"),
-        label = "Multi-gene display",
+        label = "Multi-feature display",
         choices = c("Bar plots" = "barplot", "Heatmap" = "heatmap"),
         selected = "barplot",
         inline = TRUE
       ),
-      "Choose how to display multiple genes: individual bar plots or a combined heatmap.",
+      "Choose how to display multiple features: individual bar plots or a combined heatmap.",
       placement = "top"
     )
   )
@@ -53,7 +53,7 @@ across_plot_barplot_server <- function(id,
       df <- getPlotData()
       shiny::validate(shiny::need(
         !is.null(df) && nrow(df) > 0,
-        "No data available. Please select genes and click 'Query'."
+        "No data available. Please select features and click 'Query'."
       ))
       return(df)
     })
@@ -105,7 +105,7 @@ across_plot_barplot_server <- function(id,
               title = "Sample (grouped by dataset)",
               showticklabels = FALSE
             ),
-            yaxis = list(title = "Expression"),
+            yaxis = list(title = "Value"),
             legend = list(orientation = "h", y = -0.15, title = list(text = legend_title)),
             margin = list(l = 60, r = 20, t = 40, b = 40)
           )

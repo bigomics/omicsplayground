@@ -51,7 +51,7 @@ across_plot_boxplot_server <- function(id,
       df <- getPlotData()
       shiny::validate(shiny::need(
         !is.null(df) && nrow(df) > 0,
-        "No data available. Please select genes and click 'Query'."
+        "No data available. Please select features and click 'Query'."
       ))
       return(df)
     })
@@ -96,7 +96,7 @@ across_plot_boxplot_server <- function(id,
           plotly::layout(
             title = list(text = genes[1], font = list(size = 14)),
             xaxis = list(title = "Dataset", tickangle = 45),
-            yaxis = list(title = "Expression"),
+            yaxis = list(title = "Value"),
             boxmode = "group",
             showlegend = has_split,
             legend = list(title = list(text = legend_title), orientation = "v", x = 1.02, y = 0.5),
@@ -130,7 +130,7 @@ across_plot_boxplot_server <- function(id,
           titleY = TRUE
         ) %>%
           plotly::layout(
-            yaxis = list(title = "Expression"),
+            yaxis = list(title = "Value"),
             boxmode = "group",
             showlegend = has_split,
             legend = list(title = list(text = legend_title), orientation = "v", x = 1.02, y = 0.5),

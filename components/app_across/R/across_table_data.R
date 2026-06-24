@@ -14,7 +14,7 @@ across_table_data_ui <- function(id,
     ns("table"),
     title = title,
     label = "d",
-    info.text = "Data table showing expression values for selected genes across all samples.",
+    info.text = "Data table showing values for selected features across all samples.",
     height = height,
     width = width
   )
@@ -30,11 +30,11 @@ across_table_data_server <- function(id,
       df <- getPlotData()
       shiny::validate(shiny::need(
         !is.null(df) && nrow(df) > 0,
-        "No data available. Please select genes and click 'Query'."
+        "No data available. Please select features and click 'Query'."
       ))
 
       result <- data.frame(
-        Gene = if ("gene" %in% colnames(df)) df$gene else NA,
+        Feature = if ("gene" %in% colnames(df)) df$gene else NA,
         Dataset = if ("dataset" %in% colnames(df)) df$dataset else NA,
         Sample = if ("sample_short" %in% colnames(df)) df$sample_short else NA,
         Count = if ("count" %in% colnames(df)) round(df$count, 2) else NA,
