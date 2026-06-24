@@ -555,6 +555,16 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         df$color_group <- factor(df$dataset, levels = sort(unique(df$dataset)))
         color_by <- "dataset"
       }
+      ## Label for the value column, reflecting the chosen value type / scale.
+      ## Consumed by the data table so its header matches what is shown.
+      value_label <- if (value_type == "zscore") {
+        "Z-score"
+      } else if (plot_scale == "log2") {
+        "log2(count+1)"
+      } else {
+        "Count"
+      }
+      attr(df, "value_label") <- value_label
       attr(df, "color_by") <- color_by
       attr(df, "has_split") <- has_split
       df
@@ -566,7 +576,8 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     across_plot_barplot_server("barplot", getPlotData = getPlotData, watermark = WATERMARK)
     across_plot_boxplot_server("boxplot", getPlotData = getPlotData, watermark = WATERMARK)
-    across_table_data_server("datatable", getPlotData = getPlotData)
+    across_table_data_server("datatable", getPlotData = getPlotData,
+                             dataset_info = dataset_info_table)
   })
 }
 

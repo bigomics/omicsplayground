@@ -22,7 +22,8 @@ across_table_data_ui <- function(id,
 
 #' @export
 across_table_data_server <- function(id,
-                                     getPlotData) {
+                                     getPlotData,
+                                     dataset_info = shiny::reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -33,13 +34,31 @@ across_table_data_server <- function(id,
         "No data available. Please select features and click 'Query'."
       ))
 
+      ## The value column header reflects the chosen value type / scale (Count,
+      ## Z-score or log2); computed upstream in getPlotData where those inputs live.
+      value_label <- attr(df, "value_label")
+      if (is.null(value_label)) value_label <- "Count"
+
       result <- data.frame(
         Feature = if ("gene" %in% colnames(df)) df$gene else NA,
         Dataset = if ("dataset" %in% colnames(df)) df$dataset else NA,
-        Sample = if ("sample_short" %in% colnames(df)) df$sample_short else NA,
-        Count = if ("count" %in% colnames(df)) round(df$count, 2) else NA,
         stringsAsFactors = FALSE
       )
+
+      ## Annotate each row with its dataset's datatype / organism when available
+      ## (from datasets-info.csv via getDatasetInfoTileDB). Skipped if absent.
+      info <- dataset_info()
+      if (!is.null(info) && "dataset" %in% colnames(info)) {
+        if ("datatype" %in% colnames(info)) {
+          result$Datatype <- info$datatype[match(result$Dataset, info$dataset)]
+        }
+        if ("organism" %in% colnames(info)) {
+          result$Organism <- info$organism[match(result$Dataset, info$dataset)]
+        }
+      }
+
+      result$Sample <- if ("sample_short" %in% colnames(df)) df$sample_short else NA
+      result[[value_label]] <- if ("count" %in% colnames(df)) round(df$count, 2) else NA
 
       ## "color_group" (and "split_group", if present) are derived grouping
       ## helpers; hide them. The selected phenotype columns still show.
@@ -47,12 +66,16 @@ across_table_data_server <- function(id,
       pheno_cols <- setdiff(colnames(df), standard_cols)
       for (col in pheno_cols) result[[col]] <- df[[col]]
       result$FullSampleID <- if ("sample" %in% colnames(df)) df$sample else NA
+
+      attr(result, "value_col") <- value_label
       result
     })
 
     table.RENDER <- shiny::reactive({
       df <- table_data()
-      numeric_cols <- which(colnames(df) == "Count")
+      value_col <- attr(df, "value_col")
+      if (is.null(value_col)) value_col <- "Count"
+      numeric_cols <- which(colnames(df) == value_col)
 
       DT::datatable(
         df,
