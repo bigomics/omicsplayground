@@ -931,7 +931,7 @@ app_server <- function(input, output, session) {
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server(input, output, session, PGX, env, auth)
+  opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir)
   
   CopilotServer("copilot", pgx = PGX, 
     layout = "fixed", maxturns = opt$LLM_MAXTURNS)
