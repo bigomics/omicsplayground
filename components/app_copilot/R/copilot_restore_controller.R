@@ -101,7 +101,8 @@ copilot_restore_controller <- function(
         session_id  = session_id,
         session_dir = store@session_dir,
         bindings    = bindings,
-        restore_pgx = "never"
+        restore_pgx = "never",
+        db_name     = basename(store@db_path)
       )
     }, seed = TRUE)
   })
@@ -269,7 +270,8 @@ copilot_restore_controller <- function(
             session_id  = session_id,
             session_dir = store@session_dir,
             bindings    = bindings,
-            restore_pgx = "never"
+            restore_pgx = "never",
+            db_name     = basename(store@db_path)
           ),
           error = function(e) {
             log_info("copilot.restore_sync_failed", msg = conditionMessage(e))

@@ -44,6 +44,7 @@ wgcna_module_ai_summary_ui <- function(id,
 #' @param r_module Reactive returning the selected module name.
 #' @param parent_session Parent Shiny session with AI user options.
 #' @param watermark Logical; add watermark in PlotModule.
+#' @param user_email Optional user email for telemetry attribution.
 #'
 #' @return Reactive returning the latest omicsai result, or NULL.
 wgcna_module_ai_summary_server <- function(id,
@@ -51,7 +52,8 @@ wgcna_module_ai_summary_server <- function(id,
                                            pgx,
                                            r_module,
                                            parent_session,
-                                           watermark = FALSE) {
+                                           watermark = FALSE,
+                                           user_email = NULL) {
   # Build prompt data from the currently selected module and live WGCNA object.
   summary_params <- shiny::reactive({
     res <- wgcna()
@@ -88,13 +90,17 @@ wgcna_module_ai_summary_server <- function(id,
   })
 
   # Render the serial on-demand AI summary card; no PGX write-back happens here.
+  # The card emits one telemetry event per generation tagged source="wgcna_summary".
+  # TODO(telemetry): thread auth$email for attribution (no auth in WgcnaBoard scope).
   AiTextCardServer(
     id = id,
     params_reactive = shiny::reactive(list()),
     template_reactive = template,
     config_reactive = config,
     cache = omicsai::omicsai_cache_init("mem"),
-    watermark = watermark
+    watermark = watermark,
+    user_email = user_email,
+    telemetry_source = "wgcna_summary"
   )
 }
 

@@ -115,7 +115,14 @@ CopilotBoardServer <- function(
     chat_event_rv             <- shiny::reactiveVal(NULL)
 
     # ---- Non-reactive state ----
-    chat_store <- omicsagentovi::SessionStore(session_dir = chat_dir)
+    # Chats live in a per-user db so enterprise members sharing a chats/
+    # folder don't collide. 
+    chat_db_name <- .ai_tel_sessions_db_name(email)
+    .detect_legacy_sessions(chat_dir, email)
+    chat_store <- omicsagentovi::SessionStore(
+      session_dir = chat_dir,
+      db_name     = chat_db_name
+    )
 
     # ---- Evidence module (constructed first so $append_artifact is available
     # when run/restore bindings factories run) ----
@@ -142,6 +149,27 @@ CopilotBoardServer <- function(
       style                     = style,
       custom                    = custom
     )
+
+    # ---- Telemetry: collect on save tick ----
+    # The save controller bumps history_invalidation_tick AFTER session_save()
+    # commits (post onFlushed), so by the time this fires the assistant turns
+    # are on disk and a read-only scan sees them. The collect call is a tiny
+    # SYNCHRONOUS main-thread op — deliberately NO future_promise / ExtendedTask:
+    # the SQLite pointer + Shiny session closures would break under future
+    # serialization (bad_weak_ptr), exactly as copilot_save_controller documents.
+    # tryCatch keeps any telemetry failure from disrupting the chat UI.
+    shiny::observeEvent(history_invalidation_tick(), {
+      if (is.null(email) || length(email) != 1L || is.na(email) ||
+          !nzchar(email)) {
+        return(invisible(NULL))
+      }
+      tryCatch(
+        ai_telemetry_collect_chat(session_dir = chat_dir, user_email = email),
+        error = function(e) {
+          log_info("copilot.telemetry_collect_failed", msg = conditionMessage(e))
+        }
+      )
+    }, ignoreInit = TRUE)
 
     # ---- Restore controller ----
     restore_ctrl <- copilot_restore_controller(
@@ -218,6 +246,7 @@ CopilotBoardServer <- function(
     history  <- CopilotHistoryServer(
       "history",
       session_dir               = chat_dir,
+      db_name                   = chat_db_name,
       history_invalidation_tick = shiny::reactive(history_invalidation_tick())
     )
 
@@ -343,7 +372,8 @@ CopilotBoardServer <- function(
       # the radios reflect the restored session (and the next Agent build —
       # e.g. tier change after restore — uses the restored style).
       meta <- tryCatch(
-        omicsagentovi::ovi_session_meta(session_id = sid, session_dir = chat_dir),
+        omicsagentovi::ovi_session_meta(session_id = sid, session_dir = chat_dir,
+                                        db_name = chat_db_name),
         error = function(e) NULL
       )
       if (!is.null(meta)) {
@@ -369,7 +399,8 @@ CopilotBoardServer <- function(
       sid <- history$on_delete()
       shiny::req(sid)
       tryCatch(
-        omicsagentovi::ovi_session_delete(session_id = sid, session_dir = chat_dir),
+        omicsagentovi::ovi_session_delete(session_id = sid, session_dir = chat_dir,
+                                          db_name = chat_db_name),
         error = function(e) {
           shiny::showNotification(
             paste("Delete failed:", conditionMessage(e)),

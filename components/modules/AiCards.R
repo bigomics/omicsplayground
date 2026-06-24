@@ -31,6 +31,8 @@ get_ai_model <- function(parent_session) {
 #' @param config_reactive Reactive returning an `omicsai_config`.
 #' @param cache Optional omicsai cache object.
 #' @param watermark Logical; add watermark in PlotModule.
+#' @param user_email Optional user email for telemetry attribution.
+#' @param telemetry_source Telemetry `source` tag for this card's generations.
 #'
 #' @return Reactive returning the latest omicsai result, or NULL.
 AiTextCardServer <- function(id,
@@ -38,7 +40,9 @@ AiTextCardServer <- function(id,
                              template_reactive,
                              config_reactive,
                              cache = NULL,
-                             watermark = FALSE) {
+                             watermark = FALSE,
+                             user_email = NULL,
+                             telemetry_source = "card") {
   shiny::moduleServer(id, function(input, output, session) {
     # Prepare card-local state and cache for one on-demand text result.
     module_cache <- if (is.null(cache)) omicsai::omicsai_cache_init("mem") else cache
@@ -97,6 +101,19 @@ AiTextCardServer <- function(id,
       } else {
         rv$status <- "done"
         rv$result <- result
+
+        # Telemetry must never break the card: usage is omicsai's object/list,
+        # passed straight through (no field remapping).
+        tryCatch(
+          ai_telemetry_record(
+            source     = telemetry_source,
+            session_id = session$token,
+            user_email = user_email %||% NA_character_,
+            model      = model,
+            usage      = result$metadata$usage
+          ),
+          error = function(e) NULL
+        )
       }
       info("[AiTextCardServer] text generation finished: id=", id,
            " status=", rv$status,
