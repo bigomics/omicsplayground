@@ -106,6 +106,9 @@ across_plot_boxplot_server <- function(id,
         plots <- lapply(seq_along(genes), function(i) {
           gene <- genes[i]
           gene_df <- df[df$gene == gene, ]
+          ## The datasets are identical across the stacked rows, so only the
+          ## bottom row (i == n_genes) shows the x tick labels; the upper rows
+          ## hide them to avoid repeating the (rotated) dataset names per facet.
           make_box(gene_df, has_split && i == 1) %>%
             plotly::layout(
               annotations = list(
@@ -117,7 +120,7 @@ across_plot_boxplot_server <- function(id,
                   font = list(size = 12, weight = "bold")
                 )
               ),
-              xaxis = list(title = "", tickangle = 45),
+              xaxis = list(title = "", tickangle = 45, showticklabels = (i == n_genes)),
               boxmode = "group"
             )
         })
