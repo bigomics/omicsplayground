@@ -571,6 +571,7 @@ PlotModuleServer <- function(id,
                              download.csv = NULL,
                              download.excel = NULL,
                              download.obj = NULL,
+                             download.handlers = NULL,
                              download.contrast.name = NULL,
                              pdf.width = 8,
                              pdf.height = 6,
@@ -1169,6 +1170,29 @@ PlotModuleServer <- function(id,
         )
       }
 
+      ## generic custom-format handlers (e.g. GraphML for Cytoscape)
+      custom.handlers <- list()
+      if (!is.null(download.handlers)) {
+        custom.handlers <- lapply(names(download.handlers), function(fmt) {
+          spec <- download.handlers[[fmt]]
+          ext <- if (!is.null(spec$ext)) spec$ext else fmt
+          shiny::downloadHandler(
+            filename = function() paste0(filename, ".", ext),
+            content = function(file) {
+              shiny::withProgress(
+                {
+                  spec$content(file)
+                  record_plot_download(substr(ns(""), 1, nchar(ns("")) - 1))
+                },
+                message = paste("Exporting to", toupper(fmt)),
+                value = 0.8
+              )
+            }
+          )
+        })
+        names(custom.handlers) <- names(download.handlers)
+      }
+
       ## --------------------------------------------------------------------------------
       ## ------------------------ OUTPUT ------------------------------------------------
       ## --------------------------------------------------------------------------------
@@ -1194,6 +1218,9 @@ PlotModuleServer <- function(id,
           }
           if (input$downloadOption == "obj") {
             output$download <- download.obj
+          }
+          if (input$downloadOption %in% names(custom.handlers)) {
+            output$download <- custom.handlers[[input$downloadOption]]
           }
         })
       } else {
@@ -1239,6 +1266,12 @@ PlotModuleServer <- function(id,
               "download",
               card
             )]] <- download.obj
+          }
+          if (input$downloadOption %in% names(custom.handlers)) {
+            output[[paste0(
+              "download",
+              card
+            )]] <- custom.handlers[[input$downloadOption]]
           }
         })
       }
