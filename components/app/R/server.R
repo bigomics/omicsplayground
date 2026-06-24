@@ -167,6 +167,9 @@ app_server <- function(input, output, session) {
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
+  ## Bumped when the background TileDB (re)build finishes, so AcrossBoard
+  ## re-checks the filesystem instead of caching its first (empty) result.
+  tiledb_ready <- reactiveVal(0)
 
   ## Default boards ------------------------------------------
   ## WelcomeBoard("welcome",
@@ -614,6 +617,8 @@ app_server <- function(input, output, session) {
               "Datasets database is ready for Across-datasets analysis.",
               duration = 5, type = "message", session = session
             )
+            ## Refresh AcrossBoard now that the database exists on disk.
+            tiledb_ready(shiny::isolate(tiledb_ready()) + 1)
             info("[SERVER] TileDB backfill complete for ", udir)
           }) %...!% (function(err) {
             shiny::removeNotification(tiledb_notif_id, session = session)
@@ -1009,7 +1014,8 @@ app_server <- function(input, output, session) {
   StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)
 
   if (isTRUE(opt$ENABLE_ACROSS)) {
-    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir))
+    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+                tiledb_refresh = tiledb_ready)
   }
   
   AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 

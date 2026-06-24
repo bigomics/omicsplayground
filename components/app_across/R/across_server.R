@@ -4,7 +4,8 @@
 ##
 
 AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
-                        labeltype = shiny::reactive("feature")) {
+                        labeltype = shiny::reactive("feature"),
+                        tiledb_refresh = shiny::reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 770
@@ -31,6 +32,10 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     ## ================================================================================
 
     tiledb_path <- reactive({
+      ## Re-check the filesystem when the background TileDB build completes:
+      ## without this dependency the first (empty) result is cached and the
+      ## board stays blank until the user logs out and back in.
+      tiledb_refresh()
       req(pgx_dir())
       path <- file.path(pgx_dir(), "counts_tiledb")
       if (dir.exists(path)) return(path)
@@ -40,6 +45,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     })
 
     datasets_info_file <- reactive({
+      tiledb_refresh()
       req(pgx_dir())
       path <- file.path(pgx_dir(), "datasets-info.csv")
       if (file.exists(path)) return(path)
