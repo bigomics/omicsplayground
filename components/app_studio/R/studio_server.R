@@ -45,16 +45,6 @@ StudioServer <- function(id, pgx, save_pgx = NULL) {
       bslib::nav_select("settings","Infographic")      
     })
     
-    observeEvent(input$show_podcast, {
-      bslib::nav_select("studiopanel","Podcast")
-      bslib::nav_select("settings","Podcast")
-    })
-
-    observeEvent(input$show_quiz, {
-      bslib::nav_select("studiopanel","Quiz")
-      bslib::nav_select("settings","Quiz")
-    })
-
     observeEvent(input$show_custom, {
       bslib::nav_select("studiopanel","Custom")
       bslib::nav_select("settings","Custom")
