@@ -201,6 +201,12 @@ UploadBoard <- function(id,
             new.pgx = pgxfile,
             update.sigdb = FALSE
           )
+          ## Across-datasets: incrementally add the new dataset to the per-user
+          ## TileDB counts database (cheap, one dataset). try() so a TileDB error
+          ## never blocks the upload flow.
+          if (isTRUE(opt$ENABLE_ACROSS)) {
+            try(playbase::tiledb.updateDatasetFolder(pgxdir, new_pgx = pgxfile))
+          }
         }
       )
 

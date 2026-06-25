@@ -167,6 +167,12 @@ app_server <- function(input, output, session) {
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
+  ## Bumped when the background TileDB (re)build finishes, so AcrossBoard
+  ## re-checks the filesystem instead of caching its first (empty) result.
+  tiledb_ready <- reactiveVal(0)
+  ## TRUE while a background TileDB build is running, so re-opening the Across
+  ## tab does not prompt for (or launch) a second build.
+  tiledb_building <- reactiveVal(FALSE)
 
   ## Default boards ------------------------------------------
   ## WelcomeBoard("welcome",
@@ -575,6 +581,11 @@ app_server <- function(input, output, session) {
         bigdash.toggleMenuItem(session, "admin-tab", is_admin)
         dbg("[SERVER] ADMIN status for user = ", is_admin)
       }
+
+      ## Across-datasets: the per-user TileDB counts database is no longer built
+      ## at login. It is built on demand (opt-in) the first time the user opens
+      ## the Across tab, so it never runs for users who don't use the feature.
+      ## See the "app-sidebar" observer near the AcrossBoard module call.
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
@@ -959,6 +970,87 @@ app_server <- function(input, output, session) {
   }
 
   StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)
+
+  if (isTRUE(opt$ENABLE_ACROSS)) {
+    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+                tiledb_refresh = tiledb_ready)
+
+    ## Build the per-user TileDB on demand the first time the Across tab is
+    ## opened. The build can take a few minutes, so ask before running it
+    ## (opt-in) rather than blocking login for everyone.
+    runAcrossTileDBBuild <- function(udir) {
+      tiledb_building(TRUE)
+      tiledb_notif_id <- "tiledb_backfill"
+      shiny::showNotification(
+        ui = shiny::tagList(
+          shiny::icon("database"),
+          " Updating your datasets database for Across-datasets analysis…"
+        ),
+        duration = NULL, closeButton = FALSE, type = "message",
+        id = tiledb_notif_id, session = session
+      )
+      promises::future_promise(
+        {
+          playbase::tiledb.updateDatasetFolder(udir, verbose = TRUE)
+          TRUE
+        },
+        seed = TRUE
+      ) %...>% (function(ok) {
+        shiny::removeNotification(tiledb_notif_id, session = session)
+        shiny::showNotification(
+          "Datasets database is ready for Across-datasets analysis.",
+          duration = 5, type = "message", session = session
+        )
+        ## Refresh AcrossBoard now that the database exists on disk.
+        tiledb_ready(shiny::isolate(tiledb_ready()) + 1)
+        tiledb_building(FALSE)
+        info("[SERVER] TileDB backfill complete for ", udir)
+      }) %...!% (function(err) {
+        shiny::removeNotification(tiledb_notif_id, session = session)
+        shiny::showNotification(
+          "Could not update the datasets database for Across-datasets analysis.",
+          duration = 8, type = "warning", session = session
+        )
+        tiledb_building(FALSE)
+        warning("[SERVER] TileDB backfill failed: ", conditionMessage(err))
+      })
+    }
+
+    ## Detect the user navigating to the Across tab (bslib navset value).
+    shiny::observeEvent(input[["app-sidebar"]], {
+      if (!identical(input[["app-sidebar"]], "AcrossDatasets")) return()
+      if (isTRUE(tiledb_building())) return()
+      udir <- auth$user_dir
+      need_build <- !is.null(udir) && dir.exists(udir) &&
+        isTRUE(tryCatch(playbase::tiledb.needUpdate(udir), error = function(e) FALSE))
+      if (!need_build) return()
+      shiny::showModal(shiny::modalDialog(
+        title = "Update datasets database?",
+        shiny::p(
+          "The datasets database used by Across-datasets analysis needs to be ",
+          "built or updated. This can take a few minutes. Proceed?"
+        ),
+        footer = shiny::tagList(
+          shiny::actionButton("across_build_no", "No"),
+          shiny::actionButton("across_build_yes", "Yes", class = "btn-primary")
+        ),
+        easyClose = FALSE
+      ))
+    })
+
+    shiny::observeEvent(input$across_build_yes, {
+      shiny::removeModal()
+      udir <- auth$user_dir
+      if (!is.null(udir) && dir.exists(udir) && !isTRUE(tiledb_building())) {
+        info("[SERVER] ENABLE_ACROSS: user confirmed TileDB build for ", udir)
+        runAcrossTileDBBuild(udir)
+      }
+    })
+
+    shiny::observeEvent(input$across_build_no, {
+      shiny::removeModal()
+    })
+  }
   
   AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 
   
