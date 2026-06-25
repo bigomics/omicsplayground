@@ -35,13 +35,16 @@
 # Delete oldest sessions when the store exceeds max_history entries.
 # ovi_sessions() returns rows ordered by updated_at DESC so the tail is oldest.
 .prune_sessions <- function(store, max_history) {
-  rows <- omicsagentovi::ovi_sessions(session_dir = store@session_dir)
+  db_name <- basename(store@db_path)
+  rows <- omicsagentovi::ovi_sessions(
+    session_dir = store@session_dir, db_name = db_name)
   if (nrow(rows) <= max_history) return(invisible(NULL))
   n_delete <- nrow(rows) - max_history
   to_delete <- tail(rows$session_id, n_delete)
   for (sid in to_delete) {
     tryCatch(
-      omicsagentovi::ovi_session_delete(sid, session_dir = store@session_dir),
+      omicsagentovi::ovi_session_delete(
+        sid, session_dir = store@session_dir, db_name = db_name),
       error = function(e) {
         log_info("copilot.prune_failed", sid = sid, msg = conditionMessage(e))
       }
