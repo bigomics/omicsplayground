@@ -147,19 +147,29 @@ app_ui <- function(x) {
           icon = icon("chart-line"),
           opg_ui()
         ),
+        if (isTRUE(opt$ENABLE_ACROSS)) {
+          bslib::nav_panel(
+            title = HTML("Across&nbsp;datasets"),
+            value = "AcrossDatasets",
+            icon = icon("layer-group"),
+            div(AcrossUI("across"), class = "px-4 py-0")
+          )
+        },
         bslib::nav_panel(
           title = HTML("AI&nbsp;Studio"),
           value="Studio",
           icon = icon("clapperboard"),
           div(StudioUI("studio"), class = "px-4 py-0")          
         ),
-        bslib::nav_panel(
-          #title = HTML("AI&nbsp;Copilot"),
-          title = HTML("Obi&#8209;One"),          
-          value = "Copilot",
-          icon = icon("robot"),
-          div(CopilotUI("copilot"), class = "px-4 py-0")
-        ),
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel(
+            #title = HTML("AI&nbsp;Copilot"),
+            title = HTML("Obi&#8209;One"),
+            value = "Copilot",
+            icon = icon("robot"),
+            div(CopilotUI("copilot"), class = "px-4 py-0")
+          )
+        },
         if (copilot_packages_ok()) {
           bslib::nav_panel(
             #title = HTML("AI&nbsp;Copilot"),            

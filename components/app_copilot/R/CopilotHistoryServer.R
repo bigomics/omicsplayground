@@ -41,6 +41,9 @@ CopilotHistoryUI <- function(id) {
 #'
 #' @param id Shiny module id.
 #' @param session_dir character(1) path to the SessionStore directory.
+#' @param db_name character(1) filename of the SessionStore database within
+#'   `session_dir`. Defaults to `"sessions.sqlite"`; the orchestrator passes
+#'   the per-user name so briefings read the same db the chat is saved to.
 #' @param history_invalidation_tick Optional reactive (or reactiveVal). When
 #'   provided, the panel takes a dependency on it so the session list
 #'   refreshes after save or delete. Renamed from `refresh_trigger`.
@@ -50,6 +53,7 @@ CopilotHistoryUI <- function(id) {
 #'      the caller is expected to read them, act, then reset to NULL.
 #' @export
 CopilotHistoryServer <- function(id, session_dir,
+                                 db_name = "sessions.sqlite",
                                  history_invalidation_tick = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
@@ -60,7 +64,7 @@ CopilotHistoryServer <- function(id, session_dir,
     .sessions <- shiny::reactive({
       if (!is.null(history_invalidation_tick)) history_invalidation_tick()
       df <- tryCatch(
-        omicsagentovi::ovi_sessions(session_dir = session_dir),
+        omicsagentovi::ovi_sessions(session_dir = session_dir, db_name = db_name),
         error = function(e) data.frame()
       )
       if (!is.data.frame(df) || nrow(df) == 0L) {
@@ -81,7 +85,7 @@ CopilotHistoryServer <- function(id, session_dir,
     .briefings <- shiny::reactive({
       df <- .sessions()
       if (nrow(df) == 0L) return(character(0))
-      db_path <- file.path(session_dir, "sessions.sqlite")
+      db_path <- file.path(session_dir, db_name)
       if (!file.exists(db_path)) return(rep("", nrow(df)))
       tryCatch({
         con <- DBI::dbConnect(RSQLite::SQLite(), db_path, flags = RSQLite::SQLITE_RO)
