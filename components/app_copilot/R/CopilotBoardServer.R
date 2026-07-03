@@ -256,6 +256,21 @@ CopilotBoardServer <- function(
 
     shiny::observeEvent(pgx$ai, {
       reports$refresh()
+      # Reports were (re)generated for the SAME dataset, so pgx$name did not
+      # change and the dataset observer won't re-fire. Re-attach the fresh pgx
+      # so the agent's frozen snapshot picks up the newly written pgx$ai and
+      # the injected report context is no longer stale. Only refresh an
+      # existing agent — do not construct one just because reports arrived.
+      if (!is.null(shiny::isolate(agent_rv())) &&
+          !is.null(pgx$name) && !is.null(pgx$X) &&
+          is.null(restore_inflight())) {
+        run_ctrl$apply_dataset(
+          pgx_val  = pgx,
+          name     = as.character(shiny::isolate(pgx$name)[[1]]),
+          path     = NULL,
+          data_dir = pgx_dir
+        )
+      }
     }, ignoreNULL = FALSE)
 
     shiny::observeEvent(reports$tools_enabled(), {
