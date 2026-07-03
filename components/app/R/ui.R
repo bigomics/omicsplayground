@@ -161,21 +161,11 @@ app_ui <- function(x) {
           icon = icon("clapperboard"),
           div(StudioUI("studio"), class = "px-4 py-0")          
         ),
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(
-            #title = HTML("AI&nbsp;Copilot"),
-            title = HTML("Obi&#8209;One"),
-            value = "Copilot",
-            icon = icon("robot"),
-            div(CopilotUI("copilot"), class = "px-4 py-0")
-          )
-        },
         if (copilot_packages_ok()) {
           bslib::nav_panel(
-            #title = HTML("AI&nbsp;Copilot"),            
-            title = HTML("Obi&#8209;Two"),
-            value = "Copilot2",
-            icon = icon("robot"),
+            #title = HTML("AI&nbsp;Copilot"),
+            title = tagList(icon("robot"), tags$br(), "Obi"),
+            value = "Copilot",
             div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
           )
         },
@@ -245,4 +235,3 @@ app_ui <- function(x) {
     return(ui)
   }
 }
-
