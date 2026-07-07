@@ -119,7 +119,10 @@ labs(title = 'mtcars', x = 'wt', y = 'mpg') +
 theme_gray() +
 theme(text = element_text(size = 18))"
       
-      plotcode <- playbase::ai.ask(msg2, "groq:openai/gpt-oss-20b")
+      plotcode <- omicsai::omicsai_call_llm(
+        msg2,
+        omicsai::omicsai_config(model = "groq:openai/gpt-oss-20b")
+      )$text
       plotcode <- paste0(plotcode,"\n")
       plotcode <- gsub("```[rR]|```","",plotcode)
       ##plotcode <- sub(".*ggplot\\(","ggplot(",plotcode)      

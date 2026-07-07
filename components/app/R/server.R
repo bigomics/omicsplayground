@@ -216,7 +216,6 @@ app_server <- function(input, output, session) {
   shinyjs::disable(selector = "a[data-value='Dashboard']")
   shinyjs::disable(selector = "a[data-value='Studio']")
   shinyjs::disable(selector = "a[data-value='Copilot']")
-  shinyjs::disable(selector = "a[data-value='Copilot2']")  
   
   ## Modules needed from the start
   recompute_pgx <- shiny::reactiveVal(NULL)
@@ -944,11 +943,6 @@ app_server <- function(input, output, session) {
 
   opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir)
   
-  if (isTRUE(opt$DEVMODE)) {
-    CopilotServer("copilot", pgx = PGX,
-      layout = "fixed", maxturns = opt$LLM_MAXTURNS)
-  }
-
   if (copilot_packages_ok()) {
     # Defer wiring until login completes: CopilotBoardServer snapshots
     # auth$user_dir once at init to derive its chats/ and docs_sources/
