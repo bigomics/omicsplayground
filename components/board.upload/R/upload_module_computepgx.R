@@ -10,6 +10,9 @@ upload_module_computepgx_server <- function(
   id,
   countsRT,
   countsX,
+  preprocess = shiny::reactive(NULL),
+  rawCountsRT = shiny::reactive(NULL),
+  rawAnnotRT = shiny::reactive(NULL),
   norm_method,
   samplesRT,
   azimuth_ref,
@@ -1054,6 +1057,22 @@ upload_module_computepgx_server <- function(
           annot_table <- NULL
         }
 
+        ## Data sent to createPGX. Bulk: send RAW counts + preprocess settings so a
+        ## script/endpoint reproduces the app exactly (X is rebuilt inside createPGX
+        ## via playbase::pgx.preprocess). scRNA: keep its own pipeline unchanged
+        ## (X is unused by createSingleCellPGX).
+        if (upload_datatype() == "scRNA-seq") {
+          pgx_counts <- counts
+          pgx_countsX <- countsX
+          pgx_annot <- annot_table
+          pgx_preprocess <- NULL
+        } else {
+          pgx_counts <- rawCountsRT()
+          pgx_countsX <- NULL
+          pgx_annot <- rawAnnotRT()
+          pgx_preprocess <- preprocess()
+        }
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -1188,13 +1207,14 @@ upload_module_computepgx_server <- function(
         params <- list(
           organism = upload_organism(),
           samples = samples,
-          counts = counts,
-          countsX = countsX,
+          counts = pgx_counts,
+          countsX = pgx_countsX,
+          preprocess = pgx_preprocess,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
           # ------- extra tables ---------
-          annot_table = annot_table,
+          annot_table = pgx_annot,
           custom.geneset = custom_geneset,
           custom_fc = custom_fc,
           #-------- preprocess options ---------

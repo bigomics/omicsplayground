@@ -1327,6 +1327,7 @@ UploadBoard <- function(id,
       if (input$selected_datatype == "scRNA-seq") {
         compute_input$counts <- sc_normalized$counts()
         compute_input$X <- sc_normalized$X()
+        compute_input$preprocess <- NULL ## scRNA has its own pipeline; X unused by createPGX
         compute_input$norm_method <- sc_normalized$norm_method()
         compute_input$samples <- sc_normalized$samples()
         compute_input$azimuth_ref <- sc_normalized$azimuth_ref()
@@ -1336,6 +1337,7 @@ UploadBoard <- function(id,
       } else {
         compute_input$counts <- normalized$counts()
         compute_input$X <- normalized$X()
+        compute_input$preprocess <- normalized$preprocess()
         compute_input$norm_method <- normalized$norm_method()
         compute_settings$imputation_method <- normalized$imputation_method()
         compute_settings$bc_method <- normalized$bc_method()
@@ -1348,6 +1350,9 @@ UploadBoard <- function(id,
       id = "compute",
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
+      preprocess = shiny::reactive(compute_input$preprocess),
+      rawCountsRT = shiny::reactive(checked_samples_counts()$COUNTS),
+      rawAnnotRT = shiny::reactive(checked_annot()$matrix),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
