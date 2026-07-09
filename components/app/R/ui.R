@@ -155,13 +155,18 @@ app_ui <- function(x) {
             div(AcrossUI("across"), class = "px-4 py-0")
           )
         },
-        bslib::nav_panel(
-          title = HTML("AI&nbsp;Studio"),
-          value="Studio",
-          icon = icon("clapperboard"),
-          div(StudioUI("studio"), class = "px-4 py-0")          
-        ),
-        if (copilot_packages_ok()) {
+        ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
+        ## The runtime "Enable AI" switch further shows/hides them per session
+        ## via bigdash.toggleTab in appsettings_server.R.
+        if (isTRUE(opt$ENABLE_AI)) {
+          bslib::nav_panel(
+            title = HTML("AI&nbsp;Studio"),
+            value="Studio",
+            icon = icon("clapperboard"),
+            div(StudioUI("studio"), class = "px-4 py-0")
+          )
+        },
+        if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
           bslib::nav_panel(
             #title = HTML("AI&nbsp;Copilot"),
             title = tagList(icon("robot"), tags$br(), "Obi"),

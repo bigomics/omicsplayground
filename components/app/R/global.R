@@ -74,6 +74,32 @@ SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 ## Set files
 ACCESS_LOGFILE <- file.path(ETC, "access.log")
 
+# Fail fast at startup if the installed omicsai lacks the provider-catalog API
+# the AI features depend on (model menus, live model discovery). A clear stop
+# here beats a confusing "could not find function" surfacing deep inside a
+# running Shiny session.
+.opg_require_omicsai_catalog_api <- function() {
+  required <- c(
+    "ai_known_models",
+    "ai_provider_catalog",
+    "ai_select_model",
+    "ai_validate_model",
+    "ai.list_provider_models"
+  )
+  exports <- tryCatch(getNamespaceExports("omicsai"), error = function(e) character(0))
+  missing <- setdiff(required, exports)
+  if (!length(missing)) {
+    return(invisible(TRUE))
+  }
+
+  stop(
+    "Installed omicsai is missing required provider catalog API exports: ",
+    paste(missing, collapse = ", "),
+    ". Install omicsai >= 0.3.2 or update omicsai in renv.",
+    call. = FALSE
+  )
+}
+
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
   package <- sub("^board.", "", package)
@@ -114,6 +140,8 @@ library(promises)
 future::plan(future::multisession)
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
+.opg_require_omicsai_catalog_api()
+source(file.path(APPDIR, "ai_model_policy.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -198,7 +226,11 @@ opt.default <- list(
   ENABLE_ACROSS = FALSE,
   ENABLE_COOKIE_LOGIN = TRUE,
   PUBLIC_DATASETS_LABEL = "Public Datasets",
-  LLM_MAXTURNS = 100
+  LLM_MAXTURNS = 100,
+  ENABLE_AI = FALSE,
+  AI_PROVIDERS_ENABLED = c("bigomics", "openai", "anthropic", "google",
+                           "github", "mistral", "custom"),
+  AI_PROVIDER_LOCKED   = FALSE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -240,6 +272,13 @@ if (file.exists(metadata.file)) {
   message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
   METADATA_OPTIONS <<- list(fields = list())
 }
+
+## Load OPG AI model selection policy. Provider/model facts are owned by
+## omicsai::ai_provider_catalog()/ai_known_models(); this JSON file only
+## overlays enablement, filtering, ordering, and defaults for OPG menus.
+ai_model_policy.file <- file.path(ETC, "ai_model_policy.json")
+AI_MODEL_POLICY <<- .opg_ai_read_policy(ai_model_policy.file)
+message("[GLOBAL] Loaded AI model selection policy")
 
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
@@ -345,16 +384,15 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## LLM model setup. Model availability is owned by omicsai because report and
-## infographic generation use the omicsai provider path.
-opt$LLM_MODELS <- omicsai::ai.get_models(opt$LLM_MODELS)
-image_models <- opt$LLM_IMAGE_MODELS
-if (is.null(image_models) || !length(image_models)) image_models <- opt$IMAGE_MODELS
-opt$IMAGE_MODELS <- omicsai::omicsai_image_models(image_models)
-opt$LLM_IMAGE_MODELS <- opt$IMAGE_MODELS
+## LLM model setup. Provider/model facts come from omicsai; OPG owns only the
+## menu policy overlay in etc/ai_model_policy.json.
+opt$AI_PROVIDERS <- unique(unlist(strsplit(as.character(opt$AI_PROVIDERS_ENABLED), ";")))
+opt$AI_MODELS    <- .opg_ai_build_models(AI_MODEL_POLICY, opt$AI_PROVIDERS)
+opt$AI_MENU_REPORTS          <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "reports")
+opt$AI_MENU_IMAGES           <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "images")
+opt$AI_MENU_COPILOT_DEEP     <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "copilot_deep")
+opt$AI_MENU_COPILOT_BALANCED <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "copilot_balanced")
 ## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
-dbg("[global] LLM model choices:", paste(unlist(opt$LLM_MODELS), collapse = ", "))
-dbg("[global] Image model choices:", paste(unlist(opt$IMAGE_MODELS), collapse = ", "))
 
 ## Copilot tier selection — verify against the omicsagentovi registry
 if (is.null(opt$COPILOT_MODEL)) {

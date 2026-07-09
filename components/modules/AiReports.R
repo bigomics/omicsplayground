@@ -143,7 +143,8 @@ ai_report_generate <- function(pgx,
                                select = NULL,
                                img_model = NULL,
                                report_type = "normal",
-                               on_error = "warn") {
+                               on_error = "warn",
+                               credentials = NULL) {
   if (is.null(llm_model) || !nzchar(llm_model)) return(pgx)
   if (is.null(select)) select <- ai_report_modules_for_pgx(pgx)
   select <- tryCatch(as.character(select), error = function(e) character(0))
@@ -158,7 +159,8 @@ ai_report_generate <- function(pgx,
       select = select,
       report_type = report_type,
       force = isTRUE(force),
-      on_error = on_error
+      on_error = on_error,
+      credentials = credentials
     )
   )
 }

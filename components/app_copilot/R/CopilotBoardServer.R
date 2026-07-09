@@ -209,6 +209,7 @@ CopilotBoardServer <- function(
       on_abort      = function(reason) {
         run_ctrl$dispatch(run_request_abort(reason))
       },
+      on_stream_error = function() run_ctrl$on_stream_error(),
       tier_choices  = tier_choices_rx,
       current_tier  = tier,
       style_choices = style_choices_rx,

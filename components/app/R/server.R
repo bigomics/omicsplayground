@@ -1046,8 +1046,24 @@ app_server <- function(input, output, session) {
     })
   }
   
-  AppSettingsBoard("app_settings", auth=auth, pgx=PGX) 
-  
+  app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
+
+  ## Show/hide the AI Studio + Copilot tabs from the runtime "Enable AI" switch,
+  ## gated by the deployment AI licence (opt$ENABLE_AI). Runs in the root
+  ## session so hideTab targets the un-namespaced "app-sidebar" navset. The
+  ## build-time gate in ui.R already drops the tabs entirely when unlicensed.
+  if (isTRUE(opt$ENABLE_AI)) {
+    shiny::observe({
+      ## Treat the pre-init NULL as on (default enabled); hide only on an
+      ## explicit FALSE from the switch.
+      ai_on <- !isFALSE(app_settings$enable_ai())
+      for (tab in c("Studio", "Copilot")) {
+        if (ai_on) bslib::nav_show("app-sidebar", tab)
+        else bslib::nav_hide("app-sidebar", tab)
+      }
+    })
+  }
+
   if(opt$DEVMODE) {
     dbg("[SERVER] WARNING: DEVMODE modules enabled!")
     prism_server("prism")

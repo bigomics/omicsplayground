@@ -100,7 +100,14 @@ wgcna_module_ai_summary_server <- function(id,
     cache = omicsai::omicsai_cache_init("mem"),
     watermark = watermark,
     user_email = user_email,
-    telemetry_source = "wgcna_summary"
+    telemetry_source = "wgcna_summary",
+    # Block generation when AI is off (deployment licence or the Settings
+    # "Enable AI" switch, published on session$userData by AppSettingsBoard).
+    enabled_reactive = shiny::reactive(
+      isTRUE(opt$ENABLE_AI) &&
+        !isFALSE(getUserOption(parent_session, "ai_enabled"))
+    ),
+    disabled_message = "Please enable AI to generate module summaries."
   )
 }
 
