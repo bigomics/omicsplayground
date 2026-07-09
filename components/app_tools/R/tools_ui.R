@@ -29,16 +29,7 @@ tools_ui <- function(id) {
         bslib::card_header("GraphSmart Prism"),
         bslib::card_body(
           p("Pimp up your plots using AI by just saying what you want: 'Plot a fancy volcano'"),
-          actionButton(ns("runtool1"), "Run", class="action-pill")
-        )
-      ),
-      bslib::card(
-        class = "tools-card",        
-        bslib::card_image(file="https://i0.wp.com/bigomics.ch/wp-content/uploads/2023/07/Omics-Playground-laptop-2023-e1689347474214.webp?zoom=2&resize=280%2C160&ssl=1", width=280, height=160, class="p-3"),
-        bslib::card_header("ID SmartConverter"),
-        bslib::card_body(
-          p("Automatically convert and annotate your transcriptomic, proteomics or lipidomics features using the latest databases."),
-          actionButton(ns("runtool2"), "Run", class="action-pill")
+          actionButton(ns("runtool_prism"), "Run", class="action-pill")
         )
       ),
       bslib::card(
@@ -48,9 +39,18 @@ tools_ui <- function(id) {
         bslib::card_header("BatchEffect SmartAnalyzer"),
         bslib::card_body(
           p("Analyze and correct your data for possible batch effects or unwanted covariates."),
-          actionButton(ns("runtool3"), "Run", class="action-pill")
+          actionButton(ns("runtool_qc"), "Run", class="action-pill")
         )
-      )
+      ),
+      bslib::card(
+        class = "tools-card",        
+        bslib::card_image(file="https://i0.wp.com/bigomics.ch/wp-content/uploads/2023/07/Omics-Playground-laptop-2023-e1689347474214.webp?zoom=2&resize=280%2C160&ssl=1", width=280, height=160, class="p-3"),
+        bslib::card_header("ID SmartConverter"),
+        bslib::card_body(
+          p("Automatically convert and annotate your transcriptomic, proteomics or lipidomics features using the latest databases."),
+          actionButton(ns("runtool_idconvert"), "Run", class="action-pill")
+        )
+      )      
       ## --- end of cards ---
     )
   )

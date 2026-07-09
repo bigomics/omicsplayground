@@ -13,8 +13,12 @@ tools_server <- function(id, parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    observeEvent(input$runtool1, {
+    observeEvent(input$runtool_prism, {
       bslib::nav_select("app-sidebar", "Prism", session=parent)
+    })
+
+    observeEvent(input$runtool_qc, {
+      bslib::nav_select("app-sidebar", "QSee", session=parent)
     })
 
     
