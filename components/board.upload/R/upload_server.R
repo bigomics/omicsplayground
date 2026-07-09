@@ -781,7 +781,6 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-      show_computing_spinner(value=99)
       recompute_pgx(NULL) ## need to reset ???
     })
 
