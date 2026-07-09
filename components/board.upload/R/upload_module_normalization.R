@@ -649,7 +649,9 @@ upload_module_normalization_server <- function(
       plot_correction <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
         if (!is.null(input$bec_view) && input$bec_view == "loadings") {
-          plot_bec_biplot()
+          plot_bec_biplot("loadings")
+        } else if (!is.null(input$bec_view) && input$bec_view == "pheno") {
+          plot_bec_biplot("pheno")
         } else if (!is.null(input$bec_view) && input$bec_view == "scree") {
           plot_bec_scree()
         } else if (input$batchcorrect) {
@@ -660,14 +662,15 @@ upload_module_normalization_server <- function(
       }
 
       ## Biplot grid for the BC panel: one biplot per method (sample scores as
-      ## points, top feature loadings as arrows) on the two PCs selected on the
-      ## axes. Points and arrows come from the same PCA (res$pos / res$loadings)
-      ## so they share coordinates. Same method list / grid as plot_all_methods.
-      ## ponytail: fewer arrow labels (ntop) than the single-panel view to keep
-      ## the grid readable; drop to one panel if the full grid is too crowded.
-      plot_bec_biplot <- function() {
+      ## points, arrows overlaid) on the two selected PCs. Same method list /
+      ## grid as plot_all_methods. Two arrow sources:
+      ##  - "loadings": top feature loadings (res$loadings, same PCA as scores)
+      ##  - "pheno": each annotation's correlation with the two PCs, precomputed
+      ##    in playbase (res$pheno.cor; eigencorplot-style, plain cor())
+      plot_bec_biplot <- function(arrows = "loadings") {
         res <- results_correction_methods()
-        shiny::req(res, res$loadings, res$pos)
+        shiny::req(res, res$pos)
+        if (arrows == "loadings") shiny::req(res$loadings)
         samples <- r_samples()
 
         xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
@@ -678,29 +681,40 @@ upload_module_normalization_server <- function(
         methods <- intersect(methods, names(res$pos))
         colorby_var <- intersect(input$colorby_var, colnames(samples))
 
-        ## one biplot per method
+        ## arrow endpoints for a method: named 2-col matrix in loading- or
+        ## correlation-units (scaled to the score cloud later). Both come
+        ## precomputed from playbase::compare_batchcorrection_methods.
+        arrow_ends <- function(m, scores) {
+          if (arrows == "loadings") {
+            L <- res$loadings[[m]]
+            if (is.null(L) || max(xpc, ypc) > ncol(L)) {
+              return(NULL)
+            }
+            A <- L[, c(xpc, ypc), drop = FALSE]
+            A[head(order(-(A[, 1]^2 + A[, 2]^2)), 8), , drop = FALSE]
+          } else {
+            Rc <- res$pheno.cor[[m]]
+            if (is.null(Rc) || max(xpc, ypc) > ncol(Rc)) {
+              return(NULL)
+            }
+            A <- Rc[, c(xpc, ypc), drop = FALSE]
+            A <- A[stats::complete.cases(A), , drop = FALSE]
+            if (!nrow(A)) {
+              return(NULL)
+            }
+            A[head(order(-(A[, 1]^2 + A[, 2]^2)), 12), , drop = FALSE]
+          }
+        }
+
         draw_biplot <- function(m) {
           P <- res$pos[[m]]
-          L <- res$loadings[[m]]
-          if (is.null(P) || is.null(L) || max(xpc, ypc) > min(ncol(P), ncol(L))) {
+          if (is.null(P) || max(xpc, ypc) > ncol(P)) {
             plot.new()
             text(0.45, 0.5, "method failed")
             title(m, cex.main = 1.3)
             return(invisible())
           }
           scores <- P[, c(xpc, ypc), drop = FALSE]
-          load <- L[, c(xpc, ypc), drop = FALSE]
-
-          ## top loadings by distance from the origin in the PC plane
-          ntop <- 8
-          imp <- head(order(-(load[, 1]^2 + load[, 2]^2)), ntop)
-          load <- load[imp, , drop = FALSE]
-
-          ## scale arrows to fill the score cloud (u,v columns are both unit-norm,
-          ## so raw loadings are far smaller than scores and need rescaling)
-          s <- 0.85 * max(abs(scores)) / max(abs(load))
-          ax <- load[, 1] * s
-          ay <- load[, 2] * s
 
           smp <- samples[rownames(scores), , drop = FALSE]
           color <- factor(smp[, colorby_var])
@@ -715,10 +729,20 @@ upload_module_normalization_server <- function(
           )
           title(m, cex.main = 1.3)
           abline(h = 0, v = 0, lty = 3, col = "grey70")
+
+          A <- arrow_ends(m, scores)
+          if (is.null(A) || !nrow(A) || max(abs(A)) == 0) {
+            return(invisible())
+          }
+          ## scale arrows to fill the score cloud (loadings/correlations sit on a
+          ## much smaller scale than the scores)
+          s <- 0.85 * max(abs(scores)) / max(abs(A))
+          ax <- A[, 1] * s
+          ay <- A[, 2] * s
           arrows(0, 0, ax, ay, length = 0.05, col = "#B3444488", lwd = 1.3)
           ## repel labels off each other (base-graphics; places each away from
           ## its nearest neighbour) rather than a fixed left/right offset
-          plotrix::thigmophobe.labels(ax, ay, rownames(load),
+          plotrix::thigmophobe.labels(ax, ay, rownames(A),
             cex = 0.65, col = "#7A2E2E", offset = 0.4, xpd = NA
           )
         }
@@ -1120,7 +1144,7 @@ upload_module_normalization_server <- function(
           shiny::radioButtons(
             ns("bec_view"),
             label = "Show:",
-            choices = c("Samples (PCA)" = "pca", "Biplot (loadings)" = "loadings", "Variance explained" = "scree"),
+            choices = c("Samples (PCA)" = "pca", "Biplot (loadings)" = "loadings", "Biplot (phenotypes)" = "pheno", "Variance explained" = "scree"),
             selected = "pca",
             inline = FALSE
           ),
