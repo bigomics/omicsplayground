@@ -1,14 +1,15 @@
 ## Generated automatically: do not edit by hand
 
-message("source all called from wd = ", getwd())
-if (!file.exists("00SourceAll.R")) {
-  message("WARNING: not in source folder. skipping.")
+message('source all called from wd = ',getwd())
+if(!file.exists('00SourceAll.R')) {
+  message('WARNING: not in source folder. skipping.')
 } else {
   message('Note: sourcing all code...')
-  source('app_copilot.ivo/R/copilot_server.R',encoding='UTF-8')
-  source('app_copilot.ivo/R/copilot_ui.R',encoding='UTF-8')
-  source('app_copilot.ivo/R/info_module.R',encoding='UTF-8')
-  source('app_copilot.ivo/R/utils.R',encoding='UTF-8')
+  source('app_across/R/across_plot_barplot.R',encoding='UTF-8')
+  source('app_across/R/across_plot_boxplot.R',encoding='UTF-8')
+  source('app_across/R/across_server.R',encoding='UTF-8')
+  source('app_across/R/across_table_data.R',encoding='UTF-8')
+  source('app_across/R/across_ui.R',encoding='UTF-8')
   source('app_copilot/R/copilot_bindings.R',encoding='UTF-8')
   source('app_copilot/R/copilot_context_blocks.R',encoding='UTF-8')
   source('app_copilot/R/copilot_followups_inputs.R',encoding='UTF-8')
@@ -33,6 +34,8 @@ if (!file.exists("00SourceAll.R")) {
   source('app_copilot/R/CopilotReportsServer.R',encoding='UTF-8')
   source('app_prism/R/prism_server.R',encoding='UTF-8')
   source('app_prism/R/prism_ui.R',encoding='UTF-8')
+  source('app_qsee/R/qsee_server.R',encoding='UTF-8')
+  source('app_qsee/R/qsee_ui.R',encoding='UTF-8')
   source('app_studio/R/aireport_server.R',encoding='UTF-8')
   source('app_studio/R/infographic_server.R',encoding='UTF-8')
   source('app_studio/R/studio_server.R',encoding='UTF-8')
@@ -380,6 +383,7 @@ if (!file.exists("00SourceAll.R")) {
   source('board.wordcloud/R/wordcloud_ui.R',encoding='UTF-8')
   source('modules/AiCards.R',encoding='UTF-8')
   source('modules/AiReports.R',encoding='UTF-8')
+  source('modules/AiTelemetry.R',encoding='UTF-8')
   source('modules/AuthenticationModule_functions.R',encoding='UTF-8')
   source('modules/AuthenticationModule_ui.R',encoding='UTF-8')
   source('modules/AuthenticationModule.R',encoding='UTF-8')

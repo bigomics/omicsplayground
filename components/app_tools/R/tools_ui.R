@@ -34,11 +34,12 @@ tools_ui <- function(id) {
       ),
       bslib::card(
         class = "tools-card",
-        bslib::card_image(file="https://i0.wp.com/bigomics.ch/wp-content/uploads/2023/07/Omics-Playground-laptop-2023-e1689347474214.webp?zoom=2&resize=280%2C160&ssl=1",
+        #bslib::card_image(file="https://i0.wp.com/bigomics.ch/wp-content/uploads/2023/07/Omics-Playground-laptop-2023-e1689347474214.webp?zoom=2&resize=280%2C160&ssl=1", width=280, height=160, class="p-3" ),
+        bslib::card_image(src=base64enc::dataURI(file = "www/qsee-bsee-logo.png"),
           width=280, height=160, class="p-3" ),
-        bslib::card_header("BatchEffect SmartAnalyzer"),
+        bslib::card_header("Qsee/Bsee"),
         bslib::card_body(
-          p("Analyze and correct your data for possible batch effects or unwanted covariates."),
+          p("Visual quality control (QC) and batch effects analyzer for your raw data."),
           actionButton(ns("runtool_qc"), "Run", class="action-pill")
         )
       ),
