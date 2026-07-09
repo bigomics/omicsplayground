@@ -121,7 +121,10 @@ theme(text = element_text(size = 18))"
       
       ai_model = "xai:grok-4.3"
       ai_model <- getUserOption(session, "llm_model")
-      plotcode <- playbase::ai.ask(msg2, ai_model)
+      plotcode <- omicsai::omicsai_call_llm(
+        msg2,
+        omicsai::omicsai_config(model = ai_model)
+      )$text
 
       plotcode <- paste0(plotcode,"\n")
       plotcode <- gsub("```[rR]|```","",plotcode)
