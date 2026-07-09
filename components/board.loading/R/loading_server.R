@@ -37,13 +37,22 @@ LoadingBoard <- function(id,
     ## Received/shared UI
     ## -------------------------------------------------------------------
 
+    ## Navigate to the "Shared datasets" inner tab of the Library board. The old
+    ## bigdash "sharing-tab" board was folded into this tabset during the UI
+    ## reshuffle, so bigdash.selectTab() no longer reaches it.
+    goto_sharing_tab <- function() {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
+      shiny::updateTabsetPanel(session, "tabs", selected = "sharing_tab")
+    }
+
     pgxreceived <- upload_module_received_server(
       id = "received",
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
       ##      max_datasets = auth$options$MAX_DATASETS,  ## wrong and not needed...
       reload_pgxdir = reload_pgxdir,
-      current_page = current_page
+      current_page = current_page,
+      goto_sharing_tab = goto_sharing_tab
     )
 
     pgxshared <- upload_module_shared_server(

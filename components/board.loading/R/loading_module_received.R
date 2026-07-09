@@ -30,17 +30,21 @@ upload_module_received_server <- function(id,
                                           auth,
                                           pgx_shared_dir,
                                           reload_pgxdir,
-                                          current_page) {
+                                          current_page,
+                                          goto_sharing_tab = NULL) {
   shiny::moduleServer(
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
 
       nr_ds_received <- reactiveVal(0)
 
-      # callbackR for the "New dataset received" modal: jump to Shared datasets
+      # callbackR for the "New dataset received" modal: jump to Shared datasets.
+      # The old bigdash "sharing-tab" board was folded into the Library board's
+      # inner tabset during the UI reshuffle, so navigation is delegated to the
+      # LoadingBoard via goto_sharing_tab().
       show_shared_tab <- function(value) {
-        if (isTRUE(value)) {
-          bigdash.selectTab(session, "sharing-tab")
+        if (isTRUE(value) && !is.null(goto_sharing_tab)) {
+          goto_sharing_tab()
         }
       }
 
