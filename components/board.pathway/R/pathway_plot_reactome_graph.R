@@ -108,12 +108,15 @@ functional_plot_reactome_graph_server <- function(id,
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
 
-        ## folder with predownloaded SBGN files
-        # sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-        # sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
-        imgfile <- playbase::getReactomeSVG(
+        ## Render from the locally bundled SBGN files (board.pathway/inst/sbgn).
+        ## reactome.org's live SVG exporter is Cloudflare-blocked for server-side
+        ## fetches; the reactome table above is already filtered to pathways that
+        ## have a local SBGN file, so this resolves for every selectable row.
+        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
+        sbgn.dir <- normalizePath(sbgn.dir)
+        imgfile <- playbase::getPathwayImage(
           pathway.id,
-          val = fc, as.img = TRUE
+          val = fc, sbgn.dir = sbgn.dir, as.img = TRUE
         )
 
         return(imgfile)
@@ -121,8 +124,25 @@ functional_plot_reactome_graph_server <- function(id,
 
       plot_RENDER <- function() {
         img <- get_image()
-        shiny::req(img$src)
+
+        ## nothing selected yet -> keep the panel blank (get_image returns src = "")
+        if (!is.null(img) && !is.null(img$src) && !nzchar(img$src)) {
+          shiny::req(FALSE)
+        }
+
+        ## selected, but no local diagram could be rendered -> note instead of a crash
         filename <- img$src
+        if (is.null(filename) || !file.exists(filename)) {
+          note <- paste0(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="110">',
+            '<text x="15" y="45" font-family="sans-serif" font-size="15">',
+            "<tspan x=\"15\">Reactome diagram is not available for this pathway.</tspan>",
+            "<tspan x=\"15\" dy=\"28\">Use the link in the table to open it on reactome.org.</tspan>",
+            "</text></svg>"
+          )
+          return(svgPanZoom::svgPanZoom(note, controlIconsEnabled = FALSE, viewBox = FALSE))
+        }
+
         img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
           img.svg,
