@@ -1174,7 +1174,8 @@ upload_module_computepgx_server <- function(
         llm_model <- getUserOption(session, "llm_model")
         cred_fn <- get_ai_credentials(session)
         ai_features <- NULL
-        if (create_ai_reports && !is.null(llm_model) && nzchar(llm_model)) {
+        if (isTRUE(opt$ENABLE_AI) && create_ai_reports &&
+            !is.null(llm_model) && nzchar(llm_model)) {
           ai_features <- list(
             reports = list(
               llm_model = llm_model,

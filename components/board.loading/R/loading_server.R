@@ -320,6 +320,7 @@ LoadingBoard <- function(id,
     }
 
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
+      if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
       cred_fn <- get_ai_credentials(session)

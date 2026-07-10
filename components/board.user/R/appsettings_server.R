@@ -130,7 +130,11 @@ AppSettingsBoard <- function(id, auth, pgx) {
         ## Legacy user-option names ("llm_model"/"img_model") are still read by
         ## the loading + upload boards' report/image generation, so keep writing
         ## them alongside the copilot-tier keys.
-        if (isTRUE(input$enable_ai)) {
+        ## Re-check the deployment licence (opt$ENABLE_AI), not just the switch:
+        ## on an unlicensed deployment the switch is only greyed (shinyjs::disable),
+        ## so its value stays TRUE and would otherwise seed a real llm_model that
+        ## the loading/upload auto-report paths then act on.
+        if (isTRUE(opt$ENABLE_AI) && isTRUE(input$enable_ai)) {
           setUserOption(session, "llm_model", input$llm_reports)
           setUserOption(session, "img_model", input$llm_images)
           setUserOption(session, "llm_copilot_deep", input$llm_copilot_deep)
