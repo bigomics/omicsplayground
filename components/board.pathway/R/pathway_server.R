@@ -80,8 +80,9 @@ PathwayBoard <- function(id,
       }
 
       ## ----- get REACTOME id
-      sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-      reactome.available <- gsub("^.*reactome_|.sbgn$", "", dir(sbgn.dir, pattern = "*.sbgn"))
+      ## pathways for which we can show a native Reactome diagram; sub-pathways
+      ## resolve to an ancestor's diagram (see playbase::reactomeDiagrams).
+      reactome.available <- playbase::reactomeDiagrams()
       reactome.gsets <- grep("R-HSA", rownames(pgx$gsetX), value = TRUE)
       reactome.ids <- gsub(".*R-HSA", "R-HSA", reactome.gsets)
 

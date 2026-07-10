@@ -108,15 +108,13 @@ functional_plot_reactome_graph_server <- function(id,
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
 
-        ## Render from the locally bundled SBGN files (board.pathway/inst/sbgn).
-        ## reactome.org's live SVG exporter is Cloudflare-blocked for server-side
-        ## fetches; the reactome table above is already filtered to pathways that
-        ## have a local SBGN file, so this resolves for every selectable row.
-        sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-        sbgn.dir <- normalizePath(sbgn.dir)
+        ## Fetch the native Reactome diagram SVG from our mirror. reactome.org's
+        ## live exporter is Cloudflare-blocked for server-side fetches; the table
+        ## above is filtered to pathways that resolve to a diagram, so this
+        ## returns an image for every selectable row (see playbase::getReactomeSVG).
         imgfile <- playbase::getPathwayImage(
           pathway.id,
-          val = fc, sbgn.dir = sbgn.dir, as.img = TRUE
+          val = fc, as.img = TRUE
         )
 
         return(imgfile)

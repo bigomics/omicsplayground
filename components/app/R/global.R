@@ -197,6 +197,13 @@ opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file, default = opt.default) ## global!
 
+## Base URL of the Reactome native-diagram SVG mirror, consumed by
+## playbase::getReactomeSVG. Prefer the environment variable (deployment); fall
+## back to the REACTOME_SVG_URL key in etc/OPTIONS. Empty = feature disabled.
+if (Sys.getenv("REACTOME_SVG_URL") == "" && !is.null(opt$REACTOME_SVG_URL)) {
+  Sys.setenv(REACTOME_SVG_URL = opt$REACTOME_SVG_URL)
+}
+
 message("\n************************************************")
 message("************* SETTING DEFAULTS ***************")
 message("************************************************")
