@@ -82,6 +82,7 @@ RUN R -e "BiocManager::install('wateRmelon')"
 RUN R -e "devtools::install_github('bigomics/metaLINCS')"
 RUN R -e "BiocManager::install('karyoploteR')"
 RUN R -e "BiocManager::install('regioneR')"
+RUN R -e "remotes::install_github('bigomics/WGCNAplus')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
