@@ -35,7 +35,44 @@ if(0) {
 
 }
 
+PRISM_WEBR_PACKAGES <- "ggplot2, ggrepel, ggprism, ggpubr, ggsignif"
 
+df_to_csv <- function(data) {
+  paste(utils::capture.output(utils::write.csv(data, row.names = TRUE)), collapse = "\n")
+}
+
+strip_code_fences <- function(text) {
+  gsub("```[rR]|```", "", text)
+}
+
+build_prism_prompt <- function(msg, vars, rows, last_plotcode, dataset,
+                                pointsize, fontsize, theme, packages) {
+  paste(
+    "You are asked the following request about modifying a ggplot figure.",
+    "Just give the raw plotting code. No explanations.",
+    "The code runs in a sandboxed R environment where only these packages",
+    "are pre-loaded: ", packages, "-- never call library() and never use any other package.",
+    "\nThis is the request of the user: ", msg,
+    "\nThese are the variables in the dataframe called 'data': ", vars,
+    "\nThese are the rownames of 'data': ", rows,
+    "\nThis is the last plotting code of the graph: ", last_plotcode,
+    "\nSet default title as dataset name: ", dataset,
+    "\nDefault point size unless asked by user: ", pointsize,
+    "\nDefault font size unless asked by user: ", fontsize,
+    "\nDefault theme unless asked by user: ", theme
+  )
+}
+
+update_plotcode <- function(last_plotcode, pointsize, fontsize, theme, dataset) {
+  if (last_plotcode == "") return(NULL)
+  plotcode <- trimws(last_plotcode)
+  plotcode <- gsub("\\)$", ") +\n", plotcode)
+  plotcode <- paste0(plotcode, "theme_", theme, "()")
+  plotcode <- paste0(plotcode, " +\n geom_point(size=", pointsize, ")")
+  plotcode <- paste0(plotcode, " +\n theme(text=element_text(size=", fontsize, "))")
+  plotcode <- paste0(plotcode, " +\n labs(title='", dataset, "')")
+  return(plotcode)
+}
 
 #' The application server-side logic
 #'
