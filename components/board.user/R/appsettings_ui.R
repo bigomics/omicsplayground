@@ -27,7 +27,8 @@ AppSettingsUI <- function(id) {
         bslib::layout_columns(
           height = "calc(100vh - 85px)",
           row_heights = "50%",
-          col_widths = c(3,4,3,2),
+          ## AI card moved to "AI Features" tab; 1 content card + spacer = c(5,7)
+          col_widths = c(5, 7),
           bslib::card(
             bslib::card_header("App settings"),
             bslib::card_body(
@@ -54,33 +55,116 @@ AppSettingsUI <- function(id) {
             )
           ),
 
+          div()
+        )
+      ),
+
+      ## AI Features tab -------------------------------------------------------
+      ## Inputs (wired in appsettings_server.R):
+      ##   ns("enable_ai")            — AI on/off toggle (same id as before)
+      ##   ns("ai_provider")          — provider dropdown
+      ##   ns("ai_api_key")           — API key (collapsed for bigomics)
+      ##   ns("ai_base_url")          — base URL (only for custom provider)
+      ##   ns("ai_test_load")         — validates BYOK credentials and narrows menus
+      ##   ns("ai_test_status")       — status badge for the latest validation
+      ##   ns("llm_reports")          — model for AI reports
+      ##   ns("llm_images")           — model for image generation
+      ##   ns("llm_copilot_deep")     — model for Copilot deep tier
+      ##   ns("llm_copilot_balanced") — model for Copilot balanced tier
+      bslib::nav_panel(
+        "AI Features",
+        bslib::layout_columns(
+          height = "calc(100vh - 85px)",
+          col_widths = c(4, 8),
           bslib::card(
-            bslib::card_header("AI settings"),
+            bslib::card_header("AI Provider"),
             bslib::card_body(
-              gap = '0.3em',
-              bslib::input_switch( ns("enable_ai"), "Enable AI", value=TRUE),
+              gap = "0.3em",
+              bslib::input_switch(ns("enable_ai"), "Enable AI", value = TRUE),
+              shiny::selectInput(
+                inputId = ns("ai_provider"),
+                label = "AI provider",
+                choices = opt$AI_PROVIDERS,
+                selected = "bigomics",
+                width = "100%"
+              ),
               shiny::conditionalPanel(
-                "input.enable_ai",
+                condition = "input.ai_provider != 'bigomics'",
+                ns = ns,
+                shiny::passwordInput(
+                  inputId = ns("ai_api_key"),
+                  label = "API key",
+                  width = "100%"
+                )
+              ),
+              shiny::conditionalPanel(
+                condition = "input.ai_provider == 'custom'",
+                ns = ns,
+                shiny::textInput(
+                  inputId = ns("ai_base_url"),
+                  label = "Endpoint base URL",
+                  width = "100%"
+                )
+              ),
+              shiny::conditionalPanel(
+                condition = "input.ai_provider != 'bigomics'",
+                ns = ns,
+                bslib::layout_columns(
+                  col_widths = c(7, 5),
+                  class = "mt-2",
+                  shiny::actionButton(
+                    inputId = ns("ai_test_load"),
+                    label = "Test & load models",
+                    icon = shiny::icon("plug"),
+                    class = "btn-outline-secondary",
+                    width = "100%"
+                  ),
+                  shiny::uiOutput(ns("ai_test_status"))
+                )
+              )
+            )
+          ),
+
+          bslib::card(
+            bslib::card_header("AI Models"),
+            bslib::card_body(
+              gap = "0.3em",
+              ## Hide the model menus for the BigOmics-managed backend — users
+              ## don't choose (or need to see) which models BigOmics runs.
+              shiny::conditionalPanel(
+                "input.enable_ai && input.ai_provider != 'bigomics'",
                 ns = ns,
                 shiny::selectInput(
-                  inputId = ns("llm_model"),
-                  label = "LLM model",
-                  choices = opt$LLM_MODELS,
+                  inputId = ns("llm_reports"),
+                  label = "Reports model",
+                  choices = opt$AI_MENU_REPORTS,
                   selected = 1,
                   width = "100%"
                 ),
                 shiny::selectInput(
-                  inputId = ns("img_model"),
+                  inputId = ns("llm_images"),
                   label = "Image AI model",
-                  choices = opt$IMAGE_MODELS,
+                  choices = opt$AI_MENU_IMAGES,
                   selected = 1,
                   width = "100%"
-                )                
+                ),
+                shiny::selectInput(
+                  inputId = ns("llm_copilot_deep"),
+                  label = "Copilot deep model",
+                  choices = opt$AI_MENU_COPILOT_DEEP,
+                  selected = 1,
+                  width = "100%"
+                ),
+                shiny::selectInput(
+                  inputId = ns("llm_copilot_balanced"),
+                  label = "Copilot balanced model",
+                  choices = opt$AI_MENU_COPILOT_BALANCED,
+                  selected = 1,
+                  width = "100%"
+                )
               )
             )
-          ),
-          
-          div()
+          )
         )
       ),
 
@@ -96,7 +180,7 @@ AppSettingsUI <- function(id) {
           )
         )
       ),
-      
+
       bslib::nav_panel(
         "Package versions",
         bslib::layout_columns(
@@ -114,12 +198,12 @@ AppSettingsUI <- function(id) {
         "Plot Colors",
         bslib::layout_columns(
           height = "calc(100vh - 85px)",
-          row_heights = "50%",          
+          row_heights = "50%",
           col_widths = c(3,3,3,3),
           bslib::card(
             bslib::card_header("Directional Colors"),
             bslib::card_body(
-              gap = "8px",              
+              gap = "8px",
               colourpicker::colourInput(ns("theme_primary"), "Primary (Up / High)", "#f23451"),
               colourpicker::colourInput(ns("theme_secondary"), "Secondary (Down / Low)", "#3181de"),
               colourpicker::colourInput(ns("theme_neutral"), "Mid / Zero (heatmap)", "#eeeeee")
@@ -151,7 +235,7 @@ AppSettingsUI <- function(id) {
           bslib::card(
             bslib::card_header("Accent Colors"),
             bslib::card_body(
-              gap = "8px",              
+              gap = "8px",
               colourpicker::colourInput(ns("theme_accent"), "Accent (one significant)", "#e3a45a"),
               colourpicker::colourInput(ns("theme_success"), "Success (both significant)", "#5B9B5B"),
               colourpicker::colourInput(ns("theme_ns_color"), "Not significant", "#eeeeee"),

@@ -403,7 +403,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
 
     # Handle fulfilled provider jobs, including provider-level error payloads.
     handle_image_job_result <- function(result, slot, token, img_model,
-                                        style, run_id, attempt) {
+                                        style, run_id, attempt, cred_fn = NULL) {
       # Normalize malformed promise results before reading fields.
       result <- infographic_job_result(result, slot, token)
       if (!isTRUE(image_jobs$running) ||
@@ -429,7 +429,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
             infographic_module_labels(pgx_snapshot(), result$slot),
             "infographic..."))
           launch_image_job(result$slot, img_model, style, run_id,
-            attempt = attempt + 1L)
+            attempt = attempt + 1L, cred_fn = cred_fn)
           return(NULL)
         }
 
@@ -453,7 +453,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
 
     # Handle promise rejections from the mirai/promises layer itself.
     handle_image_job_error <- function(err, slot, label, img_model, style,
-                                       run_id, attempt) {
+                                       run_id, attempt, cred_fn = NULL) {
       if (!isTRUE(image_jobs$running) ||
           !identical(run_id, image_jobs$run_id)) {
         return(NULL)
@@ -463,7 +463,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
       if (attempt < 3L) {
         image_progress(paste("Retrying", label, "infographic..."))
         launch_image_job(slot, img_model, style, run_id,
-          attempt = attempt + 1L)
+          attempt = attempt + 1L, cred_fn = cred_fn)
         return(NULL)
       }
 
@@ -475,7 +475,8 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
     }
 
     # Build and launch one report-slot image job.
-    launch_image_job <- function(slot, img_model, style, run_id, attempt = 1L) {
+    launch_image_job <- function(slot, img_model, style, run_id, attempt = 1L,
+                                 cred_fn = NULL) {
       pgx_list <- pgx_snapshot()
       entry <- ai_report_get(pgx_list, slot)
       if (is.null(entry)) {
@@ -489,11 +490,15 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
 
       # Build the omicsai image prompt in the main Shiny process.
       built <- infographic_build_image_prompt(entry$report, slot, pgx_list, style)
+      # credentials is stored inside the config object and serialized into the
+      # mirai worker along with the rest of the config — never read from session
+      # inside the async worker.
       config <- omicsai::omicsai_image_config(
         model = img_model,
         system_prompt = built$system,
         style = style,
-        image_size = "1K"
+        image_size = "1K",
+        credentials = cred_fn
       )
 
       info("[InfographicServer] image job starting: slot=", slot,
@@ -505,18 +510,18 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
         promise,
         onFulfilled = function(result) {
           handle_image_job_result(result, slot, token, img_model, style,
-            run_id, attempt)
+            run_id, attempt, cred_fn)
         },
         onRejected = function(err) {
           handle_image_job_error(err, slot, label, img_model, style,
-            run_id, attempt)
+            run_id, attempt, cred_fn)
         }
       )
       invisible(promise)
     }
 
     # Start an async batch for the selected report slots.
-    start_image_jobs <- function(slots, img_model, style) {
+    start_image_jobs <- function(slots, img_model, style, cred_fn = NULL) {
       slots <- unique(as.character(slots))
       slots <- slots[!is.na(slots) & nzchar(slots)]
       if (!length(slots)) {
@@ -536,7 +541,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
       image_jobs$progress <- shiny::Progress$new(session, min = 0, max = 1)
       image_progress("Writing your infographic. This can take 60-120s...")
       for (slot in slots) {
-        launch_image_job(slot, img_model, style, run_id)
+        launch_image_job(slot, img_model, style, run_id, cred_fn = cred_fn)
       }
     }
 
@@ -566,6 +571,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
           type = "warning", session = session)
         return(NULL)
       }
+      cred_fn <- get_ai_credentials(session)
 
       pgx_list <- pgx_snapshot()
       slots <- input$slot
@@ -574,7 +580,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
       slots <- slots[slots %in% ai_report_slots(pgx_list)]
       style <- input$style
       if (is.null(style) || !nzchar(style)) style <- "bigomics"
-      start_image_jobs(slots, img_model, style)
+      start_image_jobs(slots, img_model, style, cred_fn)
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(pgx$name, {

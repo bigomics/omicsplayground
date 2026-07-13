@@ -21,6 +21,15 @@ get_ai_model <- function(parent_session) {
   model
 }
 
+#' Get the current AI credentials from user options
+#'
+#' @param parent_session Parent Shiny session.
+#' @return A nullary credential closure \code{function() key}, or \code{NULL}
+#'   when the provider is BigOmics (env-var path) or no key has been set.
+get_ai_credentials <- function(parent_session) {
+  getUserOption(parent_session, "ai_credentials")
+}
+
 #' AI text card server
 #'
 #' Runs on-demand text generation from a prompt template and reactive params.
@@ -42,7 +51,9 @@ AiTextCardServer <- function(id,
                              cache = NULL,
                              watermark = FALSE,
                              user_email = NULL,
-                             telemetry_source = "card") {
+                             telemetry_source = "card",
+                             enabled_reactive = NULL,
+                             disabled_message = "AI features are disabled.") {
   shiny::moduleServer(id, function(input, output, session) {
     # Prepare card-local state and cache for one on-demand text result.
     module_cache <- if (is.null(cache)) omicsai::omicsai_cache_init("mem") else cache
@@ -55,6 +66,14 @@ AiTextCardServer <- function(id,
     )
 
     shiny::observeEvent(input$generate, {
+      # Guard: block generation when AI is disabled (deployment licence or the
+      # user's "Enable AI" switch). Show a friendly message and stop early.
+      if (!is.null(enabled_reactive) && !isTRUE(enabled_reactive())) {
+        rv$status <- "idle"
+        shiny::showNotification(disabled_message, type = "message",
+                                session = session)
+        return(NULL)
+      }
       # Read reactive inputs at click time so tab changes do not auto-run.
       params <- params_reactive()
       template <- template_reactive()

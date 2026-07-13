@@ -95,17 +95,24 @@ copilot_restore_controller <- function(
   restore_status <- shiny::reactiveVal("idle")
 
   # ---- ExtendedTask ----
-  restore_task <- shiny::ExtendedTask$new(function(store, session_id, bindings) {
-    promises::future_promise({
-      omicsagentovi::ovi_restore(
-        session_id  = session_id,
-        session_dir = store@session_dir,
-        bindings    = bindings,
-        restore_pgx = "never",
-        db_name     = basename(store@db_path)
-      )
-    }, seed = TRUE)
-  })
+  # `provider` + `credentials` are captured on the Shiny thread by start()
+  # and passed in as task args, never read from the reactive inside the
+  # worker (the future-worker gotcha). `credentials` is a plain value-capturing
+  # closure (or NULL), so it serialises into the future cleanly.
+  restore_task <- shiny::ExtendedTask$new(
+    function(store, session_id, bindings, provider, credentials) {
+      promises::future_promise({
+        omicsagentovi::ovi_restore(
+          session_id  = session_id,
+          session_dir = store@session_dir,
+          bindings    = bindings,
+          restore_pgx = "never",
+          db_name     = basename(store@db_path),
+          provider    = provider,
+          credentials = credentials
+        )
+      }, seed = TRUE)
+    })
 
   # ---- Failure handler ----
   .handle_restore_failure <- function(err, session_id, previous_agent) {
@@ -231,6 +238,15 @@ copilot_restore_controller <- function(
 
     previous_agent <- shiny::isolate(agent())
 
+    # Capture the user's AI provider + credential closure on the Shiny thread
+    # (never inside the future). BigOmics -> provider "bigomics" + NULL
+    # credentials, which ovi_restore treats exactly as today (env-var path,
+    # openai tier fallback). A BYOK provider re-resolves the saved tier for
+    # that provider and applies the user key.
+    ai_sel   <- .copilot_ai_provider(session)
+    provider <- ai_sel$provider
+    cred     <- ai_sel$credentials
+
     restore_inflight(session_id)
     restore_status("restoring")
 
@@ -271,7 +287,9 @@ copilot_restore_controller <- function(
             session_dir = store@session_dir,
             bindings    = bindings,
             restore_pgx = "never",
-            db_name     = basename(store@db_path)
+            db_name     = basename(store@db_path),
+            provider    = provider,
+            credentials = cred
           ),
           error = function(e) {
             log_info("copilot.restore_sync_failed", msg = conditionMessage(e))
@@ -292,7 +310,7 @@ copilot_restore_controller <- function(
 
     tryCatch(
       {
-        restore_task$invoke(store, session_id, bindings)
+        restore_task$invoke(store, session_id, bindings, provider, cred)
       },
       error = function(e) {
         log_info("copilot.restore_invoke_failed",

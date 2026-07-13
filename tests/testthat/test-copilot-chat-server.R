@@ -12,11 +12,15 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
   skip("omicsagentovi >= 0.4.0 required.")
 }
 
-.board_dir <- if (dir.exists("components/board.copilot/R")) {
-  "components/board.copilot/R"
+.board_dir <- if (dir.exists("components/app_copilot/R")) {
+  "components/app_copilot/R"
 } else {
-  "../../components/board.copilot/R"
+  "../../components/app_copilot/R"
 }
+
+# Standalone bootstrap: %||% is normally in playbase / utils.R but is not on
+# the search path when this file is sourced standalone in tests.
+if (!exists("%||%")) `%||%` <- function(a, b) if (is.null(a)) b else a
 
 source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
 source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
@@ -469,4 +473,210 @@ test_that("CopilotChatServer returns the documented API list", {
       expect_true(is.function(api$tier_clicked))
     }
   )
+})
+
+# ===========================================================================
+# Bug 1 — stream rejection calls on_stream_error and ticks stream_done
+# ===========================================================================
+
+test_that("stream rejection calls on_stream_error and ticks stream_done", {
+  stream_error_called <- FALSE
+  appended <- list()
+  local_mocked_bindings(
+    chat_append = function(id, gen, ...) promises::promise_reject(
+      simpleError("insufficient_quota: you exceeded your current quota")
+    ),
+    chat_append_message = function(id, message, chunk = FALSE) {
+      appended[[length(appended) + 1L]] <<- message
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv,
+      on_stream_error = function() { stream_error_called <<- TRUE }
+    ), {
+      api <- session$returned
+      expect_equal(api$stream_done(), 0L)
+
+      ev_rv(list(type = "stream", async_gen = list()))
+      session$flushReact()
+      later::run_now()
+      session$flushReact()
+
+      # on_stream_error must have been called to settle the run lifecycle
+      expect_true(stream_error_called)
+      # stream_done ticks so run_controller's observer can fire
+      expect_equal(api$stream_done(), 1L)
+      # last_error captures the raw message for debugging
+      expect_match(api$last_error(), "quota", fixed = TRUE)
+    }
+  )
+})
+
+test_that("stream rejection with no on_stream_error still ticks stream_done", {
+  local_mocked_bindings(
+    chat_append = function(id, gen, ...) promises::promise_reject(
+      simpleError("some error")
+    ),
+    chat_append_message = function(id, message, chunk = FALSE) invisible(NULL),
+    chat_clear  = function(id) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+      # on_stream_error omitted — defaults to NULL
+    ), {
+      api <- session$returned
+      ev_rv(list(type = "stream", async_gen = list()))
+      session$flushReact()
+      later::run_now()
+      session$flushReact()
+      expect_equal(api$stream_done(), 1L)
+    }
+  )
+})
+
+# ===========================================================================
+# Bug 2 — stream rejection posts a friendly message, not raw API text
+# ===========================================================================
+
+test_that("stream rejection posts a friendly quota message for known quota error", {
+  posted_content <- NULL
+  local_mocked_bindings(
+    chat_append = function(id, gen, ...) promises::promise_reject(
+      simpleError("openai: insufficient_quota — you exceeded your monthly quota")
+    ),
+    chat_append_message = function(id, message, chunk = FALSE) {
+      posted_content <<- message$content
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+    ), {
+      ev_rv(list(type = "stream", async_gen = list()))
+      session$flushReact()
+      later::run_now()
+      session$flushReact()
+
+      # Must NOT contain raw API error text
+      expect_false(grepl("insufficient_quota", posted_content, fixed = TRUE))
+      # Must contain billing/quota guidance
+      expect_match(posted_content, "quota", fixed = TRUE)
+    }
+  )
+})
+
+test_that("stream rejection posts a friendly auth message for 401/invalid key", {
+  posted_content <- NULL
+  local_mocked_bindings(
+    chat_append = function(id, gen, ...) promises::promise_reject(
+      simpleError("401 Unauthorized: invalid api key provided")
+    ),
+    chat_append_message = function(id, message, chunk = FALSE) {
+      posted_content <<- message$content
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+    ), {
+      ev_rv(list(type = "stream", async_gen = list()))
+      session$flushReact()
+      later::run_now()
+      session$flushReact()
+
+      expect_false(grepl("invalid api key", posted_content, fixed = TRUE))
+      expect_match(posted_content, "API key", fixed = TRUE)
+    }
+  )
+})
+
+test_that("stream rejection posts a generic message for unrecognised errors", {
+  posted_content <- NULL
+  local_mocked_bindings(
+    chat_append = function(id, gen, ...) promises::promise_reject(
+      simpleError("something weird happened with the model backend xyz-123")
+    ),
+    chat_append_message = function(id, message, chunk = FALSE) {
+      posted_content <<- message$content
+      invisible(NULL)
+    },
+    chat_clear  = function(id) invisible(NULL),
+    .package = "shinychat"
+  )
+
+  ev_rv <- shiny::reactiveVal(NULL)
+  shiny::testServer(CopilotChatServer,
+    args = list(
+      id              = "chat",
+      on_user_message = function(text) NULL,
+      chat_event      = ev_rv
+    ), {
+      ev_rv(list(type = "stream", async_gen = list()))
+      session$flushReact()
+      later::run_now()
+      session$flushReact()
+
+      expect_false(grepl("xyz-123", posted_content, fixed = TRUE))
+      expect_match(posted_content, "couldn't complete", fixed = TRUE)
+    }
+  )
+})
+
+# ===========================================================================
+# copilot_friendly_error — message mapping unit tests
+# ===========================================================================
+
+test_that("copilot_friendly_error maps quota errors correctly", {
+  expect_match(copilot_friendly_error("insufficient_quota: monthly cap reached"), "quota")
+  expect_match(copilot_friendly_error("you exceeded your current quota"), "quota")
+  expect_match(copilot_friendly_error("429 Too Many Requests: billing limit"), "quota")
+})
+
+test_that("copilot_friendly_error maps auth errors correctly", {
+  expect_match(copilot_friendly_error("401 Unauthorized"), "API key")
+  expect_match(copilot_friendly_error("invalid api key provided"), "API key")
+  expect_match(copilot_friendly_error("authentication failed"), "API key")
+})
+
+test_that("copilot_friendly_error maps rate-limit errors correctly", {
+  expect_match(copilot_friendly_error("429 Too Many Requests: rate limit exceeded"), "rate")
+  expect_match(copilot_friendly_error("rate_limit: too many requests"), "rate")
+})
+
+test_that("copilot_friendly_error returns generic message for unknown errors", {
+  result <- copilot_friendly_error("an internal model error occurred")
+  expect_match(result, "couldn't complete", fixed = TRUE)
+})
+
+test_that("copilot_friendly_error accepts a condition object", {
+  e <- simpleError("insufficient_quota: over limit")
+  expect_match(copilot_friendly_error(e), "quota")
 })

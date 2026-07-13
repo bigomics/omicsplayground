@@ -13,7 +13,7 @@ LazyData: true
 Suggests:
     commonmark,
     omicsagentovi,
-    omicsai,
+    omicsai (>= 0.3.2),
     omicspgx,
     omicspgxmcp,
     omicsplots,

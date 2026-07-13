@@ -13,17 +13,30 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
   skip("omicsagentovi >= 0.4.0 required.")
 }
 
-.board_dir <- if (dir.exists("components/board.copilot/R")) {
-  "components/board.copilot/R"
+.board_dir <- if (dir.exists("components/app_copilot/R")) {
+  "components/app_copilot/R"
 } else {
-  "../../components/board.copilot/R"
+  "../../components/app_copilot/R"
 }
 
-source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
-source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
-source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
-source(file.path(.board_dir, "copilot_bindings.R"),          local = TRUE)
-source(file.path(.board_dir, "copilot_run_controller.R"),    local = TRUE)
+# Standalone bootstrap: %||% is normally in playbase / utils.R but is not on
+# the search path when this file is sourced standalone in tests.
+if (!exists("%||%")) `%||%` <- function(a, b) if (is.null(a)) b else a
+
+# App-global helpers used by copilot_run_controller internals. Defined in
+# components/app/ but not loaded during standalone test runs.
+if (!exists("getUserOption"))    getUserOption    <- function(session, var, ...) NULL
+if (!exists("get_ai_credentials")) get_ai_credentials <- function(session) NULL
+if (!exists("copilot_system_prompt")) copilot_system_prompt <- function() ""
+
+source(file.path(.board_dir, "copilot_options.R"),        local = TRUE)
+source(file.path(.board_dir, "copilot_messages.R"),       local = TRUE)
+source(file.path(.board_dir, "copilot_logger.R"),         local = TRUE)
+source(file.path(.board_dir, "copilot_pgx_normalize.R"),  local = TRUE)
+source(file.path(.board_dir, "copilot_context_blocks.R"), local = TRUE)
+source(file.path(.board_dir, "copilot_followups.R"),      local = TRUE)
+source(file.path(.board_dir, "copilot_bindings.R"),       local = TRUE)
+source(file.path(.board_dir, "copilot_run_controller.R"), local = TRUE)
 
 library(omicsagentovi)
 
@@ -35,6 +48,13 @@ make_stub_agent <- function() {
 }
 make_fake_store <- function() {
   omicsagentovi::SessionStore(session_dir = tempdir())
+}
+# Minimal valid pgx: copilot_normalize_pgx requires $X and $name to be non-NULL.
+make_stub_pgx <- function(name = "stub_ds") {
+  structure(
+    list(X = matrix(0, nrow = 2, ncol = 2), name = name),
+    class = c("pgx", "list")
+  )
 }
 
 # ===========================================================================
@@ -343,7 +363,8 @@ test_that("dispatch(new_chat) with dirty agent pre-saves and rebuilds; clears ch
 
   local_mocked_bindings(
     session_is_dirty = function(s) TRUE,
-    session_save = function(store, agent) {
+    # The run controller passes style= and custom= named args; accept with ...
+    session_save = function(store, agent, ...) {
       session_save_called <<- TRUE
       saved_agent
     },
@@ -390,7 +411,7 @@ test_that("dispatch(tier) with same tier is a no-op", {
   session_save_called <- FALSE
   local_mocked_bindings(
     session_is_dirty = function(s) TRUE,
-    session_save = function(store, agent) {
+    session_save = function(store, agent, ...) {
       session_save_called <<- TRUE
       agent
     },
@@ -427,7 +448,8 @@ test_that("dispatch(tier) with different tier pre-saves dirty + updates tier", {
   session_save_called <- FALSE
   local_mocked_bindings(
     session_is_dirty = function(s) TRUE,
-    session_save = function(store, agent) {
+    # The run controller passes style= and custom= named args; accept with ...
+    session_save = function(store, agent, ...) {
       session_save_called <<- TRUE
       agent
     },
@@ -515,7 +537,9 @@ test_that("apply_dataset with NULL agent constructs a new Agent", {
   fake_agent <- make_stub_agent()
 
   local_mocked_bindings(
-    Agent = function(tier, context, session, bindings) {
+    # The run controller calls Agent() via do.call with system_prompt + other
+    # named args not in the original 4-param signature — accept with ...
+    Agent = function(...) {
       agent_constructed <<- TRUE
       fake_agent
     },
@@ -537,7 +561,8 @@ test_that("apply_dataset with NULL agent constructs a new Agent", {
       )
     },
     expr = {
-      ctrl$apply_dataset(list(name = "ds1"), "ds1", NULL, tempdir())
+      # copilot_normalize_pgx requires $X and $name; use a valid stub
+      ctrl$apply_dataset(make_stub_pgx("ds1"), "ds1", NULL, tempdir())
       expect_true(agent_constructed)
       expect_identical(shiny::isolate(agent_rv()), fake_agent)
     }
@@ -583,7 +608,8 @@ test_that("apply_dataset with existing agent calls agent_set_pgx (chat NOT clear
       )
     },
     expr = {
-      ctrl$apply_dataset(list(name = "ds2"), "ds2", NULL, tempdir())
+      # copilot_normalize_pgx requires $X and $name; use a valid stub
+      ctrl$apply_dataset(make_stub_pgx("ds2"), "ds2", NULL, tempdir())
       expect_true(set_pgx_called)
       expect_identical(shiny::isolate(agent_rv()), updated_agent)
 
@@ -598,7 +624,7 @@ test_that("apply_dataset with existing agent calls agent_set_pgx (chat NOT clear
 # Public surface shape
 # ===========================================================================
 
-test_that("copilot_run_controller returns dispatch + apply_dataset", {
+test_that("copilot_run_controller returns dispatch + apply_dataset + on_stream_error", {
   agent_rv      <- shiny::reactiveVal(NULL)
   run_status_rv <- shiny::reactiveVal("idle")
   tier_rv       <- shiny::reactiveVal("copilot-default")
@@ -621,6 +647,49 @@ test_that("copilot_run_controller returns dispatch + apply_dataset", {
     expr = {
       expect_true(is.function(ctrl$dispatch))
       expect_true(is.function(ctrl$apply_dataset))
+      expect_true(is.function(ctrl$on_stream_error))
+    }
+  )
+})
+
+test_that("on_stream_error sets run_status to 'failed' and unblocks dispatch", {
+  agent_rv      <- shiny::reactiveVal(make_stub_agent())
+  run_status_rv <- shiny::reactiveVal("streaming")
+  tier_rv       <- shiny::reactiveVal("copilot-default")
+  pgx_evt       <- shiny::reactiveVal(NULL)
+  chat_evt      <- shiny::reactiveVal(NULL)
+  pgx           <- shiny::reactiveValues(name = NULL)
+
+  shiny::testServer(
+    function(input, output, session) {
+      ctrl <<- copilot_run_controller(
+        agent = agent_rv, run_status = run_status_rv, tier = tier_rv,
+        save_ctrl = list(on_run_settled = function() NULL),
+        restore_ctrl = NULL, evidence = NULL,
+        store = make_fake_store(),
+        chat_event = chat_evt, chat_on_tool_request = function(req) NULL,
+        pgx = pgx, pgx_dir = tempdir(), docs_dir = tempdir(),
+        pgx_loaded_event = pgx_evt, maxturns = Inf, session = session
+      )
+    },
+    expr = {
+      # Simulate the stuck-streaming state after a mid-stream error
+      expect_equal(shiny::isolate(run_status_rv()), "streaming")
+
+      # on_stream_error should settle run_status to "failed"
+      ctrl$on_stream_error()
+      expect_equal(shiny::isolate(run_status_rv()), "failed")
+
+      # After settling, dispatch should no longer be blocked for non-abort kinds
+      # (the streaming guard only applies when status == "streaming")
+      prompt_called <- FALSE
+      local_mocked_bindings(
+        agent_prompt_stream = function(...) { prompt_called <<- TRUE; list() },
+        session_transcript  = function(s, view = "user") list(),
+        .package = "omicsagentovi"
+      )
+      ctrl$dispatch(run_request_ask("can you try again?"))
+      expect_true(prompt_called)
     }
   )
 })

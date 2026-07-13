@@ -8,6 +8,55 @@
 # See .active_plans/refactor_copilot/run_controller/specs.md for the full
 # contract.
 
+# ---- AI provider / credential resolution (shared with restore controller) ----
+#
+# The AI Features settings tab (AppSettingsBoard) writes the user's provider
+# choice and a session-only credential closure into `session$userData` via
+# setUserOption(). `session$userData` is shared across every module session,
+# so the copilot reads here exactly what the settings module wrote — the same
+# cross-module channel get_ai_model() already relies on.
+#
+# Returns the provider id (default "bigomics") and the nullary credential
+# closure `function() key` (or NULL for BigOmics / no key). BigOmics keeps the
+# env-var path (credentials NULL), so existing deployments are unaffected.
+
+#' @noRd
+.copilot_ai_provider <- function(session) {
+  list(
+    provider    = getUserOption(session, "ai_provider") %||% "bigomics",
+    credentials = get_ai_credentials(session)
+  )
+}
+
+# Build the provider/credentials/model args to splice into omicsagentovi::Agent()
+# for a fresh build at `tier`.
+#
+#   - BigOmics (or NULL provider): today's exact behaviour — the tier path only,
+#     no credentials, no model. The managed backend resolves the tier to
+#     gpt-5.4-nano / gpt-5.4-mini via omicsagentovi's own tier table.
+#   - BYOK provider with a per-tier menu model selected: a provider-prefixed
+#     model id (the catalog stores bare ids for BYOK providers) plus the user's
+#     credential closure. Agent infers the provider from the model prefix.
+#   - BYOK provider with an empty/unset menu: fall back to the provider-aware
+#     tier table (Agent resolves `tier` for `provider`), still with the key.
+#
+#' @noRd
+.copilot_agent_build_args <- function(session, tier) {
+  sel <- .copilot_ai_provider(session)
+  if (identical(sel$provider, "bigomics")) {
+    return(list(tier = tier))
+  }
+  menu_key   <- if (identical(tier, "copilot-deep")) "llm_copilot_deep"
+                else "llm_copilot_balanced"
+  menu_model <- getUserOption(session, menu_key)
+  if (!is.null(menu_model) && nzchar(menu_model)) {
+    list(model = paste0(sel$provider, ":", menu_model),
+         credentials = sel$credentials)
+  } else {
+    list(tier = tier, provider = sel$provider, credentials = sel$credentials)
+  }
+}
+
 # ---- Request constructors (pure helpers — no reactives) ----
 
 #' @export
@@ -255,6 +304,32 @@ copilot_run_controller <- function(
     copilot_normalize_pgx(pgx, source = "run_controller/.current_pgx/global")
   }
 
+  # Construct a fresh Agent at `the_tier` for `pgx_val`, splicing in the
+  # user's provider/credentials/model via .copilot_agent_build_args. Returns
+  # NULL (and notifies) on failure. Shared by the dispatch reset path and the
+  # first-load apply_dataset path.
+  .build_new_agent <- function(the_tier, pgx_val, bindings) {
+    tryCatch(
+      do.call(omicsagentovi::Agent, c(
+        .copilot_agent_build_args(session, the_tier),
+        list(
+          system_prompt = .resolve_system_prompt(),
+          context       = omicsagentovi::RunContext(pgx = pgx_val),
+          session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
+          bindings      = bindings
+        )
+      )),
+      error = function(e) {
+        log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
+        shiny::showNotification(
+          copilot_msg("agent_failed", msg = conditionMessage(e)),
+          type = "error", session = session
+        )
+        NULL
+      }
+    )
+  }
+
   # ------------------------------------------------------------------------
   # .run_ask
   # ------------------------------------------------------------------------
@@ -387,7 +462,7 @@ copilot_run_controller <- function(
         log_info("copilot.run.stream_invoke_failed", msg = conditionMessage(e))
         run_status("failed")
         chat_event(list(type = "post", role = "assistant",
-          text = copilot_msg("error_prefix", msg = conditionMessage(e))))
+          text = copilot_friendly_error(e)))
         NULL
       }
     )
@@ -470,23 +545,7 @@ copilot_run_controller <- function(
 
     new_agent <- NULL
     if (!is.null(pgx_val)) {
-      new_agent <- tryCatch(
-        omicsagentovi::Agent(
-          tier          = the_tier,
-          system_prompt = .resolve_system_prompt(),
-          context       = omicsagentovi::RunContext(pgx = pgx_val),
-          session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
-          bindings      = bindings
-        ),
-        error = function(e) {
-          log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
-          shiny::showNotification(
-            copilot_msg("agent_failed", msg = conditionMessage(e)),
-            type = "error", session = session
-          )
-          NULL
-        }
-      )
+      new_agent <- .build_new_agent(the_tier, pgx_val, bindings)
       # Install the dataset locator + current_dataset memory block so the
       # agent is aware of the dataset on the very first turn.
       if (!is.null(new_agent)) {
@@ -588,23 +647,8 @@ copilot_run_controller <- function(
       # the agent is aware of the dataset on the very first turn and the
       # next save records the real dataset name (not "(no dataset)").
       bindings <- .build_bindings()
-      new_agent <- tryCatch(
-        omicsagentovi::Agent(
-          tier          = shiny::isolate(tier()),
-          system_prompt = .resolve_system_prompt(),
-          context       = omicsagentovi::RunContext(pgx = pgx_val),
-          session       = omicsagentovi::AgentSession(session_id = .new_session_id()),
-          bindings      = bindings
-        ),
-        error = function(e) {
-          log_info("copilot.run.agent_construct_failed", msg = conditionMessage(e))
-          shiny::showNotification(
-            copilot_msg("agent_failed", msg = conditionMessage(e)),
-            type = "error", session = session
-          )
-          NULL
-        }
-      )
+      the_tier <- shiny::isolate(tier())
+      new_agent <- .build_new_agent(the_tier, pgx_val, bindings)
       if (!is.null(new_agent)) {
         new_agent <- tryCatch(
           omicsagentovi::agent_set_pgx(
@@ -655,7 +699,12 @@ copilot_run_controller <- function(
 
   # ---- Public surface ----
   list(
-    dispatch      = dispatch,
-    apply_dataset = apply_dataset
+    dispatch        = dispatch,
+    apply_dataset   = apply_dataset,
+    # Settle the run lifecycle after a mid-stream promise rejection.
+    # Called by CopilotChatServer's onRejected handler (wired via
+    # CopilotBoardServer) so run_status leaves "streaming" and dispatch
+    # unblocks for the next user turn.
+    on_stream_error = function() run_status("failed")
   )
 }
