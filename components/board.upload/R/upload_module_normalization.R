@@ -648,17 +648,13 @@ upload_module_normalization_server <- function(
 
       plot_correction <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
-        if (!is.null(input$bec_view) && input$bec_view == "loadings") {
-          plot_bec_biplot("loadings")
-        } else if (!is.null(input$bec_view) && input$bec_view == "pheno") {
-          plot_bec_biplot("pheno")
-        } else if (!is.null(input$bec_view) && input$bec_view == "scree") {
-          plot_bec_scree()
-        } else if (input$batchcorrect) {
-          plot_before_after()
-        } else {
-          plot_all_methods()
-        }
+        bec_view <- if (is.null(input$bec_view)) "pca" else input$bec_view
+        switch(bec_view,
+          loadings = plot_bec_biplot("loadings"),
+          pheno = plot_bec_biplot("pheno"),
+          scree = plot_bec_scree(),
+          if (input$batchcorrect) plot_before_after() else plot_all_methods()
+        )
       }
 
       ## Biplot grid for the BC panel: one biplot per method (sample scores as
@@ -1144,7 +1140,12 @@ upload_module_normalization_server <- function(
           shiny::radioButtons(
             ns("bec_view"),
             label = "Show:",
-            choices = c("Samples (PCA)" = "pca", "Biplot (loadings)" = "loadings", "Biplot (phenotypes)" = "pheno", "Variance explained" = "scree"),
+            choices = c(
+              "Samples (PCA)" = "pca",
+              "Biplot (loadings)" = "loadings",
+              "Biplot (phenotypes)" = "pheno",
+              "Variance explained" = "scree"
+            ),
             selected = "pca",
             inline = FALSE
           ),
