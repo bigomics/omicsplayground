@@ -103,7 +103,7 @@ dataview_plot_expression_server <- function(id,
       }
 
       pd <- list(
-        df = data.frame(x = gx, samples = samples, group = grp),
+        df = data.frame(feature = gene, x = gx, samples = samples, group = grp),
         geneplot_type = input$geneplot_type,
         groupby = groupby,
         ylab = ylab,
