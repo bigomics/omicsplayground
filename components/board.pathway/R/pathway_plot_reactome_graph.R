@@ -122,25 +122,10 @@ functional_plot_reactome_graph_server <- function(id,
 
       plot_RENDER <- function() {
         img <- get_image()
-
-        ## nothing selected yet -> keep the panel blank (get_image returns src = "")
-        if (!is.null(img) && !is.null(img$src) && !nzchar(img$src)) {
-          shiny::req(FALSE)
-        }
-
-        ## selected, but no local diagram could be rendered -> note instead of a crash
+        ## blank until a pathway with an available diagram is selected; the
+        ## reactome table is already filtered to resolvable pathways.
+        shiny::req(img$src, file.exists(img$src))
         filename <- img$src
-        if (is.null(filename) || !file.exists(filename)) {
-          note <- paste0(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="110">',
-            '<text x="15" y="45" font-family="sans-serif" font-size="15">',
-            "<tspan x=\"15\">Reactome diagram is not available for this pathway.</tspan>",
-            "<tspan x=\"15\" dy=\"28\">Use the link in the table to open it on reactome.org.</tspan>",
-            "</text></svg>"
-          )
-          return(svgPanZoom::svgPanZoom(note, controlIconsEnabled = FALSE, viewBox = FALSE))
-        }
-
         img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
           img.svg,
