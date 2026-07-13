@@ -314,6 +314,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
               "Group Order",
               shiny::uiOutput(ns_parent("hm_group_order_ui"))
             ),
+            # Sample Order (individual samples)
+            bslib::accordion_panel(
+              "Sample Order",
+              shiny::uiOutput(ns_parent("hm_sample_order_ui"))
+            ),
             # Margins
             bslib::accordion_panel(
               "Margins",
