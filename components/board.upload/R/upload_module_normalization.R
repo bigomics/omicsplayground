@@ -331,7 +331,9 @@ upload_module_normalization_server <- function(
             rownames(pos[[i]]) <- rownames(scaledX)
             colnames(pos[[i]]) <- paste0(names(pos)[i], "_", seq_len(ncol(pos[[i]])))
           }
-          pos[["pca.varexp"]] <- (pca$d^2 / sum(pca$d^2)) * 100
+          ## total-variance denominator (see compare_batchcorrection_methods):
+          ## keeps uncorrected %varexp comparable to the corrected methods'
+          pos[["pca.varexp"]] <- (pca$d^2 / sum(scaledX^2)) * 100
           out$pos <- pos
           out$corX <- corX
           out
@@ -646,10 +648,133 @@ upload_module_normalization_server <- function(
 
       plot_correction <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
-        if (input$batchcorrect) {
-          plot_before_after()
-        } else {
-          plot_all_methods()
+        bec_view <- if (is.null(input$bec_view)) "pca" else input$bec_view
+        switch(bec_view,
+          loadings = plot_bec_biplot("loadings"),
+          pheno = plot_bec_biplot("pheno"),
+          scree = plot_bec_scree(),
+          if (input$batchcorrect) plot_before_after() else plot_all_methods()
+        )
+      }
+
+      ## Biplot grid for the BC panel: one biplot per method (sample scores as
+      ## points, arrows overlaid) on the two selected PCs. Same method list /
+      ## grid as plot_all_methods. Two arrow sources:
+      ##  - "loadings": top feature loadings (res$loadings, same PCA as scores)
+      ##  - "pheno": each annotation's correlation with the two PCs, precomputed
+      ##    in playbase (res$pheno.cor; eigencorplot-style, plain cor())
+      plot_bec_biplot <- function(arrows = "loadings") {
+        res <- results_correction_methods()
+        shiny::req(res, res$pos)
+        if (arrows == "loadings") shiny::req(res$loadings)
+        samples <- r_samples()
+
+        xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
+        ypc <- as.integer(sub("PC", "", if (is.null(input$bec_ypc)) "PC2" else input$bec_ypc))
+        shiny::req(!is.na(xpc), !is.na(ypc))
+
+        methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
+        methods <- intersect(methods, names(res$pos))
+        colorby_var <- intersect(input$colorby_var, colnames(samples))
+
+        ## arrow endpoints for a method: named 2-col matrix in loading- or
+        ## correlation-units (scaled to the score cloud later). Both come
+        ## precomputed from playbase::compare_batchcorrection_methods.
+        arrow_ends <- function(m, scores) {
+          if (arrows == "loadings") {
+            L <- res$loadings[[m]]
+            if (is.null(L) || max(xpc, ypc) > ncol(L)) {
+              return(NULL)
+            }
+            A <- L[, c(xpc, ypc), drop = FALSE]
+            A[head(order(-(A[, 1]^2 + A[, 2]^2)), 8), , drop = FALSE]
+          } else {
+            Rc <- res$pheno.cor[[m]]
+            if (is.null(Rc) || max(xpc, ypc) > ncol(Rc)) {
+              return(NULL)
+            }
+            A <- Rc[, c(xpc, ypc), drop = FALSE]
+            A <- A[stats::complete.cases(A), , drop = FALSE]
+            if (!nrow(A)) {
+              return(NULL)
+            }
+            A[head(order(-(A[, 1]^2 + A[, 2]^2)), 12), , drop = FALSE]
+          }
+        }
+
+        draw_biplot <- function(m) {
+          P <- res$pos[[m]]
+          if (is.null(P) || max(xpc, ypc) > ncol(P)) {
+            plot.new()
+            text(0.45, 0.5, "method failed")
+            title(m, cex.main = 1.3)
+            return(invisible())
+          }
+          scores <- P[, c(xpc, ypc), drop = FALSE]
+
+          smp <- samples[rownames(scores), , drop = FALSE]
+          color <- factor(smp[, colorby_var])
+          cex1 <- cut(nrow(scores), c(0, 40, 100, 250, 1000, 999999), c(1, 0.85, 0.7, 0.55, 0.4))
+          cex1 <- 2 * as.numeric(as.character(cex1))
+          if (is.na(cex1)) cex1 <- 1
+
+          lim <- c(-1, 1) * max(abs(scores)) * 1.3
+          plot(scores,
+            col = color, pch = 20, cex = cex1, las = 1, xlim = lim, ylim = lim,
+            xlab = paste0("PC", xpc), ylab = paste0("PC", ypc)
+          )
+          title(m, cex.main = 1.3)
+          abline(h = 0, v = 0, lty = 3, col = "grey70")
+
+          A <- arrow_ends(m, scores)
+          if (is.null(A) || !nrow(A) || max(abs(A)) == 0) {
+            return(invisible())
+          }
+          ## scale arrows to fill the score cloud (loadings/correlations sit on a
+          ## much smaller scale than the scores)
+          s <- 0.85 * max(abs(scores)) / max(abs(A))
+          ax <- A[, 1] * s
+          ay <- A[, 2] * s
+          arrows(0, 0, ax, ay, length = 0.05, col = "#B3444488", lwd = 1.3)
+          ## repel labels off each other (base-graphics; places each away from
+          ## its nearest neighbour) rather than a fixed left/right offset
+          plotrix::thigmophobe.labels(ax, ay, rownames(A),
+            cex = 0.65, col = "#7A2E2E", offset = 0.4, xpd = NA
+          )
+        }
+
+        par(mfrow = c(2, 3), mar = c(3, 3, 2, 1), mgp = c(1.9, 0.4, 0), tcl = -0.2)
+        for (m in methods) draw_biplot(m)
+      }
+
+      ## Scree grid for the BC panel: per method, % variance explained per PC
+      ## (bars) with the cumulative % overlaid as a line. Both are in % units on
+      ## the same y-axis. Uses res$pca.varexp (now normalised to total variance).
+      plot_bec_scree <- function() {
+        res <- results_correction_methods()
+        shiny::req(res, res$pca.varexp)
+
+        methods <- c("uncorrected", sort(c("ComBat", "limma", "RUV", "SVA", "NPM")))
+        methods <- intersect(methods, names(res$pca.varexp))
+
+        par(mfrow = c(2, 3), mar = c(3.2, 3.4, 2, 1), mgp = c(2, 0.5, 0), tcl = -0.2)
+        for (m in methods) {
+          ve <- res$pca.varexp[[m]]
+          if (is.null(ve)) {
+            plot.new()
+            text(0.45, 0.5, "method failed")
+            title(m, cex.main = 1.3)
+            next
+          }
+          ve <- ve[seq_len(min(length(ve), 10))]
+          cum <- cumsum(ve)
+          bp <- barplot(ve,
+            col = "#8FB3D9", border = NA, ylim = c(0, min(100, max(cum) * 1.1)),
+            names.arg = paste0("PC", seq_along(ve)), las = 2, cex.names = 0.7,
+            ylab = "% variance explained"
+          )
+          title(m, cex.main = 1.3)
+          lines(bp, cum, type = "b", pch = 20, col = "#B34444", lwd = 1.5)
         }
       }
 
@@ -1012,6 +1137,18 @@ upload_module_normalization_server <- function(
         )
 
         bec.options <- tagList(
+          shiny::radioButtons(
+            ns("bec_view"),
+            label = "Show:",
+            choices = c(
+              "Samples (PCA)" = "pca",
+              "Biplot (loadings)" = "loadings",
+              "Biplot (phenotypes)" = "pheno",
+              "Variance explained" = "scree"
+            ),
+            selected = "pca",
+            inline = FALSE
+          ),
           shiny::radioButtons(
             ns("colorby_var"),
             label = "Annotate by:",

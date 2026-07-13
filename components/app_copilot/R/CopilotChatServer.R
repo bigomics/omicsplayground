@@ -50,9 +50,10 @@ CopilotChatServer <- function(
   on_abort      = NULL,
   tier_choices  = NULL,
   current_tier  = NULL,
-  style_choices = NULL,
-  current_style = NULL,
-  starters      = NULL
+  style_choices   = NULL,
+  current_style   = NULL,
+  starters        = NULL,
+  on_stream_error = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
 
@@ -228,8 +229,13 @@ CopilotChatServer <- function(
             },
             onRejected = function(e) {
               msg <- conditionMessage(e)
+              log_info("copilot.chat.stream_error", msg = msg)
               last_error_rv(msg)
-              .post("assistant", copilot_msg("error_prefix", msg = msg))
+              # Settle the run lifecycle so dispatch unblocks and the send
+              # button un-morphs. run_status is owned by copilot_run_controller
+              # and wired in via on_stream_error by CopilotBoardServer.
+              if (is.function(on_stream_error)) on_stream_error()
+              .post("assistant", copilot_friendly_error(e))
               stream_done_rv(shiny::isolate(stream_done_rv()) + 1L)
             }
           )

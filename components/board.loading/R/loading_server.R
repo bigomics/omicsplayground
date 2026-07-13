@@ -320,8 +320,10 @@ LoadingBoard <- function(id,
     }
 
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
+      if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
+      cred_fn <- get_ai_credentials(session)
 
       pgx_list <- shiny::reactiveValuesToList(pgx)
       report_modules <- ai_report_modules_for_pgx(pgx_list)
@@ -352,7 +354,8 @@ LoadingBoard <- function(id,
               img_model = NULL,
               select = report_modules,
               report_type = "normal",
-              on_error = "warn"
+              on_error = "warn",
+              credentials = cred_fn
             )
             updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
             if (isTRUE(updated) && isTRUE(is_user_dir) && !is.null(save_pgx)) {

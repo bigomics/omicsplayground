@@ -498,7 +498,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       }
     }
 
-    launch_next_report_job <- function(llm_model, run_id) {
+    launch_next_report_job <- function(llm_model, run_id, cred_fn = NULL) {
       if (!isTRUE(report_jobs$running) ||
           !identical(run_id, report_jobs$run_id)) {
         return(NULL)
@@ -507,10 +507,10 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
 
       module <- report_jobs$queue[[1L]]
       report_jobs$queue <- report_jobs$queue[-1L]
-      launch_report_job(module, llm_model, run_id)
+      launch_report_job(module, llm_model, run_id, cred_fn)
     }
 
-    launch_report_job <- function(module, llm_model, run_id) {
+    launch_report_job <- function(module, llm_model, run_id, cred_fn = NULL) {
       pgx_list <- pgx_snapshot()
       token <- report_jobs$token
       label <- report_module_labels(module)
@@ -527,7 +527,8 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
             select = module,
             img_model = NULL,
             report_type = "normal",
-            on_error = "warn"
+            on_error = "warn",
+            credentials = cred_fn
           )
         )
       }, seed = TRUE)
@@ -596,7 +597,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
               )
             }
           } else {
-            launch_next_report_job(llm_model, run_id)
+            launch_next_report_job(llm_model, run_id, cred_fn)
           }
           NULL
         },
@@ -620,7 +621,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
             finish_report_jobs("AI report generation completed with errors.",
               type = "error")
           } else {
-            launch_next_report_job(llm_model, run_id)
+            launch_next_report_job(llm_model, run_id, cred_fn)
           }
           NULL
         }
@@ -628,7 +629,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       invisible(promise)
     }
 
-    start_report_jobs <- function(modules, llm_model) {
+    start_report_jobs <- function(modules, llm_model, cred_fn = NULL) {
       modules <- unique(as.character(modules))
       modules <- modules[!is.na(modules) & nzchar(modules)]
       if (!length(modules)) {
@@ -652,7 +653,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
       report_progress("Starting selected reports")
       updateActionButton(session, "generate", label = "Generating...")
 
-      launch_next_report_job(llm_model, run_id)
+      launch_next_report_job(llm_model, run_id, cred_fn)
       invisible(NULL)
     }
 
@@ -742,12 +743,15 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
           type = "message", session = session)
         return(NULL)
       }
+      # Capture credential closure here — in the reactive context — before it
+      # enters the future_promise worker (where session is unavailable).
+      cred_fn <- get_ai_credentials(session)
 
       shiny::removeModal()
       info("[AiReportServer] report modal confirmed: modules=",
         paste(modules, collapse = ","),
         " llm_model=", llm_model)
-      start_report_jobs(modules, llm_model)
+      start_report_jobs(modules, llm_model, cred_fn)
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(pgx$name, {

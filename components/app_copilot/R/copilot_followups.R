@@ -1,9 +1,10 @@
 # copilot_followups.R — Side LLM call producing follow-up question
 # suggestions after every completed assistant turn.
 #
-# Architecture: small side call via ../omicsai (NOT the main omicsagentovi
-# Agent) so the follow-up prompt does not pollute the agent's transcript,
-# turn budget, or tool surface. Cheap, fast, runtime-optional.
+# Architecture: small side call through the installed omicsai package (NOT the
+# main omicsagentovi Agent) so the follow-up prompt does not pollute the
+# agent's transcript, turn budget, or tool surface. Cheap, fast,
+# runtime-optional.
 #
 # Input shape: structured payload built by build_followup_payload()
 # (in copilot_followups_inputs.R). The helper sees a strict subset of the
@@ -135,7 +136,7 @@ render_followup_prompt <- function(payload, n = 2L) {
 #' promise resolving to a `character()` vector of 0..n follow-up questions.
 #'
 #' @param model Provider-qualified model id. Default
-#'   `"groq:openai/gpt-oss-120b"` matches `../omicsai/R/model_registry.R`.
+#'   `"groq:openai/gpt-oss-120b"` matches an omicsai registry model.
 #' @param n Integer, number of follow-up questions to request (default 2L).
 #' @param config Optional pre-built `omicsai_config`. If supplied, `model` is
 #'   ignored.

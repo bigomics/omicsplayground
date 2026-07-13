@@ -1,8 +1,9 @@
 # folders
 ######################
 libx/
+etc/*
+!etc/ai_model_policy.json
 etc/online/
-etc/
 etc/hubspot_creds
 
 # R data
