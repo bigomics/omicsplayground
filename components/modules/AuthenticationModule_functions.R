@@ -99,6 +99,17 @@ read_user_field_db <- function(email, user_database, field) {
   user_config |> as.character()
 }
 
+## BYOK (bring-your-own-key) entitlement: may this user select an AI provider
+## other than "bigomics" and supply their own API key? Enterprise-only, plus a
+## blank level ("") — the no-auth/dev case, on-prem Header/Cookie deployments
+## that don't inject a level, and the Password/CSV path when the CREDENTIALS
+## file omits a "level" column. Never a live Honcho tier, which defaults to
+## "free". "pro"/"free" are NOT entitled.
+ai_byok_allowed <- function(level) {
+  lvl <- level %||% ""
+  identical(lvl, "enterprise") || !nzchar(lvl)
+}
+
 upgrade.dialog <- function(ns, current.plan) {
   btn_basic <- "Go Basic!"
   btn_starter <- "Get Starter!"

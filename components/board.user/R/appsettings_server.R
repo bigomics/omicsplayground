@@ -160,6 +160,18 @@ AppSettingsBoard <- function(id, auth, pgx) {
         if (is.null(provider) || !nzchar(provider)) {
           return(NULL)
         }
+
+        ## BYOK entitlement is the authoritative gate: client inputs are
+        ## forgeable, so a non-enterprise session can never persist a
+        ## non-bigomics provider or a key here, regardless of the UI state.
+        ## Also snap the dropdown back on every change (not just at startup like
+        ## the lock observer), so a forged selection is visibly reverted too.
+        if (!ai_byok_allowed(auth$level)) {
+          provider <- "bigomics"
+          if (!identical(input$ai_provider, "bigomics")) {
+            shiny::updateSelectInput(session, "ai_provider", selected = "bigomics")
+          }
+        }
         setUserOption(session, "ai_provider", provider)
 
         ## BigOmics uses the env-var path downstream (no key). Any other
@@ -194,8 +206,10 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## choices; empty/error responses keep the static catalog-derived menus.
     shiny::observeEvent(input$ai_test_load, {
       provider <- input$ai_provider
+      ## Non-BYOK users have no business issuing an outbound provider request
+      ## with a client-supplied key/base_url — guard the forged-input path too.
       if (is.null(provider) || !nzchar(provider) ||
-          identical(provider, "bigomics")) {
+          identical(provider, "bigomics") || !ai_byok_allowed(auth$level)) {
         ai_test_status(list(state = "idle", label = "Not tested"))
         return(NULL)
       }
@@ -265,11 +279,24 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## always grey them when the deployment is not licensed for AI
     ## (opt$ENABLE_AI == FALSE) — so admins keep control over AI usage.
     shiny::observe({
-      locked <- (isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)) ||
+      ## Base lock: deployment pins AI config for non-admins, or the deployment
+      ## is unlicensed. Governs the "Enable AI" switch.
+      base_locked <- (isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)) ||
         !isTRUE(opt$ENABLE_AI)
-      for (input_id in c("ai_provider", "enable_ai")) {
-        if (locked) shinyjs::disable(input_id) else shinyjs::enable(input_id)
+
+      ## Non-enterprise (non-BYOK) users may not change the provider: pin it to
+      ## bigomics and grey it too. This mirrors the authoritative write-observer
+      ## coercion above — the disable is UX, the server coercion is the gate.
+      ## The BYOK lock must NOT extend to enable_ai: a free/pro customer admin
+      ## still toggles AI on/off.
+      byok <- ai_byok_allowed(auth$level)
+      if (!byok) {
+        shiny::updateSelectInput(session, "ai_provider", selected = "bigomics")
       }
+      provider_locked <- base_locked || !byok
+
+      if (base_locked) shinyjs::disable("enable_ai") else shinyjs::enable("enable_ai")
+      if (provider_locked) shinyjs::disable("ai_provider") else shinyjs::enable("ai_provider")
     })
 
     ## Effective AI-enabled state = deployment licence (opt$ENABLE_AI) AND the
