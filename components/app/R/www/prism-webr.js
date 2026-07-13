@@ -99,7 +99,6 @@ async function executePlotCode(code, csv) {
 
   status('Rendering plot…', '#64748b');
 
-  const safeCode = code.replace(/\\/g, '\\\\');
   const safeCsv = escapeRString(csv || '');
 
   const wrapped = `
@@ -110,7 +109,7 @@ local({
   on.exit({ if (dev.cur() > 1) dev.off(); unlink(tmp) }, add = TRUE)
   tryCatch(
     {
-      .plotbot_result <- withVisible({ ${safeCode} })
+      .plotbot_result <- withVisible({ ${code} })
       if (.plotbot_result$visible) print(.plotbot_result$value)
     },
     error = function(e) stop(conditionMessage(e))
