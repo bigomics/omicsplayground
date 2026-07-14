@@ -661,44 +661,6 @@ loading_table_datasets_server <- function(id,
       selector = "single"
     )
 
-    ## --------------- edit rows of  pgxtable ---------------------
-    # observeEvent(
-    #   input[["datasets-datatable_cell_edit"]],
-    #   {
-    #     row <- input[["datasets-datatable_cell_edit"]]$row
-    #     col <- input[["datasets-datatable_cell_edit"]]$col
-    #     val <- input[["datasets-datatable_cell_edit"]]$value
-
-    #     df <- table_data()
-    #     col_edited <- colnames(df)[col]
-
-    #     dataset_edited <- df$dataset[row]
-    #     pgxinfo <- getPGXINFO()
-
-    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
-    #     pgxinfo[row_edited, col_edited] <- val
-    #     fname <- file.path(auth$user_dir, "datasets-info.csv")
-    #     write.csv(pgxinfo, fname)
-
-    #     ## also rewrite description in actual pgx file
-    #     pgx_name <- dataset_edited
-    #     pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
-    #     pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
-
-    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
-    #     new_val <- pgxinfo[row_edited, col_edited]
-    #     pgx[[col_edited]] <- new_val
-
-    #     dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
-    #     dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
-    #     playbase::pgx.save(pgx, file = pgx_file)
-    #     remove(pgx)
-    #     dbg("[datasets-datatable_cell_edit] done!")
-    #   },
-    #   ignoreInit = TRUE
-    # )
-
-
     table_selected_pgx <- shiny::reactive({
       req(table_module)
 

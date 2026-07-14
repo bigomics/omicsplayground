@@ -24,7 +24,6 @@ EpigenomicsBoard <- function(id, pgx) {
       shiny::updateSelectizeInput(session, "select_chromosome",
         choices = chroms, selected = chroms[1:4], server = T
       )
-      shiny::updateSelectizeInput(session, "search_gene", choices = rownames(pgx$X), server = T)
       shiny::updateSelectInput(session, "data_samplefilter", choices = colnames(pgx$X))
       Y <- pgx$samples
       pheno <- colnames(Y)[sapply(Y, function(v) any(!is.na(v) & v != ""))]

@@ -11,8 +11,6 @@ splashLoginModal <- function(ns = NULL,
                              with.email = TRUE,
                              with.password = TRUE,
                              with.username = FALSE,
-                             with.firebase = FALSE,
-                             with.firebase_emailonly = FALSE,
                              with.link = FALSE,
                              link = NULL,
                              hide.password = TRUE,
@@ -71,7 +69,6 @@ splashLoginModal <- function(ns = NULL,
   div.password <- div()
   div.email <- div()
   div.username <- div()
-  div.firebase <- div()
   div.title <- div()
   div.subtitle <- div()
   div.link <- div()
@@ -108,103 +105,6 @@ splashLoginModal <- function(ns = NULL,
       )
     }
   }
-  if (with.firebase) {
-    div.firebase <- div(
-      class = "card",
-      div(
-        class = "card-body",
-        h1(
-          title,
-          class = "card-title pb-2"
-        ),
-        div(
-          subtitle
-        ),
-        textInput(
-          ns2("emailInput"),
-          "",
-          placeholder = "Your email",
-          width = "100%"
-        ),
-        actionButton(
-          ns2("emailSubmit"),
-          "Send link",
-          class = "btn-warning"
-        ),
-        p(
-          id = "emailFeedbackShow"
-        ),
-        hr(style = "color:#888;opacity:1;margin-top:30px;"),
-        h5(
-          "or",
-          class = "text-center pb-4 pt-1",
-          style = "margin-top:-35px;background:white;width:50px;margin-left:auto;margin-right:auto;"
-        ),
-        div(
-          class = "social-button google-button",
-          actionLink(
-            ns2("launchGoogle"),
-            HTML("&nbsp; Sign in with Google"),
-            icon = shiny::icon("google", style = "font-size:18px;")
-          )
-        ),
-        div(
-          class = "social-button facebook-button",
-          actionLink(
-            ns2("launchFacebook"),
-            HTML("&nbsp; Sign in with Facebook"),
-            icon = shiny::icon("facebook", style = "font-size:18px;")
-          )
-        ),
-        ## div(
-        ##   class = "social-button apple-button",
-        ##   actionLink(
-        ##     ns2("launchApple"),
-        ##     HTML("&nbsp; Sign in with Apple"),
-        ##     icon = shiny::icon("apple", style="font-size:18px;")
-        ##   )
-        ## ),
-        div(
-          class = "social-button twitter-button",
-          actionLink(
-            ns2("launchTwitter"),
-            HTML("&nbsp; Sign in with Twitter"),
-            icon = shiny::icon("twitter", style = "font-size:18px;")
-          )
-        )
-      )
-    )
-  }
-  if (with.firebase_emailonly) {
-    div.firebase <- div(
-      class = "card",
-      div(
-        class = "card-body",
-        h1(
-          title,
-          class = "card-title pb-2"
-        ),
-        div(
-          subtitle
-        ),
-        textInput(
-          ns2("emailInput"),
-          "",
-          placeholder = "Your email",
-          width = "100%"
-        ),
-        actionButton(
-          ns2("emailSubmit"),
-          "Send link",
-          class = "btn-warning"
-        ),
-        p(
-          id = "emailFeedbackShow"
-        )
-      )
-    )
-  }
-
   if (!is.null(title) && title != "") {
     div.title <- div(
       id = ns2("splash-login-title"),
@@ -264,23 +164,18 @@ splashLoginModal <- function(ns = NULL,
   }
 
   ## splash.panel=div();ns=function(x)
-  splash.content <- NULL
-  if (with.firebase || with.firebase_emailonly) {
-    splash.content <- div.firebase
-  } else {
-    splash.content <- shiny::wellPanel(
-      ## style = "padding: 40px 20px; background-color: #ffffff22;",
-      style = "padding: 35px 25px; background-color:white; color:black;",
-      id = ns2("splash-login"),
-      div.title,
-      div.subtitle,
-      div.username,
-      div.email,
-      div.password,
-      div.button,
-      div.link
-    )
-  }
+  splash.content <- shiny::wellPanel(
+    ## style = "padding: 40px 20px; background-color: #ffffff22;",
+    style = "padding: 35px 25px; background-color:white; color:black;",
+    id = ns2("splash-login"),
+    div.title,
+    div.subtitle,
+    div.username,
+    div.email,
+    div.password,
+    div.button,
+    div.link
+  )
 
   body <- div(
     id = ns2("splash-content"),

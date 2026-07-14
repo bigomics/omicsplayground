@@ -61,7 +61,6 @@ upload_plot_pcaplot_server <- function(id,
           X[is.na(X)] <- median(X, na.rm = TRUE)
         }
 
-        ## clust <- playbase::pgx.clusterMatrix.DEPRECATED(X, dims = 2, method = method)$pos2d
         clust <- playbase::pgx.clusterBigMatrix(X, dims = 2, method = method[1])
         clust[[1]]
       })
