@@ -147,7 +147,7 @@ ngs$description = "Proteome profiles of activated  vs resting human naive T cell
 ngs$organism = 'human'
 
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)
 
 
 ##===================================================================
