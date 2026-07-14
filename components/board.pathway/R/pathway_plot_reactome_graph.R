@@ -108,10 +108,11 @@ functional_plot_reactome_graph_server <- function(id,
         pathway.name <- df[sel.row, "pathway"]
         pw.genes <- unlist(playdata::getGSETS(as.character(pathway.name)))
 
-        ## folder with predownloaded SBGN files
-        # sbgn.dir <- pgx.system.file("sbgn/", package = "pathway")
-        # sbgn.dir <- normalizePath(sbgn.dir) ## absolute path
-        imgfile <- playbase::getReactomeSVG(
+        ## Fetch the native Reactome diagram SVG from our mirror. reactome.org's
+        ## live exporter is Cloudflare-blocked for server-side fetches; the table
+        ## above is filtered to pathways that resolve to a diagram, so this
+        ## returns an image for every selectable row (see playbase::getReactomeSVG).
+        imgfile <- playbase::getPathwayImage(
           pathway.id,
           val = fc, as.img = TRUE
         )
@@ -121,7 +122,9 @@ functional_plot_reactome_graph_server <- function(id,
 
       plot_RENDER <- function() {
         img <- get_image()
-        shiny::req(img$src)
+        ## blank until a pathway with an available diagram is selected; the
+        ## reactome table is already filtered to resolvable pathways.
+        shiny::req(img$src, file.exists(img$src))
         filename <- img$src
         img.svg <- readChar(filename, nchars = file.info(filename)$size)
         pz <- svgPanZoom::svgPanZoom(
