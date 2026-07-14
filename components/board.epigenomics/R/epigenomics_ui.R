@@ -19,17 +19,6 @@ EpigenomicsInputs <- function(id) {
       )
     ),
 
-    ## withTooltip(
-    ##   shiny::selectizeInput(
-    ##     inputId = ns("search_gene"),
-    ##     label = tspan("Gene:"),
-    ##     choices = NULL,
-    ##     options = list(maxOptions = 1001)
-    ##   ),
-    ##   "Type a gene of interest.",
-    ##   placement = "top"
-    ## ),
-
     withTooltip(
       shiny::selectInput(
         inputId = ns("data_samplefilter"),

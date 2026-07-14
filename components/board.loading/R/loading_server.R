@@ -86,41 +86,6 @@ LoadingBoard <- function(id,
       )
     })
 
-    ## output$sharing_panel_ui <- renderUI({
-    ##   if (!auth$options$ENABLE_USER_SHARE) {
-    ##     return(
-    ##       "Your version does not allow sharing of datasets."
-    ##     )
-    ##   }
-    ##   received_files <- pgxreceived$getReceivedFiles()
-    ##   shared_files <- pgxshared$getSharedFiles()
-    ##   num_received <- length(received_files)
-    ##   num_shared <- length(shared_files)
-
-    ##   ## if (num_received == 0 && num_shared == 0) {
-    ##   ##   dbg("[sharing_panel_ui] no shared datasets!")
-    ##   ##   return(paste("No shared datasets in queue."))
-    ##   ## }
-
-    ##   out1 <- shiny::wellPanel(
-    ##     shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-    ##     br(), br(),
-    ##     pgxreceived$receivedPGXtable(),
-    ##     br()
-    ##   )
-
-    ##   out2 <- shiny::wellPanel(
-    ##     shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-    ##     br(), br(),
-    ##     pgxshared$sharedPGXtable(),
-    ##     br()
-    ##   )
-
-    ##   out <- shiny::tagList(out1, out2)
-    ##   return(out)
-    ## })
-
-    
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
