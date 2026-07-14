@@ -80,7 +80,7 @@ UploadBoard <- function(id,
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")
-      names(all_species) <- paste0(all_species, " (", common_name, ")")
+      names(all_species) <- common_name
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
       shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
