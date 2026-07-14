@@ -1485,6 +1485,10 @@ upload_module_computepgx_server <- function(
         if (file.exists(result_pgx)) {
           pgx <- playbase::pgx.load(result_pgx) ## always pgx
           computedPGX(pgx)
+          tryCatch(
+            ai_telemetry_record_reports(pgx, user_email = auth$email),
+            error = function(e) NULL
+          )
         } else {
           info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }

@@ -323,6 +323,15 @@ LoadingBoard <- function(id,
               credentials = cred_fn
             )
             updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
+            if (isTRUE(updated)) {
+              tryCatch(
+                ai_telemetry_record_reports(
+                  shiny::isolate(shiny::reactiveValuesToList(pgx)),
+                  user_email = auth$email
+                ),
+                error = function(e) NULL
+              )
+            }
             if (isTRUE(updated) && isTRUE(is_user_dir) && !is.null(save_pgx)) {
               save_pgx(pgx)
             }

@@ -488,3 +488,66 @@ ai_telemetry_collect_chat <- function(session_dir, user_email,
   }
   target
 }
+
+## ---------------------------------------------------------------------------
+## .8 — record_reports(): reconcile helper for AI report slots
+
+#' Record telemetry for all AI report slots that carry usage data
+#'
+#' Scans \code{pgx$ai} and calls \code{ai_telemetry_record()} once per slot
+#' that has a non-NULL \code{usage} field. Uses the slot's \code{created_at}
+#' epoch and a dataset-keyed \code{session_id} so the resulting
+#' \code{event_id = "report:<dataset_id>:<module>:<created_at>"} is stable
+#' across sessions and reloads — INSERT OR IGNORE deduplicates replays.
+#'
+#' Safe to call multiple times on the same pgx; tolerate \code{user_email = NA}.
+#' Errors are logged but never propagate (fire-and-forget).
+#'
+#' @param pgx       PGX object as a plain list (not reactive).
+#' @param user_email User email from auth\$email; may be NA.
+#' @param db_path   Telemetry db path.
+#' @return Invisible character vector of event ids recorded (may be empty).
+ai_telemetry_record_reports <- function(pgx, user_email,
+                                        db_path = .ai_tel_default_db()) {
+  if (is.null(pgx) || !is.list(pgx)) return(invisible(character(0)))
+  ai <- if (is.list(pgx$ai)) pgx$ai else NULL
+  if (is.null(ai)) return(invisible(character(0)))
+
+  dataset_id <- if (!is.null(pgx$name) && nzchar(pgx$name %||% "")) pgx$name else ""
+  slots      <- names(ai)
+  recorded   <- character(0)
+
+  for (module in slots) {
+    slot <- ai[[module]]
+    if (!is.list(slot)) next
+    usage <- slot$usage
+    if (is.null(usage)) next
+
+    model      <- usage$model %||% NA_character_
+    created_at <- slot$created_at %||% as.numeric(Sys.time())
+
+    # Build a stable, dataset-keyed session_id so the sink's formula produces:
+    #   event_id = "report:<dataset_id>:<module>:<created_at_us>"
+    session_id <- paste0(dataset_id, ":", module)
+
+    ev_id <- tryCatch(
+      ai_telemetry_record(
+        source     = "report",
+        session_id = session_id,
+        user_email = user_email,
+        model      = model,
+        usage      = usage,
+        created_at = structure(created_at, class = c("POSIXct", "POSIXt")),
+        db_path    = db_path
+      ),
+      error = function(e) {
+        warning("[ai_telemetry_record_reports] failed for module '", module,
+                "': ", conditionMessage(e), call. = FALSE)
+        NULL
+      }
+    )
+    if (!is.null(ev_id)) recorded <- c(recorded, ev_id)
+  }
+
+  invisible(recorded)
+}
