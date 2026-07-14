@@ -563,17 +563,12 @@ AiReportServer <- function(id, pgx, save_pgx = NULL) {
 
           report_jobs$done <- report_jobs$done + 1L
 
-          # Telemetry: log one event per report generation on the main thread.
-          # TODO(telemetry): tokens unavailable until playbase returns usage from
-          # pgx.update_reports() (computed in the future worker, not returned here).
-          # TODO(telemetry): thread auth$email for attribution (no auth in StudioServer scope).
+          # Telemetry: record one event per report from the persisted pgx$ai slot.
+          # Dataset-keyed event_id makes this idempotent across sessions/reloads.
           tryCatch(
-            ai_telemetry_record(
-              source     = "report",
-              session_id = paste0(session$token, ":", result$module),
-              user_email = NA_character_,
-              model      = llm_model,
-              usage      = NULL
+            ai_telemetry_record_reports(
+              shiny::isolate(shiny::reactiveValuesToList(pgx)),
+              user_email = NA_character_
             ),
             error = function(e) NULL
           )

@@ -86,41 +86,6 @@ LoadingBoard <- function(id,
       )
     })
 
-    ## output$sharing_panel_ui <- renderUI({
-    ##   if (!auth$options$ENABLE_USER_SHARE) {
-    ##     return(
-    ##       "Your version does not allow sharing of datasets."
-    ##     )
-    ##   }
-    ##   received_files <- pgxreceived$getReceivedFiles()
-    ##   shared_files <- pgxshared$getSharedFiles()
-    ##   num_received <- length(received_files)
-    ##   num_shared <- length(shared_files)
-
-    ##   ## if (num_received == 0 && num_shared == 0) {
-    ##   ##   dbg("[sharing_panel_ui] no shared datasets!")
-    ##   ##   return(paste("No shared datasets in queue."))
-    ##   ## }
-
-    ##   out1 <- shiny::wellPanel(
-    ##     shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-    ##     br(), br(),
-    ##     pgxreceived$receivedPGXtable(),
-    ##     br()
-    ##   )
-
-    ##   out2 <- shiny::wellPanel(
-    ##     shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-    ##     br(), br(),
-    ##     pgxshared$sharedPGXtable(),
-    ##     br()
-    ##   )
-
-    ##   out <- shiny::tagList(out1, out2)
-    ##   return(out)
-    ## })
-
-    
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
@@ -358,6 +323,15 @@ LoadingBoard <- function(id,
               credentials = cred_fn
             )
             updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
+            if (isTRUE(updated)) {
+              tryCatch(
+                ai_telemetry_record_reports(
+                  shiny::isolate(shiny::reactiveValuesToList(pgx)),
+                  user_email = auth$email
+                ),
+                error = function(e) NULL
+              )
+            }
             if (isTRUE(updated) && isTRUE(is_user_dir) && !is.null(save_pgx)) {
               save_pgx(pgx)
             }

@@ -111,6 +111,36 @@ test_that("ai_report_update_text edits pgx$ai reports only", {
   expect_equal(updated$wgcna$report$report, "old wgcna")
 })
 
+test_that("ai_report_update_text sets edited=TRUE without touching created_at", {
+  created_epoch <- 1750000000
+
+  pgx <- list(ai = list(
+    combined = list(
+      report     = "original",
+      prompt     = "p",
+      usage      = list(total = 100L, model = "m"),
+      created_at = created_epoch,
+      edited     = FALSE,
+      edited_at  = ""
+    )
+  ))
+
+  before <- Sys.time()
+  updated <- ai_report_update_text(pgx, c(combined = "edited text"))
+  after  <- Sys.time()
+
+  slot <- updated$ai$combined
+  expect_equal(slot$report, "edited text")
+  expect_true(isTRUE(slot$edited))
+  expect_gte(slot$edited_at, as.numeric(before))
+  expect_lte(slot$edited_at, as.numeric(after))
+  # created_at must be untouched
+  expect_equal(slot$created_at, created_epoch)
+  # usage must be untouched
+  expect_equal(slot$usage$total, 100L)
+  expect_equal(slot$prompt, "p")
+})
+
 test_that("ai_report_merge_into_reactive preserves existing pgx$ai slots", {
   pgx_rv <- new.env(parent = emptyenv())
   pgx_rv$ai <- list(

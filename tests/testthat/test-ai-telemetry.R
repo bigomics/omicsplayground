@@ -1,9 +1,14 @@
 ## Tests for the AI telemetry core module (components/modules/AiTelemetry.R).
 ## Covers pricing resolution + math, DB schema/idempotency, the turn parser,
-## record() push sink, and collect_chat() idempotent pull.
+## record() push sink, collect_chat() idempotent pull, and record_reports().
 
-source(file.path(rprojroot::find_root(rprojroot::has_file("DESCRIPTION")),
-                 "components", "modules", "AiTelemetry.R"))
+# AiTelemetry.R (sourced below into globalenv) uses %||%, whose canonical
+# definition lives in components/app/R/utils/utils.R. source() defaults to the
+# global env, so pull in that real definition rather than re-defining the
+# operator here (project rule: never shim %||%).
+.opg_root <- rprojroot::find_root(rprojroot::has_file("DESCRIPTION"))
+source(file.path(.opg_root, "components", "app", "R", "utils", "utils.R"))
+source(file.path(.opg_root, "components", "modules", "AiTelemetry.R"))
 
 # A pricing YAML written into `dir` so tests don't depend on etc/.
 .write_pricing_yaml <- function(dir) {
@@ -147,6 +152,91 @@ test_that("sessions db name + legacy migration helper", {
   expect_equal(basename(resolved), "sessions-a@b.com.sqlite")
   expect_true(file.exists(resolved))
   expect_false(file.exists(legacy))
+})
+
+test_that("ai_telemetry_record_reports skips NULL-usage slots and records others", {
+  d <- tempfile("repdir"); dir.create(d); on.exit(unlink(d, recursive = TRUE))
+  db <- file.path(d, "ai_telemetry.sqlite")
+
+  # usage mirrors what playbase stores: omicsai's native .omicsai_extract_usage()
+  # field names + model. The sink reads these exact names, so the token columns
+  # must populate — a renamed shape (total=/input=/output=) silently NA-fills.
+  mk_usage <- function(total, fresh, cached, output) list(
+    total_tokens = total, input_tokens = fresh + cached,
+    input_tokens_fresh = fresh, input_tokens_cached = cached,
+    output_tokens = output, reasoning_tokens = 0L, cache_hit_rate = 0,
+    model = "openai:gpt-5.4-nano")
+
+  pgx <- list(
+    name = "test-dataset",
+    ai = list(
+      de = list(
+        report     = "DE report",
+        usage      = mk_usage(50L, 30L, 0L, 20L),
+        created_at = 1750000000
+      ),
+      combined = list(
+        report = "Combined report",
+        usage  = NULL          # no usage — must be skipped
+      ),
+      pathways = list(
+        report     = "Pathway report",
+        usage      = mk_usage(80L, 55L, 5L, 20L),
+        created_at = 1750000100
+      )
+    )
+  )
+
+  ids <- ai_telemetry_record_reports(pgx, user_email = NA_character_, db_path = db)
+  con <- DBI::dbConnect(RSQLite::SQLite(), db); on.exit(DBI::dbDisconnect(con), add = TRUE)
+  rows <- DBI::dbGetQuery(con, paste(
+    "SELECT event_id, source, model, total, input_fresh, input_cached, output",
+    "FROM ai_usage_events ORDER BY event_id"))
+
+  # Only 2 slots have usage
+  expect_equal(nrow(rows), 2L)
+  expect_true(all(rows$source == "report"))
+  # Both event_ids are dataset-keyed
+  expect_true(all(grepl("^report:test-dataset:", rows$event_id)))
+  # Regression guard: token columns must be populated, not NA (the field-name bug).
+  de_row <- rows[grepl(":de:", rows$event_id), ]
+  expect_equal(de_row$total, 50L)
+  expect_equal(de_row$input_fresh, 30L)
+  expect_equal(de_row$output, 20L)
+  expect_equal(de_row$model, "openai:gpt-5.4-nano")
+  expect_false(anyNA(rows$total))
+})
+
+test_that("ai_telemetry_record_reports is idempotent — second call inserts no new rows", {
+  d <- tempfile("repdir2"); dir.create(d); on.exit(unlink(d, recursive = TRUE))
+  db <- file.path(d, "ai_telemetry.sqlite")
+
+  pgx <- list(
+    name = "my-ds",
+    ai = list(
+      de = list(
+        report     = "DE report",
+        usage      = list(total = 50L, input = 30L, output = 20L,
+                          model = "openai:gpt-5.4-nano"),
+        created_at = 1750000000
+      )
+    )
+  )
+
+  ai_telemetry_record_reports(pgx, user_email = "u@x.com", db_path = db)
+  ai_telemetry_record_reports(pgx, user_email = "u@x.com", db_path = db)
+
+  con <- DBI::dbConnect(RSQLite::SQLite(), db); on.exit(DBI::dbDisconnect(con), add = TRUE)
+  n <- DBI::dbGetQuery(con, "SELECT COUNT(*) n FROM ai_usage_events")$n
+  expect_equal(n, 1L)
+})
+
+test_that("ai_telemetry_record_reports tolerates NULL/empty pgx gracefully", {
+  d <- tempfile("repdir3"); dir.create(d); on.exit(unlink(d, recursive = TRUE))
+  db <- file.path(d, "ai_telemetry.sqlite")
+  expect_silent(ai_telemetry_record_reports(NULL, NA_character_, db_path = db))
+  expect_silent(ai_telemetry_record_reports(list(), NA_character_, db_path = db))
+  expect_silent(ai_telemetry_record_reports(list(ai = list()), NA_character_, db_path = db))
 })
 
 test_that("collect_chat is idempotent over a synthetic chat store", {

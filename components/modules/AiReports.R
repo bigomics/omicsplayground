@@ -178,7 +178,9 @@ ai_report_update_text <- function(pgx, reports) {
     value <- tryCatch(as.character(reports[[slot]])[[1L]],
       error = function(e) NA_character_)
     if (is.na(value)) next
-    ai[[slot]]$report <- value
+    ai[[slot]]$report    <- value
+    ai[[slot]]$edited    <- TRUE
+    ai[[slot]]$edited_at <- as.numeric(Sys.time())
   }
 
   pgx$ai <- ai

@@ -45,15 +45,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
 
-    # Board info
-    ## shiny::observeEvent(input$board_info, {
-    ##   shiny::showModal(shiny::modalDialog(
-    ##     title = shiny::HTML("<strong>Clustering Board</strong>"),
-    ##     shiny::HTML(clust_infotext),
-    ##     easyClose = TRUE, size = "xl"
-    ##   ))
-    ## })
-
     shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
@@ -622,60 +613,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     }) ## end of getTopMatrix
 
 
-    ##' Same as getTopMatrix but always averaged by group
-    ##'
-    ##' .. content for \details{} ..
-    ##' @title
-    ##' @param id
-    ##' @param pgx
-    ##' @return
-    ##' @author kwee
-    getTopMatrixGrouped <- shiny::reactive({
-      topmat <- getTopMatrix()
-      shiny::req(topmat$mat)
-
-      if (topmat$is.grouped || is.null(topmat$grp)) {
-        return(topmat)
-      }
-
-      ## ----------------------------------------------------
-      ## ------------ calculate group summarized ------------
-      ## ----------------------------------------------------
-
-      grp <- topmat$grp
-      zx <- topmat$mat
-      annot <- topmat$annot
-      idx <- topmat$idx
-      samples <- topmat$samples
-
-      ## take most frequent term as group annotation value
-      grp.zx <- tapply(colnames(zx), grp, function(k) {
-        rowMeans(zx[, k, drop = FALSE], na.rm = TRUE)
-      })
-      grp.zx <- do.call(cbind, grp.zx)
-      most.freq <- function(x) names(sort(-table(x)))[1]
-      grp.annot <- tapply(rownames(annot), grp, function(k) {
-        f <- apply(annot[k, , drop = FALSE], 2, function(x) most.freq(x))
-        w.null <- sapply(f, is.null)
-        if (any(w.null)) f[which(w.null)] <- NA
-        unlist(f)
-      }, simplify = FALSE)
-      grp.annot <- data.frame(do.call(rbind, grp.annot))
-      grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
-      grp <- colnames(grp.zx)
-
-      res <- list(
-        mat = grp.zx,
-        annot = grp.annot,
-        grp = grp, ## sample grouping
-        idx = idx, ## gene grouping
-        samples = samples,
-        is.grouped = TRUE
-      )
-      return(res)
-    })
-
-
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
       filt <- getTopMatrix()
@@ -778,19 +715,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       watermark = WATERMARK,
       parent = ns
     )
-
-    # clustering_plot_table_parcoord_server(
-    #   id = "parcoord",
-    #   getTopMatrix = getTopMatrixGrouped,
-    #   pgx = pgx,
-    #   watermark = WATERMARK
-    # )
-
-    # clustering_plot_genemodule_server(
-    #   id = "genemodule",
-    #   getTopMatrix = getTopMatrixGrouped,
-    #   watermark = WATERMARK
-    # )
 
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",

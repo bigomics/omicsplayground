@@ -337,7 +337,6 @@ opg_ui <- function() {
         ## ),
         ## bigdash::bigTabItem(
         ##   "usersettings-tab",
-        ##   AppSettingsInputs("app_settings"),
         ##   AppSettingsUI("app_settings")
         ## ),
         ## if (isTRUE(opt$ENABLE_ADMIN)) {

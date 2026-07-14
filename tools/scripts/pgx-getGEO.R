@@ -101,6 +101,6 @@ for(id in geo.ids) {
     ngs$description = paste0(geo$info$title,". ",geo$info$summary)
     
     rda.file
-    ngs.save(ngs, file=rda.file)
+    pgx.save(ngs, file=rda.file)
 
 }

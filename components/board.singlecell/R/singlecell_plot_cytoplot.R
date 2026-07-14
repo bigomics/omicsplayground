@@ -72,9 +72,6 @@ singlecell_plot_cytoplot_server <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    plot_data <- shiny::reactive({})
-
-    ##    cyto.plotFUNC <- shiny::reactive({
     cyto.plotFUNC <- function() {
       shiny::req(pgx$X)
       shiny::req(cytovar1(), cytovar2(), cytovar1() != "", cytovar2() != "")
@@ -94,9 +91,7 @@ singlecell_plot_cytoplot_server <- function(id,
         lab.unit = "  (log2CPM)",
         contour.coloring = "none"
       )
-
-      ##      plotly::plot_ly(z = ~volcano, type = "contour")
-    } ## )
+    }
 
     PlotModuleServer(
       "plotmodule",
