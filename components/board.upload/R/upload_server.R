@@ -86,9 +86,9 @@ UploadBoard <- function(id,
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics (beta)" = "methylomics", "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
       } else {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics (beta)" = "methylomics", "metabolomics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
       }
     })
 
