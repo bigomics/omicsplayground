@@ -6,6 +6,16 @@ options(timeout = 99999)  ## download time.out
 options(BioC_mirror = "https://packagemanager.posit.co/bioconductor")
 options(BIOCONDUCTOR_CONFIG_FILE = "https://packagemanager.posit.co/bioconductor/config.yaml")
 
-# Configure a CRAN snapshot compatible with Bioconductor 3.18:
-options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest"))
+# Configure a CRAN snapshot compatible with Bioconductor 3.22.
+# NOTE: the __linux__/<distro> segment must match the base image. Leaving this
+# at noble on a trixie base serves Ubuntu binaries built against Ubuntu libs.
+options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/trixie/latest"))
+
+# PPM picks the binary build from the User-Agent. R does not send its own
+# identity unless HTTPUserAgent is set explicitly -- it sends "libcurl/x.y.z",
+# which PPM answers with source packages.
+options(HTTPUserAgent = sprintf(
+  "R/%s R (%s)", getRversion(),
+  paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])
+))
 
