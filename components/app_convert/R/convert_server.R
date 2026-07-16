@@ -53,8 +53,8 @@ convert_server <- function(id) {
 
     shiny::observeEvent(input$example, {
       features <- shiny::withProgress(
-        message = "Loading example genes...",
-        playbase::getExampleFeatures(organism = input$organism, n = 20)
+        message = "Loading example features...",
+        playbase::getExampleFeatures( organism=input$organism, n=25)
       )
       if (length(features) == 0) {
         shiny::showNotification(
