@@ -35,7 +35,7 @@ convert_ui <- function(id) {
           selected = "proteomics"
         ),
         shiny::textAreaInput(ns("features"), "Gene/feature IDs (one per line):",
-          rows = 24,
+          rows = 20,
           placeholder = "e.g.\nTrp53\nENSMUSG00000059552\n..."
         ),
         shiny::actionLink(ns("example"), "Load example data",
