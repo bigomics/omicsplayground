@@ -21,6 +21,10 @@ tools_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "QSee", session=parent)
     })
 
+    observeEvent(input$runtool_idconvert, {
+      bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+    })
+
     
   })
 }

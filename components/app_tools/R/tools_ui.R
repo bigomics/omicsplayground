@@ -50,7 +50,7 @@ tools_ui <- function(id) {
           p("Automatically convert and annotate your transcriptomic, proteomics or lipidomics features using the latest databases."),
           actionButton(ns("runtool_idconvert"), "Run", class="action-pill")
         )
-      )      
+      )
       ## --- end of cards ---
     )
   )

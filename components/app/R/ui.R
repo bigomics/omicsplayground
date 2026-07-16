@@ -204,7 +204,10 @@ app_ui <- function(x) {
             div(AdminPanelUI("admin_panel"), class='px-4 py-0')
           )
         },
-        
+        bslib::nav_panel_hidden("IDconvert",
+          div(convert_ui("idconvert"), class='px-4 py-0')
+        ),
+
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),
