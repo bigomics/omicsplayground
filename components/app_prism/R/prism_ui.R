@@ -18,7 +18,7 @@ prism_ui <- function(id) {
     )
   )
 
-  title <- div("BigOmics Prism", style="font-size: 18px;")
+  title <- div("SmartPrism", style="font-size: 18px;")
   
   ui <- bslib::page_fluid(
     tags$head(
@@ -50,24 +50,20 @@ prism_ui <- function(id) {
     div(class = "navbar navbar-static-top", div(title, class = "container-fluid"),
       style="margin-top: 24px;"),
     bslib::layout_columns(
-      col_widths = c(3,9),
+      col_widths = c(3,6,3),
       class = "p-3",
       bslib::layout_columns(
         col_widths = 12,
         fill = FALSE,
-        buttons,
         shiny::selectInput(ns("dataset"), "Dataset:", c("mtcars","iris","geiger"),
           selected="mtcars"),
-        shiny::selectInput(ns("theme"), "Theme:", sort(c("gray","bw","light","dark",
-          "minimal","classic","prism")), selected="gray"),
+        buttons,
+        shiny::selectInput(ns("theme"), "Theme:", sort(c("bw","gray","prism",
+          "light","minimal","classic")), selected="gray"),
         bslib::layout_columns(
           col_widths = c(6,6),
-          shiny::sliderInput(ns("pointsize"), "Point size:", 1, 10, 3, step=1),
-          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 48, 18, step=4)
-        ),
-        wellPanel(
-          style = "width: 100%; font-family: monospace; font-size: 11px;",
-          shiny::htmlOutput(ns("plotcode"), height="400px")
+          shiny::sliderInput(ns("pointsize"), "Point size:", 1, 8, 3, step=1),
+          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 24, 12, step=2)
         )
       ),
       bslib::layout_columns(
@@ -76,26 +72,39 @@ prism_ui <- function(id) {
         bslib::navset_tab(
           bslib::nav_panel(
             title = "plot",
-            div(id = ns("webr-status"), class = "prism-webr-status",
-              "Initializing webR runtime…"),
             div(id = ns("plot-placeholder"),
               style = "color:#94a3b8; text-align:center; padding:2rem;",
               tags$div(style = "font-size:2.5rem;", "\U0001f4c8"),
               tags$div("Your plot will appear here")
             ),
             div(id = ns("plot-container")),
-            div(id = ns("plot-error"), class = "prism-plot-error"),
-            div(id = ns("chat-messages"), class = "prism-chat-messages"),
-            div(
-              shiny::textInput(ns("chartbot_user_input"),"",
-                placeholder = "What do you want to plot?", width=600),
-              shiny::actionButton(ns("chartbot_send"),"send",
-                icon = icon("arrow-right-from-bracket"))
-            )
+            div(id = ns("plot-error"), class = "prism-plot-error")
           ),
           bslib::nav_panel(
             title = "data",
             shiny::dataTableOutput(ns("data1"))
+          )
+        )
+      ),
+      bslib::layout_columns(
+        col_widths = 12,
+        class = "pl-4",
+        row_heights = c(NA,1,1),
+        fill = TRUE,
+        height = "100%",
+        div(id = ns("webr-status"), class = "prism-webr-status",
+          "Initializing webR runtime…"),
+        wellPanel(
+          style = "width: 100%; font-family: monospace; font-size: 11px;",
+          shiny::htmlOutput(ns("plotcode"), height="400px")
+        ),
+        div(
+          div(id = ns("chat-messages"), class = "prism-chat-messages"),
+          div(
+            shiny::textInput(ns("chartbot_user_input"),"",
+              placeholder = "What do you want to plot?", width="100%"),
+            shiny::actionButton(ns("chartbot_send"),"send",
+              icon = icon("arrow-right-from-bracket"))
           )
         )
       )
