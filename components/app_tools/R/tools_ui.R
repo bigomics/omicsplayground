@@ -44,10 +44,11 @@ tools_ui <- function(id) {
       ),
       bslib::card(
         class = "tools-card",        
-        bslib::card_image(file="https://i0.wp.com/bigomics.ch/wp-content/uploads/2023/07/Omics-Playground-laptop-2023-e1689347474214.webp?zoom=2&resize=280%2C160&ssl=1", width=280, height=160, class="p-3"),
-        bslib::card_header("ID SmartConverter"),
+        bslib::card_image(src=base64enc::dataURI(file = "www/applets/idconvert.png"),
+          width=280, height=160, class="p-3" ),        
+        bslib::card_header("ID Converter"),
         bslib::card_body(
-          p("Automatically convert and annotate your transcriptomic, proteomics or lipidomics features using the latest databases."),
+          p("Convert and annotate your transcriptomic, proteomics or lipidomics features using the latest databases."),
           actionButton(ns("runtool_idconvert"), "Run", class="action-pill")
         )
       )
