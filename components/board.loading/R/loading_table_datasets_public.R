@@ -188,11 +188,19 @@ loading_table_datasets_public_server <- function(id,
       pgx_path <- auth$user_dir
       new_pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
 
+      ## CRO-created public datasets bypass the dataset-count quota. Read the
+      ## full creator email from the raw table (the displayed one truncates it).
+      pub <- getFilteredPGXINFO_PUBLIC()
+      creator <- pub$creator[match(pgx_name, pub$dataset)]
+      cro_emails <- get_cro_emails()
+      creator_is_cro <- !is.null(cro_emails) && length(creator) == 1 &&
+        !is.na(creator) && creator %in% cro_emails
+
       ## check number of datasets. If deletion is disabled, we count also .pgx_ files... :)
       numpgx <- length(dir(pgx_path, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
       maxpgx <- as.integer(auth$options$MAX_DATASETS)
-      if (numpgx >= maxpgx) {
+      if (numpgx >= maxpgx && !creator_is_cro) {
         shinyalert_storage_full(numpgx, maxpgx, auth$level) ## ui-alerts.R
         return(NULL)
       }

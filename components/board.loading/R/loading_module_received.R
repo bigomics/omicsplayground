@@ -193,11 +193,17 @@ upload_module_received_server <- function(id,
           file_from <- file.path(pgx_shared_dir, pgx_name)
           file_to <- file.path(pgxdir, new_pgx_name)
 
+          ## Detect CRO sender: CRO-shared datasets bypass the dataset-count
+          ## quota and the plan size limits below.
+          sender_email <- gsub(".*__from__|__$", "", pgx_name)
+          cro_emails <- get_cro_emails()
+          sender_is_cro <- !is.null(cro_emails) && sender_email %in% cro_emails
+
           ## check number of datasets
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
           if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(auth$options$MAX_DATASETS)
-          if (numpgx >= maxpgx) {
+          if (numpgx >= maxpgx && !sender_is_cro) {
             shinyalert_storage_full(numpgx, maxpgx, auth$level) ## from ui-alerts.R
             return(NULL)
           }
@@ -218,10 +224,6 @@ upload_module_received_server <- function(id,
 
           ## Enforce plan size limits, but skip the check when the sender is a
           ## CRO so CRO-shared datasets always go through.
-          sender_email <- gsub(".*__from__|__$", "", pgx_name)
-          cro_emails <- get_cro_emails()
-          sender_is_cro <- !is.null(cro_emails) && sender_email %in% cro_emails
-
           if (!sender_is_cro) {
             ## Shared dir has no aggregated metadata CSV, so we load the file.
             pgx_dims <- tryCatch(
