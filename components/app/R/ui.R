@@ -205,7 +205,7 @@ app_ui <- function(x) {
           )
         },
         bslib::nav_panel_hidden("IDconvert",
-          div(convert_ui("idconvert"), class='px-4 py-0')
+          div(idconvert_ui("idconvert"), class='px-4 py-0')
         ),
 
         ## lower settings buttons

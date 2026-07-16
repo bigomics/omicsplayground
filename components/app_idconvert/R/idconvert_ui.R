@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-convert_ui <- function(id) {
+idconvert_ui <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   title <- div("Gene ID Converter", style = "font-size: 18px;")

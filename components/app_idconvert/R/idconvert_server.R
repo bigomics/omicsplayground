@@ -44,7 +44,7 @@ convert_datatype_choices <- function() {
 #'
 #' @param id Shiny module id.
 #' @export
-convert_server <- function(id) {
+idconvert_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
 
     shiny::updateSelectizeInput(session, "organism",

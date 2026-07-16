@@ -1069,7 +1069,7 @@ app_server <- function(input, output, session) {
     prism_server("prism")
     tools_server("tools", parent = session)
     RunMonitorServer("runmonitor")
-    convert_server("idconvert")
+    idconvert_server("idconvert")
 
   }
   

@@ -14,13 +14,13 @@ library(shiny)
 library(bslib)
 library(DT)
 
-source("../R/convert_ui.R", encoding = "UTF-8")
-source("../R/convert_server.R", encoding = "UTF-8")
+source("../R/idconvert_ui.R", encoding = "UTF-8")
+source("../R/idconvert_server.R", encoding = "UTF-8")
 
-ui <- convert_ui("convert")
+ui <- idconvert_ui("idconvert")
 
 server <- function(input, output, session) {
-  convert_server("convert")
+  idconvert_server("idconvert")
 }
 
 shinyApp(ui, server)
