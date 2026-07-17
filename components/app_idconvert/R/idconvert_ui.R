@@ -6,7 +6,7 @@
 idconvert_ui <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  title <- div("Gene ID Converter", style = "font-size: 18px;")
+  title <- div("ID Converter", style = "font-size: 18px;")
 
   organism_choices <- convert_organism_choices()
 
@@ -38,11 +38,20 @@ idconvert_ui <- function(id) {
           rows = 20,
           placeholder = "e.g.\nTrp53\nENSMUSG00000059552\n..."
         ),
-        shiny::actionLink(ns("example"), "Load example features",
-          style = paste(
-            "font-size: 12px; color: #888; margin-top: -12px;",
-            "margin-bottom: 12px; display: inline-block;",
-            "text-decoration: underline;"
+        div(
+          shiny::actionLink(ns("example"), "Load example features",
+            style = paste(
+              "font-size: 12px; color: #888; margin-top: -12px;",
+              "margin-bottom: 12px; display: inline-block;",
+              "text-decoration: underline; padding-right: 10px;"
+            )
+          ),
+          shiny::actionLink(ns("clear"), "Clear",
+            style = paste(
+              "font-size: 12px; color: #888; margin-top: -12px;",
+              "margin-bottom: 12px; display: inline-block;",
+              "text-decoration: underline;"
+            )
           )
         ),
         div(

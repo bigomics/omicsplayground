@@ -1,0 +1,75 @@
+
+.toolbox {
+    padding: 3px 5px 0px 5px;
+}
+
+.toolbox .action-icon {
+    font-size: 20px;
+    color: black;
+}
+
+.toolbox .action-label {
+    font-size: 10px;
+    color: black;
+}
+
+.app-launcher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.app-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 160px;
+    padding: 16px 12px;
+    border: 0;
+    border-radius: 18px;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+}
+
+.app-tile:hover,
+.app-tile:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,.2);
+    color: #fff;
+}
+
+.app-tile-icon {
+    font-size: 40px;
+}
+
+.app-tile-label {
+    font-weight: 700;
+    font-size: 20px;
+    margin-top: 8px;
+}
+
+.app-tile-description {
+    font-size: 14px;
+    opacity: .85;
+    margin-top: 4px;
+}
+
+.app-tile-blue {
+    background: linear-gradient(160deg, #5b8def, #3a53a9);
+}
+
+.app-tile-teal {
+    background: linear-gradient(160deg, #3ec9a7, #117e62);
+}
+
+.app-tile-purple {
+    background: linear-gradient(160deg, #c76bf0, #6b2fd1);
+}
+
+.app-tile-orange {
+    background: linear-gradient(160deg, #cc8500, #aa7700);
+}

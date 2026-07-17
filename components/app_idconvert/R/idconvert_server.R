@@ -51,6 +51,9 @@ idconvert_server <- function(id) {
       choices = convert_organism_choices(), selected = "Human", server = TRUE
     )
 
+    # Holds the current annotation result (NULL when cleared or not yet converted)
+    result <- shiny::reactiveVal(NULL)
+
     shiny::observeEvent(input$example, {
       features <- shiny::withProgress(
         message = "Loading example features...",
@@ -69,7 +72,18 @@ idconvert_server <- function(id) {
       )
     })
 
-    result <- shiny::eventReactive(input$convert, {
+    # Clear paste area + results when user changes organism (results are organism-specific)
+    shiny::observeEvent(input$organism, {
+      shiny::updateTextAreaInput(session, "features", value = "")
+      result(NULL)
+    })
+
+    shiny::observeEvent(input$clear, {
+      shiny::updateTextAreaInput(session, "features", value = "")
+      result(NULL)  # explicitly clear the stored result → table and download disappear
+    })
+
+    shiny::observeEvent(input$convert, {
       probes <- parse_feature_list(input$features)
       shiny::validate(shiny::need(
         length(probes) > 0,
@@ -90,11 +104,11 @@ idconvert_server <- function(id) {
         "Could not annotate these IDs for the selected organism."
       ))
 
-      annot
+      result(annot)  # store successful result
     })
 
     output$table_area <- shiny::renderUI({
-      df <- tryCatch(result(), error = function(e) NULL)
+      df <- result()
       if (is.null(df)) {
         shiny::div(
           style = paste(
@@ -112,6 +126,7 @@ idconvert_server <- function(id) {
 
     output$table <- DT::renderDataTable({
       df <- result()
+      req(df)  # prevent rendering when result is NULL (after Clear)
       df$gene_name <- NULL
       
       DT::datatable(
@@ -140,7 +155,7 @@ idconvert_server <- function(id) {
     })
 
     output$download_ui <- shiny::renderUI({
-      df <- tryCatch(result(), error = function(e) NULL)
+      df <- result()
       shiny::downloadButton(session$ns("download"), "Download CSV",
         enabled = !is.null(df), style = "width: 100%;"
       )

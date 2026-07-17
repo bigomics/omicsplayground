@@ -185,8 +185,8 @@ app_ui <- function(x) {
           )
         },
         if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(title = "Tools", icon = icon("tools"),
-            tools_ui("tools")
+          bslib::nav_panel(title = "Apps", icon=icon("app-store-ios"),
+            launcher_ui("apps")
           )
         },
         ## Hidden panels (e.g. tools)

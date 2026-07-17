@@ -1067,7 +1067,7 @@ app_server <- function(input, output, session) {
   if(opt$DEVMODE) {
     dbg("[SERVER] WARNING: DEVMODE modules enabled!")
     prism_server("prism")
-    tools_server("tools", parent = session)
+    launcher_server("apps", parent = session)
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
 
