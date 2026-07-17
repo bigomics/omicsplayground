@@ -220,6 +220,19 @@ PreservationWGCNA_Board <- function(id, pgx) {
       rmodule = reactive(input$module)
     )
 
+    # Module summary (ephemeral: the preservation object is computed live from
+    # user input and never persisted, so summaries are generated on demand).
+    wgcna_module_ai_summary_server(
+      "preservationSummary",
+      wgcna = r_wgcna,
+      pgx = pgx,
+      r_module = shiny::reactive(input$module),
+      parent_session = session,
+      watermark = WATERMARK,
+      variant = NULL,
+      board_type = "preservation"
+    )
+
     return(NULL)
   })
 } ## end of Board

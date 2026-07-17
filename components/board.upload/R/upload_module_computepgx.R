@@ -1185,6 +1185,11 @@ upload_module_computepgx_server <- function(
               credentials = cred_fn
             )
           )
+          # Precompute durable per-module WGCNA summaries alongside the reports,
+          # using the same authenticated model config. pgx.update_wgcna_summaries
+          # is a no-op when WGCNA was not among the selected extra methods, so
+          # this is safe to set unconditionally whenever AI reports are on.
+          ai_features$wgcna_summaries <- ai_features$reports
         }
 
         ## Define create_pgx function arguments
