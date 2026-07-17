@@ -80,3 +80,4 @@ processx-error.log
 processx-output.log
 raw_*
 components/board.upload/R/.\#upload_module_preview_samples.R
+.superpowers/
