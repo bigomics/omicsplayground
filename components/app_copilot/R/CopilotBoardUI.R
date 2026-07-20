@@ -18,10 +18,27 @@ CopilotBoardUI <- function(id) {
     col_widths = c(3, 5, 4),
     style = "height: calc(100vh - 80px);",
 
-    # ---- Left column: datasets / history / docs ----
+    # ---- Left column: docs / reports ----
+    bslib::card(
+      height = "100%",
+      bslib::navset_underline(
+        bslib::nav_panel(
+          "Context",
+          bslib::navset_underline(
+            bslib::nav_panel("Documents", CopilotDocsUI(ns("docs"))),
+            bslib::nav_panel("Reports", CopilotReportsUI(ns("reports")))
+          )
+        )
+      )
+    ),
+
+    # ---- Centre column: chat ----
+    CopilotChatUI(ns("chat")),
+
+    # ---- Right column: datasets / history, on top of evidence ----
     bslib::layout_columns(
       col_widths = 12,
-      row_heights = c(5,4),
+      row_heights = c(4, 7),
       bslib::card(
         height = "calc(100% - 40px)",
         shiny::actionButton(
@@ -44,25 +61,8 @@ CopilotBoardUI <- function(id) {
           )
         )
       ),
-      bslib::card(
-        height = "100%",
-        bslib::navset_underline(
-          bslib::nav_panel(
-            "Context",
-            bslib::navset_underline(
-              bslib::nav_panel("Documents", CopilotDocsUI(ns("docs"))),
-              bslib::nav_panel("Reports", CopilotReportsUI(ns("reports")))
-            )
-          )
-        )
-      )
-    ),
-
-    # ---- Centre column: chat ----
-    CopilotChatUI(ns("chat")),
-
-    # ---- Right column: evidence ----
-    CopilotEvidenceUI(ns("evidence"))
+      CopilotEvidenceUI(ns("evidence"))
+    )
   )
 
 
