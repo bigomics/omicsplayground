@@ -15,7 +15,16 @@ DataViewInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   bigdash::tabSettings(
-    withTooltip(shiny::selectizeInput(ns("search_gene"), tspan("Gene:"), choices = NULL, options = list(maxOptions = 1001)),
+    withTooltip(shiny::selectizeInput(ns("search_gene"), tspan("Gene:"), choices = NULL, options = list(
+      maxOptions = 1001,
+      # grey out the "(type for more...)" hint and block clicking it
+      render = I("{ option: function(item, escape) {
+        var style = item.value === '__more_genes__' ? ' style=\"pointer-events:none;opacity:0.55;font-style:italic\"' : '';
+        return '<div class=\"option\"' + style + '>' + escape(item.label) + '</div>';
+      } }"),
+      # block keyboard-selecting the hint
+      onItemAdd = I("function(value) { if (value === '__more_genes__') this.removeItem(value, true); }")
+    )),
       "Type a gene of interest.",
       placement = "top"
     ),

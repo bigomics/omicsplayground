@@ -80,14 +80,14 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         sel.feature <- features[1]
         i <- match(sel.feature, features)
         features <- c(features[i], features[-i])
-        if (length(features) > 1000) {
-          features <- c(
-            features[1:1000], tspan("(type for more genes...)", js = FALSE),
-            features[1001:length(features)]
-          )
-        }
 
         names(features) <- playbase::probe2symbol(features, pgx$genes, labeltype(), fill_na = TRUE)
+
+        # non-selectable hint that more genes are searchable by typing (see render/onItemAdd guard in ui)
+        if (length(features) > 1000) {
+          hint <- setNames("__more_genes__", tspan("(type for more genes...)", js = FALSE))
+          features <- c(features[1:1000], hint, features[1001:length(features)])
+        }
 
         shiny::updateSelectizeInput(
           session, "search_gene",
