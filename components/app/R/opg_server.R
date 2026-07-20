@@ -415,7 +415,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
       info("[SERVER:UI:2] reacted: calling WGCNA module")
       mod <- MODULE.wgcna
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
+      mod$module_server(PGX, save_pgx = env$save_pgx)
       loaded$wgcna <- 1
       tab_control()
     }

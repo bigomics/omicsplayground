@@ -899,6 +899,8 @@ app_server <- function(input, output, session) {
     try(playbase::pgx.save(pgx_obj, file = full), silent = TRUE)
     invisible(TRUE)
   }
+  ## Expose to lazily-loaded boards (e.g. WGCNA summary cards) via the shared env.
+  env$save_pgx <- save_current_pgx
 
   env$load <- LoadingBoard(
     id = "load",

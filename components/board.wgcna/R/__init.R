@@ -56,9 +56,10 @@ MODULE.wgcna <- list(
       )
     )
   },
-  module_server = function(PGX) {
+  module_server = function(PGX, save_pgx = NULL) {
     WgcnaBoard("wgcna",
-      pgx = PGX
+      pgx = PGX,
+      save_pgx = save_pgx
     )
 
     ConsensusWGCNA_Board(
@@ -73,7 +74,8 @@ MODULE.wgcna <- list(
 
     MultiWGCNA_Board(
       "mwgcna",
-      pgx = PGX
+      pgx = PGX,
+      save_pgx = save_pgx
     )
   },
   module_help = function() {

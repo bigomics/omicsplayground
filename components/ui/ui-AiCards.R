@@ -20,7 +20,8 @@ AiTextCardUI <- function(id,
                          caption = "AI-generated summary.",
                          info.text = "",
                          height = c("100%", TABLE_HEIGHT_MODAL),
-                         width = c("auto", "100%")) {
+                         width = c("auto", "100%"),
+                         show_save = FALSE) {
   ns <- shiny::NS(id)
 
   opts <- shiny::tagList(
@@ -37,7 +38,16 @@ AiTextCardUI <- function(id,
       "Generate",
       icon = shiny::icon("refresh"),
       class = "btn-outline-primary"
-    )
+    ),
+    # Durable variants only: persist a regenerated summary back to the dataset.
+    if (isTRUE(show_save)) {
+      shiny::actionButton(
+        ns("save"),
+        "Save",
+        icon = shiny::icon("floppy-disk"),
+        class = "btn-outline-secondary"
+      )
+    }
   )
 
   PlotModuleUI(
