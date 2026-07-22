@@ -221,7 +221,8 @@ infographic_job_result <- function(result, slot, token) {
 #' @param pgx ReactiveValues PGX object.
 #' @param save_pgx Optional callback used to persist modified PGX state.
 #' @return Shiny module server return value.
-InfographicServer <- function(id, pgx, save_pgx = NULL) {
+InfographicServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
+                              user_email = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     tmpdir <- file.path(tempdir(), paste0("ai-infographics-", id))
@@ -423,7 +424,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
       tryCatch(
         ai_telemetry_record_infographics(
           shiny::isolate(shiny::reactiveValuesToList(pgx)),
-          user_email = NA_character_
+          user_email = studio_user_email(user_email)
         ),
         error = function(e) NULL
       )
@@ -596,6 +597,9 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
 
     shiny::observeEvent(input$generate, {
       shiny::req(pgx$X, pgx$name)
+      if (!studio_can_generate(can_save_pgx, pgx, session, "AI infographics")) {
+        return(NULL)
+      }
       if (isTRUE(image_jobs$running)) {
         shiny::showNotification("Infographic generation is already running.",
           type = "message", session = session)

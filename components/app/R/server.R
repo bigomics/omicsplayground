@@ -880,17 +880,36 @@ app_server <- function(input, output, session) {
   ## Standard modules
   ## -------------------------------------------------------------
 
-  ## Single audited save path for voluntary report regeneration.
-  ## Owner check = file must live in auth$user_dir. Public / shared
-  ## datasets become a silent no-op.
-  save_current_pgx <- function(pgx) {
-    if (!isTRUE(auth$logged)) return(invisible(FALSE))
-    if (is.null(pgx$name)) return(invisible(FALSE))
-    pgxdir <- auth$user_dir
-    if (!dir.exists(pgxdir)) return(invisible(FALSE))
+  ## Source directory of the currently loaded dataset, tracked by
+  ## LoadingBoard on each load (pgxdir %||% user_dir). Needed so admins
+  ## can persist AI content back to public/shared datasets they don't own.
+  pgx_source_dir <- reactiveVal(NULL)
+
+  ## Resolve where the current pgx may be persisted, or NULL if the caller
+  ## isn't allowed to persist it. Owner check = file lives in auth$user_dir.
+  ## Admins act as curators: they write back to the dataset's source dir.
+  pgx_save_target <- function(pgx) {
+    if (!isTRUE(auth$logged)) return(NULL)
+    if (is.null(pgx$name)) return(NULL)
     file <- paste0(sub("[.]pgx$", "", pgx$name), ".pgx")
-    full <- file.path(pgxdir, file)
-    if (!file.exists(full)) return(invisible(FALSE))
+    owner_path <- file.path(auth$user_dir, file)
+    if (file.exists(owner_path)) return(owner_path)
+    if (isTRUE(auth$ADMIN)) {
+      src_path <- file.path(pgx_source_dir() %||% auth$user_dir, file)
+      if (file.exists(src_path)) return(src_path)
+    }
+    NULL
+  }
+
+  ## Pre-flight predicate: TRUE iff the current user could persist this pgx.
+  ## Used to gate paid AI generation before it runs, not just the save.
+  can_save_current_pgx <- function(pgx) !is.null(pgx_save_target(pgx))
+
+  ## Single audited save path for voluntary report regeneration.
+  ## Public / shared datasets a non-owner can't persist become a silent no-op.
+  save_current_pgx <- function(pgx) {
+    full <- pgx_save_target(pgx)
+    if (is.null(full)) return(invisible(FALSE))
     pgx_obj <- if (methods::is(pgx, "reactivevalues")) {
       shiny::reactiveValuesToList(pgx)
     } else {
@@ -914,6 +933,7 @@ app_server <- function(input, output, session) {
     recompute_pgx = recompute_pgx,
     new_upload = new_upload,
     save_pgx = save_current_pgx,
+    pgx_source_dir = pgx_source_dir,
     parent = session
   )
 
@@ -965,7 +985,9 @@ app_server <- function(input, output, session) {
     })
   }
 
-  StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx)
+  StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
+    can_save_pgx = can_save_current_pgx,
+    user_email = function() shiny::isolate(auth$email))
 
   if (isTRUE(opt$ENABLE_ACROSS)) {
     AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),

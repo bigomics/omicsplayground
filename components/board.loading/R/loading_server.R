@@ -19,6 +19,7 @@ LoadingBoard <- function(id,
                          recompute_pgx,
                          new_upload,
                          save_pgx = NULL,
+                         pgx_source_dir = NULL,
                          parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
@@ -286,6 +287,14 @@ LoadingBoard <- function(id,
 
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
       if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
+
+      ## Only offer generation to users who can persist the result: dataset
+      ## owners (loaded from their own dir) or admins (curators, who write
+      ## back to the source dir via save_current_pgx). Otherwise the paid
+      ## ai_report_generate() below runs only to no-op on save. Same gate as
+      ## AI Studio on-demand generation.
+      if (!isTRUE(is_user_dir) && !isTRUE(auth$ADMIN)) return(invisible(NULL))
+
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
       cred_fn <- get_ai_credentials(session)
@@ -332,7 +341,10 @@ LoadingBoard <- function(id,
                 error = function(e) NULL
               )
             }
-            if (isTRUE(updated) && isTRUE(is_user_dir) && !is.null(save_pgx)) {
+            ## Persist through save_current_pgx, which resolves the correct
+            ## target (owner dir, or source dir for admins) and no-ops if not
+            ## permitted. Non-persisters were already turned away above.
+            if (isTRUE(updated) && !is.null(save_pgx)) {
               save_pgx(pgx)
             }
             if (isTRUE(updated)) {
@@ -364,6 +376,13 @@ LoadingBoard <- function(id,
         beepr::beep(10)
         shiny::removeModal()
         return(NULL)
+      }
+
+      ## Record the source directory of the dataset just loaded so downstream
+      ## save/authorization logic (e.g. admin write-back to public/shared
+      ## datasets) knows where it actually lives.
+      if (!is.null(pgx_source_dir)) {
+        pgx_source_dir(if (is.null(pgxdir)) auth$user_dir else pgxdir)
       }
 
       ## ----------------- update PGX object ---------------------------------
