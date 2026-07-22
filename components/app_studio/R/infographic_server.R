@@ -43,53 +43,41 @@ InfographicUI <- function(id) {
   bslib::navset_tab(
     id = ns("navset"),
     bslib::nav_panel(title = "Summary",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("summary"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    ),
+      infographic_tab_card(ns, "combined")),
     bslib::nav_panel(title = "WGCNA",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("wgcna"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    ),
+      infographic_tab_card(ns, "wgcna")),
     bslib::nav_panel(title = "moxWGCNA",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("wgcna2"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    ),
+      infographic_tab_card(ns, "wgcna_mox")),
     bslib::nav_panel(title = "MOFA",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("mofa"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    ),
+      infographic_tab_card(ns, "mofa")),
     bslib::nav_panel(title = "DE",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("de"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    ),
+      infographic_tab_card(ns, "de")),
     bslib::nav_panel(title = "Enrichment",
-      bslib::card(
-        min_height = 600,
-        full_screen = TRUE,
-        div(shiny::imageOutput(ns("enrichment"), height = "100%", width = "100%"),
-          height = "100%", width = "100%", style = "text-align: center;")
-      )
-    )
+      infographic_tab_card(ns, "pathways"))
+  )
+}
+
+#' Build one infographic preview card with its PNG download button
+#'
+#' Shared by the static tabs in \code{InfographicUI()} and the dynamic drug
+#' tabs inserted by \code{InfographicServer()}, so both get an identical
+#' download control above the preview image.
+#'
+#' @param ns Namespace function for the infographic module.
+#' @param slot AI report slot name.
+#' @return A \code{bslib::card()} holding the download button and preview image.
+infographic_tab_card <- function(ns, slot) {
+  bslib::card(
+    min_height = 600,
+    full_screen = TRUE,
+    div(style = "text-align: right;",
+      shiny::downloadButton(ns(infographic_download_id(slot)),
+        "Download PNG", class = "btn btn-outline-primary btn-sm",
+        icon = shiny::icon("download"))
+    ),
+    div(shiny::imageOutput(ns(infographic_output_id(slot)),
+      height = "100%", width = "100%"),
+      height = "100%", width = "100%", style = "text-align: center;")
   )
 }
 
@@ -132,6 +120,14 @@ infographic_output_id <- function(slot) {
     pathways = "enrichment",
     paste0("preview_", slot)
   )
+}
+
+#' Resolve an AI report slot to its PNG download handler output ID
+#'
+#' @param slot AI report slot name.
+#' @return Shiny output ID for the infographic download button.
+infographic_download_id <- function(slot) {
+  paste0(infographic_output_id(slot), "_download")
 }
 
 #' Build an omicsai infographic prompt for one AI report
@@ -243,7 +239,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
     # Render one stored infographic slot into its preview image output.
     render_infographic <- function(slot) {
       renderImage({
-        img <- ai_infographic_get(pgx_snapshot(), slot)
+        img <- playbase::ai_infographic_get(pgx_snapshot(), slot)
         shiny::validate(shiny::need(!is.null(img),
           paste("missing",
             # Use a stable display label for static and dynamic report slots.
@@ -251,6 +247,34 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
             "infographic")))
         ai_infographic_render_value(img, tmpdir, paste0("infographic-", slot))
       }, deleteFile = FALSE)
+    }
+
+    # Build a PNG download handler for one stored infographic slot. Reads the
+    # durable bytes via playbase (source-agnostic: precompute or regenerate),
+    # then applies the same watermark regular plot downloads get.
+    download_infographic <- function(slot) {
+      shiny::downloadHandler(
+        filename = function() {
+          dataset <- sub("[.]pgx$", "", pgx$name %||% "dataset")
+          paste0(dataset, "-infographic-", slot, ".png")
+        },
+        content = function(file) {
+          img <- playbase::ai_infographic_get(pgx_snapshot(), slot)
+          shiny::validate(shiny::need(
+            !is.null(img) && is.raw(img$bytes) && length(img$bytes) > 0L,
+            paste("no",
+              infographic_module_labels(pgx_snapshot(), slot),
+              "infographic available")))
+          writeBin(img$bytes, file)
+          # Gate on the global WATERMARK exactly like PlotModuleServer; a
+          # no-op if ImageMagick is missing or watermarking is disabled.
+          if (!WATERMARK %in% c("none", FALSE)) {
+            addWatermark.PNG2(file,
+              mark = file.path(FILES, "watermark-logo.png"),
+              position = WATERMARK)
+          }
+        }
+      )
     }
 
     # Rebuild dynamic drug-connectivity tabs from the current AI report slots.
@@ -269,20 +293,14 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
           nav = bslib::nav_panel(
             title = label,
             value = slot,
-            bslib::card(
-              min_height = 600,
-              full_screen = TRUE,
-              div(shiny::imageOutput(ns(infographic_output_id(slot)),
-                height = "100%",
-                width = "100%"), height = "100%", width = "100%",
-                style = "text-align: center;")
-            )
+            infographic_tab_card(ns, slot)
           )
         )
         local({
           slot_i <- slot
           # Bind each dynamic tab to the matching stored infographic slot.
           output[[infographic_output_id(slot_i)]] <- render_infographic(slot_i)
+          output[[infographic_download_id(slot_i)]] <- download_infographic(slot_i)
         })
         dynamic_drug_tabs <<- c(dynamic_drug_tabs, slot)
         target <- slot
@@ -293,7 +311,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
     # Sync visible tabs, checkbox choices, and style choices from PGX state.
     update_nav <- function(pgx_list = pgx_snapshot()) {
       sync_drug_tabs(pgx_list)
-      slots <- unique(c(ai_report_slots(pgx_list), ai_infographic_slots(pgx_list)))
+      slots <- unique(c(ai_report_slots(pgx_list), playbase::ai_infographic_slots(pgx_list)))
       targets <- c(
         combined = "Summary",
         wgcna = "WGCNA",
@@ -386,7 +404,7 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
     # Store one job result in pgx$ai and advance batch counters.
     store_image_job_result <- function(slot, result = NULL, error = NULL,
                                        style = NULL) {
-      updated_pgx <- ai_infographic_set(
+      updated_pgx <- playbase::ai_infographic_set(
         pgx_snapshot(),
         slot,
         result,
@@ -398,6 +416,18 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
       image_jobs$changed <- TRUE
       image_jobs$done <- image_jobs$done + 1L
       if (!is.null(error)) image_jobs$failed <- image_jobs$failed + 1L
+
+      # Telemetry: record one event per infographic from the persisted
+      # pgx$ai slot. Dataset-keyed event_id makes this idempotent across
+      # sessions/reloads; no-ops for error entries (no usage to record).
+      tryCatch(
+        ai_telemetry_record_infographics(
+          shiny::isolate(shiny::reactiveValuesToList(pgx)),
+          user_email = NA_character_
+        ),
+        error = function(e) NULL
+      )
+
       invisible(NULL)
     }
 
@@ -551,6 +581,13 @@ InfographicServer <- function(id, pgx, save_pgx = NULL) {
     output$mofa <- render_infographic("mofa")
     output$de <- render_infographic("de")
     output$enrichment <- render_infographic("pathways")
+
+    for (slot in c("combined", "wgcna", "wgcna_mox", "mofa", "de", "pathways")) {
+      local({
+        slot_i <- slot
+        output[[infographic_download_id(slot_i)]] <- download_infographic(slot_i)
+      })
+    }
 
     shiny::observeEvent(list(pgx$X, pgx$name, pgx$ai), {
       shiny::req(pgx$X, pgx$name)

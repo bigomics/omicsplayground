@@ -571,6 +571,21 @@ upload_module_computepgx_server <- function(
                     ),
                     value = TRUE
                   )
+                ),
+                conditionalPanel(
+                  "input.create_ai_reports == true",
+                  ns = ns,
+                  div(
+                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                    shiny::checkboxInput(
+                      ns("create_ai_infographics"),
+                      label = withTooltip(
+                        shiny::span("Create AI infographics"),
+                        "Infographics can also be generated later from AI Studio. Image generation adds extra compute time and cost."
+                      ),
+                      value = FALSE
+                    )
+                  )
                 )
               ),
               bslib::card(
@@ -1171,6 +1186,7 @@ upload_module_computepgx_server <- function(
         }
 
         create_ai_reports <- is.null(input$create_ai_reports) || isTRUE(input$create_ai_reports)
+        create_ai_infographics <- isTRUE(input$create_ai_infographics)
         llm_model <- getUserOption(session, "llm_model")
         cred_fn <- get_ai_credentials(session)
         ai_features <- NULL
@@ -1190,6 +1206,16 @@ upload_module_computepgx_server <- function(
           # is a no-op when WGCNA was not among the selected extra methods, so
           # this is safe to set unconditionally whenever AI reports are on.
           ai_features$wgcna_summaries <- ai_features$reports
+
+          # Precompute durable AI infographics for the static report slots,
+          # opt-in via the nested checkbox (defaults FALSE — image generation
+          # has real per-slot provider cost/time, unlike text reports).
+          if (isTRUE(create_ai_infographics)) {
+            ai_features$infographics <- list(
+              select = c("combined", "wgcna", "wgcna_mox", "mofa", "de", "pathways"),
+              style = "bigomics"
+            )
+          }
         }
 
         ## Define create_pgx function arguments
@@ -1492,6 +1518,10 @@ upload_module_computepgx_server <- function(
           computedPGX(pgx)
           tryCatch(
             ai_telemetry_record_reports(pgx, user_email = auth$email),
+            error = function(e) NULL
+          )
+          tryCatch(
+            ai_telemetry_record_infographics(pgx, user_email = auth$email),
             error = function(e) NULL
           )
         } else {
