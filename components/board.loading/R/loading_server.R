@@ -289,11 +289,12 @@ LoadingBoard <- function(id,
       if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
 
       ## Only offer generation to users who can persist the result: dataset
-      ## owners (loaded from their own dir) or admins (curators, who write
-      ## back to the source dir via save_current_pgx). Otherwise the paid
-      ## ai_report_generate() below runs only to no-op on save. Same gate as
-      ## AI Studio on-demand generation.
-      if (!isTRUE(is_user_dir) && !isTRUE(auth$ADMIN)) return(invisible(NULL))
+      ## owners (loaded from their own dir) or, when the admin feature is
+      ## enabled, admins (curators, who write back to the source dir via
+      ## save_current_pgx). Otherwise the paid ai_report_generate() below runs
+      ## only to no-op on save. Same gate as AI Studio on-demand generation.
+      admin_ok <- isTRUE(auth$ADMIN) && isTRUE(opt$ENABLE_ADMIN)
+      if (!isTRUE(is_user_dir) && !admin_ok) return(invisible(NULL))
 
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))

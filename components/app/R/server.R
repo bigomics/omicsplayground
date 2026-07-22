@@ -887,14 +887,15 @@ app_server <- function(input, output, session) {
 
   ## Resolve where the current pgx may be persisted, or NULL if the caller
   ## isn't allowed to persist it. Owner check = file lives in auth$user_dir.
-  ## Admins act as curators: they write back to the dataset's source dir.
+  ## When the admin feature is enabled (opt$ENABLE_ADMIN), admins act as
+  ## curators: they write back to the dataset's source dir.
   pgx_save_target <- function(pgx) {
     if (!isTRUE(auth$logged)) return(NULL)
     if (is.null(pgx$name)) return(NULL)
     file <- paste0(sub("[.]pgx$", "", pgx$name), ".pgx")
     owner_path <- file.path(auth$user_dir, file)
     if (file.exists(owner_path)) return(owner_path)
-    if (isTRUE(auth$ADMIN)) {
+    if (isTRUE(auth$ADMIN) && isTRUE(opt$ENABLE_ADMIN)) {
       src_path <- file.path(pgx_source_dir() %||% auth$user_dir, file)
       if (file.exists(src_path)) return(src_path)
     }
