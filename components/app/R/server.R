@@ -875,6 +875,12 @@ app_server <- function(input, output, session) {
   observeEvent(input$my_profile, {
     bslib::nav_select("app-sidebar", selected = "UserProfile")
   })
+
+  observeEvent(input$show_admin, {
+    if (isTRUE(auth$ADMIN)) {
+      bslib::nav_select("app-sidebar", selected = "AdminPanel")
+    }
+  })
   
   ## -------------------------------------------------------------
   ## Standard modules

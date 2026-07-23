@@ -200,7 +200,7 @@ app_ui <- function(x) {
           div(UserProfileUI("user_profile"), class='px-4 py-0')
         ),
         if (isTRUE(opt$ENABLE_ADMIN)) {
-          bslib::nav_panel_hidden("UserProfile",
+          bslib::nav_panel_hidden("AdminPanel",
             div(AdminPanelUI("admin_panel"), class='px-4 py-0')
           )
         },
