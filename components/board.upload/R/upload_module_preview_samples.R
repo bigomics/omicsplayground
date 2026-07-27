@@ -156,7 +156,7 @@ upload_table_preview_samples_server <- function(
             label = "Add metadata",
             value = FALSE
           ),
-          "Expand Olink metadata by uploading an additional sample file (.csv)"
+          "Add extra sample annotations by uploading an additional file (.csv)"
         ),
         uiOutput(ns("metadata_upload_area"))
       )
@@ -166,7 +166,7 @@ upload_table_preview_samples_server <- function(
       shiny::req(input$add_metadata_button == TRUE)
       bslib::card(
         fileInputArea(ns("metadata_csv"),
-          shiny::h4("Expand Olink metadata: upload an additional file (.csv)", class = "mb-0"),
+          shiny::h4("Add metadata: upload an additional file (.csv)", class = "mb-0"),
           multiple = FALSE, accept = c(".csv"), width = "100%"
         ),
         style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;"
@@ -174,20 +174,13 @@ upload_table_preview_samples_server <- function(
     })
 
     samples_options <- shiny::reactive({
-      base_options <- shiny::tagList(
+      shiny::tagList(
         uiOutput(ns("col_sel")),
         br(),
-        uiOutput(ns("tech_rep"))
+        uiOutput(ns("tech_rep")),
+        br(),
+        uiOutput(ns("add_metadata"))
       )
-      if (upload_datatype() == "proteomics" && is.olink()) {
-        shiny::tagList(
-          base_options,
-          br(),
-          uiOutput(ns("add_metadata"))
-        )
-      } else {
-        base_options
-      }
     })
 
     table.RENDER <- function() {
@@ -476,12 +469,10 @@ upload_table_preview_samples_server <- function(
 
     observeEvent(input$metadata_csv, {
       shiny::req(input$metadata_csv)
-      c1 <- (tools::file_ext(input$metadata_csv$name)[1] != "csv")
-      c2 <- (!grepl("sample", input$metadata_csv$name, ignore.case = TRUE))
-      if (c1 | c2) {
+      if (tools::file_ext(input$metadata_csv$name)[1] != "csv") {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please make sure the file is a CSV file and contains 'samples' in the file name.",
+          text = "Please make sure the file is a CSV file.",
           type = "error"
         )
         return()
@@ -522,6 +513,7 @@ upload_table_preview_samples_server <- function(
         new_samples <- new_samples[cm, , drop = FALSE]
         counts <- counts[, cm, drop = FALSE]
         uploaded$counts.csv <- counts
+        orig_counts_matrix(counts)
       }
       new_cols <- setdiff(colnames(new_samples), colnames(samples))
       if (length(new_cols) > 0) {
