@@ -593,17 +593,6 @@ upload_table_preview_counts_server <- function(id,
         return()
       }
 
-      # if counts not in file name, give warning and return
-      ss <- "count|expression|abundance|concentration|params.rdata"
-      if (!any(grepl(ss, tolower(input$counts_csv$name)))) {
-        shinyalert::shinyalert(
-          title = tspan("Counts not in filename.", js = FALSE),
-          text = tspan("Please ensure the file name contains 'counts', e.g., counts_dataset.csv or counts.csv.", js = FALSE),
-          type = "error"
-        )
-        return()
-      }
-
       # Save file
       # At first raw_dir will not exist, if the user deletes and uploads a different counts it will already exist
       if (!is.null(raw_dir()) && dir.exists(raw_dir())) {
@@ -622,115 +611,103 @@ upload_table_preview_counts_server <- function(id,
       }
 
       ## ---counts---##
-      sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
-      if (length(sel)) {
-        datafile <- input$counts_csv$datapath[sel[1]]
-        datafile.name <- input$counts_csv$name
-        file.ext <- tools::file_ext(datafile.name)
+      datafile <- input$counts_csv$datapath[1]
+      datafile.name <- input$counts_csv$name
+      file.ext <- tools::file_ext(datafile.name)
 
-        if (upload_datatype() == "scRNA-seq") {
-          if (file.ext %in% c("h5", "h5ad")) {
-            h5_result <- tryCatch(
-              {
-                playbase::read_h5_counts(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
-            )
-            df <- h5_result[["counts"]]
-            df.samples <- h5_result[["samples"]]
-            if (is.null(df)) {
-              shinyalert::shinyalert(
-                title = "Error",
-                text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
-                type = "error"
-              )
+      if (upload_datatype() == "scRNA-seq") {
+        if (file.ext %in% c("h5", "h5ad")) {
+          h5_result <- tryCatch(
+            {
+              playbase::read_h5_counts(datafile)
+            },
+            error = function(w) {
+              NULL
             }
-          } else if (file.ext %in% c("gz", "zip")) {
-            df <- tryCatch(
-              {
-                playbase::read_cellranger_output(datafile)
-              },
-              error = function(w) {
-                NULL
-              }
+          )
+          df <- h5_result[["counts"]]
+          df.samples <- h5_result[["samples"]]
+          if (is.null(df)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "Error: there may be an issue with the uploaded h5 format. Please fix it & re-upload.",
+              type = "error"
             )
-            if (is.null(df)) {
-              shinyalert::shinyalert(
-                title = "Error",
-                text = "Error: there may be an issue with the uploaded Cell Ranger output format. Please fix it & re-upload.",
-                type = "error"
-              )
-            }
           }
-        } else {
-          df.samples <- NULL
-          if (upload_datatype() == "proteomics" && is.olink()) {
+        } else if (file.ext %in% c("gz", "zip")) {
+          df <- tryCatch(
+            {
+              playbase::read_cellranger_output(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
+          if (is.null(df)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "Error: there may be an issue with the uploaded Cell Ranger output format. Please fix it & re-upload.",
+              type = "error"
+            )
+          }
+        }
+      } else {
+        df.samples <- NULL
+        if (upload_datatype() == "proteomics" && is.olink()) {
+          df0 <- tryCatch(
+            {
+              playbase::read_Olink_NPX(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
+          if (!is.null(df0)) {
+            df <- df0[["counts"]]
+            df.samples <- df0[["samples"]]
+          } else {
             df0 <- tryCatch(
               {
-                playbase::read_Olink_NPX(datafile)
+                playbase::read_counts(datafile)
               },
               error = function(w) {
                 NULL
               }
             )
-            if (!is.null(df0)) {
-              df <- df0[["counts"]]
-              df.samples <- df0[["samples"]]
-            } else {
-              df0 <- tryCatch(
-                {
-                  playbase::read_counts(datafile)
-                },
-                error = function(w) {
-                  NULL
-                }
-              )
-              if (!is.null(df0)) df <- df0
+            if (!is.null(df0)) df <- df0
+          }
+          if (is.null(df0)) {
+            shinyalert::shinyalert(
+              title = "Error",
+              text = "Your data may not be correctly formatted as either standard abundance.csv or Official Olink format. Please check."
+            )
+          }
+          rm(df0)
+        } else if (upload_datatype() == "proteomics" && !is.olink()) {
+          df <- tryCatch(
+            {
+              playbase::read_spectronaut(datafile)
+            },
+            error = function(w) {
+              NULL
             }
-            if (is.null(df0)) {
-              shinyalert::shinyalert(
-                title = "Error",
-                text = "Your data may not be correctly formatted as either standard abundance.csv or Official Olink format. Please check."
-              )
-            }
-            rm(df0)
-          } else if (upload_datatype() == "proteomics" && !is.olink()) {
+          )
+          if (is.null(df)) {
             df <- tryCatch(
               {
-                playbase::read_spectronaut(datafile)
+                playbase::read_spectronaut_hPTM(datafile)
               },
               error = function(w) {
                 NULL
               }
             )
-            if (is.null(df)) {
-              df <- tryCatch(
-                {
-                  playbase::read_spectronaut_hPTM(datafile)
-                },
-                error = function(w) {
-                  NULL
-                }
-              )
-            }
-            if (!is.null(df)) {
-              char.cols <- which(sapply(df, class) == "character")
-              if (length(char.cols) > 0) {
-                uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
-                df <- df[, colnames(df) != names(char.cols), drop = FALSE]
-                df <- as.matrix(df)
-              }
-            } else {
-              df <- tryCatch(
-                {
-                  playbase::read_counts(datafile)
-                },
-                error = function(w) {
-                  NULL
-                }
-              )
+          }
+          if (!is.null(df)) {
+            char.cols <- which(sapply(df, class) == "character")
+            if (length(char.cols) > 0) {
+              uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
+              df <- df[, colnames(df) != names(char.cols), drop = FALSE]
+              df <- as.matrix(df)
             }
           } else {
             df <- tryCatch(
@@ -742,16 +719,16 @@ upload_table_preview_counts_server <- function(id,
               }
             )
           }
+        } else {
+          df <- tryCatch(
+            {
+              playbase::read_counts(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
         }
-      } else {
-        df <- tryCatch(
-          {
-            playbase::read_counts(datafile)
-          },
-          error = function(w) {
-            NULL
-          }
-        )
       }
 
       ## Precheck methylation: hope to filter probes & samples
