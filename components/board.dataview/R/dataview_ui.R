@@ -56,6 +56,17 @@ DataViewInputs <- function(id) {
           ),
           "Choose an input data type for the analysis.",
           placement = "bottom"
+        ),
+        withTooltip(
+          shiny::radioButtons(
+            ns("qc_datasource"), "Sample QC data:",
+            choiceNames = c("normalized", "raw"),
+            choiceValues = c("X", "counts"),
+            selected = "X",
+            inline = TRUE
+          ),
+          "Sample QC plots: show the normalized (and batch-corrected) data used for the analysis, or the raw uploaded counts.",
+          placement = "bottom"
         )
       )
     )
