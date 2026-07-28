@@ -118,9 +118,9 @@ prism_ui <- function(id) {
         row_heights = list("auto",1),
         div(
           shiny::selectInput(ns("theme"), "Theme:", sort(c("bw","gray","prism",
-            "light","minimal","classic")), selected="gray", width='100%'),
+            "light","classic")), selected="gray", width='100%'),
           shiny::sliderInput(ns("pointsize"), "Point size:", 1, 8, 3, step=1),
-          shiny::sliderInput(ns("fontsize"), "Font size:", 8, 24, 12, step=2)
+          shiny::sliderInput(ns("fontsize"), "Text size:", 8, 24, 12, step=2)
         ),
         div()
       )        

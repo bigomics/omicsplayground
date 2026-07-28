@@ -19,6 +19,14 @@
     gap: 20px;
 }
 
+.app-launcher-grid-dashboards {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.app-launcher-grid-apps {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+}
+
 .app-tile {
     display: flex;
     flex-direction: column;
@@ -33,6 +41,42 @@
     box-shadow: 0 4px 10px rgba(0,0,0,.15);
     transition: transform .15s ease, box-shadow .15s ease;
     cursor: pointer;
+}
+
+.app-tile-wide {
+    height: auto;
+    aspect-ratio: 2.0 / 1;
+    padding: 16px 14px;
+}
+
+.app-tile-wide .app-tile-icon {
+    font-size: 40px;
+}
+
+.app-tile-wide .app-tile-label {
+    font-size: 20px;
+}
+
+.app-tile-wide .app-tile-description {
+    font-size: 14px;
+}
+
+.app-tile-square {
+    height: auto;
+    aspect-ratio: 1 / 1;
+    padding: 10px 8px;
+}
+
+.app-tile-square .app-tile-icon {
+    font-size: 30px;
+}
+
+.app-tile-square .app-tile-label {
+    font-size: 16px;
+}
+
+.app-tile-square .app-tile-description {
+    font-size: 12px;
 }
 
 .app-tile:hover,
@@ -58,18 +102,3 @@
     margin-top: 4px;
 }
 
-.app-tile-blue {
-    background: linear-gradient(160deg, #5b8def, #3a53a9);
-}
-
-.app-tile-teal {
-    background: linear-gradient(160deg, #3ec9a7, #117e62);
-}
-
-.app-tile-purple {
-    background: linear-gradient(160deg, #c76bf0, #6b2fd1);
-}
-
-.app-tile-orange {
-    background: linear-gradient(160deg, #cc8500, #aa7700);
-}

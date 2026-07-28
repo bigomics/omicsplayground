@@ -29,7 +29,7 @@ source("./launcher_ui_grok.R", encoding = "UTF-8")
 source("./launcher_ui_claude.R", encoding = "UTF-8")
 source("./launcher_ui_classic.R", encoding = "UTF-8")
 source("./launcher_ui_ds.R", encoding = "UTF-8")
-source("./launcher_server.R", encoding = "UTF-8")
+source("../R/launcher_server.R", encoding = "UTF-8")
 
 css_path <- "../../app/R/www/styles.min.css"
 OPG = "~/Playground/omicsplayground/"

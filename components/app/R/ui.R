@@ -121,6 +121,7 @@ app_ui <- function(x) {
     
     nav_page <- function(p) {p}  ## dummy
     
+    ##ui <- bslib::page_fillable(
     ui <- bigdash::bigPage(
       header,
       navbar = NULL,
@@ -155,13 +156,19 @@ app_ui <- function(x) {
             div(AcrossUI("across"), class = "px-4 py-0")
           )
         },
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel(title = "Apps",
+            icon = icon("app-store-ios", style="font-size: 38px;"),
+            launcher_ui("apps")
+          )
+        },
         ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
         ## The runtime "Enable AI" switch further shows/hides them per session
         ## via bigdash.toggleTab in appsettings_server.R.
         if (isTRUE(opt$ENABLE_AI)) {
           bslib::nav_panel(
-            title = HTML("AI&nbsp;Studio"),
-            value="Studio",
+            title = HTML("Studio"),
+            value = "Studio",
             icon = icon("clapperboard"),
             div(StudioUI("studio"), class = "px-4 py-0")
           )
@@ -169,7 +176,7 @@ app_ui <- function(x) {
         if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
           bslib::nav_panel(
             #title = HTML("AI&nbsp;Copilot"),
-            title = tagList(icon("robot"), tags$br(), "Obi"),
+            title = tagList(icon("robot"), tags$br(), "Obi AI"),
             value = "Copilot",
             div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
           )
@@ -182,11 +189,6 @@ app_ui <- function(x) {
               ##p("Monitor and inspect the details of computation runs"),
               RunMonitorUI("runmonitor")
             )
-          )
-        },
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(title = "Apps", icon=icon("app-store-ios"),
-            launcher_ui("apps")
           )
         },
         ## Hidden panels (e.g. tools)
@@ -206,6 +208,15 @@ app_ui <- function(x) {
         },
         bslib::nav_panel_hidden("IDconvert",
           div(idconvert_ui("idconvert"), class='px-4 py-0')
+        ),
+        bslib::nav_panel_hidden("Qsee",
+          div(qsee_ui("qsee"), class='px-4 py-0')
+        ),
+        bslib::nav_panel_hidden("ComparePGX",
+          div(PGXCompareUI("compare"), class='px-4 py-0')
+        ),
+        bslib::nav_panel_hidden("PCAexplorer",
+          div(PCAexplorer_ui("pcaexplorer"), class='px-4 py-0')
         ),
 
         ## lower settings buttons

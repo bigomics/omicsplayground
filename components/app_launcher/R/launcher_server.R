@@ -17,18 +17,30 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
 
+    observeEvent(input$launch_across, {
+      bslib::nav_select("app-sidebar", "AcrossDatasets", session=parent)
+    })
+
     observeEvent(input$launch_prism, {
       bslib::nav_select("app-sidebar", "Prism", session=parent)
     })
     
-    observeEvent(input$launch_qc, {
-      bslib::nav_select("app-sidebar", "QSee", session=parent)
+    observeEvent(input$launch_qsee, {
+      bslib::nav_select("app-sidebar", "Qsee", session=parent)
+    })
+
+    observeEvent(input$launch_compare, {
+      bslib::nav_select("app-sidebar", "ComparePGX", session=parent)
     })
 
     observeEvent(input$launch_idconvert, {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })
 
+    observeEvent(input$launch_pca, {
+      bslib::nav_select("app-sidebar", "PCAexplorer", session=parent)
+    })
+    
     
   })
 }

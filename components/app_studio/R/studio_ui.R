@@ -11,7 +11,7 @@ StudioUI <- function(id) {
 
   studio_card <- bslib::navset_underline(
     bslib::nav_panel(
-      "AI Studio",
+      "Studio",
       shiny::br(),
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
