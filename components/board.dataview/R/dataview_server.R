@@ -80,14 +80,14 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         sel.feature <- features[1]
         i <- match(sel.feature, features)
         features <- c(features[i], features[-i])
-        if (length(features) > 1000) {
-          features <- c(
-            features[1:1000], tspan("(type for more genes...)", js = FALSE),
-            features[1001:length(features)]
-          )
-        }
 
         names(features) <- playbase::probe2symbol(features, pgx$genes, labeltype(), fill_na = TRUE)
+
+        # non-selectable hint that more genes are searchable by typing (see render/onItemAdd guard in ui)
+        if (length(features) > 1000) {
+          hint <- setNames("__more_genes__", tspan("(type for more genes...)", js = FALSE))
+          features <- c(features[1:1000], hint, features[1001:length(features)])
+        }
 
         shiny::updateSelectizeInput(
           session, "search_gene",
@@ -197,6 +197,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "counts_total",
       getCountStatistics,
       r.samples = selected_samples,
+      r.datasource = reactive(input$qc_datasource),
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -207,6 +208,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       getCountStatistics,
       r.samples = selected_samples,
       r.annot = annot,
+      r.datasource = reactive(input$qc_datasource),
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -230,6 +232,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx,
       r.samples = selected_samples,
       r.groupby = reactive(input$data_groupby),
+      r.datasource = reactive(input$qc_datasource),
       watermark = WATERMARK
     )
 
@@ -285,7 +288,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     getCountStatistics <- eventReactive(
       {
-        list(pgx$X, input$data_groupby, input$data_samplefilter)
+        list(pgx$X, input$data_groupby, input$data_samplefilter, input$qc_datasource)
       },
       {
         shiny::req(pgx$X, pgx$Y, pgx$samples)
@@ -299,7 +302,20 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         if (nsamples == 0) {
           return(NULL)
         }
-        counts <- pgx$counts[, samples, drop = FALSE]
+        ## QC plots show either the normalized/batch-corrected matrix used for the
+        ## analysis (pgx$X, default) or the raw counts. X is log2 (beta for
+        ## methylomics), so linearize it: totals and class proportions only make
+        ## sense on a linear scale. raw.counts is kept for feature detection, which
+        ## is a property of the uploaded data (X may be normalized and imputed).
+        is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
+        use.X <- !identical(input$qc_datasource, "counts")
+        raw.counts <- pgx$counts[, samples, drop = FALSE]
+        if (use.X) {
+          counts <- pgx$X[, samples, drop = FALSE]
+          if (!is.meth) counts <- 2**counts
+        } else {
+          counts <- raw.counts
+        }
 
         grpvar <- input$data_groupby
         if (grpvar != "<ungrouped>") {
@@ -307,10 +323,13 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           grps <- sort(unique(gr))
           ## check if there are any samples remaining in the group after filtering
           if (length(grps) > 1) {
-            mx <- tapply(samples, gr, function(ii) {
-              rowMeans(counts[, ii, drop = FALSE], na.rm = TRUE)
-            })
-            counts <- do.call(cbind, mx)
+            grpmean <- function(mx) {
+              do.call(cbind, tapply(samples, gr, function(ii) {
+                rowMeans(mx[, ii, drop = FALSE], na.rm = TRUE)
+              }))
+            }
+            counts <- grpmean(counts)
+            raw.counts <- grpmean(raw.counts)
           }
         }
 
@@ -318,9 +337,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         if (ncol(counts) > 500) {
           kk <- sample(ncol(counts), 400, replace = TRUE)
           counts <- counts[, kk, drop = FALSE]
+          raw.counts <- raw.counts[, kk, drop = FALSE]
           subtt <- c(subtt, "random subset")
         }
         colnames(counts) <- substring(colnames(counts), 1, 24)
+        colnames(raw.counts) <- colnames(counts)
 
         gset <- list()
         gg <- pgx$genes[rownames(counts), ]$symbol
@@ -351,14 +372,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         prop.counts <- 100 * t(t(summed.counts) / total.counts)
 
         ## N. of detected features per sample or group AZ
-        n.detected.features <- apply(counts, 2, function(x) length(which(x > 0)))
-
-        ## get variation per group
-        # log2counts <- log2(1 + counts)
-        is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
-        log2counts <- if (is.meth) playbase::mToBeta(counts) else log2(1 + counts)
-        varx <- apply(log2counts, 1, var)
-        gset.var <- sapply(gset, function(s) mean(varx[s], na.rm = TRUE))
+        n.detected.features <- apply(raw.counts, 2, function(x) length(which(x > 0)))
 
         ## sort get top 20 gene families
         jj <- head(order(-rowSums(prop.counts, na.rm = TRUE)), 20)
@@ -375,7 +389,10 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ss2 <- match(ss, colnames(prop.counts))
         prop.counts <- prop.counts[, ss2, drop = FALSE]
         counts <- counts[, ss2, drop = FALSE]
-        if (is.meth) {
+        if (use.X) {
+          ## counts is 2**X (beta values for methylomics): back to the analysis scale
+          log2counts <- if (is.meth) counts else log2(counts)
+        } else if (is.meth) {
           log2counts <- playbase::mToBeta(counts)
         } else {
           if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
@@ -393,6 +410,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         res <- list(
           total.counts = total.counts,
           subtt = subtt,
+          counts = counts, ## linear scale, for {Scale} = linear
           log2counts = log2counts,
           prop.counts = prop.counts,
           n.detected.features = n.detected.features, ## AZ

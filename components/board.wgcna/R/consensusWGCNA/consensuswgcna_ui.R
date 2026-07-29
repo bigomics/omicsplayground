@@ -162,7 +162,7 @@ ConsensusWGCNA_UI <- function(id) {
           bslib::layout_columns(
             col_widths = c(3, 4, 5),
             height = "100vh",
-            wgcna_html_module_summary_ui(
+            wgcna_module_ai_summary_ui(
               id = ns("consensusWGCNAmoduleSummary"),
               title = "Summary",
               info.text = "Summary. Description of the selected WGCNA module. The WGCNA module and phenotype/trait of interest can both be selected in the drop-down menu on the right.",

@@ -53,7 +53,10 @@ AiTextCardServer <- function(id,
                              user_email = NULL,
                              telemetry_source = "card",
                              enabled_reactive = NULL,
-                             disabled_message = "AI features are disabled.") {
+                             disabled_message = "AI features are disabled.",
+                             prefetch_reactive = NULL,
+                             on_generated = NULL,
+                             on_save = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     # Prepare card-local state and cache for one on-demand text result.
     module_cache <- if (is.null(cache)) omicsai::omicsai_cache_init("mem") else cache
@@ -64,6 +67,39 @@ AiTextCardServer <- function(id,
       prompt = NULL,
       system_prompt = NULL
     )
+
+    # Durable-first display: when a precomputed summary exists for the current
+    # selection, render it instantly (no LLM call, no AI-enabled gate). Falling
+    # back to "idle" when none exists lets the user Generate on demand. Skipped
+    # while a live generation is running so a click is never overwritten.
+    if (!is.null(prefetch_reactive)) {
+      shiny::observeEvent(prefetch_reactive(), ignoreNULL = FALSE, {
+        if (identical(rv$status, "running")) return(NULL)
+        entry <- prefetch_reactive()
+        if (!is.null(entry) && !is.null(entry$summary)) {
+          rv$status <- "done"
+          rv$result <- list(text = entry$summary)
+          rv$error <- NULL
+        } else {
+          rv$status <- "idle"
+          rv$result <- NULL
+          rv$error <- NULL
+        }
+      })
+    }
+
+    # Persist the current summaries to disk (durable variants only). The board
+    # supplies on_save = function() save_pgx(pgx); we just report success/failure.
+    if (!is.null(on_save)) {
+      shiny::observeEvent(input$save, {
+        ok <- tryCatch(isTRUE(on_save()), error = function(e) FALSE)
+        shiny::showNotification(
+          if (ok) "Summary saved to dataset." else "Could not save summary.",
+          type = if (ok) "message" else "error",
+          session = session
+        )
+      })
+    }
 
     shiny::observeEvent(input$generate, {
       # Guard: block generation when AI is disabled (deployment licence or the
@@ -133,6 +169,12 @@ AiTextCardServer <- function(id,
           ),
           error = function(e) NULL
         )
+
+        # Durable variants persist the regenerated summary back into the pgx so
+        # it overrides the stored one (AI-Studio style); never break the card.
+        if (!is.null(on_generated)) {
+          tryCatch(on_generated(result), error = function(e) NULL)
+        }
       }
       info("[AiTextCardServer] text generation finished: id=", id,
            " status=", rv$status,

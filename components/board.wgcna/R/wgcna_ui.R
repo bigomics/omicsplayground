@@ -205,7 +205,8 @@ WgcnaUI <- function(id) {
             info.text = "",
             caption = "Information about the Module.",
             height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%")
+            width = c("auto", "100%"),
+            show_save = TRUE
           ),
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),

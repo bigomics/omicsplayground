@@ -166,8 +166,16 @@ PreservationWGCNA_UI <- function(id) {
           height = "calc(100vh - 180px)",
           row_heights = c("auto", 1),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(3, 4, 5),
             height = "100vh",
+            wgcna_module_ai_summary_ui(
+              id = ns("preservationSummary"),
+              title = "Summary",
+              info.text = "AI-generated summary of the selected WGCNA module. The WGCNA module and trait of interest can be selected in the drop-down menu on the right.",
+              caption = "Information about the selected WGCNA module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             bslib::layout_columns(
               col_widths = c(12),
               preservationWGCNA_table_modulegenes_ui(

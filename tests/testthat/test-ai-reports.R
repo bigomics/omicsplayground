@@ -271,7 +271,7 @@ test_that("ai_infographic_set stores image bytes and metadata under pgx$ai", {
   ), class = "omicsai_image_result")
 
   pgx <- list(ai = list(combined = list(report = "Combined report")))
-  updated <- ai_infographic_set(pgx, "combined", result,
+  updated <- playbase::ai_infographic_set(pgx, "combined", result,
     style = "bigomics", n_blocks = 2)
 
   stored <- updated$ai$combined$infographic
@@ -283,7 +283,7 @@ test_that("ai_infographic_set stores image bytes and metadata under pgx$ai", {
   expect_equal(stored$model, "gemini-test")
   expect_equal(stored$style, "bigomics")
   expect_equal(stored$n_blocks, 2)
-  expect_equal(ai_infographic_slots(updated), "combined")
+  expect_equal(playbase::ai_infographic_slots(updated), "combined")
 })
 
 test_that("ai_infographic_get and render tolerate missing and error states", {
@@ -295,9 +295,9 @@ test_that("ai_infographic_get and render tolerate missing and error states", {
     )
   ))
 
-  expect_null(ai_infographic_get(pgx, "combined"))
-  expect_equal(ai_infographic_get(pgx, "wgcna")$error, "provider failed")
-  expect_equal(ai_infographic_slots(pgx), "wgcna")
+  expect_null(playbase::ai_infographic_get(pgx, "combined"))
+  expect_equal(playbase::ai_infographic_get(pgx, "wgcna")$error, "provider failed")
+  expect_equal(playbase::ai_infographic_slots(pgx), "wgcna")
 })
 
 test_that("ai_infographic_friendly_error hides provider internals", {
@@ -306,21 +306,21 @@ test_that("ai_infographic_friendly_error hides provider internals", {
     "No image data in Gemini response"
   )
 
-  expect_match(ai_infographic_friendly_error(raw_error),
+  expect_match(playbase::ai_infographic_friendly_error(raw_error),
     "server seems saturated", fixed = TRUE)
   expect_false(grepl(
     "\\.image_api_call|Gemini",
-    ai_infographic_friendly_error(raw_error)
+    playbase::ai_infographic_friendly_error(raw_error)
   ))
-  expect_match(ai_infographic_friendly_error("HTTP 429 rate limit"),
+  expect_match(playbase::ai_infographic_friendly_error("HTTP 429 rate limit"),
     "rate limit", fixed = TRUE)
-  expect_match(ai_infographic_friendly_error(""),
+  expect_match(playbase::ai_infographic_friendly_error(""),
     "Please try again", fixed = TRUE)
 })
 
 test_that("ai_infographic_set stores friendly errors", {
   pgx <- list(ai = list(pathways = list(report = "Enrichment report")))
-  updated <- ai_infographic_set(
+  updated <- playbase::ai_infographic_set(
     pgx,
     "pathways",
     NULL,
