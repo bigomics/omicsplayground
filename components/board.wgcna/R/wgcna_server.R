@@ -4,7 +4,7 @@
 ##
 
 
-WgcnaBoard <- function(id, pgx) {
+WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -302,14 +302,17 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
-    # Module summary
+    # Module summary (durable: precomputed at compute time, stored in
+    # pgx$ai$wgcna$extras; Regenerate overrides the stored entry).
     wgcna_module_ai_summary_server(
       "moduleSummary",
       wgcna = wgcna,
       pgx = pgx,
       r_module = shiny::reactive(input$selected_module),
       parent_session = session,
-      watermark = WATERMARK
+      watermark = WATERMARK,
+      variant = "wgcna",
+      save_pgx = save_pgx
     )
 
     return(NULL)

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-MultiWGCNA_Board <- function(id, pgx) {
+MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -225,14 +225,18 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # Module summary (durable: precomputed per layer x module, stored in
+    # pgx$ai$wgcna_mox$extras; Regenerate overrides the stored entry).
+    wgcna_module_ai_summary_server(
       "multiwgcnaSummary",
       wgcna = r_multiwgcna,
-      multi = TRUE,
-      r_annot = reactive(pgx$genes),
+      pgx = pgx,
       r_module = shiny::reactive(input$module),
-      watermark = WATERMARK
+      parent_session = session,
+      watermark = WATERMARK,
+      variant = "wgcna_mox",
+      board_type = "multiomics",
+      save_pgx = save_pgx
     )
 
     return(NULL)

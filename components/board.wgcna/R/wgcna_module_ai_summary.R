@@ -5,7 +5,8 @@
 
 #' WGCNA module AI summary UI
 #'
-#' Renders an on-demand AI summary card for the selected WGCNA module.
+#' Renders an AI summary card for the selected WGCNA module. Used by all four
+#' WGCNA tabs (standard, consensus, preservation, multi-omics).
 #'
 #' @param id Shiny module namespace ID.
 #' @param label Optional PlotModule label.
@@ -22,29 +23,46 @@ wgcna_module_ai_summary_ui <- function(id,
                                        info.text = "",
                                        caption = "",
                                        height,
-                                       width) {
+                                       width,
+                                       show_save = FALSE) {
   AiTextCardUI(
     id = id,
     title = title,
     caption = caption,
     info.text = info.text,
     height = height,
-    width = width
+    width = width,
+    show_save = show_save
   )
 }
 
 #' WGCNA module AI summary server
 #'
-#' Builds current-module evidence from the live WGCNA object and generates a
-#' fresh AI summary on demand. Results are not written back to PGX.
+#' Serves the per-module AI summary card in two modes:
+#'
+#' * **Durable** (`variant = "wgcna"` / `"wgcna_mox"`): reads the precomputed
+#'   summary from `pgx$ai$<variant>$extras$<module>` and renders it instantly.
+#'   "Regenerate" runs a fresh summary and writes it back into the pgx so it
+#'   overrides the stored one, mirroring the AI Studio reports.
+#' * **Ephemeral** (`variant = NULL`, consensus / preservation): the WGCNA
+#'   object is computed live from user input and never persisted, so the summary
+#'   is generated on demand and not stored.
+#'
+#' All prompt assembly is delegated to `playbase::wgcna.module_summary_prompt()`
+#' so the board keeps no parallel module-data extraction code.
 #'
 #' @param id Shiny module namespace ID.
 #' @param wgcna Reactive returning the current WGCNA object.
-#' @param pgx Current PGX object.
+#' @param pgx Current PGX object (reactiveValues).
 #' @param r_module Reactive returning the selected module name.
 #' @param parent_session Parent Shiny session with AI user options.
 #' @param watermark Logical; add watermark in PlotModule.
 #' @param user_email Optional user email for telemetry attribution.
+#' @param variant Storage slot for durable summaries (`"wgcna"` /
+#'   `"wgcna_mox"`), or `NULL` for ephemeral (consensus / preservation).
+#' @param board_type WGCNA flavour selecting the prompt/extraction: `"standard"`,
+#'   `"multiomics"`, `"consensus"`, or `"preservation"`. Playbase handles each
+#'   object's shape (including multi-omics layer resolution) internally.
 #'
 #' @return Reactive returning the latest omicsai result, or NULL.
 wgcna_module_ai_summary_server <- function(id,
@@ -53,45 +71,82 @@ wgcna_module_ai_summary_server <- function(id,
                                            r_module,
                                            parent_session,
                                            watermark = FALSE,
-                                           user_email = NULL) {
-  # Build prompt data from the currently selected module and live WGCNA object.
-  summary_params <- shiny::reactive({
+                                           user_email = NULL,
+                                           variant = NULL,
+                                           board_type = "standard",
+                                           save_pgx = NULL) {
+  # The whole WGCNA object is passed to playbase, which selects the right
+  # extractor per board_type (multi-omics resolves the owning layer and computes
+  # cross-omics coordination from all layers, so it needs the full object).
+  wgcna_for_module <- shiny::reactive({
     res <- wgcna()
     module <- r_module()
     shiny::req(res, module)
-    wgcna_module_summary_params(res, module, pgx)
+    list(obj = res, annot = res$annot %||% pgx$genes)
   })
 
-  # Assemble the structured omicsai prompt into system and user-message parts.
+  # Assemble the summary prompt from playbase (single source of truth). The
+  # board_type routes consensus / preservation objects to their own extractors.
   prompt_parts <- shiny::reactive({
-    params <- summary_params()
-    organism <- tryCatch(pgx$organism, error = function(e) NULL)
-    prompt <- omicsai::summary_prompt(
-      role = omicsai::frag("system_base"),
-      task = NULL,
-      species = omicsai::omicsai_species_prompt(organism),
-      context = omicsai::frag("wgcna/wgcna_interpretation"),
-      data = omicsai::frag("wgcna/wgcna_module_data", params)
+    wm <- wgcna_for_module()
+    playbase::wgcna.module_summary_prompt(
+      pgx, wm$obj, r_module(),
+      annot = wm$annot, board_type = board_type
     )
-    omicsai::build_prompt(prompt)
   })
 
-  # Pass the already-built user message through the generic AI text card.
+  # The card's live/regenerate path uses the already-built board message plus a
+  # config carrying the WGCNA system prompt.
   template <- shiny::reactive(prompt_parts()$board)
-
-  # Keep model selection tied to app Settings while using the WGCNA system prompt.
   config <- shiny::reactive({
-    model <- get_ai_model(parent_session)
-    system_prompt <- prompt_parts()$system
     omicsai::omicsai_config(
-      model = model,
-      system_prompt = system_prompt
+      model = get_ai_model(parent_session),
+      system_prompt = prompt_parts()$system
     )
   })
 
-  # Render the serial on-demand AI summary card; no PGX write-back happens here.
-  # The card emits one telemetry event per generation tagged source="wgcna_summary".
-  # TODO(telemetry): thread auth$email for attribution (no auth in WgcnaBoard scope).
+  # Durable variants: seed the card from the stored summary and persist any
+  # regeneration back into the pgx. Ephemeral variants pass NULL for both.
+  prefetch_reactive <- NULL
+  on_generated <- NULL
+  if (!is.null(variant)) {
+    prefetch_reactive <- shiny::reactive({
+      module <- r_module()
+      shiny::req(module)
+      pgx$ai[[variant]]$extras[[module]]
+    })
+    on_generated <- function(result) {
+      module <- shiny::isolate(r_module())
+      if (is.null(module)) return(invisible(NULL))
+      entry <- list(
+        summary    = result$text,
+        prompt     = shiny::isolate(tryCatch(
+          paste0("# SYSTEM\n\n", prompt_parts()$system,
+                 "\n\n---\n\n# BOARD\n\n", prompt_parts()$board),
+          error = function(e) NULL
+        )),
+        usage      = result$metadata$usage,
+        model      = result$metadata$model %||% NA_character_,
+        created_at = as.numeric(Sys.time()),
+        edited     = FALSE,
+        edited_at  = ""
+      )
+      if (is.null(pgx$ai)) pgx$ai <- list()
+      if (is.null(pgx$ai[[variant]])) pgx$ai[[variant]] <- list()
+      if (is.null(pgx$ai[[variant]]$extras)) pgx$ai[[variant]]$extras <- list()
+      pgx$ai[[variant]]$extras[[module]] <- entry
+    }
+  }
+
+  # Persist the in-memory pgx (with any regenerated summaries) to disk, mirroring
+  # the AI Studio "Save edits" action. Only durable variants with a save handler
+  # get a Save control; ephemeral consensus/preservation cards leave it NULL.
+  on_save <- NULL
+  if (!is.null(variant) && !is.null(save_pgx)) {
+    on_save <- function() save_pgx(pgx)
+  }
+
+  # Render the on-demand AI summary card. Telemetry is tagged per variant.
   AiTextCardServer(
     id = id,
     params_reactive = shiny::reactive(list()),
@@ -100,273 +155,17 @@ wgcna_module_ai_summary_server <- function(id,
     cache = omicsai::omicsai_cache_init("mem"),
     watermark = watermark,
     user_email = user_email,
-    telemetry_source = "wgcna_summary",
+    telemetry_source = paste0(variant %||% "wgcna", "_summary"),
     # Block generation when AI is off (deployment licence or the Settings
     # "Enable AI" switch, published on session$userData by AppSettingsBoard).
+    # Displaying a stored durable summary bypasses this gate (no generation).
     enabled_reactive = shiny::reactive(
       isTRUE(opt$ENABLE_AI) &&
         !isFALSE(getUserOption(parent_session, "ai_enabled"))
     ),
-    disabled_message = "Please enable AI to generate module summaries."
-  )
-}
-
-#' Build prompt parameters for one WGCNA module
-#'
-#' @param wgcna WGCNA result object.
-#' @param module Character module name such as `"MEblue"`.
-#' @param pgx Current PGX object.
-#'
-#' @return Named list matching `omicsai` prompt `wgcna/wgcna_module_data`.
-wgcna_module_summary_params <- function(wgcna, module, pgx) {
-  # Normalize source tables before mapping them into the omicsai prompt schema.
-  input <- .wgcna_module_input_data(wgcna, module)
-
-  # Keep this list aligned with inst/prompts/wgcna/wgcna_module_data.md.
-  list(
-    ME_color = module,
-    n_genes = length(input$module_genes),
-    tier = .wgcna_module_tier(input$module_traits, module, input$gse),
-    eigengene_profile_qualitative = .wgcna_module_eigengene_profile(wgcna, module, pgx),
-    top_pos_trait = .wgcna_module_trait(input$module_traits, module, "positive"),
-    top_pos_verbal = .wgcna_module_trait(input$module_traits, module, "positive", verbal = TRUE),
-    top_neg_trait = .wgcna_module_trait(input$module_traits, module, "negative"),
-    top_neg_verbal = .wgcna_module_trait(input$module_traits, module, "negative", verbal = TRUE),
-    n_sig_terms = sum(input$gse$q.value < 0.05, na.rm = TRUE),
-    n_total_terms = nrow(input$gse),
-    enrichment_themes_table = .wgcna_module_enrichment_table(input$gse),
-    n_hub = 50L,
-    hub_genes_table = .wgcna_module_hub_table(
-      wgcna,
-      module,
-      pgx,
-      input$module_traits,
-      input$top
-    ),
-    gene_families_summary = "",
-    enrichment_overlaps = .wgcna_module_enrichment_overlaps(input$gse)
-  )
-}
-
-# Normalize WGCNA module aliases and table shapes for prompt assembly.
-# This is necessary because precomputed and live WGCNA objects expose different shapes.
-.wgcna_module_input_data <- function(wgcna, module) {
-  module_key <- module
-  module_alt <- sub("^ME", "", module)
-  module_genes <- wgcna$me.genes[[module_key]]
-  if (is.null(module_genes) && module_alt != module_key) {
-    module_genes <- wgcna$me.genes[[module_alt]]
-  }
-  if (is.null(module_genes)) {
-    module_genes <- character(0)
-  }
-  module_traits <- tryCatch(playbase:::wgcna.get_modTraits(wgcna), error = function(e) NULL)
-  top <- tryCatch(
-    playbase::wgcna.getTopGenesAndSets(
-      wgcna,
-      annot = wgcna$annot,
-      ntop = 40,
-      level = "gene",
-      rename = "gene_title"
-    ),
-    error = function(e) list(pheno = list(), genes = list(), sets = list())
-  )
-  top_genes <- top$genes[[module_key]]
-  top_sets <- top$sets[[module_key]]
-  if (is.null(top_genes) && module_alt != module_key) {
-    top_genes <- top$genes[[module_alt]]
-  }
-  if (is.null(top_sets) && module_alt != module_key) {
-    top_sets <- top$sets[[module_alt]]
-  }
-  top$genes[[module_key]] <- if (is.null(top_genes)) character(0) else top_genes
-  top$sets[[module_key]] <- if (is.null(top_sets)) character(0) else top_sets
-
-  if (is.data.frame(wgcna$gse)) {
-    gse <- wgcna$gse[wgcna$gse$module %in% c(module_key, module_alt), , drop = FALSE]
-  } else {
-    gse <- wgcna$gse[[module_key]]
-    if (is.null(gse) && module_alt != module_key) {
-      gse <- wgcna$gse[[module_alt]]
-    }
-  }
-  if (!is.data.frame(gse)) {
-    gse <- data.frame()
-  }
-  if (nrow(gse) > 0 && !"score" %in% colnames(gse) &&
-      all(c("odd.ratio", "p.value") %in% colnames(gse))) {
-    gse$odd.ratio[is.infinite(gse$odd.ratio)] <- 99
-    gse$score <- gse$odd.ratio * -log10(gse$p.value)
-  }
-
-  list(
-    module_genes = module_genes,
-    module_traits = module_traits,
-    top = top,
-    gse = gse
-  )
-}
-
-# Classify module signal from trait correlation and significant enrichment count.
-# This helps us give the prompt a compact strength label instead of raw thresholds.
-.wgcna_module_tier <- function(module_traits, module, gse) {
-  max_cor <- 0
-  if (!is.null(module_traits) && module %in% rownames(module_traits)) {
-    max_cor <- max(abs(module_traits[module, ]), na.rm = TRUE)
-  }
-  n_sig <- if ("q.value" %in% colnames(gse)) sum(gse$q.value < 0.05, na.rm = TRUE) else 0L
-  if (max_cor >= 0.7 || n_sig >= 10L) return("strong signal")
-  if (max_cor >= 0.5 || n_sig >= 3L) return("moderate signal")
-  "weak signal"
-}
-
-# Summarize eigengene group means for the selected module.
-# This helps us expose module directionality without passing full sample matrices.
-.wgcna_module_eigengene_profile <- function(wgcna, module, pgx) {
-  datME <- if (!is.null(wgcna$datME)) wgcna$datME else wgcna$net$MEs
-  groups <- pgx$samples$group
-  if (is.null(datME) || !module %in% colnames(datME) || is.null(groups)) {
-    return("not available")
-  }
-  group_means <- sort(tapply(datME[, module], groups, mean), decreasing = TRUE)
-  paste(
-    sprintf("%s: %+.2f", names(group_means), group_means),
-    collapse = "; "
-  )
-}
-
-# Return the strongest positive or negative trait above the reporting threshold.
-# Separating the code here keeps trait picking consistent across summary fields.
-.wgcna_module_trait <- function(module_traits,
-                                module,
-                                direction = c("positive", "negative"),
-                                verbal = FALSE) {
-  direction <- match.arg(direction)
-  if (is.null(module_traits) || !module %in% rownames(module_traits)) {
-    return("")
-  }
-  cors <- module_traits[module, ]
-  cors <- cors[!is.na(cors)]
-  cors <- if (identical(direction, "positive")) cors[cors >= 0.5] else cors[cors <= -0.5]
-  if (length(cors) == 0) {
-    return("")
-  }
-  value <- if (identical(direction, "positive")) max(cors) else min(cors)
-  trait <- names(cors)[which(cors == value)[1]]
-  if (isTRUE(verbal)) sprintf("r = %+.2f", value) else trait
-}
-
-# Format the top significant enrichment terms for the omicsai data fragment.
-# This helps us keep WGCNA-specific prompt wording out of generic formatters.
-.wgcna_module_enrichment_table <- function(gse) {
-  needed <- c("geneset", "score", "q.value")
-  if (!is.data.frame(gse) || nrow(gse) == 0 || !all(needed %in% colnames(gse))) {
-    return("No enrichment terms available.")
-  }
-  sig <- gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
-  if (nrow(sig) == 0) {
-    return("No enrichment terms passed q < 0.05.")
-  }
-  sig <- sig[order(sig$q.value, -sig$score), , drop = FALSE]
-  df <- data.frame(
-    theme = head(sig$geneset, 20),
-    score = head(sig$score, 20),
-    q = head(sig$q.value, 20),
-    stringsAsFactors = FALSE
-  )
-  paste(omicsai::omicsai_format_mdtable(df, formatters = list(
-    score = function(x) omicsai::omicsai_format_num(x, 2),
-    q = omicsai::omicsai_format_pvalue
-  )), collapse = "\n")
-}
-
-# Format hub genes using gene stats when a correlated trait is available.
-# This is necessary because hub ranking depends on the selected module and trait.
-.wgcna_module_hub_table <- function(wgcna, module, pgx, module_traits, top) {
-  trait <- .wgcna_module_trait(module_traits, module, "positive")
-  if (!nzchar(trait)) {
-    trait <- .wgcna_module_trait(module_traits, module, "negative")
-  }
-  genes <- top$genes[[module]]
-  if (length(genes) == 0) {
-    module_alt <- sub("^ME", "", module)
-    genes <- wgcna$me.genes[[module]]
-    if (is.null(genes) && module_alt != module) {
-      genes <- wgcna$me.genes[[module_alt]]
-    }
-  }
-  if (is.null(genes)) {
-    genes <- character(0)
-  }
-  stats <- if (nzchar(trait)) {
-    tryCatch(
-      playbase::wgcna.getGeneStats(wgcna, module = module, trait = trait, plot = FALSE),
-      error = function(e) NULL
-    )
-  } else {
-    NULL
-  }
-  if (is.data.frame(stats) && nrow(stats) > 0 && "moduleMembership" %in% colnames(stats)) {
-    stats <- stats[order(-abs(stats$moduleMembership)), , drop = FALSE]
-    genes <- head(stats$feature, 50)
-  } else {
-    genes <- head(genes, 50)
-  }
-  symbols <- .wgcna_module_symbols(genes, pgx$genes)
-  funcs <- .wgcna_module_functions(genes, pgx$genes)
-  paste(omicsai::omicsai_format_mdtable(data.frame(
-    gene = symbols,
-    known_function = funcs,
-    stringsAsFactors = FALSE
-  )), collapse = "\n")
-}
-
-# Resolve feature IDs to gene symbols.
-# This helps us let the AI summary mention readable annotated gene names.
-.wgcna_module_symbols <- function(features, annot) {
-  symbols <- tryCatch(
-    playbase::probe2symbol(features, annot, "symbol"),
-    error = function(e) features
-  )
-  symbols[is.na(symbols) | symbols == ""] <- features[is.na(symbols) | symbols == ""]
-  symbols
-}
-
-# Resolve feature IDs to short gene descriptions.
-# This helps us include compact biological context for hub genes.
-.wgcna_module_functions <- function(features, annot) {
-  out <- rep("function not annotated", length(features))
-  if (is.null(annot) || is.null(rownames(annot))) {
-    return(out)
-  }
-  col <- intersect(c("gene_title", "gene_name", "description"), colnames(annot))
-  if (length(col) == 0) {
-    return(out)
-  }
-  idx <- match(features, rownames(annot))
-  ok <- !is.na(idx)
-  out[ok] <- as.character(annot[idx[ok], col[1]])
-  out[is.na(out) | out == ""] <- "function not annotated"
-  substr(out, 1, 90)
-}
-
-# Format overlap gene lists for top enrichment terms.
-# This helps us keep overlap wording tailored to the WGCNA prompt.
-.wgcna_module_enrichment_overlaps <- function(gse) {
-  if (!is.data.frame(gse) || nrow(gse) == 0 || !"genes" %in% colnames(gse)) {
-    return("")
-  }
-  sig <- if ("q.value" %in% colnames(gse)) {
-    gse[!is.na(gse$q.value) & gse$q.value < 0.05, , drop = FALSE]
-  } else {
-    gse
-  }
-  if (nrow(sig) == 0) {
-    return("")
-  }
-  sig <- head(sig, 5)
-  paste(
-    sprintf("- %s: %s", sig$geneset, sig$genes),
-    collapse = "\n"
+    disabled_message = "Please enable AI to generate module summaries.",
+    prefetch_reactive = prefetch_reactive,
+    on_generated = on_generated,
+    on_save = on_save
   )
 }

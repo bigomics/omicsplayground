@@ -37,6 +37,7 @@ COPILOT_MSG <- list(
   switch_failed    = "Copilot: failed to switch dataset — {{msg}}",
   error_prefix     = "Copilot error: {{msg}}",
   restore_busy     = "Restore is unavailable while the agent is responding.",
+  report_locked    = "Reports can only be passed once per session.",
   model_gone       = "ovi_restore: cannot restore session — model is not resolvable. Pick a different model.",
   no_session       = "ovi_restore: no saved session with that id.",
   # Provider-specific error categories (shown to users instead of raw API text)

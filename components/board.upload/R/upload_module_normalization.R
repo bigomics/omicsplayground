@@ -1496,6 +1496,29 @@ upload_module_normalization_server <- function(
         return(ll)
       })
 
+      ## Single options list that reproduces this module's normalization
+      ## (imputedX -> normalizedX -> cleanX) inside playbase::pgx.preprocess().
+      ## The compute path sends these settings + RAW counts instead of the
+      ## precomputed X, so a script/endpoint gets an identical result.
+      ## Batch correction is NOT here: it runs inside pgx.createPGX (bc_method).
+      preprocess <- reactive({
+        list(
+          datatype = upload_datatype(),
+          is_npx = isTRUE(is.olink()) || isTRUE(is.nulisa()),
+          zero_as_na = zero_as_na(),
+          normalize = isTRUE(input$normalize),
+          norm_method = input$normalization_method,
+          ref_gene = if (identical(input$normalization_method, "reference")) input$ref_gene else NULL,
+          filter_missing = isTRUE(input$filtermissing),
+          filter_threshold = input$filterthreshold,
+          impute = isTRUE(input$impute),
+          impute_method = input$impute_method,
+          remove_outliers = isTRUE(input$remove_outliers),
+          outlier_threshold = input$outlier_threshold,
+          meth_type = meth_type()
+        )
+      })
+
       return(
         list(
           counts = counts,
@@ -1504,7 +1527,8 @@ upload_module_normalization_server <- function(
           imputation_method = imputation_method,
           bc_method = bc_method,
           remove_outliers = remove_outliers,
-          annot = annot
+          annot = annot,
+          preprocess = preprocess
         )
       ) ## pointing to reactive
     } ## end-of-server

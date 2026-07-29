@@ -185,26 +185,46 @@ CopilotReportsServer <- function(id, pgx) {
             } else {
               isTRUE(current)
             }
-            shiny::tags$li(
-              style = if (already_used) {
-                "opacity: 0.55;"
-              } else {
-                NULL
-              },
-              shiny::tags$label(
-                class = "checkbox-inline",
-                style = "display: block; font-weight: normal;",
-                shiny::tags$input(
-                  id = session$ns(id),
-                  type = "checkbox",
-                  checked = if (checked) "checked" else NULL,
-                  disabled = if (already_used) "disabled" else NULL
-                ),
+            label_tag <- shiny::tags$label(
+              class = "checkbox-inline",
+              style = paste(
+                "display: block; font-weight: normal;",
+                # No `disabled` attribute when locked — that native state is
+                # what drove the greyed-out look. Interaction is blocked via
+                # pointer-events instead, so the checkbox stays full-colour.
+                if (already_used) "pointer-events: none;" else ""
+              ),
+              shiny::tags$input(
+                id = session$ns(id),
+                type = "checkbox",
+                checked = if (checked) "checked" else NULL,
+                `aria-disabled` = if (already_used) "true" else NULL
+              ),
+              shiny::tags$span(
+                style = "margin-left: 6px;",
+                copilot_report_label(value, slot)
+              ),
+              if (already_used) {
                 shiny::tags$span(
-                  style = "margin-left: 6px;",
-                  copilot_report_label(value, slot)
+                  class = "text-muted",
+                  style = "margin-left: 4px;",
+                  shiny::icon("lock")
                 )
-              )
+              }
+            )
+            shiny::tags$li(
+              if (already_used) {
+                bslib::tooltip(
+                  shiny::tags$span(
+                    style = "display: block; cursor: not-allowed;",
+                    label_tag
+                  ),
+                  copilot_msg("report_locked"),
+                  placement = "right"
+                )
+              } else {
+                label_tag
+              }
             )
           })
         )
