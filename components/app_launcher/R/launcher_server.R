@@ -29,10 +29,6 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "Qsee", session=parent)
     })
 
-    observeEvent(input$launch_compare, {
-      bslib::nav_select("app-sidebar", "ComparePGX", session=parent)
-    })
-
     observeEvent(input$launch_idconvert, {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })

@@ -69,14 +69,6 @@ launcher_ui <- function(id) {
       description = "Download KEGG sets",
       rgb = c(190,190,50),
       group = "Apps"
-    ),
-    list(
-      input = "launch_compare",
-      icon = "balance-scale",
-      label = "PGX Compare",
-      description = "Compare PGX side-by-side",
-      rgb = c(100, 150, 200),
-      group = "Apps"
     )
   )
 

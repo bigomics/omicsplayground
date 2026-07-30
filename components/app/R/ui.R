@@ -212,9 +212,6 @@ app_ui <- function(x) {
         bslib::nav_panel_hidden("Qsee",
           div(qsee_ui("qsee"), class='px-4 py-0')
         ),
-        bslib::nav_panel_hidden("ComparePGX",
-          div(PGXCompareUI("compare"), class='px-4 py-0')
-        ),
         bslib::nav_panel_hidden("PCAexplorer",
           div(PCAexplorer_ui("pcaexplorer"), class='px-4 py-0')
         ),
