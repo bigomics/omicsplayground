@@ -10,19 +10,18 @@ UploadBoard <- function(id,
                         reload_pgxdir,
                         load_uploaded_data,
                         recompute_pgx,
-                        ## recompute_info,  ## not used
                         inactivityCounter,
                         new_upload) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
-    # Some 'global' reactive variables used in this file
     uploaded <- shiny::reactiveValues()
     checklist <- shiny::reactiveValues()
     loaded_samples <- shiny::reactiveVal(FALSE)
+    sum_techreps <- shiny::reactiveVal(FALSE)
     orig_sample_matrix <- shiny::reactiveVal(NULL)
+    orig_counts_matrix <- shiny::reactiveVal(NULL)
     vars_selected <- shiny::reactiveVal(NULL)
-    # this directory is used to save pgx files, logs, inputs, etc..
     raw_dir <<- reactiveVal(NULL)
     upload_organism <- reactiveVal(NULL)
     upload_name <- reactiveVal(NULL)
@@ -49,9 +48,8 @@ UploadBoard <- function(id,
           test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
           annot.cols = annot.cols
         )
-        ## if (is.null(detected)) detected <- "error"
         detected
-      }, seed = NULL) ## seed=NULL avoids useless warning messages.
+      })
     })
 
     output$navheader <- shiny::renderUI({
@@ -80,35 +78,20 @@ UploadBoard <- function(id,
       ))
     })
 
-    module_infotext <- tspan(paste0(
-      'Under the <b>Upload data</b> panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
-
-<br><br>
-<ol>
-<li>counts.csv: Counts file with gene on rows, samples as columns.
-<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
-<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
-</ol>
-
-<br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>'
-    ), js = FALSE)
-
-    module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
-
-    ## observeEvent( new_upload(), {
+        module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
+    
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")
       names(all_species) <- paste0(all_species, " (", common_name, ")")
       names(all_species)[all_species == "No organism"] <- "<custom organism>"
-      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, selected = "Human", server = TRUE)
+      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
       shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
       if (opt$ENABLE_MULTIOMICS) {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
       } else {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
+        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics", "metabolomics (beta)" = "metabolomics"), selected = DEFAULTS$datatype)
       }
     })
 
@@ -117,7 +100,7 @@ UploadBoard <- function(id,
         shiny::selectInput(
           ns("proteomics_type"),
           label = "Proteomics type:",
-          choices = c("MS", "Olink NPX"),
+          choices = c("MS", "Olink NPX", "Nulisa NPQ"),
           selected = "MS",
           width = "150px"
         )
@@ -130,6 +113,38 @@ UploadBoard <- function(id,
       req(upload_datatype())
       if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
         return(input$proteomics_type == "Olink NPX")
+      } else {
+        return(FALSE)
+      }
+    })
+
+    output$methylomics_subtype_ui <- shiny::renderUI({
+      if (upload_datatype() == "methylomics") {
+        shiny::selectInput(
+          ns("methylomics_type"),
+          label = "Methylomics platform:",
+          choices = c("450K array", "EPIC array"),
+          selected = "450K array",
+          width = "150px"
+        )
+      } else {
+        NULL
+      }
+    })
+
+    meth_type <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "methylomics" && !is.null(input$methylomics_type)) {
+        return(input$methylomics_type)
+      } else {
+        return(NULL)
+      }
+    })
+
+    is.nulisa <- shiny::reactive({
+      req(upload_datatype())
+      if (upload_datatype() == "proteomics" && !is.null(input$proteomics_type)) {
+        return(input$proteomics_type == "Nulisa NPQ")
       } else {
         return(FALSE)
       }
@@ -168,13 +183,6 @@ UploadBoard <- function(id,
     shiny::observeEvent(uploaded_pgx(), {
       new_pgx <- uploaded_pgx()
 
-      ## NEED RETHINK: if "uploaded" we unneccessarily saving the pgx
-      ## object again.  We should skip saving and pass the filename to
-      ## pgxfile to be sure the filename is correct.
-
-      ## new_pgx <- playbase::pgx.initialize(new_pgx)  ## already done later
-      ## -------------- save PGX file/object ---------------
-      # Old pgx does not have name slot, overwrite it with file name
       if (is.null(new_pgx$name)) {
         new_pgx$name <- sub("[.]pgx$", "", input$upload_files$name)
       }
@@ -184,9 +192,6 @@ UploadBoard <- function(id,
       pgxdir <- auth$user_dir
       fn <- file.path(pgxdir, pgxfile)
       fn <- iconv(fn, from = "", to = "ASCII//TRANSLIT")
-      ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ## switch 'pgx' as standard name. Actually saving as RDS
-      ## would have been better...
       dbg("[UploadBoard:observe:uploaded_pgx] saving pgx as = ", fn)
       playbase::pgx.save(new_pgx, file = fn)
 
@@ -208,13 +213,10 @@ UploadBoard <- function(id,
       beepr::beep(10) ## short beep
 
       load_my_dataset <- function() {
-        if (input$confirmload) {
-          load_uploaded_data(pgxfile)
-        }
+        if (input$confirmload) { load_uploaded_data(pgxfile) }
       }
 
-      # reset new_upload to 0, so upload will not trigger when
-      # computation is done
+      # reset new_upload to 0, so upload will not trigger when computation is done
       new_upload(0)
 
       if (uploaded_method == "computed") {
@@ -274,9 +276,7 @@ UploadBoard <- function(id,
         ## Single matrix counts check
         ## --------------------------------------------------------
         df0 <- uploaded$counts.csv
-        if (is.null(df0)) {
-          return(NULL)
-        }
+        if (is.null(df0)) return(NULL)
 
         if (!is.null(df0)) {
           barcodes <- colnames(df0)[stringr::str_detect(colnames(df0), "^[ATCG]+_[0-9]+$")]
@@ -292,37 +292,17 @@ UploadBoard <- function(id,
         write_check_output(res$checks, "COUNTS", raw_dir())
 
         olink <- is.olink()
-        if (olink) {
-          shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
+        nulisa <- is.nulisa()
+        if (olink || nulisa) {
           checked_for_log(TRUE)
         } else {
           if ("e29" %in% names(res$checks)) {
-            shinyalert::shinyalert(
-              title = paste("Log-scale detected"),
-              text = '<span style="font-size: 1.5em;">Please confirm:</span>',
-              html = TRUE,
-              confirmButtonText = "Yes",
-              showCancelButton = TRUE,
-              cancelButtonText = "No",
-              inputId = "logCorrectCounts",
-              closeOnEsc = FALSE,
-              immediate = FALSE,
-              callbackR = function(x) checked_for_log(TRUE)
-            )
-          } else {
-            checked_for_log(TRUE)
-          }
-
-          checked_for_log(FALSE)
-          res <- playbase::pgx.checkINPUT(df0, "COUNTS")
-          write_check_output(res$checks, "COUNTS", raw_dir())
-
-          olink <- is.olink()
-          if (olink) {
-            shinyalert::shinyalert(title = "Proteomics Olink NPX", type = "info")
-            checked_for_log(TRUE)
-          } else {
-            if ("e29" %in% names(res$checks)) {
+            is.meth.beta <- FALSE
+            if (upload_datatype() == "methylomics") {
+              vv <- range(df0, na.rm = TRUE)
+              is.meth.beta <- all(vv >= 0 & vv <= 1)
+            }
+            if (!is.meth.beta) {
               shinyalert::shinyalert(
                 title = paste("Log-scale detected"),
                 text = '<span style="font-size: 1.5em;">Please confirm:</span>',
@@ -339,12 +319,11 @@ UploadBoard <- function(id,
               checked_for_log(TRUE)
             }
           }
+          return(list(res = res, olink = olink, nulisa = nulisa))
         }
-        return(list(res = res, olink = olink))
-      }
-    )
+      )
 
-    checked_counts <- shiny::eventReactive(
+      checked_counts <- shiny::eventReactive(
       {
         list(checked_for_log(), uploaded_counts()$res)
       },
@@ -353,9 +332,8 @@ UploadBoard <- function(id,
         checked <- NULL
         res <- uploaded_counts()$res
         olink <- uploaded_counts()$olink
-        if (is.null(res)) {
-          return(list(status = "Missing counts.csv", matrix = NULL))
-        }
+        nulisa <- uploaded_counts()$nulisa
+        if (is.null(res)) return(list(status = "Missing counts.csv", matrix = NULL))
 
         ## wait for dialog finished
         shiny::req(checked_for_log())
@@ -368,7 +346,12 @@ UploadBoard <- function(id,
         isConfirmed <- input$logCorrectCounts
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
-        if (olink) {
+        is.meth.beta <- FALSE
+        if (upload_datatype() == "methylomics" && "e29" %in% names(res$checks)) {
+          vv <- range(res$df, na.rm = TRUE)
+          is.meth.beta <- all(vv >= 0 & vv <= 1)
+        }
+        if (olink || nulisa || is.meth.beta) {
           res$checks[["e29"]] <- NULL
           check.e29 <- TRUE
         } else {
@@ -389,7 +372,7 @@ UploadBoard <- function(id,
         # Set any negatives to zero and inform the user. Store value.
         # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
         negs <- sum(res$df < 0, na.rm = TRUE)
-        if (negs > 0 && !olink) {
+        if (negs > 0 && !olink && !nulisa) {
           res$df <- pmax(res$df, 0)
           ss <- paste(negs, " negative values detected and set to zero. If you wish otherwise, please correct your data manually.")
           shinyalert::shinyalert(title = "Negative values", text = ss, type = "warning")
@@ -413,41 +396,25 @@ UploadBoard <- function(id,
           if (ncol(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
             checked <- NULL
-            # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of samples allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                MAXSAMPLES, "samples."
-              ),
-              type = "error"
-            )
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "counts")
           }
 
           # Hard stop for scRNA-seq
-          if (ncol(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
+          if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
+            status <- paste("ERROR: max 200K cells allowed for scRNA-seq")
             checked <- NULL
-            # remove only counts.csv from last_uploaded
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste(
                 "You have reached the maximum number of cells allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
-              ),
+                tspan("upload a new counts file with a maximum of", js = FALSE), "200K cells."),
               type = "error"
             )
           }
-
         }
+
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
         }
@@ -482,7 +449,6 @@ UploadBoard <- function(id,
         res <- playbase::pgx.checkINPUT(df0, "SAMPLES")
 
         write_check_output(res$checks, "SAMPLES", raw_dir())
-        # store check and data regardless of it errors
         checklist[["samples.csv"]]$checks <- res$checks
         checked <- res$df
         if (res$PASS) {
@@ -496,37 +462,12 @@ UploadBoard <- function(id,
         if (!is.null(checked)) {
           if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
-            ## uploaded[["samples.csv"]] <- NULL
             checked <- NULL
-            # pop up telling user max samples reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste("You have reached the maximum number of samples allowed. Please upload a new SAMPLES file with a maximum of", MAXSAMPLES, "samples."),
-              type = "error"
-            )
-          }
-          # Hard stop for scRNA-seq
-          if (nrow(checked) > 100000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 100.000 cells allowed for scRNA-seq")
-            checked <- NULL
-            # remove only counts.csv from last_uploaded
-            uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
-            ## uploaded[["counts.csv"]] <- NULL
-            # pop up telling user max sample reached
-            shinyalert::shinyalert(
-              title = "Maximum samples reached",
-              text = paste(
-                "You have reached the maximum number of cells allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE),
-                "100.000 cells."
-              ),
-              type = "error"
-            )
+            shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "samples")
           }
         }
 
         ## -------------- cross-check with counts ------------------
-        # initialize results
         res_samples <- NULL
         res_counts <- NULL
 
@@ -540,7 +481,6 @@ UploadBoard <- function(id,
           if (cross_check$PASS) {
             res_samples <- cross_check$SAMPLES
             res_counts <- cross_check$COUNTS
-            ## res_counts <- res_counts + checked_counts()$log_prior
             status <- "OK"
           } else {
             checked <- NULL
@@ -566,7 +506,6 @@ UploadBoard <- function(id,
         list(uploaded$contrasts.csv, uploaded$samples.csv)
       },
       {
-        ## get uploaded counts
         df0 <- uploaded$contrasts.csv
         if (is.null(df0)) {
           return(list(status = "Missing contrasts.csv", matrix = NULL))
@@ -574,7 +513,6 @@ UploadBoard <- function(id,
 
         ## --------- Single matrix counts check----------
         res <- playbase::pgx.checkINPUT(df0, "CONTRASTS")
-        # store check and data regardless of it errors
         checklist[["contrasts.csv"]]$checks <- res$checks
         write_check_output(res$checks, "CONTRASTS", raw_dir())
         checked <- res$df
@@ -585,7 +523,6 @@ UploadBoard <- function(id,
           status <- "ERROR: invalid contrast. please check your input file."
         }
 
-        ## Check if samples.csv exists before uploading contrast.csv
         cc <- checked_samples_counts()
 
         ## -------------- max contrast check ------------------
@@ -594,27 +531,18 @@ UploadBoard <- function(id,
           if (ncol(checked) > MAXCONTRASTS) {
             status <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
             checked <- NULL
-            # pop up telling user max contrasts reached
-            shinyalert::shinyalert(
-              title = "Maximum contrasts reached",
-              text = paste("You have reached the maximum number of contrasts allowed. Please upload a new contrasts file with a maximum of", MAXCONTRASTS, "contrasts."),
-              type = "error"
-            )
+            shinyalert_max_contrasts_reached(MAXCONTRASTS, auth$level)
           }
         }
 
         ## -------------- cross-check with samples ------------------
         if (!is.null(checked) && !is.null(cc$SAMPLES)) {
-          cross_check <- playbase::pgx.crosscheckINPUT(
-            SAMPLES = cc$SAMPLES,
-            CONTRASTS = checked
-          )
+          cross_check <- playbase::pgx.crosscheckINPUT(SAMPLES = cc$SAMPLES, CONTRASTS = checked)
 
           write_check_output(cross_check$checks, "SAMPLES_CONTRASTS", raw_dir())
           checklist[["samples_contrasts"]]$checks <- cross_check$checks
           checked <- res$df
           if (cross_check$PASS) {
-            # checked <- res$df
             status <- "OK"
           } else {
             checked <- NULL
@@ -623,9 +551,7 @@ UploadBoard <- function(id,
         }
 
         if (!is.null(checked)) {
-          checked <- playbase::contrasts.convertToLabelMatrix(
-            contrasts = checked, samples = cc$SAMPLES
-          )
+          checked <- playbase::contrasts.convertToLabelMatrix(contrasts = checked, samples = cc$SAMPLES)
         }
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
@@ -641,27 +567,21 @@ UploadBoard <- function(id,
         step_title = tspan("Step 1: Upload counts", js = FALSE),
         step_id = "step_counts",
         server = TRUE,
-        upload_table_preview_counts_ui(
-          ns("counts_preview")
-        )
+        upload_table_preview_counts_ui(ns("counts_preview"))
       )
 
       samples_ui <- wizardR::wizard_step(
         step_title = "Step 2: Upload samples",
         step_id = "step_samples",
         server = TRUE,
-        upload_table_preview_samples_ui(
-          ns("samples_preview")
-        )
+        upload_table_preview_samples_ui(ns("samples_preview"))
       )
 
       contrasts_ui <- wizardR::wizard_step(
         step_title = "Step 3: Create comparisons",
         step_id = "step_comparisons",
         server = TRUE,
-        upload_table_preview_contrasts_ui(
-          ns("contrasts_preview")
-        )
+        upload_table_preview_contrasts_ui(ns("contrasts_preview"))
       )
 
       if (upload_datatype() == "scRNA-seq") {
@@ -730,11 +650,9 @@ UploadBoard <- function(id,
     ## --------------------------------------------------------
     ## Download example data
     ## --------------------------------------------------------
-
     output$downloadExampleData <- shiny::downloadHandler(
       filename = "exampledata.zip",
       content = function(file) {
-        # save samples, counts and contrasts locally
         samples <- playbase::SAMPLES
         counts <- playbase::COUNTS
         contrasts <- playbase::CONTRASTS
@@ -761,8 +679,9 @@ UploadBoard <- function(id,
     )
 
     output$upload_info <- shiny::renderUI({
-      upload_info <- "Please prepare the data files in CSV format with the names 'counts.csv', 'samples.csv' and 'contrasts.csv'. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of _LIMITS_. Click <u><a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>here</a></u> to read more about data preparation.</p>"
-      limits.text <- paste(
+            upload_info <- "Please prepare the data files in CSV format with the names 'counts.csv', 'samples.csv' and 'contrasts.csv'. Be sure the dimensions, rownames and column names match for all files. You can upload a maximum of _LIMITS_. Click <u><a target='_blank' href='https://omicsplayground.readthedocs.io/en/latest/dataprep/dataprep.html'>here</a></u> to read more about data preparation.</p>"
+
+       limits.text <- paste(
         auth$options$MAX_DATASETS, "datasets (with each up to",
         auth$options$MAX_SAMPLES, "samples and",
         auth$options$MAX_COMPARISONS, "comparisons)"
@@ -795,12 +714,22 @@ UploadBoard <- function(id,
       return(pgx)
     })
 
-    # change upload_datatype to selected_datatype
     observeEvent(input$selected_datatype, {
       upload_datatype(input$selected_datatype)
+      if (input$selected_datatype == "methylomics") {
+        shiny::updateSelectizeInput(session, "selected_organism",
+          choices = c("Human" = "Human"), selected = "Human"
+        )
+      } else {
+        all_species <- playbase::allSpecies(col = "species_name")
+        common_name <- playbase::allSpecies(col = "display_name")
+        names(all_species) <- paste0(all_species, " (", common_name, ")")
+        names(all_species)[all_species == "No organism"] <- "<custom organism>"
+        shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
+        shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
+      }
     })
 
-    # change upload_organism to selected_organism
     observeEvent(input$selected_organism, {
       upload_organism(input$selected_organism)
     })
@@ -820,7 +749,7 @@ UploadBoard <- function(id,
     })
 
     observeEvent(input$start_upload, {
-      recompute_pgx(NULL) ## need to reset ???
+      recompute_pgx(NULL)
     })
 
     observeEvent(recompute_pgx(),
@@ -848,7 +777,6 @@ UploadBoard <- function(id,
     )
 
     observeEvent(input$start_upload, {
-      ## check number of datasets
       numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
       if (!auth$options$ENABLE_DELETE) {
         ## count also deleted files...
@@ -948,9 +876,6 @@ UploadBoard <- function(id,
       }
     )
 
-    ## Note: would be good to be able to lock/unlock left and
-    ## right navigation separately... IK
-
     # lock/unlock wizard for counts.csv
     observeEvent(
       list(uploaded$counts.csv, checked_counts(), input$upload_wizard),
@@ -1041,8 +966,7 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        probetype.finished <- all(!(probetype() %in% c("error", "running")))
-        ## probetype.finished <- any(!(probetype() %in% c("error", "running"))) ? ## AZ
+        probetype.finished <- !(probetype() %in% c("error", "running"))
         
         if (is.null(upload_name()) ||
           upload_name() == "" ||
@@ -1063,6 +987,9 @@ UploadBoard <- function(id,
     shiny::observeEvent(
       list(new_upload()),
       {
+        # skip upload trigger at first startup (must be first check!)
+        if (new_upload() == 0) return(NULL)
+
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
         if (!enable_upload) {
@@ -1083,7 +1010,9 @@ UploadBoard <- function(id,
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
           loaded_samples(FALSE)
+          sum_techreps(FALSE)
           orig_sample_matrix(NULL)
+          orig_counts_matrix(NULL)
           vars_selected(NULL)
         })
 
@@ -1282,7 +1211,6 @@ UploadBoard <- function(id,
             alt.text <- c(alt.text, paste0("Are these perhaps <b>", alt.species, "</b>?"))
           }
           if (upload_datatype() == "metabolomics") {
-            # overwrite alt.text for metabolomics
             alt.text <- c(alt.text, paste0("Valid probes are: <b>ChEBI (recommended), HMDB, PubChem, or KEGG</b>"))
           }
         } else {
@@ -1292,46 +1220,47 @@ UploadBoard <- function(id,
           } else {
             detected_probetype <- sapply(organism, function(x) paste(detected[[x]], collapse="+"))
           }
+
+          if (upload_datatype() != "methylomics") {
+            probetype(detected_probetype) ## set RV
+            info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
+
+            if (!is.null(detected_probetype) && all(detected_probetype == "error")) {
+              info("[UploadBoard] ExtendedTask result has ERROR")
+              shinyalert::shinyalert(
+                title = "Probes not recognized!",
+                text = paste0(
+                  "Error. Your probes do not match any probe type for <b>",
+                  organism, "</b>. Please check your probe names and select ",
+                  "the correct organism. ", paste(alt.text, collapse = " ")
+                ),
+                type = "error",
+                size = "s",
+                html = TRUE
+              )
+            }
+
+            ## wrong datatype. just give warning. or should we change datatype?
+            if (any(detected_probetype != "error") &&
+                  any(grepl("PROT", detected_probetype)) &&
+                  !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+              shinyalert::shinyalert(
+                title = "Is this proteomics data?",
+                text = paste0(
+                  "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+                  "<b>", upload_datatype(), "</b> as data type."
+                ),
+                type = "warning",
+                size = "s",
+                html = TRUE
+              )
+            }
+          } else {
+            probetype("CpG probes")
+          }
         }
-
-        probetype(detected_probetype) ## set RV
-        info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
-
-        if (all(detected_probetype == "error")) {
-          info("[UploadBoard] ExtendedTask result has ERROR")
-          shinyalert::shinyalert(
-            title = "Probes not recognized!",
-            text = paste0(
-              "Error. Your probes do not match any probe type for <b>",
-              organism, "</b>. Please check your probe names and select ",
-              "the correct organism. ", paste(alt.text, collapse = " ")
-            ),
-            type = "error",
-            size = "s",
-            html = TRUE
-          )
-        }
-
-        ## wrong datatype. just give warning. or should we change datatype?
-        if (any(detected_probetype != "error") &&
-          any(grepl("PROT", detected_probetype)) &&
-          !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
-          shinyalert::shinyalert(
-            title = "Is this proteomics data?",
-            text = paste0(
-              "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
-              "<b>", upload_datatype(), "</b> as data type."
-            ),
-            type = "warning",
-            size = "s",
-            html = TRUE
-          )
-        }
-
-      }
-
     )
-
+    
     ## =====================================================================
     ## ======================== MODULES SERVERS ============================
     ## =====================================================================
@@ -1352,13 +1281,15 @@ UploadBoard <- function(id,
       caption = "This is the uploaded counts data.",
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      public_dataset_id = public_dataset_id ## accession ID
+      public_dataset_id = public_dataset_id
     )
 
     upload_table_preview_samples_server(
       "samples_preview",
       orig_sample_matrix = orig_sample_matrix,
+      orig_counts_matrix = orig_counts_matrix,
       loaded_samples = loaded_samples,
+      sum_techreps = sum_techreps,
       vars_selected = vars_selected,
       uploaded,
       checklist = checklist,
@@ -1369,7 +1300,8 @@ UploadBoard <- function(id,
       info.text = "This is the uploaded samples data.",
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
-      public_dataset_id = public_dataset_id ## accession ID
+      is.olink = is.olink,
+      public_dataset_id = public_dataset_id
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
@@ -1397,10 +1329,14 @@ UploadBoard <- function(id,
       r_counts = shiny::reactive(checked_samples_counts()$COUNTS),
       r_samples = shiny::reactive(checked_samples_counts()$SAMPLES),
       r_contrasts = modified_ct,
+      r_annot = shiny::reactive(checked_annot()$matrix),
       upload_datatype = upload_datatype,
       is.olink = is.olink,
+      is.nulisa = is.nulisa,
+      meth_type = meth_type,
       is.count = TRUE,
-      height = height
+      height = height,
+      recompute_pgx = recompute_pgx
     )
 
     sc_normalized <- upload_module_normalizationSC_server(
@@ -1413,7 +1349,6 @@ UploadBoard <- function(id,
       height = height
     )
 
-    ## placeholder for dynamic inputs for computepgx
     compute_input <- reactiveValues()
     sc_compute_settings <- reactiveValues()
 
@@ -1443,16 +1378,11 @@ UploadBoard <- function(id,
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
       norm_method = shiny::reactive(compute_input$norm_method),
-      #      imputation_method = shiny::reactive(compute_input$imputation_method),
-      #      bc_method = shiny::reactive(compute_input$bc_method),
-      #      remove_outliers = shiny::reactive(compute_input$remove_outliers),
-      # samplesRT = shiny::reactive(checked_samples_counts()$SAMPLES),
-      # samplesRT = shiny::reactive(compute_input$samples), scRNA-seq disabled at merging.
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
-      annotRT = shiny::reactive(checked_annot()$matrix),
+      annotRT = normalized$annot, ## shiny::reactive(checked_annot()$matrix),
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       lib.dir = FILES,
@@ -1466,12 +1396,16 @@ UploadBoard <- function(id,
       upload_name = upload_name,
       upload_description = upload_description,
       upload_datatype = upload_datatype,
+      meth_type = meth_type,
+      is.olink = is.olink,
+      is.nulisa = is.nulisa,
       upload_organism = upload_organism,
       upload_gx_methods = upload_gx_methods,
       upload_gset_methods = upload_gset_methods,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
-      probetype = probetype
+      probetype = probetype,
+      recompute_pgx = recompute_pgx
     )
 
     ## ------------------------------------------------
