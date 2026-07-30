@@ -444,15 +444,6 @@ upload_table_preview_samples_server <- function(
         )
         return()
       }
-      # if samples not in file name, give warning and return
-      if (!grepl("sample", input$samples_csv$name, ignore.case = TRUE)) {
-        shinyalert::shinyalert(
-          title = "Samples not in filename.",
-          text = "Please make sure the file name contains 'samples', such as samples_dataset.csv or samples.csv.",
-          type = "error"
-        )
-        return()
-      }
 
       # Save file
       datafile <- input$samples_csv$datapath
@@ -476,12 +467,10 @@ upload_table_preview_samples_server <- function(
 
     observeEvent(input$metadata_csv, {
       shiny::req(input$metadata_csv)
-      c1 <- (tools::file_ext(input$metadata_csv$name)[1] != "csv")
-      c2 <- (!grepl("sample", input$metadata_csv$name, ignore.case = TRUE))
-      if (c1 | c2) {
+      if (tools::file_ext(input$metadata_csv$name)[1] != "csv") {
         shinyalert::shinyalert(
           title = "File format not supported.",
-          text = "Please make sure the file is a CSV file and contains 'samples' in the file name.",
+          text = "Please make sure the file is a CSV file.",
           type = "error"
         )
         return()

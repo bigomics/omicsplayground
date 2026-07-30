@@ -326,16 +326,6 @@ upload_table_preview_contrasts_server <- function(
         return()
       }
 
-      # if contrasts not in file name, give warning and return
-      if (!grepl("contrast", input$contrasts_csv$name, ignore.case = TRUE) && !grepl("comparison", input$contrasts_csv$name, ignore.case = TRUE)) {
-        shinyalert::shinyalert(
-          title = "Comparison not in filename.",
-          text = "Please make sure the file name contains 'comparison', such as comparison_dataset.csv or comparison.csv.",
-          type = "error"
-        )
-        return()
-      }
-
       ct <- tryCatch(
         {
           playbase::read.as_matrix(input$contrasts_csv$datapath)
