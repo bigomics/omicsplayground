@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 mofa_plot_pathwayheatmap_ui <- function(
@@ -66,8 +66,7 @@ mofa_plot_pathwayheatmap_server <- function(id,
         k = k, ## main=k,
         features = features,
         ntop = 40,
-        # split = input$split,
-        split = FALSE,
+        split = input$split,
         type = "splitmap",
         annot = "pheno",
         maxchar = 40,

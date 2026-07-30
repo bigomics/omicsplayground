@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 app_ui <- function(x) {
@@ -73,6 +73,7 @@ app_ui <- function(x) {
         shiny::tags$script(src = "custom/close-message.js"),
         shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
         shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
+        shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
         shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
         visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
@@ -101,6 +102,14 @@ app_ui <- function(x) {
           "Exit",
           onClick = "shinyproxy_logout();",
           link = "/login"
+        )
+      } else if (opt$AUTHENTICATION %in% c("shinyproxy-sso", "shinyproxy-sso-admin")) {
+        ## Upstream-header auth (e.g. ShinyProxy + SAML). Hit /logout so
+        ## ShinyProxy clears its session and triggers the IdP SLO via the
+        ## configured saml.logout-url, then bounce back to /login.
+        logout.tab <- bigdash::navbarDropdownItem(
+          "Logout",
+          link = "/logout"
         )
       } else if (opt$AUTHENTICATION == "apache-cookie") {
         ## For apache SSO we need to redirect to /mellon/logout for SSO logout
@@ -148,7 +157,8 @@ app_ui <- function(x) {
           tcga = "TCGA survival (beta)"
         ),
         "MultiOmics" = MODULE.multiomics$module_menu(),
-        "WGCNA" = MODULE.wgcna$module_menu()
+        "WGCNA" = MODULE.wgcna$module_menu(),
+        "Epigenomics" = MODULE.epigenomics$module_menu()
       )
 
       ## filter disabled modules
@@ -185,7 +195,7 @@ app_ui <- function(x) {
           tab.names <- names(menu_tree[[i]])
           tab.titles <- menu_tree[[i]]
           menu.id <- names(menu_tree)[i]
-          if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+          if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
             menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
           } else {
             menu[[menu.id]] <- sidebar_menu_with_items(menu_tree[[i]], menu.id)
@@ -206,15 +216,11 @@ app_ui <- function(x) {
         .where = "declarations"
       )
 
-      ## offcanvas chatbox
-      div.chirpbutton <- NULL
-      if (opt$ENABLE_CHIRP) {
-        div.chirpbutton <- shiny::actionButton("chirp_button", "Discuss!",
-          width = "auto", class = "quick-button",
-          onclick = "window.open('https://www.reddit.com/r/omicsplayground', '_blank')"
-        )
-      }
 
+      div.copilotbutton <- NULL
+      if (opt$ENABLE_CHIRP) {
+        div.copilotbutton <- uiOutput("copilot_button")
+      }
       div.invitebutton <- InviteFriendUI("invite")
       div.upgradebutton <- if (opt$ENABLE_UPGRADE) {
         UpgradeModuleUI("upgrade")
@@ -266,9 +272,9 @@ app_ui <- function(x) {
               )
             )
           ),
+          div.copilotbutton,
           div.upgradebutton,
           div.invitebutton,
-          div.chirpbutton,
           div(
             id = "mainmenu_help",
             bigdash::navbarDropdown(
@@ -318,6 +324,12 @@ app_ui <- function(x) {
                 "App settings",
                 "usersettings-tab"
               ),
+              if (isTRUE(opt$ENABLE_ADMIN)) {
+                bigdash::navbarDropdownTab(
+                  "Admin panel",
+                  "admin-tab"
+                )
+              },
               upgrade.tab,
               tags$li(
                 actionLink("navbar_about", "About")
@@ -336,8 +348,24 @@ app_ui <- function(x) {
                 bslib::input_switch("enable_info", "Show info boxes", value = TRUE),
                 selector_switch(
                   class = "card-footer-checked",
-                  label = "show captions",
+                  label = "Show captions",
                   is.checked = FALSE
+                ),
+                shiny::conditionalPanel(
+                  "input.enable_beta",
+                  bslib::input_switch("enable_llm", "Enable AI"),
+                  shiny::conditionalPanel(
+                    "input.enable_llm",
+                    bigdash::navbarDropdownItem(
+                      shiny::selectInput(
+                        inputId = "llm_model",
+                        label = NULL,
+                        choices = opt$LLM_MODELS,
+                        selected = 1,
+                        width = "100%"
+                      )
+                    )
+                  )
                 )
               ),
               bigdash::navbarDropdownItem(
@@ -347,19 +375,6 @@ app_ui <- function(x) {
                     label = "Label type:",
                     choices = c("feature", "symbol", "name"),
                     selected = "feature",
-                    width = "100%"
-                  ),
-                  "Choose a label type to be displayed in the plots",
-                  placement = "right", options = list(container = "body")
-                )
-              ),
-              bigdash::navbarDropdownItem(
-                withTooltip(
-                  shiny::selectInput(
-                    inputId = "llm_model",
-                    label = "LLM model:",
-                    choices = opt$LLM_MODELS,
-                    selected = 1,
                     width = "100%"
                   ),
                   "Choose a label type to be displayed in the plots",
@@ -539,6 +554,11 @@ app_ui <- function(x) {
             "Preservation WGCNA",
             tspan("Preservation analysis using the WGCNA framework")
           ),
+          bigdash::sidebarTabHelp(
+            "ideograms-tab",
+            "Beta Ideograms",
+            tspan("Epigenomics visualizations and analyses for methylomics data.")
+          ),
           !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
         ),
         bigdash::bigTabs(
@@ -565,6 +585,12 @@ app_ui <- function(x) {
             AppSettingsInputs("app_settings"),
             AppSettingsUI("app_settings")
           ),
+          if (isTRUE(opt$ENABLE_ADMIN)) {
+            bigdash::bigTabItem(
+              "admin-tab",
+              AdminPanelUI("admin_panel")
+            )
+          },
           bigdash::bigTabItem(
             "sharing-tab",
             SharedDatasetsUI("load")

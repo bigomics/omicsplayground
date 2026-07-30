@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 WgcnaInputs <- function(id) {
@@ -22,18 +22,29 @@ WgcnaInputs <- function(id) {
             choices = c(1000, 2000, 4000),
             selected = 2000
           ),
-          shiny::selectInput(ns("power"),"Soft treshold:",
-            choices=c("<auto>",1,3,6,9,12,20), selected = 12),
+          shiny::selectInput(ns("power"), "Soft treshold:",
+            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
+          ),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 20
           ),
-          shiny::checkboxInput(ns("useLLM"), "AI summary", FALSE),
           shiny::br(),
           shiny::actionButton(
             ns("compute"), "Recompute!",
             icon = icon("running"),
             class = "btn-outline-primary"
           )
+        )
+      )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("report_options"),
+        open = TRUE,
+        bslib::accordion_panel(
+          "Report options",
+          icon = icon("cog", lib = "glyphicon"),
+          wgcna_report_inputs(ns("wgcnaReport"))
         )
       )
     )
@@ -234,14 +245,6 @@ WgcnaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              ## wgcna_plot_module_heatmap_ui(
-              ##   ns("moduleheatmap"),
-              ##   title = "(d) Module heatmap",
-              ##   info.text = "Heatmap of genes, or top genes, in the selected module.",
-              ##   caption = "Heatmap of genes, or top genes, in the selected module.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## ),
               wgcna_table_genes_ui(
                 ns("geneTable"),
                 title = "(d) Significance table",
@@ -250,16 +253,6 @@ WgcnaUI <- function(id) {
                 height = c("100%", TABLE_HEIGHT_MODAL),
                 width = c("auto", "100%")
               ),
-              ## wgcna_plot_module_membership_ui(
-              ##   ns("modulemembership"),
-              ##   title = "(e) Module membership",
-              ##   info.text = "For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.",
-              ##   caption = "For each module, we also define
-              ##   a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene
-              ##   expression profile. This allows us to quantify the similarity of all genes to every module.",
-              ##   height = c("100%", TABLE_HEIGHT_MODAL),
-              ##   width = c("auto", "100%")
-              ## ),
               wgcna_plot_membership_v_trait_ui(
                 ns("memberTrait"),
                 title = "(e) Gene significance",
@@ -277,7 +270,7 @@ WgcnaUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),          
+          bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),
           bslib::layout_columns(
             col_widths = c(7, 5, 7, 5),
             height = "calc(100vh - 181px)",
@@ -305,17 +298,62 @@ WgcnaUI <- function(id) {
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             ),
-            wgcna_plot_enrichment_ui(
-              ns("enrichPlot"),
-              title = "(d) Top enriched genesets",
-              info.text = "Functional enrichment of the selected module.",
-              caption = "Module enrichment plot of top most enriched genesets.",
+            wgcna_plot_topgenes_ui(
+              ns("topgenesPlot"),
+              title = "(d) Gene frequency",
+              info.text = "Gene frequency in top enriched genesets.",
+              caption = "Gene frequency in top enriched genesets",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           ) ## end layout_columns (left column)
         ) ## end layout_columns (page)
-      ) ## end tabPanel
+      ), ## end tabPanel
+
+
+      ## ----------------------------------------------------------------
+      shiny::tabPanel(
+        "AI Report✨",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto", 1),
+          #          bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently."), translate=FALSE),
+          div(
+            class = "alert alert-primary p-2",
+            wgcna_report_bullets_ui(ns("wgcnaReport"))
+          ),
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            height = "calc(100vh - 180px)",
+            wgcna_html_report_ui(
+              ns("wgcnaReport"),
+              title = "AI Report",
+              caption = "AI-generated summary report",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              row_heights = c(1, 1),
+              wgcna_report_diagram_ui(
+                ns("wgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI-generated module diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_report_infographic_ui(
+                ns("wgcnaReport"),
+                title = "Graphical Abstract",
+                caption = "AI-generated graphical abstract",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            )
+          )
+        )
+      )
     )
   )
 }

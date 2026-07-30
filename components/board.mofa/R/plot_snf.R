@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 mofa_plot_snf_ui <- function(
@@ -86,7 +86,6 @@ mofa_plot_snf_server <- function(id,
         ph <- input$tsne_colorby
         cc <- factor(pgx_samples[, ph])
         par(mfrow = c(2, 2), mar = c(5, 5, 2, 1))
-        i <- 1
         for (i in 1:length(snf$posx)) {
           plot(snf$posx[[i]],
             col = cc, pch = 19, cex = 1,

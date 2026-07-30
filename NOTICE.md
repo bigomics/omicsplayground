@@ -2,7 +2,7 @@
 
 BigOmics Analytics OmicsPlaygroud
 
-Copyright (c) 2020-2024 BigOmics Analytics
+Copyright (c) 2020-2026 BigOmics Analytics
 
 This product includes software developed at BigOmics Analytics
 (http://www.bigomics.ch/).

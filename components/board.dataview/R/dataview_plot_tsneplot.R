@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_tsne_ui <- function(
@@ -29,7 +29,10 @@ dataview_plot_tsne_ui <- function(
     height = height,
     label = label,
     caption = caption,
-    title = title
+    title = title,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "scatterplot"
   )
 }
 
@@ -83,7 +86,9 @@ dataview_plot_tsne_server <- function(id,
         ylab <- "expression (CPM)"
       } else if (data_type %in% c("logCPM", "log2")) {
         gx <- pgx$X[pp, samples]
-        if (data_type == "logCPM") {
+        if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") {
+          ylab <- "Beta values"
+        } else if (data_type == "logCPM") {
           ylab <- "expression (log2CPM)"
         } else {
           ylab <- "expression (log2)"
@@ -195,6 +200,12 @@ dataview_plot_tsne_server <- function(id,
 
       df <- data[[1]]
       gene <- data[[2]]
+
+      ## dynamic color palette from editor
+      scatter_col <- get_editor_color(input, "scatter_color", "secondary")
+      light_end <- colorRampPalette(c("#FFFFFF", scatter_col))(10)[4]
+      pal <- colorRampPalette(c(light_end, scatter_col))(100)
+
       symbols <- c(
         "circle", "square", "cross", "diamond", "triangle-down", "star", "x", "trianlge-up",
         "star-diamond", "square-cross", "diamond-wide"
@@ -211,7 +222,7 @@ dataview_plot_tsne_server <- function(id,
             symbol = ~group,
             symbols = symbols[1:length(unique(df$group))],
             color = ~expression,
-            colors = omics_pal_c(palette = "brand_blue")(100),
+            colors = pal,
             marker = list(
               size = 10,
               line = list(
@@ -236,7 +247,7 @@ dataview_plot_tsne_server <- function(id,
             x = ~pos_x,
             y = ~pos_y,
             color = ~expression,
-            colors = omics_pal_c(palette = "brand_blue")(100),
+            colors = pal,
             marker = list(
               size = 10,
               line = list(
@@ -294,7 +305,8 @@ dataview_plot_tsne_server <- function(id,
       res = c(100, 300) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
       ## label = label, title = "t-SNE clustering",
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

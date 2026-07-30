@@ -1,17 +1,14 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 expression_plot_maplot_ui <- function(
   id,
@@ -37,16 +34,19 @@ expression_plot_maplot_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = NULL,
+    outputFunc = plotly::plotlyOutput,
+    outputFunc2 = plotly::plotlyOutput,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "scatter_updown"
   )
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
 #' @param pgx
 #' @param gx_fdr
@@ -57,9 +57,6 @@ expression_plot_maplot_ui <- function(
 #' @param sel1
 #' @param df1
 #' @param watermark
-#'
-#'
-#'
 #' @export
 expression_plot_maplot_server <- function(id,
                                           pgx,
@@ -140,13 +137,23 @@ expression_plot_maplot_server <- function(id,
       names <- pd[["features"]]
       label.names <- pd[["label.names"]]
 
+      col_up <- get_editor_color(input, "color_up", "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
+
+      lab.genes <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]])
+
+      highlight <- pd[["sel.genes"]]
+      if (isTRUE(input$color_selection) && length(lab.genes) > 0) {
+        highlight <- lab.genes
+      }
+
       plt <- playbase::plotlyMA(
         x = pd[["x"]],
         y = pd[["y"]],
         names = names,
         label.names = label.names,
-        highlight = pd[["sel.genes"]],
-        label = pd[["lab.genes"]],
+        highlight = highlight,
+        label = lab.genes,
         label.cex = lab.cex,
         shape = pd[["shape"]],
         group.names = c("group1", "group0"),
@@ -159,7 +166,8 @@ expression_plot_maplot_server <- function(id,
         showlegend = FALSE,
         source = "plot1",
         marker.type = "scattergl",
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = c(up = col_up, notsig = "#8F8F8F", down = col_down)
       )
       plt
     }
@@ -183,11 +191,12 @@ expression_plot_maplot_server <- function(id,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       remove_margins = FALSE,
-      csvFunc = plot_data_csv, ##  *** downloadable data as CSV
-      res = c(80, 95), ## resolution of plots
+      csvFunc = plot_data_csv,
+      res = c(80, 95),
       pdf.width = 6, pdf.height = 6,
       add.watermark = watermark,
-      download.contrast.name = gx_contrast
+      download.contrast.name = gx_contrast,
+      parent_session = session
     )
-  }) ## end of moduleServer
+  })
 }

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 mofa_plot_loadingheatmap_ui <- function(
@@ -38,8 +38,7 @@ mofa_plot_loadingheatmap_server <- function(id,
       k <- input_factor()
       factors <- colnames(res$F)
       shiny::req(k %in% factors)
-      playbase::mofa.plot_heatmap(
-        res,
+      playbase::mofa.plot_heatmap(res,
         k = k, ntop = ntop, type = "splitmap", annot = "scores",
         mar = c(5, 5, 0, 3), annot.ht = 3.5, cexRow = 0.9
       )

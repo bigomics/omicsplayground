@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 upload_table_preview_samples_ui <- function(id) {
@@ -11,7 +11,9 @@ upload_table_preview_samples_ui <- function(id) {
 upload_table_preview_samples_server <- function(
   id,
   orig_sample_matrix,
+  orig_counts_matrix,
   loaded_samples,
+  sum_techreps,
   vars_selected,
   uploaded,
   checklist,
@@ -22,10 +24,17 @@ upload_table_preview_samples_server <- function(
   info.text,
   caption,
   upload_datatype,
+  is.olink,
   public_dataset_id
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observe({
+      if (!is.null(uploaded$counts.csv) && is.null(orig_counts_matrix())) {
+        orig_counts_matrix(uploaded$counts.csv)
+      }
+    })
 
     shiny::observe({
       if (is.null(orig_sample_matrix()) && !is.null(uploaded$samples.csv)) {
@@ -44,9 +53,31 @@ upload_table_preview_samples_server <- function(
       if (length(sel) > 0) vars_selected(sel)
     })
 
+    observeEvent(input$sum_treps, {
+      shiny::req(orig_sample_matrix(), orig_counts_matrix())
+      shiny::req(length(input$treps_var) > 0)
+      sel <- intersect(input$treps_var, colnames(orig_sample_matrix()))
+      shiny::req(length(sel) > 0)
+      Y <- orig_sample_matrix()
+      counts1 <- playbase::sum_treps(orig_counts_matrix(), Y[, sel[1]])
+      uploaded$counts.csv <- counts1
+      uploaded$samples.csv <- Y[colnames(counts1), , drop = FALSE]
+      sum_techreps(TRUE)
+    })
+
+    observeEvent(input$sum_treps, {
+      if (length(input$treps_var) == 0) {
+        uploaded$counts.csv <- orig_counts_matrix()
+        uploaded$samples.csv <- orig_sample_matrix()
+        sum_techreps(FALSE)
+      }
+    })
+
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$samples.csv))
       dt <- orig_sample_matrix()
+      shiny::req(!is.null(dt))
+      if (sum_techreps()) dt <- uploaded$samples.csv
       vars_selected <- vars_selected()
       vars_selected <- intersect(vars_selected, colnames(dt))
       dt <- dt[, vars_selected, drop = FALSE]
@@ -93,8 +124,70 @@ upload_table_preview_samples_server <- function(
           "Update",
           icon = icon("refresh"),
           class = "btn-sm btn-outline-primary"
-        )
+        ),
+        br()
       )
+    })
+
+    output$tech_rep <- renderUI({
+      tagList(
+        checkboxGroupInput(
+          ns("treps_var"),
+          label = "Technical replicates' variable:",
+          choices = vars_selected(),
+          selected = NULL,
+          inline = TRUE
+        ),
+        actionButton(
+          ns("sum_treps"),
+          "Combine/Restore technical replicates",
+          icon = icon("plus"),
+          class = "btn-sm btn-outline-primary"
+        ),
+        br()
+      )
+    })
+
+    output$add_metadata <- renderUI({
+      tagList(
+        withTooltip(
+          checkboxInput(
+            ns("add_metadata_button"),
+            label = "Add metadata",
+            value = FALSE
+          ),
+          "Expand Olink metadata by uploading an additional sample file (.csv)"
+        ),
+        uiOutput(ns("metadata_upload_area"))
+      )
+    })
+
+    output$metadata_upload_area <- renderUI({
+      shiny::req(input$add_metadata_button == TRUE)
+      bslib::card(
+        fileInputArea(ns("metadata_csv"),
+          shiny::h4("Expand Olink metadata: upload an additional file (.csv)", class = "mb-0"),
+          multiple = FALSE, accept = c(".csv"), width = "100%"
+        ),
+        style = "background-color: #fffef5; border: 0.07rem dashed goldenrod;"
+      )
+    })
+
+    samples_options <- shiny::reactive({
+      base_options <- shiny::tagList(
+        uiOutput(ns("col_sel")),
+        br(),
+        uiOutput(ns("tech_rep"))
+      )
+      if (upload_datatype() == "proteomics" && is.olink()) {
+        shiny::tagList(
+          base_options,
+          br(),
+          uiOutput(ns("add_metadata"))
+        )
+      } else {
+        base_options
+      }
     })
 
     table.RENDER <- function() {
@@ -123,7 +216,7 @@ upload_table_preview_samples_server <- function(
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin-bottom: 8px;",
         div(
-          if (loaded_samples()) {
+          if (loaded_samples() && !is.olink()) {
             shiny::actionButton(
               ns("remove_samples"),
               "Cancel",
@@ -183,9 +276,7 @@ upload_table_preview_samples_server <- function(
                 title = title,
                 info.text = info.text,
                 caption = caption,
-                options = tagList(
-                  uiOutput(ns("col_sel"))
-                ),
+                options = samples_options(),
                 label = "",
                 show.maximize = FALSE
               ),
@@ -244,10 +335,22 @@ upload_table_preview_samples_server <- function(
     output$umap <- renderPlot({
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
-      counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
-      prior <- min(counts[which(counts > 0)], na.rm = TRUE)
-      X <- log2(counts + prior)
+      if (upload_datatype() == "methylomics") {
+        X <- playbase::mToBeta(counts)
+      } else if (inherits(counts, "sparseMatrix")) {
+        ## pgx.countNormalization uses apply() which densifies sparse matrices.
+        ## log1p(x)/log(2) == log2(1+x) but sparse-preserving since log1p(0)=0.
+        X <- log1p(counts) / log(2)
+      } else {
+        counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
+        prior <- min(counts[which(counts > 0)], na.rm = TRUE)
+        X <- log2(counts + prior)
+      }
+
       Y <- uploaded$samples.csv
+      cm <- intersect(colnames(X), rownames(Y))
+      X <- X[, cm, drop = FALSE]
+      Y <- Y[cm, , drop = FALSE]
       shiny::req(nrow(Y))
       shiny::validate(shiny::need(ncol(Y) > 0, "Please select at least 1 variable."))
       sel <- grep("group|condition", colnames(Y), ignore.case = TRUE)
@@ -260,6 +363,17 @@ upload_table_preview_samples_server <- function(
           y <- Y[, non_na_cols[1]]
         }
       }
+      ## Subsample cells before densifying to avoid allocating a huge dense matrix
+      MAX_CELLS <- 500
+      if (ncol(X) > MAX_CELLS) {
+        set.seed(42)
+        ss <- sample(ncol(X), MAX_CELLS)
+        X <- X[, ss, drop = FALSE]
+        Y <- Y[colnames(X), , drop = FALSE]
+        y <- Y[, sel]
+      }
+      if (inherits(X, "sparseMatrix")) X <- as.matrix(X)
+
       hilight2 <- colnames(X)
       if (ncol(X) > 100) hilight2 <- NULL
       shiny::validate(shiny::need(
@@ -360,6 +474,75 @@ upload_table_preview_samples_server <- function(
       loaded_samples(TRUE)
     })
 
+    observeEvent(input$metadata_csv, {
+      shiny::req(input$metadata_csv)
+      c1 <- (tools::file_ext(input$metadata_csv$name)[1] != "csv")
+      c2 <- (!grepl("sample", input$metadata_csv$name, ignore.case = TRUE))
+      if (c1 | c2) {
+        shinyalert::shinyalert(
+          title = "File format not supported.",
+          text = "Please make sure the file is a CSV file and contains 'samples' in the file name.",
+          type = "error"
+        )
+        return()
+      }
+      datafile <- input$metadata_csv$datapath
+      new_samples <- tryCatch(
+        {
+          playbase::read.as_matrix(datafile)
+        },
+        error = function(w) {
+          NULL
+        }
+      )
+      if (is.null(new_samples)) {
+        data_error_modal(path = datafile, data_type = "metadata")
+        return()
+      }
+      samples <- uploaded$samples.csv
+      shiny::req(samples)
+      counts <- uploaded$counts.csv
+      cm <- intersect(as.character(rownames(samples)), as.character(rownames(new_samples)))
+      cm <- intersect(cm, colnames(counts))
+      if (length(cm) == 0) {
+        shinyalert::shinyalert(
+          title = "No matching samples",
+          text = "The newly uploaded metadata file does not share any sample identifiers with the current samples and abundance file.",
+          type = "error"
+        )
+        return()
+      }
+      if ((length(cm) != nrow(samples)) | (length(cm) != nrow(new_samples))) {
+        shinyalert::shinyalert(
+          title = "Samples mismatch",
+          text = "The new sample file contains a different set of samples than the current metadata. We will intersect these.",
+          type = "warning"
+        )
+        samples <- samples[cm, , drop = FALSE]
+        new_samples <- new_samples[cm, , drop = FALSE]
+        counts <- counts[, cm, drop = FALSE]
+        uploaded$counts.csv <- counts
+      }
+      new_cols <- setdiff(colnames(new_samples), colnames(samples))
+      if (length(new_cols) > 0) {
+        merged <- cbind(samples, new_samples[rownames(samples), new_cols, drop = FALSE])
+        uploaded$samples.csv <- merged
+        orig_sample_matrix(merged)
+        vars_selected(colnames(merged))
+        shinyalert::shinyalert(
+          title = "Metadata added",
+          text = paste("Added", length(new_cols), "new variables:", paste(new_cols, collapse = ", ")),
+          type = "success"
+        )
+      } else {
+        shinyalert::shinyalert(
+          title = "No new columns added",
+          text = "The newly upload metadata file does not contain any new variables.",
+          type = "warning"
+        )
+      }
+    })
+
     observeEvent(input$remove_samples, {
       delete_all_files_samples <- function(value) {
         if (value) {
@@ -388,6 +571,7 @@ upload_table_preview_samples_server <- function(
       } else {
         delete_all_files_samples(TRUE)
       }
+      uploaded$samples.csv <- NULL
       loaded_samples(FALSE)
       vars_selected(NULL)
       orig_sample_matrix(NULL)

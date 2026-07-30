@@ -1,3 +1,27 @@
 .navbar-custom {
     border-bottom: 1px solid gray !important;
 }
+
+// pending received-dataset indicators (set by static/shared-badges.js)
+.shared-pending-badge {
+    display: inline-block;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 10px;
+    padding: 0 6px;
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+    vertical-align: middle;
+}
+
+.shared-pending-dot {
+    display: inline-block;
+    background: #dc3545;
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+}

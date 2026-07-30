@@ -1,7 +1,5 @@
-##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
-##
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 
 UploadBoard <- function(id,
                         pgx_dir,
@@ -78,8 +76,8 @@ UploadBoard <- function(id,
       ))
     })
 
-        module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
-    
+    module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
+
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")
       common_name <- playbase::allSpecies(col = "display_name")
@@ -286,7 +284,7 @@ UploadBoard <- function(id,
             shinyalert::shinyalert(title = "Is your dataset single-cell RNA-seq? If so, please correct the selected datatype.", type = "info")
           }
         }
-        
+
         checked_for_log(FALSE)
         res <- playbase::pgx.checkINPUT(df0, "COUNTS")
         write_check_output(res$checks, "COUNTS", raw_dir())
@@ -318,12 +316,15 @@ UploadBoard <- function(id,
             } else {
               checked_for_log(TRUE)
             }
+          } else {
+            checked_for_log(TRUE)
           }
-          return(list(res = res, olink = olink, nulisa = nulisa))
         }
-      )
+        return(list(res = res, olink = olink, nulisa = nulisa))
+      }
+    )
 
-      checked_counts <- shiny::eventReactive(
+    checked_counts <- shiny::eventReactive(
       {
         list(checked_for_log(), uploaded_counts()$res)
       },
@@ -333,7 +334,9 @@ UploadBoard <- function(id,
         res <- uploaded_counts()$res
         olink <- uploaded_counts()$olink
         nulisa <- uploaded_counts()$nulisa
-        if (is.null(res)) return(list(status = "Missing counts.csv", matrix = NULL))
+        if (is.null(res)) {
+          return(list(status = "Missing counts.csv", matrix = NULL))
+        }
 
         ## wait for dialog finished
         shiny::req(checked_for_log())
@@ -368,7 +371,7 @@ UploadBoard <- function(id,
           }
         }
 
-        # For data != Olink NPX, no further negative values allowed (in the linear space).
+        # For data != Olink NPX and != NULISA NPQ, no further negative values allowed (in the linear space).
         # Set any negatives to zero and inform the user. Store value.
         # Olink NPX are passed to upload_module_normalization_server as original. There I get counts.
         negs <- sum(res$df < 0, na.rm = TRUE)
@@ -397,19 +400,23 @@ UploadBoard <- function(id,
             status <- paste("ERROR: max", MAXSAMPLES, " samples allowed")
             checked <- NULL
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
+            ## uploaded[["counts.csv"]] <- NULL
+            # pop up telling user max sample reached (ui-alerts.R)
             shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "counts")
           }
 
           # Hard stop for scRNA-seq
           if (ncol(checked) > 200000L && upload_datatype() == "scRNA-seq") {
-            status <- paste("ERROR: max 200K cells allowed for scRNA-seq")
+            status <- paste("ERROR: max 200.000 cells allowed for scRNA-seq")
             checked <- NULL
             uploaded[["last_uploaded"]] <- setdiff(uploaded[["last_uploaded"]], "counts.csv")
             shinyalert::shinyalert(
               title = "Maximum samples reached",
               text = paste(
                 "You have reached the maximum number of cells allowed. Please",
-                tspan("upload a new counts file with a maximum of", js = FALSE), "200K cells."),
+                tspan("upload a new counts file with a maximum of", js = FALSE),
+                "200.000 cells."
+              ),
               type = "error"
             )
           }
@@ -463,6 +470,7 @@ UploadBoard <- function(id,
           if (nrow(checked) > MAXSAMPLES && upload_datatype() != "scRNA-seq") {
             status <- paste("ERROR: max", MAXSAMPLES, "samples allowed")
             checked <- NULL
+            # pop up telling user max samples reached (ui-alerts.R)
             shinyalert_max_samples_reached(MAXSAMPLES, auth$level, "samples")
           }
         }
@@ -531,6 +539,7 @@ UploadBoard <- function(id,
           if (ncol(checked) > MAXCONTRASTS) {
             status <- paste("ERROR: max", MAXCONTRASTS, "contrasts allowed")
             checked <- NULL
+            # pop up telling user max contrasts reached (ui-alerts.R)
             shinyalert_max_contrasts_reached(MAXCONTRASTS, auth$level)
           }
         }
@@ -550,8 +559,10 @@ UploadBoard <- function(id,
           }
         }
 
-        if (!is.null(checked)) {
-          checked <- playbase::contrasts.convertToLabelMatrix(contrasts = checked, samples = cc$SAMPLES)
+        if (!is.null(checked) && !is.null(cc$SAMPLES)) {
+          checked <- playbase::contrasts.convertToLabelMatrix(
+            contrasts = checked, samples = cc$SAMPLES
+          )
         }
         if (is.null(checked)) {
           uploaded[["last_uploaded"]] <<- setdiff(uploaded[["last_uploaded"]], "contrasts.csv")
@@ -624,7 +635,6 @@ UploadBoard <- function(id,
           finish = "Compute!"
         )
       )
-
       return(wizard)
 
     })
@@ -765,7 +775,7 @@ UploadBoard <- function(id,
         }
         max.datasets <- as.integer(auth$options$MAX_DATASETS)
         if (numpgx >= max.datasets) {
-          shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+          shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
           return(NULL)
         }
         bigdash.selectTab(session, selected = "upload-tab")
@@ -784,7 +794,7 @@ UploadBoard <- function(id,
       }
       max.datasets <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= max.datasets) {
-        shinyalert_storage_full(numpgx, max.datasets) ## from ui-alerts.R
+        shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
         return(NULL)
       }
 
@@ -988,7 +998,9 @@ UploadBoard <- function(id,
       list(new_upload()),
       {
         # skip upload trigger at first startup (must be first check!)
-        if (new_upload() == 0) return(NULL)
+        if (new_upload() == 0) {
+          return(NULL)
+        }
 
         shiny::req(auth$options)
         enable_upload <- auth$options$ENABLE_UPLOAD
@@ -1005,24 +1017,20 @@ UploadBoard <- function(id,
         isolate({
           lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
           lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+          upload_organism(input$selected_organism)
           upload_name(NULL)
           upload_description(NULL)
           show_comparison_builder(TRUE)
           selected_contrast_input(FALSE)
           loaded_samples(FALSE)
-          sum_techreps(FALSE)
+          sum_techreps(FALSE) ## new az
           orig_sample_matrix(NULL)
-          orig_counts_matrix(NULL)
+          orig_counts_matrix(NULL) ## new az
           vars_selected(NULL)
         })
 
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
-
-        # skip upload trigger at first startup
-        if (new_upload() == 0) {
-          return(NULL)
-        }
 
         if (any(input$selected_organism == "No organism")) {
           shinyalert::shinyalert(
@@ -1259,6 +1267,7 @@ UploadBoard <- function(id,
             probetype("CpG probes")
           }
         }
+      }
     )
     
     ## =====================================================================
@@ -1301,7 +1310,7 @@ UploadBoard <- function(id,
       caption = "This is the uploaded samples data.",
       upload_datatype = upload_datatype,
       is.olink = is.olink,
-      public_dataset_id = public_dataset_id
+      public_dataset_id = public_dataset_id ## accession ID
     )
 
     modified_ct <- upload_table_preview_contrasts_server(
@@ -1382,7 +1391,7 @@ UploadBoard <- function(id,
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
       contrastsRT = modified_ct,
-      annotRT = normalized$annot, ## shiny::reactive(checked_annot()$matrix),
+      annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),
       lib.dir = FILES,

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 InviteFriendUI <- function(id) {
@@ -222,7 +222,7 @@ The BigOmics Team
           ),
           footer = blastula::md(randomMotto())
         ),
-        from = "bigomics.app@gmail.com",
+        from = "noreply@bigomics.ch",
         to = friend_email,
         ##        cc = "support@bigomics.ch",
         subject = paste("You're invited! Join Omics Playground today"),
@@ -278,7 +278,7 @@ The BigOmics Team
           ),
           footer = blastula::md(randomMotto())
         ),
-        from = "bigomics.app@gmail.com",
+        from = "noreply@bigomics.ch",
         to = user_email,
         ##      cc = "support@bigomics.ch",
         subject = paste("Your Invite has been sent!"),

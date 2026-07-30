@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 wgcna_table_enrichment_ui <- function(
@@ -32,21 +32,19 @@ wgcna_table_enrichment_ui <- function(
 
 wgcna_table_enrichment_server <- function(id,
                                           wgcna,
-                                          selected_module
-) {
+                                          selected_module) {
   moduleServer(id, function(input, output, session) {
-
     table_data <- function() {
       gse <- wgcna()$gse
       k <- selected_module()
-      
+
       if (input$showallmodules) k <- "<all>"
       if (k %in% names(gse)) {
         df <- gse[[k]]
       } else {
         df <- do.call(rbind, gse)
       }
-      
+
       if (!"score" %in% colnames(df)) {
         df$odd.ratio[is.infinite(df$odd.ratio)] <- 99
         df$score <- df$odd.ratio * -log10(df$p.value)

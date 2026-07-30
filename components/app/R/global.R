@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -25,7 +25,7 @@ if (Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-options(shiny.maxRequestSize = 999 * 1024^2) ## max 999Mb upload
+options(shiny.maxRequestSize = 2048 * 1024^2) ## max 2GB (previously 999Mb) upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
 # 1. The header scrolls with the X scroll bar
@@ -157,12 +157,13 @@ opt.default <- list(
   USE_CREDENTIALS = FALSE,
   DOMAIN = NULL,
   BLOCKED_DOMAIN = "bigomics.com|massdynamics.com|pluto.bio|rosalind.bio",
-  ## ENABLE_CHIRP         = TRUE,
   ENABLE_DELETE = TRUE,
   ENABLE_PGX_DOWNLOAD = TRUE,
   ENABLE_PUBLIC_SHARE = TRUE,
   ENABLE_PUBLIC_LOAD = FALSE,
+  ENABLE_PUBLIC_DELETE = FALSE,
   ENABLE_UPLOAD = TRUE,
+  ENABLE_ADMIN = FALSE,
   ENABLE_USERDIR = TRUE,
   ENABLE_USER_SHARE = TRUE,
   ENABLE_USER_LOCK = TRUE,
@@ -170,6 +171,7 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
@@ -178,6 +180,7 @@ opt.default <- list(
   MAX_COMPARISONS = 20,
   MAX_GENES = 20000,
   MAX_GENESETS = 5000,
+  MAX_METH_FEATURES = 450000,
   MAX_SHARED_QUEUE = 3,
   MAX_SESSIONS = 2,
   TIMEOUT = 0,
@@ -218,6 +221,16 @@ if (file.exists(defaults.file)) {
       impute = TRUE
     )
   )
+}
+
+## Load metadata options configuration
+metadata.file <- file.path(ETC, "metadata_options.yml")
+if (file.exists(metadata.file)) {
+  METADATA_OPTIONS <<- yaml::read_yaml(metadata.file)
+  message("[GLOBAL] Loaded metadata_options.yml")
+} else {
+  message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
+  METADATA_OPTIONS <<- list(fields = list())
 }
 
 ## Check and set authentication method
@@ -266,7 +279,7 @@ BOARDS <- c(
   "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
-  "multiomics"
+  "multiomics", "ideograms"
 )
 ## if (is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED <- BOARDS
 opt$BOARDS_ENABLED <- BOARDS
@@ -274,14 +287,16 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics","WGCNA"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Epigenomics"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
+if (is.null(opt$MODULES_METHYLOMICS)) opt$MODULES_METHYLOMICS <- setdiff(MODULES, "MultiOmics")
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
+MODULES_METHYLOMICS <- array(MODULES %in% opt$MODULES_METHYLOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
 ## ------------------------------------------------
@@ -325,7 +340,11 @@ i18n$set_translation_language("RNA-seq")
 ## Filter LLM models with available models, add all local models(?)
 opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
 LOCAL_MODELS <- playbase::ai.get_ollama_models()
-#opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
+opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
+opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
 
 ## Setup reticulate
-## reticulate::use_virtualenv("reticulate")
+tryCatch(
+  reticulate::use_miniconda("r-reticulate"),
+  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
+)

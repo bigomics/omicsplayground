@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -54,7 +54,11 @@ correlation_plot_barplot_ui <- function(
     info.extra_link = info.extra_link,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "grouped_barplot",
+    palette_default = "default"
   )
 }
 
@@ -78,18 +82,18 @@ correlation_plot_barplot_server <- function(id,
     plot_data <- shiny::reactive({
       df <- getPartialCorrelation()
       R <- getGeneCorr()
-
-      sel <- cor_table$rownames_current()
-      shiny::req(sel)
-
-      ## cor_table!=R mismatch!!!
-      if (length(sel) > nrow(R)) {
-        return(NULL)
-      }
+      shiny::req(R)
 
       NTOP <- 40 ## how many genes to show in barplot
-      sel <- intersect(sel, rownames(R))
-      sel <- head(sel, NTOP)
+      ## Top-N correlated features, ranked by correlation. Independent of the
+      ## table search/filter.
+      sel <- head(rownames(R), NTOP)
+
+      ## Force-inject the table-selected feature, even when it falls outside the
+      ## top-N, so the selection always has a bar to highlight.
+      selected <- intersect(cor_table$rownames_selected(), rownames(R))
+      if (length(selected) > 0) sel <- unique(c(sel, selected))
+
       rho <- R[sel, "cor"]
       if (length(sel) == 1) names(rho) <- sel
 
@@ -103,19 +107,83 @@ correlation_plot_barplot_server <- function(id,
         "partial correlation" = prho
       )
 
+      ## Remember the selected feature (as plotted symbol label) for highlighting.
+      if (length(selected) > 0) {
+        attr(pd, "highlight") <- playbase::probe2symbol(
+          selected[1], pgx$genes, labeltype(),
+          fill_na = TRUE
+        )
+      }
+
       return(pd)
+    })
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      series <- c("correlation", "partial correlation")
+      default_clrs <- c("#A6CEE3", "#1F78B4")
+      custom_palette_pickers(series, session$ns, default_colors = default_clrs)
+    })
+
+    ## Editor: rank list for custom bar ordering
+    output$rank_list <- shiny::renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      labels <- rownames(pd)
+      shiny::req(length(labels) > 0)
+      rank_list_ui(labels, session$ns)
     })
 
     render_barplot <- function() {
       pd <- plot_data()
       shiny::req(pd)
+      highlight <- attr(pd, "highlight") ## table-selected feature, if any
 
-      playbase::pgx.stackedBarplot(
+      ## Editor: bar ordering
+      bars_order <- input$bars_order
+      if (!is.null(bars_order) && bars_order != "alphabetical") {
+        if (bars_order == "ascending") {
+          pd <- pd[order(pd[, 1]), , drop = FALSE]
+        } else if (bars_order == "descending") {
+          pd <- pd[order(-pd[, 1]), , drop = FALSE]
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          custom_order <- input$rank_list_basic
+          valid <- custom_order[custom_order %in% rownames(pd)]
+          if (length(valid) > 0) pd <- pd[valid, , drop = FALSE]
+        }
+      }
+
+      fig <- playbase::pgx.stackedBarplot(
         x = pd,
         ylab = "Correlation",
         xlab = "",
         showlegend = FALSE
       )
+
+      ## Editor: palette override; highlight the table-selected feature's bars
+      n_series <- 2
+      COL <- resolve_palette_colors(input, n_series)
+      do_highlight <- !is.null(highlight) && highlight %in% rownames(pd)
+      if (!is.null(COL) || do_highlight) {
+        fig <- plotly::plotly_build(fig)
+        bar_idx <- 1
+        for (i in seq_along(fig$x$data)) {
+          if (!is.null(fig$x$data[[i]]$type) && fig$x$data[[i]]$type == "bar") {
+            if (!is.null(COL)) {
+              fig$x$data[[i]]$marker$color <- COL[bar_idx]
+              bar_idx <- min(bar_idx + 1, n_series)
+            }
+            if (do_highlight) {
+              xv <- as.character(fig$x$data[[i]]$x)
+              fig$x$data[[i]]$marker$line$width <- ifelse(xv == highlight, 2, 0)
+              fig$x$data[[i]]$marker$line$color <- "black"
+            }
+          }
+        }
+      }
+
+      fig
     }
 
     barplot.RENDER <- function() {
@@ -136,7 +204,8 @@ correlation_plot_barplot_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(63, 100), ## resolution of plots
       pdf.width = 6, pdf.height = 4,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

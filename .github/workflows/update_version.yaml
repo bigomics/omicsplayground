@@ -21,10 +21,15 @@ jobs:
             current_version=$(cat VERSION)
             number_version=$(echo "$current_version" | grep -oP '\d+\.\d+\.\d+')
 
-            # Increment the last part of the version
-            parts=(${number_version//./ })
-            parts[2]=$((parts[2] + 1))
-            new_version="${parts[0]}.${parts[1]}.${parts[2]}"
+            # Check if "release-as-is" suffix is present (skip version bump)
+            if echo "$current_version" | grep -q "release-as-is"; then
+              new_version="$number_version"
+            else
+              # Increment the last part of the version
+              parts=(${number_version//./ })
+              parts[2]=$((parts[2] + 1))
+              new_version="${parts[0]}.${parts[1]}.${parts[2]}"
+            fi
 
             # Replace the version in the VERSION file
             DATE=`date +%y%m%d|sed 's/\ //g'`

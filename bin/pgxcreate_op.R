@@ -3,7 +3,7 @@
 ##
 ## Make PGX file from CSV files
 ##
-## (c) 2023 BigOmics Analytics
+## (c) 2023-2026 BigOmics Analytics
 ##
 
 message("[create PGX process] : starting process")
@@ -32,11 +32,17 @@ pgx <- playbase::pgx.createPGX(
   dotimeseries = params$dotimeseries,
   name = params$name,
   datatype = params$datatype,
+  datatype_subtype = params$datatype_subtype,
   probe_type = params$probe_type,
   description = params$description,
+  metadata = params$metadata,
   creator = params$creator,
-  batch.correct.method = params$batch.correct.method, ## NEW
-  batch.pars = params$batch.pars, ## NEW
+  batch.correct.method = params$batch.correct.method,
+  batch.pars = params$batch.pars,
+  covariates = params$covariates,
+  dma = params$dma, ## new
+  remove.xy.probes = params$remove.xy.probes, ## new
+  meth_type = params$meth_type, ## new
   prune.samples = params$prune.samples,
   filter.genes = params$filter.genes,
   exclude.genes = params$exclude.genes,  
@@ -76,8 +82,6 @@ pgx <- playbase::pgx.computePGX(
 # embed opg version
 pgx$versions$omicsplayground_version <- scan(file.path(OPG, "VERSION"), character())[1]
 
-# annotate pgx
-
 message("[ComputePgxServer:@compute] initialize object\n")
 
 # Save output to a PGX file
@@ -90,13 +94,15 @@ if (dir.exists(params$pgx.save.folder)) {
 }
 save(pgx, file = pgx_name)
 
-ds_name <- paste0("<b>", params$name, "</b>")
-gmail_creds <- file.path(params$ETC, "gmail_creds")
+# We now send success message to user from the shiny app, because the process only runs if the app is alive, so there is no need to send the message here.
 
-params$sendSuccessMessageToUser(
-  user_email = params$email,
-  pgx_name = ds_name,
-  path_to_creds = gmail_creds
-)
+# ds_name <- paste0("<b>", params$name, "</b>")
+# gmail_creds <- file.path(params$ETC, "gmail_creds")
+
+# params$sendSuccessMessageToUser(
+#   user_email = params$email,
+#   pgx_name = ds_name,
+#   path_to_creds = gmail_creds
+# )
 
 message("[compute PGX process] : process finished, pgx is saved as", pgx_name, "\n")

@@ -1,16 +1,13 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
-#'
 #' @export
 correlation_plot_scattercorr_ui <- function(
   id,
@@ -41,7 +38,11 @@ correlation_plot_scattercorr_ui <- function(
     ),
     withTooltip(
       shiny::checkboxInput(ns("swapaxis"), "Swap XY-axes"),
-      "Transpose plot, i.e. swap X-axis and Y-axis.",
+      "Transpose plot, i.e. swap X-axis and Y-axis."
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("corr_line"), "Show correlation (r=1) line"),
+      "Show correlation (r=1) line."
     )
   )
 
@@ -56,16 +57,16 @@ correlation_plot_scattercorr_ui <- function(
     options = cor_scatter.opts,
     download.fmt = c("png", "pdf", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "clustering",
+    palette_default = "default"
   )
 }
 
-#' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 correlation_plot_scattercorr_server <- function(id,
@@ -85,18 +86,40 @@ correlation_plot_scattercorr_server <- function(id,
       shiny::updateSelectInput(session, "colorby", choices = px, selected = s1)
     })
 
+    ## Default colors: Paired palette (consistent with correlation barplot)
+    DEFAULT_COL <- RColorBrewer::brewer.pal(12, "Paired")
+
+    ## Editor: dynamic color pickers for custom palette
+    output$custom_palette_ui <- shiny::renderUI({
+      shiny::req(input$palette == "custom")
+      colorby <- input$colorby
+      shiny::req(colorby, colorby %in% colnames(pgx$Y))
+      groups <- sort(unique(as.character(pgx$samples[, colorby])))
+      groups <- groups[!groups %in% c(NA, "", " ", "NA", "na")]
+      shiny::req(length(groups) > 0)
+      custom_palette_pickers(groups, session$ns, default_colors = DEFAULT_COL)
+    })
+
     cor_scatter.DATA <- shiny::reactive({
       shiny::req(sel_gene, pgx$X, cor_table)
 
       this.gene <- sel_gene()
       NTOP <- 50
       R <- getGeneCorr()
-      sel <- cor_table$rownames_current()
-      sel <- head(intersect(sel, rownames(R)), NTOP)
+
+      ## Decoupled from the table search/filter. With a table row selected, show
+      ## a single scatter (settings feature vs the selected feature); otherwise
+      ## show the top-N correlated features as a grid.
+      selected <- intersect(cor_table$rownames_selected(), rownames(R))
+      if (length(selected) > 0) {
+        sel <- selected[1]
+      } else {
+        sel <- head(rownames(R), NTOP)
+      }
       shiny::req(sel)
       rho <- R[sel, "cor"]
 
-      if (length(rho) == 1) names(rho) <- rownames(R)[1]
+      if (length(rho) == 1) names(rho) <- sel
       pp <- unique(c(this.gene, names(rho)))
       X <- pgx$X[pp, , drop = FALSE]
 
@@ -121,7 +144,6 @@ correlation_plot_scattercorr_server <- function(id,
 
     plotly_scatter <- function(n_row, n_cols, markersize = 10, axis_title_pos = c(-0.07, -0.06),
                                margin_l = 50, margin_b = 10, interplot_margin = 0.03) {
-      # Load input data
       dt <- cor_scatter.DATA()
 
       shiny::req(dt)
@@ -131,10 +153,11 @@ correlation_plot_scattercorr_server <- function(id,
       pheno <- dt$pheno
       colorby <- dt$colorby
       this.gene <- dt$this.gene
-      COL <- rep(dt$COL, 99)
-
       shiny::req(length(rho) > 0)
-      klr <- COL[as.integer(pheno)]
+
+      ## Editor: palette override (default "original" uses Paired palette)
+      clrs.length <- length(levels(pheno))
+      COL <- resolve_palette_colors(input, clrs.length, fallback_colors = DEFAULT_COL)
 
       nplots <- n_row * n_cols
       rho <- head(rho, nplots)
@@ -175,18 +198,25 @@ correlation_plot_scattercorr_server <- function(id,
             gene2,
             " Expression:</b> %{y}<extra></extra>"
           )
-        ) %>%
-          # Add the points
-          plotly::add_trace(
-            x = x,
-            y = y,
-            name = pheno,
-            color = klr,
-            type = "scatter",
-            mode = "markers",
-            marker = list(size = markersize),
-            showlegend = (i == 1)
-          ) %>%
+        )
+        # Add the points. One trace per group with a shared legendgroup so
+        # that toggling a group in the legend hides/shows it across all subplots.
+        for (j in seq_along(levels(pheno))) {
+          g <- levels(pheno)[j]
+          sel.j <- which(pheno == g)
+          plt <- plt %>%
+            plotly::add_trace(
+              x = x[sel.j],
+              y = y[sel.j],
+              name = g,
+              legendgroup = g,
+              type = "scatter",
+              mode = "markers",
+              marker = list(size = markersize, color = COL[j]),
+              showlegend = (i == 1)
+            )
+        }
+        plt <- plt %>%
           # Add the regression line
           plotly::add_trace(
             data = newdata,
@@ -197,7 +227,21 @@ correlation_plot_scattercorr_server <- function(id,
             line = list(color = "rgb(22, 96, 167)", dash = "dot"),
             mode = "lines",
             inherit = FALSE
-          ) %>%
+          )
+        # Add diagonal line (x=y, r=1).
+        if (input$corr_line) {
+          plt <- plt %>%
+            plotly::add_trace(
+              x = range(c(x, y)),
+              y = range(c(x, y)),
+              showlegend = FALSE,
+              type = "scatter",
+              line = list(color = "black", dash = "dash", width = 0.3),
+              mode = "lines",
+              inherit = FALSE
+            )
+        }
+        plt <- plt %>%
           # Legend
           plotly::layout(
             legend = list(orientation = "h", bgcolor = "transparent"),
@@ -272,7 +316,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- ncol <- 3
       } else if (input$layout == "4x4") {
         nrow <- ncol <- 4
@@ -290,7 +336,9 @@ correlation_plot_scattercorr_server <- function(id,
     }
 
     cor_scatter.PLOTFUN2 <- function() {
-      if (input$layout == "3x3") {
+      if (length(cor_table$rownames_selected()) > 0) {
+        nrow <- ncol <- 1 ## single scatter for the table-selected feature
+      } else if (input$layout == "3x3") {
         nrow <- 3
         ncol <- 5
       } else if (input$layout == "4x4") {
@@ -318,7 +366,8 @@ correlation_plot_scattercorr_server <- function(id,
       res = c(100, 120), ## resolution of plots
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

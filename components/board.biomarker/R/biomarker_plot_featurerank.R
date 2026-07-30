@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -68,7 +68,14 @@ biomarker_plot_featurerank_server <- function(id,
       } else {
         features <- pgx$families
         X <- pgx$X
-        if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+        is.mox <- playbase::is.multiomics(rownames(X))
+        if (sum(is.na(X)) > 0) {
+          if (is.mox) {
+            X <- playbase::imputeMissing.mox(X, method = "SVD2")
+          } else {
+            X <- playbase::imputeMissing(X, method = "SVD2")
+          }
+        }
       }
 
       ## ------------ intersect features, set minimum set size
@@ -86,7 +93,6 @@ biomarker_plot_featurerank_server <- function(id,
         message("[biomarkers: feature-set scores] scRNAseq. Down-sampling by cell type")
         Y <- pgx$samples
         ct <- unique(Y$celltype)
-        i <- 1
         cells <- c()
         for (i in 1:length(ct)) {
           jj <- which(Y$celltype == ct[i])
@@ -101,14 +107,12 @@ biomarker_plot_featurerank_server <- function(id,
 
       if (is.null(Y)) Y <- pgx$Y
 
-      ## ------------- rm redundant/unneeded pheno
       kk <- c(
         "nCount_SCT", "nCount_RNA", "nFeature_SCT", "SCT_snn_res.1",
         "orig.ident", "percent.ribo", "percent.hb", ".cell_cycle", "S.Score", "G2M.Score"
       )
       Y <- Y[, !colnames(Y) %in% kk, drop = FALSE]
 
-      ## ------------ Just to get current samples
       samples <- playbase::selectSamplesFromSelectedLevels(Y, samplefilter())
       X <- X[, samples, drop = FALSE]
 
@@ -147,22 +151,14 @@ biomarker_plot_featurerank_server <- function(id,
 
       for (i in 1:ncol(Y)) {
         if (!interactive()) progress$inc(1 / ncol(Y))
-
         grp <- as.character(Y[, i])
-
         score <- rep(NA, length(features))
         names(score) <- names(features)
 
         for (j in 1:length(features)) {
           pp <- features[[j]]
-
-          if (gene.level) {
-            pp <- playbase::filterProbes(annot, features[[j]])
-          }
-
-          sdtop <- 1000
-          pp <- head(pp[order(-sdx[pp])], sdtop)
-
+          if (gene.level) pp <- playbase::filterProbes(annot, features[[j]])
+          pp <- head(pp[order(-sdx[pp])], 1000)
           X1 <- playbase::rename_by(X, pgx$genes, "symbol")
           pp <- intersect(pp, rownames(X1))
           X1 <- X1[pp, , drop = FALSE]
@@ -226,11 +222,8 @@ biomarker_plot_featurerank_server <- function(id,
       rownames(S) <- paste(substring(rownames(S), 1, 50), "  ")
 
       playbase::pgx.stackedBarplot(
-        x = t(S),
-        showlegend = TRUE,
-        xlab = "Discriminant score",
-        ylab = "",
-        horiz = TRUE
+        x = t(S), showlegend = TRUE,
+        xlab = "Discriminant score", ylab = "", horiz = TRUE
       )
     }
 

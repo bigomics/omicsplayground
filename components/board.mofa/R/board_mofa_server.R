@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -42,14 +42,12 @@ MofaBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Overview" = list(disable = c("selected_factor", "selected_module", "selected_trait", "show_types")),
-      "Response" = list(disable = c("show_types", "selected_module", "selected_trait")),
-      "Weights" = list(disable = c("selected_module", "selected_trait")),
-      "Enrichment" = list(disable = c(
-        "selected_module", "selected_trait",
-        "show_types"
-      )),
-      "gsetMOFA" = list(disable = c("show_types"))
+      "Overview" = list(disable = c("selected_factor", "show_types", "report_options")),
+      "Response" = list(disable = c("show_types", "report_options")),
+      "Weights" = list(disable = c("report_options")),
+      "Enrichment" = list(disable = c("show_types", "report_options")),
+      "gsetMOFA" = list(disable = c("show_types", "report_options")),
+      "AI Summary✨" = list(disable = c("selected_factor", "show_types", "options_accordion"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -119,16 +117,9 @@ MofaBoard <- function(id, pgx) {
         factors <- colnames(mofa$W)
         dtypes <- names(mofa$ww)
         sel.dtypes <- grep("^gset", dtypes, value = TRUE, invert = TRUE)
-        contrasts <- colnames(mofa$contrasts)
-        phenotypes <- colnames(mofa$samples)
-        traits <- colnames(pgx$mofa$Y)
         updateSelectInput(session, "selected_factor",
           choices = factors,
           selected = factors[1]
-        )
-        updateSelectInput(session, "selected_trait",
-          choices = traits,
-          selected = traits[1]
         )
         updateSelectInput(session, "show_types",
           choices = dtypes,
@@ -165,7 +156,6 @@ MofaBoard <- function(id, pgx) {
     ## =========================== MODULES ====================================
     ## ========================================================================
 
-    # Gene dendrogram and gene modules
     mofa_plot_variance_server(
       "factorxview",
       type = "factorxview",
@@ -299,9 +289,6 @@ MofaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-
-    ## ------------- Table Modules --------------------------
-
     mofa_table_genetable_server(
       "mofa_genetable",
       mofa = mofa,
@@ -322,6 +309,11 @@ MofaBoard <- function(id, pgx) {
       selected_pathway = enrichmentTable_selected
     )
 
+    mofa_report_server(
+      "mofa_report",
+      pgx = pgx,
+      mofa = mofa
+    )
 
     return(NULL)
   })

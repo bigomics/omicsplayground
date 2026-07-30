@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 wgcna_plot_sampledendrogram_ui <- function(
@@ -35,7 +35,10 @@ wgcna_plot_sampledendrogram_server <- function(id,
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
         res,
-        what = what, justdata = TRUE
+        show.me = (what == "me"),
+        show.traits = (what == "traits"),
+        show.contrasts = (what == "contrasts"),
+        justdata = TRUE
       )
     }
 
@@ -43,7 +46,11 @@ wgcna_plot_sampledendrogram_server <- function(id,
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
         res,
-        what = what, main = ""
+        ## what = what,
+        show.me = (what == "me"),
+        show.traits = (what == "traits"),
+        show.contrasts = (what == "contrasts"),
+        main = ""
       )
     }
 

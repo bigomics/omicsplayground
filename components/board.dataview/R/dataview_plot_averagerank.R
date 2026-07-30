@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_averagerank_ui <- function(id,
@@ -35,7 +35,10 @@ dataview_plot_averagerank_ui <- function(id,
     caption = caption,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "rank_plot"
   )
 }
 
@@ -72,6 +75,7 @@ dataview_plot_averagerank_server <- function(id,
       if (data_type %in% c("logCPM", "log2")) {
         mean.fc <- sort(rowMeans(pgx$X[, samples, drop = FALSE], na.rm = TRUE), decreasing = TRUE)
         ylab <- tspan("average counts (log2)", js = FALSE)
+        if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") ylab <- "average Beta values"
       }
 
       ann <- pgx$genes[names(mean.fc), , drop = FALSE]
@@ -106,6 +110,11 @@ dataview_plot_averagerank_server <- function(id,
       ylab <- pd$ylab
       xanchor <- "center"
 
+      ## Editor: custom colors
+      clr_fill <- get_editor_color(input, "color_fill", "#b8d4f0")
+      clr_line <- get_editor_color(input, "rank_color_line", "secondary")
+      clr_highlight <- get_editor_color(input, "color_highlight", "#e3a45a")
+
       # subsample for speed
       ii <- 1:length(mean.fc)
       if (length(ii) > 200) {
@@ -118,7 +127,7 @@ dataview_plot_averagerank_server <- function(id,
         type = "scatter",
         mode = "lines",
         fill = "tozeroy",
-        fillcolor = omics_colors("light_blue"),
+        fillcolor = clr_fill,
         line = list(width = 0),
         hovertemplate = ~ paste("<extra></extra>")
       )
@@ -131,7 +140,7 @@ dataview_plot_averagerank_server <- function(id,
             y = c(0, mean.fc[sel[i]]),
             type = "scatter",
             mode = "lines",
-            line = list(color = omics_colors("orange"), width = 5)
+            line = list(color = clr_highlight, width = 5)
           )
       }
 
@@ -145,7 +154,7 @@ dataview_plot_averagerank_server <- function(id,
           mode = "lines",
           fill = "tozeroy",
           fillcolor = "#00000000",
-          line = list(color = omics_colors("brand_blue"), width = 2.5)
+          line = list(color = clr_line, width = 2.5)
         )
 
       i <- 1
@@ -190,7 +199,8 @@ dataview_plot_averagerank_server <- function(id,
       csvFunc = plot_data, ##  *** downloadable data as CSV
       res = c(90, 170) * 1, ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

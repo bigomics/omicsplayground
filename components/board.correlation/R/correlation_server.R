@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
@@ -140,7 +140,14 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredImpExpression <- shiny::reactive({
       shiny::req(pgx$X, input$gene)
       X <- pgx$X
-      if (any(is.na(X))) X <- playbase::imputeMissing(X, method = "SVD2")
+      is.mox <- playbase::is.multiomics(rownames(X))
+      if (sum(is.na(X)) > 0) {
+        if (is.mox) {
+          X <- playbase::imputeMissing.mox(X, method = "SVD2")
+        } else {
+          X <- playbase::imputeMissing(X, method = "SVD2")
+        }
+      }
       gene <- input$gene
       filterExpression(X, gene)
     })
@@ -154,17 +161,14 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ## filter gene expression matrix
       X <- getFilteredExpression()
       if (any(is.na(X))) X <- getFilteredImpExpression()
-
-      NTOP <- 50
+      if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") {
+        X <- pmax(pmin(X, 1 - 1e-6), 1e-6) ## clip noisy beta back into valid range
+        X <- playbase::betaToM(X)
+      }
       NTOP <- as.integer(input$pcor_ntop)
-      res <- playbase::pgx.computeGlassoAroundGene(
-        X, gene,
-        lambda = 0.01,
-        nmax = NTOP
-      )
+      res <- playbase::pgx.computeGlassoAroundGene(X, gene, lambda = 0.01, nmax = NTOP)
       res$meta.pcor <- res$pcor
-
-      res
+      return(res)
     })
 
     getPartialCorrelation <- shiny::reactive({
@@ -284,6 +288,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       "cor_graph",
       gene = reactive(input$gene),
       getPartialCorrelationMatrix = getPartialCorrelationMatrix,
+      pgx = pgx,
       watermark = WATERMARK
     )
   })

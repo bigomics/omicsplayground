@@ -1,17 +1,14 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
-#'
 #' @description A shiny Module for plotting (UI code).
-#'
 #' @param id
 #' @param label
 #' @param height
 #' @param width
-#'
 #' @export
 expression_plot_volcanoMethods_ui <- function(
   id,
@@ -49,16 +46,16 @@ expression_plot_volcanoMethods_ui <- function(
     height = height,
     width = width,
     cards = TRUE,
-    card_names = c("dynamic", "static")
+    card_names = c("dynamic", "static"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "volcano"
   )
 }
 
 #' Expression plot Server function
-#'
 #' @description A shiny Module for plotting (server code).
-#'
 #' @param id
-#'
 #' @return
 #' @export
 expression_plot_volcanoMethods_server <- function(id,
@@ -72,7 +69,6 @@ expression_plot_volcanoMethods_server <- function(id,
                                                   pval_cap,
                                                   watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-    ## reactive function listening for changes in input
     plot_data <- shiny::reactive({
       shiny::req(pgx$X)
       shiny::req(comp())
@@ -84,14 +80,18 @@ expression_plot_volcanoMethods_server <- function(id,
       mx <- pgx$gx.meta$meta[[comp]]
       mx.features <- rownames(mx)
       mx.symbols <- pgx$genes[mx.features, "symbol"]
+      mx.names <- pgx$genes[mx.features, "gene_title"]
+      label.names <- playbase::probe2symbol(mx.features, pgx$genes, labeltype(), fill_na = TRUE)
 
-      if (labeltype() == "symbol") {
-        names <- mx.features
-        label.names <- mx.symbols
-      } else {
-        names <- mx.symbols
-        label.names <- mx.features
-      }
+      ## Position data for click-to-label (all methods, so nearest-neighbor
+      ## matches the actual plotted point regardless of which facet is clicked)
+      fc_cols <- mx[, "fc", drop = FALSE]
+      q_cols <- mx[, "q", drop = FALSE]
+      click_df <- data.frame(
+        x = as.vector(as.matrix(fc_cols)),
+        y = as.vector(-log10(pmax(as.matrix(q_cols), 1e-99))),
+        feature_name = rep(mx.features, ncol(fc_cols))
+      )
 
       pd <- list(
         mx = mx,
@@ -101,8 +101,11 @@ expression_plot_volcanoMethods_server <- function(id,
         comp = comp,
         sel.genes = genes_selected()$sel.genes,
         lab.genes = genes_selected()$lab.genes,
-        names = names,
-        label.names = label.names
+        names = mx.names,
+        symbols = mx.symbols,
+        features = mx.features,
+        label.names = label.names,
+        df = click_df
       )
 
       return(pd)
@@ -112,7 +115,6 @@ expression_plot_volcanoMethods_server <- function(id,
       pd <- plot_data()
       shiny::req(pd)
 
-      # Input vars
       sel.genes <- pd[["sel.genes"]]
       lab.genes <- pd[["lab.genes"]]
       fdr <- pd[["fdr"]]
@@ -120,7 +122,6 @@ expression_plot_volcanoMethods_server <- function(id,
       names <- pd[["names"]]
       label.names <- pd[["label.names"]]
 
-      ## meta tables
       comp <- pd[["comp"]]
       mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
       x <- mx[, "fc", drop = FALSE]
@@ -132,17 +133,11 @@ expression_plot_volcanoMethods_server <- function(id,
       }
 
       mx.features <- rownames(mx)
-      mx.symbols <- pgx$genes[mx.features, "symbol"]
-      mx.names <- ifelse(is.na(pgx$genes[mx.features, "gene_title"]),
-        mx.features,
-        pgx$genes[mx.features, "gene_title"]
-      )
-
-      label.names <- playbase::probe2symbol(rownames(mx), pgx$genes, labeltype(), fill_na = TRUE)
+      mx.symbols <- pd[["symbols"]]
+      mx.names <- pd[["names"]]
 
       pval_cap <- pval_cap()
 
-      # Call volcano plots
       all_plts <- playbase::plotlyVolcano_multi(
         FC = x,
         Q = y,
@@ -161,6 +156,7 @@ expression_plot_volcanoMethods_server <- function(id,
         margin_l = margin_l,
         margin_b = margin_b,
         color_up_down = TRUE,
+        colors = extract_volcano_colors(input),
         by_sig = FALSE,
         pval_cap = pval_cap
       )
@@ -176,23 +172,14 @@ expression_plot_volcanoMethods_server <- function(id,
       return(fig)
     }
 
-    big_plotly.RENDER <- function() {
-      fig <- plotly_plots(
-        yrange = 0.02, n_rows = 3, margin_b = 70, margin_l = 70
-      ) %>%
-        plotly::style(
-          marker.size = 6
-        ) %>%
-        playbase::plotly_build_light(.)
-      return(fig)
-    }
-
     base.plots <- function(label.cex = 4) {
       pd <- plot_data()
       shiny::req(pd)
 
       sel.genes <- pd[["sel.genes"]]
       lab.genes <- pd[["lab.genes"]]
+      sel.genes <- playbase::probe2symbol(sel.genes, pgx$genes, labeltype(), fill_na = TRUE)
+      lab.genes <- playbase::probe2symbol(lab.genes, pgx$genes, labeltype(), fill_na = TRUE)
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
       names <- pd[["names"]]
@@ -225,7 +212,27 @@ expression_plot_volcanoMethods_server <- function(id,
       pval_cap <- pval_cap()
       y <- -log10(y + pval_cap)
 
-      playbase::ggVolcano(
+      ## Editor: custom labels
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = lab.genes)
+
+      highlight <- if (isTRUE(input$color_selection)) {
+        label_features
+      } else {
+        sel.genes
+      }
+      if (!is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      ## Editor: extract settings via helpers
+      plot_colors <- extract_volcano_colors(input)
+      ls <- extract_label_settings(input, defaults = list(label_size = label.cex))
+      gp <- extract_ggprism_params(input)
+
+      ## Editor: hyperbolic cutoff settings
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      p <- playbase::ggVolcano(
         x = x,
         y = y,
         psig = fdr,
@@ -233,15 +240,35 @@ expression_plot_volcanoMethods_server <- function(id,
         facet = facet,
         names = gene_names,
         label.names = label.names,
-        highlight = sel.genes,
-        label = lab.genes,
-        marker.size = 1.2,
-        label.cex = label.cex,
+        highlight = highlight,
+        label = label_features,
+        marker.size = ls$marker_size,
+        label.cex = ls$label_size,
         ylab = "Significance (-log10q)",
         xlab = "Effect size (log2FC)",
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        axis.text.size = ls$axis_text_size,
+        colors = plot_colors,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
+
+      ## Editor: margins & aspect ratio
+      p <- apply_editor_theme(p, input)
+
+      p
     }
 
     big_base.plots <- function(label.cex = 4) {
@@ -252,17 +279,6 @@ expression_plot_volcanoMethods_server <- function(id,
       list(plotlib = "plotly", func = modal_plotly.RENDER, func2 = modal_plotly.RENDER, card = 1),
       list(plotlib = "ggplot", func = base.plots, func2 = big_base.plots, card = 2)
     )
-
-    plot_data_csv <- function() {
-      pd <- plot_data()
-      sel.genes <- pd[["sel.genes"]]
-      comp <- pd[["comp"]]
-      mx <- pd[["pgx"]]$gx.meta$meta[[comp]]
-      fc <- mx[which(rownames(mx) %in% sel.genes), "fc", drop = FALSE]
-      qv <- mx[which(rownames(mx) %in% sel.genes), "q", drop = FALSE]
-      df <- cbind(fc, qv, mx)
-      return(df)
-    }
 
     lapply(plot_grid, function(x) {
       PlotModuleServer(
@@ -276,8 +292,9 @@ expression_plot_volcanoMethods_server <- function(id,
         pdf.height = 5,
         add.watermark = watermark,
         card = x$card,
-        download.contrast.name = comp
+        download.contrast.name = comp,
+        parent_session = session
       )
     })
-  }) ## end of moduleServer
+  })
 }

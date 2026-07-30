@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_variationcoefficient_ui <- function(
@@ -29,7 +29,10 @@ dataview_plot_variationcoefficient_ui <- function(
     caption = caption,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "expression_barplot"
   )
 }
 
@@ -77,18 +80,69 @@ dataview_plot_variationcoefficient_server <- function(id,
       grid()
     }
 
+    output$rank_list <- shiny::renderUI({
+      res <- plot_data()
+      shiny::req(res)
+      rank_list_ui(colnames(res), session$ns)
+    })
+
     plotly.RENDER <- function() {
       res <- plot_data()
       shiny::req(res)
       long.df <- reshape2::melt(res)
       colnames(long.df) <- c("gene", "sample", "value")
-      fig <- playbase::pgx.boxplot.PLOTLY(
-        data = long.df,
-        x = "sample",
-        y = "value",
-        yaxistitle = "CV (%)"
-      ) %>%
-        plotly_default()
+      long.df$sample <- as.character(long.df$sample)
+
+      bar_color <- get_editor_color(input, "scatter_color", "secondary")
+      fill_color <- adjustcolor(bar_color, alpha.f = 0.35)
+      bars_order <- input$bars_order
+      samples <- colnames(res)
+
+      ## Apply sample ordering
+      if (!is.null(bars_order)) {
+        if (bars_order == "ascending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians))
+        } else if (bars_order == "descending") {
+          medians <- tapply(long.df$value, long.df$sample, median, na.rm = TRUE)
+          samples <- names(sort(medians, decreasing = TRUE))
+        } else if (bars_order == "custom" && !is.null(input$rank_list_basic) &&
+          all(input$rank_list_basic %in% colnames(res))) {
+          samples <- input$rank_list_basic
+        }
+      }
+      long.df$sample <- factor(long.df$sample, levels = samples)
+
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        ## --- ggplot2 + ggprism path ---
+        p <- playbase::pgx.boxplot.GGPLOT(
+          data = long.df, x = "sample", y = "value",
+          yaxistitle = "CV (%)",
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color
+        )
+        p <- apply_ggprism_theme(p, gp, x_angle = 90)
+        p <- apply_editor_theme(p, input)
+        fig <- ggplot_as_plotly_image(p)
+      } else {
+        ## --- existing plotly path ---
+        fig <- playbase::pgx.boxplot.PLOTLY(
+          data = long.df,
+          x = "sample",
+          y = "value",
+          yaxistitle = "CV (%)",
+          color = bar_color,
+          fillcolor = fill_color,
+          linecolor = bar_color
+        ) %>%
+          plotly_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
       fig
     }
 
@@ -103,21 +157,15 @@ dataview_plot_variationcoefficient_server <- function(id,
 
     PlotModuleServer(
       "pltmod",
-      # plotlib = "base",
-      # plotlib2 = "base",
       plotlib = "plotly",
-      # func = plot.RENDER,
-      # func2 = modal_plot.RENDER,
       func = plotly.RENDER,
       func2 = modal_plotly.RENDER,
       csvFunc = plot_data,
-      # renderFunc = shiny::renderPlot,
-      # renderFunc2 = shiny::renderPlot,
-      # res = c(100, 170) * 0.85,
       res = c(90, 170),
       pdf.width = 6,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

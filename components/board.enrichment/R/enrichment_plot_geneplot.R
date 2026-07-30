@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -47,7 +47,11 @@ enrichment_plot_geneplot_ui <- function(
     options = options,
     height = height,
     width = width,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "barplot",
+    bar_color_default = "#A6CEE3"
   )
 }
 
@@ -70,6 +74,34 @@ enrichment_plot_geneplot_server <- function(id,
                                             subplot.MAR,
                                             watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+    ## Editor: rank list for custom drag-and-drop ordering
+    output$rank_list <- renderUI({
+      shiny::req(pgx$X)
+
+      comp0 <- gs_contrast()
+      shiny::req(comp0)
+
+      expmat <- pgx$model.parameters$exp.matrix
+      ct <- expmat[, comp0]
+      grouped <- !input$ungroup
+
+      if (grouped) {
+        if ("contrasts" %in% names(pgx)) {
+          contr.labels <- pgx$contrasts[, comp0]
+          labels <- unique(contr.labels[ct != 0])
+        } else {
+          comp1 <- sub(".*:", "", comp0)
+          labels <- rev(strsplit(comp1, split = "_vs_|_VS_")[[1]])
+        }
+        if (input$show_others && any(ct == 0)) labels <- c(labels, "other")
+      } else {
+        labels <- rownames(expmat)
+        if (!input$show_others) labels <- rownames(expmat)[ct != 0]
+      }
+
+      rank_list_ui(labels, session$ns)
+    })
+
     render_subplot_geneplot <- function() {
       par(mfrow = c(1, 1), mgp = c(1.8, 0.8, 0), oma = c(0, 0, 0, 0.4))
       par(mar = subplot.MAR)
@@ -100,20 +132,91 @@ enrichment_plot_geneplot_server <- function(id,
         has.design <- !is.null(pgx$model.parameters$design)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
 
-        playbase::pgx.plotExpression(
-          pgx,
-          probe,
-          comp = comp0,
-          logscale = TRUE,
-          level = "gene",
-          collapse.others = collapse.others,
-          showothers = input$show_others,
-          grouped = grouped,
-          srt = srt,
-          main = "",
-          xlab = gene,
-          plotlib = "plotly",
-        )
+        gp <- extract_ggprism_params(input)
+        bar_color <- get_editor_color(input, "bar_color", "#A6CEE3")
+
+        if (gp$use_ggprism) {
+          ## --- ggplot2 + ggprism path ---
+          p <- playbase::pgx.plotExpression(
+            pgx,
+            probe,
+            comp = comp0,
+            logscale = TRUE,
+            level = "gene",
+            collapse.others = collapse.others,
+            showothers = input$show_others,
+            grouped = grouped,
+            srt = srt,
+            main = "",
+            xlab = gene,
+            plotlib = "ggplot"
+          )
+          shiny::req(p)
+          x_map <- p$mapping$x
+          if (!is.null(x_map)) {
+            suppressMessages(
+              p <- p +
+                ggplot2::aes(fill = !!x_map) +
+                ggplot2::scale_fill_manual(values = rep(bar_color, 50)) +
+                ggplot2::guides(fill = "none")
+            )
+          }
+          p <- apply_ggprism_theme(p, gp, x_angle = 0)
+          p <- apply_editor_theme(p, input)
+          fig <- ggplot_as_plotly_image(p)
+        } else {
+          ## --- existing plotly path ---
+          fig <- playbase::pgx.plotExpression(
+            pgx,
+            probe,
+            comp = comp0,
+            logscale = TRUE,
+            level = "gene",
+            collapse.others = collapse.others,
+            showothers = input$show_others,
+            grouped = grouped,
+            srt = srt,
+            main = "",
+            xlab = gene,
+            plotlib = "plotly"
+          )
+
+          effective_color <- bar_color
+          if (bar_color != "#A6CEE3" && !is.null(fig)) {
+            fig <- plotly::plotly_build(fig)
+            for (j in seq_along(fig$x$data)) {
+              if (!is.null(fig$x$data[[j]]$type) && fig$x$data[[j]]$type == "bar") {
+                fig$x$data[[j]]$marker$color <- bar_color
+              }
+            }
+          }
+
+          if (!is.null(fig)) {
+            fig <- plotly::layout(fig, title = list(font = list(color = effective_color)))
+          }
+
+          ## Editor: bars order
+          bars_order <- input$bars_order
+          if (!is.null(bars_order) && !is.null(fig)) {
+            if (bars_order == "custom" && !is.null(input$rank_list_basic)) {
+              fig <- plotly::layout(fig, xaxis = list(
+                categoryorder = "array",
+                categoryarray = input$rank_list_basic
+              ))
+            } else {
+              cat_order <- switch(bars_order,
+                "alphabetical" = "category ascending",
+                "ascending" = "total ascending",
+                "descending" = "total descending",
+                "trace"
+              )
+              fig <- plotly::layout(fig, xaxis = list(categoryorder = cat_order))
+            }
+          }
+        }
+
+        if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+        fig
       }
     }
 
@@ -138,7 +241,8 @@ enrichment_plot_geneplot_server <- function(id,
       func2 = subplot_geneplot.RENDER2,
       pdf.width = 5, pdf.height = 5,
       res = c(78, 100),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

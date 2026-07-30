@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -133,6 +133,7 @@ expression_plot_volcano_server <- function(id,
     plotly.RENDER <- function(marker.size = 4, lab.cex = 1) {
       pd <- plot_data()
       shiny::req(pd)
+      al <- extract_axis_limits(input)
       plt <- playbase::plotlyVolcano(
         x = pd[["x"]],
         y = pd[["y"]],
@@ -151,7 +152,10 @@ expression_plot_volcano_server <- function(id,
         ylab = pd[["ylab"]],
         marker.size = marker.size,
         showlegend = FALSE,
-        color_up_down = TRUE
+        color_up_down = TRUE,
+        colors = extract_volcano_colors(input),
+        xlim = al$xlim,
+        ylim = if (!is.null(al$ymax)) c(0, al$ymax) else NULL
       )
       plt
     }
@@ -173,22 +177,28 @@ expression_plot_volcano_server <- function(id,
 
       names <- pd$features
 
-      if (input$custom_labels) {
-        label_features <- if (input$label_features == "") {
-          NULL
-        } else {
-          strsplit(input$label_features, "\\s+")[[1]]
-        }
-        label_features <- label_features
-      } else {
-        label_features <- pd[["lab.genes"]]
-      }
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]])
 
       highlight <- if (input$color_selection) {
         label_features
       } else {
         pd[["sel.genes"]]
       }
+      if (input$cutoff_type == "hyperbolic") {
+        highlight <- label_features
+      }
+
+      plot_colors <- extract_volcano_colors(input)
+
+      ls <- extract_label_settings(input)
+      ## Hyperbolic cutoff settings
+      use_hyperbola <- !is.null(input$cutoff_type) && input$cutoff_type == "hyperbolic"
+
+      ## ggprism settings
+      gp <- extract_ggprism_params(input)
+
+      ## Axis limits
+      al <- extract_axis_limits(input)
 
       p <- playbase::ggVolcano(
         x = pd[["x"]],
@@ -197,50 +207,34 @@ expression_plot_volcano_server <- function(id,
         highlight = highlight,
         label = label_features,
         label.names = pd[["label.names"]],
-        label.cex = input$label_size,
+        label.cex = ls$label_size,
         psig = pd[["fdr"]],
         lfc = pd[["lfc"]],
         xlab = "Effect size (log2FC)",
         ylab = pd[["ylab"]],
-        marker.size = input$marker_size,
+        marker.size = ls$marker_size,
         showlegend = FALSE,
         title = NULL,
-        axis.text.size = input$axis_text_size,
-        colors = c(
-          up = input$color_up,
-          notsig = "#707070AA",
-          notsel = "#cccccc88",
-          down = input$color_down
-        )
+        axis.text.size = ls$axis_text_size,
+        colors = plot_colors,
+        xlim = al$xlim,
+        ylim = al$ymax,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype,
+        use_hyperbola = use_hyperbola,
+        hyperbola_k = ls$hyperbola_k,
+        use_ggprism = gp$use_ggprism,
+        ggprism_border = gp$ggprism_border,
+        ggprism_axis_guide = gp$ggprism_axis_guide,
+        ggprism_show_legend = gp$ggprism_show_legend,
+        ggprism_legend_x = gp$ggprism_legend_x,
+        ggprism_legend_y = gp$ggprism_legend_y,
+        ggprism_legend_border = gp$ggprism_legend_border
       )
 
-      if (input$margin_checkbox) {
-        margin_top <- ifelse(is.na(input$margin_top), 10, input$margin_top)
-        margin_right <- ifelse(is.na(input$margin_right), 10, input$margin_right)
-        margin_bottom <- ifelse(is.na(input$margin_bottom), 10, input$margin_bottom)
-        margin_left <- ifelse(is.na(input$margin_left), 10, input$margin_left)
-        p <- p + ggplot2::theme(
-          plot.margin = ggplot2::margin(
-            t = margin_top,
-            r = margin_right,
-            b = margin_bottom,
-            l = margin_left,
-            unit = "pt"
-          )
-        )
-      }
-
-      if (input$aspect_ratio_checkbox) {
-        if (is.na(input$aspect_ratio)) {
-          p <- p + ggplot2::theme(
-            aspect.ratio = 0.5
-          )
-        } else {
-          p <- p + ggplot2::theme(
-            aspect.ratio = input$aspect_ratio
-          )
-        }
-      }
+      p <- apply_editor_theme(p, input)
 
       p
     }
@@ -250,6 +244,8 @@ expression_plot_volcano_server <- function(id,
       shiny::req(pd)
 
       names <- pd$features
+      ls <- extract_label_settings(input)
+      al <- extract_axis_limits(input)
 
       playbase::ggVolcano(
         x = pd[["x"]],
@@ -266,7 +262,13 @@ expression_plot_volcano_server <- function(id,
         ylab = pd[["ylab"]],
         marker.size = 1.8,
         showlegend = FALSE,
-        title = NULL
+        title = NULL,
+        xlim = al$xlim,
+        ylim = al$ymax,
+        box.padding = ls$box_padding,
+        min.segment.length = ls$min_segment_length,
+        label.box = ls$label_box,
+        segment.linetype = ls$segment_linetype
       )
     }
 
@@ -299,5 +301,10 @@ expression_plot_volcano_server <- function(id,
         download.contrast.name = comp1
       )
     })
+
+    list(
+      cutoff_type = shiny::reactive(input$cutoff_type),
+      hyperbola_k = shiny::reactive(input$hyperbola_k)
+    )
   }) ## end of moduleServer
 }

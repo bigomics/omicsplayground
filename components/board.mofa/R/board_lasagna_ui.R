@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 LasagnaInputs <- function(id) {
@@ -37,10 +37,10 @@ LasagnaInputs <- function(id) {
         "Network options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          ##shiny::checkboxInput(ns("top50"),"top 50",TRUE),
-          shiny::checkboxInput(ns("consensus"),"consensus",FALSE),          
-          shiny::checkboxInput(ns("sp_weight"),"SP weighting",FALSE),
-          shiny::sliderInput(ns("minrho"),"Edge threshold:",0,0.95,0.5,0.05),
+          ## shiny::checkboxInput(ns("top50"),"top 50",TRUE),
+          shiny::checkboxInput(ns("consensus"), "consensus", FALSE),
+          shiny::checkboxInput(ns("sp_weight"), "SP weighting", FALSE),
+          shiny::sliderInput(ns("minrho"), "Edge threshold:", 0, 0.95, 0.5, 0.05),
           shiny::hr(),
           shiny::radioButtons(ns("node_value"), "Node value:",
             choices = c("logFC", "rho"), selected = "logFC", inline = TRUE
@@ -53,37 +53,20 @@ LasagnaInputs <- function(id) {
   )
 }
 
-my_navset_card_tab <- function(...) {
-  htmltools::tagAppendAttributes(
-    bslib::navset_card_tab(
-      ...,
-      tags$style(HTML("@media (min-width: 1200px) {.root_navset { height: calc(100vh - 36px); }}"))
-    ),
-    class = "root_navset border-0"
-  )
-}
-
 MPARTITE_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
-NETWORK_INFO <- "Multi-type network"
-
 LasagnaUI <- function(id) {
-  ns <- shiny::NS(id) ## namespace
+  ns <- shiny::NS(id)
 
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
+  fullH <- 700
+  rowH1 <- 250
+  rowH2 <- 440
 
   shiny::div(
     boardHeader(title = "LASAGNA", info_link = ns("info")),
     shiny::tabsetPanel(
-      # my_navset_card_tab(
       id = ns("tabs"),
-      # title = "LASAGNA",
-
-      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ## bslib::nav_panel(
         "Multi-layer model",
         bslib::layout_columns(
           col_widths = 12,
@@ -116,18 +99,17 @@ LasagnaUI <- function(id) {
         )
       ),
 
-      ## ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Multi-partite graph",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 181px)",
-          row_heights = c("auto", 1),
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
-            # col_widths = c(8,4),
-            col_widths = c(12),
-            height = "calc(100vh - 180px)",
+            col_widths = 12,
+            # height = "calc(100vh - 180px)",
+            row_heights = c(3, 2),
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),
               title = "Multi-partite graph",
@@ -135,34 +117,30 @@ LasagnaUI <- function(id) {
               info.text = MPARTITE_INFO,
               info.references = NULL,
               height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
+              width = "100%"
+            ),
+            bslib::layout_columns(
+              width = 6,
+              lasagna_multipartite_nodes_table_ui(
+                ns("multipartite_nodes_table"),
+                title = "Node information",
+                info.text = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph. Optionally, nodes' identifiers can be reported as official feature symbol (if known) or full feature title (if known).",
+                caption = "LASAGNA multipartite (multi-omics) nodes table. This table reports the data on the nodes (features) visualized in the LASAGNA multipartite graph. Each node is part of a specific layer. In the case of multi-omics data, each layer corresponds to a specific omics type. The table includes the nodes' identifiers, the correspond omics type (layer), and the metrics, specifically log2FC and correlation coefficient adopted to construct the LASAGNA multipartite graph.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              lasagna_multipartite_edges_table_ui(
+                ns("multipartite_edges_table"),
+                title = "Edge information",
+                info.text = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
+                caption = "LASAGNA multipartite (multi-omics) edges table. This table reports the data on the edges connecting (multi-omics) features. These edges can be visualized in the LASAGNA multipartite graph. The table includes the nodes (from, to) connected by each edge, weight, correlation coefficient across layers, and the connection type.",
+                height = c("50%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
             )
           )
         )
-      ),
-      ## end tabPanel
-      ## ##----------------------------------------------------------------
-      shiny::tabPanel(
-        "Multi-type network",
-        bslib::layout_columns(
-          col_widths = 12,
-          height = "calc(100vh - 181px)",
-          row_heights = c("auto", 1),
-          bs_alert(HTML(NETWORK_INFO)),
-          bslib::layout_columns(
-            col_widths = c(12),
-            height = "calc(100vh - 180px)",
-            mofa_plot_lasagna_network_ui(
-              ns("lasagnaNetwork"),
-              title = "Multi-type network",
-              info.text = NETWORK_INFO,
-              info.references = NULL,
-              height = c("100%", TABLE_HEIGHT_MODAL),
-              width = c("auto", "100%")
-            )
-          )
-        )
-      ) ## end tabPanel
+      )
     ) ## end tabsetPanel
   ) ## end div
 }

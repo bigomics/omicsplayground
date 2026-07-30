@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## ================================================================================
@@ -382,14 +382,6 @@ splashscreen.buttons <- function(ns) {
               "Docker image",
               class = "dropdown-item",
               href = "https://hub.docker.com/r/bigomics/omicsplayground",
-              target = "_blank"
-            )
-          ),
-          tags$li(
-            shiny::tags$a(
-              "Buy us a coffee!",
-              class = "dropdown-item",
-              href = "https://www.buymeacoffee.com/bigomics",
               target = "_blank"
             )
           )

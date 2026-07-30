@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -62,7 +62,10 @@ enrichment_plot_top_enrich_gsets_ui <- function(
     height = height,
     width = width,
     options = options,
-    download.fmt = c("png", "pdf", "svg")
+    download.fmt = c("png", "pdf", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -129,7 +132,7 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       }
 
       fx.col <- grep("score|fx|fc|sign|NES|logFC", colnames(rpt))[1]
-      qv.col <- grep("meta.q|q$", colnames(rpt))[1]
+      qv.col <- grep("meta.q|meta.p|q$", colnames(rpt))[1]
       fx <- rpt[, fx.col]
       qv <- rpt[, qv.col]
       names(qv) <- names(fx) <- rownames(rpt)
@@ -173,11 +176,19 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       if (ntop == 1) rowcol <- c(1, 1)
       if (ntop == 12) rowcol <- c(3, 4)
 
+      ## Editor: read color inputs
+      color_up <- get_editor_color(input, "color_up", "#f23451")
+      color_down <- get_editor_color(input, "color_down", "#3181de")
+      color_line <- get_editor_color(input, "color_line", "#00EE00")
+      colors_changed <- (color_up != "#f23451") || (color_down != "#3181de") || (color_line != "#00EE00")
+
       plist <- list()
 
       for (i in 1:ntop) {
         gset.name <- names(gmt.genes)[i]
         genes <- gmt.genes[[i]]
+        genes <- playbase::probe2symbol(genes, pgx$genes, "gene_name", fill_na = TRUE)
+        names(rnk0) <- playbase::probe2symbol(names(rnk0), pgx$genes, "gene_name", fill_na = TRUE)
         if (ntop == 1) {
           plt <- playbase::gsea.enplotly(
             rnk0,
@@ -221,6 +232,35 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
               margin = list(l = 0, r = 0, t = 80, b = 40)
             )
         }
+
+        ## Editor: override colors in plotly traces
+        if (colors_changed && !is.null(plt)) {
+          plt <- plotly::plotly_build(plt)
+
+          ## Identify colorbar segment indices (wide segments, not the green line)
+          cbar_indices <- which(sapply(plt$x$data, function(t) {
+            !is.null(t$line$width) && t$line$width >= 15 &&
+              !is.null(t$line$color) && t$line$color != "#00EE00"
+          }))
+
+          ## Build custom colorbar palette
+          if (length(cbar_indices) > 0) {
+            suppressWarnings(
+              custom_cc <- gplots::colorpanel(length(cbar_indices), color_down, "#CCCCCC", color_up)
+            )
+            for (ci in seq_along(cbar_indices)) {
+              plt$x$data[[cbar_indices[ci]]]$line$color <- custom_cc[ci]
+            }
+          }
+
+          ## Override enrichment score line color
+          for (j in seq_along(plt$x$data)) {
+            if (!is.null(plt$x$data[[j]]$line$color) && plt$x$data[[j]]$line$color == "#00EE00") {
+              plt$x$data[[j]]$line$color <- color_line
+            }
+          }
+        }
+
         plist[[i]] <- plt
       }
       plist
@@ -275,7 +315,8 @@ enrichment_plot_top_enrich_gsets_server <- function(id,
       pdf.width = 5,
       pdf.height = 5,
       res = c(90, 120),
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   })
 }

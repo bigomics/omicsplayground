@@ -1,6 +1,6 @@
 #
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 UpgradeModuleUI <- function(id) {
@@ -19,7 +19,7 @@ UpgradeModuleServer <- function(id, auth) {
       body <- tagList(
         tags$iframe(
           class = "iframe2",
-          src = "https://upgrade.bigomics.ch/buy-now/", # Replace with the desired URL
+          src = "https://upgrade.bigomics.ch/academic-pro-subscriptions", # Replace with the desired URL
           width = "100%",
           # height = "82vh",
           frameborder = "0"

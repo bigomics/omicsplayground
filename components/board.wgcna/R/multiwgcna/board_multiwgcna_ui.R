@@ -1,20 +1,26 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 MultiWGCNA_Inputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
   bigdash::tabSettings(
-    shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL),
-    shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL),
+    shinyjs::hidden(
+      shiny::selectInput(ns("phenotype"), "Phenotype", choices = NULL)
+    ),
+    shinyjs::hidden(
+      shiny::selectInput(ns("condition"), "Condition on phenotype:", choices = NULL)
+    ),
+    shinyjs::hidden(
+      shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE)
+    ),
     shiny::selectInput(ns("layers"), "Layers:", choices = NULL, multiple = TRUE),
     shiny::conditionalPanel(
       "input.layers && input.layers.indexOf('gset') > -1",
       ns = ns,
-      shiny::selectInput(ns("gsfilter"),"Geneset filter:",choices=NULL)          
+      shiny::selectInput(ns("gsfilter"), "Geneset filter:", choices = NULL)
     ),
-    shiny::selectInput(ns("module"), "Module:", choices = NULL, multiple = FALSE),
     shiny::br(),
     shiny::br(),
     bslib::accordion(
@@ -24,19 +30,24 @@ MultiWGCNA_Inputs <- function(id) {
         "WGCNA options",
         icon = icon("cog", lib = "glyphicon"),
         shiny::tagList(
-          shiny::selectInput(ns("power"),"Soft power:",
-            choices=c("<auto>",1,3,6,9,12,20), selected=12),
-          shiny::selectInput(ns("deepsplit"),"Deepsplit:", choices = c(0:4), 2),
-          shiny::selectInput(ns("ngenes"),"Max. features:", choices = c(1000,2000,4000),
-            2000),
+          shiny::selectInput(ns("power"), "Soft power:",
+            choices = c("<auto>", 1, 3, 6, 9, 12, 20), selected = 12
+          ),
+          shiny::selectInput(ns("deepsplit"), "Deepsplit:", choices = c(0:4), 2),
+          shiny::selectInput(ns("ngenes"), "Max. features:",
+            choices = c(1000, 2000, 4000),
+            2000
+          ),
           shiny::selectInput(ns("minmodsize"), "Min. module size",
             choices = c(5, 10, 20, 40, 100), selected = 10
           ),
-          shiny::checkboxInput(ns("consensus"),"use consensus",FALSE),
-          shiny::checkboxInput(ns("useLLM"),"AI summary", FALSE),
+          shiny::checkboxInput(ns("consensus"), "use consensus", FALSE),
+          shiny::checkboxInput(ns("addgsets"), "add genesets", FALSE),
           shiny::br(),
-          shiny::actionButton(ns("compute"), "Compute", size = "xs",
-            icon=icon("refresh"))
+          shiny::actionButton(ns("compute"), "Compute",
+            size = "xs",
+            icon = icon("refresh")
+          )
         )
       )
     ),
@@ -44,11 +55,22 @@ MultiWGCNA_Inputs <- function(id) {
     shinyjs::hidden(
       bslib::accordion(
         id = ns("lasagna_options"),
-        open = FALSE,
+        open = TRUE,
         bslib::accordion_panel(
           "Lasagna options",
-        icon = icon("cog", lib = "glyphicon"),
-        multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna")) 
+          icon = icon("cog", lib = "glyphicon"),
+          multiwgcna_plot_lasagna_inputs(ns("multiwgcnaLasagna"))
+        )
+      )
+    ),
+    shinyjs::hidden(
+      bslib::accordion(
+        id = ns("report_options"),
+        open = TRUE,
+        bslib::accordion_panel(
+          "Report options",
+          icon = icon("cog", lib = "glyphicon"),
+          wgcna_report_inputs(ns("multiwgcnaReport"))
         )
       )
     )
@@ -56,7 +78,7 @@ MultiWGCNA_Inputs <- function(id) {
 }
 
 
-MULTIWGCNA_INFO = "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
+MULTIWGCNA_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
 MultiWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -70,17 +92,17 @@ MultiWGCNA_UI <- function(id) {
     shiny::tabsetPanel(
       id = ns("tabs"),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Dendrograms",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Multiomics WGCNA</b> is a generalization of WGCNA for integratiing multi-omics where WGCNA is performed for each layer separately. Integration is performed by computing the module correlation across layers using LASAGNA.")),
           bslib::layout_columns(
             col_widths = c(12),
-            #height = "calc(100vh - 180px)",
+            # height = "calc(100vh - 180px)",
             height = "100vh",
             multiwgcna_plot_dendrograms_ui(
               ns("multiwgcnaDendro"),
@@ -93,7 +115,7 @@ MultiWGCNA_UI <- function(id) {
           ),
           bslib::layout_columns(
             col_widths = c(12),
-            #height = "calc(100vh - 180px)",
+            # height = "calc(100vh - 180px)",
             height = "100vh",
             multiwgcna_plot_power_ui(
               ns("multiwgcnaPower"),
@@ -107,14 +129,14 @@ MultiWGCNA_UI <- function(id) {
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
+        ## bslib::nav_panel(
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Module-trait heatmaps</b> show the correlation between eigengenes and traits (i.e. phenotype conditions). Heatmaps can be created for each datatype or merged. We look for modules that are highly correlated with traits.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -130,15 +152,15 @@ MultiWGCNA_UI <- function(id) {
           )
         )
       ),
-      
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
+        ## bslib::nav_panel(
         "Module correlation",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Module correlation heatmaps</b> show the pairwise correlation of module eigengenes across layers. Heatmaps can be shown per layer or merged for all layers.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -155,41 +177,41 @@ MultiWGCNA_UI <- function(id) {
         )
       ),
 
-      ##----------------------------------------------------------------
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
-        ##bslib::nav_panel(      
+        ## bslib::nav_panel(
         "WGCNA-Lasagna",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
-          bs_alert(HTML("<b>Multi-WGCNA LASAGNA</b>. MultiWGCNA is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association)")),
+          row_heights = c("auto", 1),
+          bs_alert(HTML("<b>WGCNA-LASAGNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately and then integrated using LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association).")),
           bslib::layout_columns(
             col_widths = c(12),
             height = "100vh",
             multiwgcna_plot_lasagna_ui(
               ns("multiwgcnaLasagna"),
-              title = "Multipartite MultiWGCNA LASAGNA",
-              caption = "Multipartite MultiWGCNA LASAGNA graph.",
-              info.text = "Multipartite MultiWGCNA LASAGNA graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
+              title = "Multipartite graph",
+              caption = "Multipartite graph.",
+              info.text = "Multipartite graph. LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association) is a stacked layer model for multi-omics where each layer corresponds to a data type. Each layer (vertical bar), corresponds to a data type. Under 'Layers', you can optionally select the data type of interest, and include gene sets ('gs'). WGCNA modules, inferred for each data type, are shown as nodes within each layer. The sizes of the node represent the page-rank centrality of the module. The log2FC is indicated for the chosen comparison. The color of the edges correspond to positive (purple) and negative (yellow) correlation between WGCNA feature modules. Thicker edges mean higher correlation. Correlation coefficients can be set under 'Lasagna option' to filter out lowly correlated modules.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
             )
           )
         )
       ),
-      
-      ##----------------------------------------------------------------
+
+      ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
           height = "calc(100vh - 180px)",
-          row_heights = c("auto",1),
+          row_heights = c("auto", 1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
-            col_widths = c(3,4,5),
-            height = "100vh",            
+            col_widths = c(3, 4, 5),
+            height = "100vh",
             wgcna_html_module_summary_ui(
               id = ns("multiwgcnaSummary"),
               title = "Summary",
@@ -197,7 +219,7 @@ MultiWGCNA_UI <- function(id) {
               caption = "Information about the selected WGCNA module.",
               height = c("100%", TABLE_HEIGHT_MODAL),
               width = c("auto", "100%")
-            ),                      
+            ),
             bslib::layout_columns(
               col_widths = c(12),
               multiwgcna_table_modulegenes_ui(
@@ -227,9 +249,47 @@ MultiWGCNA_UI <- function(id) {
             )
           )
         )
-      )
+      ),
 
-      
+      ## ----------------------------------------------------------------
+      shiny::tabPanel(
+        "AI Report✨",
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 180px)",
+          row_heights = c("auto", 1),
+          # bs_alert(HTML("⚠️ Disclaimer. This page contains AI-generated content. Please verify important information independently.")),
+          div(class = "alert alert-primary p-2", wgcna_report_bullets_ui(ns("multiwgcnaReport"))),
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            height = "calc(100vh - 180px)",
+            wgcna_html_report_ui(
+              ns("multiwgcnaReport"),
+              title = "AI Report",
+              caption = "AI summary report",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
+            bslib::layout_columns(
+              col_widths = 12,
+              wgcna_report_diagram_ui(
+                ns("multiwgcnaReport"),
+                title = "Module Diagram",
+                caption = "AI generated diagram",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              ),
+              wgcna_report_infographic_ui(
+                ns("multiwgcnaReport"),
+                title = "Graphical Abstract",
+                caption = "AI-generated infographic",
+                height = c("100%", TABLE_HEIGHT_MODAL),
+                width = c("auto", "100%")
+              )
+            )
+          )
+        )
+      )
     ) ## end tabsetPanel
-  )  ## end div 
+  ) ## end div
 }

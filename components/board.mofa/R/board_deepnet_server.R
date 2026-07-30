@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 DeepNetBoard <- function(id, pgx) {
@@ -221,7 +221,6 @@ DeepNetBoard <- function(id, pgx) {
         ii <- which(rowSums(is.na(y)) == 0)
         y <- y[ii, , drop = FALSE]
         X <- X[, ii]
-        sdX <- matrixStats::rowSds(X, na.rm = TRUE)
         xx <- playbase::mofa.split_data(X) ## also handles single-omics
 
         ## Subset selection of datatypes for deepnet
@@ -403,7 +402,7 @@ DeepNetBoard <- function(id, pgx) {
       ntop = c(20, 32),
       rmar = c(0, 40),
       show_legend = c(0, 1),
-      add_annot = c(0, 1),
+      add_annot = c(FALSE, TRUE),
       update = update,
       watermark = WATERMARK
     )
@@ -414,7 +413,7 @@ DeepNetBoard <- function(id, pgx) {
       pgx = pgx,
       ntop = c(50, 50),
       plot.res = c(110, 110),
-      add_annot = c(1, 1),
+      add_annot = c(TRUE, TRUE),
       show_legend = c(1, 1),
       rmar = c(40, 40),
       update = update,

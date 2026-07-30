@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -128,6 +128,17 @@ omics_pal_c <- function(palette = "brand_blue", reverse = FALSE, ...) {
 #' @export
 omics_pal_d <- function(palette = "default", reverse = FALSE) {
   palette <- stringr::str_to_lower(palette)
+
+  ## Custom gradient palette: interpolate 3 user-defined colours
+
+  if (palette == "custom_gradient") {
+    ct <- get_color_theme()
+    cols <- c(ct$palette_c1, ct$palette_c2, ct$palette_c3)
+    if (reverse) cols <- rev(cols)
+    return(function(n) {
+      grDevices::colorRampPalette(cols)(n)
+    })
+  }
 
   if (!palette %in% c("default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red", "highlight_orange")) stop('palette should be one of "default", "light", "dark", "super_light", "super_dark", "muted", "muted_light", "expanded", "highlight_blue", "highlight_red" or "highlight_orange".')
   if (!is.logical(reverse)) stop("reverse should be logical.")

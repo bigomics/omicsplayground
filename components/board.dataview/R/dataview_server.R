@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -131,7 +131,20 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       samples
     })
 
-    #
+    annot <- shiny::reactive({
+      annot <- NULL
+      shiny::req(input$data_groupby)
+      if (input$data_groupby == "<ungrouped>") {
+        return(annot)
+      }
+      kk <- grep("class", tolower(colnames(pgx$genes)))
+      if (length(kk) > 0) {
+        kk <- unique(colnames(pgx$genes)[kk])
+        annot <- pgx$genes[, kk, drop = FALSE]
+      }
+      return(annot)
+    })
+
     dataview_module_geneinfo_server(
       "geneinfo",
       pgx,
@@ -200,6 +213,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       input,
       getCountStatistics,
       r.samples = selected_samples,
+      r.annot = annot,
       r.data_type = reactive(input$data_type),
       watermark = WATERMARK
     )
@@ -342,11 +356,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         n.detected.features <- apply(counts, 2, function(x) length(which(x > 0)))
 
         ## get variation per group
-        log2counts <- log2(1 + counts)
+        # log2counts <- log2(1 + counts)
+        is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
+        log2counts <- if (is.meth) playbase::mToBeta(counts) else log2(1 + counts)
         varx <- apply(log2counts, 1, var)
         gset.var <- sapply(gset, function(s) mean(varx[s], na.rm = TRUE))
-        gset.var
-        tail(sort(gset.var), 10)
 
         ## sort get top 20 gene families
         jj <- head(order(-rowSums(prop.counts, na.rm = TRUE)), 20)
@@ -363,12 +377,16 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ss2 <- match(ss, colnames(prop.counts))
         prop.counts <- prop.counts[, ss2, drop = FALSE]
         counts <- counts[, ss2, drop = FALSE]
-        if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
-          offset <- 1e-6
+        if (is.meth) {
+          log2counts <- playbase::mToBeta(counts)
         } else {
-          offset <- 1
+          if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
+            offset <- 1e-6
+          } else {
+            offset <- 1
+          }
+          log2counts <- log2(offset + counts)
         }
-        log2counts <- log2(offset + counts)
 
         names(total.counts) <- substring(names(total.counts), 1, 30)
         colnames(log2counts) <- substring(colnames(log2counts), 1, 30)
@@ -382,7 +400,6 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           n.detected.features = n.detected.features, ## AZ
           gset.genes = gset.genes
         )
-        ## getCountStatistics(res)
         return(res)
       },
       ignoreNULL = TRUE

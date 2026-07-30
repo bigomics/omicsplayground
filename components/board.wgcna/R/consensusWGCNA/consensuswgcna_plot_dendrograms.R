@@ -1,22 +1,28 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 consensusWGCNA_plot_dendrograms_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
-  
+
   options <- shiny::tagList(
     shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
       value = TRUE
     ),
     shiny::selectInput(
@@ -40,36 +46,33 @@ consensusWGCNA_plot_dendrograms_ui <- function(
 }
 
 consensusWGCNA_plot_dendrograms_server <- function(id,
-                                               mwgcna
-                                               ) {
+                                                   mwgcna) {
   moduleServer(id, function(input, output, session) {
-    
-    observeEvent( mwgcna(), {
+    observeEvent(mwgcna(), {
       cons <- mwgcna()
       shiny::req(cons)
-      trees <- c("Consensus"=0, names(cons$layers))
+      trees <- c("Consensus" = 0, names(cons$layers))
       shiny::updateSelectInput(session, "clusterby", choices = trees)
     })
-    
-    plot.RENDER <- function() {
 
-      cons <- mwgcna()      
+    plot.RENDER <- function() {
+      cons <- mwgcna()
       shiny::req(cons)
 
-      mytrees <- c(0,names(cons$layers))
+      mytrees <- c(0, names(cons$layers))
       shiny::req(input$clusterby %in% mytrees)
-      
-      playbase::wgcna.plotDendroAndTraitCorrelation(
+
+      playbase::wgcna.plotDendroAndColors(
         cons,
         main = "",
         show.traits = input$showtraits,
+        show.contrasts = input$showcontrasts,
         marAll = c(1, 6, 1, 0),
         use.tree = input$clusterby,
         colorHeightMax = 0.75
-      )  
-      
+      )
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -78,10 +81,5 @@ consensusWGCNA_plot_dendrograms_server <- function(id,
       res = c(90, 110),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

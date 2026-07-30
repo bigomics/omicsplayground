@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 dataview_plot_correlation_ui <- function(
@@ -28,7 +28,11 @@ dataview_plot_correlation_ui <- function(
     options = NULL,
     download.fmt = c("png", "pdf", "csv", "svg"),
     width = width,
-    height = height
+    height = height,
+    # outputFunc = plotly::plotlyOutput,
+    ns_parent = ns,
+    editor = TRUE,
+    plot_type = "correlation"
   )
 }
 
@@ -71,7 +75,8 @@ dataview_plot_correlation_server <- function(id,
 
       gx1 <- sqrt(rowSums(pgx$X[names(top.rho), samples, drop = FALSE]**2, na.rm = TRUE))
       gx1 <- (gx1 / max(gx1))
-      klr1 <- omics_pal_c(palette = "brand_blue")(16)[1 + round(15 * gx1)]
+      sec_col <- get_color_theme()$secondary
+      klr1 <- colorRampPalette(c("#FFFFFF", sec_col))(20)[5:20][1 + round(15 * gx1)]
       klr1[which(is.na(klr1))] <- unname(omics_colors("mid_grey"))
 
       ## names(top.rho) <- mofa.strip_prefix(names(top.rho)
@@ -108,7 +113,20 @@ dataview_plot_correlation_server <- function(id,
       pd
     })
 
-    plotly_render <- function() {
+    observe({
+      shiny::updateSelectInput(session, "bars_order", selected = "ascending")
+    })
+
+    output$rank_list <- renderUI({
+      pd <- plot_data()
+      shiny::req(pd)
+      df <- pd[[1]]
+      gene_labels <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
+      gene_labels <- unique(gene_labels)
+      rank_list_ui(gene_labels, session$ns)
+    })
+
+    plot_df_prepared <- function() {
       pd <- plot_data()
       shiny::req(pd)
 
@@ -116,18 +134,42 @@ dataview_plot_correlation_server <- function(id,
       gg <- unique(df$genes)
       df <- df[match(gg, df$genes), , drop = FALSE]
       df$genes <- playbase::probe2symbol(df$genes, pgx$genes, "gene_name", fill_na = TRUE)
-      df$genes <- factor(df$genes, levels = unique(df$genes))
 
+      bar_col <- get_editor_color(input, "scatter_color", "secondary")
+      light_end <- colorRampPalette(c("#FFFFFF", bar_col))(10)[4]
+      pal <- colorRampPalette(c(light_end, bar_col))(16)
+      df$color <- pal[1 + round(15 * df$value)]
+
+      if (!is.null(input$bars_order)) {
+        if (input$bars_order == "alphabetical") {
+          df <- df[order(df$genes), ]
+        } else if (input$bars_order == "ascending") {
+          df <- df[order(df$rho), ]
+        } else if (input$bars_order == "descending") {
+          df <- df[order(-df$rho), ]
+        } else if (input$bars_order == "custom" && !is.null(input$rank_list_basic)) {
+          valid_ranks <- input$rank_list_basic
+          if (all(valid_ranks %in% df$genes)) {
+            df$genes <- factor(df$genes, levels = valid_ranks)
+            df <- df[order(df$genes), ]
+          }
+        }
+      }
+
+      df$genes <- factor(df$genes, levels = unique(df$genes))
+      df
+    }
+
+    plotly_render <- function(df) {
       ay <- list(overlaying = "y", side = "right", title = "")
 
-      ## plot as regular bar plot
       plotly::plot_ly(
         data = df,
         x = ~genes,
         y = ~rho,
         type = "bar",
         marker = list(
-          color = ~color # ,
+          color = ~color
         ),
         hovertemplate = ~annot
       ) %>%
@@ -149,20 +191,53 @@ dataview_plot_correlation_server <- function(id,
         )
     }
 
+    ggplot_render <- function(df, gp) {
+      p <- playbase::pgx.barplot.GGPLOT(
+        data = df, x = "genes", y = "rho", grouped = FALSE,
+        fillcolor = df$color,
+        yaxistitle = "Correlation (rho)"
+      )
+      p <- apply_ggprism_theme(p, gp, x_angle = 90)
+      p <- apply_editor_theme(p, input)
+      ggplot_as_plotly_image(p)
+    }
+
     plotly.RENDER <- function() {
-      plotly_render() %>%
-        plotly::layout(
-          xaxis = list(tickfont = list(size = 10))
-        ) %>%
-        plotly_default()
+      df <- plot_df_prepared()
+      shiny::req(df)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        fig <- ggplot_render(df, gp)
+      } else {
+        fig <- plotly_render(df) %>%
+          plotly::layout(
+            xaxis = list(tickfont = list(size = 10))
+          ) %>%
+          plotly_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+      fig
     }
 
     modal_plotly.RENDER <- function() {
-      plotly_render() %>%
-        plotly::layout(
-          xaxis = list(tickfont = list(size = 18))
-        ) %>%
-        plotly_modal_default()
+      df <- plot_df_prepared()
+      shiny::req(df)
+      gp <- extract_ggprism_params(input)
+
+      if (gp$use_ggprism) {
+        fig <- ggplot_render(df, gp)
+      } else {
+        fig <- plotly_render(df) %>%
+          plotly::layout(
+            xaxis = list(tickfont = list(size = 18))
+          ) %>%
+          plotly_modal_default()
+        fig <- apply_prism_plotly(fig, gp)
+      }
+      if (!gp$use_ggprism) fig <- apply_plotly_editor_theme(fig, input)
+      fig
     }
 
     plot_data_csv <- function() {
@@ -184,7 +259,8 @@ dataview_plot_correlation_server <- function(id,
       csvFunc = plot_data_csv, ##  *** downloadable data as CSV
       res = c(80, 170), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

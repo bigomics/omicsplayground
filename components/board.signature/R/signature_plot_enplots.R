@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -36,7 +36,10 @@ signature_plot_enplots_ui <- function(
     caption = caption,
     download.fmt = c("png", "pdf", "svg"),
     height = height,
-    width = width
+    width = width,
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "enrichment"
   )
 }
 
@@ -68,14 +71,11 @@ signature_plot_enplots_server <- function(id,
       }
 
       ## filter with table selection/search
-      ii <- enrichmentContrastTable$rows_selected()
-      if (is.null(ii)) {
-        ii <- enrichmentContrastTable$rows_all()
-      }
+      ct <- signature_get_enrichment_contrasts(enrichmentContrastTable)
+      shiny::req(ct)
+      ct <- ct[ct %in% rownames(gsea$output)]
+      shiny::req(ct)
 
-      shiny::req(ii)
-
-      ct <- rownames(gsea$output)[ii]
       F <- as.matrix(gsea$F[, ct, drop = FALSE])
       qv <- gsea$output[ct, "q"]
       gset <- gsea$gset
@@ -142,6 +142,41 @@ signature_plot_enplots_server <- function(id,
             margin = list(0, 0, 0, 0),
             annotations = anntitle(tt)
           )
+
+        ## Editor: color overrides via plotly_build post-processing
+        color_up <- get_editor_color(input, "color_up", "#f23451")
+        color_down <- get_editor_color(input, "color_down", "#3181de")
+        color_line <- get_editor_color(input, "color_line", "#00EE00")
+        colors_changed <- (!is.null(input$color_up) && input$color_up != "#f23451") ||
+          (!is.null(input$color_down) && input$color_down != "#3181de") ||
+          (!is.null(input$color_line) && input$color_line != "#00EE00")
+        if (colors_changed) {
+          p <- plotly::plotly_build(p)
+
+          ## Identify colorbar segment indices (wide segments, not the green line)
+          cbar_indices <- which(sapply(p$x$data, function(t) {
+            !is.null(t$line$width) && t$line$width >= 15 &&
+              !is.null(t$line$color) && t$line$color != "#00EE00"
+          }))
+
+          ## Build custom colorbar palette
+          if (length(cbar_indices) > 0) {
+            suppressWarnings(
+              custom_cc <- gplots::colorpanel(length(cbar_indices), color_down, "#CCCCCC", color_up)
+            )
+            for (ci in seq_along(cbar_indices)) {
+              p$x$data[[cbar_indices[ci]]]$line$color <- custom_cc[ci]
+            }
+          }
+
+          ## Override enrichment score line color
+          for (j in seq_along(p$x$data)) {
+            if (!is.null(p$x$data[[j]]$line$color) && p$x$data[[j]]$line$color == "#00EE00") {
+              p$x$data[[j]]$line$color <- color_line
+            }
+          }
+        }
+
         plt[[i]] <- p
       }
       return(plt)
@@ -207,7 +242,8 @@ signature_plot_enplots_server <- function(id,
       res = c(90, 130), ## resolution of plots
       pdf.width = 8,
       pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

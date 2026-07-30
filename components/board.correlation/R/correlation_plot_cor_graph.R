@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 #' Expression plot UI input function
@@ -44,9 +44,14 @@ correlation_plot_cor_graph_ui <- function(
     info.extra_link = info.extra_link,
     caption = caption,
     options = cor_graph.opts,
+    outputFunc = visNetwork::visNetworkOutput,
+    outputFunc2 = visNetwork::visNetworkOutput,
     width = width,
     height = height,
     download.fmt = c("png", "pdf", "csv", "svg"),
+    editor = TRUE,
+    ns_parent = ns,
+    plot_type = "correlation_matrix"
   )
 }
 
@@ -62,6 +67,7 @@ correlation_plot_cor_graph_server <- function(
   id,
   gene,
   getPartialCorrelationMatrix,
+  pgx,
   watermark = FALSE
 ) {
   moduleServer(id, function(input, output, session) {
@@ -105,6 +111,10 @@ correlation_plot_cor_graph_server <- function(
         gr <- igraph::mst(gr)
       }
 
+      ## Editor: up/down colors for positive/negative correlation edges
+      col_up <- get_editor_color(input, "color_up", "primary")
+      col_down <- get_editor_color(input, "color_down", "secondary")
+
       visdata <- visNetwork::toVisNetworkData(gr, idToLabel = FALSE)
       visdata$edges$width <- 2 * visdata$edges$width
 
@@ -119,6 +129,19 @@ correlation_plot_cor_graph_server <- function(
         )
       }
 
+      ## Color edges by correlation sign, scaling alpha by |rho| to preserve strength variation
+      if ("rho" %in% names(visdata$edges)) {
+        rho_abs <- abs(visdata$edges$rho)
+        max_rho <- max(rho_abs, na.rm = TRUE)
+        alpha <- if (max_rho > 0) 0.25 + 0.25 * rho_abs / max_rho else rep(0.6, length(rho_abs))
+        base_colors <- ifelse(visdata$edges$rho >= 0, col_up, col_down)
+        visdata$edges$color <- mapply(
+          function(col, a) grDevices::adjustcolor(col, alpha.f = a),
+          base_colors, alpha
+        )
+      }
+
+      visdata$nodes$label <- playbase::probe2symbol(visdata$nodes$id, pgx$genes, "gene_name", fill_na = TRUE)
       graph <- visNetwork::visNetwork(
         nodes = visdata$nodes,
         edges = visdata$edges
@@ -151,7 +174,8 @@ correlation_plot_cor_graph_server <- function(
       csvFunc = plot_csv_data,
       res = c(72, 80), ## resolution of plots
       pdf.width = 6, pdf.height = 6,
-      add.watermark = watermark
+      add.watermark = watermark,
+      parent_session = session
     )
   }) ## end of moduleServer
 }

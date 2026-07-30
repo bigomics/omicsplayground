@@ -1,22 +1,33 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 consensusWGCNA_plot_sampletree_ui <- function(
-    id,
-    title = "",
-    info.text = "",
-    caption = "",
-    label = "",
-    height = 400,
-    width = 400) {
+  id,
+  title = "",
+  info.text = "",
+  caption = "",
+  label = "",
+  height = 400,
+  width = 400
+) {
   ns <- shiny::NS(id)
 
   options <- shiny::tagList(
     shiny::checkboxInput(
+      inputId = ns("showme"),
+      label = "Show eigengenes",
+      value = TRUE
+    ),
+    shiny::checkboxInput(
       inputId = ns("showtraits"),
       label = "Show traits",
+      value = FALSE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
       value = FALSE
     )
   )
@@ -35,34 +46,33 @@ consensusWGCNA_plot_sampletree_ui <- function(
 }
 
 consensusWGCNA_plot_sampletree_server <- function(id,
-                                                  mwgcna
-                                                  ) {
+                                                  mwgcna) {
   moduleServer(id, function(input, output, session) {
-
     plot.RENDER <- function() {
-
       cons <- mwgcna()
       shiny::req(cons)
-      
+
       nsets <- length(cons$datExpr)
-      layout.matrix <- matrix(1:(2*nsets), nrow = 2, ncol = nsets)
-      layout(layout.matrix, heights=c(1,2), widths=rep(1,nsets))
+      layout.matrix <- matrix(1:(2 * nsets), nrow = 2, ncol = nsets)
+      layout(layout.matrix, heights = c(1, 2), widths = rep(1, nsets))
       what <- if (input$showtraits) "both" else "me"
-      
-      for(i in 1:nsets) {
+
+      for (i in 1:nsets) {
         playbase::wgcna.plotConsensusSampleDendroAndColors(
           cons,
           i,
           main = toupper(names(cons$datExpr)[i]),
-          what = what,
+          ## what = what,   ## DEPRECATED!!!
+          show.me = input$showme,
+          show.traits = input$showtraits,
+          show.contrasts = input$showcontrasts,
           marAll = c(1.2, 10, 2, 0.3),
           clust.expr = TRUE,
           setLayout = FALSE
-        ) 
+        )
       }
-      
     }
-    
+
     PlotModuleServer(
       "plot",
       func = plot.RENDER,
@@ -71,10 +81,5 @@ consensusWGCNA_plot_sampletree_server <- function(id,
       res = c(95, 110),
       add.watermark = FALSE
     )
-
-    
   })
 }
-
-
-

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 LasagnaBoard <- function(id, pgx) {
@@ -41,8 +41,8 @@ LasagnaBoard <- function(id, pgx) {
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Multi-layer model" = list(disable = c("mpartite_options", "gsfilter")),
-      "Multi-partite graph" = list(disable = c("clust_options")),
-      "Multi-type network" = list(disable = c("clust_options"))
+      "Multi-partite graph" = list(disable = c("clust_options"))
+      # "Multi-type network" = list(disable = c("clust_options"))
     )
 
     shiny::observeEvent(input$tabs, {
@@ -249,11 +249,17 @@ LasagnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    mofa_plot_lasagna_network_server(
-      "lasagnaNetwork",
+    multipartite_nodes_table <- lasagna_multipartite_nodes_table_server(
+      "multipartite_nodes_table",
       data = pruned_data,
       pgx = pgx,
-      watermark = WATERMARK
+      scrollY = "calc(100vh - (240px + 140px))"
+    )
+
+    multipartite_edges_table <- lasagna_multipartite_edges_table_server(
+      "multipartite_edges_table",
+      data = pruned_data,
+      scrollY = "calc(100vh - (240px + 140px))"
     )
 
     return(NULL)

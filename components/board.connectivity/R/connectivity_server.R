@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ConnectivityBoard <- function(
@@ -232,7 +232,9 @@ ConnectivityBoard <- function(
         }
 
         has.user_sigdb <- "datasets-sigdb.h5" %in% names(pgx$connectivity)
-        if (need_update || !has.user_sigdb) {
+        any.nan <- any(unlist(pgx$connectivity) == "NaN", na.rm = TRUE)
+
+        if (need_update || !has.user_sigdb || any.nan) {
           user.scores <- NULL
           if (file.exists(sigdb.file)) {
             info("[compute_connectivity] re-computing connectivity scores...")
@@ -439,7 +441,8 @@ ConnectivityBoard <- function(
       ## getTopProfiles,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
-      getCurrentContrast = getCurrentContrast
+      getCurrentContrast = getCurrentContrast,
+      pgx = pgx
     )
 
     ## ================================================================================
@@ -530,6 +533,7 @@ ConnectivityBoard <- function(
     ## =============================================================================
     connectivity_plot_connectivityHeatmap_server(
       "connectivityHeatmap",
+      pgx = pgx,
       getProfiles = getSelectedProfiles,
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 loading_table_datasets_public_ui <- function(
@@ -39,12 +39,16 @@ loading_table_datasets_public_ui <- function(
         icon = icon("file-import"),
         class = "btn btn-primary"
       ),
+      ## Always render delete button but hidden initially.
+      ## Server-side will control visibility based on user options.
       if (delete_button) {
-        shiny::actionButton(
-          ns("deletebutton"),
-          label = "Delete dataset",
-          icon = icon("trash"),
-          class = "btn btn-danger"
+        shinyjs::hidden(
+          shiny::actionButton(
+            ns("deletebutton"),
+            label = "Delete dataset",
+            icon = icon("trash"),
+            class = "btn btn-danger"
+          )
         )
       }
     )
@@ -58,6 +62,18 @@ loading_table_datasets_public_server <- function(id,
                                                  reload_pgxdir,
                                                  loadAndActivatePGX = NULL) {
   moduleServer(id, function(input, output, session) {
+    ## Control delete button visibility based on per-user options
+    observeEvent(auth$logged, {
+      if (!is.null(auth$logged) && auth$logged) {
+        enable_delete <- isTRUE(auth$options$ENABLE_PUBLIC_DELETE)
+        if (enable_delete) {
+          shinyjs::show("deletebutton")
+        } else {
+          shinyjs::hide("deletebutton")
+        }
+      }
+    })
+
     getPGXINFO_PUBLIC <- shiny::reactive({
       shiny::req(auth$logged)
       if (is.null(auth$logged) || !auth$logged) {
@@ -166,7 +182,8 @@ loading_table_datasets_public_server <- function(id,
 
     observeEvent(input$importbutton, {
       selected_row <- pgxtable_public$rows_selected()
-      pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
+      row_data <- pgxtable_public$data()[selected_row, ]
+      pgx_name <- row_data[, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
       pgx_path <- auth$user_dir
       new_pgx_file <- file.path(pgx_path, paste0(pgx_name, ".pgx"))
@@ -176,7 +193,7 @@ loading_table_datasets_public_server <- function(id,
       if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgx_path, pattern = "*.pgx$|*.pgx_$"))
       maxpgx <- as.integer(auth$options$MAX_DATASETS)
       if (numpgx >= maxpgx) {
-        shinyalert_storage_full(numpgx, maxpgx) ## ui-alerts.R
+        shinyalert_storage_full(numpgx, maxpgx, auth$level) ## ui-alerts.R
         return(NULL)
       }
 
@@ -189,6 +206,19 @@ loading_table_datasets_public_server <- function(id,
           )
         )
         return()
+      }
+
+      cols <- colnames(row_data)
+      get_num <- function(col) {
+        if (col %in% cols) suppressWarnings(as.numeric(row_data[, col])) else NA_real_
+      }
+      nsamples <- get_num("nsamples")
+      ngenes <- get_num("ngenes")
+      if (is.na(ngenes)) ngenes <- get_num("nfeatures")
+      datatype <- if ("datatype" %in% cols) as.character(row_data[, "datatype"]) else ""
+      if (dataset_exceeds_limits(nsamples, ngenes, datatype, auth$options)) {
+        shinyalert_exceeds_plan_limits() ## ui-alerts.R
+        return(NULL)
       }
 
       ## Copy the file from Public folder to user folder
@@ -212,8 +242,25 @@ loading_table_datasets_public_server <- function(id,
       selected_row <- pgxtable_public$rows_selected()
       pgx_name <- pgxtable_public$data()[selected_row, "dataset"]
       pgx_file <- file.path(pgx_public_dir, paste0(pgx_name, ".pgx"))
-      file.rename(pgx_file, paste0(pgx_file, "_"))
-      reload_pgxdir_public(reload_pgxdir_public() + 1)
+
+      deletePublicPGX <- function(x) {
+        if (input$confirmdelete_public) {
+          file.rename(pgx_file, paste0(pgx_file, "_"))
+          reload_pgxdir_public(reload_pgxdir_public() + 1)
+        }
+      }
+
+      shinyalert::shinyalert(
+        "Delete this dataset?",
+        paste(
+          "Are you sure you want to delete '", pgx_name, "' from",
+          tolower(auth$options$PUBLIC_DATASETS_LABEL), "?"
+        ),
+        confirmButtonText = "Delete",
+        showCancelButton = TRUE,
+        callbackR = deletePublicPGX,
+        inputId = "confirmdelete_public"
+      )
     })
 
     pgxTable_DT <- reactive({

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 wgcna_plot_MTrelationships_ui <- function(
@@ -16,7 +16,7 @@ wgcna_plot_MTrelationships_ui <- function(
 
   options <- shiny::tagList(
     shiny::checkboxInput(ns("showval"), "Show correlation values", FALSE),
-    shiny::checkboxInput(ns("showtop"), "Show top ME", TRUE)    
+    shiny::checkboxInput(ns("showtop"), "Show top ME", TRUE)
   )
 
   PlotModuleUI(
@@ -54,7 +54,7 @@ wgcna_plot_MTrelationships_server <- function(id,
         res,
         setpar = FALSE,
         cluster = TRUE,
-        nmax = ifelse( input$showtop, 20, -1),
+        nmax = ifelse(input$showtop, 20, -1),
         text = input$showval,
         pstar = !input$showval,
         main = ""

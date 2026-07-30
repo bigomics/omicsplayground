@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 plot_deepnet_biomarkerheatmap_ui <- function(
@@ -15,10 +15,6 @@ plot_deepnet_biomarkerheatmap_ui <- function(
   width = c("auto", "100%")
 ) {
   ns <- shiny::NS(id)
-
-  options <- shiny::tagList(
-    selectInput(ns("ntop"), "Number of features:", c(20, 30, 50, 100, 200))
-  )
 
   PlotModuleUI(
     ns("plot"),
@@ -38,7 +34,7 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  net,
                                                  pgx,
                                                  update,
-                                                 add_annot = c(0, 1),
+                                                 add_annot = c(FALSE, TRUE),
                                                  show_legend = c(0, 1),
                                                  ntop = c(20, 30),
                                                  rmar = c(0, 20),
@@ -47,10 +43,12 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
                                                  watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot.RENDER <- function(n = 12) {
-      update() ## react on updates
+      update()
       net <- net()
       annot <- NULL
-      if (add_annot[1]) annot <- pgx$samples[colnames(net$X[[1]]), ]
+      if (add_annot[1]) {
+        annot <- pgx$samples[colnames(net$X[[1]]), , drop = FALSE]
+      }
 
       # set labels
       gene.labels <- playbase::mofa.strip_prefix(pgx$genes$gene_name)
@@ -81,7 +79,11 @@ plot_deepnet_biomarkerheatmap_server <- function(id,
       net <- net()
       nsamples <- ncol(net$X[[1]])
       annot <- NULL
-      if (add_annot[2]) annot <- pgx$samples[colnames(net$X[[1]]), ]
+
+      if (add_annot[2]) {
+        annot <- pgx$samples[colnames(net$X[[1]]), , drop = FALSE]
+      }
+
       playbase::deep.plotBiomarkerHeatmap(
         net,
         ntop = ntop[2],

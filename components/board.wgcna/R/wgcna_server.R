@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -36,32 +36,27 @@ WgcnaBoard <- function(id, pgx) {
       ))
     })
 
-
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "WGCNA" = list(disable = c("selected_module", "selected_trait")),
-      "Eigengenes" = list(disable = c("selected_module", "selected_trait")),
-      "Modules" = list(disable = c(NULL)),
-      "Enrichment" = list(disable = c("selected_trait"))
+      "WGCNA" = list(disable = c("selected_module", "selected_trait", "report_options")),
+      "Eigengenes" = list(disable = c("selected_module", "selected_trait", "report_options")),
+      "Modules" = list(disable = c("report_options")),
+      "Enrichment" = list(disable = c("selected_trait", "report_options")),
+      "AI Report✨" = list(disable = c(
+        "selected_module", "selected_trait",
+        "compare_accordion"
+      ))
     )
 
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-    
-    shiny::observeEvent( input$useLLM, {
-      if(input$useLLM) {
-        model <- getUserOption(session,'llm_model')
-        dbg("[WgcnaBoard] input$useLLM => model = ", model)
-        if(is.null(model) || model=="") {
-          shinyalert::shinyalert("ERROR",
-            "No LLM server available. Please check your settings.")
-          return(NULL)
-        }
-        shinyalert::shinyalert("WARNING",
-          "Using LLM might expose some of your data to external LLM servers.")
-      }
-    })
+
+    ## shiny::observe({
+    ##   ai_model <- getUserOption(session,'llm_model')
+    ##   showtab <- ifelse(ai_model=='', FALSE, TRUE)
+    ##   toggleTab("wgcna-tabs", "AI Report✨", showtab) ## too slow
+    ## })
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
@@ -69,16 +64,12 @@ WgcnaBoard <- function(id, pgx) {
 
     compute_wgcna <- function() {
       pgx.showSmallModal("Recalculating WGCNA with new parameters...")
+
       progress <- shiny::Progress$new()
       on.exit(progress$close())
       progress$set(message = "Calculating WGCNA...", value = 0)
 
       message("[WGCNA:compute_wgcna] >>> Calculating WGCNA...")
-
-      #ai_model = opt$LLM_MODEL
-      ai_model <- getUserOption(session,'llm_model')
-      message("[WGCNA:compute_wgcna] ai_model = ", ai_model)
-      
       out <- playbase::pgx.wgcna(
         pgx = pgx,
         ngenes = as.integer(input$ngenes),
@@ -87,51 +78,70 @@ WgcnaBoard <- function(id, pgx) {
         power = as.numeric(input$power),
         numericlabels = FALSE,
         summary = TRUE,
-        ai_model = ifelse(input$useLLM, ai_model, ""),
+        ai_model = NULL,
         progress = progress
       )
+
+      message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
+      progress$set(message = "Initializing WGCNA object...", value = 0.7)
+
+      llm_model <- getUserOption(session, "llm_model")
+      img_model <- NULL # skip infographics
+      # img_model <- "google:gemini-3.1-flash-image-preview"
+      out <- playbase::wgcna.init(
+        out,
+        llm = llm_model, img_model = img_model,
+        annot = pgx$genes, progress = progress
+      )
+
       shiny::removeModal()
       out
     }
 
-    wgcna <- shiny::reactiveVal({
-      require(WGCNA)
-      all.req <- all(c("stats") %in% names(pgx$wgcna)) && any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
-      # Use pre-computed results only if they exist, conditions are
-      # met, AND we're not forcing recomputation
-      if ("wgcna" %in% names(pgx) && all.req) {
-        message("[wgcna] >>> using pre-computed WGCNA results...")
-        out <- pgx$wgcna
-        ## old style had these settings
-        if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
-        if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
-        if (is.null(pgx$wgcna$power)) out$power <- 6
-      } else {
-        message("[wgcna] >>> COMPUTE1")
-        out <- compute_wgcna()
-      }
-      out
-    })
+    ncompute <- 0
 
-    shiny::observeEvent( input$compute, {
-      message("[wgcna] >>> COMPUTE2")
-      wgcna( compute_wgcna() )
-    },
-    ignoreInit = TRUE)
-    
-    shiny::observeEvent( wgcna(), {
-      ## update Inputs
-      me <- sort(names(wgcna()$me.genes))
-      shiny::updateSelectInput(session, "selected_module",
-        choices = me,
-        sel = me[1]
-      )
-      tt <- sort(colnames(wgcna()$datTraits))
-      shiny::updateSelectInput(session, "selected_trait",
-        choices = tt,
-        selected = tt[1]
-      )
-    })
+    wgcna <- shiny::eventReactive(
+      {
+        list(input$compute, pgx$X)
+      },
+      {
+        require(WGCNA)
+        all_req <- all(c("stats") %in% names(pgx$wgcna)) &&
+          any(c("TOM", "svTOM", "wTOM") %in% names(pgx$wgcna))
+        has_wgcna <- "wgcna" %in% names(pgx) && all_req
+        compute_clicked <- (input$compute != ncompute)
+
+        # Use pre-computed results only if they exist, conditions are
+        # met, AND we're not forcing recomputation
+        if (!compute_clicked && has_wgcna) {
+          dbg("[WgcnaBoard] >>> using pre-computed WGCNA results...")
+          out <- pgx$wgcna
+          ## old style had these settings
+          if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
+          if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
+          if (is.null(pgx$wgcna$power)) out$power <- 6
+        } else {
+          if (compute_clicked) dbg("[WgcnaBoard] compute_clicked!")
+          if (!has_wgcna) dbg("[WgcnaBoard] WGCNA needs update!")
+          dbg("[WgcnaBoard] >>> recomputing WGCNA results")
+          out <- compute_wgcna()
+        }
+
+        ## update Inputs
+        me <- sort(names(out$me.genes))
+        shiny::updateSelectInput(session, "selected_module",
+          choices = me, sel = me[1]
+        )
+
+        tt <- sort(colnames(out$datTraits))
+        shiny::updateSelectInput(session, "selected_trait",
+          choices = tt, selected = tt[1]
+        )
+
+        ncompute <<- input$compute
+        return(out)
+      }
+    )
 
 
     ## ================================================================================
@@ -163,6 +173,7 @@ WgcnaBoard <- function(id, pgx) {
     wgcna_plot_gclustering_server(
       "umap",
       wgcna = wgcna,
+      pgx = pgx,
       watermark = WATERMARK
     )
 
@@ -260,12 +271,6 @@ WgcnaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    ## wgcna_plot_MMvsGS_server(
-    ##   "geneSignificance",
-    ##   wgcna.compute = wgcna,
-    ##   watermark = WATERMARK
-    ## )
-
     wgcna_plot_sampledendrogram_server(
       "sampleDendrogram",
       wgcna = wgcna,
@@ -298,12 +303,13 @@ WgcnaBoard <- function(id, pgx) {
     )
 
     # Enrichment plot
-    wgcna_plot_enrichment_server(
-      "enrichPlot",
+    wgcna_plot_topgenes_server(
+      "topgenesPlot",
       enrichTable = enrichTableModule,
+      ## pgx = pgx,
       watermark = WATERMARK
     )
-    
+
     # Module enrichment
     enrichTableModule <- wgcna_table_enrichment_server(
       "enrichTable",
@@ -311,15 +317,25 @@ WgcnaBoard <- function(id, pgx) {
       selected_module = shiny::reactive(input$selected_module)
     )
 
-    # Enrichment plot
+    # Module summary
     wgcna_html_module_summary_server(
       "moduleSummary",
       wgcna = wgcna,
       multi = FALSE,
-      r_module = shiny::reactive(input$selected_module),      
+      r_module = shiny::reactive(input$selected_module),
       watermark = WATERMARK
     )
-    
+
+    # Report
+    wgcna_html_report_server(
+      id = "wgcnaReport",
+      wgcna = wgcna,
+      multi = FALSE,
+      r_annot = shiny::reactive(pgx$genes),
+      watermark = WATERMARK
+    )
+
+
     return(NULL)
   })
 } ## end of Board
