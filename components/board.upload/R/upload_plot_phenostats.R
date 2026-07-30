@@ -44,9 +44,23 @@ plotPhenoDistribution <- function(pheno) {
     })
   }
 
-  p1 <- df %>%
-    inspectdf::inspect_cat() %>%
-    inspectdf::show_plot()
+  p1 <- tryCatch(
+    {
+      df %>%
+        inspectdf::inspect_cat() %>%
+        inspectdf::show_plot()
+    },
+    error = function(e) {
+      ## incompatibility: inspectdf <= 0.0.12.1 vs dplyr >= 1.2.0
+      ## (if_any() over an empty selection now filters out all rows in
+      ## plot_cat's jsd check); fixed upstream but not yet on CRAN.
+      cat("[UploadModule::phenoStats] inspectdf::show_plot() failed:", conditionMessage(e), "\n")
+      NULL
+    }
+  )
+  if (is.null(p1)) {
+    return(NULL)
+  }
   tt2 <- paste(nrow(pheno), "samples x", ncol(pheno), "phenotypes")
   #
   p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle = tt2) +
