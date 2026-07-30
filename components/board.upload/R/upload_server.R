@@ -976,7 +976,7 @@ UploadBoard <- function(id,
           upload_name(NULL)
         }
 
-        probetype.finished <- !(probetype() %in% c("error", "running"))
+        probetype.finished <- all(!(probetype() %in% c("error", "running")))
         
         if (is.null(upload_name()) ||
           upload_name() == "" ||
