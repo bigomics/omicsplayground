@@ -33,7 +33,7 @@
 #
 #   - BigOmics (or NULL provider): today's exact behaviour — the tier path only,
 #     no credentials, no model. The managed backend resolves the tier to
-#     gpt-5.4-nano / gpt-5.4-mini via omicsagentovi's own tier table.
+#     deepseek-v4-flash / gpt-5.6-terra via omicsagentovi's own tier table.
 #   - BYOK provider with a per-tier menu model selected: a provider-prefixed
 #     model id (the catalog stores bare ids for BYOK providers) plus the user's
 #     credential closure. Agent infers the provider from the model prefix.

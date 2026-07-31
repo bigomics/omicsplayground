@@ -173,14 +173,15 @@ test_that("OPG policy can disable a provider and reorder menu defaults", {
   expect_null(make_opt(providers = "openai")$AI_MODELS$mistral)
 })
 
-test_that("BigOmics defaults stay unchanged and model menus remain hidden", {
-  expect_equal(opt$AI_MODELS$bigomics$reports[[1]], "openai:gpt-5.4-nano")
+test_that("BigOmics defaults point at the OpenRouter models and menus remain hidden", {
+  expect_equal(opt$AI_MODELS$bigomics$reports[[1]],
+               "openrouter:deepseek/deepseek-v4-flash")
   expect_equal(opt$AI_MODELS$bigomics$images[[1]],
                "gemini-3.1-flash-image-preview")
   expect_equal(opt$AI_MODELS$bigomics$copilot_deep,
-               "openai:gpt-5.4-mini")
+               "openrouter:openai/gpt-5.6-terra")
   expect_equal(opt$AI_MODELS$bigomics$copilot_balanced,
-               "openai:gpt-5.4-nano")
+               "openrouter:deepseek/deepseek-v4-flash")
 
   ui_source <- readLines(file.path(.repo_dir,
                                    "components/board.user/R/appsettings_ui.R"))
