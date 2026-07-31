@@ -239,11 +239,11 @@ copilot_restore_controller <- function(
     previous_agent <- shiny::isolate(agent())
 
     # Capture the user's AI provider + credential closure on the Shiny thread
-    # (never inside the future). BigOmics -> provider "bigomics" + NULL
-    # credentials, which ovi_restore treats exactly as today (env-var path,
-    # openai tier fallback). A BYOK provider re-resolves the saved tier for
-    # that provider and applies the user key.
-    ai_sel   <- .copilot_ai_provider(session)
+    # (never inside the future). .copilot_restore_provider maps the managed
+    # "bigomics" sentinel to ovi's "openai" (env-var path, BigOmics tier
+    # model) and passes a real BYOK provider + key through — so restore
+    # resolves the same provider/model a fresh session for this user would.
+    ai_sel   <- .copilot_restore_provider(session)
     provider <- ai_sel$provider
     cred     <- ai_sel$credentials
 

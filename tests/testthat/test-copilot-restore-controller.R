@@ -29,6 +29,24 @@ if (packageVersion("omicsagentovi") < "0.4.0") {
   "../../components/board.copilot/R"
 }
 
+# %||% is normally provided by playbase / app utils but is not on the search
+# path when the copilot sources are loaded standalone here (see CLAUDE.md —
+# fix the test bootstrap, do not redefine the operator in R/).
+if (!exists("%||%")) `%||%` <- function(a, b) if (is.null(a)) b else a
+
+# App-global helpers used by the copilot provider resolver. The real
+# getUserOption/get_ai_credentials read session$userData (see
+# components/app/R/utils/utils.R and components/modules/AiCards.R); mirror
+# that here so the BYOK-provider tests below can steer the resolver by
+# writing session$userData.
+if (!exists("getUserOption")) {
+  getUserOption <- function(session, var, ...) session$userData[[var]]
+}
+if (!exists("get_ai_credentials")) {
+  get_ai_credentials <- function(session) session$userData[["ai_credentials"]]
+}
+if (!exists("copilot_system_prompt")) copilot_system_prompt <- function() ""
+
 source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
 source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
 source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
@@ -39,6 +57,9 @@ source(file.path(.board_dir, "copilot_pgx_normalize.R"),       local = TRUE)
 # Context-block staging providers (current_dataset, future AI report, etc.)
 # are invoked by .complete_restore after agent reconstruction.
 source(file.path(.board_dir, "copilot_context_blocks.R"),      local = TRUE)
+# Owns .copilot_ai_provider / .copilot_restore_provider — the restore
+# controller reads the user's live provider through these.
+source(file.path(.board_dir, "copilot_run_controller.R"),      local = TRUE)
 source(file.path(.board_dir, "copilot_restore_controller.R"), local = TRUE)
 
 library(omicsagentovi)
@@ -353,7 +374,7 @@ test_that("start() happy path: chat clear + post events pushed, evidence cleared
   fake_evidence <- list(clear = function() { evidence_cleared <<- TRUE })
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) {
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx, ...) {
       ovi_restore_called <<- TRUE
       make_stub_agent()
     },
@@ -414,7 +435,7 @@ test_that("after task starts with NULL local_pgx: inflight set, status restoring
   agent_set_pgx_called <- FALSE
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) make_stub_agent(),
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx, ...) make_stub_agent(),
     agent_set_pgx = function(agent, pgx, ...) {
       agent_set_pgx_called <<- TRUE
       agent
@@ -472,7 +493,7 @@ test_that("non-NULL local_pgx triggers the sync fast path: restore completes ins
   agent_set_pgx_called <- FALSE
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) restored_agent,
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx, ...) restored_agent,
     agent_set_pgx = function(agent, pgx, ...) {
       agent_set_pgx_called <<- TRUE
       agent
@@ -511,6 +532,87 @@ test_that("non-NULL local_pgx triggers the sync fast path: restore completes ins
       expect_identical(shiny::isolate(agent_rv()), restored_agent)
     }
   )
+})
+
+# ===========================================================================
+# Provider resolution — the args handed to ovi_restore must mirror what a
+# fresh session for this user would build (omicsplayground-qkyp). Uses the
+# sync fast path (non-NULL local_pgx) so ovi_restore is actually invoked and
+# its provider/credentials can be captured.
+# ===========================================================================
+
+.run_restore_capturing_provider <- function(user_options) {
+  store          <- make_fake_store()
+  restored_agent <- make_stub_agent()
+  agent_rv       <- shiny::reactiveVal(make_stub_agent())
+  run_status_rv  <- shiny::reactiveVal("idle")
+  inflight_rv    <- shiny::reactiveVal(NULL)
+  chat_event_rv  <- shiny::reactiveVal(NULL)
+  fake_pgx       <- list(name = "ds", X = matrix(1, 2, 2))
+  captured       <- new.env(parent = emptyenv())
+
+  local_mocked_bindings(
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx,
+                           db_name, provider, credentials) {
+      captured$provider    <- provider
+      captured$credentials <- credentials
+      restored_agent
+    },
+    agent_set_pgx = function(agent, pgx, ...) agent,
+    session_transcript = function(agent_session, view = "user") list(),
+    .package = "omicsagentovi"
+  )
+
+  shiny::testServer(
+    function(input, output, session) {
+      for (nm in names(user_options)) session$userData[[nm]] <- user_options[[nm]]
+      ctrl <<- copilot_restore_controller(
+        store            = store,
+        agent            = agent_rv,
+        run_status       = run_status_rv,
+        restore_inflight = inflight_rv,
+        bindings_factory = function() build_run_bindings(
+                             session          = session,
+                             evidence_api     = NULL,
+                             pgx_loaded_event = NULL
+                           ),
+        local_pgx        = shiny::reactive(fake_pgx),
+        data_dir         = tempdir(),
+        evidence         = NULL,
+        chat_event       = chat_event_rv,
+        session          = session
+      )
+    },
+    expr = {
+      ctrl$start("sess-x")
+      session$flushReact()
+    }
+  )
+  captured
+}
+
+test_that("bigomics-managed restore passes provider 'openai' and no credentials", {
+  # A managed session has no ai_provider set -> resolver defaults to
+  # "bigomics", which must be translated to ovi's "openai" sentinel (NOT the
+  # literal "bigomics", which errors in ovi_resolve_copilot_model's catalog
+  # branch). Credentials must be dropped for the managed backend.
+  captured <- .run_restore_capturing_provider(list())
+  expect_equal(captured$provider, "openai")
+  expect_null(captured$credentials)
+})
+
+test_that("BYOK restore passes the user's real provider + credential closure", {
+  # A BYOK user configured anthropic must restore against anthropic (so ovi
+  # resolves the saved tier to an anthropic catalog model), carrying the
+  # user's key closure — never a bigomics/openai default.
+  key_fn <- function() "USER-KEY"
+  captured <- .run_restore_capturing_provider(list(
+    ai_provider    = "anthropic",
+    ai_credentials = key_fn
+  ))
+  expect_equal(captured$provider, "anthropic")
+  expect_identical(captured$credentials, key_fn)
+  expect_equal(captured$credentials(), "USER-KEY")
 })
 
 # ===========================================================================
@@ -570,7 +672,7 @@ test_that("agent_set_pgx throws during injection: restore still completes, agent
   set_pgx_attempted <- FALSE
 
   local_mocked_bindings(
-    ovi_restore = function(session_id, session_dir, bindings, restore_pgx) restored_agent,
+    ovi_restore = function(session_id, session_dir, bindings, restore_pgx, ...) restored_agent,
     agent_set_pgx = function(agent, pgx, ...) {
       set_pgx_attempted <<- TRUE
       stop("agent_set_pgx: simulated failure")
