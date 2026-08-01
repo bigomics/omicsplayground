@@ -18,6 +18,14 @@ if (!exists("%||%")) {
 setUserOption <- function(session, var, value) session$userData[[var]] <- value
 getUserOption <- function(session, var, value) session$userData[[var]]
 
+## BYOK entitlement gate (mirrors AuthenticationModule_functions.R, which the
+## standalone test env does not source). make_auth() leaves level unset -> ""
+## -> BYOK allowed, so the provider/menu observers run their real code paths.
+ai_byok_allowed <- function(level) {
+  lvl <- level %||% ""
+  identical(lvl, "enterprise") || !nzchar(lvl)
+}
+
 ## Init-time collaborators the module touches but that are irrelevant here.
 dbg                         <- function(...) invisible(NULL)
 user_table_resources_server <- function(...) invisible(NULL)
