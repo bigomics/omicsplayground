@@ -213,7 +213,8 @@ test_that("changing provider repopulates the four menus from that provider's cat
     args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
       session$setInputs(ai_provider = "openai")
       expect_equal(captured$llm_reports$choices,
-                   c("gpt-5.4-nano", "gpt-5.4-mini",
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
                      "gpt-4o", "gpt-4o-mini"))
       expect_equal(captured$llm_reports$selected, "gpt-5.4-nano")
       expect_equal(captured$llm_images$choices, c("dall-e-3", "dall-e-2"))
@@ -295,7 +296,8 @@ test_that("Test & load falls back to static catalog choices on empty live result
       session$setInputs(ai_test_load = 1)
 
       expect_equal(captured$llm_reports,
-                   c("gpt-5.4-nano", "gpt-5.4-mini",
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
                      "gpt-4o", "gpt-4o-mini"))
       expect_equal(captured$llm_images, c("dall-e-3", "dall-e-2"))
       expect_equal(alert$title, "Could not load provider models")
