@@ -28,12 +28,35 @@
   )
 }
 
+# Resolve the provider/credentials pair to hand to omicsagentovi::ovi_restore().
+#
+# `ovi_restore()` takes only `provider` + `credentials` live (tier + model come
+# from the saved session row), and resolves the model via
+# ovi_resolve_copilot_model(tier, provider). It knows the managed backend as
+# provider "openai" — NOT "bigomics", which is an omicsplayground-only label;
+# passing "bigomics" hits ovi's BYOK catalog branch and errors. So map the
+# managed sentinel to "openai" (dropping any user key), and pass a real BYOK
+# provider through with its key. This mirrors the bigomics-vs-BYOK split in
+# .copilot_agent_build_args(): managed restore resolves the tier's BigOmics
+# model, BYOK restore re-resolves the saved tier against the user's own
+# provider/key — exactly what a fresh session for that user would build now.
+#
+#' @noRd
+.copilot_restore_provider <- function(session) {
+  sel <- .copilot_ai_provider(session)
+  if (identical(sel$provider, "bigomics")) {
+    list(provider = "openai", credentials = NULL)
+  } else {
+    list(provider = sel$provider, credentials = sel$credentials)
+  }
+}
+
 # Build the provider/credentials/model args to splice into omicsagentovi::Agent()
 # for a fresh build at `tier`.
 #
 #   - BigOmics (or NULL provider): today's exact behaviour — the tier path only,
 #     no credentials, no model. The managed backend resolves the tier to
-#     gpt-5.4-nano / gpt-5.4-mini via omicsagentovi's own tier table.
+#     deepseek-v4-flash / gpt-5.6-terra via omicsagentovi's own tier table.
 #   - BYOK provider with a per-tier menu model selected: a provider-prefixed
 #     model id (the catalog stores bare ids for BYOK providers) plus the user's
 #     credential closure. Agent infers the provider from the model prefix.
