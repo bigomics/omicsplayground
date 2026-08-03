@@ -18,6 +18,14 @@ if (!exists("%||%")) {
 setUserOption <- function(session, var, value) session$userData[[var]] <- value
 getUserOption <- function(session, var, value) session$userData[[var]]
 
+## BYOK entitlement gate (mirrors AuthenticationModule_functions.R, which the
+## standalone test env does not source). make_auth() leaves level unset -> ""
+## -> BYOK allowed, so the provider/menu observers run their real code paths.
+ai_byok_allowed <- function(level) {
+  lvl <- level %||% ""
+  identical(lvl, "enterprise") || !nzchar(lvl)
+}
+
 ## Init-time collaborators the module touches but that are irrelevant here.
 dbg                         <- function(...) invisible(NULL)
 user_table_resources_server <- function(...) invisible(NULL)
@@ -173,14 +181,15 @@ test_that("OPG policy can disable a provider and reorder menu defaults", {
   expect_null(make_opt(providers = "openai")$AI_MODELS$mistral)
 })
 
-test_that("BigOmics defaults stay unchanged and model menus remain hidden", {
-  expect_equal(opt$AI_MODELS$bigomics$reports[[1]], "openai:gpt-5.4-nano")
+test_that("BigOmics defaults point at the OpenRouter models and menus remain hidden", {
+  expect_equal(opt$AI_MODELS$bigomics$reports[[1]],
+               "openrouter:deepseek/deepseek-v4-flash")
   expect_equal(opt$AI_MODELS$bigomics$images[[1]],
                "gemini-3.1-flash-image-preview")
   expect_equal(opt$AI_MODELS$bigomics$copilot_deep,
-               "openai:gpt-5.4-mini")
+               "openrouter:openai/gpt-5.6-terra")
   expect_equal(opt$AI_MODELS$bigomics$copilot_balanced,
-               "openai:gpt-5.4-nano")
+               "openrouter:deepseek/deepseek-v4-flash")
 
   ui_source <- readLines(file.path(.repo_dir,
                                    "components/board.user/R/appsettings_ui.R"))
@@ -204,7 +213,8 @@ test_that("changing provider repopulates the four menus from that provider's cat
     args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
       session$setInputs(ai_provider = "openai")
       expect_equal(captured$llm_reports$choices,
-                   c("gpt-5.4-nano", "gpt-5.4-mini",
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
                      "gpt-4o", "gpt-4o-mini"))
       expect_equal(captured$llm_reports$selected, "gpt-5.4-nano")
       expect_equal(captured$llm_images$choices, c("dall-e-3", "dall-e-2"))
@@ -286,7 +296,8 @@ test_that("Test & load falls back to static catalog choices on empty live result
       session$setInputs(ai_test_load = 1)
 
       expect_equal(captured$llm_reports,
-                   c("gpt-5.4-nano", "gpt-5.4-mini",
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
                      "gpt-4o", "gpt-4o-mini"))
       expect_equal(captured$llm_images, c("dall-e-3", "dall-e-2"))
       expect_equal(alert$title, "Could not load provider models")
