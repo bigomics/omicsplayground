@@ -97,12 +97,15 @@ opg_ui <- function() {
       HTML(unlist(menu))
     }
 
+    ## NOTE: the list key must equal the tab name (see createMenu above),
+    ## otherwise the entry renders as a collapsible group holding one
+    ## identical item ("Cluster Samples > Cluster Samples").
     basic_menu_tree <- list(
-      "DataView"                = c(dataview       = "DataView"),
-      "Cluster Samples"         = c(clustersamples = "Cluster Samples"),
-      "Differential expression" = c(diffexpr       = "Differential expression"),
-      "Geneset Enrichment"      = c(enrich         = "Geneset Enrichment"),
-      "Pathway analysis"        = c(pathway        = "Pathway analysis")
+      "dataview"       = c(dataview       = "DataView"),
+      "clustersamples" = c(clustersamples = "Cluster Samples"),
+      "diffexpr"       = c(diffexpr       = "Differential expression"),
+      "enrich"         = c(enrich         = "Geneset Enrichment"),
+      "pathway"        = c(pathway        = "Pathway analysis")
     )
 
     initial_is_full <- (opt$USER_LEVEL != "BASIC")

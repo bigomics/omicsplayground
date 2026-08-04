@@ -70,3 +70,34 @@
     background-color: #F7FAFD;
     height: calc(100vh + 15px);
 }
+
+/* Basic menu mode -- toggled by the "Basic menu" switch in App settings.
+   Class lives on <body> (see components/app/R/opg_server.R) so it also
+   catches boards that get inserted into the DOM later. */
+body.basic-mode {
+
+    /* ponytail: greys out + blocks the mouse, but keyboard focus still
+       reaches the control. Add shinyjs::disable() per input if that matters. */
+    .advanced-option {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* Keep the greyed-out accordions expanded: the settings are locked, but
+       BASIC users should still see which ones are in effect. Beats bootstrap's
+       .collapse:not(.show) on specificity, so no !important needed. */
+    .advanced-option .accordion-collapse {
+        display: block;
+    }
+
+    /* ...and the chevron would otherwise still read "collapsed" */
+    .advanced-option .accordion-button::after {
+        transform: rotate(-180deg);
+    }
+
+    /* Differential expression: Overview only. !important because
+       tab_control() calls shiny::showTab(), which writes an inline display. */
+    #diffexpr-tabs1 > li:not(:first-child) {
+        display: none !important;
+    }
+}
