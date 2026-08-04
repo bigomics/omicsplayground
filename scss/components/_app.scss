@@ -83,18 +83,6 @@ body.basic-mode {
         pointer-events: none;
     }
 
-    /* Keep the greyed-out accordions expanded: the settings are locked, but
-       BASIC users should still see which ones are in effect. Beats bootstrap's
-       .collapse:not(.show) on specificity, so no !important needed. */
-    .advanced-option .accordion-collapse {
-        display: block;
-    }
-
-    /* ...and the chevron would otherwise still read "collapsed" */
-    .advanced-option .accordion-button::after {
-        transform: rotate(-180deg);
-    }
-
     /* Differential expression: Overview only. !important because
        tab_control() calls shiny::showTab(), which writes an inline display. */
     #diffexpr-tabs1 > li:not(:first-child) {
