@@ -3,14 +3,14 @@ PCAexplorer_biplot_ui <- function(id) {
 
   bslib::layout_columns(
     col_widths = c(7, 5),
-    navset_card_tab(
+    bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Biplot",
       bslib::nav_spacer(),
-      nav_panel("base", plotOutput(ns("biplot"), height = "800px")),
-      nav_panel("plotly", plotly::plotlyOutput(ns("biplot_2d"), height = "800px")),
-      nav_panel("3D", plotly::plotlyOutput(ns("biplot_3d"), height = "800px")),
-      nav_panel("table", dataTableOutput(ns("biplot_table")))
+      bslib::nav_panel("base", plotOutput(ns("biplot"), height = "800px")),
+      bslib::nav_panel("plotly", plotly::plotlyOutput(ns("biplot_2d"), height = "800px")),
+      bslib::nav_panel("3D", plotly::plotlyOutput(ns("biplot_3d"), height = "800px")),
+      bslib::nav_panel("table", dataTableOutput(ns("biplot_table")))
     ),
     bslib::layout_columns(
       col_widths = 12,

@@ -6,13 +6,13 @@ PCAexplorer_feature_ui <- function(id) {
 
   bslib::layout_columns(
     col_widths = c(7, 5),
-    navset_card_tab(
+    bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Feature PCA",
       bslib::nav_spacer(),
-      nav_panel("plotly", plotly::plotlyOutput(ns("feature_pca"), height = "800px")),
-      nav_panel("3D", plotly::plotlyOutput(ns("feature_pca_3d"), height = "800px")),
-      nav_panel("all", shiny::plotOutput(ns("feature_pca_all"), height = "800px"))
+      bslib::nav_panel("plotly", plotly::plotlyOutput(ns("feature_pca"), height = "800px")),
+      bslib::nav_panel("3D", plotly::plotlyOutput(ns("feature_pca_3d"), height = "800px")),
+      bslib::nav_panel("all", shiny::plotOutput(ns("feature_pca_all"), height = "800px"))
     ),
     bslib::layout_columns(
       col_widths = 12,
