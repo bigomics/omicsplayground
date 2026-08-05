@@ -47,6 +47,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
       shinyjs::runjs("$('#menu-basic').removeClass('nodisp').show(); $('#menu-full').addClass('nodisp').hide();")
       shinyjs::addClass(selector = "body", class = "basic-mode")
       ## the active tab may be one we are about to hide
+      shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
       shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
     } else {
       shinyjs::runjs("$('#menu-full').removeClass('nodisp').show(); $('#menu-basic').addClass('nodisp').hide();")

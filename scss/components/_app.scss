@@ -83,8 +83,10 @@ body.basic-mode {
         pointer-events: none;
     }
 
-    /* Differential expression: Overview only. !important because
-       tab_control() calls shiny::showTab(), which writes an inline display. */
+    /* DataView and Differential expression: Overview only -- it is the first
+       panel of both. !important because tab_control() calls
+       shiny::showTab(), which writes an inline display. */
+    #dataview-tabs > li:not(:first-child),
     #diffexpr-tabs1 > li:not(:first-child) {
         display: none !important;
     }
