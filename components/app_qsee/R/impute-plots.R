@@ -46,7 +46,7 @@ qsee_imputation_plot_distributions <- function(res, Y, ph) {
   X <- res$impX[[1]]; cc <- 1 + as.integer(factor(Y[, ph]))
   x.avg <- rowMeans(X, na.rm = TRUE); x.nar <- rowMeans(is.na(X)); x.avg2 <- cut(x.avg, breaks = 20)
   x.nar2 <- tapply(seq_len(nrow(X)), x.avg2, function(i) mean(is.na(X[i, , drop = FALSE])))
-  aa <- sort(unique(as.numeric(gsub(".*,|\\\\]", "", as.character(x.avg2)))))
+  aa <- sort(unique(as.numeric(gsub(".*,|\\]", "", as.character(x.avg2)))))
   par(mfrow = c(2, 3), cex = 1, mar = c(5, 5, 3, 1))
   barplot(rbind(x.nar2, 1 - x.nar2), beside = FALSE, names.arg = aa, las = 1,
     col = c("red", "lightgrey"), border = "grey60", xlab = "average intensity (log2)", ylab = "missing ratio")
