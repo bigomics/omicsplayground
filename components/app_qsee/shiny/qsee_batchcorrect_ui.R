@@ -1,0 +1,125 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+##
+
+## Was: board.upload/upload_module_batchcorrect.R
+
+
+qsee_bsee_ui <- function(id) {
+  ns <- shiny::NS(id)
+
+  bc_info <- HTML("<h4>Batch-effects analysis</h4>Batch correction can clean your data from 'unwanted variables'.\n")
+
+  clust.infotext <-
+    "Clustering of samples before ('uncorrected') and after the different batch-effect correction methods. After batch-effect correction clustering should improve. The silhouette score gives an indication of the clustering performance of the method."
+
+  covariate.info <-
+    "Analysis of variables by plotting their significance in correlation with the phenotype against their significance in correlation with a principal component (PC) vector. Strong model variables are situate 'top right'. Batch effect variables with high PC correlation but low phenotype correlation are on the 'top left'. A well-designed experiment shows strong model variables in PC1, else it may be a sign of significant batch-effects."
+
+  pcc.info <- "PC analysis by covariate (class). The heights of the bars correspond to the relative contribution of that covariate to the three PC, as measured by an F-test. "
+
+  clust.options <- tagList(
+    shiny::selectInput(ns("clust.colorby"), "Color by:", choices = NULL, multiple = FALSE)
+  )
+
+  batchcorrect_panel <- bslib::page_sidebar(
+    height = "100%",
+    sidebar = bslib::sidebar(
+      position = "right",
+      open = "always",      
+      bc_info,
+      shiny::br(),
+      shiny::br(),
+      shiny::br(),
+      shiny::selectizeInput(ns("main_param"), "Main parameter:",
+        choices = NULL, multiple = FALSE
+      ),
+      shiny::selectizeInput(ns("tech_params"), "Technical covariates:",
+        choices = "<none>", multiple = TRUE
+      ),
+      shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
+        choices = "<none>", multiple = TRUE
+      ),
+      shiny::actionButton(ns("recompute_button"), "Recompute",
+        class = "btn-sm btn-primary mt-3", width = "100%"
+      )
+    ),
+    bslib::navset_tab(
+      bslib::nav_panel(
+        title = "Analysis",
+        height = "700px",
+        bslib::layout_columns(
+          col_widths = 6,
+          row_heights = c("400px","400px"),
+          height = "100%",
+          heights_equal = "row",
+          PlotModuleUI(
+            ns("plot1"),
+            title = "Clustering",
+            info.text = clust.infotext,
+            caption = clust.infotext,
+            ##options = clust.options,
+            height = c("100%", "70vh")
+          ),
+          PlotModuleUI(
+            ns("plot2"),
+            title = "Heatmap",
+            info.text = pcc.info,
+            caption = pcc.info,
+            options = NULL,
+            height = c("100%", "70vh")
+          ),
+          PlotModuleUI(
+            ns("plot3"),
+            title = "Statistics and score"
+          ),
+          PlotModuleUI(
+            ns("plot4"),
+            title = "Covariate correlation",
+            info.text = covariate.info,
+            caption = covariate.info
+          )
+        )
+      ),  ## end of Analysis panel (was Panel2)
+      bslib::nav_panel(
+        title = "PCVA",
+        bslib::layout_columns(
+          col_widths = 6,
+          height = "800px",        
+          bslib::layout_columns(
+            col_widths = 12,
+            row_heights = c(1,1),
+            PlotModuleUI(
+              ns("plot5"),
+              title = "PVCA by phenotype",
+              info.text = pcc.info,
+              caption = pcc.info,
+              height = c("100%", "70vh")
+            ),
+            PlotModuleUI(
+              ns("plot6"),
+              title = "PVCA by component",
+              info.text = pcc.info,
+              caption = pcc.info,
+              height = c("100%", "70vh")
+            )
+          ),
+          PlotModuleUI(
+            ns("plot7"),
+            title = "Covariate analysis",
+            info.text = covariate.info,
+            caption = covariate.info,
+            height = c("100%", "70vh")
+          )
+        )
+      )  ## end of Before vs After panel (was Panel1)
+    )
+  ) ## end of page_sidebar
+
+
+  shiny::tagList(
+    qsee_visibility_probe(ns),
+    batchcorrect_panel,
+  ) ## end of tagList
+}
