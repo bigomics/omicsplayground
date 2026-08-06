@@ -22,7 +22,13 @@ library(dplyr)
 
 ## Make the shared styles and JS assets from the main app available.
 ## (matches components/app/R/global.R and ui.R)
-shiny::addResourcePath("custom", "../../app/R/www")
+www_path <- normalizePath("../../app/R/www", mustWork = FALSE)
+if (dir.exists(www_path)) {
+  shiny::addResourcePath("custom", www_path)
+} else {
+  message("[test/app.R] WARNING: www dir not found at ", www_path)
+}
+
 
 ## global `opt` list expected by the shared PlotModule UI (normally set up
 ## in components/app/R/global.R). Assigned into .GlobalEnv explicitly since
@@ -39,15 +45,20 @@ assign(
 ui_files <- list.files("../../ui", pattern = "\\.R$", full.names = TRUE)
 for (f in ui_files) source(f, encoding = "UTF-8")
 
-app_files <- list.files("../R", pattern = "\\.R$", full.names = TRUE)
+r_files <- list.files("../R", pattern = "\\.R$", full.names = TRUE)
+for (f in r_files) source(f, encoding = "UTF-8")
+
+app_files <- list.files("../shiny", pattern = "\\.R$", full.names = TRUE)
 for (f in app_files) source(f, encoding = "UTF-8")
 
 xapp_files <- list.files("../../app_pcaexplorer/R", pattern = "\\.R$", full.names = TRUE)
 for (f in xapp_files) source(f, encoding = "UTF-8")
 
 ## example dataset to drive the reactive inputs
-load("../../../data/example-data.pgx")
+#load("../../../data/example-data.pgx")
+pgx <- playbase::pgx.load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
 if (!exists("pgx")) pgx <- playdata::GEIGER_PGX
+pgx <- NULL
 
 ui <- bslib::page_fillable(
   ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
@@ -57,12 +68,13 @@ ui <- bslib::page_fillable(
       href = "custom/styles.min.css"
     )
   ),
+  shinyjs::useShinyjs(),
   qsee_ui("qsee")
 )
 
 server <- function(input, output, session) {
   ## The qsee_server module now registers its own outputs and PlotModuleServers
-  qsee_server("qsee", pgx)
+  qsee_server("qsee", pgx = pgx)
 }
 
 shinyApp(ui, server)

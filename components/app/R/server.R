@@ -1101,7 +1101,7 @@ app_server <- function(input, output, session) {
     launcher_server("apps", parent = session)
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
-    qsee_server("qsee", pgx=NULL)
+    qsee_server("qsee", pgx = PGX)
     PCAexplorer_server("pcaexplorer", pgx = PGX)
     
   }
