@@ -59,26 +59,26 @@ qsee_bsee_ui <- function(id) {
             title = "Clustering",
             info.text = clust.infotext,
             caption = clust.infotext,
+            plotlib = "plotly",
             ##options = clust.options,
             height = c("100%", "70vh")
           ),
-          PlotModuleUI(
-            ns("plot2"),
-            title = "Heatmap",
-            info.text = pcc.info,
-            caption = pcc.info,
-            options = NULL,
-            height = c("100%", "70vh")
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header("Heatmap"),
+            qsee_plotly_hm_grid_ui(ns, "bsee", n = 6L, ncol = 3L)
           ),
           PlotModuleUI(
             ns("plot3"),
-            title = "Statistics and score"
+            title = "Statistics and score",
+            plotlib = "plotly"
           ),
           PlotModuleUI(
             ns("plot4"),
             title = "Covariate correlation",
             info.text = covariate.info,
-            caption = covariate.info
+            caption = covariate.info,
+            plotlib = "plotly"
           )
         )
       ),  ## end of Analysis panel (was Panel2)
@@ -95,6 +95,7 @@ qsee_bsee_ui <- function(id) {
               title = "PVCA by phenotype",
               info.text = pcc.info,
               caption = pcc.info,
+              plotlib = "plotly",
               height = c("100%", "70vh")
             ),
             PlotModuleUI(
@@ -102,6 +103,7 @@ qsee_bsee_ui <- function(id) {
               title = "PVCA by component",
               info.text = pcc.info,
               caption = pcc.info,
+              plotlib = "plotly",
               height = c("100%", "70vh")
             )
           ),
@@ -110,6 +112,7 @@ qsee_bsee_ui <- function(id) {
             title = "Covariate analysis",
             info.text = covariate.info,
             caption = covariate.info,
+            plotlib = "plotly",
             height = c("100%", "70vh")
           )
         )

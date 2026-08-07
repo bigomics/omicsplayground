@@ -101,121 +101,91 @@ qsee_bsee_server <- function(id, rX, rY) {
            
       render.plot_pca_vs_methods <- function() {
         res <- get_results()
-        ##pheno.var <- input$clust.colorby
         pheno.var <- input$main_param
         shiny::req(res, pheno.var)
-        bsee.plot_pca_vs_methods(res, pheno.var, cex=1.2) 
-      }
-
-      render.plot_heatmap_vs_methods <- function() {
-        res <- get_results()
-        shiny::req(res)
-        bsee.plot_heatmap_vs_methods(res) 
+        bsee.plot_pca_vs_methods_plotly(res, pheno.var)
       }
 
       render.plot_covariate_correlation_heatmap <- function() {
         res <- get_results()
         shiny::req(res)
-        bsee.plot_covariate_correlation_heatmap(res) 
+        bsee.plot_covariate_correlation_heatmap_plotly(res)
       }
 
       render.plot_covariate_analysis <- function() {
         res <- get_results()
         shiny::req(res)
-        bsee.plot_covariate_analysis(res) 
+        bsee.plot_covariate_analysis_plotly(res)
       }
 
       render.plot_scores <- function() {
         res <- get_results()
         shiny::req(res)
-        bsee.plot_scores(res) 
+        bsee.plot_scores_plotly(res)
       }
 
       render.plot_pvca_by_phenotype <- function() {
         res <- get_results()
         shiny::req(res)
-        bsee.plot_pvca_by_phenotype(res) 
+        bsee.plot_pvca_by_phenotype_plotly(res)
       }
 
       render.plot_pvca_by_component <- function() {
         res <- get_results()
         shiny::req(res)
-        bsee.plot_pvca_by_component(res) 
+        bsee.plot_pvca_by_component_plotly(res)
       }
-      
+
       PlotModuleServer(
         "plot1",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_pca_vs_methods,
-        res = c(70, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
 
-      PlotModuleServer(
-        "plot2",
-        plotlib = "base",
-        func = render.plot_heatmap_vs_methods,
-        res = c(65, 110),
-        pdf.width = 12,
-        pdf.height = 6,
-        add.watermark = FALSE
-      )
+      heatmap_panels <- shiny::reactive({
+        res <- get_results()
+        shiny::req(res)
+        bsee.plot_heatmap_vs_methods_plotly(res)
+      })
+      qsee_plotly_hm_grid_server(output, "bsee", heatmap_panels, n = 6L)
 
       PlotModuleServer(
         "plot3",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_scores,
-        res = c(65, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot4",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_covariate_correlation_heatmap,
-        res = c(70, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
 
       ##-------------------------------
-      
+
       PlotModuleServer(
         "plot5",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_pvca_by_phenotype,
-        res = c(65, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot6",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_pvca_by_component,
-        res = c(65, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot7",
-        plotlib = "base",
+        plotlib = "plotly",
         func = render.plot_covariate_analysis,
-        res = c(65, 110),
-        pdf.width = 12,
-        pdf.height = 6,
         add.watermark = FALSE
       )
-          
-      return(NULL) ## pointing to reactive
     } ## end-of-server
   )
 }

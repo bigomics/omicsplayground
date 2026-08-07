@@ -24,17 +24,17 @@ qsee_normalization_server <- function(id, rX, rY) {
       }
     )
 
-    output$box_plots <- shiny::renderPlot({
+    output$box_plots <- plotly::renderPlotly({
       res <- get_result(); Y <- rY(); ph <- input$colorby
-      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_boxplots(res, Y, ph)
+      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_boxplots_plotly(res, Y, ph)
     })
-    output$histograms <- shiny::renderPlot({
+    output$histograms <- plotly::renderPlotly({
       res <- get_result(); Y <- rY(); ph <- input$colorby
-      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_histograms(res, Y, ph)
+      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_histograms_plotly(res, Y, ph)
     })
-    output$pca_plots <- shiny::renderPlot({
+    output$pca_plots <- plotly::renderPlotly({
       res <- get_result(); Y <- rY(); ph <- input$colorby
-      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_pca(res, Y, ph)
+      shiny::req(ph, ph %in% colnames(Y)); qsee_normalization_plot_pca_plotly(res, Y, ph)
     })
   })
 }

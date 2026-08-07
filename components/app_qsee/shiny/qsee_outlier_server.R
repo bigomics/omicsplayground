@@ -14,14 +14,14 @@ qsee_outlier_server <- function(id, rX, rY) {
         qsee_outlier_compute(X, Y, progress)
       }
     )
-    output$outlier_zscores <- shiny::renderPlot({
-      res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_zscores(res, ph)
+    output$outlier_zscores <- plotly::renderPlotly({
+      res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_zscores_plotly(res, ph)
     })
-    output$outlier_heatmap <- shiny::renderPlot({
-      res <- get_result(); shiny::req(res$heatX); qsee_outlier_plot_heatmap(res)
+    qsee_plotly_hm_server(output, "outlier_heatmap", function() {
+      res <- get_result(); shiny::req(res$heatX); qsee_outlier_plot_heatmap_plotly(res)
     })
-    output$outlier_pca <- shiny::renderPlot({
-      res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_pca(res, ph)
+    output$outlier_pca <- plotly::renderPlotly({
+      res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_pca_plotly(res, ph)
     })
   })
 }

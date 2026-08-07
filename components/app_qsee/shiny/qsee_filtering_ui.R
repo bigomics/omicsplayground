@@ -25,12 +25,12 @@ qsee_filtering_ui <- function(id) {
         title = "SD filtering",
         bslib::layout_columns(
           col_widths = c(7, 5),
-          bslib::card(full_screen = TRUE, shiny::plotOutput(ns("pca_vs_topsd"), height = "800px")),
+          bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("pca_vs_topsd"), height = "800px")),
           bslib::layout_columns(
             col_widths = 12,
             row_heights = c(1, 1),
-            bslib::card(full_screen = TRUE, shiny::plotOutput(ns("variance_vs_topsd"), height = "350px")),
-            bslib::card(full_screen = TRUE, shiny::plotOutput(ns("sd_histogram"), height = "350px"))
+            bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("variance_vs_topsd"), height = "350px")),
+            bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("sd_histogram"), height = "350px"))
           )
         )
       )

@@ -15,14 +15,14 @@ qsee_filtering_server <- function(id, rX, rY) {
       is_visible, deps = function() list(rX(), rY()), label = "qsee_filtering_server",
       compute = function() { X <- rX(); Y <- rY(); shiny::req(X, Y); qsee_filtering_compute(X, Y) }
     )
-    output$pca_vs_topsd <- shiny::renderPlot({
-      res <- get_results(); ph <- input$colorby; shiny::req(ph); qsee_filtering_plot_pca_vs_topsd(res, ph)
+    output$pca_vs_topsd <- plotly::renderPlotly({
+      res <- get_results(); ph <- input$colorby; shiny::req(ph); qsee_filtering_plot_pca_vs_topsd_plotly(res, ph)
     })
-    output$variance_vs_topsd <- shiny::renderPlot({
-      res <- get_results(); top <- input$threshold; shiny::req(top); qsee_filtering_plot_variance_vs_topsd(res, top)
+    output$variance_vs_topsd <- plotly::renderPlotly({
+      res <- get_results(); top <- input$threshold; shiny::req(top); qsee_filtering_plot_variance_vs_topsd_plotly(res, top)
     })
-    output$sd_histogram <- shiny::renderPlot({
-      res <- get_results(); top <- input$threshold; shiny::req(top); qsee_filtering_plot_sd_histogram(res, top)
+    output$sd_histogram <- plotly::renderPlotly({
+      res <- get_results(); top <- input$threshold; shiny::req(top); qsee_filtering_plot_sd_histogram_plotly(res, top)
     })
   })
 }
