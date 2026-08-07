@@ -90,7 +90,6 @@ qsee_server <- function(id, pgx=NULL) {
       qsee_outlier_server("outlier", rX=getX, rY=getY)
       qsee_filtering_server("filtering", rX=getX, rY=getY)
 
-
       ## If no dataset is loaded (X is NULL/empty), show a helpful popup only
       ## after the Qsee module itself is visible.  In the main application Qsee
       ## is a hidden parent nav panel during startup.

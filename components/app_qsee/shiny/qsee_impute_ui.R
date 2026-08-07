@@ -20,31 +20,31 @@ qsee_imputation_ui <- function(id) {
       bslib::nav_panel(
         title = "Distribution",
         bslib::card(
-          plotOutput(ns("distributions"), height="720px")
+          plotly::plotlyOutput(ns("distributions"), height="720px")
         )
       ),
       bslib::nav_panel(
         title = "Histogram",
         bslib::card(
-          plotOutput(ns("histograms"), height="720px")
+          plotly::plotlyOutput(ns("histograms"), height="720px")
         )
       ),
       bslib::nav_panel(
         title = "PCA",
         bslib::card(
-          plotOutput(ns("pca_plots"), height="720px")
+          plotly::plotlyOutput(ns("pca_plots"), height="720px")
         )
       ),
       bslib::nav_panel(
         title = "Heatmap",
         bslib::card(
-          plotOutput(ns("heatmap_plots"), height="720px")
+          qsee_plotly_hm_grid_ui(ns, "heatmap", n = 6L, ncol = 3L)
         )
       ),
       bslib::nav_panel(
         title = "Validation",
         bslib::card(
-          plotOutput(ns("validation_scatter"), height="720px")
+          plotly::plotlyOutput(ns("validation_scatter"), height="720px")
         )
       )
     )

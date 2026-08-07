@@ -130,6 +130,7 @@ if(0) {
   pgx <- playbase::pgx.load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
   
   X <- pgx$X
+  X[X==0] <- NA
   samples <- pgx$samples
   pheno.var=1;cex=1
 
@@ -139,6 +140,7 @@ if(0) {
   plot = TRUE; horiz = FALSE;
   main = NULL; text.cex = 1
 
+  
   par(cex=1.3)
   pgx.PC_correlation(X, Y, nv=5, plot=TRUE, plotby="phenotype")
   pgx.PC_correlation(X, Y, nv=10, plot=TRUE, plotby="component")

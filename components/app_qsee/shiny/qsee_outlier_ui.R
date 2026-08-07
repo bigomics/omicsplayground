@@ -16,15 +16,15 @@ qsee_outlier_ui <- function(id) {
       bslib::nav_panel(
         title = "Z-scores",
         bslib::card(
-          plotOutput(ns("outlier_zscores"), height="720px")
+          plotly::plotlyOutput(ns("outlier_zscores"), height="720px")
         )
       ),
       bslib::nav_panel(
         title = "Heatmap",
         bslib::layout_columns(
           col_widths = c(6,6),
-          bslib::card(plotOutput(ns("outlier_heatmap"),height="720px")),
-          bslib::card(plotOutput(ns("outlier_pca"),height="720px"))          
+          bslib::card(iheatmapr::iheatmaprOutput(ns("outlier_heatmap"), height="720px")),
+          bslib::card(plotly::plotlyOutput(ns("outlier_pca"), height="720px"))
         )
       )
     )

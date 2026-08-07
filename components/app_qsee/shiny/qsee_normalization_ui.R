@@ -28,15 +28,15 @@ qsee_normalization_ui <- function(id) {
       bslib::navset_tab(
         bslib::nav_panel(
           title = "Boxplots",
-          plotOutput(ns("box_plots"), height="700px")
+          plotly::plotlyOutput(ns("box_plots"), height="700px")
         ),
         bslib::nav_panel(
           title = "Histograms",
-          plotOutput(ns("histograms"), height="700px")
+          plotly::plotlyOutput(ns("histograms"), height="700px")
         ),
         bslib::nav_panel(
           title = "PCA",
-          plotOutput(ns("pca_plots"), height="700px")
+          plotly::plotlyOutput(ns("pca_plots"), height="700px")
         )
       )
     )

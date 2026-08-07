@@ -1,3 +1,5 @@
+
+
 qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress = NULL) {
   if (!is.null(progress)) progress$set(message = "Normalizing...", value = 0.1)
   normX <- playbase::normalizeExpression(rawX, method = "CPM+quantile", prior = 0)
@@ -38,5 +40,6 @@ qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress 
     dimnames(pos) <- list(colnames(cX), c("PC1", "PC2"))
     pos
   })
-  list(normX = normX, impX = impX, pcaX = pcaX, val_set = val_set)
+  res <- list(normX = normX, impX = impX, pcaX = pcaX, val_set = val_set)
+  return(res)
 }
