@@ -84,6 +84,7 @@ RUN R -e "BiocManager::install('karyoploteR')"
 RUN R -e "BiocManager::install('regioneR')"
 RUN R -e "remotes::install_github('bigomics/WGCNAplus')"
 RUN R -e "install.packages('isotree')"
+RUN R -e "install.packages('collapse')"
 
 #------------------------------------------------------------
 # Add supporting R libraries
