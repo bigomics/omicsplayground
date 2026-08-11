@@ -62,6 +62,7 @@ pgx <- NULL
 
 ui <- bslib::page_fillable(
   ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
+  padding = 0, gap = 0,
   shiny::tags$head(
     shiny::tags$link(
       rel = "stylesheet",

@@ -20,6 +20,48 @@ qsee_server <- function(id, pgx=NULL) {
       ## Track if we've already shown the "no dataset" popup (to avoid spamming)
       has_shown_no_data_popup <- shiny::reactiveVal(FALSE)
 
+      ## bigdash only auto-selects the first tab of a bigPage() that is
+      ## already visible at the moment Shiny connects, and its
+      ## openSidebar()/openSettings() helpers hardcode the *default*
+      ## (unscoped) container ids -- both are no-ops for a nested, scoped
+      ## bigPage() like this one. On top of that, the app-wide init script
+      ## in temp.js (`$('.sidebar-label').trigger('click')`, ~250ms after
+      ## page load) targets *every* `.sidebar-label` on the page, unscoped,
+      ## so it collapses this module's own left menu as a side effect even
+      ## though Qsee isn't shown yet.
+      ## Once Qsee is first shown: select its first tab, force its own left
+      ## menu back open, and force its own right settings panel open+locked
+      ## -- all scoped to this module's own containers.
+      initial_tab_selected <- shiny::reactiveVal(FALSE)
+      shiny::observeEvent(input$is_visible, {
+        shiny::req(isTRUE(input$is_visible))
+        if (!shiny::isolate(initial_tab_selected())) {
+          bigdash.selectTab(session, session$ns("normalize-tab"))
+
+          shinyjs::runjs(sprintf(
+            "(function() {
+              var sidebarEl = $('#%s');
+              if (sidebarEl.length && !sidebarEl.hasClass('sidebar-expanded')) {
+                sidebarEl.find('.sidebar-label').trigger('click');
+              }
+              var settingsEl = $('#%s');
+              if (settingsEl.length) {
+                if (!settingsEl.hasClass('settings-expanded')) {
+                  settingsEl.trigger('mouseenter');
+                }
+                if (!settingsEl.hasClass('settings-locked')) {
+                  settingsEl.find('.settings-lock').trigger('click');
+                }
+              }
+            })();",
+            session$ns("sidebar-container"),
+            session$ns("settings-container")
+          ))
+
+          initial_tab_selected(TRUE)
+        }
+      })
+
       shiny::observeEvent( list(pgx$X, pgx$samples), {
         uploaded$X <- pgx$X
         uploaded$Y <- pgx$samples
@@ -50,6 +92,16 @@ qsee_server <- function(id, pgx=NULL) {
         message("[qsee_server] loaded example data")
       })
 
+      shiny::observeEvent(input$load_pgx, {
+        if(is.null(pgx$X)) {
+          shinyalert::shinyalert(text = "no dataset uploaded", type = "error")          
+          return(NULL)
+        }
+        uploaded$X <- pgx$X
+        uploaded$Y <- pgx$samples
+        message("[qsee_server] loaded current pgx")
+      })
+      
       ## Handle popup buttons
       shiny::observeEvent(input$load_example_from_popup, {
         shiny::removeModal()

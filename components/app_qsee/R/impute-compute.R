@@ -1,5 +1,3 @@
-
-
 qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress = NULL) {
   if (!is.null(progress)) progress$set(message = "Normalizing...", value = 0.1)
   normX <- playbase::normalizeExpression(rawX, method = "CPM+quantile", prior = 0)
@@ -35,7 +33,9 @@ qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress 
   pcaX <- lapply(impX, function(X) {
     cX <- X - rowMeans(X, na.rm = TRUE)
     sel <- which(complete.cases(cX))
-    if (length(sel) < 2 || ncol(cX) < 2) return(NULL)
+    if (length(sel) < 2 || ncol(cX) < 2) {
+      return(NULL)
+    }
     pos <- irlba::irlba(cX[sel, , drop = FALSE], nv = 2)$v
     dimnames(pos) <- list(colnames(cX), c("PC1", "PC2"))
     pos

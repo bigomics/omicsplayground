@@ -34,6 +34,15 @@ qsee_visibility_probe <- function(ns) {
         var inputId = '%s';
         var lastState = null;
         function report(state) {
+          // Shiny.setInputValue is not attached until shiny.js finishes
+          // initializing, which can be after this script runs (it executes
+          // as soon as its containing markup is parsed/inserted). Retrying
+          // is safe: on failure we leave lastState untouched so the very
+          // same state is reported again on the next check() -- including
+          // the guaranteed one on 'shiny:connected' below -- instead of
+          // being silently dropped forever.
+          if (!(window.Shiny && typeof Shiny.setInputValue === 'function'))
+            return;
           if (state !== lastState) {
             lastState = state;
             Shiny.setInputValue(inputId, state, {priority: 'event'});
@@ -60,6 +69,7 @@ qsee_visibility_probe <- function(ns) {
           subtree: true
         });
         check();
+        document.addEventListener('shiny:connected', check);
       })();",
       ns("visible_probe"), ns("is_visible")
     )))

@@ -2,6 +2,7 @@
 
 qsee_outlier_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
+    OmicsBoard("board", pgx = NULL, title = "Outlier analysis", infotext = NULL)
     is_visible <- qsee_is_visible(input, label = "qsee_outlier_server")
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
@@ -14,14 +15,33 @@ qsee_outlier_server <- function(id, rX, rY) {
         qsee_outlier_compute(X, Y, progress)
       }
     )
-    output$outlier_zscores <- plotly::renderPlotly({
+
+    render.outlier_zscores <- function() {
       res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_zscores_plotly(res, ph)
-    })
+    }
+    render.outlier_pca <- function() {
+      res <- get_result(); ph <- input$colorby; shiny::req(ph)
+      qsee_outlier_plot_pca_plotly(res, ph, show_labels = isTRUE(input$show_labels))
+    }
+
+    PlotModuleServer(
+      "outlier_zscores",
+      plotlib = "plotly",
+      func = render.outlier_zscores,
+      add.watermark = FALSE
+    )
+
+    ## Heatmap uses custom renderer (iheatmapr objects from omicsplots::pgx.plot_heatmap
+    ## do not play nicely with PlotModuleServer + iheatmapr::renderIheatmap which forces to_widget())
     qsee_plotly_hm_server(output, "outlier_heatmap", function() {
       res <- get_result(); shiny::req(res$heatX); qsee_outlier_plot_heatmap_plotly(res)
     })
-    output$outlier_pca <- plotly::renderPlotly({
-      res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_pca_plotly(res, ph)
-    })
+
+    PlotModuleServer(
+      "outlier_pca",
+      plotlib = "plotly",
+      func = render.outlier_pca,
+      add.watermark = FALSE
+    )
   })
 }

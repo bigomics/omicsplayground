@@ -1364,6 +1364,13 @@ PlotModuleServer <- function(id,
               ) %>%
               plotly::plotly_build()
 
+            # By default only show the modebar on hover, unless the plot
+            # function already set its own displayModeBar (e.g. FALSE to
+            # hide it entirely).
+            if (is.null(plot$x$config$displayModeBar)) {
+              plot <- plot %>% plotly::config(displayModeBar = "hover")
+            }
+
             if (remove_margins == TRUE) {
               plot <- plot %>% plotly::layout(margin = list(l = 0, r = 0, t = 0, b = 0))
             }
@@ -1399,6 +1406,13 @@ PlotModuleServer <- function(id,
                 scrollZoom = TRUE
               ) %>%
               plotly::plotly_build()
+
+            # By default only show the modebar on hover, unless the plot
+            # function already set its own displayModeBar (e.g. FALSE to
+            # hide it entirely).
+            if (is.null(plot$x$config$displayModeBar)) {
+              plot <- plot %>% plotly::config(displayModeBar = "hover")
+            }
             # Remove toImage button from modebar
             if (inherits(plot$x$config$modeBarButtons, "list")) {
               for (y in seq_along(plot$x$config$modeBarButtons[[1]])) {

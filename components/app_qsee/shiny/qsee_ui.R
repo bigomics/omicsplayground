@@ -4,79 +4,88 @@
 ##
 
 
-qsee_ui.save <- function(id, height = "100%") {
-  ns <- shiny::NS(id)
-
-
-  title <- div("Qsee/Bsee", style = "font-size: 18px;")
-  
-  ui <- bslib::page_fillable(
-    padding = 0,
-    div(class = "navbar navbar-static-top", div(title, class = "container-fluid"),
-      style = "margin-top: 24px; height: 55px;"),
-  
-    bslib::navset_pill_list(
-      widths = c(2, 10),
-      bslib::nav_panel(
-        title = "Normalization",
-        qsee_normalization_ui(ns("normalize"))
-      ),
-      bslib::nav_panel(
-        title = "Missing values",
-        qsee_imputation_ui(ns("impute"))
-      ),
-      bslib::nav_panel(
-        title = "Batch-effects",
-        qsee_bsee_ui(ns("bsee"))
-      ),      
-      bslib::nav_panel(
-        title = "Filtering",
-        qsee_filtering_ui(ns("filtering"))
-      ),
-      bslib::nav_spacer(),
-      selectInput(ns("testinput"),"test", choices=NULL)
-    )        
-  )
-  
-  return(ui)
-}
-
 qsee_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
 
-  title <- div("Qsee/Bsee", style = "font-size: 18px;")
-  
   ## This probe reports visibility of the whole Qsee module.  The individual
   ## board probes below only report their respective inner tabs.
   ui <- shiny::tagList(
     qsee_visibility_probe(ns),
     bigdash::bigPage(
       id = id,
-      navbar = bigdash::navbar("Qsee/Bsee", style="margin-top: 20px;"),
-      sidebar = bigdash::sidebar("Menu",
+      #navbar = bigdash::navbar("Qsee/Bsee"),
+      navbar = div(
+        style = "visibility: hidden; display: none;"
+      ),
+      sidebar = bigdash::sidebar(
+        "Menu",
         id = id,
-        style = "max-height: 100vh !important;",      
-        bigdash::sidebarItem("Normalization", ns("normalize-tab")),
-        bigdash::sidebarItem("Missing values", ns("impute-tab")),
-        bigdash::sidebarItem("Outlier analysis", ns("outlier-tab")),
-        bigdash::sidebarItem("Batch-effects", ns("bsee-tab")),
-        bigdash::sidebarItem("Filtering", ns("filtering-tab")),
+        bigdash::sidebarMenuItem("Normalization", ns("normalize-tab")),
+        bigdash::sidebarMenuItem("Missing values", ns("impute-tab")),
+        bigdash::sidebarMenuItem("Outlier analysis", ns("outlier-tab")),
+        bigdash::sidebarMenuItem("Batch-effects", ns("bsee-tab")),
+        bigdash::sidebarMenuItem("Filtering", ns("filtering-tab")),
         br(),
         shiny::actionButton(ns("upload"), "upload CSV"),
-        shiny::actionButton(ns("load_example"), "load example")
+        shiny::actionButton(ns("load_example"), "load example"),
+        shiny::actionButton(ns("load_pgx"), "use current dataset")
       ),
-      settings = bigdash::settings("Settings", p("Settings will appear here."), id = id),
-      bigdash::sidebarHelp(
-        id = id
-        #sidebarTabHelp("home", "Welcome!","This is the homepage, welcome!")
-      ),
+      settings = bigdash::settings("Settings", id = id),
+      ## bigdash::sidebarHelp(
+      ##   id = id,
+      ##   bigdash::sidebarTabHelp(
+      ##     ns("normalize-tab"),
+      ##     "Normalization",
+      ##     "Compare different normalization methods on boxplots, densities and PCA. Includes noise injection for testing robustness."
+      ##   ),
+      ##   bigdash::sidebarTabHelp(
+      ##     ns("impute-tab"),
+      ##     "Missing values",
+      ##     "Analyze imputation methods, missingness patterns (MAR/MNAR) and imputation accuracy using PCA, densities, heatmaps and validation plots."
+      ##   ),
+      ##   bigdash::sidebarTabHelp(
+      ##     ns("outlier-tab"),
+      ##     "Outlier analysis",
+      ##     "Detect and visualize sample and feature outliers using z-scores, clustered heatmaps of extreme features, and PCA."
+      ##   ),
+      ##   bigdash::sidebarTabHelp(
+      ##     ns("bsee-tab"),
+      ##     "Batch-effects",
+      ##     "Batch correction analysis. Clustering before/after correction, covariate correlation with phenotype vs PC, PVCA, and scores."
+      ##   ),
+      ##   bigdash::sidebarTabHelp(
+      ##     ns("filtering-tab"),
+      ##     "Filtering",
+      ##     "SD filtering to remove low-variance features. Includes PCA of top-SD features, cumulative variance explained, and SD histogram."
+      ##   )
+      ## ),
       bigdash::bigTabs(
         id = id,
-        bigdash::bigTabItem(ns("normalize-tab"), qsee_normalization_ui(ns("normalize"))),
-        bigdash::bigTabItem(ns("impute-tab"), qsee_imputation_ui(ns("impute"))),
-        bigdash::bigTabItem(ns("outlier-tab"), qsee_outlier_ui(ns("outlier"))),
-        bigdash::bigTabItem(ns("bsee-tab"), qsee_bsee_ui(ns("bsee"))),
-        bigdash::bigTabItem(ns("filtering-tab"), qsee_filtering_ui(ns("filtering")))
+        bigdash::bigTabItem(
+          ns("normalize-tab"),
+          qsee_normalization_inputs(ns("normalize")),
+          qsee_normalization_ui(ns("normalize"))
+        ),
+        bigdash::bigTabItem(
+          ns("impute-tab"),
+          qsee_imputation_inputs(ns("impute")),
+          qsee_imputation_ui(ns("impute"))
+        ),
+        bigdash::bigTabItem(
+          ns("outlier-tab"),
+          qsee_outlier_inputs(ns("outlier")),
+          qsee_outlier_ui(ns("outlier"))
+        ),
+        bigdash::bigTabItem(
+          ns("bsee-tab"),
+          qsee_bsee_inputs(ns("bsee")),
+          qsee_bsee_ui(ns("bsee"))
+        ),
+        bigdash::bigTabItem(
+          ns("filtering-tab"),
+          qsee_filtering_inputs(ns("filtering")),
+          qsee_filtering_ui(ns("filtering"))
+        )
       )
     )
   )

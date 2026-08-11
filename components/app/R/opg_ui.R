@@ -164,7 +164,6 @@ opg_ui <- function() {
       settings = bigdash::settings(
         "Settings"
       ),
-      ## bigdash::sidebarHelp(
       make_sidebarHelp(
         bigdash::sidebarTabHelp(
           "upload-tab",

@@ -1,58 +1,109 @@
 
 
+qsee_imputation_inputs <- function(id) {
+  ns <- shiny::NS(id)
+
+  bigdash::tabSettings(
+    shiny::selectInput(ns("colorby"), "Color by:", choices=NULL),
+    div(
+      shiny::sliderInput(ns("marlevel"), "Add MAR:", 0, 1, 0, 0.05),
+      shiny::sliderInput(ns("mnarlevel"), "Add MNAR:", 0, 1, 0, 0.05)
+    )
+  )
+}
+
 qsee_imputation_ui <- function(id) {
   ns <- shiny::NS(id)
-  
-  mod_info <- HTML("<h4>Missing value analysis</h4> Analyze imputation methods and missing value distribution.\n")
 
-  normalize_panel <- bslib::page_sidebar(
-    sidebar = bslib::sidebar(
-      position = "right",
-      open = "always",
-      mod_info,
-      shiny::selectInput(ns("colorby"), "Color by:", choices=NULL),
-      div(
-        shiny::sliderInput(ns("marlevel"), "Add MAR:", 0, 1, 0, 0.05),
-        shiny::sliderInput(ns("mnarlevel"), "Add MNAR:", 0, 1, 0, 0.05)
-      )
-    ),
+  dist_infotext <- "Missingness patterns versus intensity: barplots of missing ratio per intensity bin, feature-wise scatterplots, histograms of missing ratios, retention curves, and per-sample missing rates."
+  hist_infotext <- "Density distributions of observed versus imputed intensity values for each imputation method."
+  pca_infotext <- "PCA of samples after each imputation method (samples colored by phenotype)."
+  valid_infotext <- "Imputation validation: imputed values versus known (simulated MAR/MNAR) true values. Higher Pearson correlation indicates better imputation performance."
+
+  imputation_panel <-
     bslib::navset_tab(
       bslib::nav_panel(
         title = "Distribution",
-        bslib::card(
-          plotly::plotlyOutput(ns("distributions"), height="720px")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 200px)",
+          PlotModuleUI(
+            ns("distributions"),
+            title = "Missingness distributions",
+            info.text = dist_infotext,
+            caption = dist_infotext,
+            plotlib = "plotly",
+            height = c("calc(100vh - 200px)", "calc(80vh)")
+          )
         )
       ),
       bslib::nav_panel(
         title = "Histogram",
-        bslib::card(
-          plotly::plotlyOutput(ns("histograms"), height="720px")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 200px)",
+          PlotModuleUI(
+            ns("histograms"),
+            title = "Observed vs imputed densities",
+            info.text = hist_infotext,
+            caption = hist_infotext,
+            plotlib = "plotly",
+            height = c("calc(100vh - 200px)", "calc(80vh)")
+          )
         )
       ),
       bslib::nav_panel(
         title = "PCA",
-        bslib::card(
-          plotly::plotlyOutput(ns("pca_plots"), height="720px")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 200px)",
+          PlotModuleUI(
+            ns("pca_plots"),
+            title = "PCA after imputation",
+            info.text = pca_infotext,
+            caption = pca_infotext,
+            plotlib = "plotly",
+            options = shiny::tagList(
+              shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
+            ),
+            height = c("calc(100vh - 200px)", "calc(80vh)")
+          )
         )
       ),
       bslib::nav_panel(
         title = "Heatmap",
-        bslib::card(
-          qsee_plotly_hm_grid_ui(ns, "heatmap", n = 6L, ncol = 3L)
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 200px)",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header("Imputed data correlation heatmaps"),
+            qsee_plotly_hm_grid_ui(ns, "heatmap", n = 6L, ncol = 3L, height = "calc(50vh - 130px)")
+          )
         )
       ),
       bslib::nav_panel(
         title = "Validation",
-        bslib::card(
-          plotly::plotlyOutput(ns("validation_scatter"), height="720px")
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "calc(100vh - 200px)",
+          PlotModuleUI(
+            ns("validation_scatter"),
+            title = "Imputation accuracy (simulated missing)",
+            info.text = valid_infotext,
+            caption = valid_infotext,
+            plotlib = "plotly",
+            height = c("calc(100vh - 200px)", "calc(80vh)")
+          )
         )
       )
     )
-  )
 
-  shiny::tagList(
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Missing value analysis",
     qsee_visibility_probe(ns),
-    normalize_panel
+    imputation_panel
   )
 }
 

@@ -60,7 +60,6 @@ if(!file.exists('00SourceAll.R')) {
   source('app_qsee/R/normalization-plots.R',encoding='UTF-8')
   source('app_qsee/R/outlier-compute.R',encoding='UTF-8')
   source('app_qsee/R/outlier-plots.R',encoding='UTF-8')
-  source('app_qsee/R/plotly-plots.R',encoding='UTF-8')
   source('app_qsee/shiny/qsee_batchcorrect_server.R',encoding='UTF-8')
   source('app_qsee/shiny/qsee_batchcorrect_ui.R',encoding='UTF-8')
   source('app_qsee/shiny/qsee_filtering_server.R',encoding='UTF-8')

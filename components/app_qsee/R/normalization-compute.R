@@ -1,5 +1,7 @@
 qsee_normalization_add_noise <- function(rawX, amount = 1) {
-  if (amount <= 0) return(rawX)
+  if (amount <= 0) {
+    return(rawX)
+  }
   zeroes <- which(rawX == 0)
   n <- ncol(rawX)
   set.seed(42 + as.integer(round(amount * 10)))
@@ -27,7 +29,9 @@ qsee_normalization_compute <- function(rawX, progress = NULL) {
   pcaX <- lapply(normX, function(X) {
     cX <- X - rowMeans(X, na.rm = TRUE)
     sel <- which(rowMeans(is.na(cX)) == 0)
-    if (length(sel) < 2 || ncol(cX) < 2) return(NULL)
+    if (length(sel) < 2 || ncol(cX) < 2) {
+      return(NULL)
+    }
     res <- irlba::irlba(cX[sel, , drop = FALSE], nv = 2)
     pos <- res$v
     dimnames(pos) <- list(colnames(cX), c("PC1", "PC2"))

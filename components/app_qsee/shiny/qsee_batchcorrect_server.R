@@ -8,6 +8,7 @@ qsee_bsee_server <- function(id, rX, rY) {
     id,
     function(input, output, session) {
 
+      OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
       ## `input$is_visible` is reported by qsee_visibility_probe() in the UI.
       is_visible <- qsee_is_visible(input, label = "qsee_bsee_server")
 
@@ -103,7 +104,7 @@ qsee_bsee_server <- function(id, rX, rY) {
         res <- get_results()
         pheno.var <- input$main_param
         shiny::req(res, pheno.var)
-        bsee.plot_pca_vs_methods_plotly(res, pheno.var)
+        bsee.plot_pca_vs_methods_plotly(res, pheno.var, show_labels = isTRUE(input$show_labels))
       }
 
       render.plot_covariate_correlation_heatmap <- function() {

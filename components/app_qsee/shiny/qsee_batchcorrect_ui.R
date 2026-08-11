@@ -6,10 +6,27 @@
 ## Was: board.upload/upload_module_batchcorrect.R
 
 
-qsee_bsee_ui <- function(id) {
+qsee_bsee_inputs <- function(id) {
   ns <- shiny::NS(id)
 
-  bc_info <- HTML("<h4>Batch-effects analysis</h4>Batch correction can clean your data from 'unwanted variables'.\n")
+  bigdash::tabSettings(
+    shiny::selectizeInput(ns("main_param"), "Main parameter:",
+      choices = NULL, multiple = FALSE
+    ),
+    shiny::selectizeInput(ns("tech_params"), "Technical covariates:",
+      choices = "<none>", multiple = TRUE
+    ),
+    shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
+      choices = "<none>", multiple = TRUE
+    ),
+    shiny::actionButton(ns("recompute_button"), "Recompute",
+      class = "btn-sm btn-primary mt-3", width = "100%"
+    )
+  )
+}
+
+qsee_bsee_ui <- function(id) {
+  ns <- shiny::NS(id)
 
   clust.infotext <-
     "Clustering of samples before ('uncorrected') and after the different batch-effect correction methods. After batch-effect correction clustering should improve. The silhouette score gives an indication of the clustering performance of the method."
@@ -20,39 +37,19 @@ qsee_bsee_ui <- function(id) {
   pcc.info <- "PC analysis by covariate (class). The heights of the bars correspond to the relative contribution of that covariate to the three PC, as measured by an F-test. "
 
   clust.options <- tagList(
-    shiny::selectInput(ns("clust.colorby"), "Color by:", choices = NULL, multiple = FALSE)
+    shiny::selectInput(ns("clust.colorby"), "Color by:", choices = NULL, multiple = FALSE),
+    shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
   )
 
-  batchcorrect_panel <- bslib::page_sidebar(
-    height = "100%",
-    sidebar = bslib::sidebar(
-      position = "right",
-      open = "always",      
-      bc_info,
-      shiny::br(),
-      shiny::br(),
-      shiny::br(),
-      shiny::selectizeInput(ns("main_param"), "Main parameter:",
-        choices = NULL, multiple = FALSE
-      ),
-      shiny::selectizeInput(ns("tech_params"), "Technical covariates:",
-        choices = "<none>", multiple = TRUE
-      ),
-      shiny::selectizeInput(ns("batch_params"), "Batch covariates:",
-        choices = "<none>", multiple = TRUE
-      ),
-      shiny::actionButton(ns("recompute_button"), "Recompute",
-        class = "btn-sm btn-primary mt-3", width = "100%"
-      )
-    ),
+  batchcorrect_panel <-
     bslib::navset_tab(
       bslib::nav_panel(
         title = "Analysis",
-        height = "700px",
+        height = "100%",
         bslib::layout_columns(
           col_widths = 6,
-          row_heights = c("400px","400px"),
-          height = "100%",
+          row_heights = c(1,1),
+          height = "calc(100vh - 200px)",
           heights_equal = "row",
           PlotModuleUI(
             ns("plot1"),
@@ -60,7 +57,7 @@ qsee_bsee_ui <- function(id) {
             info.text = clust.infotext,
             caption = clust.infotext,
             plotlib = "plotly",
-            ##options = clust.options,
+            options = clust.options,
             height = c("100%", "70vh")
           ),
           bslib::card(
@@ -86,7 +83,7 @@ qsee_bsee_ui <- function(id) {
         title = "PCVA",
         bslib::layout_columns(
           col_widths = 6,
-          height = "800px",        
+          height = "calc(100vh - 200px)",
           bslib::layout_columns(
             col_widths = 12,
             row_heights = c(1,1),
@@ -118,11 +115,11 @@ qsee_bsee_ui <- function(id) {
         )
       )  ## end of Before vs After panel (was Panel1)
     )
-  ) ## end of page_sidebar
 
-
-  shiny::tagList(
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Batch-effects",
     qsee_visibility_probe(ns),
-    batchcorrect_panel,
-  ) ## end of tagList
+    batchcorrect_panel
+  )
 }

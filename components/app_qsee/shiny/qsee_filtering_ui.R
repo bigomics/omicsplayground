@@ -1,45 +1,81 @@
 
 
+qsee_filtering_inputs <- function(id) {
+  ns <- shiny::NS(id)
+
+  bigdash::tabSettings(
+    shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
+    shiny::sliderInput(
+      ns("threshold"),
+      "Threshold (top SD features):",
+      min = 1,
+      max = 1000,
+      value = 1000,
+      step = 1
+    )
+  )
+}
+
 qsee_filtering_ui <- function(id) {
   ns <- shiny::NS(id)
-  
-  mod_info <- HTML("<h4>Missing value analysis</h4> Analyze imputation methods and missing value distribution.\n")
 
-  normalize_panel <- bslib::page_sidebar(
-    sidebar = bslib::sidebar(
-      position = "right",
-      open = "always",
-      mod_info,
-      shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
-      shiny::sliderInput(
-        ns("threshold"),
-        "Threshold (top SD features):",
-        min = 1,
-        max = 1000,
-        value = 1000,
-        step = 1
-      )
-    ),
+  pca_infotext <-
+    "PCA of the top-N most variable features (different N per panel). Good filtering preserves major biological structure in the first few PCs."
+
+  var_infotext <-
+    "Cumulative variance explained as a function of the number of top-SD features kept. Steep initial slope shows that few high-variance features capture most signal."
+
+  hist_infotext <-
+    "Distribution of feature standard deviations across the dataset. The dashed line indicates the current threshold for top-SD features."
+
+  filtering_panel <-
     bslib::navset_tab(
       bslib::nav_panel(
         title = "SD filtering",
         bslib::layout_columns(
-          col_widths = c(7, 5),
-          bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("pca_vs_topsd"), height = "800px")),
+          col_widths = c(8, 4),
+          height = "calc(100vh - 200px)",
+          PlotModuleUI(
+            ns("pca_vs_topsd"),
+            title = "PCA (top SD features)",
+            info.text = pca_infotext,
+            caption = pca_infotext,
+            plotlib = "plotly",
+            options = shiny::tagList(
+              shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
+            ),
+            height = c("calc(100vh - 200px)", "calc(80vh)")
+          ),
           bslib::layout_columns(
             col_widths = 12,
             row_heights = c(1, 1),
-            bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("variance_vs_topsd"), height = "350px")),
-            bslib::card(full_screen = TRUE, plotly::plotlyOutput(ns("sd_histogram"), height = "350px"))
+            height = "calc(100vh - 200px)",
+            PlotModuleUI(
+              ns("variance_vs_topsd"),
+              title = "Cumulative variance explained",
+              info.text = var_infotext,
+              caption = var_infotext,
+              plotlib = "plotly",
+              height = c("calc(100vh - 200px)", "calc(80vh)")
+            ),
+            PlotModuleUI(
+              ns("sd_histogram"),
+              title = "SD histogram",
+              info.text = hist_infotext,
+              caption = hist_infotext,
+              plotlib = "plotly",
+              height = c("calc(100vh - 200px)", "calc(80vh)")
+            )
           )
         )
       )
     )
-  )
 
-  shiny::tagList(
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "SD filtering",
     qsee_visibility_probe(ns),
-    normalize_panel
+    filtering_panel
   )
 }
 
