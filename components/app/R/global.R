@@ -133,6 +133,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(bigdash)
 library(grid)
 library(magrittr)
 library(future)
@@ -415,3 +416,26 @@ if (requireNamespace("omicsagentovi", quietly = TRUE)) {
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
+
+## ------------------------------------------------------------------
+## bigdash hooks
+## ------------------------------------------------------------------
+## PlotModule/TableModule live in bigdash and know nothing about Omics
+## Playground. Everything OPG-specific they used to reach for directly is
+## registered here as an option; see bigdash::bd_hook. Registered last so
+## that both the ui-*.R functions and the globals below are in place.
+
+options(
+  bigdash.tspan = tspan,
+  bigdash.editor_content = getEditorContent,
+  bigdash.editor_theme_observer = plotmodule_theme_observer,
+  bigdash.record_download = record_plot_download,
+  bigdash.watermark = isTRUE(opt$WATERMARK),
+  bigdash.watermark_png = function(file, position) {
+    addWatermark.PNG2(file, mark = file.path(FILES, "watermark-logo.png"), position = position)
+  },
+  bigdash.watermark_pdf = function(file, w, h) {
+    addWatermark.PDF2(file, w = w, h = h, mark = file.path(FILES, "watermark-logo.pdf"))
+  },
+  bigdash.pdf_settings = addSettings
+)
