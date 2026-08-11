@@ -140,7 +140,7 @@ app_ui <- function(x) {
           title = "Library",
           icon=icon("book"),
           nav_page(
-            div(LoadingUI("load"), class = "px-4 py-0")
+            div(LoadingUI("load"), class = "omicspanel")
           )
         ),
         bslib::nav_panel(
@@ -153,7 +153,7 @@ app_ui <- function(x) {
             title = HTML("Across&nbsp;datasets"),
             value = "AcrossDatasets",
             icon = icon("layer-group"),
-            div(AcrossUI("across"), class = "px-4 py-0")
+            div(AcrossUI("across"), class = "omicspanel")
           )
         },
         if(isTRUE(opt$DEVMODE)) {
@@ -170,7 +170,7 @@ app_ui <- function(x) {
             title = HTML("Studio"),
             value = "Studio",
             icon = icon("clapperboard"),
-            div(StudioUI("studio"), class = "px-4 py-0")
+            div(StudioUI("studio"), class = "omicspanel")
           )
         },
         if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
@@ -178,13 +178,13 @@ app_ui <- function(x) {
             #title = HTML("AI&nbsp;Copilot"),
             title = tagList(icon("robot"), tags$br(), "Obi AI"),
             value = "Copilot",
-            div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
+            div(CopilotBoardUI("copilot2"), class = "omicspanel")
           )
         },
         if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(
             title = "Runs", icon=icon("person-running"),
-            div( class = "px-4 py-0",
+            div( class = "omicspanel",
               ##shiny::div(id = "navheader-current-section", HTML("Runs")),
               ##p("Monitor and inspect the details of computation runs"),
               RunMonitorUI("runmonitor")
@@ -193,33 +193,33 @@ app_ui <- function(x) {
         },
         ## Hidden panels (e.g. tools)
         bslib::nav_panel_hidden("Prism",
-          div(prism_ui("prism"), class='px-4 py-0')
+          div(prism_ui("prism"), class='omicspanel')
         ),
         bslib::nav_panel_hidden("Upload",
-          div(UploadUI("upload"), class='px-4 py-0')           
+          div(UploadUI("upload"), class='omicspanel')           
         ),
         bslib::nav_panel_hidden("UserProfile",
-          div(UserProfileUI("user_profile"), class='px-4 py-0')
+          div(UserProfileUI("user_profile"), class='omicspanel')
         ),
         if (isTRUE(opt$ENABLE_ADMIN)) {
           bslib::nav_panel_hidden("AdminPanel",
-            div(AdminPanelUI("admin_panel"), class='px-4 py-0')
+            div(AdminPanelUI("admin_panel"), class='omicspanel')
           )
         },
         bslib::nav_panel_hidden("IDconvert",
-          div(idconvert_ui("idconvert"), class='px-4 py-0')
+          div(idconvert_ui("idconvert"), class='omicspanel')
         ),
         bslib::nav_panel_hidden("Qsee",
-          div(qsee_ui("qsee"), class='px-4 py-0')
+          div(qsee_ui("qsee"), class='omicspanel')
         ),
         bslib::nav_panel_hidden("PCAexplorer",
-          div(PCAexplorer_ui("pcaexplorer"), class='px-4 py-0')
+          div(PCAexplorer_ui("pcaexplorer"), class='omicspanel')
         ),
 
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),
-          div(AppSettingsUI("app_settings"), class='px-4 py-0') 
+          div(AppSettingsUI("app_settings"), class='omicspanel') 
         ),          
         bslib::nav_menu(
           title = "Help",

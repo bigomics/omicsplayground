@@ -25,17 +25,14 @@ PCAexplorer_server <- function(id, pgx) {
         Y[, sel.valid, drop = FALSE]
       })
 
-      get_normX <- shiny::reactive({
-        message("[normalize_plots] computing normX ")
-        rawX <- rX()
-        m <- "CPM+quantile"
-        playbase::normalizeExpression(rawX, method = m, ref = NULL, prior = 0)
-      })
-
       get_pcaX <- shiny::reactive({
-        normX <- get_normX()
+        rawX <- rX()
         Y <- rY()
 
+        m <- "CPM+quantile"
+        normX <- playbase::normalizeExpression(rawX, method = m,
+          ref = NULL, prior = 0)
+        
         cX <- normX - rowMeans(normX, na.rm = TRUE)  ## important
         sel <- which(rowMeans(is.na(cX)) == 0)  ## only complete rows
         nv <- min(10, dim(cX) - 1)
@@ -98,7 +95,7 @@ PCAexplorer_server <- function(id, pgx) {
       ## Stretch min_fc slider once when PCA is ready (not on every plot tick)
       shiny::observeEvent(get_pcaX(), {
         res <- get_pcaX()
-        normX <- get_normX()
+        normX <- res$X
         shiny::req(res, normX)
         H <- if (!is.null(res$H)) res$H else {
           playbase::expandPhenoMatrix(rY(), drop.ref = FALSE)
@@ -165,7 +162,6 @@ PCAexplorer_server <- function(id, pgx) {
       PCAexplorer_feature_module(
         "feature",
         get_pcaX,
-        get_normX,
         rY,
         numarrows = numarrows,
         show_arrows = show_arrows,

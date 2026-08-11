@@ -326,15 +326,6 @@ app_server <- function(input, output, session) {
       shiny::req(PGX$X)
       info("[SERVER] trigger on change dataset")
 
-      ## Set navbar color based on datatype
-      ## if (PGX$datatype == "multi-omics") {
-      ##   js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #00923b'")
-      ##   shinyjs::runjs(js_code)
-      ## } else {
-      ##   js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #004ca7'")
-      ##   shinyjs::runjs(js_code)
-      ## }
-
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
       DATATYPEPGX <<- tolower(PGX$datatype)

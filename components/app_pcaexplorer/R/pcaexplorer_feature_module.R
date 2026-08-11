@@ -23,7 +23,7 @@ PCAexplorer_feature_ui <- function(id) {
   )
 }
 
-PCAexplorer_feature_module <- function(id, get_pcaX, get_normX, rY,
+PCAexplorer_feature_module <- function(id, get_pcaX, rY,
                                        numarrows = shiny::reactive(10),
                                        show_arrows = shiny::reactive(TRUE),
                                        min_fc = shiny::reactive(0),
@@ -53,7 +53,7 @@ PCAexplorer_feature_module <- function(id, get_pcaX, get_normX, rY,
 
       output$feature_pca <- plotly::renderPlotly({
         res <- get_pcaX()
-        normX <- get_normX()
+        normX <- res$X
         shiny::req(res, normX)
         pcaexplorer.plot_feature_pca(
           res, normX = normX, Y = rY(),
@@ -65,7 +65,7 @@ PCAexplorer_feature_module <- function(id, get_pcaX, get_normX, rY,
 
       output$feature_pca_3d <- plotly::renderPlotly({
         res <- get_pcaX()
-        normX <- get_normX()
+        normX <- res$X
         shiny::req(res, normX)
         pcaexplorer.plot_feature_pca_3d(
           res, normX = normX, Y = rY(),
@@ -77,7 +77,7 @@ PCAexplorer_feature_module <- function(id, get_pcaX, get_normX, rY,
 
       output$feature_pca_all <- shiny::renderPlot({
         res <- get_pcaX()
-        normX <- get_normX()
+        normX <- res$X
         shiny::req(res, normX)
         pcaexplorer.plot_feature_pca_all(
           res, normX = normX, Y = rY(),
@@ -98,7 +98,7 @@ PCAexplorer_feature_module <- function(id, get_pcaX, get_normX, rY,
         shiny::req(res)
         pcaexplorer.plot_loadings_bars_compact(
           res, npc = 2, ntop = 40,
-          normX = get_normX(), Y = rY(),
+          normX = res$normX, Y = rY(),
           min_fc = fc_cut()
         )
       })
