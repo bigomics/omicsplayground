@@ -252,13 +252,19 @@ clustering_plot_clustpca_server <- function(id,
             symbol = shapevar,
             symbols = symbols,
             text = tt.info
-          ) %>%
-          plotly::add_annotations(
-            x = pos[, 1],
-            y = pos[, 2],
-            text = ann.text,
-            showarrow = FALSE
           )
+
+        ## Sample labels go in a text TRACE, not annotations: plotly.repel
+        ## replaces the whole annotation array in the browser, which would
+        ## silently erase them whenever arrow labels are being repelled.
+        if (label.samples) {
+          plt <- plt %>% plotly::add_text(
+            x = pos[, 1], y = pos[, 2], text = rownames(df),
+            textposition = "top center",
+            textfont = list(size = 12 * cex, color = "grey30"),
+            showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
+          )
+        }
 
         plt <- plt %>% plotly::layout(
           xaxis = list(title = xlab),
@@ -290,10 +296,19 @@ clustering_plot_clustpca_server <- function(id,
               text = aa$text, hoverinfo = "text",
               showlegend = FALSE, inherit = FALSE
             )
-          ## Arrow tips bunch up, so fixed-offset labels collide. plotly.repel
-          ## places them in the browser and re-solves on zoom/pan. Off by
-          ## request, or when the optional package is not installed: labels then
-          ## sit nudged just past their own tip.
+          ## Labels are ALWAYS drawn as annotations, nudged just past their own
+          ## tip. plotly.repel is then layered on top when asked for: its JS
+          ## relayouts the whole annotation array in the browser, so on screen
+          ## the repelled labels REPLACE these rather than doubling up.
+          ## Wherever that JS does not run -- kaleido image export, or
+          ## plotly::subplot() stripping the render hook in "show all methods"
+          ## -- the annotations survive, so labels are never silently lost.
+          plt <- plt %>% plotly::add_annotations(
+            x = aa$lx, y = aa$ly, text = aa$text,
+            showarrow = FALSE,
+            font = list(color = "grey20", size = 13 * cex),
+            bgcolor = "rgba(255,255,255,0.65)", borderpad = 2
+          )
           if (isTRUE(input$pca_repel) && requireNamespace("plotly.repel", quietly = TRUE)) {
             plt <- plotly.repel::add_text_repel(
               plt,
@@ -302,13 +317,6 @@ clustering_plot_clustpca_server <- function(id,
               box_padding = 0.4, point_padding = 0.3, max_overlaps = 20,
               font = list(color = "grey20", size = 13 * cex),
               segment = list(color = "grey60", width = 1)
-            )
-          } else {
-            plt <- plt %>% plotly::add_annotations(
-              x = aa$lx, y = aa$ly, text = aa$text,
-              showarrow = FALSE,
-              font = list(color = "grey20", size = 13 * cex),
-              bgcolor = "rgba(255,255,255,0.65)", borderpad = 2
             )
           }
         }
@@ -326,12 +334,13 @@ clustering_plot_clustpca_server <- function(id,
             cex2 <- 1
             if (length(grp.pos) > 20) cex2 <- 0.8
             if (length(grp.pos) > 50) cex2 <- 0.6
-            plt <- plt %>% plotly::add_annotations(
+            ## text trace, not annotations: see the sample-label note above
+            plt <- plt %>% plotly::add_text(
               x = grp.pos[, 1],
               y = grp.pos[, 2],
               text = paste0("<b>", rownames(grp.pos), "</b>"),
-              font = list(size = 24 * cex2 * cex, color = "#555"),
-              showarrow = FALSE
+              textfont = list(size = 24 * cex2 * cex, color = "#555"),
+              showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
             )
           }
           plt <- plt %>%
@@ -479,13 +488,14 @@ clustering_plot_clustpca_server <- function(id,
       ## free-text numeric: empty or nonsense while typing must not blank the plot
       n <- suppressWarnings(as.integer(input$pca_numarrows))
       if (length(n) != 1 || is.na(n)) n <- 3
-      n <- max(1, n)
+      n <- min(max(1, n), 50) ## the UI max is advisory: typed values bypass it
       A <- A[head(order(-(A[, 1]^2 + A[, 2]^2)), n), , drop = FALSE]
       if (mode == "features") {
-        rownames(A) <- playbase::probe2symbol(
-          rownames(A), pgx$genes, labeltype(),
-          fill_na = TRUE
-        )
+        ## probe2symbol returns NULL when the requested label column is absent
+        ## (reachable while labeltype still holds the previous dataset's
+        ## choice). Blanking the rownames would blank the labels downstream.
+        sym <- playbase::probe2symbol(rownames(A), pgx$genes, labeltype(), fill_na = TRUE)
+        if (length(sym) == nrow(A)) rownames(A) <- sym
       }
       A
     }
@@ -525,7 +535,9 @@ clustering_plot_clustpca_server <- function(id,
       methods <- clustmethod()
       if (input$all_clustmethods) {
         cluster.names <- names(pgx$cluster$pos)
-        methods <- sub("2d", "", grep("2d", cluster.names, value = TRUE))
+        ## anchored: pgx$cluster$pos also holds pca2d.varexp, which an
+        ## unanchored match turns into a bogus "pca.varexp" method
+        methods <- sub("2d$", "", grep("2d$", cluster.names, value = TRUE))
       }
       do3d <- (input$plot3d)
       multiplot <- length(methods) > 1
@@ -574,7 +586,9 @@ clustering_plot_clustpca_server <- function(id,
       methods <- clustmethod()
       if (input$all_clustmethods) {
         cluster.names <- names(pgx$cluster$pos)
-        methods <- sub("2d", "", grep("2d", cluster.names, value = TRUE))
+        ## anchored: pgx$cluster$pos also holds pca2d.varexp, which an
+        ## unanchored match turns into a bogus "pca.varexp" method
+        methods <- sub("2d$", "", grep("2d$", cluster.names, value = TRUE))
       }
 
       groups <- sort(unique(as.character(pgx$samples[samples, colvar])))

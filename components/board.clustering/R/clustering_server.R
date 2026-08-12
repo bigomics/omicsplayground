@@ -17,6 +17,21 @@
 ##' too. Upgrade path: export pgx.pcaComponents() from playbase, have
 ##' pgx.clusterMatrix() delegate to it, and delete this copy.
 ##'
+##' How many components pgx.pcaComponents() can return for a matrix.
+##'
+##' Derived from the dimensions alone, so the axis selectors can be populated
+##' without running the decomposition. Keep in step with the npc capping in
+##' pgx.pcaComponents(), or the selectors will offer components that do not
+##' exist.
+##'
+##' @param X expression matrix (features x samples)
+##' @param npc maximum number of components wanted
+##' @return integer number of components actually available
+pgx.pcaMaxComponents <- function(X, npc = 5) {
+  max(1, min(npc, ncol(X) - 1, nrow(X) - 1))
+}
+
+
 ##' @param X expression matrix (features x samples)
 ##' @param Y sample annotation; when given, phenotype levels are one-hot
 ##'   encoded and correlated with each component for the direction arrows
@@ -25,6 +40,14 @@
 ##' @return list(pos = samples x npc scores, varexp = percentage per component,
 ##'   loadings = features x npc, pheno.cor = phenotype levels x npc or NULL)
 pgx.pcaComponents <- function(X, Y = NULL, npc = 5, reduce.sd = 1000) {
+  ## Inf/-Inf survive an is.na() check but turn the row into NaN once centered,
+  ## which leaves an all-NaN component and breaks the sign pinning below.
+  X[!is.finite(X)] <- NA
+  ## Reduce BEFORE imputing: imputing the full matrix to then discard all but
+  ## the top reduce.sd rows costs seconds on a large NA-heavy dataset.
+  if (nrow(X) > reduce.sd) {
+    X <- X[head(order(-matrixStats::rowSds(X, na.rm = TRUE)), reduce.sd), , drop = FALSE]
+  }
   if (any(is.na(X))) {
     if (playbase::is.multiomics(rownames(X))) {
       X <- playbase::imputeMissing.mox(X, method = "SVD2")
@@ -32,15 +55,19 @@ pgx.pcaComponents <- function(X, Y = NULL, npc = 5, reduce.sd = 1000) {
       X <- playbase::imputeMissing(X, method = "SVD2")
     }
   }
-  if (nrow(X) > reduce.sd) {
-    X <- X[head(order(-matrixStats::rowSds(X, na.rm = TRUE)), reduce.sd), , drop = FALSE]
-  }
   X <- X - rowMeans(X, na.rm = TRUE)
-  npc <- max(1, min(npc, ncol(X) - 1, nrow(X) - 1))
+  npc <- pgx.pcaMaxComponents(X, npc)
 
   ## ponytail: irlba is unstable when npc approaches min(dim), and base svd is
-  ## exact and cheap at that size anyway
-  sv <- if (min(dim(X)) <= npc + 2) svd(X) else irlba::irlba(X, nv = npc)
+  ## exact and cheap at that size anyway. irlba also throws outright on a
+  ## degenerate (near null space) matrix, where svd still returns -- playbase
+  ## dodges that with random jitter, which we cannot use without losing
+  ## reproducibility, so fall back to the exact decomposition instead.
+  sv <- if (min(dim(X)) <= npc + 2) {
+    svd(X)
+  } else {
+    tryCatch(irlba::irlba(X, nv = npc), error = function(e) svd(X))
+  }
 
   pos <- sv$v[, seq_len(npc), drop = FALSE]
   loadings <- sv$u[, seq_len(npc), drop = FALSE]
@@ -181,8 +208,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           choices = clustmethods, sel = selmethod
         )
 
-        ## principal components available for the axis selectors
-        npc <- ncol(pca_components()$pos)
+        ## Principal components available for the axis selectors. Derived from
+        ## the matrix dimensions rather than by calling pca_components(): an
+        ## error thrown inside an observer ends the whole Shiny session, and
+        ## forcing it here would also pay for the decomposition on every dataset
+        ## load even for users who never open this tab.
+        npc <- pgx.pcaMaxComponents(pgx$X, npc = 5)
         pcs <- stats::setNames(seq_len(npc), paste0("PC", seq_len(npc)))
         shiny::updateSelectInput(session, "pca_dimx", choices = pcs, selected = 1)
         shiny::updateSelectInput(session, "pca_dimy", choices = pcs, selected = min(2, npc))

@@ -137,6 +137,42 @@ test_that("a phenotype table that cannot be encoded does not kill the PCA", {
   expect_equal(dim(pc$pos), c(ncol(X), 5L))
 })
 
+test_that("the cheap component cap agrees with what is actually computed", {
+  ## the axis selectors are populated from pgx.pcaMaxComponents() without
+  ## running the SVD; if the two drift, the UI offers components that do not exist
+  for (ns in c(2, 3, 6, 8, 13)) {
+    X <- make_X(nsamples = ns)$X
+    expect_equal(
+      pgx.pcaMaxComponents(X, npc = 5),
+      ncol(pgx.pcaComponents(X, npc = 5)$pos),
+      info = paste("nsamples =", ns)
+    )
+  }
+})
+
+test_that("non-finite values do not break the decomposition", {
+  ## Inf passes an is.na() check but becomes NaN once the row is centered,
+  ## leaving an all-NaN component that the sign pinning cannot index
+  X <- make_X()$X
+  X[5, 3] <- Inf
+  X[100, 7] <- -Inf
+  pc <- pgx.pcaComponents(X, npc = 5)
+  expect_equal(dim(pc$pos), c(ncol(X), 5L))
+  expect_true(all(is.finite(pc$pos)))
+  expect_true(all(is.finite(pc$loadings)))
+})
+
+test_that("a degenerate matrix falls back to the exact svd instead of throwing", {
+  ## irlba errors with "starting vector near the null space" here; playbase
+  ## avoids it with random jitter, which we cannot use without losing sign
+  ## reproducibility
+  X <- matrix(1, 1200, 12)
+  dimnames(X) <- list(paste0("gene", 1:1200), paste0("s", 1:12))
+  pc <- pgx.pcaComponents(X, npc = 5)
+  expect_equal(dim(pc$pos), c(12L, 5L))
+  expect_true(all(is.finite(pc$pos)))
+})
+
 test_that("reduce.sd keeps the most variable features", {
   X <- make_X(nfeatures = 300)$X
   ## the 20 planted rows carry the signal and survive the SD cut
