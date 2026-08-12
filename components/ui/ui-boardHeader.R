@@ -105,7 +105,7 @@ OmicsBoard <- function(id, pgx, title, infotext=NULL) {
     })
 
     shiny::observeEvent(input$logo_click, {
-      ui.aboutModal()
+      ui.showAboutModal()
     })
     
     ## Show experiment info if dataset name is clicked.
