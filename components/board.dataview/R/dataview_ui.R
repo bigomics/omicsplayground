@@ -42,6 +42,7 @@ DataViewInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("data_type_accordion"),
+      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Options",

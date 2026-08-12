@@ -38,12 +38,20 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     }
   )
 
-  ## Hide/show basic or full menu
+  ## Hide/show basic or full menu. The body class drives the board-level
+  ## simplifications (greyed .advanced-option blocks, hidden extra tabs) in
+  ## scss/components/_app.scss -- CSS so it also applies to boards that are
+  ## inserted lazily, after this observer has already run.
   observeEvent(input$menu_basic, {
     if (isTRUE(input$menu_basic)) {
       shinyjs::runjs("$('#menu-basic').removeClass('nodisp').show(); $('#menu-full').addClass('nodisp').hide();")
+      shinyjs::addClass(selector = "body", class = "basic-mode")
+      ## the active tab may be one we are about to hide
+      shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
+      shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
     } else {
       shinyjs::runjs("$('#menu-full').removeClass('nodisp').show(); $('#menu-basic').addClass('nodisp').hide();")
+      shinyjs::removeClass(selector = "body", class = "basic-mode")
     }
   }, ignoreInit = FALSE)
 

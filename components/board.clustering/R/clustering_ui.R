@@ -56,6 +56,7 @@ ClusteringInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("hm_filter_accordion"),
+      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Filter options",
@@ -103,6 +104,7 @@ ClusteringInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("hm_options_accordion"),
+      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Advanced options",
