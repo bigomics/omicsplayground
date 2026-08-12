@@ -45,6 +45,8 @@ clustering_plot_phenoplot_server <- function(id,
                                              selected_phenotypes,
                                              clustmethod,
                                              selected_samples,
+                                             pca_components,
+                                             pca_dims,
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -86,9 +88,13 @@ clustering_plot_phenoplot_server <- function(id,
       shiny::req(pgx$Y)
       Y <- pgx$Y
 
-      ## get t-SNE positions
-      clustmethod1 <- paste0(clustmethod(), "2d")
-      pos <- pgx$cluster$pos[[clustmethod1]]
+      ## get layout positions. PCA is recomputed on the fly so that the
+      ## selected components match the dimensionality reduction plot.
+      if (clustmethod() == "pca") {
+        pos <- pca_components()$pos[, pca_dims(), drop = FALSE]
+      } else {
+        pos <- pgx$cluster$pos[[paste0(clustmethod(), "2d")]]
+      }
       colnames(pos) <- c("x", "y")
       jj <- selected_samples()
       kk <- selected_phenotypes()

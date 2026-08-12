@@ -127,6 +127,20 @@ ClusteringInputs <- function(id) {
             choices = c("tsne", "pca", "umap", "pacmap")
           ),
           "Choose the layout method for clustering plots."
+        ),
+        shiny::conditionalPanel(
+          "input.hm_clustmethod == 'pca'",
+          ns = ns,
+          withTooltip(
+            shiny::selectInput(ns("pca_dimx"), "X axis:", choices = NULL),
+            "Principal component shown on the horizontal axis.",
+            placement = "right", options = list(container = "body")
+          ),
+          withTooltip(
+            shiny::selectInput(ns("pca_dimy"), "Y axis:", choices = NULL),
+            "Principal component shown on the vertical axis.",
+            placement = "right", options = list(container = "body")
+          )
         )
       )
     )
@@ -246,8 +260,8 @@ ClusteringUI <- function(id) {
         clustering_plot_clustpca_ui(
           ns("PCAplot"),
           title = "Dimensionality reduction",
-          info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the percentage of variance explained by the first two principal components is reported in the x- and y-axis.",
-          info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
+          info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the {X axis} and {Y axis} options in the settings panel select which of the first five principal components are plotted against each other, and the percentage of variance explained by each of them is reported on the corresponding axis.",
+          info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other. For PCA, the first five principal components are computed on the 1000 most variable features after row centering, and the reported percentage is the share of the total variance of that matrix explained by the component.",
           info.references = list(
             list(
               "Krijthe J (2023) Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation.",

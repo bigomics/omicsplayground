@@ -4,6 +4,57 @@
 ##
 
 
+##' Recompute the PCA of the samples on the fly.
+##'
+##' pgx$cluster$pos only stores PC1-PC2 (pca2d) and PC1-PC3 (pca3d), so any
+##' higher component has to be recomputed here.
+##'
+##' ponytail: this duplicates the preprocessing recipe of the "pca" branch of
+##' playbase::pgx.clusterMatrix() (playbase/R/pgx-cluster.R) -- top-SD rows,
+##' row-centered, irlba. It deliberately drops the jitter and column
+##' augmentation that function adds for t-SNE/UMAP stability, so PC1/PC2 match
+##' the stored pca2d only up to sign. If that recipe changes, change it here
+##' too. Upgrade path: export pgx.pcaComponents() from playbase, have
+##' pgx.clusterMatrix() delegate to it, and delete this copy.
+##'
+##' @param X expression matrix (features x samples)
+##' @param npc maximum number of components to return
+##' @param reduce.sd reduce to this many top-SD features before the SVD
+##' @return list(pos = samples x npc matrix, varexp = percentage per component)
+pgx.pcaComponents <- function(X, npc = 5, reduce.sd = 1000) {
+  if (any(is.na(X))) {
+    if (playbase::is.multiomics(rownames(X))) {
+      X <- playbase::imputeMissing.mox(X, method = "SVD2")
+    } else {
+      X <- playbase::imputeMissing(X, method = "SVD2")
+    }
+  }
+  if (nrow(X) > reduce.sd) {
+    X <- X[head(order(-matrixStats::rowSds(X, na.rm = TRUE)), reduce.sd), , drop = FALSE]
+  }
+  X <- X - rowMeans(X, na.rm = TRUE)
+  npc <- max(1, min(npc, ncol(X) - 1, nrow(X) - 1))
+
+  ## ponytail: irlba is unstable when npc approaches min(dim), and base svd is
+  ## exact and cheap at that size anyway
+  sv <- if (min(dim(X)) <= npc + 2) svd(X) else irlba::irlba(X, nv = npc)
+
+  pos <- sv$v[, seq_len(npc), drop = FALSE]
+  ## the sign of an SVD is arbitrary: pin the largest-magnitude loading positive
+  ## so the plot does not mirror between sessions
+  for (i in seq_len(npc)) {
+    if (sv$u[which.max(abs(sv$u[, i])), i] < 0) pos[, i] <- -pos[, i]
+  }
+  rownames(pos) <- colnames(X)
+  colnames(pos) <- paste0("PC", seq_len(npc))
+
+  list(
+    pos = pos,
+    varexp = round(sv$d[seq_len(npc)]^2 / sum(X^2, na.rm = TRUE) * 100, 1)
+  )
+}
+
+
 ##' Clustering board server module
 ##'
 ##' .. content for \details{} ..
@@ -29,7 +80,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     tab_elements <- list(
       "Heatmap" = list(
         enable = NULL,
-        disable = c("hm_clustmethod")
+        disable = c("hm_clustmethod", "pca_dimx", "pca_dimy")
       ),
       "PCA/tSNE" = list(
         enable = NULL,
@@ -37,7 +88,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ),
       "Parallel" = list(
         enable = NULL,
-        disable = c("selected_phenotypes", "hm_clustmethod")
+        disable = c("selected_phenotypes", "hm_clustmethod", "pca_dimx", "pca_dimy")
       )
     )
 
@@ -105,6 +156,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         shiny::updateSelectInput(session, "hm_clustmethod",
           choices = clustmethods, sel = selmethod
         )
+
+        ## principal components available for the axis selectors
+        npc <- ncol(pca_components()$pos)
+        pcs <- stats::setNames(seq_len(npc), paste0("PC", seq_len(npc)))
+        shiny::updateSelectInput(session, "pca_dimx", choices = pcs, selected = 1)
+        shiny::updateSelectInput(session, "pca_dimy", choices = pcs, selected = min(2, npc))
       }
     )
 
@@ -692,6 +749,22 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
     })
 
+    ## PC1-PC5 on the fly. Only depends on pgx$X, so this runs once per dataset
+    ## and is cached for every later change of the axis selectors.
+    pca_components <- shiny::reactive({
+      shiny::req(pgx$X)
+      pgx.pcaComponents(pgx$X, npc = 5)
+    })
+
+    pca_dims <- shiny::reactive({
+      npc <- ncol(pca_components()$pos)
+      dims <- suppressWarnings(c(as.integer(input$pca_dimx), as.integer(input$pca_dimy)))
+      ## empty before the selectors are populated, stale right after a dataset
+      ## switch shrinks the number of available components
+      shiny::req(length(dims) == 2, !any(is.na(dims)), all(dims <= npc))
+      dims
+    })
+
     # plots ##########
     clustering_plot_splitmap_server(
       id = "splitmap",
@@ -712,6 +785,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx = pgx,
       selected_samples = selected_samples,
       clustmethod = shiny::reactive(input$hm_clustmethod),
+      pca_components = pca_components,
+      pca_dims = pca_dims,
       watermark = WATERMARK,
       parent = ns
     )
@@ -722,6 +797,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       clustmethod = shiny::reactive(input$hm_clustmethod),
       selected_samples = selected_samples,
+      pca_components = pca_components,
+      pca_dims = pca_dims,
       watermark = WATERMARK
     )
 

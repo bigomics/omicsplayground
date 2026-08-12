@@ -73,6 +73,8 @@ clustering_plot_clustpca_server <- function(id,
                                             pgx,
                                             selected_samples,
                                             clustmethod,
+                                            pca_components,
+                                            pca_dims,
                                             watermark = FALSE,
                                             parent) {
   moduleServer(id, function(input, output, session) {
@@ -90,7 +92,12 @@ clustering_plot_clustpca_server <- function(id,
 
     plot_data <- shiny::reactive({
       samples <- selected_samples()
-      cluster.pos <- pgx$cluster$pos
+      ## drop pca2d.varexp and friends: only the position matrices are tabular
+      cluster.pos <- Filter(is.matrix, pgx$cluster$pos)
+      ## the board recomputes PCA on the fly, so export those instead of the
+      ## stored PC1/PC2 only
+      cluster.pos <- cluster.pos[grep("^pca", names(cluster.pos), invert = TRUE)]
+      cluster.pos$pca <- pca_components()$pos
       for (m in names(cluster.pos)) {
         colnames(cluster.pos[[m]]) <- paste0(m, ".", colnames(cluster.pos[[m]]))
       }
@@ -101,7 +108,7 @@ clustering_plot_clustpca_server <- function(id,
     })
 
 
-    create_plot <- function(pgx, pos, pca2d.varexp, method, colvar, shapevar, label, cex, palette = "muted_light", custom_colors = NULL) {
+    create_plot <- function(pgx, pos, xlab, ylab, method, colvar, shapevar, label, cex, palette = "muted_light", custom_colors = NULL) {
       do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
       df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
@@ -206,17 +213,10 @@ clustering_plot_clustpca_server <- function(id,
             showarrow = FALSE
           )
 
-        if (method == "pca") {
-          plt <- plt %>% plotly::layout(
-            xaxis = list(title = paste0(toupper(method), "1 (", pca2d.varexp[1], "%)")),
-            yaxis = list(title = paste0(toupper(method), "2 (", pca2d.varexp[2], "%)"))
-          )
-        } else {
-          plt <- plt %>% plotly::layout(
-            xaxis = list(title = paste0(toupper(method), "1")),
-            yaxis = list(title = paste0(toupper(method), "2"))
-          )
-        }
+        plt <- plt %>% plotly::layout(
+          xaxis = list(title = xlab),
+          yaxis = list(title = ylab)
+        )
 
         ## add group/cluster annotation labels
         if (label == "inside") {
@@ -252,7 +252,7 @@ clustering_plot_clustpca_server <- function(id,
       return(plt)
     }
 
-    create_ggplot <- function(pgx, pos, pca2d.varexp, method, colvar, label, cex, palette = "muted_light", custom_colors = NULL) {
+    create_ggplot <- function(pgx, pos, xlab, ylab, method, colvar, label, cex, palette = "muted_light", custom_colors = NULL) {
       sel <- rownames(pos)
       df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
 
@@ -271,21 +271,13 @@ clustering_plot_clustpca_server <- function(id,
 
       showlabels <- (label %in% c("group", "inside"))
 
-      if (method == "pca") {
-        xl <- paste0(toupper(method), "1 (", pca2d.varexp[1], "%)")
-        yl <- paste0(toupper(method), "2 (", pca2d.varexp[2], "%)")
-      } else {
-        xl <- paste0(toupper(method), "1")
-        yl <- paste0(toupper(method), "2")
-      }
-
       p <- playbase::pgx.scatterPlotXY.GGPLOT(
         pos,
         var = colvar_fct,
         col = clrs,
         cex = cex,
-        xlab = xl,
-        ylab = yl,
+        xlab = xlab,
+        ylab = ylab,
         title = toupper(method),
         cex.title = 1.2,
         cex.clust = 1.1,
@@ -293,6 +285,22 @@ clustering_plot_clustpca_server <- function(id,
         legend = !(label %in% c("<none>", "group", "sample"))
       )
       p
+    }
+
+    ## Positions and axis labels for one layout method. PCA is recomputed on
+    ## the fly (pgx only stores PC1-PC3) so any pair of PC1-PC5 can be plotted.
+    method_pos <- function(m, samples, do3d = FALSE) {
+      if (m == "pca") {
+        pc <- pca_components()
+        k <- if (do3d) seq_len(min(3, ncol(pc$pos))) else pca_dims()
+        pos <- pc$pos[samples, k, drop = FALSE]
+        labs <- paste0("PC", k, " (", pc$varexp[k], "%)")
+      } else {
+        m1 <- paste0(m, ifelse(do3d, "3d", "2d"))
+        pos <- pgx$cluster$pos[[m1]][samples, , drop = FALSE]
+        labs <- paste0(toupper(m), seq_len(ncol(pos)))
+      }
+      list(pos = pos, xlab = labs[1], ylab = labs[2])
     }
 
     create_plotlist <- function() {
@@ -327,15 +335,12 @@ clustering_plot_clustpca_server <- function(id,
       plist <- list()
       for (i in 1:length(methods)) {
         m <- methods[i]
-        m1 <- paste0(m, "2d")
-        if (do3d) m1 <- paste0(m, "3d")
-        pos <- pgx$cluster$pos[[m1]]
-        pos <- pos[samples, ]
-        pca2d.varexp <- pgx$cluster$pos$pca2d.varexp
+        mp <- method_pos(m, samples, do3d = do3d)
         plist[[i]] <- create_plot(
           pgx = pgx,
-          pos = pos,
-          pca2d.varexp = pca2d.varexp,
+          pos = mp$pos,
+          xlab = mp$xlab,
+          ylab = mp$ylab,
           method = m,
           colvar = colvar,
           shapevar = shapevar,
@@ -377,15 +382,13 @@ clustering_plot_clustpca_server <- function(id,
       plts <- list()
       for (i in seq_along(methods)) {
         m <- methods[i]
-        m1 <- paste0(m, "2d")
-        pos <- pgx$cluster$pos[[m1]]
-        pos <- pos[samples, ]
-        pca2d.varexp <- pgx$cluster$pos$pca2d.varexp
+        mp <- method_pos(m, samples)
 
         p <- create_ggplot(
           pgx = pgx,
-          pos = pos,
-          pca2d.varexp = pca2d.varexp,
+          pos = mp$pos,
+          xlab = mp$xlab,
+          ylab = mp$ylab,
           method = m,
           colvar = colvar,
           label = label,
