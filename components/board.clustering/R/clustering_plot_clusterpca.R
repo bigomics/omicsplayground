@@ -35,6 +35,36 @@ clustering_plot_clustpca_ui <- function(
       ),
       "Place group labels as legend at the bottom or in plot as group or sample labels."
     ),
+    ## arrows only make sense for PCA: loadings and phenotype correlations are
+    ## defined against ordered components, which t-SNE/UMAP do not have
+    shiny::conditionalPanel(
+      "input.hm_clustmethod == 'pca'",
+      ns = parent,
+      withTooltip(
+        shiny::selectInput(ns("pca_arrows"), "Arrows:",
+          choices = c("<none>", "features", "phenotypes"), width = "100%"
+        ),
+        "Overlay a biplot: arrows for the top feature loadings, or for the direction in which each phenotype increases."
+      ),
+      shiny::conditionalPanel(
+        "input.pca_arrows != '<none>'",
+        ns = ns,
+        withTooltip(
+          shiny::numericInput(ns("pca_numarrows"), "Number of arrows:",
+            value = 3, min = 1, max = 50, step = 1, width = "100%"
+          ),
+          "How many arrows to label and draw, ranked by length. Lower numbers keep the plot readable."
+        ),
+        withTooltip(
+          shiny::checkboxInput(ns("pca_repel"), "repel labels", value = TRUE),
+          "Move overlapping arrow labels apart. Switch off to pin each label to its own arrow tip."
+        )
+      ),
+      withTooltip(
+        shiny::checkboxInput(ns("pca_varplot"), "variance explained"),
+        "Show how much variance each component explains, instead of the samples."
+      )
+    ),
     withTooltip(
       shiny::checkboxInput(ns("all_clustmethods"), "show all methods"),
       "Show an overview of all dimensionality reduction methods."
@@ -75,6 +105,7 @@ clustering_plot_clustpca_server <- function(id,
                                             clustmethod,
                                             pca_components,
                                             pca_dims,
+                                            labeltype = shiny::reactive("feature"),
                                             watermark = FALSE,
                                             parent) {
   moduleServer(id, function(input, output, session) {
@@ -108,7 +139,23 @@ clustering_plot_clustpca_server <- function(id,
     })
 
 
-    create_plot <- function(pgx, pos, xlab, ylab, method, colvar, shapevar, label, cex, palette = "muted_light", custom_colors = NULL) {
+    ## arrows scaled to fill the score cloud (loadings and correlations live on
+    ## a much smaller scale than the scores), with the label just past the tip
+    scale_arrows <- function(arrows, pos) {
+      s <- 0.65 * max(abs(pos)) / max(abs(arrows))
+      ax <- arrows[, 1] * s
+      ay <- arrows[, 2] * s
+      r <- sqrt(ax^2 + ay^2)
+      r[r == 0] <- 1
+      nudge <- 0.05 * max(abs(pos))
+      list(
+        x = ax, y = ay,
+        lx = ax + nudge * ax / r, ly = ay + nudge * ay / r,
+        text = rownames(arrows)
+      )
+    }
+
+    create_plot <- function(pgx, pos, xlab, ylab, method, colvar, shapevar, label, cex, palette = "muted_light", custom_colors = NULL, arrows = NULL) {
       do3d <- (ncol(pos) == 3)
       sel <- rownames(pos)
       df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
@@ -218,6 +265,54 @@ clustering_plot_clustpca_server <- function(id,
           yaxis = list(title = ylab)
         )
 
+        if (!is.null(arrows) && nrow(arrows) && max(abs(arrows)) > 0) {
+          aa <- scale_arrows(arrows, pos)
+          ## Arrows are drawn as traces, NOT as annotations: plotly.repel takes
+          ## ownership of layout.annotations at render time (plotly-repel.js
+          ## relayouts the whole array), which wipes anything annotation-drawn.
+          ## Shafts are one NA-separated line trace, heads are markers rotated
+          ## along each arrow (angle is the bearing, clockwise from up).
+          plt <- plt %>%
+            plotly::add_trace(
+              x = as.vector(rbind(0, aa$x, NA)),
+              y = as.vector(rbind(0, aa$y, NA)),
+              type = "scatter", mode = "lines",
+              line = list(color = "grey30", width = 1.8),
+              showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
+            ) %>%
+            plotly::add_trace(
+              x = aa$x, y = aa$y,
+              type = "scatter", mode = "markers",
+              marker = list(
+                symbol = "arrow", size = 12, color = "grey30",
+                angle = atan2(aa$x, aa$y) * 180 / pi
+              ),
+              text = aa$text, hoverinfo = "text",
+              showlegend = FALSE, inherit = FALSE
+            )
+          ## Arrow tips bunch up, so fixed-offset labels collide. plotly.repel
+          ## places them in the browser and re-solves on zoom/pan. Off by
+          ## request, or when the optional package is not installed: labels then
+          ## sit nudged just past their own tip.
+          if (isTRUE(input$pca_repel) && requireNamespace("plotly.repel", quietly = TRUE)) {
+            plt <- plotly.repel::add_text_repel(
+              plt,
+              data = data.frame(x = aa$x, y = aa$y, text = aa$text),
+              x = ~x, y = ~y, text = ~text,
+              box_padding = 0.4, point_padding = 0.3, max_overlaps = 20,
+              font = list(color = "grey20", size = 13 * cex),
+              segment = list(color = "grey60", width = 1)
+            )
+          } else {
+            plt <- plt %>% plotly::add_annotations(
+              x = aa$lx, y = aa$ly, text = aa$text,
+              showarrow = FALSE,
+              font = list(color = "grey20", size = 13 * cex),
+              bgcolor = "rgba(255,255,255,0.65)", borderpad = 2
+            )
+          }
+        }
+
         ## add group/cluster annotation labels
         if (label == "inside") {
           plt <- plt %>%
@@ -252,7 +347,7 @@ clustering_plot_clustpca_server <- function(id,
       return(plt)
     }
 
-    create_ggplot <- function(pgx, pos, xlab, ylab, method, colvar, label, cex, palette = "muted_light", custom_colors = NULL) {
+    create_ggplot <- function(pgx, pos, xlab, ylab, method, colvar, label, cex, palette = "muted_light", custom_colors = NULL, arrows = NULL) {
       sel <- rownames(pos)
       df <- cbind(pos, pgx$samples[sel, , drop = FALSE])
 
@@ -284,23 +379,133 @@ clustering_plot_clustpca_server <- function(id,
         label.clusters = showlabels,
         legend = !(label %in% c("<none>", "group", "sample"))
       )
+
+      if (!is.null(arrows) && nrow(arrows) && max(abs(arrows)) > 0) {
+        aa <- scale_arrows(arrows, pos)
+        df.a <- data.frame(x = aa$x, y = aa$y, lx = aa$lx, ly = aa$ly, text = aa$text)
+        p <- p +
+          ggplot2::geom_segment(
+            data = df.a,
+            ggplot2::aes(x = 0, y = 0, xend = x, yend = y),
+            arrow = ggplot2::arrow(length = ggplot2::unit(0.18, "cm"), type = "closed"),
+            colour = "grey30", linewidth = 0.5, inherit.aes = FALSE
+          ) +
+          if (isTRUE(input$pca_repel)) {
+            ggrepel::geom_text_repel(
+              data = df.a,
+              ggplot2::aes(x = x, y = y, label = text),
+              colour = "grey20", size = 3 * cex, inherit.aes = FALSE,
+              box.padding = 0.4, point.padding = 0.3,
+              segment.colour = "grey60", max.overlaps = 20
+            )
+          } else {
+            ggplot2::geom_text(
+              data = df.a,
+              ggplot2::aes(x = lx, y = ly, label = text),
+              colour = "grey20", size = 3 * cex, inherit.aes = FALSE
+            )
+          }
+      }
       p
+    }
+
+    ## Scree data: percentage of variance per component plus its running total.
+    ## Both series are percentages, so they share one axis. The percentages come
+    ## from pca_components() and are relative to the total variance, so they do
+    ## not sum to 100 over the five components we compute -- that is correct.
+    varexp_data <- function() {
+      v <- pca_components()$varexp
+      data.frame(
+        pc = factor(paste0("PC", seq_along(v)), levels = paste0("PC", seq_along(v))),
+        varexp = as.numeric(v),
+        cumulative = cumsum(as.numeric(v))
+      )
+    }
+
+    create_varplot <- function(palette = "muted_light") {
+      df <- varexp_data()
+      clr <- omics_pal_d(palette = palette)(8)[1]
+      plotly::plot_ly(df) %>%
+        plotly::add_bars(
+          x = ~pc, y = ~varexp, name = "per component",
+          marker = list(color = clr),
+          text = ~ paste0(varexp, "%"), textposition = "outside",
+          hovertemplate = "%{x}: %{y}%<extra></extra>"
+        ) %>%
+        plotly::add_trace(
+          x = ~pc, y = ~cumulative, name = "cumulative",
+          type = "scatter", mode = "lines+markers",
+          line = list(color = "grey40"), marker = list(color = "grey40"),
+          hovertemplate = "up to %{x}: %{y}%<extra></extra>"
+        ) %>%
+        plotly::layout(
+          xaxis = list(title = ""),
+          yaxis = list(title = "variance explained (%)", rangemode = "tozero"),
+          showlegend = FALSE
+        )
+    }
+
+    create_gg_varplot <- function(palette = "muted_light") {
+      df <- varexp_data()
+      clr <- omics_pal_d(palette = palette)(8)[1]
+      ggplot2::ggplot(df, ggplot2::aes(x = pc)) +
+        ggplot2::geom_col(ggplot2::aes(y = varexp), fill = clr) +
+        ggplot2::geom_text(
+          ggplot2::aes(y = varexp, label = paste0(varexp, "%")),
+          vjust = -0.5, size = 3
+        ) +
+        ggplot2::geom_line(ggplot2::aes(y = cumulative, group = 1), colour = "grey40") +
+        ggplot2::geom_point(ggplot2::aes(y = cumulative), colour = "grey40") +
+        ggplot2::labs(x = NULL, y = "variance explained (%)") +
+        ggplot2::expand_limits(y = 0)
+    }
+
+    ## Biplot arrow endpoints on the two selected components, in loading or
+    ## correlation units. Ranked by length and cut to the top N; the caller
+    ## scales them to the score cloud.
+    arrow_ends <- function(pc, k) {
+      mode <- input$pca_arrows
+      if (is.null(mode) || mode == "<none>") {
+        return(NULL)
+      }
+      A <- if (mode == "features") pc$loadings else pc$pheno.cor
+      if (is.null(A) || max(k) > ncol(A)) {
+        return(NULL)
+      }
+      A <- A[stats::complete.cases(A[, k, drop = FALSE]), k, drop = FALSE]
+      if (!nrow(A)) {
+        return(NULL)
+      }
+      ## free-text numeric: empty or nonsense while typing must not blank the plot
+      n <- suppressWarnings(as.integer(input$pca_numarrows))
+      if (length(n) != 1 || is.na(n)) n <- 3
+      n <- max(1, n)
+      A <- A[head(order(-(A[, 1]^2 + A[, 2]^2)), n), , drop = FALSE]
+      if (mode == "features") {
+        rownames(A) <- playbase::probe2symbol(
+          rownames(A), pgx$genes, labeltype(),
+          fill_na = TRUE
+        )
+      }
+      A
     }
 
     ## Positions and axis labels for one layout method. PCA is recomputed on
     ## the fly (pgx only stores PC1-PC3) so any pair of PC1-PC5 can be plotted.
     method_pos <- function(m, samples, do3d = FALSE) {
+      arrows <- NULL
       if (m == "pca") {
         pc <- pca_components()
         k <- if (do3d) seq_len(min(3, ncol(pc$pos))) else pca_dims()
         pos <- pc$pos[samples, k, drop = FALSE]
         labs <- paste0("PC", k, " (", pc$varexp[k], "%)")
+        if (!do3d) arrows <- arrow_ends(pc, k)
       } else {
         m1 <- paste0(m, ifelse(do3d, "3d", "2d"))
         pos <- pgx$cluster$pos[[m1]][samples, , drop = FALSE]
         labs <- paste0(toupper(m), seq_len(ncol(pos)))
       }
-      list(pos = pos, xlab = labs[1], ylab = labs[2])
+      list(pos = pos, xlab = labs[1], ylab = labs[2], arrows = arrows)
     }
 
     create_plotlist <- function() {
@@ -347,7 +552,8 @@ clustering_plot_clustpca_server <- function(id,
           label = label,
           cex = ifelse(length(methods) > 1, 0.6, 1),
           palette = palette,
-          custom_colors = custom_colors
+          custom_colors = custom_colors,
+          arrows = mp$arrows
         )
       }
       plist
@@ -394,7 +600,8 @@ clustering_plot_clustpca_server <- function(id,
           label = label,
           cex = ifelse(length(methods) > 1, 0.6, 1),
           palette = palette,
-          custom_colors = custom_colors
+          custom_colors = custom_colors,
+          arrows = mp$arrows
         )
         p <- apply_ggprism_theme(p, gp)
         p <- apply_editor_theme(p, input)
@@ -406,6 +613,19 @@ clustering_plot_clustpca_server <- function(id,
     plot.RENDER <- reactive({
       gp <- extract_ggprism_params(input)
       do3d <- isTRUE(input$plot3d)
+
+      ## the variance toggle replaces the scatter in this same panel. Check the
+      ## layout too: the checkbox keeps its value while hidden, so switching to
+      ## tsne/umap must not leave a PCA scree plot on screen.
+      if (isTRUE(input$pca_varplot) && clustmethod() == "pca") {
+        palette <- if (!is.null(input$palette)) input$palette else "muted_light"
+        if (palette %in% c("original", "default", "custom", "")) palette <- "muted_light"
+        if (gp$use_ggprism) {
+          p <- apply_editor_theme(apply_ggprism_theme(create_gg_varplot(palette), gp), input)
+          return(ggplot_as_plotly_image(p, width = 6, height = 6))
+        }
+        return(apply_plotly_editor_theme(create_varplot(palette), input))
+      }
 
       if (gp$use_ggprism && !do3d) {
         plts <- create_gg_plotlist()

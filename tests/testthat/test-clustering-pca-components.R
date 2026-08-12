@@ -84,6 +84,59 @@ test_that("missing values are imputed rather than propagated", {
   expect_false(any(is.na(pc$varexp)))
 })
 
+test_that("loadings come back aligned with the features and the scores", {
+  X <- make_X()$X
+  pc <- pgx.pcaComponents(X, npc = 5)
+
+  expect_equal(dim(pc$loadings), c(nrow(X), 5L))
+  expect_equal(rownames(pc$loadings), rownames(X))
+  expect_equal(colnames(pc$loadings), paste0("PC", 1:5))
+
+  ## the planted rows dominate PC1, which is what the biplot arrows point at
+  top <- rownames(pc$loadings)[order(-abs(pc$loadings[, "PC1"]))][1:20]
+  expect_true(all(top %in% paste0("gene", 1:20)))
+})
+
+test_that("scores and loadings are flipped together", {
+  ## X %*% loadings must stay proportional to the scores after sign pinning;
+  ## flipping one without the other points the arrows the wrong way
+  X <- make_X()$X
+  pc <- pgx.pcaComponents(X, npc = 5)
+  Xc <- X - rowMeans(X)
+  for (i in 1:5) {
+    expect_gt(cor(as.vector(t(Xc) %*% pc$loadings[, i]), pc$pos[, i]), 0.999)
+  }
+})
+
+test_that("phenotype correlations are returned only when Y is given", {
+  d <- make_X()
+  X <- d$X
+  Y <- data.frame(
+    grp = ifelse(d$grp == 1, "treated", "control"),
+    batch = rep(c("b1", "b2"), each = ncol(X) / 2),
+    row.names = colnames(X)
+  )
+
+  expect_null(pgx.pcaComponents(X, npc = 5)$pheno.cor)
+
+  pc <- pgx.pcaComponents(X, Y = Y, npc = 5)
+  expect_equal(ncol(pc$pheno.cor), 5L)
+  expect_true(all(abs(pc$pheno.cor) <= 1))
+  ## the planted group is what PC1 separates, so it must dominate PC1
+  expect_gt(
+    max(abs(pc$pheno.cor[grep("^grp=", rownames(pc$pheno.cor)), "PC1"])),
+    max(abs(pc$pheno.cor[grep("^batch=", rownames(pc$pheno.cor)), "PC1"]))
+  )
+})
+
+test_that("a phenotype table that cannot be encoded does not kill the PCA", {
+  X <- make_X()$X
+  ## every sample its own level: nothing to correlate against
+  Y <- data.frame(id = colnames(X), row.names = colnames(X))
+  pc <- pgx.pcaComponents(X, Y = Y, npc = 5)
+  expect_equal(dim(pc$pos), c(ncol(X), 5L))
+})
+
 test_that("reduce.sd keeps the most variable features", {
   X <- make_X(nfeatures = 300)$X
   ## the 20 planted rows carry the signal and survive the SD cut

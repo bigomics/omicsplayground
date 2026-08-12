@@ -18,10 +18,13 @@
 ##' pgx.clusterMatrix() delegate to it, and delete this copy.
 ##'
 ##' @param X expression matrix (features x samples)
+##' @param Y sample annotation; when given, phenotype levels are one-hot
+##'   encoded and correlated with each component for the direction arrows
 ##' @param npc maximum number of components to return
 ##' @param reduce.sd reduce to this many top-SD features before the SVD
-##' @return list(pos = samples x npc matrix, varexp = percentage per component)
-pgx.pcaComponents <- function(X, npc = 5, reduce.sd = 1000) {
+##' @return list(pos = samples x npc scores, varexp = percentage per component,
+##'   loadings = features x npc, pheno.cor = phenotype levels x npc or NULL)
+pgx.pcaComponents <- function(X, Y = NULL, npc = 5, reduce.sd = 1000) {
   if (any(is.na(X))) {
     if (playbase::is.multiomics(rownames(X))) {
       X <- playbase::imputeMissing.mox(X, method = "SVD2")
@@ -40,17 +43,38 @@ pgx.pcaComponents <- function(X, npc = 5, reduce.sd = 1000) {
   sv <- if (min(dim(X)) <= npc + 2) svd(X) else irlba::irlba(X, nv = npc)
 
   pos <- sv$v[, seq_len(npc), drop = FALSE]
+  loadings <- sv$u[, seq_len(npc), drop = FALSE]
   ## the sign of an SVD is arbitrary: pin the largest-magnitude loading positive
-  ## so the plot does not mirror between sessions
+  ## so the plot does not mirror between sessions. Scores and loadings must flip
+  ## together, otherwise the biplot arrows point the wrong way.
   for (i in seq_len(npc)) {
-    if (sv$u[which.max(abs(sv$u[, i])), i] < 0) pos[, i] <- -pos[, i]
+    if (loadings[which.max(abs(loadings[, i])), i] < 0) {
+      loadings[, i] <- -loadings[, i]
+      pos[, i] <- -pos[, i]
+    }
   }
-  rownames(pos) <- colnames(X)
-  colnames(pos) <- paste0("PC", seq_len(npc))
+  dimnames(pos) <- list(colnames(X), paste0("PC", seq_len(npc)))
+  dimnames(loadings) <- list(rownames(X), paste0("PC", seq_len(npc)))
+
+  ## correlation of each one-hot encoded phenotype level with each component,
+  ## for the phenotype-direction arrows
+  pheno.cor <- NULL
+  if (!is.null(Y)) {
+    pheno.cor <- tryCatch(
+      {
+        H <- playbase::expandPhenoMatrix(Y[rownames(pos), , drop = FALSE], drop.ref = FALSE)
+        rho <- suppressWarnings(stats::cor(H, pos, use = "pairwise.complete.obs"))
+        rho[stats::complete.cases(rho), , drop = FALSE]
+      },
+      error = function(e) NULL
+    )
+  }
 
   list(
     pos = pos,
-    varexp = round(sv$d[seq_len(npc)]^2 / sum(X^2, na.rm = TRUE) * 100, 1)
+    varexp = round(sv$d[seq_len(npc)]^2 / sum(X^2, na.rm = TRUE) * 100, 1),
+    loadings = loadings,
+    pheno.cor = pheno.cor
   )
 }
 
@@ -752,8 +776,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## PC1-PC5 on the fly. Only depends on pgx$X, so this runs once per dataset
     ## and is cached for every later change of the axis selectors.
     pca_components <- shiny::reactive({
-      shiny::req(pgx$X)
-      pgx.pcaComponents(pgx$X, npc = 5)
+      shiny::req(pgx$X, pgx$Y)
+      pgx.pcaComponents(pgx$X, Y = pgx$Y, npc = 5)
     })
 
     pca_dims <- shiny::reactive({
@@ -787,6 +811,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       clustmethod = shiny::reactive(input$hm_clustmethod),
       pca_components = pca_components,
       pca_dims = pca_dims,
+      labeltype = labeltype,
       watermark = WATERMARK,
       parent = ns
     )

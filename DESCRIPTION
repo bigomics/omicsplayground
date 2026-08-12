@@ -17,6 +17,7 @@ Suggests:
     omicspgx,
     omicspgxmcp,
     omicsplots,
+    plotly.repel,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
@@ -35,6 +36,7 @@ Imports:
     forcats,
     future,
     ggforce,
+    ggrepel,
     ggVennDiagram,
     heatmaply,
     htmltools,
