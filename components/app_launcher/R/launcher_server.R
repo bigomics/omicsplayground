@@ -13,6 +13,10 @@ launcher_server <- function(id, parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    shiny::observeEvent(input$logo_click, {
+      ui.showAboutModal()
+    })
+
     observeEvent(input$launch_playground, {
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
@@ -33,6 +37,5 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })
 
-    
   })
 }

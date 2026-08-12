@@ -98,9 +98,9 @@ opg_ui <- function() {
     basic_menu_tree <- list(
       "DataView"                = c(dataview       = "DataView"),
       "Cluster Samples"         = c(clustersamples = "Cluster Samples"),
-      "Differential expression" = c(diffexpr       = "Differential expression"),
+      "Differential Expression" = c(diffexpr       = "Differential Expression"),
       "Geneset Enrichment"      = c(enrich         = "Geneset Enrichment"),
-      "Pathway analysis"        = c(pathway        = "Pathway analysis")
+      "Pathway Analysis"        = c(pathway        = "Pathway Analysis")
     )
 
     initial_is_full <- (opt$USER_LEVEL != "BASIC")

@@ -50,16 +50,6 @@ app_server <- function(input, output, session) {
     }
   })
 
-  if (!copilot_packages_ok()) {
-    shinyalert::shinyalert(
-      title = "Missing packages",
-      text = "Copilot will be disabled",
-      immediate = TRUE,
-      showCancelButton = FALSE,
-      showConfirmButton = TRUE
-    )      
-  }
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -964,30 +954,6 @@ app_server <- function(input, output, session) {
   opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir,
     load_example = load_example)
   
-  if (copilot_packages_ok()) {
-    # Defer wiring until login completes: CopilotBoardServer snapshots
-    # auth$user_dir once at init to derive its chats/ and docs_sources/
-    # folders. Pre-login auth$user_dir is the bare PGX.DIR, so wiring at
-    # session start would scope every user's chats/docs to PGX.DIR. Gating
-    # on auth$logged guarantees auth$user_dir holds the finalized
-    # (per-email when ENABLE_USERDIR) path. Guard ensures we wire once even
-    # if auth$logged toggles (logout -> login).
-    copilot_wired <- FALSE
-    observeEvent(auth$logged, {
-      if (!isTRUE(auth$logged) || copilot_wired) return()
-      copilot_wired <<- TRUE
-      CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
-        auth = auth,
-        maxturns = opt$LLM_MAXTURNS,
-        tiers = opt$COPILOT_MODEL,
-        is_data_loaded = NULL)
-    })
-  }
-
-  StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
-    can_save_pgx = can_save_current_pgx,
-    user_email = function() shiny::isolate(auth$email))
-
   ##if (isTRUE(opt$ENABLE_ACROSS)) {
   if (isTRUE(opt$DEVMODE)) {  
     AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
@@ -1076,7 +1042,31 @@ app_server <- function(input, output, session) {
   ## gated by the deployment AI licence (opt$ENABLE_AI). Runs in the root
   ## session so hideTab targets the un-namespaced "app-sidebar" navset. The
   ## build-time gate in ui.R already drops the tabs entirely when unlicensed.
-  if (isTRUE(opt$ENABLE_AI)) {
+  if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
+    
+    # Defer wiring until login completes: CopilotBoardServer snapshots
+    # auth$user_dir once at init to derive its chats/ and docs_sources/
+    # folders. Pre-login auth$user_dir is the bare PGX.DIR, so wiring at
+    # session start would scope every user's chats/docs to PGX.DIR. Gating
+    # on auth$logged guarantees auth$user_dir holds the finalized
+    # (per-email when ENABLE_USERDIR) path. Guard ensures we wire once even
+    # if auth$logged toggles (logout -> login).
+    copilot_wired <- FALSE
+    observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged) || copilot_wired) return()
+      copilot_wired <<- TRUE
+      CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
+        auth = auth,
+          maxturns = opt$LLM_MAXTURNS,
+        tiers = opt$COPILOT_MODEL,
+        is_data_loaded = NULL)
+      
+      StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
+        can_save_pgx = can_save_current_pgx,
+        user_email = function() shiny::isolate(auth$email))
+      
+    })
+    
     shiny::observe({
       ## Treat the pre-init NULL as on (default enabled); hide only on an
       ## explicit FALSE from the switch.
@@ -1087,15 +1077,14 @@ app_server <- function(input, output, session) {
       }
     })
   }
-
+  
   if(opt$DEVMODE) {
-    dbg("[SERVER] WARNING: DEVMODE modules enabled!")
-    prism_server("prism")
+    dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
     launcher_server("apps", parent = session)
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
     qsee_server("qsee", pgx = PGX)
-
+    prism_server("prism")
   }
   
   ## -------------------------------------------------------------

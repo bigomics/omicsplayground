@@ -16,9 +16,10 @@ launcher_ui <- function(id) {
 #      icon = "chart-column",
       icon = "tachograph-digital",      
       label = "Omics Playground",
-      description = "Play, visualize & discover",
+      description = "Play, see & discover",
       rgb = c(73,129,178),
-      group = "Dashboards"
+      group = "Dashboards",
+      badge = "free"      
     ),
     list(
       input = "launch_qsee",
@@ -26,7 +27,8 @@ launcher_ui <- function(id) {
       label = "Qsee/Bsee",
       description = "Visual QC & BC analyzer",
       rgb = c(36,176,148),
-      group = "Dashboards"
+      group = "Dashboards",
+      badge = "pro"
     ),
     list(
       input = "launch_across",
@@ -35,7 +37,8 @@ launcher_ui <- function(id) {
       label = "Across Explorer",
       description = "Query across all your datasets",
       rgb = c(180,70,70),
-      group = "Dashboards"
+      group = "Dashboards",
+      badge = "beta"
     ),
     ## ----------------- apps ---------------
     list(
@@ -66,6 +69,7 @@ launcher_ui <- function(id) {
     shiny::actionButton(
       ns(app$input),
       label = shiny::tagList(
+        if (!is.null(app$badge)) shiny::div(class = "app-tile-badge", app$badge),
         shiny::icon(app$icon, class = "app-tile-icon"),
         shiny::div(class = "app-tile-label", app$label),
         shiny::div(class = "app-tile-description", app$description)
@@ -94,25 +98,56 @@ launcher_ui <- function(id) {
   }
 
   groups <- unique(vapply(apps, function(a) a$group, character(1)))
+  
+  random_greeting <- function() {
+    all.hello <- c(
+      "Hello", "Salut", "Hola", "Pivet", "Ni hao", "Ciao", "Hi", "Hoi", "Hej",
+      "Yassou", "Selam", "Hey", "Hei", "Grutzi", "Bonjour", "Jak się masz",
+      "Namaste", "Salam", "Selamat", "Shalom", "Goeiedag", "Yaxshimusiz"
+    )
+    greetings <- c(
+      "What shall we discover today?",
+      "What are you working on today?",
+      "Where shall we go today?",
+      "What would you like to do today?",
+      "Ready to dive into your data?",
+      "Ready for new discoveries?"
+    )
+    hh <- paste0(sample(all.hello, 1),"! ")
+    gg <- sample(greetings, 1)
+    paste0(hh, gg)
+  }
 
   ui <- page_fluid(
-    style = "background-color: #f0f9fd;",
-      
+    style = "background-color: #f0f9fd; height: 100vh;",
+
+    div(shiny::actionButton(
+      ns("logo_click"),
+      shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px"),
+      class = "quick-button", style="border: 0px; background-color: transparent;"),
+      style="display: flex; justify-content: flex-end; padding: 20px 0 0 0;"),
+
     ## header with search bar
     bslib::layout_columns(
-      style = "text-align: center; padding: 20px 0 0px 0;",
+      style = "text-align: center; margin: -10px 0 20px 0;",
       col_widths = 12,
-      div("What shall we discover today?", id="welcome-text", style="font-size: 32px;"),      
-      #div("What would you like to discover today?", id = "welcome-subtext"),
+      div( random_greeting(), id="welcome-text", style="font-size: 32px;")      
+      #div("What would you like to discover today?", id = "welcome-subtext")
     ),
-
+    
     ## app launcher grid, grouped by section
     shiny::div(
       style = "padding: 35px 15% 0 15%;",
-      lapply(groups, function(g) {
-        group_section(g, Filter(function(a) a$group == g, apps))
-      })
+      group_section("Dashboards", Filter(function(a) a$group == "Dashboards", apps))
+      ##group_section("Apps", Filter(function(a) a$group == "Apps", apps))      
+    ),
+
+    ## credits
+    shiny::div(
+      style = "margin-top: 100px; width: 100%;",
+      creditsCarousel() 
     )
+    
   )
 
   return(ui)

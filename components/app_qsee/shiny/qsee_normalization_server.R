@@ -18,7 +18,9 @@ qsee_normalization_server <- function(id, rX, rY) {
     })
 
     get_result <- qsee_board_cache(
-      is_visible, deps = function() get_rawX(), label = "qsee_normalization_server",
+      is_visible,
+      deps = function() get_rawX(),
+      label = "qsee_normalization_server",
       compute = function() {
         rawX <- get_rawX(); shiny::req(rawX)
         progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())

@@ -110,13 +110,20 @@ app_ui <- function(x) {
         id = "app-sidebar",
         ##widths = c("50px","calc(100% - 50px)"),
         widths = c(1,11),
-        selected = "Home",
+        selected = ifelse( isTRUE(opt$DEVMODE), "Apps", "Home"),
         well = TRUE,
         bslib::nav_panel(
           title = "Home",
-          icon=icon("home"),
+          icon = icon("home"),
           omicspanel(WelcomeBoardUI("welcome2"))
         ),
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel(
+            title = "Apps",
+            icon = icon("app-store-ios", style="font-size: 38px;"),
+            launcher_ui("apps")
+          )
+        },        
         bslib::nav_panel(
           title = "Library",
           icon=icon("book"),
@@ -127,12 +134,6 @@ app_ui <- function(x) {
           icon = icon("chart-line"),
           opg_ui()
         ),
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(title = "Apps",
-            icon = icon("app-store-ios", style="font-size: 38px;"),
-            launcher_ui("apps")
-          )
-        },
         ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
         ## The runtime "Enable AI" switch further shows/hides them per session
         ## via bigdash.toggleTab in appsettings_server.R.

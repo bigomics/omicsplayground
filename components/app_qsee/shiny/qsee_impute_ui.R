@@ -26,14 +26,14 @@ qsee_imputation_ui <- function(id) {
         title = "Distribution",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("distributions"),
             title = "Missingness distributions",
             info.text = dist_infotext,
             caption = dist_infotext,
             plotlib = "plotly",
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       ),
@@ -41,14 +41,14 @@ qsee_imputation_ui <- function(id) {
         title = "Histogram",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("histograms"),
             title = "Observed vs imputed densities",
             info.text = hist_infotext,
             caption = hist_infotext,
             plotlib = "plotly",
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       ),
@@ -56,7 +56,7 @@ qsee_imputation_ui <- function(id) {
         title = "PCA",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("pca_plots"),
             title = "PCA after imputation",
@@ -66,7 +66,7 @@ qsee_imputation_ui <- function(id) {
             options = shiny::tagList(
               shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
             ),
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       ),
@@ -74,7 +74,7 @@ qsee_imputation_ui <- function(id) {
         title = "Heatmap",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           bslib::card(
             full_screen = TRUE,
             bslib::card_header("Imputed data correlation heatmaps"),
@@ -86,14 +86,14 @@ qsee_imputation_ui <- function(id) {
         title = "Validation",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("validation_scatter"),
             title = "Imputation accuracy (simulated missing)",
             info.text = valid_infotext,
             caption = valid_infotext,
             plotlib = "plotly",
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       )

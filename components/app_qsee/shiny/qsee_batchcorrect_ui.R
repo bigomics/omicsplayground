@@ -49,7 +49,7 @@ qsee_bsee_ui <- function(id) {
         bslib::layout_columns(
           col_widths = 6,
           row_heights = c(1,1),
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           heights_equal = "row",
           PlotModuleUI(
             ns("plot1"),
@@ -83,7 +83,7 @@ qsee_bsee_ui <- function(id) {
         title = "PCVA",
         bslib::layout_columns(
           col_widths = 6,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           bslib::layout_columns(
             col_widths = 12,
             row_heights = c(1,1),

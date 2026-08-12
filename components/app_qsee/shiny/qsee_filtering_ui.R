@@ -35,7 +35,7 @@ qsee_filtering_ui <- function(id) {
         title = "SD Filtering",
         bslib::layout_columns(
           col_widths = c(8, 4),
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("pca_vs_topsd"),
             title = "PCA (top SD features)",
@@ -45,19 +45,19 @@ qsee_filtering_ui <- function(id) {
             options = shiny::tagList(
               shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
             ),
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           ),
           bslib::layout_columns(
             col_widths = 12,
             row_heights = c(1, 1),
-            height = "calc(100vh - 200px)",
+            height = "calc(100vh - 140px)",
             PlotModuleUI(
               ns("variance_vs_topsd"),
               title = "Cumulative variance explained",
               info.text = var_infotext,
               caption = var_infotext,
               plotlib = "plotly",
-              height = c("calc(100vh - 200px)", "calc(80vh)")
+              height = c("100%", "80vh")
             ),
             PlotModuleUI(
               ns("sd_histogram"),
@@ -65,7 +65,7 @@ qsee_filtering_ui <- function(id) {
               info.text = hist_infotext,
               caption = hist_infotext,
               plotlib = "plotly",
-              height = c("calc(100vh - 200px)", "calc(80vh)")
+              height = c("100%", "80vh")
             )
           )
         )

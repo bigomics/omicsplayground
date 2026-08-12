@@ -21,14 +21,14 @@ qsee_outlier_ui <- function(id) {
         title = "Z-scores",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           PlotModuleUI(
             ns("outlier_zscores"),
             title = "Z-score outliers",
             info.text = zscore_infotext,
             caption = zscore_infotext,
             plotlib = "plotly",
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       ),
@@ -36,7 +36,7 @@ qsee_outlier_ui <- function(id) {
         title = "Heatmap & PCA",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 200px)",
+          height = "calc(100vh - 140px)",
           bslib::card(
             full_screen = TRUE,
             iheatmapr::iheatmaprOutput(ns("outlier_heatmap"), height = "calc(100vh - 260px)")
@@ -50,7 +50,7 @@ qsee_outlier_ui <- function(id) {
             options = shiny::tagList(
               shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = TRUE)
             ),
-            height = c("calc(100vh - 200px)", "calc(80vh)")
+            height = c("100%", "80vh")
           )
         )
       )

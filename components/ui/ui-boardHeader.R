@@ -81,7 +81,7 @@ OmicsBoard <- function(id, pgx, title, infotext=NULL) {
       if(has.pgx) {
         pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
       } else {
-        pgx.name <- "(no dataset)"
+        pgx.name <- ""
       }
       div(
         shiny::actionButton(
