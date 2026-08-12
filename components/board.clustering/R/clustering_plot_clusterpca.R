@@ -261,7 +261,7 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_text(
             x = pos[, 1], y = pos[, 2], text = rownames(df),
             textposition = "top center",
-            textfont = list(size = 12 * cex, color = "grey30"),
+            textfont = list(size = 12 * cex, color = "#4D4D4D"),
             showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
           )
         }
@@ -283,14 +283,14 @@ clustering_plot_clustpca_server <- function(id,
               x = as.vector(rbind(0, aa$x, NA)),
               y = as.vector(rbind(0, aa$y, NA)),
               type = "scatter", mode = "lines",
-              line = list(color = "grey30", width = 1.8),
+              line = list(color = "#4D4D4D", width = 1.8),
               showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
             ) %>%
             plotly::add_trace(
               x = aa$x, y = aa$y,
               type = "scatter", mode = "markers",
               marker = list(
-                symbol = "arrow", size = 12, color = "grey30",
+                symbol = "arrow", size = 12, color = "#4D4D4D",
                 angle = atan2(aa$x, aa$y) * 180 / pi
               ),
               text = aa$text, hoverinfo = "text",
@@ -306,7 +306,7 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_annotations(
             x = aa$lx, y = aa$ly, text = aa$text,
             showarrow = FALSE,
-            font = list(color = "grey20", size = 13 * cex),
+            font = list(color = "#333333", size = 13 * cex),
             bgcolor = "rgba(255,255,255,0.65)", borderpad = 2
           )
           if (isTRUE(input$pca_repel) && requireNamespace("plotly.repel", quietly = TRUE)) {
@@ -315,8 +315,8 @@ clustering_plot_clustpca_server <- function(id,
               data = data.frame(x = aa$x, y = aa$y, text = aa$text),
               x = ~x, y = ~y, text = ~text,
               box_padding = 0.4, point_padding = 0.3, max_overlaps = 20,
-              font = list(color = "grey20", size = 13 * cex),
-              segment = list(color = "grey60", width = 1)
+              font = list(color = "#333333", size = 13 * cex),
+              segment = list(color = "#999999", width = 1)
             )
           }
         }
@@ -444,7 +444,7 @@ clustering_plot_clustpca_server <- function(id,
         plotly::add_trace(
           x = ~pc, y = ~cumulative, name = "cumulative",
           type = "scatter", mode = "lines+markers",
-          line = list(color = "grey40"), marker = list(color = "grey40"),
+          line = list(color = "#666666"), marker = list(color = "#666666"),
           hovertemplate = "up to %{x}: %{y}%<extra></extra>"
         ) %>%
         plotly::layout(
