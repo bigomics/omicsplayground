@@ -3,8 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-## Pre-redesign version saved as launcher_ui_classic() in launcher_ui_classic.R —
-## see docs/superpowers/specs/2026-07-17-app-launcher-redesign-design.md.
+## Launcher page for dashboards, apps and tools.
 
 launcher_ui <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -32,8 +31,9 @@ launcher_ui <- function(id) {
     list(
       input = "launch_across",
       icon = "shuffle",
-      label = "Cross Explorer",
-      description = "Query across datasets",
+      ##icon = "layer-group",
+      label = "Across Explorer",
+      description = "Query across all your datasets",
       rgb = c(180,70,70),
       group = "Dashboards"
     ),
@@ -52,22 +52,6 @@ launcher_ui <- function(id) {
       label = "SmartPrism",
       description = "AI-generated figures",
       rgb = c(190,120,50),
-      group = "Apps"
-    ),
-    list(
-      input = "launch_pca",
-      icon = "bullseye",
-      label = "PCA explorer",
-      description = "Interactive PCA",
-      rgb = c(190,190,50),
-      group = "Apps"
-    ),
-    list(
-      input = "launch_kegg",
-      icon = "object-group",
-      label = "KEGG Retriever",
-      description = "Download KEGG sets",
-      rgb = c(190,190,50),
       group = "Apps"
     )
   )
@@ -112,14 +96,14 @@ launcher_ui <- function(id) {
   groups <- unique(vapply(apps, function(a) a$group, character(1)))
 
   ui <- page_fluid(
-
+    style = "background-color: #f0f9fd;",
+      
     ## header with search bar
     bslib::layout_columns(
-      style = "text-align: center; padding: 80px 0 50px 0;",
-      col_widths = c(-4,4,-4),
-      h1("App Launcher"),
-      p("Handy apps for your bioinformatics", style="margin-top: -20px;"),
-      shiny::textInput(ns("tools_search"), NULL, placeholder="Search...")
+      style = "text-align: center; padding: 20px 0 0px 0;",
+      col_widths = 12,
+      div("What shall we discover today?", id="welcome-text", style="font-size: 32px;"),      
+      #div("What would you like to discover today?", id = "welcome-subtext"),
     ),
 
     ## app launcher grid, grouped by section

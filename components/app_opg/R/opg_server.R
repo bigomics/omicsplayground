@@ -2,9 +2,56 @@
 ## NOTE: This is not a real shiny module (yet...). We should move as
 ## much as possible OPG server related code here.
 
-opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
+opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
+                       load_example = NULL) {
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
+
+  ## -------------------------------------------------------------
+  ## No dataset loaded: offer the example dataset (like Qsee)
+  ## -------------------------------------------------------------
+
+  ## The Dashboard can be entered without any dataset (e.g. from the app
+  ## launcher, which selects the nav panel programmatically and so bypasses
+  ## the disabled nav link). Then all boards are empty, so ask the user
+  ## whether to load the example dataset instead.
+  shiny::observeEvent(input[["app-sidebar"]], {
+    shiny::req(input[["app-sidebar"]] == "Dashboard")
+    shiny::req(isTRUE(auth$logged))
+    noX <- is.null(PGX$X) || length(PGX$X) == 0
+    if (!noX) return(NULL)
+    info("[SERVER] no dataset loaded: asking for example data")
+    shiny::showModal(
+      shiny::modalDialog(
+        title = "No dataset loaded",
+        shiny::p(
+          "No dataset has been loaded yet. Would you like to load ",
+          "the example dataset to explore the Playground?"
+        ),
+        footer = shiny::tagList(
+          shiny::modalButton("Cancel"),
+          shiny::actionButton("opg_load_example_from_popup",
+            "Load example data", class = "btn-primary")
+        ),
+        size = "s",
+        easyClose = FALSE
+      )
+    )
+  })
+
+  shiny::observeEvent(input$opg_load_example_from_popup, {
+    shiny::removeModal()
+    if (is.null(load_example)) {
+      warning("[SERVER] !!! no load_example trigger available")
+      return(NULL)
+    }
+    if (is.null(load_example())) {
+      load_example(1)
+    } else {
+      load_example(load_example() + 1)
+    }
+    info("[SERVER] loading example data from popup")
+  })
 
   ## Hide/show tabs. Open sidebar and settings
   shiny::observeEvent(

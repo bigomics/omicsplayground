@@ -961,7 +961,8 @@ app_server <- function(input, output, session) {
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir)
+  opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir,
+    load_example = load_example)
   
   if (copilot_packages_ok()) {
     # Defer wiring until login completes: CopilotBoardServer snapshots
@@ -987,7 +988,8 @@ app_server <- function(input, output, session) {
     can_save_pgx = can_save_current_pgx,
     user_email = function() shiny::isolate(auth$email))
 
-  if (isTRUE(opt$ENABLE_ACROSS)) {
+  ##if (isTRUE(opt$ENABLE_ACROSS)) {
+  if (isTRUE(opt$DEVMODE)) {  
     AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
                 tiledb_refresh = tiledb_ready)
 
@@ -1093,8 +1095,7 @@ app_server <- function(input, output, session) {
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
     qsee_server("qsee", pgx = PGX)
-    PCAexplorer_server("pcaexplorer", pgx = PGX)
-    
+
   }
   
   ## -------------------------------------------------------------

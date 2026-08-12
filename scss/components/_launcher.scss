@@ -33,7 +33,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    height: 160px;
+    height: 130px;
     padding: 16px 12px;
     border: 0;
     border-radius: 18px;
@@ -45,7 +45,8 @@
 
 .app-tile-wide {
     height: auto;
-    aspect-ratio: 2.0 / 1;
+    max-height: 170px;
+    aspect-ratio: 2.2 / 1;
     padding: 16px 14px;
 }
 

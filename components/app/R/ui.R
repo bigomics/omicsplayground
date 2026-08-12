@@ -97,29 +97,9 @@ app_ui <- function(x) {
         href = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#"))
     }
     
-    ## new multi-app UI
-    nav_page <- function(...) {
-      bslib::page_fluid(
-        theme = bigdash::big_theme(),
-        title = NULL,
-        style = "padding: 0px;",
-        bigdash::navbar(
-          title = tags$img(
-            src = "assets/img/bigomics.png",
-            width = "110"
-          ),
-          center = tags$div(
-              "title in navbar",
-              style = 'text-align:center;width: 100%;'
-          ),
-          left = NULL,
-          NULL
-        ),
-        ... 
-      )
-    }
-    
-    nav_page <- function(p) {p}  ## dummy
+    omicspanel <- function(p) {
+      div(p, style="margin: 0 8px 0 8px;", class = "omicspanel")
+    }  
     
     ##ui <- bslib::page_fillable(
     ui <- bigdash::bigPage(
@@ -134,28 +114,18 @@ app_ui <- function(x) {
         bslib::nav_panel(
           title = "Home",
           icon=icon("home"),
-          nav_page(WelcomeBoardUI("welcome2"))
+          omicspanel(WelcomeBoardUI("welcome2"))
         ),
         bslib::nav_panel(
           title = "Library",
           icon=icon("book"),
-          nav_page(
-            div(LoadingUI("load"), class = "omicspanel")
-          )
+          omicspanel(LoadingUI("load"))
         ),
         bslib::nav_panel(
           title = "Dashboard",
           icon = icon("chart-line"),
           opg_ui()
         ),
-        if (isTRUE(opt$ENABLE_ACROSS)) {
-          bslib::nav_panel(
-            title = HTML("Across&nbsp;datasets"),
-            value = "AcrossDatasets",
-            icon = icon("layer-group"),
-            div(AcrossUI("across"), class = "omicspanel")
-          )
-        },
         if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(title = "Apps",
             icon = icon("app-store-ios", style="font-size: 38px;"),
@@ -170,56 +140,54 @@ app_ui <- function(x) {
             title = HTML("Studio"),
             value = "Studio",
             icon = icon("clapperboard"),
-            div(StudioUI("studio"), class = "omicspanel")
+            omicspanel(StudioUI("studio"))
           )
         },
         if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
           bslib::nav_panel(
             #title = HTML("AI&nbsp;Copilot"),
-            title = tagList(icon("robot"), tags$br(), "Obi AI"),
+            title = shiny::tagList(icon("robot"), tags$br(), "Obi AI"),
             value = "Copilot",
-            div(CopilotBoardUI("copilot2"), class = "omicspanel")
+            omicspanel(CopilotBoardUI("copilot2"))
           )
         },
         if(isTRUE(opt$DEVMODE)) {
           bslib::nav_panel(
-            title = "Runs", icon=icon("person-running"),
-            div( class = "omicspanel",
-              ##shiny::div(id = "navheader-current-section", HTML("Runs")),
-              ##p("Monitor and inspect the details of computation runs"),
-              RunMonitorUI("runmonitor")
-            )
+            title = "Runs", icon = icon("person-running"),
+            omicspanel(RunMonitorUI("runmonitor"))
           )
         },
         ## Hidden panels (e.g. tools)
-        bslib::nav_panel_hidden("Prism",
-          div(prism_ui("prism"), class='omicspanel')
-        ),
         bslib::nav_panel_hidden("Upload",
-          div(UploadUI("upload"), class='omicspanel')           
+          omicspanel(UploadUI("upload"))
         ),
         bslib::nav_panel_hidden("UserProfile",
-          div(UserProfileUI("user_profile"), class='omicspanel')
+          omicspanel(UserProfileUI("user_profile"))
         ),
         if (isTRUE(opt$ENABLE_ADMIN)) {
           bslib::nav_panel_hidden("AdminPanel",
-            div(AdminPanelUI("admin_panel"), class='omicspanel')
+            omicspanel(AdminPanelUI("admin_panel"))
           )
         },
+        bslib::nav_panel_hidden("Prism",
+          omicspanel(prism_ui("prism"))
+        ),
         bslib::nav_panel_hidden("IDconvert",
-          div(idconvert_ui("idconvert"), class='omicspanel')
+          omicspanel(idconvert_ui("idconvert"))
         ),
         bslib::nav_panel_hidden("Qsee",
-          div(qsee_ui("qsee"), class='omicspanel')
+          omicspanel(qsee_ui("qsee"))
         ),
-        bslib::nav_panel_hidden("PCAexplorer",
-          div(PCAexplorer_ui("pcaexplorer"), class='omicspanel')
+        bslib::nav_panel_hidden(
+          value = "AcrossDatasets",
+          #title = HTML("Across&nbsp;datasets"),
+          #icon = icon("layer-group"),
+          omicspanel(AcrossUI("across"))
         ),
-
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),
-          div(AppSettingsUI("app_settings"), class='omicspanel') 
+          omicspanel(AppSettingsUI("app_settings")) 
         ),          
         bslib::nav_menu(
           title = "Help",
@@ -245,7 +213,35 @@ app_ui <- function(x) {
           nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            
           signout_link
           )
-      )
+      ),
+      ## The "Dashboard" nav_panel above embeds opg_ui(), which builds its
+      ## own bigdash::bigPage() (with its own sidebar/settings drawer) as a
+      ## tab of this outer bigdash::bigPage(). Both default to the same
+      ## "app" id, so both end up as `.bigdash-app` roots with
+      ## id/data-bigdash-id="app" -- an invalid duplicate DOM id. bigdash's
+      ## own JS (settings.js) iterates every `.bigdash-app` root once to
+      ## bind the settings-lock click handler, so with two roots resolving
+      ## to the same id it binds the handler *twice* on the same lock icon;
+      ## the two bound handlers toggle the locked/unlocked state back and
+      ## forth on every click, so the lock appears completely unresponsive
+      ## (this is the reported bug -- see qsee_ui.R/qsee_server.R for a
+      ## module that avoids this by using a distinct, fully-scoped id).
+      ## This outer shell never uses its own bigdash sidebar/settings (no
+      ## `sidebar`/`settings` args are passed above), so it's safe to strip
+      ## its `.bigdash-app` marker before bigdash's init code runs, leaving
+      ## opg_ui()'s nested page as the sole "app"-id root. Runs as a plain
+      ## synchronous <script> (not $(document).ready(...)) so it executes
+      ## while the page is still parsing, before bigdash's own
+      ## `$(function(){ ... })` init handlers fire.
+      tags$script(HTML(
+        "(function() {
+          var roots = document.querySelectorAll('.bigdash-app');
+          if (roots.length > 1) {
+            roots[0].classList.remove('bigdash-app');
+            roots[0].removeAttribute('data-bigdash-id');
+          }
+        })();"
+      ))
     )
 
     return(ui)

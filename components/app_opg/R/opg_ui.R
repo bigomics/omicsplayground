@@ -60,8 +60,6 @@ opg_ui <- function() {
     #ENABLED["welcome"] <<- TRUE
     #ENABLED["load"] <<- TRUE
 
-    dbg("names(menu_tree) = ", names(menu_tree))
-    dbg("names.ENABLED = ", names(ENABLED))
     menu_tree <- menu_tree[MODULES_ENABLED]
     ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
@@ -110,18 +108,7 @@ opg_ui <- function() {
     info("[opg_ui] initial_is_full = ", initial_is_full)
     
     sidebar <- bigdash::sidebar(
-      "Menu",
-      ## div(
-      ##   id = "menu-mode-switch",
-      ##   shinyWidgets::switchInput(
-      ##     "menu_mode_toggle",
-      ##     label    = NULL,
-      ##     value    = initial_is_full,
-      ##     onLabel  = "Advanced",
-      ##     offLabel = "Basic",
-      ##     size     = "mini"
-      ##   )
-      ## ),
+      "Playground",
       div(
         id = "menu-full",
         class = "nodisp", style = "diplay: none;",

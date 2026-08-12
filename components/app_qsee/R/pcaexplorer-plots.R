@@ -1,141 +1,26 @@
-## Biplot grid for the BC panel: one biplot per method (sample scores as
-## points, arrows overlaid) on the two selected PCs. Same method list /
-## grid as plot_all_methods. Two arrow sources:
-##  - "loadings": top feature loadings (res$loadings, same PCA as scores)
-##  - "pheno": each annotation's correlation with the two PCs, precomputed
-##    in playbase (res$pheno.cor; eigencorplot-style, plain cor())
-pcaexplorer.plot_biplot <- function(res, samples, xpc=1, ypc=2, colorby_var=NULL,
-                                    main = "PCA biplot", cex = 2, cex.labels = 0.85,
-                                    arrows = "loadings", arrow.col = "#B3444488",
-                                    numarrows = 10, arrow.lwd = 2,
-                                    var.scale = 0.5,
-                                    legend = TRUE, add.ellipse=TRUE ) {
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
+##
+## Plotting functions for the "PCA explorer" Qsee board (formerly the
+## standalone app_pcaexplorer app, now merged in as an extra board -- see
+## app_qsee/shiny/qsee_pcaexplorer_ui.R / _server.R and
+## app_qsee/R/pcaexplorer-compute.R).
+##
 
-  if(0) {
+## ---------------------------------------------------------------------------
+## Biplot board
+## ---------------------------------------------------------------------------
 
-    X <- playbase::logCPM(playbase::COUNTS)
-    X <- X - rowMeans(X,na.rm=TRUE)
-    Y <- playbase::SAMPLES
-    res <- svd(X)
-    rownames(res$v) <- rownames(Y)
-    rownames(res$u) <- rownames(X)
-    H <- playbase::expandPhenoMatrix(Y, drop.ref=FALSE)
-    res$R <- cor(H, res$v)
-    xpc=1;ypc=2
-  }
-  
-  ## arrow endpoints for a method: named 2-col matrix in loading- or
-  ## correlation-units (scaled to the score cloud later). Both come
-  ## precomputed from playbase::compare_batchcorrection_methods.
-  arrow_ends <- function(res, scores, arrows="loadings") {
-    if (arrows == "loadings") {
-      L <- res$u
-      if (is.null(L) || max(xpc, ypc) > ncol(L)) {
-        return(NULL)
-      }
-      A <- L[, c(xpc, ypc), drop = FALSE]
-    } else {
-      Rc <- res$R
-      if (is.null(Rc) || max(xpc, ypc) > ncol(Rc)) {
-        return(NULL)
-      }
-      A <- Rc[, c(xpc, ypc), drop = FALSE]
-      if (!nrow(A)) {
-        return(NULL)
-      }
-    }
-    A <- A[stats::complete.cases(A), , drop = FALSE]
-    A[head(order(-(A[, 1]^2 + A[, 2]^2)), numarrows), , drop = FALSE]
-  }
-  
-  P <- res$v
-  if (is.null(P) || max(xpc, ypc) > ncol(P)) {
-    plot.new()
-    text(0.45, 0.5, "method failed")
-    title("PCA biplot", cex.main = 1.3, adj = 0)
-    return(invisible())
-  }
-  varx <- round(100 * res$d**2 / sum(res$d**2),1)
-  scores <- P[, c(xpc, ypc), drop = FALSE]
-  varx <- varx[c(xpc, ypc)]
-  
-  smp <- samples[rownames(scores), , drop = FALSE]
-  group <- factor(smp[, colorby_var])
-  color <- 1 + as.integer(group)
-  names(color) <- group
-  cex1 <- cut(nrow(scores), c(0, 40, 100, 250, 1000, 999999),
-    c(1, 0.85, 0.7, 0.55, 0.4))
-  cex1 <- 2 * cex * as.numeric(as.character(cex1))
-  if (is.na(cex1)) cex1 <- 1
-  
-  lim <- c(-1, 1) * max(abs(scores)) * 1.2
-  plot(scores,
-    col = color, pch = 20, cex = cex1, las = 1, xlim = lim, ylim = lim,
-    xlab = paste0("PC", xpc, " (", varx[1],"%)"),
-    ylab = paste0("PC", ypc, " (", varx[2],"%)"),
-  )
-  title(main, cex.main = 1.3)
-  abline(h = 0, v = 0, lty = 3, col = "grey70")
-
-  plotrix::thigmophobe.labels(
-    scores[,1], scores[,2], rownames(scores),
-    cex = cex.labels, col = color, offset = 0.4, xpd = NA
-  )
-
-  if(numarrows > 0) {
-    A <- arrow_ends(res, scores, arrows = arrows)
-    if (!is.null(A) && nrow(A) && max(abs(A)) > 0) {
-      ## scale arrows to fill the score cloud (loadings/correlations sit on a
-      ## much smaller scale than the scores)
-      s <- var.scale * max(abs(scores)) / max(abs(A))
-      ax <- A[, 1] * s
-      ay <- A[, 2] * s
-      arrows(0, 0, ax, ay, length = 0.15, col = arrow.col, lwd = arrow.lwd)
-      ## repel labels off each other (base-graphics; places each away from
-      ## its nearest neighbour) rather than a fixed left/right offset
-      plotrix::thigmophobe.labels(ax, ay, rownames(A),
-        cex = cex.labels, col = arrow.col, offset = 0.4, xpd = NA
-      )
-    }
-  }
-  
-  if(add.ellipse) {
-    g = group[1]
-    for(g in unique(group)) {
-      ii <- which(group == g)
-      mat <- scores[ii,,drop=FALSE]
-      if(nrow(mat) < 2) next
-      
-      # 3. Calculate ellipse boundary from the matrix covariance
-      # (t = radius multiplier; t = 2 captures roughly 95% of data for bivariate normal)
-      ellipse_points <- ellipse::ellipse(
-        cov(mat), centre = colMeans(mat), t = 2)
-      
-      # 4. Layer the ellipse onto the plot
-      ##lines(ellipse_points, col = color[g], lwd = 2)
-      c1 <- adjustcolor( color[g], alpha.f = 0.12)
-      polygon(ellipse_points, col = c1, border = color[g], lwd = 1.4)
-    }    
-  }
-
-  if(legend) {
-    cc <- color[levels(group)]
-    legend("bottomright", levels(group), fill=cc, cex=0.85, y.intersp=0.85)
-  }
-  
-}
-
-
-
-## 2D plotly counterpart of pcaexplorer.plot_biplot: same score/arrow logic
-## (top loadings or top pheno-correlations, scaled to fill the score cloud),
-## rendered as an interactive plotly scatter. Optional group ellipses as
-## closed line traces (same covariance ellipse as the base plot).
-pcaexplorer.plot_biplot_2d <- function(res, samples, xpc=1, ypc=2, colorby_var=NULL,
-                                       main = "PCA biplot", arrows = "loadings",
-                                       arrow.col = "black", numarrows = 10,
-                                       var.scale = 0.65, marker.size = 10,
-                                       legend = TRUE, add.ellipse = TRUE) {
+## 2D interactive biplot: score/arrow
+## logic (top loadings or top pheno-correlations, scaled to fill the score
+## cloud), rendered as an interactive plotly scatter. Optional group
+## ellipses as closed line traces.
+qsee_pcaexplorer_plot_biplot_2d <- function(res, samples, xpc=1, ypc=2, colorby_var=NULL,
+                                            main = "PCA biplot", arrows = "loadings",
+                                            arrow.col = "black", numarrows = 10,
+                                            var.scale = 0.65, marker.size = 10,
+                                            legend = TRUE, add.ellipse = TRUE) {
 
   arrow_ends <- function(res, arrows = "loadings") {
     A <- if (arrows == "loadings") res$u else res$R
@@ -311,15 +196,15 @@ pcaexplorer.plot_biplot_2d <- function(res, samples, xpc=1, ypc=2, colorby_var=N
 }
 
 
-## 3D counterpart of pcaexplorer.plot_biplot: same score/arrow logic (top
-## loadings or top pheno-correlations, scaled to fill the score cloud), but
-## rendered as an interactive plotly scatter3d instead of base graphics.
+## 3D interactive biplot: same score/arrow logic
+## (top loadings or top pheno-correlations, scaled to fill the score cloud),
+## rendered as an interactive plotly scatter3d.
 ## Optional group ellipsoids as scatter3d wireframes (t=2 covariance).
-pcaexplorer.plot_biplot_3d <- function(res, samples, xpc=1, ypc=2, zpc=3, colorby_var=NULL,
-                                       main = "PCA biplot", arrows = "loadings",
-                                       arrow.col = "black", numarrows = 10,
-                                       var.scale = 0.5, marker.size = 6, legend = TRUE,
-                                       add.ellipse = TRUE) {
+qsee_pcaexplorer_plot_biplot_3d <- function(res, samples, xpc=1, ypc=2, zpc=3, colorby_var=NULL,
+                                            main = "PCA biplot", arrows = "loadings",
+                                            arrow.col = "black", numarrows = 10,
+                                            var.scale = 0.5, marker.size = 6, legend = TRUE,
+                                            add.ellipse = TRUE) {
 
   arrow_ends <- function(res, arrows="loadings") {
     A <- if (arrows == "loadings") res$u else res$R
@@ -478,8 +363,41 @@ pcaexplorer.plot_biplot_3d <- function(res, samples, xpc=1, ypc=2, zpc=3, colorb
   )
 }
 
+qsee_pcaexplorer_plot_variance_proportion <- function(res) {
+  aa <- paste0("PC", seq_len(ncol(res$v)))
+  dd <- 100 * res$d**2 / sum(res$d**2)
+  graphics::par(cex = 1.1, mar = c(3, 4, 3, 0.5))
+  graphics::barplot(
+    dd, names.arg = aa,
+    ylab = "variance proportion (%)", width = 1,
+    ylim = c(0, max(dd) * 1.1)
+  )
+  graphics::title("Variance vs. PC dimension")
+  xx <- (seq_along(dd) - 0.5) * 1.2
+  graphics::lines(xx, dd, type = "b", cex = 1.6, pch = 20)
+  graphics::text(xx, dd, labels = paste0(round(dd, 2), "%"), pos = 3, cex = 1)
+}
 
-pcaexplorer.plot_scatterpairs <- function(res, colorby_var, add.ellipse) {
+qsee_pcaexplorer_plot_variance_cumulative <- function(res) {
+  aa <- paste0("PC", seq_len(ncol(res$v)))
+  dd <- cumsum(100 * res$d**2 / sum(res$d**2))
+  graphics::par(cex = 1.1, mar = c(3, 4, 3, 0.5))
+  graphics::barplot(
+    dd, names.arg = aa,
+    ylab = "Cumulative variance (%)", width = 1,
+    ylim = c(0, max(dd) * 1.1)
+  )
+  graphics::title("Variance explained")
+  xx <- (seq_along(dd) - 0.5) * 1.2
+  graphics::lines(xx, dd, type = "b", cex = 1.6, pch = 20)
+  graphics::text(xx, dd, labels = paste0(round(dd, 2), "%"), pos = 3, cex = 1)
+}
+
+## ---------------------------------------------------------------------------
+## PCA pairs board
+## ---------------------------------------------------------------------------
+
+qsee_pcaexplorer_plot_scatterpairs <- function(res, colorby_var, add.ellipse) {
   group <- factor(res$Y[rownames(res$v), colorby_var])
   cc <- 1 + as.integer(group)
   V <- res$v[, 1:min(4L, ncol(res$v)), drop = FALSE]
@@ -577,14 +495,8 @@ pcaexplorer.plot_scatterpairs <- function(res, colorby_var, add.ellipse) {
     xl <- mean(range(x, na.rm = TRUE))
     yl <- mean(range(y, na.rm = TRUE))
     dy <- diff(range(y, na.rm = TRUE))
-    ## if (!is.na(ix) && !is.na(iy)) {
-    ##   graphics::text(xl, yl + 0.18 * dy,
-    ##     labels = sprintf("PC%d vs PC%d", min(ix, iy), max(ix, iy)),
-    ##     cex = 0.95, col = "grey25")
-    ## }
     lbl <- if (is.finite(s)) sprintf("sil = %.2f", s) else "sil = NA"
-    #graphics::text(xl, yl - 0.05 * dy, labels = lbl, cex = 1.4, font = 2)
-    graphics::text(xl, yl, labels = lbl, cex = 1.8, font = 1)    
+    graphics::text(xl, yl, labels = lbl, cex = 1.8, font = 1)
   }
 
   graphics::pairs(
@@ -600,11 +512,10 @@ pcaexplorer.plot_scatterpairs <- function(res, colorby_var, add.ellipse) {
   )
 }
 
-
 ## Boxplots of sample PC scores stratified by a phenotype (colorby).
 ## Complements the pairs matrix (bivariate) and the F-test panel
 ## (which phenotype separates on which PC).
-pcaexplorer.plot_pc_boxplots <- function(res, colorby_var, npc = 4) {
+qsee_pcaexplorer_plot_pc_boxplots <- function(res, colorby_var, npc = 4) {
   Y <- res$Y
   V <- res$v
   if (is.null(V) || is.null(Y) || is.null(colorby_var) ||
@@ -632,10 +543,10 @@ pcaexplorer.plot_pc_boxplots <- function(res, colorby_var, npc = 4) {
   if(length(levels(group)) <= 3) {
     bm <- 2
     las <- 1
-  } 
+  }
   par(mfrow = c(nr, nc), mar = c(bm, 3.5, 2.2, 0.3),
     mgp = c(2.3, 0.7, 0), cex = 0.95)
-  
+
   varx <- 100 * res$d**2 / sum(res$d**2)
   for (k in seq_len(npc)) {
     sc <- V[, k]
@@ -651,81 +562,36 @@ pcaexplorer.plot_pc_boxplots <- function(res, colorby_var, npc = 4) {
     set.seed(1)
     points(
       jitter(as.integer(group), amount = 0.12), sc,
-      pch = 19, cex = 0.7 #, col = grDevices::adjustcolor(clrs[as.character(group)], 0.7)
+      pch = 19, cex = 0.7
     )
     abline(h = 0, lty = 3, col = "grey60")
   }
 }
 
-
-pcaexplorer.plot_ftest_vs_pcdim <- function(res) {
+qsee_pcaexplorer_plot_ftest_vs_pcdim <- function(res) {
   Y <- res$Y
   V <- res$v
   sel <- which(apply(Y, 2, function(x) max(table(x[!is.na(x)])) > 1))
   F <- matrix(NA, ncol(V), length(sel))
   P <- matrix(NA, ncol(V), length(sel))
   rownames(F) = rownames(P) = colnames(V)
-  colnames(F) = colnames(P) = colnames(Y)  
+  colnames(F) = colnames(P) = colnames(Y)
   for(i in sel) {
     group <- factor(Y[,i])
     ft <- matrixTests::row_oneway_welch( t(V), group )
     F[,i] <- ft$statistic
-    P[,i] <- ft$pvalue    
+    P[,i] <- ft$pvalue
   }
 
-  if(0) {
-    matplot(log(1+F), type='p', pch=19, cex=1.3,
-      xlab = "PC dimension",
-      ylab = "F-statistic    log(F+1)"
-    )
-    matlines(log(1+F), lty=2, lwd=1.5)   
-  } else {
-    matplot(-log10(P), type='p', pch=19, cex=1.3,
-      xlab = "PC dimension",
-      ylab = "F-test p-value    (-logP)"
-    )
-    matlines(-log10(P), lty=2, lwd=1.5)  
-  }
-  
+  matplot(-log10(P), type='p', pch=19, cex=1.3,
+    xlab = "PC dimension",
+    ylab = "F-test p-value    (-logP)"
+  )
+  matlines(-log10(P), lty=2, lwd=1.5)
+
   title("F-test vs. PC dimension", line=1.2)
   legend("topright", legend=colnames(F), fill=1:10,
     cex=0.85, y.intersp=0.85 )
-  
-}
-
-
-## ---------------------------------------------------------------------------
-## Biplot side panels
-## ---------------------------------------------------------------------------
-
-pcaexplorer.plot_variance_proportion <- function(res) {
-  aa <- paste0("PC", seq_len(ncol(res$v)))
-  dd <- 100 * res$d**2 / sum(res$d**2)
-  graphics::par(cex = 1.1, mar = c(3, 4, 3, 0.5))
-  graphics::barplot(
-    dd, names.arg = aa,
-    ylab = "variance proportion (%)", width = 1,
-    ylim = c(0, max(dd) * 1.1)
-  )
-  graphics::title("Variance vs. PC dimension")
-  xx <- (seq_along(dd) - 0.5) * 1.2
-  graphics::lines(xx, dd, type = "b", cex = 1.6, pch = 20)
-  graphics::text(xx, dd, labels = paste0(round(dd, 2), "%"), pos = 3, cex = 1)
-}
-
-pcaexplorer.plot_variance_cumulative <- function(res) {
-  aa <- paste0("PC", seq_len(ncol(res$v)))
-  dd <- cumsum(100 * res$d**2 / sum(res$d**2))
-  graphics::par(cex = 1.1, mar = c(3, 4, 3, 0.5))
-  graphics::barplot(
-    dd, names.arg = aa,
-    ylab = "Cumulative variance (%)", width = 1,
-    ylim = c(0, max(dd) * 1.1)
-  )
-  graphics::title("Variance explained")
-  xx <- (seq_along(dd) - 0.5) * 1.2
-  graphics::lines(xx, dd, type = "b", cex = 1.6, pch = 20)
-  graphics::text(xx, dd, labels = paste0(round(dd, 2), "%"), pos = 3, cex = 1)
 }
 
 ## ---------------------------------------------------------------------------
@@ -733,7 +599,7 @@ pcaexplorer.plot_variance_cumulative <- function(res) {
 ## ---------------------------------------------------------------------------
 
 ## Vertical stack of top-|loading| barplots (one panel per PC).
-pcaexplorer.plot_loadings_bars <- function(res, npc = 4, ntop = 40) {
+qsee_pcaexplorer_plot_loadings_bars <- function(res, npc = 4, ntop = 40) {
   npc <- min(as.integer(npc), ncol(res$u))
   graphics::par(mfrow = c(npc, 1), mar = c(6, 4.5, 1.2, 0.8), cex = 1)
   for (k in seq_len(npc)) {
@@ -751,9 +617,9 @@ pcaexplorer.plot_loadings_bars <- function(res, npc = 4, ntop = 40) {
 
 ## Compact loading bars for PC1–PC2 (feature board side panel).
 ## Optional min_fc keeps only features with max |FC| >= threshold.
-pcaexplorer.plot_loadings_bars_compact <- function(res, npc = 2, ntop = 40,
-                                                   normX = NULL, Y = NULL,
-                                                   min_fc = 0) {
+qsee_pcaexplorer_plot_loadings_bars_compact <- function(res, npc = 2, ntop = 40,
+                                                         normX = NULL, Y = NULL,
+                                                         min_fc = 0) {
   npc <- min(as.integer(npc), ncol(res$u))
   U <- res$u
   if (is.null(normX)) normX <- res$X
@@ -762,8 +628,8 @@ pcaexplorer.plot_loadings_bars_compact <- function(res, npc = 2, ntop = 40,
   if (is.finite(min_fc) && min_fc > 0 && !is.null(normX)) {
     H <- if (!is.null(res$H)) res$H else playbase::expandPhenoMatrix(Y, drop.ref = FALSE)
     genes <- intersect(rownames(U), rownames(normX))
-    max_fc <- pcaexplorer.feature_max_fc(normX[genes, , drop = FALSE], H)
-    keep <- pcaexplorer.filter_features_by_maxfc(genes, max_fc, min_fc)
+    max_fc <- qsee_pcaexplorer_feature_max_fc(normX[genes, , drop = FALSE], H)
+    keep <- qsee_pcaexplorer_filter_features_by_maxfc(genes, max_fc, min_fc)
     if (length(keep) >= 2L) {
       U <- U[keep, , drop = FALSE]
     }
@@ -782,7 +648,7 @@ pcaexplorer.plot_loadings_bars_compact <- function(res, npc = 2, ntop = 40,
 
 ## Expression heatmap of top genes per PC (by |loading|), split into PC
 ## blocks via gx.splitmap; phenotype annotations on top of columns.
-pcaexplorer.plot_loadings_heatmap <- function(res, npc = 4, ntop = 15) {
+qsee_pcaexplorer_plot_loadings_heatmap <- function(res, npc = 4, ntop = 15) {
   X <- res$X
   Y <- res$Y
   U <- res$u
@@ -852,87 +718,20 @@ pcaexplorer.plot_loadings_heatmap <- function(res, npc = 4, ntop = 15) {
   )
 }
 
-
 ## ---------------------------------------------------------------------------
 ## Feature PCA board
 ## ---------------------------------------------------------------------------
 
-## Per-feature max |fold-change| vs expanded phenotype (same metric used to
-## color feature PCA points). Returns a named numeric vector.
-pcaexplorer.feature_max_fc <- function(normX, H) {
-  if (is.null(normX) || is.null(H) || !nrow(normX) || !ncol(H)) {
-    return(numeric(0))
-  }
-  rx <- fast_diff_in_means(normX, t(H))
-  apply(abs(rx), 1, function(z) {
-    z <- z[is.finite(z)]
-    if (!length(z)) return(NA_real_)
-    max(z, na.rm = TRUE)
-  })
-}
-
-## Keep features with maxFC >= min_fc (drops the middle / weak-effect cloud).
-pcaexplorer.filter_features_by_maxfc <- function(genes, max_fc, min_fc = 0) {
-  min_fc <- suppressWarnings(as.numeric(min_fc))
-  if (!is.finite(min_fc) || min_fc <= 0) {
-    return(genes)
-  }
-  mf <- max_fc[genes]
-  keep <- genes[is.finite(mf) & mf >= min_fc]
-  keep
-}
-
-## Condition / phenotype direction vectors on the feature PC plane (2D or 3D).
-## Same recipe as feature_pca_all: colMeans(pos * pmax(cor,0)^2), then
-## unit-normalized (length is applied later via var.scale * score_span).
-pcaexplorer.feature_condition_dirs <- function(pos, rx, numarrows = Inf) {
-  if (is.null(pos) || is.null(rx) || !nrow(pos) || !ncol(rx)) {
-    return(NULL)
-  }
-  genes <- intersect(rownames(pos), rownames(rx))
-  if (length(genes) < 2L) {
-    return(NULL)
-  }
-  pos <- as.matrix(pos[genes, , drop = FALSE])
-  rx <- as.matrix(rx[genes, , drop = FALSE])
-  nd <- ncol(pos)
-
-  D <- matrix(NA_real_, ncol(rx), nd,
-    dimnames = list(colnames(rx), colnames(pos)))
-  for (i in seq_len(ncol(rx))) {
-    w <- pmax(rx[, i], 0, na.rm = TRUE)**2
-    if (!any(w > 0, na.rm = TRUE)) next
-    ## match feature_pca_all: colMeans(pos * w), not a proper weighted mean
-    dir <- colMeans(pos * w, na.rm = TRUE)
-    nrm <- sqrt(sum(dir**2))
-    if (!is.finite(nrm) || nrm <= 0) next
-    D[i, ] <- dir / nrm
-  }
-  D <- D[stats::complete.cases(D), , drop = FALSE]
-  if (!nrow(D)) {
-    return(NULL)
-  }
-  nkeep <- suppressWarnings(as.integer(numarrows))
-  if (is.finite(nkeep) && nkeep >= 0L && nkeep < nrow(D)) {
-    if (nkeep == 0L) {
-      return(D[FALSE, , drop = FALSE])
-    }
-    r2 <- rowSums(D^2)
-    D <- D[utils::head(order(-r2), nkeep), , drop = FALSE]
-  }
-  D
-}
-
 ## Interactive feature PCA (plotly): genes as points on PC1–PC2 with biplot
 ## arrows for phenotype / condition directions (same as feature_pca_all).
 ## Labels the top-n up/down features by loading on PC1 and on PC2.
-pcaexplorer.plot_feature_pca <- function(res, normX = NULL, Y = NULL,
-                                         numarrows = 20,
-                                         nlabel = 5,
-                                         min_fc = 0,
-                                         marker.size = 6,
-                                         var.scale = 0.75,
-                                         main = "Feature PCA (interactive)") {
+qsee_pcaexplorer_plot_feature_pca <- function(res, normX = NULL, Y = NULL,
+                                              numarrows = 20,
+                                              nlabel = 5,
+                                              min_fc = 0,
+                                              marker.size = 6,
+                                              var.scale = 0.75,
+                                              main = "Feature PCA (interactive)") {
   if (is.null(normX)) normX <- res$X
   if (is.null(Y)) Y <- res$Y
 
@@ -949,7 +748,7 @@ pcaexplorer.plot_feature_pca <- function(res, normX = NULL, Y = NULL,
       plotly::layout(title = "no features"))
   }
   pos <- pos[genes, , drop = FALSE]
-  rx <- fast_diff_in_means(normX[genes, , drop = FALSE], t(H))  ## fold.change
+  rx <- qsee_pcaexplorer_fast_diff_in_means(normX[genes, , drop = FALSE], t(H))  ## fold.change
 
   ## color genes by max |FC| across conditions; drop weak middle cloud
   max_fc <- apply(abs(rx), 1, function(z) {
@@ -957,7 +756,7 @@ pcaexplorer.plot_feature_pca <- function(res, normX = NULL, Y = NULL,
     if (!length(z)) return(NA_real_)
     max(z, na.rm = TRUE)
   })
-  keep <- pcaexplorer.filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
+  keep <- qsee_pcaexplorer_filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
   if (length(keep) < 2L) {
     return(plotly::plotly_empty(type = "scatter") %>%
       plotly::layout(title = paste0("no features with maxFC ≥ ", min_fc)))
@@ -1039,7 +838,7 @@ pcaexplorer.plot_feature_pca <- function(res, normX = NULL, Y = NULL,
   }
 
   ## condition-direction arrows (biplot overlay)
-  D <- pcaexplorer.feature_condition_dirs(pos, rx, numarrows = numarrows)
+  D <- qsee_pcaexplorer_feature_condition_dirs(pos, rx, numarrows = numarrows)
   arrow_ann <- list()
   if (!is.null(D) && nrow(D) && max(abs(D), na.rm = TRUE) > 0) {
     score_span <- max(abs(pos), na.rm = TRUE)
@@ -1107,13 +906,13 @@ pcaexplorer.plot_feature_pca <- function(res, normX = NULL, Y = NULL,
 
 ## Interactive 3D feature PCA (plotly scatter3d): genes on PC1–PC3 with
 ## condition-direction arrows and top up/down feature labels per PC.
-pcaexplorer.plot_feature_pca_3d <- function(res, normX = NULL, Y = NULL,
-                                            numarrows = 20,
-                                            nlabel = 5,
-                                            min_fc = 0,
-                                            marker.size = 3,
-                                            var.scale = 0.75,
-                                            main = "Feature PCA 3D") {
+qsee_pcaexplorer_plot_feature_pca_3d <- function(res, normX = NULL, Y = NULL,
+                                                 numarrows = 20,
+                                                 nlabel = 5,
+                                                 min_fc = 0,
+                                                 marker.size = 3,
+                                                 var.scale = 0.75,
+                                                 main = "Feature PCA 3D") {
   if (is.null(normX)) normX <- res$X
   if (is.null(Y)) Y <- res$Y
 
@@ -1136,14 +935,14 @@ pcaexplorer.plot_feature_pca_3d <- function(res, normX = NULL, Y = NULL,
       plotly::layout(title = "no features"))
   }
   pos <- pos[genes, , drop = FALSE]
-  rx <- fast_diff_in_means(normX[genes, , drop = FALSE], t(H))
+  rx <- qsee_pcaexplorer_fast_diff_in_means(normX[genes, , drop = FALSE], t(H))
 
   max_fc <- apply(abs(rx), 1, function(z) {
     z <- z[is.finite(z)]
     if (!length(z)) return(NA_real_)
     max(z, na.rm = TRUE)
   })
-  keep <- pcaexplorer.filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
+  keep <- qsee_pcaexplorer_filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
   if (length(keep) < 2L) {
     return(plotly::plotly_empty(type = "scatter3d") %>%
       plotly::layout(title = paste0("no features with maxFC ≥ ", min_fc)))
@@ -1219,7 +1018,7 @@ pcaexplorer.plot_feature_pca_3d <- function(res, normX = NULL, Y = NULL,
   }
 
   ## condition-direction arrows as scatter3d lines + tip text
-  D <- pcaexplorer.feature_condition_dirs(pos, rx, numarrows = numarrows)
+  D <- qsee_pcaexplorer_feature_condition_dirs(pos, rx, numarrows = numarrows)
   if (!is.null(D) && nrow(D) && max(abs(D), na.rm = TRUE) > 0) {
     score_span <- max(abs(pos), na.rm = TRUE)
     s <- var.scale * score_span / max(abs(D), na.rm = TRUE)
@@ -1262,50 +1061,11 @@ pcaexplorer.plot_feature_pca_3d <- function(res, normX = NULL, Y = NULL,
   )
 }
 
-#' Handles NA
-#' 
-fast_diff_in_means <- function(X, Y) {
-  # X: vars x samples (contains NAs)
-  # Y: groups x samples (binary, no NAs assumed)
-  
-  # 1. Create a binary mask of where data actually exists
-  valid_mask <- !is.na(X)
-  
-  # 2. Replace NAs with 0 strictly for the matrix multiplication step
-  X_zeroed <- X
-  X_zeroed[!valid_mask] <- 0
-  
-  # 3. Compute sums for group 1 and group 0
-  sum_1 <- X_zeroed %*% t(Y)
-  
-  # Total sum of valid elements per variable
-  sum_total <- matrix(rowSums(X_zeroed), nrow = nrow(X), ncol = nrow(Y))
-  sum_0 <- sum_total - sum_1
-  
-  # 4. CRITICAL: Dynamically calculate sample sizes using the valid mask
-  # This counts how many non-NA samples fall into group 1 for each variable
-  n1 <- valid_mask %*% t(Y)
-  
-  # Count how many non-NA samples fall into group 0
-  n_total <- matrix(rowSums(valid_mask), nrow = nrow(X), ncol = nrow(Y))
-  n0 <- n_total - n1
-  
-  # 5. Compute means safely, generating NA if a group has 0 valid samples
-  mean_1 <- sum_1 / n1
-  mean_0 <- sum_0 / n0
-  
-  # Prevent 0/0 resulting in NaN instead of NA
-  mean_1[n1 == 0] <- NA
-  mean_0[n0 == 0] <- NA
-  
-  return(mean_1 - mean_0)
-}
-
 ## Feature scores (res$u) colored by FC with each expanded phenotype.
-pcaexplorer.plot_feature_pca_all <- function(res, normX = NULL, Y = NULL,
-                                             min_fc = 0,
-                                             var.scale = 0.65,
-                                             show_arrows = TRUE) {
+qsee_pcaexplorer_plot_feature_pca_all <- function(res, normX = NULL, Y = NULL,
+                                                  min_fc = 0,
+                                                  var.scale = 0.65,
+                                                  show_arrows = TRUE) {
   if (is.null(normX)) normX <- res$X
   if (is.null(Y)) Y <- res$Y
   pos <- res$u[, 1:2, drop = FALSE]
@@ -1314,13 +1074,13 @@ pcaexplorer.plot_feature_pca_all <- function(res, normX = NULL, Y = NULL,
   normX <- normX[genes, , drop = FALSE]
 
   H <- if (!is.null(res$H)) res$H else playbase::expandPhenoMatrix(Y, drop.ref = FALSE)
-  rx <- fast_diff_in_means(normX, t(H))
+  rx <- qsee_pcaexplorer_fast_diff_in_means(normX, t(H))
   max_fc <- apply(abs(rx), 1, function(z) {
     z <- z[is.finite(z)]
     if (!length(z)) return(NA_real_)
     max(z, na.rm = TRUE)
   })
-  keep <- pcaexplorer.filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
+  keep <- qsee_pcaexplorer_filter_features_by_maxfc(rownames(pos), max_fc, min_fc)
   if (length(keep) < 2L) {
     plot.new()
     text(0.5, 0.5, paste0("no features with maxFC ≥ ", min_fc))
@@ -1360,7 +1120,7 @@ pcaexplorer.plot_feature_pca_all <- function(res, normX = NULL, Y = NULL,
 }
 
 ## Heatmap of PC × expanded-phenotype correlations (res$R).
-pcaexplorer.plot_trait_correlation <- function(res, min_fc = 0) {
+qsee_pcaexplorer_plot_trait_correlation <- function(res, min_fc = 0) {
   R <- res$R
   if (is.null(R)) {
     plot.new()
@@ -1376,87 +1136,4 @@ pcaexplorer.plot_trait_correlation <- function(res, min_fc = 0) {
     R, clust = FALSE, col = bluered, cex = 1.2,
     main = "PC-trait correlation", cex.main = 1.2
   )
-}
-
-
-## ---------------------------------------------------------------------------
-## SD Filtering board
-## ---------------------------------------------------------------------------
-
-## Grid of PC1–PC2 scatters at successive top-SD feature cutoffs.
-pcaexplorer.plot_pca_vs_topsd <- function(res, colorby_var = NULL) {
-  X <- res$X
-  Y <- res$Y
-
-  nn <- c(nrow(X), 20 * 2**seq(0, 12, 2))
-  nn <- utils::head(nn[nn <= nrow(X)], 9)
-  nn <- sort(nn)
-  sdx <- matrixStats::rowSds(X, na.rm = TRUE)
-  X <- X[order(-sdx), , drop = FALSE]
-
-  ycol <- if (!is.null(colorby_var) && colorby_var %in% colnames(Y)) {
-    Y[, colorby_var]
-  } else if (ncol(Y) >= 1) {
-    Y[, min(2L, ncol(Y))]
-  } else {
-    rep(1, ncol(X))
-  }
-  cc <- 1 + as.integer(factor(ycol))
-
-  graphics::par(
-    mfrow = c(3, 3), mar = c(4, 4, 4, 0.5),
-    cex = 0.95, mgp = c(2.3, 0.85, 0)
-  )
-  for (n in nn) {
-    X1 <- utils::head(X, n)
-    pr <- stats::prcomp(t(X1))
-    graphics::plot(pr$x[, 1:2], cex = 1.7, col = cc, pch = 19)
-    graphics::title(paste("N=", n))
-  }
-}
-
-## Cumulative variance explained as a function of top-SD feature count,
-## with the current topsd cutoff highlighted.
-pcaexplorer.plot_variance_vs_topsd <- function(res, topsd = NULL) {
-  X <- res$X
-  nn <- c(20 * 2**seq(0, 12, 2), nrow(X))
-  nn <- nn[nn <= nrow(X)]
-
-  U <- res$u %*% diag(res$d, length(res$d))
-  U <- U[order(-rowMeans(U**2)), , drop = FALSE]
-  pcx <- 100 * cumsum(rowSums(U**2)) / sum(U**2)
-  graphics::matplot(
-    pcx, pch = ".", lwd = 3, type = "l",
-    xlab = "Number of topSD features",
-    ylab = "Variance explained (%)"
-  )
-  graphics::points(nn, pcx[nn], pch = 19, cex = 1.3)
-  graphics::title("Variance vs. topSD")
-
-  if (!is.null(topsd) && is.finite(as.numeric(topsd))) {
-    topx <- as.integer(topsd)
-    topx <- max(1L, min(topx, length(pcx)))
-    topy <- pcx[topx]
-    graphics::abline(v = topx, lty = 2, col = "red")
-    graphics::abline(h = topy, lty = 2, col = "red")
-  }
-}
-
-## Histogram of feature SDs with the current topsd threshold marked.
-pcaexplorer.plot_sd_histogram <- function(res, topsd = NULL) {
-  sdx <- matrixStats::rowSds(res$X, na.rm = TRUE)
-  sdx[is.na(sdx)] <- 0
-
-  graphics::par(mar = c(4, 4, 3, 1))
-  graphics::hist(
-    sdx, breaks = 100,
-    main = "Histogram of SD",
-    xlab = "standard deviation  (SD)"
-  )
-  if (!is.null(topsd) && is.finite(as.numeric(topsd))) {
-    ntop <- as.integer(topsd)
-    ntop <- max(1L, min(ntop, length(sdx)))
-    sdthreshold <- sort(sdx, decreasing = TRUE)[ntop]
-    graphics::abline(v = sdthreshold, col = "red", lty = 2, lwd = 1)
-  }
 }

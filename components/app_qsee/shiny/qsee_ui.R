@@ -18,13 +18,14 @@ qsee_ui <- function(id, height = "100%") {
         style = "visibility: hidden; display: none;"
       ),
       sidebar = bigdash::sidebar(
-        "Menu",
+        "Qsee/Bsee",
         id = id,
-        bigdash::sidebarMenuItem("Normalization", ns("normalize-tab")),
-        bigdash::sidebarMenuItem("Missing values", ns("impute-tab")),
-        bigdash::sidebarMenuItem("Outlier analysis", ns("outlier-tab")),
-        bigdash::sidebarMenuItem("Batch-effects", ns("bsee-tab")),
-        bigdash::sidebarMenuItem("Filtering", ns("filtering-tab")),
+        bigdash::sidebarItem("Normalization", ns("normalize-tab")),
+        bigdash::sidebarItem("Missing values", ns("impute-tab")),
+        bigdash::sidebarItem("PCA explorer", ns("pcaexplorer-tab")),
+        bigdash::sidebarItem("Outlier analysis", ns("outlier-tab")),
+        bigdash::sidebarItem("Batch-effects", ns("bsee-tab")),
+        bigdash::sidebarItem("SD Filtering", ns("filtering-tab")),
         br(),
         shiny::actionButton(ns("upload"), "upload CSV"),
         shiny::actionButton(ns("load_example"), "load example"),
@@ -70,6 +71,11 @@ qsee_ui <- function(id, height = "100%") {
           ns("impute-tab"),
           qsee_imputation_inputs(ns("impute")),
           qsee_imputation_ui(ns("impute"))
+        ),
+        bigdash::bigTabItem(
+          ns("pcaexplorer-tab"),
+          qsee_pcaexplorer_inputs(ns("pcaexplorer")),
+          qsee_pcaexplorer_ui(ns("pcaexplorer"))
         ),
         bigdash::bigTabItem(
           ns("outlier-tab"),

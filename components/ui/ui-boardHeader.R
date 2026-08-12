@@ -52,7 +52,7 @@ OmicsBoardUI <- function(id, title, ..., info=TRUE) {
     row_heights = list("auto", 1),
     fillRow(
       flex = c(NA, 1, NA),
-      style = "margin-top: -6px;",
+      style = "margin-top: -8px;",
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, "&nbsp;")),

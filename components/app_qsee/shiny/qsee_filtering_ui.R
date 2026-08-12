@@ -5,6 +5,7 @@ qsee_filtering_inputs <- function(id) {
 
   bigdash::tabSettings(
     shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
+    hr(),
     shiny::sliderInput(
       ns("threshold"),
       "Threshold (top SD features):",
@@ -31,7 +32,7 @@ qsee_filtering_ui <- function(id) {
   filtering_panel <-
     bslib::navset_tab(
       bslib::nav_panel(
-        title = "SD filtering",
+        title = "SD Filtering",
         bslib::layout_columns(
           col_widths = c(8, 4),
           height = "calc(100vh - 200px)",
@@ -73,7 +74,7 @@ qsee_filtering_ui <- function(id) {
 
   OmicsBoardUI(
     id = ns("board"),
-    title = "SD filtering",
+    title = "SD Filtering",
     qsee_visibility_probe(ns),
     filtering_panel
   )

@@ -60,7 +60,8 @@ OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
-APPDIR <- file.path(OPG, "components/app/R")
+#APPDIR <- file.path(OPG, "components/app/R")
+APPDIR <- file.path(OPG, "components")
 PGX.DIR <- file.path(OPG, "data")
 ## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
 options(omicspgxmcp.data_dir = PGX.DIR)
@@ -141,7 +142,7 @@ future::plan(future::multisession)
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 .opg_require_omicsai_catalog_api()
-source(file.path(APPDIR, "ai_model_policy.R"), local = TRUE)
+source(file.path(APPDIR, "utils/ai_model_policy.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")

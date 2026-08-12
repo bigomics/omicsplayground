@@ -51,9 +51,6 @@ for (f in r_files) source(f, encoding = "UTF-8")
 app_files <- list.files("../shiny", pattern = "\\.R$", full.names = TRUE)
 for (f in app_files) source(f, encoding = "UTF-8")
 
-xapp_files <- list.files("../../app_pcaexplorer/R", pattern = "\\.R$", full.names = TRUE)
-for (f in xapp_files) source(f, encoding = "UTF-8")
-
 ## example dataset to drive the reactive inputs
 #load("../../../data/example-data.pgx")
 pgx <- playbase::pgx.load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")

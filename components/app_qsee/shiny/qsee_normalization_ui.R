@@ -22,7 +22,7 @@ qsee_normalization_ui <- function(id) {
   hist_infotext <- "Density distributions of log-intensities per sample after each normalization method. Good normalization reduces batch effects while preserving biological signal."
   pca_infotext <- "PCA of samples after each normalization (colored by selected phenotype). Effective normalization should cluster samples by biology rather than technical factors."
   
-  normalize_panel <- bslib::navset_tab(
+  normalization_panel <- bslib::navset_tab(
     bslib::nav_panel(
       title = "Boxplots",
       bslib::layout_columns(
@@ -80,9 +80,9 @@ qsee_normalization_ui <- function(id) {
 
   OmicsBoardUI(
     id = ns("board"),
-    title = "Normalize",
+    title = "Normalization",
     qsee_visibility_probe(ns),
-    normalize_panel    
+    normalization_panel    
   )
 
 }

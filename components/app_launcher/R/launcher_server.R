@@ -33,10 +33,6 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })
 
-    observeEvent(input$launch_pca, {
-      bslib::nav_select("app-sidebar", "PCAexplorer", session=parent)
-    })
-    
     
   })
 }
