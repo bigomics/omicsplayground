@@ -182,6 +182,11 @@ params <- list(
     custom_fc = NULL
   ),
   sc_compute_settings = sc_compute_settings,
+  ## edgy-only. Drives optional AI report generation inside computePGX, not the
+  ## computed data. The app builds it from live session state (llm_model +
+  ## a credentials closure), which a script has no equivalent of -- NULL means
+  ## "no AI reports", which is what a headless run wants.
+  ai_features = NULL,
   prune.samples = TRUE,
   filter.genes = has("remove.notexpressed"),
   exclude.genes = NULL,

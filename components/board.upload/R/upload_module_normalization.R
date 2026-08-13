@@ -273,10 +273,23 @@ upload_module_normalization_server <- function(
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
         if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+        ## Preserve the user's choice. updateSelectInput() with `choices` but no
+        ## `selected` makes Shiny select the FIRST choice -- "ComBat" -- so every
+        ## time this comparison re-ran (it is reactive on bec_param,
+        ## bec_full_features and the upstream matrices) it silently discarded the
+        ## selected method, and the dataset was computed with ComBat instead.
+        ## Falls back to the first method only when the current one is genuinely
+        ## unavailable, e.g. NPM is dropped above once there are >100 samples.
+        keep <- if (!is.null(input$bec_method) && input$bec_method %in% methods) {
+          input$bec_method
+        } else {
+          methods[1]
+        }
         shiny::updateSelectInput(
           session,
           "bec_method",
-          choices = methods
+          choices = methods,
+          selected = keep
         )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 

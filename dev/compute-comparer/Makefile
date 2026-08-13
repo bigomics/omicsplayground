@@ -5,8 +5,24 @@
 SHELL := /bin/bash
 HERE  := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
-OPG_MAIN ?= $(abspath $(HERE)/../..)
-OPG_EDGY ?= /home/massagno/bigomics/GitHub/omicsplayground-edgy
+## Two comparison modes:
+##   MODE=edgy   (default) app and script BOTH on edgy -- validates that a script's
+##               params reproduce the app's exactly, with no playbase drift between
+##               the two sides. This is the contract test.
+##   MODE=master app on master + playbase main, script on edgy -- the migration
+##               question: "will users' results change?". Needs a master worktree.
+MODE ?= edgy
+OPG_EDGY ?= $(abspath $(HERE)/../..)
+OPG_MASTER ?= /home/massagno/bigomics/GitHub/omicsplayground-master-2
+
+ifeq ($(MODE),master)
+  APP_TREE := $(OPG_MASTER)
+  APP_LIB  := $(HERE)/libs/pb-main
+else
+  APP_TREE := $(OPG_EDGY)
+  APP_LIB  := $(HERE)/libs/pb-edgy
+endif
+OPG_MAIN ?= $(APP_TREE)
 PB_MAIN  := $(HERE)/libs/pb-main
 PB_EDGY  := $(HERE)/libs/pb-edgy
 
@@ -23,7 +39,7 @@ RUN  := $(HERE)/runs/$(SC)
 R_USER_LIB := $(shell Rscript -e 'cat(Sys.getenv("R_LIBS_USER"))' 2>/dev/null)
 R_PERSONAL := $(HOME)/R/x86_64-pc-linux-gnu-library/4.3
 
-A_ENV := R_LIBS_USER=$(PB_MAIN):$(R_PERSONAL)
+A_ENV := R_LIBS_USER=$(APP_LIB):$(R_PERSONAL)
 B_ENV := R_LIBS_USER=$(PB_EDGY):$(R_PERSONAL)
 
 .PHONY: setup check app.start app.stop a b create.a create.b full.a full.b \
@@ -43,15 +59,17 @@ setup:
 	cd $(HERE) && npm i playwright
 
 check:
-	@echo -n "pb-main : "; $(A_ENV) Rscript -e 'suppressMessages(library(playbase)); cat(as.character(packageVersion("playbase")), "preprocess=", "pgx.preprocess" %in% getNamespaceExports("playbase"), "\n")' 2>/dev/null | tail -1
-	@echo -n "pb-edgy : "; $(B_ENV) Rscript -e 'suppressMessages(library(playbase)); cat(as.character(packageVersion("playbase")), "preprocess=", "pgx.preprocess" %in% getNamespaceExports("playbase"), "\n")' 2>/dev/null | tail -1
-	@echo "opg main: $(OPG_MAIN)"
-	@echo "opg edgy: $(OPG_EDGY)"
+	@echo -n "pb-main : "; R_LIBS_USER=$(PB_MAIN):$(R_PERSONAL) Rscript -e 'suppressMessages(library(playbase)); cat(as.character(packageVersion("playbase")), "preprocess=", "pgx.preprocess" %in% getNamespaceExports("playbase"), "\n")' 2>/dev/null | tail -1
+	@echo -n "pb-edgy : "; R_LIBS_USER=$(PB_EDGY):$(R_PERSONAL) Rscript -e 'suppressMessages(library(playbase)); cat(as.character(packageVersion("playbase")), "preprocess=", "pgx.preprocess" %in% getNamespaceExports("playbase"), "\n")' 2>/dev/null | tail -1
+	@echo "MODE    : $(MODE)"
+	@echo "app tree: $(APP_TREE)"
+	@echo "app lib : $(APP_LIB)"
+	@echo "script  : $(OPG_EDGY) (pb-edgy)"
 
 ## ---------------------------------------------------------------- the app
-## Path A's app MUST run against playbase main out of the master worktree.
+## Path A's app: edgy tree + pb-edgy by default, master tree + pb-main with MODE=master.
 app.start:
-	@cd $(OPG_MAIN) && $(A_ENV) nohup Rscript dev/run_app_headless.R \
+	@cd $(APP_TREE) && $(A_ENV) nohup Rscript dev/run_app_headless.R \
 		> $(HERE)/runs/app.log 2>&1 & echo "app starting, log: runs/app.log"
 	@until curl -sf -o /dev/null http://localhost:$(PORT); do sleep 2; done; echo "app up on :$(PORT)"
 
@@ -70,12 +88,12 @@ b:
 
 ## ---------------------------------------------------------------- execute
 create.a:
-	$(A_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/A $(OPG_MAIN) create $(SEED)
+	$(A_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/A $(APP_TREE) create $(SEED)
 create.b:
 	$(B_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/B $(OPG_EDGY) create $(SEED)
 
 full.a:
-	$(A_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/A $(OPG_MAIN) full $(SEED)
+	$(A_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/A $(APP_TREE) full $(SEED)
 full.b:
 	$(B_ENV) Rscript $(HERE)/run_pgx.R $(RUN)/B $(OPG_EDGY) full $(SEED)
 
@@ -96,7 +114,7 @@ gate2: create.a create.b g2
 ## The poller keys on raw_ dirs that appear after compute is triggered, but a
 ## stale one from a crashed run is still confusing. Clear between batches.
 clean.userinput:
-	rm -rf $(OPG_MAIN)/data/USER_INPUT/raw_*
+	rm -rf $(APP_TREE)/data/USER_INPUT/raw_*
 
 clean.runs:
 	rm -rf $(HERE)/runs/*/ $(HERE)/runs/report.csv

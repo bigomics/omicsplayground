@@ -257,22 +257,51 @@ try {
   // Even with AUTHENTICATION=none the app shows splashLoginModal with a single
   // click-through button (AuthenticationModule.R:29-40). Matched by its label
   // rather than its id (ns("login_emailSubmit")) so the auth namespace can move.
-  const splash = page.getByRole('button', { name: 'Sure I am!' });
-  if (await splash.count() > 0) {
-    await splash.first().click({ timeout: 30000 });
+  // Wait for it to appear at all -- on a cold app the modal can lag the socket by
+  // several seconds -- then click via the resilient path.
+  // The button id differs by branch (edgy: auth-login_submit_btn, master:
+  // ns("login_emailSubmit")), so match on the label and fall back to a direct
+  // dispatch: the modal container itself reports no layout, so Playwright's
+  // actionability check on the button can never settle even though the button is
+  // painted and clickable.
+  await page.waitForSelector('.modal.show, #shiny-modal', { timeout: 60000 }).catch(() => {});
+  const clicked = await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('button, a.btn, .btn')]
+      .find((e) => /sure i am/i.test(e.textContent || ''));
+    if (!btn) return null;
+    btn.click();
+    return btn.id || '(no id)';
+  });
+  if (clicked) {
     await settle(page, 2000);
-    log('passed sign-in splash');
+    log(`passed sign-in splash (${clicked})`);
   } else {
     log('no sign-in splash present');
   }
 
   // --- navigate to the upload board (bigdash tab trigger) ---------------
-  // The trigger lives in a closed navbar dropdown, so it is not clickable with a real
-  // mouse event -- jQuery .trigger('click') fires bigdash's handler regardless.
-  await page.evaluate(() =>
-    window.$('.tab-trigger[data-target="upload-tab"]').trigger('click'));
+  // Navigation differs by branch:
+  //   master: bigdash bigTabItem("upload-tab") reached via a .tab-trigger that sits in
+  //           a closed navbar dropdown -- not clickable with a real mouse event, but
+  //           jQuery .trigger('click') fires bigdash's handler regardless.
+  //   edgy:   the feat/bigdash-modules rework moved it to a bslib
+  //           nav_panel_hidden("Upload") inside the "app-sidebar" navset. A hidden
+  //           panel has no nav link to click, so drive the navset's Shiny input
+  //           binding directly -- that is exactly what bslib::nav_select() sends.
+  const nav = await page.evaluate(() => {
+    const bigdash = window.$('.tab-trigger[data-target="upload-tab"]');
+    if (bigdash.length) { bigdash.trigger('click'); return 'bigdash'; }
+    const el = document.getElementById('app-sidebar');
+    const binding = el && window.$(el).data('shiny-input-binding');
+    if (binding && binding.receiveMessage) {
+      binding.receiveMessage(el, { value: 'Upload' });
+      return 'bslib';
+    }
+    return null;
+  });
+  log(`navigation: ${nav ?? 'NONE FOUND'}`);
   // Gate on a genuinely visible control, not on a selectize-hidden <select>.
-  await page.waitForSelector('#upload-start_upload', { state: 'visible', timeout: 60000 });
+  await page.waitForSelector('#upload-start_upload', { state: 'visible', timeout: 120000 });
   await settle(page);
   await clearOverlays(page);
   log('on upload board');
@@ -284,7 +313,7 @@ try {
   await settle(page);
 
   await clearOverlays(page);
-  await page.click('#upload-start_upload');
+  await clickOrDispatch(page, '#upload-start_upload', 'start_upload', 60000);
   await page.waitForSelector('.wizard-step', { timeout: 60000 });
   await settle(page);
   log('wizard opened');
