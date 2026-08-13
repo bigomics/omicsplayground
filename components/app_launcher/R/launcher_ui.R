@@ -13,13 +13,13 @@ launcher_ui <- function(id) {
     ## -------------- dashboards -------------
     list(
       input = "launch_playground",
-#      icon = "chart-column",
-      icon = "tachograph-digital",      
+      icon = "chart-column",
+      ##icon = "tachograph-digital",      
       label = "Omics Playground",
       description = "Play, see & discover",
       rgb = c(73,129,178),
       group = "Dashboards",
-      badge = "free"      
+      badge = NULL      
     ),
     list(
       input = "launch_qsee",

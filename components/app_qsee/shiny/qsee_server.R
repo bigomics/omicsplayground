@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-qsee_server <- function(id, pgx=NULL) {
+qsee_server <- function(id, pgx=NULL, parent=NULL) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -67,7 +67,7 @@ qsee_server <- function(id, pgx=NULL) {
         uploaded$Y <- pgx$samples
       })
 
-      shiny::observeEvent(input$upload, {
+      show_upload_modal <- function() {
         shiny::showModal(shiny::modalDialog(
           title = "Upload CSV files",
           shiny::fileInput(
@@ -83,6 +83,10 @@ qsee_server <- function(id, pgx=NULL) {
           easyClose = TRUE,
           footer = shiny::modalButton("Close")
         ))
+      }
+
+      shiny::observeEvent(input$upload, {
+        show_upload_modal()
       })
 
       shiny::observeEvent(input$load_example, {
@@ -148,39 +152,58 @@ qsee_server <- function(id, pgx=NULL) {
       ## is a hidden parent nav panel during startup.
       #shiny::observe({
       shiny::observeEvent( list(input$nav, input$is_visible), {      
-
-        message("DBG [qsee_server] is_visible = ", input$is_visible)
-        message("DBG [qsee_server] input$nav = ", input$nav)        
         
         shiny::req(isTRUE(input$is_visible))
         X <- uploaded$X
-        noX <- is.null(X) || length(X) == 0 || nrow(X) == 0 || ncol(X) == 0
-        message("DBG [qsee_server] is.null.X = ", is.null(X))
-        message("DBG [qsee_server] noX = ", noX)        
-        ##message("DBG [qsee_server] has_shown_no_data_popup = ", has_shown_no_data_popup())
-        
+        noX <- is.null(X) || length(X) == 0 || nrow(X) == 0 || ncol(X) == 0        
         ##if (noX && !has_shown_no_data_popup()) {
-        if (noX) {        
+        if (noX) {
           #has_shown_no_data_popup(TRUE)
           shiny::showModal(
             shiny::modalDialog(
               title = "No dataset loaded",
               shiny::p(
-                "No dataset has been loaded yet. Would you like to load ",
-                "the example dataset to explore Qsee/Bsee?"
-                ),
-              footer = shiny::tagList(
-                shiny::modalButton("Cancel"),
-                shiny::actionButton(session$ns("load_example_from_popup"),
-                    "Load example data", class = "btn-primary")
+                "No dataset has been loaded yet. What would you like to do?"
               ),
+              div(
+                style = "text-align:center;",
+                shiny::actionButton(
+                  session$ns("load_example_from_popup"),
+                  "Load example dataset",
+                  class = "btn btn-outline-info welcome-btn-sm"
+                ),
+                shiny::actionButton(
+                  session$ns("upload_new_from_popup"),
+                  "Upload new data",
+                  class = "btn btn-outline-info welcome-btn-sm"
+                ),
+                shiny::actionButton(
+                  session$ns("load_library_from_popup"),
+                  "Load from library",
+                  class = "btn btn-outline-primary welcome-btn-sm"
+                )
+              ),
+              footer = shiny::modalButton("Cancel"),
               size = "s",
               easyClose = FALSE
             )
           )
         }
       })
-      
+
+      shiny::observeEvent(input$upload_new_from_popup, {
+        shiny::removeModal()
+        show_upload_modal()
+      })
+
+      shiny::observeEvent(input$load_library_from_popup, {
+        shiny::removeModal()
+        if (is.null(parent)) {
+          warning("[qsee_server] !!! no parent session available for Library navigation")
+          return(NULL)
+        }
+        bslib::nav_select("app-sidebar", "Library", session = parent)
+      })
 
     } ## end-of-server
   )

@@ -25,14 +25,27 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       shiny::modalDialog(
         title = "No dataset loaded",
         shiny::p(
-          "No dataset has been loaded yet. Would you like to load ",
-          "the example dataset to explore the Playground?"
+          "No dataset has been loaded yet. What would you like to do?"
         ),
-        footer = shiny::tagList(
-          shiny::modalButton("Cancel"),
-          shiny::actionButton("opg_load_example_from_popup",
-            "Load example data", class = "btn-primary")
+        div(
+          style = "text-align:center;",
+          shiny::actionButton(
+            "opg_load_example_from_popup",
+            "Load example dataset",
+            class = "btn btn-outline-info welcome-btn-sm"
+          ),
+          shiny::actionButton(
+            "opg_upload_new_from_popup",
+            "Upload new data",
+            class = "btn btn-outline-info welcome-btn-sm"
+          ),
+          shiny::actionButton(
+            "opg_load_library_from_popup",
+            "Load from library",
+            class = "btn btn-outline-primary welcome-btn-sm"
+          )
         ),
+        footer = shiny::modalButton("Cancel"),
         size = "s",
         easyClose = FALSE
       )
@@ -51,6 +64,18 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       load_example(load_example() + 1)
     }
     info("[SERVER] loading example data from popup")
+  })
+
+  shiny::observeEvent(input$opg_upload_new_from_popup, {
+    shiny::removeModal()
+    info("[SERVER] opening upload panel from popup")
+    bslib::nav_select("app-sidebar", selected = "Upload", session = session)
+  })
+
+  shiny::observeEvent(input$opg_load_library_from_popup, {
+    shiny::removeModal()
+    info("[SERVER] opening library panel from popup")
+    bslib::nav_select("app-sidebar", selected = "Library", session = session)
   })
 
   ## Hide/show tabs. Open sidebar and settings
