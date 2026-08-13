@@ -9,7 +9,7 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @export
-launcher_server <- function(id, parent) {
+launcher_server <- function(id, parent, load_example = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -35,6 +35,30 @@ launcher_server <- function(id, parent) {
 
     observeEvent(input$launch_idconvert, {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+    })
+
+    ## Quick action: load the example dataset and jump to the Dashboard
+    observeEvent(input$load_example, {
+      if (is.null(load_example)) {
+        warning("[launcher_server] !!! no load_example trigger available")
+        return()
+      }
+      if (is.null(load_example())) {
+        load_example(1)
+      } else {
+        load_example(load_example() + 1)
+      }
+      bslib::nav_select("app-sidebar", "Dashboard", session = parent)
+    })
+
+    ## Quick action: go to the Upload panel
+    observeEvent(input$upload_new_data, {
+      bslib::nav_select("app-sidebar", "Upload", session = parent)
+    })
+
+    ## Quick action: go to the Obi AI Copilot panel
+    observeEvent(input$chat_with_obi, {
+      bslib::nav_select("app-sidebar", "Copilot", session = parent)
     })
 
   })

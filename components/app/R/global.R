@@ -13,9 +13,6 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
-shiny::addResourcePath("custom", "www")
-
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {
@@ -140,6 +137,11 @@ library(magrittr)
 library(future)
 library(promises)
 future::plan(future::multisession)
+
+## Resource paths
+shiny::addResourcePath("custom", file.path(OPG, "components/assets"))
+shiny::addResourcePath("assets", file.path(OPG, "components/assets"))
+shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 .opg_require_omicsai_catalog_api()
@@ -369,8 +371,6 @@ message("\n\n")
 main.init_time <- round(Sys.time() - main.start_time, digits = 4)
 main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
-
-shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
 
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")

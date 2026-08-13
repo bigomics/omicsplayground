@@ -61,12 +61,12 @@ opg_ui <- function() {
     #ENABLED["load"] <<- TRUE
 
     menu_tree <- menu_tree[MODULES_ENABLED]
-    ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
     createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
-        div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        #div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        bigdash::sidebarItem(title, paste0(name, "-tab"))      
       }
       sidebar_menu_item <- function(title, name) {
         bigdash::sidebarMenuItem(title, paste0(name, "-tab"))
