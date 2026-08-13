@@ -166,9 +166,29 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
-        kk <- intersect(rownames(X), rownames(counts))
-        X <- X[kk, , drop = FALSE]
-        counts <- counts[kk, , drop = FALSE]
+        ## Realign counts to X: normalization may drop and/or reorder rows.
+        ##
+        ## Do NOT use intersect() here. It returns UNIQUE names, and indexing a
+        ## matrix by a duplicated name returns only the FIRST matching row -- so on
+        ## any dataset with duplicated features (common with gene symbols; the
+        ## shipped salmon-ENSOKI has 30, horse has 14462) this silently collapsed
+        ## them: 6 rows in, 3 rows out. It also ran unconditionally, reducing the
+        ## data even when nothing needed realigning.
+        ##
+        ## This mirrors playbase::pgx.preprocess(), which is what the compute
+        ## actually runs, so the preview and the computed data now agree.
+        if (!identical(rownames(X), rownames(counts))) {
+          if (anyDuplicated(rownames(counts))) {
+            ## Duplicate names: column-wise normalization preserves row order, so a
+            ## %in% subset keeps counts aligned to X and, unlike name-indexing,
+            ## keeps every duplicate row.
+            counts <- counts[rownames(counts) %in% rownames(X), , drop = FALSE]
+          } else {
+            ## Unique names: index by name so counts follows any reorder AND drop
+            ## from normalization (methylation BMIQ reorders to its probe manifest).
+            counts <- counts[rownames(X), , drop = FALSE]
+          }
+        }
         is.mox <- playbase::is.multiomics(rownames(counts))
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
@@ -181,7 +201,10 @@ upload_module_normalization_server <- function(
             }
           }
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
-          is.outlier <- (res$z.outlier > threshold)
+          ## NA-safe, matching pgx.preprocess: a non-finite z-score must not read as
+          ## an outlier, and must not reach the if() below as NA (which errors with
+          ## "missing value where TRUE/FALSE needed").
+          is.outlier <- !is.na(res$z.outlier) & (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
             X <- X[, which(!is.outlier), drop = FALSE]
             counts <- counts[, colnames(X), drop = FALSE]
