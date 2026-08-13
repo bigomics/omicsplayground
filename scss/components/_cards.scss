@@ -16,6 +16,16 @@ html {
         border-bottom: 0px !important;
         height: 33px;
     }
+
+    // bigdash splices bslib's nav-pills bar into the plot header, and bslib
+    // now emits "card-header bslib-gap-spacing bslib-navs-card-title" so the
+    // card-header class survives its gsub. Left alone it stacks a full 33px
+    // card header inside the header, making static/dynamic cards 11px taller
+    // than every other card.
+    .plotmodule-header .card-header {
+        height: auto;
+        padding: 0;
+    }
     
     .card-footer {
         background-color: #F7FAFD;
