@@ -85,6 +85,30 @@ withr_seed <- function(seed, pb) {
   )$X
 }
 
+## Strip per-run metadata that can never match, wherever it is nested:
+##   timings -- wall-clock durations
+##   myid    -- a UUID regenerated per object (graph/visNetwork environments), e.g.
+##              5973916f-e6ab-... vs 8aed1a3a-7bad-...
+## Environments are converted to lists so both sides normalise identically (an
+## environment otherwise compares by reference and always differs).
+## Environments are REPLACED by a marker, not expanded: pgx$meta.go$graph holds
+## graph objects that reference themselves, so converting them to lists makes
+## all.equal walk a cycle forever ("Component 10: Component 1: Component 10: ...").
+## They are object handles rather than data -- the data they wrap is compared
+## through the surrounding slots -- so collapsing both sides to the same marker is
+## the honest treatment.
+META_KEYS <- c("timings", "myid")
+scrub <- function(x, depth = 0) {
+  if (depth > 12) return("<max-depth>")
+  if (is.environment(x)) return("<environment>")
+  if (is.list(x)) {
+    nm <- names(x)
+    if (!is.null(nm)) x <- x[!nm %in% META_KEYS]
+    return(lapply(x, scrub, depth = depth + 1))
+  }
+  x
+}
+
 cmp_obj <- function(name, x, y) {
   eq <- all.equal(x, y, tolerance = TOL)
   if (isTRUE(eq)) record(name, "PASS", "") else record(name, "FAIL", paste(eq, collapse = "; "))
@@ -246,7 +270,7 @@ if (gate == 3) {
       paste(setdiff(names(gb), names(ga)), collapse = ",")))
 
   for (k in setdiff(keys, ignored)) {
-    eq <- all.equal(ga[[k]], gb[[k]], tolerance = TOL)
+    eq <- all.equal(scrub(ga[[k]]), scrub(gb[[k]]), tolerance = TOL)
     if (isTRUE(eq)) {
       record(paste0("pgx$", k), "PASS", "")
     } else if (k %in% stochastic) {
