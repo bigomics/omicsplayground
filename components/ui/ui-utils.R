@@ -4,41 +4,6 @@
 ##
 
 
-visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom = 1) {
-  is.pdf <- grepl("pdf$", file)
-  if (is.pdf) {
-    width <- width * 600
-    height <- height * 600
-  }
-  vis2 <- htmlwidgets::createWidget(
-    name = "visNetwork",
-    x = visnet$x,
-    width = width, height = height,
-    package = "visNetwork"
-  )
-  tmp.html <- paste0(tempfile(), "-visnet.html")
-  tmp.png <- paste0(tempfile(), "-webshot.png")
-  visNetwork::visSave(vis2, file = tmp.html)
-  webshot2::webshot(
-    url = tmp.html,
-    file = tmp.png,
-    selector = "#htmlwidget_container",
-    delay = delay,
-    zoom = zoom,
-    cliprect = "viewport",
-    vwidth = width,
-    vheight = height
-  )
-  if (is.pdf) {
-    cmd <- paste("convert", tmp.png, "-density 600", file)
-    system(cmd)
-  } else {
-    file.copy(tmp.png, file, overwrite = TRUE)
-  }
-  unlink(tmp.html)
-}
-
-
 addWatermark.PDF <- function(file) {
   if (system("which pdftk", ignore.stdout = TRUE) == 1) {
     return
