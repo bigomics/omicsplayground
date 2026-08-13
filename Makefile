@@ -46,9 +46,15 @@ docker.run2:
 		-v ~/Playground/omicsplayground/etc:/omicsplayground/etc \
 		bigomics/omicsplayground:$(TAG)
 
+## Base images to build FROM. Override to build on a trixie base, e.g.
+## make docker.update BRANCH=edgy BASE_IMAGE=bigomics/omicsplayground:trixie-base
+PLAYBASE_IMAGE=bigomics/playbase:latest
+BASE_IMAGE=bigomics/omicsplayground:beta
+
 docker: FORCE version
 	@echo building docker $(BRANCH)
 	docker build $(ARG) --no-cache --build-arg BRANCH=$(BRANCH) \
+		--build-arg BASE_IMAGE=$(PLAYBASE_IMAGE) \
 		--progress plain \
 		-f docker/Dockerfile \
 	  	-t bigomics/omicsplayground:$(BRANCH) . \
@@ -57,11 +63,24 @@ docker: FORCE version
 update_playdata=false
 update_bigdash=false
 update_playbase=true
+## CACHEBUST_CODE (not --no-cache) so the package layers stay cached and only
+## the code clone is re-pulled -- same as the GHA workflow does with run_id.
+## --secret is what feeds GITHUB_PAT to the private bigomics installs; without
+## it they are skipped by an `if [ -n "$$GITHUB_PAT" ]` guard and the build
+## still exits 0, leaving a silently broken image.
 docker.update: FORCE
-	@echo building update docker 
-	docker build --no-cache \
+	@echo building update docker $(BRANCH) on $(BASE_IMAGE)
+	@test -n "$${GITHUB_PAT:-$$(gh auth token 2>/dev/null)}" || { \
+	  echo "ERROR: no GITHUB_PAT and 'gh auth token' failed."; \
+	  echo "The private bigomics packages would be silently skipped. Aborting."; \
+	  exit 1; }
+	DOCKER_BUILDKIT=1 GITHUB_PAT=$${GITHUB_PAT:-$$(gh auth token)} \
+	docker build \
 		--progress plain $(ARG) \
+		--secret id=GITHUB_PAT,env=GITHUB_PAT \
 		--build-arg BRANCH=$(BRANCH) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg CACHEBUST_CODE=$$(date +%s) \
 		--build-arg update_playdata=$(update_playdata) \
 		--build-arg update_bigdash=$(update_bigdash) \
 		--build-arg update_playbase=$(update_playbase) \

@@ -10,7 +10,9 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:beta
+# Overridable so a trixie base can be used without retagging :beta.
+ARG BASE_IMAGE=bigomics/omicsplayground:beta
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)

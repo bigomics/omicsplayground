@@ -9,6 +9,10 @@ on:
         description: 'Branch to build'
         required: true
         default: 'master'
+      base_image:
+        description: 'Base image to build FROM'
+        required: true
+        default: 'bigomics/omicsplayground:beta'
       update_playdata:
         description: 'Update playdata package'
         required: true
@@ -43,12 +47,20 @@ jobs:
     # runs-on: ubuntu-latest # free GH worker, not enough memory
     runs-on: self-hosted # run on dev-bigomics-frankfurt self-hosted runner
 
+    env:
+      # Branch to build: manual dispatch, else the PR source branch, else the
+      # pushed branch. Drives BOTH the checkout and the in-container git clone
+      # -- they must agree, or a branch build uses master's Dockerfile and
+      # master's dev/Rprofile while only the cloned app code follows the branch.
+      BUILD_BRANCH: ${{ github.event.inputs.branch || github.head_ref || github.ref_name }}
+      BASE_IMAGE: ${{ github.event.inputs.base_image || 'bigomics/omicsplayground:beta' }}
+
     steps:
       -
-        name: Checkout 
+        name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: master
+          ref: ${{ env.BUILD_BRANCH }}
       -
         name: Get version
         id: get_version
@@ -76,12 +88,12 @@ jobs:
           secrets: |
             GITHUB_PAT=${{ secrets.GH_PAT }}
           build-args: |
-            BRANCH=${{ github.event.inputs.branch || github.ref_name }}
+            BRANCH=${{ env.BUILD_BRANCH }}
+            BASE_IMAGE=${{ env.BASE_IMAGE }}
             CACHEBUST_CODE=${{ github.run_id }}
             update_playdata=${{ github.event.inputs.update_playdata || 'false' }}
             update_bigdash=${{ github.event.inputs.update_bigdash || 'true' }}
             update_playbase=${{ github.event.inputs.update_playbase || 'true' }}
-            GITHUB_PAT=${{ secrets.GH_PAT }}
           tags: |
-            ${{ (github.event.inputs.branch || github.ref_name) == 'master' && format('{0}/omicsplayground:{1}, {0}/omicsplayground:latest, {0}/omicsplayground:master', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
-            ${{ (github.event.inputs.branch || github.ref_name) != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, github.event.inputs.branch || github.ref_name) || '' }}
+            ${{ env.BUILD_BRANCH == 'master' && format('{0}/omicsplayground:{1}, {0}/omicsplayground:latest, {0}/omicsplayground:master', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
+            ${{ env.BUILD_BRANCH != 'master' && format('{0}/omicsplayground:{1}', secrets.DOCKERHUB_USERNAME, env.BUILD_BRANCH) || '' }}

@@ -10,7 +10,9 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/playbase:latest
+# Overridable so a trixie playbase can be used without retagging :latest.
+ARG BASE_IMAGE=bigomics/playbase:latest
+FROM ${BASE_IMAGE}
 
 ARG BRANCH=master
 RUN echo Building Docker image from branch '$BRANCH'
