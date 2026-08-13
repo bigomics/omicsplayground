@@ -60,7 +60,7 @@ CopilotEvidenceUI <- function(id) {
               condition = paste0("output['", ns("has_plot"), "']"),
               # DropdownMenu trigger (download icon, circular) + popover body
               # holding width / height in inches and the actual downloadButton.
-              # Mirrors PlotModule's pattern at ui-PlotModule.R:216-245.
+              # Mirrors PlotModule's pattern at bigdash R/plot-module.R.
               DropdownMenu(
                 shiny::div(
                   style = "width: 240px;",
@@ -154,7 +154,7 @@ CopilotEvidenceUI <- function(id) {
     ),
 
     # ---- Maximize modal ----
-    # Recipe copied from PlotModule (`ui-PlotModule.R:480-512`):
+    # Recipe copied from PlotModule (bigdash R/plot-module.R):
     #   * `modalUI(size = "fullscreen")` -> Bootstrap `.modal-fullscreen` so
     #     the dialog spans the viewport instead of getting capped by the
     #     project-global `.modal-lg { width: 640px }` override.
