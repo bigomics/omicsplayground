@@ -166,7 +166,6 @@ app_ui <- function(x) {
         },
         if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
           bslib::nav_panel(
-            #title = HTML("AI&nbsp;Copilot"),
             title = tagList(icon("robot"), tags$br(), "Obi"),
             value = "Copilot",
             div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
@@ -176,8 +175,6 @@ app_ui <- function(x) {
           bslib::nav_panel(
             title = "Runs", icon=icon("person-running"),
             div( class = "px-4 py-0",
-              ##shiny::div(id = "navheader-current-section", HTML("Runs")),
-              ##p("Monitor and inspect the details of computation runs"),
               RunMonitorUI("runmonitor")
             )
           )
@@ -188,9 +185,11 @@ app_ui <- function(x) {
           )
         },
         ## Hidden panels (e.g. tools)
-        bslib::nav_panel_hidden("Prism",
-          div(prism_ui("prism"), class='px-4 py-0')
-        ),
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel_hidden("Prism",
+            div(prism_ui("prism"), class='px-4 py-0')
+          )
+        },
         bslib::nav_panel_hidden("Upload",
           div(UploadUI("upload"), class='px-4 py-0')           
         ),

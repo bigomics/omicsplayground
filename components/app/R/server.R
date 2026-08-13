@@ -1095,7 +1095,7 @@ app_server <- function(input, output, session) {
     })
   }
 
-  if(opt$DEVMODE) {
+  if(isTRUE(opt$DEVMODE)) {
     dbg("[SERVER] WARNING: DEVMODE modules enabled!")
     prism_server("prism")
     tools_server("tools", parent = session)
