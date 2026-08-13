@@ -20,7 +20,8 @@ HERE <- dirname(normalizePath(sub("^--file=", "",
   grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
 
 src <- if (length(argv) >= 1) argv[1] else
-  "/home/massagno/bigomics/GitHub/opg-exampledata/human-symbol"
+  file.path(Sys.getenv("OPG_EXAMPLEDATA",
+    "/home/massagno/bigomics/GitHub/opg-exampledata"), "human-symbol")
 out <- if (length(argv) >= 2) argv[2] else file.path(HERE, "human-dups")
 if (!dir.exists(src)) stop("source fixture not found: ", src)
 dir.create(out, recursive = TRUE, showWarnings = FALSE)

@@ -1,14 +1,17 @@
 # App bugs found while building the compute-comparer parity harness
 
-Two pre-existing bugs in the `master` upload flow, found by driving the real UI with
-Playwright and diffing the resulting `params.RData` against a script-built one. Neither
-is caused by the preprocess refactor; both are independent of it and affect users today.
+Pre-existing bugs in the upload flow, found by driving the real UI with Playwright and
+diffing the resulting `params.RData` against a script-built one. None is caused by the
+preprocess refactor; all are independent of it.
+
+- **#1 (batch-correction reset) is FIXED** in this branch.
+- **#2 (dead wizard locks) is NOT fixed** — recorded here for a separate change.
 
 Harness and full parity results: `dev/compute-comparer/`.
 
 ---
 
-## 1. The chosen batch-correction method is silently reset to ComBat
+## 1. The chosen batch-correction method is silently reset to ComBat  [FIXED HERE]
 
 **Severity: user-visible wrong results.** A user who picks limma, RUV, SVA or NPM can get
 a dataset computed with **ComBat** instead, with no warning.
@@ -18,7 +21,9 @@ batch-correction comparison reactive:
 
 ```r
 methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
+  methods <- methods[methods != "NPM"]
+}
 shiny::updateSelectInput(
   session,
   "bec_method",
@@ -92,10 +97,7 @@ Coefficients not estimable: batch1 batch2
 Any batch-correction scenario needs a batch column independent of the contrast design;
 this is a fixture-choice caveat, not an app defect.
 
-Note this also means a `ComBat` scenario "passes" trivially: ComBat is the value the
-reset lands on, so a test that only ever checks ComBat will never catch this.
-
-**Fix:** preserve the selection.
+**Fix (applied in this branch):** preserve the selection.
 
 ```r
 shiny::updateSelectInput(
@@ -105,12 +107,14 @@ shiny::updateSelectInput(
 )
 ```
 
-Note the `ncol(X0) > 100` branch drops NPM from the list, so a user who selected NPM on a
-small dataset and then grows it needs the fallback — hence the `%in%` guard.
+Note the guard above drops NPM for >100 samples or for methylomics, so a user who
+selected NPM and then changes datatype or grows the dataset needs the fallback — hence
+the `%in%` check. `isolate()` the read, or the reactive gains a dependency on
+`bec_method` and every dropdown change re-runs the whole 5-method comparison.
 
 ---
 
-## 2. Every wizard lock/unlock branch is dead code
+## 2. Every wizard lock/unlock branch is dead code  [NOT FIXED]
 
 **Severity: no data corruption, but the wizard never locks.** Users can page past a step
 whose upload failed validation, and the "please finish this step" alerts never appear.

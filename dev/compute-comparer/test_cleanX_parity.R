@@ -6,12 +6,20 @@
 ##   R_LIBS_USER=libs/pb-edgy:$HOME/R/x86_64-pc-linux-gnu-library/4.3 \
 ##     Rscript test_cleanX_parity.R
 ##
-## No Shiny, no browser: cleanX's realignment is pure matrix code, so both the old
-## and the new version are reproduced here verbatim and compared on inputs that
-## actually have duplicated feature names.
+## No Shiny, no browser: the realignment is pure matrix code, so the app's own
+## realign_counts_to_X() is loaded straight out of the module file and compared
+## against the old intersect() behaviour on inputs with duplicated feature names.
+##
+## Set OPG_EXAMPLEDATA to point at your opg-exampledata checkout.
 ##
 ## Exits non-zero if any assertion fails.
 ##
+
+HERE <- dirname(normalizePath(sub("^--file=", "",
+  grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
+## Fixture roots are overridable so this is not tied to one developer's checkout.
+EXAMPLEDATA <- Sys.getenv("OPG_EXAMPLEDATA",
+  "/home/massagno/bigomics/GitHub/opg-exampledata")
 
 ok <- TRUE
 check <- function(label, cond, detail = "") {
@@ -28,18 +36,34 @@ realign_old <- function(X, counts) {
   list(X = X[kk, , drop = FALSE], counts = counts[kk, , drop = FALSE])
 }
 
-## AFTER: mirrors playbase::pgx.preprocess() -- only realign when the rownames
-## actually differ, and use a %in% subset when names are duplicated.
-realign_new <- function(X, counts) {
-  if (!identical(rownames(X), rownames(counts))) {
-    if (anyDuplicated(rownames(counts))) {
-      counts <- counts[rownames(counts) %in% rownames(X), , drop = FALSE]
-    } else {
-      counts <- counts[rownames(X), , drop = FALSE]
-    }
+## AFTER: loaded FROM THE MODULE ITSELF, so this is a real regression test -- revert
+## realign_counts_to_X() in the app and these assertions fail. (A local copy of the
+## implementation would pass no matter what the app does.)
+##
+## Only that one top-level assignment is evaluated: the rest of the file is Shiny
+## module code that needs a session to run.
+MODULE <- file.path(HERE, "..", "..", "components", "board.upload", "R",
+  "upload_module_normalization.R")
+if (!file.exists(MODULE)) stop("cannot find the normalization module at ", MODULE)
+mod_env <- new.env(parent = globalenv())
+found <- FALSE
+for (e in parse(MODULE)) {
+  if (is.call(e) && length(e) >= 3 &&
+    as.character(e[[1]]) %in% c("<-", "=") &&
+    identical(as.character(e[[2]]), "realign_counts_to_X")) {
+    eval(e, mod_env)
+    found <- TRUE
   }
-  list(X = X, counts = counts)
 }
+if (!found) {
+  stop("realign_counts_to_X() not found in ", MODULE,
+    " -- was the realignment inlined back into cleanX? This test must exercise the ",
+    "app's own implementation, not a copy.")
+}
+realign_new <- function(X, counts) {
+  list(X = X, counts = mod_env$realign_counts_to_X(X, counts))
+}
+cat("loaded realign_counts_to_X() from the app module\n")
 
 mk <- function(names, ncol = 3) {
   matrix(seq_len(length(names) * ncol), nrow = length(names),
@@ -94,7 +118,7 @@ check("counts returned unchanged", identical(w4$counts, counts4))
 if (requireNamespace("playbase", quietly = TRUE) &&
   "pgx.preprocess" %in% getNamespaceExports("playbase")) {
   cat("\n== end-to-end against playbase::pgx.preprocess on a real duplicated fixture\n")
-  fx <- "/home/massagno/bigomics/GitHub/opg-exampledata/salmon-ENSOKI"
+  fx <- file.path(EXAMPLEDATA, "salmon-ENSOKI")
   if (dir.exists(fx)) {
     counts <- playbase::read_counts(file.path(fx, "counts.csv"))
     samples <- playbase::read_samples(file.path(fx, "samples.csv"))

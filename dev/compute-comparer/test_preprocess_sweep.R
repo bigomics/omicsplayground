@@ -81,6 +81,7 @@ app_chain <- function(counts, samples, contrasts, annot, opt) {
       X <- playbase::normalizeMultiOmics(X)
     } else if (opt$datatype == "methylomics") {
       nX <- try(playbase::normalizeMethylation(X, opt$norm_method, opt$meth_type), silent = TRUE)
+      ## matches the module (which now guards try-error too)
       if (!inherits(nX, "try-error") && !is.null(nX)) X <- nX
     } else {
       X <- playbase::normalizeExpression(X, method = opt$norm_method,
@@ -113,7 +114,7 @@ app_chain <- function(counts, samples, contrasts, annot, opt) {
 }
 
 ## ------------------------------------------------------------------- fixtures
-E <- "/home/massagno/bigomics/GitHub/opg-exampledata"
+E <- Sys.getenv("OPG_EXAMPLEDATA", "/home/massagno/bigomics/GitHub/opg-exampledata")
 H <- dirname(normalizePath(sub("^--file=", "",
   grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
 FIX <- list(
