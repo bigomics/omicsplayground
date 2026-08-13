@@ -130,6 +130,6 @@ WordCloudBoard <- function(id, pgx) {
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "WordCloudBoard")
+    board_pause_resume_observers(is_visible, observers, label = "WordCloudBoard", start_paused = TRUE)
   })
 }

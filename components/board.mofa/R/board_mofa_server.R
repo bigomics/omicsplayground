@@ -318,7 +318,7 @@ MofaBoard <- function(id, pgx) {
       selected_pathway = enrichmentTable_selected
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "MofaBoard")
+    board_pause_resume_observers(is_visible, observers, label = "MofaBoard", start_paused = TRUE)
 
     return(NULL)
   })

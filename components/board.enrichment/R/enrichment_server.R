@@ -613,7 +613,7 @@ EnrichmentBoard <- function(id, pgx,
     ## reactive values to return to parent environment
     outx <- list(selected_gsetmethods = selected_gsetmethods)
 
-    board_pause_resume_observers(is_visible, observers, label = "EnrichmentBoard")
+    board_pause_resume_observers(is_visible, observers, label = "EnrichmentBoard", start_paused = TRUE)
 
     return(outx)
   }) ## end of moduleServer

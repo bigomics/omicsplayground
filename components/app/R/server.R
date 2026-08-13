@@ -165,23 +165,11 @@ app_server <- function(input, output, session) {
   tiledb_building <- reactiveVal(FALSE)
 
   ## Default boards ------------------------------------------
-  ## WelcomeBoard("welcome",
-  ##   auth = auth,
-  ##   load_example = load_example,
-  ##   new_upload = new_upload
-  ## )
-
   env$user_profile <- UserProfileBoard(
     "user_profile",
     auth = auth,
     nav_count = reactive(nav$count)
   )
-
-  ## AppSettingsBoard(
-  ##   "app_settings",
-  ##   auth = auth,
-  ##   pgx = PGX
-  ## )
 
   if (isTRUE(opt$ENABLE_ADMIN)) {
     AdminPanelBoard(
@@ -197,7 +185,6 @@ app_server <- function(input, output, session) {
   )
 
   ## Do not display "Welcome" tab on the menu
-  #bigdash.hideMenuItem(session, "welcome-tab")
   ## Hide admin tab by default (will be shown for admin users after login)
   if (isTRUE(opt$ENABLE_ADMIN)) {
     bigdash.hideMenuItem(session, "admin-tab")
@@ -220,17 +207,6 @@ app_server <- function(input, output, session) {
       bslib::nav_select("app-sidebar", "Upload")
     }
   })
-
-  shinyjs::onclick("logo-bigomics", {
-    shinyjs::runjs("console.info('logo-bigomics clicked')")
-    #bigdash.selectTab(session, selected = "welcome-tab")
-    #shinyjs::runjs("sidebarClose()")
-    #shinyjs::runjs("settingsClose()")
-  })
-
-  ## observeEvent(input$menu_createreport, {
-  ##   shinyjs::click("load-generate_report-show_report_modal")
-  ## })
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user

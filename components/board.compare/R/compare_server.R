@@ -505,6 +505,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "CompareBoard")
+    board_pause_resume_observers(is_visible, observers, label = "CompareBoard", start_paused = TRUE)
   })
 } ## end-of-Board

@@ -348,6 +348,10 @@ MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimna
 MODULES_METHYLOMICS <- array(MODULES %in% opt$MODULES_METHYLOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
+## Visibility gating control (can be toggled in etc/OPTIONS)
+if (is.null(opt$ENABLE_VISIBILITY_GATING)) opt$ENABLE_VISIBILITY_GATING <- TRUE
+opt$ENABLE_VISIBILITY_GATING <- as.logical(opt$ENABLE_VISIBILITY_GATING)
+
 ## ------------------------------------------------
 ## SESSION CONTROL
 ## ------------------------------------------------

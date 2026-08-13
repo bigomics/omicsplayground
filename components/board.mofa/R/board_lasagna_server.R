@@ -277,7 +277,7 @@ LasagnaBoard <- function(id, pgx) {
       scrollY = "calc(100vh - (240px + 140px))"
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "LasagnaBoard")
+    board_pause_resume_observers(is_visible, observers, label = "LasagnaBoard", start_paused = TRUE)
 
     return(NULL)
   })

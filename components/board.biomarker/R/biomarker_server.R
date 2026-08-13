@@ -262,6 +262,6 @@ BiomarkerBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "BiomarkerBoard")
+    board_pause_resume_observers(is_visible, observers, label = "BiomarkerBoard", start_paused = TRUE)
   })
 } ## end-of-Board

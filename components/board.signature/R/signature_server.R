@@ -549,6 +549,6 @@ SignatureBoard <- function(id, pgx,
       getEnrichmentGeneTable = getEnrichmentGeneTable
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "SignatureBoard")
+    board_pause_resume_observers(is_visible, observers, label = "SignatureBoard", start_paused = TRUE)
   })
 } ## end-of-Board

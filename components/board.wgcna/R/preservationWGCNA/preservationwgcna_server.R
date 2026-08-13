@@ -245,7 +245,7 @@ PreservationWGCNA_Board <- function(id, pgx) {
       board_type = "preservation"
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "PreservationWGCNA_Board")
+    board_pause_resume_observers(is_visible, observers, label = "PreservationWGCNA_Board", start_paused = TRUE)
 
     return(NULL)
   })

@@ -293,7 +293,7 @@ SingleCellBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "SingleCellBoard")
+    board_pause_resume_observers(is_visible, observers, label = "SingleCellBoard", start_paused = TRUE)
     return(NULL)
   })
 }

@@ -298,6 +298,6 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "CorrelationBoard")
+    board_pause_resume_observers(is_visible, observers, label = "CorrelationBoard", start_paused = TRUE)
   })
 } ## end of Board

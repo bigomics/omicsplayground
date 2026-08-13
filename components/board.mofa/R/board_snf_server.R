@@ -96,7 +96,7 @@ SNFBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "SNFBoard")
+    board_pause_resume_observers(is_visible, observers, label = "SNFBoard", start_paused = TRUE)
 
     return(NULL)
   })

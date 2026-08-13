@@ -109,6 +109,6 @@ EpigenomicsBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "EpigenomicsBoard")
+    board_pause_resume_observers(is_visible, observers, label = "EpigenomicsBoard", start_paused = TRUE)
   })
 }

@@ -194,7 +194,7 @@ qsee_bsee_server <- function(id, rX, rY) {
         add.watermark = FALSE
       )
 
-      board_pause_resume_observers(is_visible, observers, label = "qsee_bsee_server")
+      board_pause_resume_observers(is_visible, observers, label = "qsee_bsee_server", start_paused = TRUE)
     } ## end-of-server
   )
 }

@@ -83,6 +83,15 @@ board_visibility_probe <- function(ns) {
 #' @param label optional label for debug messages (e.g. module name)
 #' @return a `reactive` logical
 board_is_visible <- function(input, label = NULL) {
+  ## If visibility gating is disabled globally, always report visible = TRUE
+  ## so board_cache() and pause/resume logic are bypassed.
+  if (!isTRUE(getOption("ENABLE_VISIBILITY_GATING", TRUE)) &&
+      !is.null(getOption("shiny.app")) && exists("opt", envir = .GlobalEnv)) {
+    if (!isTRUE(opt$ENABLE_VISIBILITY_GATING)) {
+      return(shiny::reactive(TRUE))
+    }
+  }
+
   shiny::reactive({
     if (!is.null(label)) {
       message("[", label, "] visible = ", input$is_visible)
@@ -130,7 +139,28 @@ board_observer_registry <- function() {
 #' @param is_visible reactive logical from [board_is_visible()]
 #' @param registry a registry from [board_observer_registry()]
 #' @param label optional debug label
-board_pause_resume_observers <- function(is_visible, registry, label = NULL) {
+board_pause_resume_observers <- function(is_visible, registry, label = NULL, start_paused = TRUE) {
+  ## Respect global option from etc/OPTIONS (ENABLE_VISIBILITY_GATING)
+  if (!isTRUE(opt$ENABLE_VISIBILITY_GATING %||% TRUE)) {
+    if (!is.null(label)) {
+      message("[", label, "] visibility gating DISABLED globally -- observers stay live")
+    }
+    return(invisible(NULL))
+  }
+
+  ## By default, immediately suspend all registered observers at creation.
+  ## This ensures no reactivity happens at module init time (before the
+  ## first visibility report arrives). Call sites that want observers to
+  ## run immediately on registration can pass start_paused = FALSE.
+  if (start_paused) {
+    for (obs in registry$all()) {
+      obs$suspend()
+    }
+    if (!is.null(label)) {
+      message("[", label, "] observers -> initially suspended (start_paused=TRUE)")
+    }
+  }
+
   shiny::observeEvent(is_visible(), {
     visible <- isTRUE(is_visible())
     if (!is.null(label)) {
@@ -161,6 +191,17 @@ board_cache <- function(is_visible, deps, compute, label = NULL) {
   force(compute)
   if (!is.function(deps)) {
     stop("board_cache: `deps` must be a zero-arg function or reactive")
+  }
+
+  ## If visibility gating is disabled globally, fall back to a simple
+  ## reactive (always recompute on dep change, no visibility check).
+  if (!isTRUE(opt$ENABLE_VISIBILITY_GATING %||% TRUE)) {
+    if (!is.null(label)) {
+      message("[", label, "] visibility gating disabled — using plain reactive")
+    }
+    return(shiny::reactive({
+      compute()
+    }))
   }
 
   result <- shiny::reactiveVal(NULL)

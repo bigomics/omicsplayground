@@ -66,6 +66,6 @@ TcgaBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "TcgaBoard")
+    board_pause_resume_observers(is_visible, observers, label = "TcgaBoard", start_paused = TRUE)
   })
 }

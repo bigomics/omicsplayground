@@ -747,6 +747,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "ClusteringBoard")
+    board_pause_resume_observers(is_visible, observers, label = "ClusteringBoard", start_paused = TRUE)
   }) ## end of moduleServer
 } ## end of Board

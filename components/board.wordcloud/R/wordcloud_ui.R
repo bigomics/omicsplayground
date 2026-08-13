@@ -14,17 +14,19 @@ WordCloudInputs <- function(id) {
 }
 
 WordCloudUI <- function(id) {
+  ns <- shiny::NS(id) ## namespace
+
   fullH <- 750
   rowH <- 660 ## row height of panel
   tabH <- 200 ## row height of panel
   tabH <- "70vh" ## row height of panel
   halfH <- c("calc(50vh - 70px)", TABLE_HEIGHT_MODAL)
 
-  ns <- shiny::NS(id) ## namespace
-  shiny::tabsetPanel(
-    id = ns("tabs"),
-    tabs <- shiny::tabPanel(
-      "",
+  tabs <- shiny::tabPanel(
+    "",
+    bslib::layout_columns(
+      col_widths = 12,
+      height = "calc(100vh - 100px)",
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
         wordcloud_plot_enrichment_ui(
@@ -94,9 +96,13 @@ WordCloudUI <- function(id) {
       )
     )
   )
+  
   div(
     boardHeader(title = "Word cloud", info_link = ns("wc_info")),
     board_visibility_probe(ns),
-    tabs
+    shiny::tabsetPanel(
+      id = ns("tabs"),
+      tabs
+    )
   )
 }

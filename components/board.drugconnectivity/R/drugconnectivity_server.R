@@ -224,6 +224,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       getActiveDSEA
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "DrugConnectivityBoard")
+    board_pause_resume_observers(is_visible, observers, label = "DrugConnectivityBoard", start_paused = TRUE)
   })
 }

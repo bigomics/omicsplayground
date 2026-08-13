@@ -80,6 +80,6 @@ PcsfBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "PcsfBoard")
+    board_pause_resume_observers(is_visible, observers, label = "PcsfBoard", start_paused = TRUE)
   })
 }

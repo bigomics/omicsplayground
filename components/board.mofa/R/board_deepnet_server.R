@@ -434,7 +434,7 @@ DeepNetBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "DeepNetBoard")
+    board_pause_resume_observers(is_visible, observers, label = "DeepNetBoard", start_paused = TRUE)
 
     return(NULL)
   })

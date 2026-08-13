@@ -341,6 +341,6 @@ IntersectionBoard <- function(
       input_comparisons = input_comparisons
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "IntersectionBoard")
+    board_pause_resume_observers(is_visible, observers, label = "IntersectionBoard", start_paused = TRUE)
   })
 } ## end-of-Board

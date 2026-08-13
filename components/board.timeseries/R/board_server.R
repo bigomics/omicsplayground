@@ -185,6 +185,6 @@ TimeSeriesBoard <- function(id,
       watermark = WATERMARK
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "TimeSeriesBoard")
+    board_pause_resume_observers(is_visible, observers, label = "TimeSeriesBoard", start_paused = TRUE)
   })
 }

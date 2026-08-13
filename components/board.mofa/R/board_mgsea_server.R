@@ -128,7 +128,7 @@ MGseaBoard <- function(id, pgx) {
       input_k = reactive(input$contrast)
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "MGseaBoard")
+    board_pause_resume_observers(is_visible, observers, label = "MGseaBoard", start_paused = TRUE)
 
     return(NULL)
   })

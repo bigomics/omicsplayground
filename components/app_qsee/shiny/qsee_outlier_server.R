@@ -45,6 +45,6 @@ qsee_outlier_server <- function(id, rX, rY) {
       add.watermark = FALSE
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "qsee_outlier_server")
+    board_pause_resume_observers(is_visible, observers, label = "qsee_outlier_server", start_paused = TRUE)
   })
 }

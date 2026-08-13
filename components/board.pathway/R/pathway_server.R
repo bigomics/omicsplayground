@@ -285,6 +285,6 @@ PathwayBoard <- function(id,
       reactive(input$fa_contrast)
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "PathwayBoard")
+    board_pause_resume_observers(is_visible, observers, label = "PathwayBoard", start_paused = TRUE)
   }) ## end-of-moduleServer
 }

@@ -690,7 +690,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       metaFC
     })
 
-    board_pause_resume_observers(is_visible, observers, label = "ExpressionBoard")
+    board_pause_resume_observers(is_visible, observers, label = "ExpressionBoard", start_paused = TRUE)
 
     outx <- list(
       selected_gxmethods = selected_gxmethods

@@ -427,7 +427,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ignoreNULL = TRUE
     )
     
-    board_pause_resume_observers(is_visible, observers, label = "DataViewBoard")
+    board_pause_resume_observers(is_visible, observers, label = "DataViewBoard", start_paused = TRUE)
 
     ## ================================================================================
     ## =================================== END ========================================

@@ -245,7 +245,7 @@ MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
       save_pgx = save_pgx
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "MultiWGCNA_Board")
+    board_pause_resume_observers(is_visible, observers, label = "MultiWGCNA_Board", start_paused = TRUE)
 
     return(NULL)
   })

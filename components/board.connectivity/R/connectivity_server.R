@@ -545,6 +545,6 @@ ConnectivityBoard <- function(
       getCurrentContrast = getCurrentContrast
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "ConnectivityBoard")
+    board_pause_resume_observers(is_visible, observers, label = "ConnectivityBoard", start_paused = TRUE)
   }) ## end of moduleserver
 } ## end-of-Board

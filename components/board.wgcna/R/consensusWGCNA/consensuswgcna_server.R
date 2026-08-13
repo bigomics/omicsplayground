@@ -292,7 +292,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       rtrait = reactive(input$trait)
     )
 
-    board_pause_resume_observers(is_visible, observers, label = "ConsensusWGCNA_Board")
+    board_pause_resume_observers(is_visible, observers, label = "ConsensusWGCNA_Board", start_paused = TRUE)
 
     return(NULL)
   })
