@@ -9,7 +9,14 @@ options(BIOCONDUCTOR_CONFIG_FILE = "https://packagemanager.posit.co/bioconductor
 # Configure a CRAN snapshot compatible with Bioconductor 3.22.
 # NOTE: the __linux__/<distro> segment must match the base image. Leaving this
 # at noble on a trixie base serves Ubuntu binaries built against Ubuntu libs.
-options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/trixie/latest"))
+#
+# Pinned to a date, NOT `latest`. On `latest` the binary channel served lattice
+# 0.23-1, which dropped the `parallel` export that methylumi still imports;
+# that breaks methylumi -> lumi -> wateRmelon, and wateRmelon is a playbase
+# Import. Symptom is nasty: the packages install fine and only fail on load.
+# Keep this date in step with playbase's dev/rspm.R -- if the two disagree, the
+# opg stages upgrade packages the base image was built against.
+options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/trixie/2026-07-15"))
 
 # PPM picks the binary build from the User-Agent. R does not send its own
 # identity unless HTTPUserAgent is set explicitly -- it sends "libcurl/x.y.z",
