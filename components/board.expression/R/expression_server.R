@@ -25,7 +25,13 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
      <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods.
      The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
      <center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=H8OB2pGbAI6UB-ar' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>", js = FALSE)
-    OmicsBoard("board", pgx, title="Differential expression", infotext = gx_infotext) 
+    OmicsBoard("board", pgx, title="Differential expression", infotext = gx_infotext)
+
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "ExpressionBoard")
+    observers <- board_observer_registry()
 
     GX.DEFAULTTEST <- "trend.limma"
     GX.DEFAULTTEST <- c("trend.limma", "edger.qlf", "deseq2.wald", "edger.lrt")
@@ -34,7 +40,7 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     # =============================== observers ======================================
     # ================================================================================
 
-    shiny::observeEvent(input$gx_info,
+    observers$add(shiny::observeEvent(input$gx_info,
       {
         shiny::showModal(shiny::modalDialog(
           title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
@@ -43,10 +49,10 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ))
       },
       ignoreInit = TRUE
-    )
+    ))
 
     ## update choices upon change of data set
-    shiny::observe({
+    observers$add(shiny::observe({
       pgx <- pgx
       shiny::req(pgx$X)
 
@@ -70,9 +76,9 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       )
 
       shiny::updateCheckboxInput(session, "gx_grouped", value = (ncol(pgx$X) <= 8))
-    })
+    }))
 
-    observeEvent(
+    observers$add(observeEvent(
       {
         input$show_pv
       },
@@ -85,20 +91,20 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           )
         }
       }
-    )
+    ))
 
     # observe functions to project DT from invalidating equal row_select
     gsettable_rows_selected <- reactiveVal()
 
-    observe({
+    observers$add(observe({
       gsettable_rows_selected(gsettable$rows_selected())
-    })
+    }))
 
     genetable_rows_selected <- reactiveVal()
 
-    observe({
+    observers$add(observe({
       genetable_rows_selected(genetable$rows_selected())
-    })
+    }))
 
     ## =========================================================================
     ## ============================= REACTIVES =================================
@@ -113,12 +119,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       test
     })
 
-    shiny::observeEvent(input$show_pv, {
+    observers$add(shiny::observeEvent(input$show_pv, {
       shiny::updateSelectInput(
         session, "gx_fdr",
         label = if (input$show_pv) "P-value" else "FDR"
       )
-    })
+    }))
 
     pval_cap <- shiny::reactive({
       pval_cap <- input$pval_cap
@@ -683,6 +689,8 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       rownames(metaFC) <- rownames(pgx$gx.meta$meta[[1]])
       metaFC
     })
+
+    board_pause_resume_observers(is_visible, observers, label = "ExpressionBoard")
 
     outx <- list(
       selected_gxmethods = selected_gxmethods

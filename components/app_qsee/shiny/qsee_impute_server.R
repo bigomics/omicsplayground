@@ -3,13 +3,14 @@
 qsee_imputation_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "Missing value analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_imputation_server")
-    shiny::observeEvent(rY(), {
+    is_visible <- board_is_visible(input, label = "qsee_imputation_server")
+    observers <- board_observer_registry()
+    observers$add(shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
-    })
+    }))
     tr_marlevel <- shiny::reactive(input$marlevel) %>% shiny::debounce(1000)
     tr_mnarlevel <- shiny::reactive(input$mnarlevel) %>% shiny::debounce(1000)
-    get_result <- qsee_board_cache(
+    get_result <- board_cache(
       is_visible,
       deps = function() list(rX(), tr_marlevel(), tr_mnarlevel()),
       label = "qsee_imputation_server",
@@ -65,5 +66,7 @@ qsee_imputation_server <- function(id, rX, rY) {
       func = render.validation_scatter,
       add.watermark = FALSE
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "qsee_imputation_server")
   })
 }

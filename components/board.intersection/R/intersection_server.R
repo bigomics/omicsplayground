@@ -23,6 +23,12 @@ IntersectionBoard <- function(
 
 ", js = FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "IntersectionBoard")
+    observers <- board_observer_registry()
+
     ## delayed input
     input_comparisons <- shiny::reactive({
       input$comparisons
@@ -36,16 +42,16 @@ IntersectionBoard <- function(
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Intersection Analysis Board</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
     ## update choices upon change of data set
-    shiny::observe({
+    observers$add(shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -57,19 +63,19 @@ IntersectionBoard <- function(
         choices = comparisons,
         selected = head(comparisons, 3)
       )
-    })
+    }))
 
-    shiny::observeEvent(pgx$X, {
+    observers$add(shiny::observeEvent(pgx$X, {
       choices <- c("gene", "geneset")
       choices_names <- c(tspan("gene", js = FALSE), tspan("geneset", js = FALSE))
       names(choices) <- choices_names
       shiny::updateRadioButtons(session, "level", choices = choices)
       shiny::updateTextAreaInput(session, "customlist", placeholder = tspan("Paste your custom gene list", js = FALSE))
-    })
+    }))
 
     ## update choices upon change of feature level
     ## observeEvent( input$level, {
-    shiny::observe({
+    observers$add(shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -87,7 +93,7 @@ IntersectionBoard <- function(
       ft <- sort(ft)
       names(ft) <- sub(".*:", "", ft)
       shiny::updateSelectInput(session, "filter", choices = ft, selected = "<all>")
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -95,9 +101,9 @@ IntersectionBoard <- function(
       ## "Signature clustering" = list(disable = c("comparisons"))
       "Signature clustering" = list(disable = NULL)
     )
-    shiny::observeEvent(input$tabs1, {
+    observers$add(shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
+    }))
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
@@ -334,5 +340,7 @@ IntersectionBoard <- function(
       pgx = pgx,
       input_comparisons = input_comparisons
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "IntersectionBoard")
   })
 } ## end-of-Board

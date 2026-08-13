@@ -21,6 +21,12 @@ SNFBoard <- function(id, pgx) {
 ", js = FALSE)
 
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "SNFBoard")
+    observers <- board_observer_registry()
+
     ## =============================================================================
     ## ======================= OBSERVE FUNCTIONS ===================================
     ## =============================================================================
@@ -30,14 +36,14 @@ SNFBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     ## ========================================================================
     ## ============================= REACTIVES ================================
@@ -89,6 +95,8 @@ SNFBoard <- function(id, pgx) {
       mofa = mofa,
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "SNFBoard")
 
     return(NULL)
   })

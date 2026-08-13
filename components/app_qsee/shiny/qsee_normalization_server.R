@@ -5,10 +5,11 @@ qsee_normalization_server <- function(id, rX, rY) {
 
     OmicsBoard("board", pgx=NULL, title="Normalization", infotext = NULL) 
 
-    is_visible <- qsee_is_visible(input, label = "qsee_normalization_server")
-    shiny::observeEvent(rY(), {
+    is_visible <- board_is_visible(input, label = "qsee_normalization_server")
+    observers <- board_observer_registry()
+    observers$add(shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
-    })
+    }))
 
     get_rawX <- shiny::reactive({
       rawX <- rX(); shiny::req(rawX)
@@ -17,7 +18,7 @@ qsee_normalization_server <- function(id, rX, rY) {
       qsee_normalization_add_noise(rawX, amount)
     })
 
-    get_result <- qsee_board_cache(
+    get_result <- board_cache(
       is_visible,
       deps = function() get_rawX(),
       label = "qsee_normalization_server",
@@ -61,5 +62,7 @@ qsee_normalization_server <- function(id, rX, rY) {
       func = render.pca_plots,
       add.watermark = FALSE
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "qsee_normalization_server")
   })
 }

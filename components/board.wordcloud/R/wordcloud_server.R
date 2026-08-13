@@ -12,26 +12,32 @@ WordCloudBoard <- function(id, pgx) {
 <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=2irSbCjCBRgQf5Wd&amp;start=190' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>
 "), js = FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "WordCloudBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$wc_info, {
+    observers$add(shiny::observeEvent(input$wc_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WordCloud Analysis Board</strong>"),
         shiny::HTML(wc_infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       # shiny::req(pgx$gset.meta)
       # ct <- names(pgx$gset.meta$meta)
       shiny::req(pgx)
       ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "wc_contrast", choices = ct)
-    })
+    }))
 
     ## ---------------------------------------------------------------
     ## ------------- Functions for WordCloud -------------------------
@@ -123,5 +129,7 @@ WordCloudBoard <- function(id, pgx) {
       wordcloud_enrichmentTable = wordcloud_enrichmentTable,
       getCurrentWordEnrichment = getCurrentWordEnrichment
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "WordCloudBoard")
   })
 }

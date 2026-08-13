@@ -11,7 +11,8 @@
 qsee_pcaexplorer_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "PCA explorer", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_pcaexplorer_server")
+    is_visible <- board_is_visible(input, label = "qsee_pcaexplorer_server")
+    observers <- board_observer_registry()
 
     ## Qsee's own rY() does not drop degenerate phenotype columns
     ## (constant, or all-unique like a sample-id column); without that,
@@ -23,12 +24,12 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
       qsee_pcaexplorer_filter_pheno(Y)
     })
 
-    shiny::observeEvent(rYf(), {
+    observers$add(shiny::observeEvent(rYf(), {
       cols <- colnames(rYf())
       shiny::updateSelectInput(session, "colorby", choices = cols, selected = cols[1])
-    }, ignoreNULL = TRUE)
+    }, ignoreNULL = TRUE))
 
-    get_pcaX <- qsee_board_cache(
+    get_pcaX <- board_cache(
       is_visible, deps = function() list(rX(), rYf()), label = "qsee_pcaexplorer_server",
       compute = function() {
         rawX <- rX()
@@ -52,7 +53,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
       if (is.null(b) || !nzchar(as.character(b))) "Biplot" else as.character(b)
     })
 
-    shiny::observeEvent(board_tab(), {
+    observers$add(shiny::observeEvent(board_tab(), {
       b <- board_tab()
       need <- list(
         sb_colorby     = b %in% c("Biplot", "PCA pairs"),
@@ -69,17 +70,17 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
           condition = !isTRUE(need[[nm]])
         )
       }
-    }, ignoreNULL = TRUE)
+    }, ignoreNULL = TRUE))
 
     ## Stretch min_fc slider once when PCA is first ready
-    shiny::observeEvent(get_pcaX(), {
+    observers$add(shiny::observeEvent(get_pcaX(), {
       rng <- qsee_pcaexplorer_minfc_range(get_pcaX())
       shiny::req(rng)
       shiny::updateSliderInput(
         session, "min_fc",
         min = rng$min, max = rng$max, step = rng$step, value = rng$value
       )
-    }, ignoreNULL = TRUE, once = TRUE)
+    }, ignoreNULL = TRUE, once = TRUE))
 
     ## shared sidebar reactives
     colorby <- shiny::reactive(input$colorby)
@@ -354,5 +355,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
       func = render.loadings2,
       add.watermark = FALSE
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "qsee_pcaexplorer_server")
   })
 }

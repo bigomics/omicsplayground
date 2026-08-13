@@ -287,6 +287,7 @@ ClusteringUI <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Cluster Samples",
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs1"),
       heatmap_panel,

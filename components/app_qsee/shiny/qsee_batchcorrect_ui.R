@@ -119,7 +119,7 @@ qsee_bsee_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Batch-effects",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     batchcorrect_panel
   )
 }

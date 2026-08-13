@@ -29,6 +29,12 @@ BiomarkerBoard <- function(id, pgx) {
     and provides expression boxplots by phenotype classes for features present in
     the tree.", js = FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "BiomarkerBoard")
+    observers <- board_observer_registry()
+
     ## =========================================================================
     ## ======================== OBSERVERS ======================================
     ## =========================================================================
@@ -44,31 +50,39 @@ BiomarkerBoard <- function(id, pgx) {
         disable = c("pdx_target", "pdx_filter")
       )
     )
-    shiny::observeEvent(input$tabs1, {
+    observers$add(shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
+    }))
 
-    shiny::observeEvent(input$pdx_info, {
+    observers$add(shiny::observeEvent(input$pdx_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Biomarker Board</strong>"),
         shiny::HTML(pdx_infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
-
+    ## NOT suspended: calcVariableImportance() below reads input$pdx_target
+    ## via an isolate()'d call, gated only by the pdx_runbutton click (not by
+    ## these choices). A click can only happen once the board is already on
+    ## screen, so a same-tick race with the visibility flip (like the qsee
+    ## bsee main_param incident) can't happen here -- but to remove any doubt
+    ## rather than rely on that timing argument, this stays always-live.
     shiny::observe({
       shiny::req(pgx$X)
       ct <- colnames(pgx$Y)
       shiny::updateSelectInput(session, "pdx_target", choices = ct)
     })
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$Y)
       levels <- playbase::getLevels(pgx$Y)
       shiny::updateSelectInput(session, "pdx_samplefilter", choices = levels)
-    })
+    }))
 
+    ## NOT suspended: same reasoning as the pdx_target observer above --
+    ## calcVariableImportance() isolate()-reads input$pdx_filter, gated only
+    ## by the pdx_runbutton click.
     shiny::observe({
       shiny::req(pgx$X)
       ft <- sort(names(pgx$families))
@@ -83,7 +97,7 @@ BiomarkerBoard <- function(id, pgx) {
 
     # Enable or disable the run button in the UI
     # if the pdx_target overlaps with the pdx_samplefilter variable
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       list(pgx$Y, input$pdx_samplefilter, input$pdx_target),
       {
         shiny::req(pgx$Y, input$pdx_target)
@@ -95,10 +109,10 @@ BiomarkerBoard <- function(id, pgx) {
           shinyjs::disable("pdx_runbutton")
         }
       }
-    )
+    ))
 
     is_computed <- reactiveVal(FALSE)
-    observeEvent(
+    observers$add(observeEvent(
       {
         list(
           input$pdx_target,
@@ -110,7 +124,7 @@ BiomarkerBoard <- function(id, pgx) {
       {
         is_computed(FALSE)
       }
-    )
+    ))
 
     ## =========================================================================
     ## ============================= REACTIVES =================================
@@ -247,5 +261,7 @@ BiomarkerBoard <- function(id, pgx) {
       samplefilter = shiny::reactive(input$pdx_samplefilter),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "BiomarkerBoard")
   })
 } ## end-of-Board

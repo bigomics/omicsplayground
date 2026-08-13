@@ -72,6 +72,7 @@ TimeSeriesUI <- function(id) {
 
   div(
     boardHeader(title = "Time Series", info_link = ns("board_info")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(

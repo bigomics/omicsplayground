@@ -39,44 +39,58 @@ SignatureBoard <- function(id, pgx,
     CITRICACIDCYCLE.METABOLITES <- "57288 16947 32805 30887 16810 15380 15741 18012 30797 30744 15346 15846 16908 16238 17877 17552 15996 16526 15377"
     UREACYCLE.METABOLITES <- "15729 16349 16941 16467 16199 17672 17053 18012"
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "SignatureBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "xl"
       ))
-    })
+    }))
 
     ## ------------------------ observe/reactive function  -----------------------------
 
-    shiny::observeEvent(input$example1, {
+    observers$add(shiny::observeEvent(input$example1, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = GLYCOLISIS.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = IMMCHECK.GENES)
       }
-    })
+    }))
 
-    shiny::observeEvent(input$example2, {
+    observers$add(shiny::observeEvent(input$example2, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = CITRICACIDCYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = APOPTOSIS.GENES)
       }
-    })
+    }))
 
-    shiny::observeEvent(input$example3, {
+    observers$add(shiny::observeEvent(input$example3, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = UREACYCLE.METABOLITES)
       } else {
         shiny::updateTextAreaInput(session, "genelist", value = CELLCYCLE.GENES)
       }
-    })
+    }))
 
+    ## NOT suspended: input_genelist (below) is an eventReactive triggered by
+    ## pgx$X (among others) that reads input$genelist WITHOUT declaring it as
+    ## a trigger -- an isolate()-like bypass. If this setter were suspended
+    ## while hidden, the first visibility flip could resume it too late
+    ## relative to a render already reading input_genelist() with the old/
+    ## default genelist value (same race class fixed in qsee_bsee_server's
+    ## main_param -- see components/app_qsee/shiny/qsee_batchcorrect_server.R).
+    ## Must stay always-live.
     shiny::observeEvent(pgx$X, {
       if (DATATYPEPGX == "metabolomics") {
         shiny::updateTextAreaInput(session, "genelist", value = DEFAULT.METABOLITES)
@@ -91,7 +105,7 @@ SignatureBoard <- function(id, pgx,
       }
     })
 
-    shiny::observe({
+    observers$add(shiny::observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -132,7 +146,7 @@ SignatureBoard <- function(id, pgx,
           selected = "<custom>"
         )
       }
-    })
+    }))
 
     ## ================================================================================
     ## ======================= REACTIVE FUNCTIONS =====================================
@@ -534,5 +548,7 @@ SignatureBoard <- function(id, pgx,
       organism = pgx$organism,
       getEnrichmentGeneTable = getEnrichmentGeneTable
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "SignatureBoard")
   })
 } ## end-of-Board

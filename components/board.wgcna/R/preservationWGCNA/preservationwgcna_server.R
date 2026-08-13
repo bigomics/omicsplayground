@@ -28,14 +28,20 @@ PreservationWGCNA_Board <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "PreservationWGCNA_Board")
+    observers <- board_observer_registry()
+
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Preservation WGCNA Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -45,16 +51,22 @@ PreservationWGCNA_Board <- function(id, pgx) {
       "Feature Table" = list(disable = c(), enable = c("module", "trait"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       ## dbg("[PreservationWGCNA_Board] input$tabs = ", input$tabs)
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-
+    ## NOT suspended: r_wgcna's eventReactive body below reads
+    ## input$splitpheno but its own trigger list is only
+    ## list(input$compute, pgx$X) -- splitpheno is read outside that
+    ## dependency tracking (eventReactive semantics), the same shape as the
+    ## qsee_bsee_server main_param race (see
+    ## components/app_qsee/shiny/qsee_batchcorrect_server.R). Must stay
+    ## always-live.
     shiny::observeEvent(list(pgx$X, pgx$samples), {
       splitpheno <- colnames(pgx$samples)
       shiny::updateSelectInput(session, "splitpheno",
@@ -232,6 +244,8 @@ PreservationWGCNA_Board <- function(id, pgx) {
       variant = NULL,
       board_type = "preservation"
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "PreservationWGCNA_Board")
 
     return(NULL)
   })

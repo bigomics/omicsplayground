@@ -49,6 +49,7 @@ ConsensusWGCNA_UI <- function(id) {
 
   shiny::div(
     boardHeader(title = "Consensus WGCNA", info_link = ns("info")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
 

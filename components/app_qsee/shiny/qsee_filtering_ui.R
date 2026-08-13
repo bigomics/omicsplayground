@@ -75,7 +75,7 @@ qsee_filtering_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "SD Filtering",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     filtering_panel
   )
 }

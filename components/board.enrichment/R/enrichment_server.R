@@ -35,19 +35,25 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "EnrichmentBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$gs_info, {
+    observers$add(shiny::observeEvent(input$gs_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Enrichment Analysis Board</strong>"),
         shiny::HTML(gs_infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       meta <- pgx$gset.meta$meta
       comparisons <- playbase::pgx.getContrasts(pgx)
@@ -64,9 +70,9 @@ EnrichmentBoard <- function(id, pgx,
         choices = sort(gset.methods),
         selected = sel2
       )
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       gset_collections <- playbase::pgx.getGeneSetCollections(gsets = rownames(pgx$gsetX))
       nn <- sapply(gset_collections, function(k) sum(k %in% rownames(pgx$gsetX)))
@@ -76,9 +82,9 @@ EnrichmentBoard <- function(id, pgx,
       hmark <- grep("^H$|hallmark|", gsets.groups, ignore.case = TRUE, value = TRUE)
       if (length(hmark) > 0) sel <- hmark[1]
       shiny::updateSelectInput(session, "gs_features", choices = gsets.groups, selected = sel)
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       if (isTRUE(input$show_pv)) {
         shinyalert::shinyalert(
           title = "",
@@ -86,15 +92,15 @@ EnrichmentBoard <- function(id, pgx,
           type = "warning"
         )
       }
-    })
+    }))
 
-    shiny::observeEvent(input$show_pv, {
+    observers$add(shiny::observeEvent(input$show_pv, {
       shiny::updateSelectInput(
         session,
         "gs_fdr",
         label = if (input$show_pv) "P-value" else "FDR"
       )
-    })
+    }))
 
     ## ================================================================================
     ## ========================= REACTIVE FUNCTIONS ===================================
@@ -606,6 +612,9 @@ EnrichmentBoard <- function(id, pgx,
 
     ## reactive values to return to parent environment
     outx <- list(selected_gsetmethods = selected_gsetmethods)
+
+    board_pause_resume_observers(is_visible, observers, label = "EnrichmentBoard")
+
     return(outx)
   }) ## end of moduleServer
 } ## end-of-Board

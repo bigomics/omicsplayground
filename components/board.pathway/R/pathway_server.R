@@ -33,25 +33,31 @@ PathwayBoard <- function(id,
     <br><br><br><br>
     <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=AB4FSqin7aqqYU_n&amp;start=100' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "PathwayBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$fa_info, {
+    observers$add(shiny::observeEvent(input$fa_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Functional Analysis Board</strong>"),
         shiny::HTML(fa_infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       # ct <- colnames(pgx$model.parameters$contr.matrix)
       ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "fa_contrast", choices = ct)
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -60,9 +66,9 @@ PathwayBoard <- function(id,
       "GO graph" = list(disable = NULL),
       "Enrichment Map (beta)" = list(disable = NULL)
     )
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ================================================================================
     ## =========================== FUNCTIONS ==========================================
@@ -278,5 +284,7 @@ PathwayBoard <- function(id,
       getFilteredWikiPathwayTable,
       reactive(input$fa_contrast)
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "PathwayBoard")
   }) ## end-of-moduleServer
 }

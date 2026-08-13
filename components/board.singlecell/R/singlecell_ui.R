@@ -32,6 +32,7 @@ SingleCellUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
   div(
     boardHeader(title = "Cell Profiling", info_link = ns("infotext")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

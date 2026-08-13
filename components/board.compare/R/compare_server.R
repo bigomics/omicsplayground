@@ -16,17 +16,23 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         js = FALSE
       )
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "CompareBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Compare Experiments</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -44,16 +50,16 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       )
     )
 
-    shiny::observeEvent(input$tabs1, {
+    observers$add(shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
+    }))
 
     score_table_rows <- reactive({
       score_table$rownames_all()
     })
 
     ## upon new pgx upload
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$X)
       },
@@ -85,11 +91,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           placeholder = tspan("Paste your custom gene list", js = FALSE)
         )
       }
-    )
+    ))
 
     ## keep a list of highlighted/selected features
     hilightgenes <- reactiveVal(NULL)
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(contrast1())
       shiny::req(contrast2())
 
@@ -107,13 +113,13 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         higenes <- trimws(gsub("[ ]", "", higenes))
       }
       hilightgenes(higenes)
-    })
+    }))
 
 
     ## allow trigger on explicit compare button
     contrast1 <- shiny::reactiveVal()
     contrast2 <- shiny::reactiveVal()
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$X, input$compare_button)
       },
@@ -152,7 +158,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       },
       ignoreInit = FALSE,
       ignoreNULL = FALSE
-    )
+    ))
 
     ## ============================================================================
     ## ========================= REACTIVE FUNCTIONS ===============================
@@ -498,5 +504,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
       selected = score_table_rows,
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "CompareBoard")
   })
 } ## end-of-Board

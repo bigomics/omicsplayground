@@ -32,8 +32,14 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
     ##   ))
     ## })
 
-    OmicsBoard("board", pgx, title="WGCNA", infotext = youtube_link) 
-    
+    OmicsBoard("board", pgx, title="WGCNA", infotext = youtube_link)
+
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "WgcnaBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ========================== OBSERVE FUNCTIONS ===================================
     ## ================================================================================
@@ -46,9 +52,9 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
       "Enrichment" = list(disable = c("selected_trait"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ================================================================================
     ## ======================= PRECOMPUTE FUNCTION ====================================
@@ -314,6 +320,8 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
       variant = "wgcna",
       save_pgx = save_pgx
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "WgcnaBoard")
 
     return(NULL)
   })

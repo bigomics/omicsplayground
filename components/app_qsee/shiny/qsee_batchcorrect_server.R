@@ -9,9 +9,17 @@ qsee_bsee_server <- function(id, rX, rY) {
     function(input, output, session) {
 
       OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
-      ## `input$is_visible` is reported by qsee_visibility_probe() in the UI.
-      is_visible <- qsee_is_visible(input, label = "qsee_bsee_server")
+      ## `input$is_visible` is reported by board_visibility_probe() in the UI.
+      is_visible <- board_is_visible(input, label = "qsee_bsee_server")
+      observers <- board_observer_registry()
 
+      ## NOT suspended: compute() below reads input$main_param via an
+      ## isolate()'d call inside board_cache, outside of deps() tracking.
+      ## If this setter were suspended while hidden, the first visibility
+      ## flip would resume it too late -- the (never-suspended) compute
+      ## observer reacts to is_visible() directly and would already have run
+      ## with an empty main_param, req()-failing silently until a *second*
+      ## visibility toggle gave it another chance. Must stay always-live.
       observeEvent( list(rY()), {
         Y <- rY()
         shiny::req(Y)
@@ -22,13 +30,13 @@ qsee_bsee_server <- function(id, rX, rY) {
           selected = colnames(Y)[sel.main]
         )
       })
-      
+
       ## Main precomputation. Visibility gates *when* work may run; cache
       ## invalidates only when inputs / Recompute change — not on tab
       ## leave/return.
-      get_results <- qsee_board_cache(
+      get_results <- board_cache(
         is_visible,
-        deps = function() list(rX(), rY(), input$recompute_button),
+        deps = function() list(rX(), rY(), input$recompute_button, input$main_param),
         label = "qsee_bsee_server",
         compute = function() {
           X <- rX()
@@ -48,12 +56,10 @@ qsee_bsee_server <- function(id, rX, rY) {
         }
       )
 
-      ## Update selectInputs when results are available and the tab is visible.
-      ## Because get_results() now gates on is_visible() internally, we no
-      ## longer need the req() here for performance reasons (but we keep
-      ## it for clarity).
-      observe({
-        req(is_visible())
+      ## Update selectInputs when results are available. Suspended/resumed
+      ## explicitly by board_pause_resume_observers() below, so no req() on
+      ## is_visible() is needed here -- it simply won't run while hidden.
+      observers$add(observe({
         res <- get_results()
 
         bparams <- c()
@@ -97,9 +103,9 @@ qsee_bsee_server <- function(id, rX, rY) {
 
         pp <- colnames(res$samples)
         shiny::updateSelectInput( session, "clust.colorby", choices = pp)
-        
-      })
-           
+
+      }))
+
       render.plot_pca_vs_methods <- function() {
         res <- get_results()
         pheno.var <- input$main_param
@@ -187,6 +193,8 @@ qsee_bsee_server <- function(id, rX, rY) {
         func = render.plot_covariate_analysis,
         add.watermark = FALSE
       )
+
+      board_pause_resume_observers(is_visible, observers, label = "qsee_bsee_server")
     } ## end-of-server
   )
 }

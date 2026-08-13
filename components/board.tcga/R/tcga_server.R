@@ -21,11 +21,17 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "TcgaBoard")
+    observers <- board_observer_registry()
+
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
 
-    observeEvent(input$tcga_info, {
+    observers$add(observeEvent(input$tcga_info, {
       showModal(
         modalDialog(
           title = tags$strong("TCGA Analysis Board"),
@@ -34,16 +40,16 @@ TcgaBoard <- function(id, pgx) {
           size = "l"
         )
       )
-    })
+    }))
 
-    observe({
+    observers$add(observe({
       if (is.null(pgx)) {
         return(NULL)
       }
       comparisons <- colnames(pgx$model.parameters$contr.matrix)
       comparisons <- sort(comparisons)
       updateSelectInput(session, "contrast", choices = comparisons, selected = head(comparisons, 1))
-    })
+    }))
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -59,5 +65,7 @@ TcgaBoard <- function(id, pgx) {
       genelist = shiny::reactive(input$genelist),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "TcgaBoard")
   })
 }

@@ -20,6 +20,12 @@ LasagnaBoard <- function(id, pgx) {
 ", js = FALSE)
 
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "LasagnaBoard")
+    observers <- board_observer_registry()
+
     ## ============================================================================
     ## ============================ OBSERVERS =====================================
     ## ============================================================================
@@ -29,14 +35,14 @@ LasagnaBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>LASAGNA Analysis Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -45,15 +51,24 @@ LasagnaBoard <- function(id, pgx) {
       # "Multi-type network" = list(disable = c("clust_options"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-    shiny::observeEvent(pgx$mofa,
+    ## Sets input$contrast / input$layers. lasagna_model() below reads
+    ## input$layers inside an eventReactive() body that is NOT triggered by
+    ## input$layers itself (only by input$updateplots / pgx$X), and nothing
+    ## here is directly driven by is_visible() -- unlike qsee_bsee_server's
+    ## main_param case, so there is no first-visibility-flip race: this
+    ## observer's normal one-time run at board creation (or a later resume)
+    ## always lands before a user can click "updateplots" (which requires
+    ## the tab to be visible), and a pgx$X change alone does not read
+    ## input$layers synchronously against this observer.
+    observers$add(shiny::observeEvent(pgx$mofa,
       {
         shiny::validate(shiny::need(!is.null(pgx$mofa), "missing MOFA slot"))
 
@@ -75,7 +90,7 @@ LasagnaBoard <- function(id, pgx) {
         )
       },
       ignoreNULL = FALSE
-    )
+    ))
 
     lasagna_model <- shiny::eventReactive(
       {
@@ -261,6 +276,8 @@ LasagnaBoard <- function(id, pgx) {
       data = pruned_data,
       scrollY = "calc(100vh - (240px + 140px))"
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "LasagnaBoard")
 
     return(NULL)
   })

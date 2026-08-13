@@ -177,7 +177,7 @@ qsee_pcaexplorer_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "PCA explorer",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     pcaexplorer_panel
   )
 }

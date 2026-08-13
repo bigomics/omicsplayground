@@ -17,19 +17,25 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 <br><br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/phm1joeZTO4?si=G1fJyxS1lDmxZEpo' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>
 ", js = FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "FeatureMapBoard")
+    observers <- board_observer_registry()
+
     ## ========================================================================
     ## ======================= OBSERVE FUNCTIONS ==============================
     ## ========================================================================
 
     # Observer (1):
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     # Observer (2): tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -42,12 +48,12 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         disable = c("filter_genes")
       )
     )
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     # Observer (3):
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$name, pgx$X, pgx$gsetX)
       },
@@ -75,9 +81,9 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         )
         shiny::updateTextAreaInput(session, "customlist", placeholder = tspan("Paste your custom gene list", js = FALSE))
       }
-    )
+    ))
 
-    observeEvent(
+    observers$add(observeEvent(
       {
         list(input$sigvar, pgx$samples)
       },
@@ -89,8 +95,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           shiny::updateSelectInput(session, "ref_group", choices = y)
         }
       }
-    )
-    observeEvent(
+    ))
+    observers$add(observeEvent(
       {
         list(pgx$samples, pgx$X, input$showvar)
       },
@@ -114,8 +120,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           shiny::updateSelectInput(session, "ref_group", choices = "  ")
         }
       }
-    )
-    observeEvent(
+    ))
+    observers$add(observeEvent(
       {
         list(pgx$samples, input$showvar, input$sigvar)
       },
@@ -127,8 +133,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           shiny::updateSelectInput(session, "ref_group", choices = y)
         }
       }
-    )
-    observeEvent(
+    ))
+    observers$add(observeEvent(
       {
         list(input$selcomp)
       },
@@ -136,7 +142,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ## shiny::req(pgx$samples, input$sigvar, input$showvar)
         shiny::updateSelectInput(session, "ref_group", choices = " ")
       }
-    )
+    ))
 
     ## =========================================================================
     ## ============================= FUNCTIONS =================================
@@ -376,6 +382,8 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       plotFeaturesPanel = plotFeaturesPanel,
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "FeatureMapBoard")
   }) ## end of serverModule
 } ## end of Board
 

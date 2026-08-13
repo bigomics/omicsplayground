@@ -28,14 +28,20 @@ MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "MultiWGCNA_Board")
+    observers <- board_observer_registry()
+
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Multi-Omics WGCNA Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -57,9 +63,9 @@ MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
       ))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
@@ -238,6 +244,8 @@ MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
       board_type = "multiomics",
       save_pgx = save_pgx
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "MultiWGCNA_Board")
 
     return(NULL)
   })

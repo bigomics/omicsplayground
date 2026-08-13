@@ -46,6 +46,7 @@ EpigenomicsUI <- function(id) {
 
   div(
     boardHeader(title = "Epigenomics", info_link = ns("board_info")),
+    board_visibility_probe(ns),
     tabs <- shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

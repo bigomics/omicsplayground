@@ -128,6 +128,7 @@ IntersectionUI <- function(id) {
   ## return this div
   div(
     boardHeader(title = "Compare signatures", info_link = ns("info")),
+    board_visibility_probe(ns),
     tabs
   )
 }

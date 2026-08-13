@@ -21,30 +21,36 @@ DrugConnectivityBoard <- function(id, pgx) {
         This facilitates to quickly see and detect the similarities between contrasts for certain drugs.<br><br><br><br>
         <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BtMQ7Y0NoIA?si=3T61_k_onEqsTMcr&amp;start=91' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>")
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "DrugConnectivityBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ============================== OBSERVERS  ======================================
     ## ================================================================================
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "method", choices = ct)
-    })
+    }))
 
-    shiny::observeEvent(input$dsea_info, {
+    observers$add(shiny::observeEvent(input$dsea_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       ct <- playbase::pgx.getContrasts(pgx)
       ct <- sort(ct[!grepl("^IA:", ct)])
       shiny::updateSelectInput(session, "contrast", choices = ct)
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -52,10 +58,10 @@ DrugConnectivityBoard <- function(id, pgx) {
       "Connectivity map (beta)" = list(disable = c())
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
-    
+    }))
+
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
@@ -218,5 +224,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       getActiveDSEA
     )
 
+    board_pause_resume_observers(is_visible, observers, label = "DrugConnectivityBoard")
   })
 }

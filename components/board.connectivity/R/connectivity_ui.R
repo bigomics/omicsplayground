@@ -202,6 +202,7 @@ ConnectivityUI <- function(id) {
   ## returned UI object
   div(
     boardHeader(title = "Similar experiments", info_link = ns("info")),
+    board_visibility_probe(ns),
     tabs
   )
 }

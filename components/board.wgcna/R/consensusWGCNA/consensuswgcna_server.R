@@ -28,14 +28,20 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "ConsensusWGCNA_Board")
+    observers <- board_observer_registry()
+
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Multi-Omics WGCNA Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -45,19 +51,26 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       "Feature Table" = list(disable = c())
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ============================================================================
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
-    shiny::observe({
+    observers$add(shiny::observe({
       cons <- r_wgcna()
       shiny::validate(shiny::need(!is.null(cons), "Please compute"))
-    })
+    }))
 
+    ## NOT suspended: r_wgcna's eventReactive body below reads input$splitby
+    ## but its own trigger list is only list(input$compute, pgx$X) -- splitby
+    ## is read outside that dependency tracking (eventReactive semantics),
+    ## the same shape as the qsee_bsee_server main_param race (see
+    ## components/app_qsee/shiny/qsee_batchcorrect_server.R). Suspending this
+    ## setter risks it losing the race against r_wgcna() being read by a
+    ## resumed/un-suspended child output on tab return. Must stay always-live.
     shiny::observeEvent(list(pgx$X, pgx$samples), {
       splitby <- colnames(pgx$samples)
       if (pgx$datatype == "multi-omics") {
@@ -278,6 +291,8 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       rwgcna = r_wgcna,
       rtrait = reactive(input$trait)
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "ConsensusWGCNA_Board")
 
     return(NULL)
   })

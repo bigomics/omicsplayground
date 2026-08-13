@@ -72,6 +72,7 @@ TcgaUI <- function(id) {
       title = "TCGA",
       info_link = ns("tcga_info")
     ),
+    board_visibility_probe(ns),
     tabsetPanel(
       id = ns("tabs1"),
       tabPanel(

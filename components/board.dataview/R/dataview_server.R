@@ -25,10 +25,16 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     ## ----------------------------------------------------------------------
 
     data_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=Rc7Rlmxa3GyyEtsd&amp;start=190" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>')
-    OmicsBoard("board", pgx, title="Data View", infotext = data_infotext) 
+    OmicsBoard("board", pgx, title="Data View", infotext = data_infotext)
+
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "DataViewBoard")
+    observers <- board_observer_registry()
 
     ## update filter choices upon change of data set
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$Y, pgx$samples)
       ## levels for sample filter
       levels <- playbase::getLevels(pgx$Y)
@@ -43,7 +49,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if ("condition" %in% grps) selgrp <- "condition"
       if (nrow(pgx$samples) <= 20) selgrp <- "<ungrouped>"
       shiny::updateSelectInput(session, "data_groupby", choices = grps, selected = selgrp)
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -56,11 +62,11 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         "data_samplefilter"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(
           input$data_type,
@@ -97,7 +103,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           server = TRUE
         )
       }
-    )
+    ))
 
     ## ================================================================================
     ## =========================== MODULES ============================================
@@ -421,6 +427,8 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ignoreNULL = TRUE
     )
     
+    board_pause_resume_observers(is_visible, observers, label = "DataViewBoard")
+
     ## ================================================================================
     ## =================================== END ========================================
     ## ================================================================================

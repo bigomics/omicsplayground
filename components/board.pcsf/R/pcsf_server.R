@@ -13,22 +13,26 @@ PcsfBoard <- function(id, pgx) {
       "This PCSF analysis module..."
     )
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "PcsfBoard")
+    observers <- board_observer_registry()
+
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
-
-    my_observers <- list()
 
     tab_elements <- list(
       "Gene PCSF" = list(disable = c("gset_accordion")),
       "Geneset PCSF" = list(disable = c("pcsf_accordion"))
     )
 
-    my_observers[[1]] <- shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
-    my_observers[[2]] <- observeEvent(input$pcsf_info, {
+    observers$add(observeEvent(input$pcsf_info, {
       showModal(
         modalDialog(
           title = tags$strong("PCSF Network Analysis"),
@@ -37,9 +41,9 @@ PcsfBoard <- function(id, pgx) {
           size = "xl"
         )
       )
-    })
+    }))
 
-    my_observers[[3]] <- observe({
+    observers$add(observe({
       if (is.null(pgx)) {
         return(NULL)
       }
@@ -51,7 +55,7 @@ PcsfBoard <- function(id, pgx) {
         choices = comparisons,
         selected = head(comparisons, 1)
       )
-    })
+    }))
 
     ## =========================================================================
     ## =========================== FUNCTIONS ===================================
@@ -75,5 +79,7 @@ PcsfBoard <- function(id, pgx) {
       r_contrast = shiny::reactive(input$contrast),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "PcsfBoard")
   })
 }

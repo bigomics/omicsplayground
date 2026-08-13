@@ -211,6 +211,7 @@ PathwayUI <- function(id) {
 
   page_ui <- div(
     boardHeader(title = "Pathway Analysis", info_link = ns("fa_info")),
+    board_visibility_probe(ns),
     tabs
   )
   return(page_ui)

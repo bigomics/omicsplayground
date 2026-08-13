@@ -3,11 +3,12 @@
 qsee_outlier_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "Outlier analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_outlier_server")
-    shiny::observeEvent(rY(), {
+    is_visible <- board_is_visible(input, label = "qsee_outlier_server")
+    observers <- board_observer_registry()
+    observers$add(shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
-    })
-    get_result <- qsee_board_cache(
+    }))
+    get_result <- board_cache(
       is_visible, deps = function() list(rX(), rY()), label = "qsee_outlier_server",
       compute = function() {
         X <- rX(); Y <- rY(); shiny::req(X, Y)
@@ -43,5 +44,7 @@ qsee_outlier_server <- function(id, rX, rY) {
       func = render.outlier_pca,
       add.watermark = FALSE
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "qsee_outlier_server")
   })
 }

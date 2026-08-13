@@ -10,7 +10,7 @@ qsee_ui <- function(id, height = "100%") {
   ## This probe reports visibility of the whole Qsee module.  The individual
   ## board probes below only report their respective inner tabs.
   ui <- shiny::tagList(
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     bigdash::bigPage(
       id = id,
       #navbar = bigdash::navbar("Qsee/Bsee"),

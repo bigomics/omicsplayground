@@ -2,9 +2,10 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-## Shared tab-visibility helpers for QSEE boards. Each board UI embeds
-## qsee_visibility_probe(); the matching server reads input$is_visible
-## (via qsee_is_visible) and gates expensive precomputation on it.
+## Shared tab-visibility helpers for board modules. Each board UI embeds
+## board_visibility_probe(); the matching server reads input$is_visible
+## (via board_is_visible) and gates expensive precomputation and its own
+## ordinary observers on it.
 ##
 
 #' Invisible IntersectionObserver probe for board tab visibility.
@@ -21,7 +22,7 @@
 #'
 #' @param ns module namespace function (`shiny::NS(id)`)
 #' @return a `shiny.tag.list` to prepend to the board UI
-qsee_visibility_probe <- function(ns) {
+board_visibility_probe <- function(ns) {
   shiny::tagList(
     shiny::tags$div(
       id = ns("visible_probe"),
@@ -81,12 +82,63 @@ qsee_visibility_probe <- function(ns) {
 #' @param input module `input`
 #' @param label optional label for debug messages (e.g. module name)
 #' @return a `reactive` logical
-qsee_is_visible <- function(input, label = NULL) {
+board_is_visible <- function(input, label = NULL) {
   shiny::reactive({
     if (!is.null(label)) {
       message("[", label, "] visible = ", input$is_visible)
     }
     isTRUE(input$is_visible)
+  })
+}
+
+#' Mutable registry of Observer handles for one board's moduleServer.
+#'
+#' `shiny::observeEvent()`/`shiny::observe()` return an Observer object with
+#' `$suspend()`/`$resume()` methods, but call sites normally discard that
+#' return value. Wrap each call in `registry$add(...)` to keep the handle so
+#' [board_pause_resume_observers()] can suspend/resume all of a board's own
+#' observers together, based on tab visibility.
+#'
+#' @return a list with `add(obs)` (registers `obs` and returns it invisibly,
+#'   so it can wrap an observeEvent()/observe() call directly) and `all()`
+#'   (the observers registered so far)
+board_observer_registry <- function() {
+  obs_list <- list()
+  add <- function(obs) {
+    obs_list[[length(obs_list) + 1]] <<- obs
+    invisible(obs)
+  }
+  all <- function() obs_list
+  list(add = add, all = all)
+}
+
+#' Explicitly suspend/resume a board's registered observers with visibility.
+#'
+#' Complements [board_cache()]: that gates *when the heavy compute may run*,
+#' this stops the board's own ordinary observeEvent()/observe() blocks (e.g.
+#' input-driven UI sync) from running at all while the tab is hidden, and
+#' resumes them -- re-running if anything invalidated them while suspended --
+#' once it is shown again.
+#'
+#' CAUTION: don't register an observer whose side effect is read (isolated)
+#' by a board_cache() compute() step unless that value is also part of the
+#' cache's deps() -- otherwise the first visibility flip can race the
+#' compute step against the resumed setter (see qsee_bsee_server's
+#' main_param history for a concrete case). Either add the value to deps()
+#' or leave that particular observer unsuspended.
+#'
+#' @param is_visible reactive logical from [board_is_visible()]
+#' @param registry a registry from [board_observer_registry()]
+#' @param label optional debug label
+board_pause_resume_observers <- function(is_visible, registry, label = NULL) {
+  shiny::observeEvent(is_visible(), {
+    visible <- isTRUE(is_visible())
+    if (!is.null(label)) {
+      message("[", label, "] observers -> ", if (visible) "resume" else "suspend")
+    }
+    for (obs in registry$all()) {
+      if (visible) obs$resume() else obs$suspend()
+    }
   })
 }
 
@@ -97,7 +149,7 @@ qsee_is_visible <- function(input, label = NULL) {
 #' unless `deps` changed (including changes that happened while hidden —
 #' those are applied on the next visit).
 #'
-#' @param is_visible reactive logical from [qsee_is_visible()]
+#' @param is_visible reactive logical from [board_is_visible()]
 #' @param deps zero-arg function or reactive that returns a value whose
 #'   change marks the cache stale (e.g. `function() list(rX(), rY())`)
 #' @param compute zero-arg function that performs the heavy work and
@@ -105,10 +157,10 @@ qsee_is_visible <- function(input, label = NULL) {
 #'   not create extra reactive dependencies.
 #' @param label optional debug label
 #' @return a `reactive` yielding the latest computed result
-qsee_board_cache <- function(is_visible, deps, compute, label = NULL) {
+board_cache <- function(is_visible, deps, compute, label = NULL) {
   force(compute)
   if (!is.function(deps)) {
-    stop("qsee_board_cache: `deps` must be a zero-arg function or reactive")
+    stop("board_cache: `deps` must be a zero-arg function or reactive")
   }
 
   result <- shiny::reactiveVal(NULL)

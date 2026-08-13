@@ -47,6 +47,7 @@ PcsfUI <- function(id) {
     boardHeader(
       title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
     ),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

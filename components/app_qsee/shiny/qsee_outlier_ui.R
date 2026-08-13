@@ -59,7 +59,7 @@ qsee_outlier_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Outlier analysis",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     outlier_panel
   )
 }

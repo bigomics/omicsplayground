@@ -96,6 +96,7 @@ WordCloudUI <- function(id) {
   )
   div(
     boardHeader(title = "Word cloud", info_link = ns("wc_info")),
+    board_visibility_probe(ns),
     tabs
   )
 }

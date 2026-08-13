@@ -21,6 +21,12 @@ MofaBoard <- function(id, pgx) {
 ", js = FALSE)
 
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "MofaBoard")
+    observers <- board_observer_registry()
+
     ## ========================================================================
     ## ======================= OBSERVE FUNCTIONS ==============================
     ## ========================================================================
@@ -30,14 +36,14 @@ MofaBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
 
     # Observe tabPanel change to update Settings visibility
@@ -49,11 +55,15 @@ MofaBoard <- function(id, pgx) {
       "gsetMOFA" = list(disable = c("show_types"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
-    shiny::observeEvent(
+    ## Compute trigger: only fires on an actual button click by the user, who
+    ## can only click it while this board is visible, so suspending it while
+    ## hidden cannot race anything (unlike the qsee_bsee_server main_param
+    ## case -- see board_pause_resume_observers() docs).
+    observers$add(shiny::observeEvent(
       list(
         input$compute
       ),
@@ -93,7 +103,7 @@ MofaBoard <- function(id, pgx) {
         pgx$mofa <- mofa ## should trigger new mofa
       },
       ignoreNULL = FALSE
-    )
+    ))
 
     ## =======================================================================
     ## ======================= PRECOMPUTE FUNCTION ===========================
@@ -307,6 +317,8 @@ MofaBoard <- function(id, pgx) {
       selected_factor = reactive(input$selected_factor),
       selected_pathway = enrichmentTable_selected
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "MofaBoard")
 
     return(NULL)
   })

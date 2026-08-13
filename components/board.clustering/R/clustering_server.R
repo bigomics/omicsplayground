@@ -19,8 +19,14 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     clust_infotext <-
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/phm1joeZTO4?si=GgUWBZNlxdU_TpPX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
-    OmicsBoard("board", pgx, title="Cluster Samples", infotext = clust_infotext) 
-    
+    OmicsBoard("board", pgx, title="Cluster Samples", infotext = clust_infotext)
+
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "ClusteringBoard")
+    observers <- board_observer_registry()
+
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
@@ -41,11 +47,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       )
     )
 
-    shiny::observeEvent(input$tabs1, {
+    observers$add(shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
+    }))
 
-    shiny::observeEvent(pgx$Y, {
+    observers$add(shiny::observeEvent(pgx$Y, {
       shiny::req(pgx$Y)
       ## input$menuitem  ## upon menuitem change
       var.types <- playbase::pgx.getCategoricalPhenotypes(pgx$samples, min.ncat = 2, max.ncat = 999)
@@ -79,10 +85,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       hm_level_choices_names <- c(tspan("gene", js = FALSE), tspan("geneset", js = FALSE))
       names(hm_level_choices) <- hm_level_choices_names
       shiny::updateSelectInput(session, "hm_level", choices = hm_level_choices)
-    })
+    }))
 
     ## update filter choices upon change of data set
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$X, pgx$Y, pgx$samples)
       },
@@ -106,10 +112,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           choices = clustmethods, sel = selmethod
         )
       }
-    )
+    ))
 
     ## update choices upon change of level
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         c(input$hm_splitvar, input$hm_level)
       },
@@ -128,10 +134,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         choices <- sort(unique(choices))
         shiny::updateSelectInput(session, "hm_features", choices = choices)
       }
-    )
+    ))
 
     # reactive functions ##############
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(input$hm_splitby, input$hm_level, pgx$X, pgx$samples)
       },
@@ -168,16 +174,16 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           )
         }
       }
-    )
+    ))
 
     ## update filter choices upon change of data set
-    shiny::observeEvent(pgx$X, {
+    observers$add(shiny::observeEvent(pgx$X, {
       shiny::req(pgx$X)
       shiny::updateRadioButtons(session, "hm_splitby", selected = "none")
-    })
+    }))
 
     ## update split radio button label to match current level
-    shiny::observeEvent(input$hm_level, {
+    observers$add(shiny::observeEvent(input$hm_level, {
       shiny::req(input$hm_level)
       level_label <- tspan(input$hm_level, js = FALSE)
       choices <- c("none", "phenotype", "contrast", "gene")
@@ -185,15 +191,15 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       names(choices) <- choices_names
       sel <- input$hm_splitby
       shiny::updateRadioButtons(session, "hm_splitby", choices = choices, selected = sel)
-    })
+    }))
 
-    shiny::observeEvent(pgx, {
+    observers$add(shiny::observeEvent(pgx, {
       shiny::req(pgx$datatype)
       datatype <- pgx$datatype
       if (datatype %in% c("scRNA-seq", "scRNAseq")) {
         shiny::updateRadioButtons(session, "hm_splitby", selected = "phenotype")
       }
-    })
+    }))
 
     ## ===================================================================================
     ## ============================= REACTIVES ===========================================
@@ -740,5 +746,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       scrollY = "calc(40vh - 236px)",
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "ClusteringBoard")
   }) ## end of moduleServer
 } ## end of Board

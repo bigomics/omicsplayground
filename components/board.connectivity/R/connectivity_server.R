@@ -23,20 +23,26 @@ ConnectivityBoard <- function(
       <br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=m4qEXCuQJo6o-A9o&amp;start=38' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "ConnectivityBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Connectivity Analysis Board</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
     ## update choices upon change of data set
-    shiny::observeEvent(pgx$model.parameters$contr.matrix, {
+    observers$add(shiny::observeEvent(pgx$model.parameters$contr.matrix, {
       shiny::req(pgx$model.parameters$contr.matrix)
       ## update contrasts
       comparisons <- playbase::pgx.getContrasts(pgx)
@@ -47,9 +53,9 @@ ConnectivityBoard <- function(
         choices = comparisons,
         selected = head(comparisons, 1)
       )
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X, pgx$connectivity)
       ## update sigdb choices
       my_sigdb <- "datasets-sigdb.h5"
@@ -61,15 +67,15 @@ ConnectivityBoard <- function(
       }
       available_sigdb <- c(my_sigdb, computed_sigdb)
       shiny::updateSelectInput(session, "sigdb", choices = available_sigdb, selected = my_sigdb)
-    })
+    }))
 
-    shiny::observeEvent(pgx$X, {
+    observers$add(shiny::observeEvent(pgx$X, {
       shiny::updateTextAreaInput(
         session,
         inputId = "genelist",
         placeholder = tspan("Paste your gene list", js = FALSE)
       )
-    })
+    }))
 
 
     ## ================================================================================
@@ -153,14 +159,14 @@ ConnectivityBoard <- function(
       list(name = ct, fc = fc, gs = gs)
     })
 
-    observe({
+    observers$add(observe({
       contr <- getCurrentContrast()
       shiny::req(contr)
       ntop <- as.integer(input$genelist_ntop)
       top50 <- head(names(sort(abs(contr$fc), decreasing = TRUE)), ntop)
       top50 <- paste(top50, collapse = " ")
       updateTextAreaInput(session, "genelist", value = top50)
-    })
+    }))
 
     cumEnrichmentTable <- shiny::reactive({
       sigdb <- input$sigdb
@@ -538,5 +544,7 @@ ConnectivityBoard <- function(
       getConnectivityScores = getConnectivityScores,
       getCurrentContrast = getCurrentContrast
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "ConnectivityBoard")
   }) ## end of moduleserver
 } ## end-of-Board

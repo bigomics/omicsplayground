@@ -102,7 +102,7 @@ qsee_imputation_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Missing value analysis",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     imputation_panel
   )
 }

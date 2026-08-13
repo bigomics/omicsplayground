@@ -81,7 +81,7 @@ qsee_normalization_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Normalization",
-    qsee_visibility_probe(ns),
+    board_visibility_probe(ns),
     normalization_panel    
   )
 

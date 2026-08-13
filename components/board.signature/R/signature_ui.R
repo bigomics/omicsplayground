@@ -249,6 +249,7 @@ SignatureUI <- function(id) {
 
   div(
     boardHeader(title = "Test signatures", info_link = ns("info")),
+    board_visibility_probe(ns),
     bslib::layout_columns(
       col_widths = c(8, 4),
       left.panel,

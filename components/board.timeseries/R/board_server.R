@@ -23,6 +23,12 @@ TimeSeriesBoard <- function(id,
        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "TimeSeriesBoard")
+    observers <- board_observer_registry()
+
     tab_elements <- list(
       "Clustering" = list(
         enable = NULL,
@@ -34,19 +40,19 @@ TimeSeriesBoard <- function(id,
       )
     )
 
-    shiny::observeEvent(input$tabs1, {
+    observers$add(shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
+    }))
 
-    shiny::observeEvent(input$board_info, {
+    observers$add(shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>TimeSeries Board</strong>"),
         shiny::HTML(clust_infotext),
         easyClose = TRUE, size = "xl"
       ))
-    })
+    }))
 
-    shiny::observeEvent(pgx$samples, {
+    observers$add(shiny::observeEvent(pgx$samples, {
       vars <- sort(colnames(pgx$samples))
       timevars <- unique(c(grep(playbase::get_timevars(), vars, value = TRUE, ignore.case = TRUE), vars))
       valid_timevars <- timevars[sapply(timevars, function(var) {
@@ -57,7 +63,7 @@ TimeSeriesBoard <- function(id,
       contrasts <- playbase::pgx.getContrasts(pgx)
       contrasts <- contrasts[!grepl("^IA:", contrasts)]
       shiny::updateSelectInput(session, "contrast", choices = contrasts, selected = contrasts[1])
-    })
+    }))
 
     timeseries_full <- shiny::reactive({
       shiny::req(pgx$X, input$timevar)
@@ -178,5 +184,7 @@ TimeSeriesBoard <- function(id,
       timevar = shiny::reactive(input$timevar),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "TimeSeriesBoard")
   })
 }

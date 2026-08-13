@@ -67,6 +67,7 @@ BiomarkerUI <- function(id) {
 
   div(
     boardHeader(title = "Biomarker Selection", info_link = ns("pdx_info")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(

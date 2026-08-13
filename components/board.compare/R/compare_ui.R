@@ -212,6 +212,7 @@ CompareUI <- function(id) {
 
   div(
     boardHeader(title = "Compare datasets", info_link = ns("info")),
+    board_visibility_probe(ns),
     tabs
   )
 }

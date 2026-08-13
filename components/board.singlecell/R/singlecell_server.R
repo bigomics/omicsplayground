@@ -25,19 +25,30 @@ SingleCellBoard <- function(id, pgx) {
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=pebNlzthvdZF7h5o&amp;start=35" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
     )
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "SingleCellBoard")
+    observers <- board_observer_registry()
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
 
-    shiny::observeEvent(input$infotext, {
+    observers$add(shiny::observeEvent(input$infotext, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Single Cell Board</strong>"),
         shiny::HTML(infotext),
         easyClose = TRUE, size = "l"
       ))
-    })
+    }))
 
     ## update filter choices upon change of data set
+    ## NOT suspended: pfGetClusterPositions() below is bindEvent()-gated on
+    ## (input$samplefilter, pgx$X) only, but its body also reads
+    ## input$clustmethod -- which this observer sets -- outside that trigger
+    ## list (an isolate()-style bypass). Suspending this would race the same
+    ## way qsee_bsee_server's main_param setter did; must stay always-live.
     shiny::observe({
       shiny::req(pgx$X, pgx$Y)
       ## levels for sample filter
@@ -55,7 +66,7 @@ SingleCellBoard <- function(id, pgx) {
       }
     })
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       refsets <- "LM22"
       refsets <- sort(names(pgx$deconv))
@@ -66,25 +77,25 @@ SingleCellBoard <- function(id, pgx) {
       sel <- grpvars[1]
       if (ncol(pgx$X) > 30) sel <- grpvars[2]
       shiny::updateSelectInput(session, "group2", choices = grpvars, selected = sel)
-    })
+    }))
 
-    shiny::observeEvent(input$refset, {
+    observers$add(shiny::observeEvent(input$refset, {
       shiny::req(input$refset)
       shiny::req(pgx$X)
 
       dcmethods <- names(pgx$deconv[[input$refset]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod", choices = dcmethods, selected = dcsel)
-    })
+    }))
 
-    shiny::observeEvent(input$refset2, {
+    observers$add(shiny::observeEvent(input$refset2, {
       shiny::req(input$refset2)
       dcmethods <- names(pgx$deconv[[input$refset2]])
       dcsel <- intersect(c("meta.prod", "meta"), dcmethods)[1]
       shiny::updateSelectInput(session, "dcmethod2", choices = dcmethods, selected = dcsel)
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
 
       pheno0 <- grep("group|sample|donor|id|batch", colnames(pgx$samples), invert = TRUE, value = TRUE)
@@ -103,9 +114,9 @@ SingleCellBoard <- function(id, pgx) {
       shiny::updateSelectInput(session, "crosstabpheno", choices = pheno1, , selected = pheno1[1])
       names(genes1) <- playbase::probe2symbol(genes1, pgx$genes, "gene_name", fill_na = TRUE)
       shiny::updateSelectizeInput(session, "crosstabgene", choices = genes1, server = TRUE, selected = genes1[2])
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X, input$mrk_level)
 
       choices <- names(pgx$families)
@@ -118,9 +129,9 @@ SingleCellBoard <- function(id, pgx) {
       }
       shiny::updateSelectInput(session, "features", choices = choices, selected = selected)
       shiny::updateSelectInput(session, "mrk_features", choices = choices, selected = selected)
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X)
       ## just at new data load
       genes <- NULL
@@ -138,7 +149,7 @@ SingleCellBoard <- function(id, pgx) {
       ## NOTE: server=TRUE sometime not renders plot. please check. (XM)
       shiny::updateSelectizeInput(session, "cytovar1", choices = genes, selected = g1, server = TRUE)
       shiny::updateSelectizeInput(session, "cytovar2", choices = genes, selected = g2, server = TRUE)
-    })
+    }))
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -147,9 +158,9 @@ SingleCellBoard <- function(id, pgx) {
       "Markers" = list(disable = NULL)
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     ## ========================================================================
     ## ============================ REACTIVE ==================================
@@ -282,6 +293,7 @@ SingleCellBoard <- function(id, pgx) {
       watermark = WATERMARK
     )
 
+    board_pause_resume_observers(is_visible, observers, label = "SingleCellBoard")
     return(NULL)
   })
 }

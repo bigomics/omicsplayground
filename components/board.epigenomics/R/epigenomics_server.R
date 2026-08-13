@@ -5,16 +5,22 @@ EpigenomicsBoard <- function(id, pgx) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(input$board_info, {
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    is_visible <- board_is_visible(input, label = "EpigenomicsBoard")
+    observers <- board_observer_registry()
+
+    observers$add(shiny::observeEvent(input$board_info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>Epigenomics Board</strong>"),
         shiny::HTML("Epigenomics visualizations and analyses for methylomics data."),
         easyClose = TRUE,
         size = "l"
       ))
-    })
+    }))
 
-    shiny::observe({
+    observers$add(shiny::observe({
       shiny::req(pgx$X, pgx$samples, pgx$genes)
       kk <- grep("chr|chromosome|chromosomes|chrom|chroms", tolower(colnames(pgx$genes)))
       chroms <- unique(na.omit(sub("(p|q|cen).*", "", as.character(pgx$genes[, kk[1]]))))
@@ -30,7 +36,7 @@ EpigenomicsBoard <- function(id, pgx) {
       pheno <- pheno[!grepl("cell_cycle", pheno, ignore.case = TRUE)]
       grps <- c("<ungrouped>", pheno)
       shiny::updateSelectInput(session, "select_pheno", choices = grps, selected = "<ungrouped>")
-    })
+    }))
 
     chromosomes <- shiny::reactive({
       chroms <- input$select_chromosome
@@ -102,5 +108,7 @@ EpigenomicsBoard <- function(id, pgx) {
       }),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "EpigenomicsBoard")
   })
 }

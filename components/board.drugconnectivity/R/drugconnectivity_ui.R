@@ -132,6 +132,7 @@ DrugConnectivityUI <- function(id) {
 
   div(
     boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,

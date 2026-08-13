@@ -389,6 +389,7 @@ DataViewUI <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "Data View",
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
       overview_panel,

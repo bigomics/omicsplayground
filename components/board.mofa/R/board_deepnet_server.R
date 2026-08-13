@@ -23,6 +23,19 @@ DeepNetBoard <- function(id, pgx) {
     update <- reactiveVal(0)
     update_diagram <- reactiveVal(FALSE)
 
+    ## Visibility gating: pause this board's own observers while its tab is
+    ## off screen, resume (re-running if invalidated while suspended) when
+    ## shown again. See components/ui/ui-board-visibility.R.
+    ##
+    ## Safe to wrap every observer below: none of this board's reactives are
+    ## themselves directly triggered by is_visible() (unlike board_cache()'s
+    ## compute observer, which is what caused the qsee_bsee_server main_param
+    ## race) -- net()/phenoFC() are plain eventReactive()s gated only on
+    ## input$select_pheno/input$reset/user button clicks, all of which
+    ## require the board to already be visible to fire.
+    is_visible <- board_is_visible(input, label = "DeepNetBoard")
+    observers <- board_observer_registry()
+
     ## ===========================================================================
     ## ============================ OBSERVERS ====================================
     ## ===========================================================================
@@ -34,26 +47,26 @@ DeepNetBoard <- function(id, pgx) {
       "Biomarker heatmap" = list(disable = c("show_conditions", "select_datatypes"))
     )
 
-    shiny::observeEvent(input$tabs, {
+    observers$add(shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
-    })
+    }))
 
     infotext2 <-
       '<center><iframe width="1120" height="630" src="https://www.youtube.com/embed/rRIRMW_RRS4"
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
+    observers$add(shiny::observeEvent(input$info, {
       shiny::showModal(shiny::modalDialog(
         title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
         shiny::HTML(infotext2),
         size = "xl",
         easyClose = TRUE
       ))
-    })
+    }))
 
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$samples)
       },
@@ -66,10 +79,10 @@ DeepNetBoard <- function(id, pgx) {
         )
         update(update() + 1)
       }
-    )
+    ))
 
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(input$select_pheno, pgx$samples)
       },
@@ -85,18 +98,18 @@ DeepNetBoard <- function(id, pgx) {
           selected = head(conditions, 3)
         )
       }
-    )
+    ))
 
     warned <- TRUE
-    observeEvent(input$step, {
+    observers$add(observeEvent(input$step, {
       optim <- "adam"
       # optim <- input$optim
       net()$fit(niter = 1, optim = optim)
       warned <<- FALSE
       update(update() + 1)
-    })
+    }))
 
-    observeEvent(input$step20, {
+    observers$add(observeEvent(input$step20, {
       pgx.showSmallModal(paste("Fitting model 20 steps... please wait"))
       optim <- "adam"
       # optim <- input$optim
@@ -104,9 +117,9 @@ DeepNetBoard <- function(id, pgx) {
       shiny::removeModal()
       warned <<- FALSE
       update(update() + 1)
-    })
+    }))
 
-    observeEvent(input$step100, {
+    observers$add(observeEvent(input$step100, {
       pgx.showSmallModal(paste("Fitting model 100 steps... please wait"))
       optim <- "adam"
       # optim <- input$optim
@@ -114,9 +127,9 @@ DeepNetBoard <- function(id, pgx) {
       shiny::removeModal()
       warned <<- FALSE
       update(update() + 1)
-    })
+    }))
 
-    observeEvent(
+    observers$add(observeEvent(
       {
         list(
           input$latent_dim,
@@ -131,9 +144,9 @@ DeepNetBoard <- function(id, pgx) {
           warned <<- TRUE
         }
       }
-    )
+    ))
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(pgx$X, input$addgsets)
       },
@@ -174,9 +187,9 @@ DeepNetBoard <- function(id, pgx) {
           selected = sel.datatype
         )
       }
-    )
+    ))
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(input$select_datatypes)
       },
@@ -187,16 +200,16 @@ DeepNetBoard <- function(id, pgx) {
           selected = datatypes
         )
       }
-    )
+    ))
 
-    shiny::observeEvent(
+    observers$add(shiny::observeEvent(
       {
         list(input$select_pheno, input$reset)
       },
       {
         update_diagram(TRUE)
       }
-    )
+    ))
 
     ## ===========================================================================
     ## ========================== BOARD FUNCTIONS ================================
@@ -420,6 +433,8 @@ DeepNetBoard <- function(id, pgx) {
       datatypes = reactive(input$show_datatypes),
       watermark = WATERMARK
     )
+
+    board_pause_resume_observers(is_visible, observers, label = "DeepNetBoard")
 
     return(NULL)
   })

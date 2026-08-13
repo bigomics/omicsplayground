@@ -20,6 +20,7 @@ MGseaUI <- function(id) {
 
   shiny::div(
     boardHeader(title = "Multi-Omics GSEA", info_link = ns("info")),
+    board_visibility_probe(ns),
     shiny::tabsetPanel(
       id = ns("tabs"),
 

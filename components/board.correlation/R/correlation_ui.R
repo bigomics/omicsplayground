@@ -146,6 +146,7 @@ CorrelationUI <- function(id) {
   ## full page
   div(
     boardHeader(title = "Correlation analysis", info_link = ns("data_info")),
+    board_visibility_probe(ns),
     tabs
   )
 }
