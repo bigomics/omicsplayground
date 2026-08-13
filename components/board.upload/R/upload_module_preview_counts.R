@@ -28,6 +28,15 @@ upload_table_preview_counts_server <- function(id,
     ns <- session$ns
 
     GEO_alert_shown <- reactiveVal(FALSE)
+    hptm_loaded <- reactiveVal(FALSE)
+    hptm_both_types <- reactiveVal(FALSE)
+    has_counts <- reactiveVal(FALSE)
+    shiny::observe({
+      now_has <- !is.null(uploaded$counts.csv)
+      if (!identical(now_has, shiny::isolate(has_counts()))) {
+        has_counts(now_has)
+      }
+    })
 
     table_data <- shiny::reactive({
       shiny::req(!is.null(uploaded$counts.csv))
@@ -38,7 +47,6 @@ upload_table_preview_counts_server <- function(id,
       MAXCOL <- 20
       if (nrow(dt) > MAXROW) dt <- dt[seq_len(MAXROW), , drop = FALSE]
       if (ncol(dt) > MAXCOL) dt <- dt[, seq_len(MAXCOL), drop = FALSE]
-      ## Densify the small subset before adding indicator rows/cols and passing to DT::datatable.
       if (inherits(dt, "sparseMatrix")) dt <- as.matrix(dt)
       if (nrow0 > MAXROW) {
         dt <- rbind(dt, rep(NA, ncol(dt)))
@@ -78,7 +86,7 @@ upload_table_preview_counts_server <- function(id,
     output$table_counts <- shiny::renderUI({
       action_buttons <- div(
         style = "display: flex; justify-content: left; margin: 8px;",
-        if (is.null(uploaded$counts.csv)) {
+        if (!has_counts()) {
           div(
             if (upload_datatype() == "multi-omics") {
               actionButton(
@@ -174,7 +182,7 @@ upload_table_preview_counts_server <- function(id,
         div(
           bslib::as_fill_carrier(),
           style = "width: 100%; display: flex; ",
-          if (is.null(uploaded$counts.csv)) {
+          if (!has_counts()) {
             if (upload_datatype() == "proteomics") {
               msg <- "The counts file (counts.csv) contains the gene counts for all samples. For proteomics data types other than Olink NPX, the file should be a tabular text file (.csv), where each row corresponds to a feature (i.e. genes) and each column corresponds to a sample. For Olink NPX, the uploaded file needs to be the standard Olink format and can be a parquet file."
             } else {
@@ -267,7 +275,7 @@ upload_table_preview_counts_server <- function(id,
               br()
             )
           },
-          if (!is.null(uploaded$counts.csv)) {
+          if (has_counts()) {
             bslib::layout_columns(
               col_widths = 12,
               bslib::layout_columns(
@@ -279,6 +287,7 @@ upload_table_preview_counts_server <- function(id,
                   title = title,
                   info.text = info.text,
                   caption = caption,
+                  options = counts_options(),
                   label = "",
                   show.maximize = FALSE,
                   translate_js = FALSE
@@ -622,6 +631,8 @@ upload_table_preview_counts_server <- function(id,
       }
 
       ## ---counts---##
+      hptm_loaded(FALSE)
+      hptm_both_types(FALSE)
       sel <- grep("count|expression|abundance|concentration", tolower(input$counts_csv$name))
       if (length(sel)) {
         datafile <- input$counts_csv$datapath[sel[1]]
@@ -714,12 +725,19 @@ upload_table_preview_counts_server <- function(id,
                   NULL
                 }
               )
+              hptm_loaded(!is.null(df))
+              if (hptm_loaded()) {
+                hdr <- tryCatch(strsplit(readLines(datafile, n = 1), "\t")[[1]], error = function(w) character(0))
+                has_qty <- any(grepl("ptm\\..*quantity$", hdr, ignore.case = TRUE))
+                has_qty_per_protein <- any(grepl("ptm\\..*quantityperprotein$", hdr, ignore.case = TRUE))
+                hptm_both_types(has_qty && has_qty_per_protein)
+              }
             }
             if (!is.null(df)) {
               char.cols <- which(sapply(df, class) == "character")
               if (length(char.cols) > 0) {
                 uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
-                df <- df[, colnames(df) != names(char.cols), drop = FALSE]
+                df <- df[, !(colnames(df) %in% names(char.cols)), drop = FALSE]
                 df <- as.matrix(df)
               }
             } else {
@@ -801,6 +819,8 @@ upload_table_preview_counts_server <- function(id,
           uploaded$counts.csv <- NULL
           uploaded$samples.csv <- NULL
           uploaded$contrasts.csv <- NULL
+          hptm_loaded(FALSE)
+          hptm_both_types(FALSE)
           checklist$counts.csv$checks <- NULL
           checklist$samples.csv$checks <- NULL
           checklist$contrasts.csv$checks <- NULL
@@ -828,6 +848,8 @@ upload_table_preview_counts_server <- function(id,
     })
 
     shiny::observeEvent(input$load_example, {
+      hptm_loaded(FALSE)
+      hptm_both_types(FALSE)
       if (upload_datatype() == "multi-omics") {
         uploaded$counts.csv <- playbase::COUNTS_MO
       } else if (is.olink()) {
@@ -841,6 +863,59 @@ upload_table_preview_counts_server <- function(id,
         uploaded$counts.csv <- playbase::COUNTS
       }
     })
+
+    output$ptm_norm_menu <- shiny::renderUI({
+      tagList(
+        checkboxInput(
+          ns("use_ptm_norm"),
+          label = "Use PTM normalized to global proteome",
+          value = TRUE
+        ),
+        br()
+      )
+    })
+
+    counts_options <- shiny::reactive({
+      if (isTRUE(hptm_loaded()) && isTRUE(hptm_both_types())) {
+        tagList(uiOutput(ns("ptm_norm_menu")))
+      } else {
+        NULL
+      }
+    })
+
+    observeEvent(input$use_ptm_norm, {
+      shiny::req(hptm_loaded(), raw_dir())
+      datafile <- file.path(raw_dir(), "counts.csv")
+      df <- shiny::withProgress(
+        message = "Re-reading PTM abundance data...",
+        value = 0.5,
+        {
+          tryCatch(
+            {
+              playbase::read_spectronaut_hPTM(datafile, use_ptm_norm = input$use_ptm_norm)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
+        }
+      )
+      if (is.null(df)) {
+        shinyalert::shinyalert(
+          title = "Error",
+          text = "Could not re-read PTM abundance data.",
+          type = "error"
+        )
+        return()
+      }
+      char.cols <- which(sapply(df, class) == "character")
+      if (length(char.cols) > 0) {
+        uploaded$annot.csv <- df[, names(char.cols), drop = FALSE]
+        df <- df[, !(colnames(df) %in% names(char.cols)), drop = FALSE]
+        df <- as.matrix(df)
+      }
+      uploaded$counts.csv <- df
+    }, ignoreInit = TRUE)
 
     TableModuleServer(
       "counts_datasets",
