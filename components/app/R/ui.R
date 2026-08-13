@@ -177,6 +177,9 @@ app_ui <- function(x) {
         bslib::nav_panel_hidden("IDconvert",
           omicspanel(idconvert_ui("idconvert"))
         ),
+        bslib::nav_panel_hidden("Methylome",
+          omicspanel(methylome_ui("methylome"))
+        ),
         bslib::nav_panel_hidden("Qsee",
           omicspanel(qsee_ui("qsee"))
         ),

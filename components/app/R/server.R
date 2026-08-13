@@ -1084,6 +1084,8 @@ app_server <- function(input, output, session) {
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
     qsee_server("qsee", pgx = PGX, parent = session)
+
+    methylome_server("methylome", pgx = PGX)
     prism_server("prism")
   }
   
