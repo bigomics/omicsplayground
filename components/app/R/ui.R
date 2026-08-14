@@ -121,17 +121,28 @@ app_ui <- function(x) {
     ## _utils.scss style the navset_pill_list's `.col-sm-1.well`/`.col-sm-11`
     ## columns via `#app-shell .col-sm-*` (see scss/components/_app.scss),
     ## so this id needs to stay put here for that CSS to keep matching.
+    ##
+    ## `header` stays *nested inside* the `#app-shell` div (as bigPage() also
+    ## nested it inside its own `id="app"` div), rather than as a sibling of
+    ## it directly under <body>. header's hidden `visNetworkOutput("a", ...)`
+    ## carries bslib's `.html-fill-item` class; bslib promotes <body> itself
+    ## to a `.html-fill-container` (with a flex `gap`) whenever a fill item
+    ## exists anywhere on the page, regardless of page function used. As a
+    ## *direct* body child sibling of #app-shell, that gap rendered as a
+    ## visible gap above #app-shell (rail shifted down, blank strip up top);
+    ## nested inside it, the gap falls inside #app-shell instead, same as
+    ## the original layout.
     ui <- shiny::bootstrapPage(
       title = "BigOmics",
       theme = bigdash::big_theme(),
       bigdash::dependencies(),
-      header,
       div(
         id = "app-shell",
         class = "d-flex",
         style = "min-height:100vh;",
         div(
           class = "flex-grow-1 p-0 w-100",
+          header,
           bslib::navset_pill_list(
             id = "app-sidebar",
             ##widths = c("50px","calc(100% - 50px)"),
