@@ -222,7 +222,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     shiny::observeEvent(input$run_gometh, {
       p <- PGX(); d <- r_ewas()$data
       sig <- mp_ewas_sig(d, r_thresh())
-      arr <- if (!is.null(p$meth_type) && grepl("EPIC", p$meth_type, ignore.case = TRUE)) "EPIC" else "450K"
+      arr <- mp_array_type(p)
       shiny::withProgress(message = "Testing gene sets...", value = 0.4, {
         enrich_val(mp_run_gometh(
           d$probe[sig], d$probe,

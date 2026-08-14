@@ -67,25 +67,73 @@ mp_xreactive_probes <- function() {
 ## ATTACHED, not merely loaded - with only requireNamespace() it fails with
 ## "no item called package:... on the search list" and the mask silently
 ## becomes a no-op. Same trap as agep() and data("age_coefficients").
-mp_manifest <- function(pgx) {
-  pkg <- if (!is.null(pgx$meth_type) && grepl("EPIC", pgx$meth_type, ignore.case = TRUE)) {
-    "IlluminaHumanMethylationEPICanno.ilm10b4.hg19"
-  } else {
-    "IlluminaHumanMethylation450kanno.ilmn12.hg19"
-  }
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    warning("[methylome] ", pkg, " is not installed; SNP masking disabled")
-    return(NULL)
-  }
+## Array type, inferred from the probe IDs rather than from metadata.
+##
+## playbase takes meth_type as an argument to pgx.createPGX and uses it when
+## annotating, but does not store it on the pgx - so pgx$meth_type is NULL and
+## anything keyed on it silently falls through to 450K. Inferring from the
+## probes themselves is both more robust and works on subsets, where a probe
+## count would tell you nothing: EPIC keeps roughly 453k of the 450K probes
+## and adds ~413k of its own, so any real EPIC dataset carries a large
+## fraction of probes that do not exist on the 450K at all.
+MP_ARRAY_CACHE <- new.env(parent = emptyenv())
+
+MP_ANNO_PKG <- c(`450K` = "IlluminaHumanMethylation450kanno.ilmn12.hg19",
+                 EPIC = "IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+
+## Attach-and-read a manifest. getAnnotation() dispatches through the
+## annotation object, which must be ATTACHED, not merely loaded - with only
+## requireNamespace() it fails with "no item called package:... on the search
+## list" and callers silently get nothing.
+mp_read_manifest <- function(pkg) {
+  key <- paste0("anno_", pkg)
+  if (!is.null(MP_ARRAY_CACHE[[key]])) return(MP_ARRAY_CACHE[[key]])
+  if (!requireNamespace(pkg, quietly = TRUE)) return(NULL)
   if (!paste0("package:", pkg) %in% search()) {
     suppressPackageStartupMessages(library(pkg, character.only = TRUE))
   }
-  tryCatch(as.data.frame(minfi::getAnnotation(getExportedValue(pkg, pkg))),
-           error = function(e) {
-             warning("[methylome] could not read the ", pkg, " manifest: ",
-                     conditionMessage(e))
-             NULL
-           })
+  ann <- tryCatch(as.data.frame(minfi::getAnnotation(getExportedValue(pkg, pkg))),
+                  error = function(e) {
+                    warning("[methylome] could not read ", pkg, ": ",
+                            conditionMessage(e)); NULL
+                  })
+  MP_ARRAY_CACHE[[key]] <- ann
+  ann
+}
+
+#' Infer the array from the probes present. Returns "450K" or "EPIC".
+mp_array_type <- function(pgx, min_frac = 0.01) {
+  ids <- rownames(pgx$X)
+  key <- paste0("type_", length(ids), "_", digest_ids(ids))
+  if (!is.null(MP_ARRAY_CACHE[[key]])) return(MP_ARRAY_CACHE[[key]])
+
+  epic <- mp_read_manifest(MP_ANNO_PKG[["EPIC"]])
+  k450 <- mp_read_manifest(MP_ANNO_PKG[["450K"]])
+  type <- "450K"
+  if (is.null(epic)) {
+    warning("[methylome] the EPIC manifest is not installed; assuming 450K")
+  } else if (is.null(k450)) {
+    type <- "EPIC"
+  } else {
+    epic_only <- setdiff(rownames(epic), rownames(k450))
+    frac <- mean(ids %in% epic_only)
+    if (frac > min_frac) type <- "EPIC"
+  }
+  MP_ARRAY_CACHE[[key]] <- type
+  type
+}
+
+## Cheap stable key for a probe set - avoids re-inferring on every call
+## without pulling in a hashing dependency.
+digest_ids <- function(ids) {
+  n <- length(ids)
+  paste0(ids[1], "_", ids[max(1, n %/% 2)], "_", ids[n])
+}
+
+mp_manifest <- function(pgx) {
+  ann <- mp_read_manifest(MP_ANNO_PKG[[mp_array_type(pgx)]])
+  if (is.null(ann)) warning("[methylome] no manifest available; SNP masking disabled")
+  ann
 }
 
 ## Which probes survive the selected masks.
