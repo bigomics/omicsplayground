@@ -447,17 +447,21 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     bigdash.toggleTab(session, "mwgcna-tab", is.multiomics)
     bigdash.toggleTab(session, "wgcna-tab", !is.multiomics || show.beta)
 
-    ## hide beta subtabs..
-    toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
-    toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-    toggleTab("wgcna-tabs", "AI Report✨", show.beta)
-    toggleTab("mwgcna-tabs", "AI Report✨", show.beta)
-    toggleTab("drug-tabs", "AI Summary✨", show.beta)     
+    ## hide beta subtabs.. only for boards already inserted in the DOM,
+    ## otherwise shiny throws "There is no tabsetPanel with id equal to ..."
+    if (loaded$systems == 1) {
+      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
+    }
+    if (loaded$enrichment == 1) {
+      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    }
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
       length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
-    toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    if (loaded$expression == 1) {
+      toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    }
 
     ## Dynamically show upon availability in pgx object
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
