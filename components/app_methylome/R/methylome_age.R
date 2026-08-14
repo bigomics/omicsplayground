@@ -65,6 +65,14 @@ methylome_age_inputs <- function(id) {
       ),
       "A clock with fewer than this fraction of its CpGs present is withheld rather than estimated from partial data.",
       placement = "top"
+    ),
+    ## Fitting ten clocks takes ~20s, so the settings above are staged and
+    ## only applied on demand rather than recomputing on every tick.
+    shiny::div(
+      style = "margin-top: 6px;",
+      shiny::actionButton(ns("recompute_clocks"), "Recompute clocks",
+                          class = "btn btn-primary btn-sm", width = "100%"),
+      shiny::uiOutput(ns("clock_stale"))
     )
   )
 }

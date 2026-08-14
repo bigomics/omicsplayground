@@ -37,12 +37,35 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(v) || is.na(v)) 0.8 else v
     })
 
-    ## methylclock takes ~20s on a full cohort, so compute the clock set once
-    ## and share it: four panels each calling mp_clock_set() would pay it four
-    ## times over on every settings change.
-    r_clockset <- shiny::reactive({
-      shiny::req(PGX())
-      mp_clock_set(PGX(), r_clocks(), r_mincov())
+    ## methylclock takes ~20s on a full cohort, so the clock set is computed
+    ## once and shared across the four panels, and only on demand: reacting to
+    ## every checkbox tick would refit ten clocks each time. Loading a new
+    ## dataset also triggers it, otherwise the panels would keep showing the
+    ## previous dataset's ages.
+    applied <- shiny::reactiveVal(NULL)
+    r_clockset <- shiny::eventReactive(
+      list(input$recompute_clocks, PGX()),
+      {
+        shiny::req(PGX())
+        a <- list(clocks = r_clocks(), min_cov = r_mincov())
+        applied(a)
+        mp_clock_set(PGX(), a$clocks, a$min_cov)
+      },
+      ignoreNULL = FALSE
+    )
+
+    ## Tell the user when the panels are showing something older than the
+    ## current settings, rather than letting them wonder if it worked.
+    output$clock_stale <- shiny::renderUI({
+      a <- applied()
+      if (is.null(a)) return(NULL)
+      stale <- !identical(sort(a$clocks), sort(r_clocks())) ||
+        !isTRUE(all.equal(a$min_cov, r_mincov()))
+      if (!stale) return(NULL)
+      shiny::div(
+        style = "margin-top:6px; font-size:11.5px; color:#8a5a06;",
+        "Settings changed - press Recompute to apply."
+      )
     })
 
     methylome_plot_agecor_server("age_cor", r_clockset, watermark = watermark)
