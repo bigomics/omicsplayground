@@ -75,41 +75,55 @@ methylome_ui <- function(id = "methylome") {
       ## --------------------------------------------------------------- age --
       bigdash::bigTabItem(
         ns("age-tab"),
+        ## Clock selection lives in the board namespace: it drives all four
+        ## panels on this screen.
+        methylome_age_inputs(id),
         mp_tab(bslib::layout_columns(
           col_widths = 12,
           height = MP_TAB_HEIGHT,
-          row_heights = list("auto", 1, "auto"),
-          bs_alert("Epigenetic age from the wateRmelon clocks. A clock computed on a fraction of its probes returns a confident wrong number, so any clock missing probes is withheld rather than shown with a caveat."),
+          row_heights = list("auto", 1.15, 1),
+          bs_alert("Epigenetic clocks for every sample. Pick the clocks in the settings panel on the right, by family or one at a time. A clock computed on a fraction of its probes returns a confident wrong number, so anything below the coverage floor is withheld rather than shown."),
           bslib::layout_columns(
             height = "100%",
-            col_widths = c(6, 6),
+            col_widths = c(7, 5),
+            methylome_plot_agecor_ui(
+              ns("age_cor"),
+              title = "DNAm age vs chronological age",
+              caption = "Each clock against the reported age of the sample.",
+              info.text = "The headline check on any epigenetic clock: how closely it tracks the age actually recorded for the sample. Points on the dashed identity line are samples whose methylome matches their years; the fitted line shows the clock's overall calibration in this cohort.",
+              info.methods = "Up to four selected clocks, each plotted against the first chronological age column found in the sample sheet. Dashed line is parity, solid line is the least-squares fit, and the panel title carries the Pearson correlation.",
+              height = c("100%", "700px"), width = c("auto", "100%")
+            ),
             methylome_plot_clocks_ui(
               ns("age_clocks"),
               title = "Clock agreement",
-              caption = "Two independent clocks plotted against each other.",
-              info.text = "Different clocks were trained on different tissues and probe sets. Where they agree, the age estimate is trustworthy; where they diverge, the sample or its normalisation deserves a look.",
-              info.methods = "The first two clocks with complete probe coverage are plotted against each other with the identity line and Pearson correlation.",
-              height = c("100%", "700px"), width = c("auto", "100%")
-            ),
-            methylome_plot_agegroup_ui(
-              ns("age_group"),
-              title = "DNAm age by phenotype",
-              caption = "Epigenetic age split by the first two-level phenotype.",
-              info.text = "Epigenetic age compared across the groups defined in the sample sheet. This is the point where a per-sample metric becomes a comparison the rest of the platform can use.",
-              info.methods = "Boxplot of the first fully covered clock against the first two-level phenotype column, with the individual samples jittered over it.",
+              caption = "Every selected clock against every other.",
+              info.text = "Different clocks were trained on different tissues and CpG sets. Where they agree the estimate is trustworthy; where they diverge, the sample or its normalisation deserves a look.",
+              info.methods = "Pairwise scatter of the selected clocks, identity line dotted in the lower panels, Pearson correlation printed in the upper panels.",
               height = c("100%", "700px"), width = c("auto", "100%")
             )
           ),
-          methylome_table_coverage_ui(
-            ns("age_cov"),
-            title = "Per-clock coverage",
-            info.text = "How many of each clock's required probes are present in this dataset. Clocks with any missing probes have their age withheld.",
-            caption = "Clock probe coverage and whether the estimate is usable.",
-            height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+          bslib::layout_columns(
+            height = "100%",
+            col_widths = c(5, 7),
+            methylome_plot_agegroup_ui(
+              ns("age_group"),
+              title = "Age acceleration by phenotype",
+              caption = "Residual of DNAm age on chronological age, split by group.",
+              info.text = "Age acceleration is what is left of the epigenetic age once the chronological age is accounted for: positive means the methylome looks older than the person is. This is the point where a per-sample metric becomes a comparison the rest of the platform can use.",
+              info.methods = "Residuals of a linear fit of the first selected clock on chronological age, boxplotted against the first categorical phenotype, with samples jittered over it and a two-sample t-test when the phenotype has two levels. Without a chronological age column the raw DNAm age is shown instead.",
+              height = c("100%", "700px"), width = c("auto", "100%")
+            ),
+            methylome_table_coverage_ui(
+              ns("age_cov"),
+              title = "Clocks and coverage",
+              info.text = "What each selected clock is, its median estimate, and whether this dataset carries enough of its CpGs to compute it at all.",
+              caption = "Per-clock coverage and whether the estimate is usable.",
+              height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+            )
           )
         ))
       ),
-
       ## --------------------------------------------------------- character --
       bigdash::bigTabItem(
         ns("character-tab"),

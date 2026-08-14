@@ -20,9 +20,35 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_table_ledger_server("ledger_tbl", PGX)
     methylome_plot_betadist_server("ledger_dens", PGX, watermark = watermark)
 
-    methylome_plot_clocks_server("age_clocks", PGX, watermark = watermark)
-    methylome_plot_agegroup_server("age_group", PGX, watermark = watermark)
-    methylome_table_coverage_server("age_cov", PGX)
+    ## Clock selection: the family checkboxes drive the individual list, and
+    ## the individual list is what is actually computed - so a user can tick a
+    ## family and then drop one clock out of it.
+    shiny::observeEvent(input$clock_families, {
+      sel <- unlist(MP_CLOCK_FAMILIES[input$clock_families], use.names = FALSE)
+      shiny::updateCheckboxGroupInput(session, "clocks", selected = sel)
+    }, ignoreNULL = FALSE)
+
+    r_clocks <- shiny::reactive({
+      cl <- input$clocks
+      if (is.null(cl) || !length(cl)) MP_CLOCK_ALL else cl
+    })
+    r_mincov <- shiny::reactive({
+      v <- input$min_cov
+      if (is.null(v) || is.na(v)) 0.8 else v
+    })
+
+    ## methylclock takes ~20s on a full cohort, so compute the clock set once
+    ## and share it: four panels each calling mp_clock_set() would pay it four
+    ## times over on every settings change.
+    r_clockset <- shiny::reactive({
+      shiny::req(PGX())
+      mp_clock_set(PGX(), r_clocks(), r_mincov())
+    })
+
+    methylome_plot_agecor_server("age_cor", r_clockset, watermark = watermark)
+    methylome_plot_clocks_server("age_clocks", r_clockset, watermark = watermark)
+    methylome_plot_agegroup_server("age_group", PGX, r_clockset, watermark = watermark)
+    methylome_table_coverage_server("age_cov", r_clockset)
 
     methylome_plot_context_server("char_island", PGX, what = "island", watermark = watermark)
     methylome_plot_context_server("char_gene", PGX, what = "gene", watermark = watermark)
