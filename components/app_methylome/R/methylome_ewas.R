@@ -42,11 +42,36 @@ methylome_ewas_inputs <- function(id) {
         "so significance alone is a weak filter. 0 disables it."
       ),
       placement = "top"
+    ),
+    withTooltip(
+      shiny::numericInput(
+        ns("top_n"), "Top CpGs to chart:",
+        value = 6, min = 2, max = 12, step = 1
+      ),
+      "How many of the most significant CpGs to draw as per-sample beta stripcharts.",
+      placement = "top"
     )
   )
 }
 
 ## ------------------------------------------------------------------ shared --
+
+## Per-sample group labels for a contrast. pgx$contrasts holds the actual
+## labels; exp.matrix only holds signed weights, so prefer the former and
+## fall back to the sign when it is absent.
+mp_contrast_groups <- function(pgx, cmp) {
+  ct <- pgx$contrasts
+  if (!is.null(ct) && cmp %in% colnames(ct)) {
+    g <- as.character(ct[, cmp])
+    names(g) <- rownames(ct)
+    g[!is.na(g) & g != ""]
+  } else {
+    em <- pgx$model.parameters$exp.matrix
+    if (is.null(em) || !cmp %in% colnames(em)) return(NULL)
+    w <- em[, cmp]
+    stats::setNames(ifelse(w > 0, "group 1", "group 0"), names(w))[w != 0]
+  }
+}
 
 ## Note pgx$genes$chr is a cytoband ("16q12.2"), not a bare chromosome, so the
 ## arm and band are stripped exactly as board.epigenomics does.
@@ -82,18 +107,18 @@ mp_ewas_table <- function(pgx, contrast = NULL) {
 ## of the contrast, which is what the field reports.
 mp_delta_beta <- function(pgx, contrast) {
   X <- mp_beta(pgx)
+  na <- stats::setNames(rep(NA_real_, nrow(X)), rownames(X))
+  grp <- mp_contrast_groups(pgx, contrast)
   em <- pgx$model.parameters$exp.matrix
-  if (is.null(em) || !contrast %in% colnames(em)) {
-    return(stats::setNames(rep(NA_real_, nrow(X)), rownames(X)))
-  }
+  if (is.null(grp) || is.null(em) || !contrast %in% colnames(em)) return(na)
+  ## Numerator of "A_vs_B" is the positively weighted side.
   w <- em[, contrast]
-  g1 <- names(w)[w > 0]
-  g0 <- names(w)[w < 0]
+  up <- unique(stats::na.omit(grp[names(w)[w > 0]]))[1]
+  g1 <- names(grp)[grp == up]
+  g0 <- names(grp)[grp != up]
   g1 <- intersect(g1, colnames(X))
   g0 <- intersect(g0, colnames(X))
-  if (!length(g1) || !length(g0)) {
-    return(stats::setNames(rep(NA_real_, nrow(X)), rownames(X)))
-  }
+  if (!length(g1) || !length(g0)) return(na)
   round(rowMeans(X[, g1, drop = FALSE], na.rm = TRUE) -
           rowMeans(X[, g0, drop = FALSE], na.rm = TRUE), 4)
 }
@@ -343,6 +368,97 @@ methylome_table_hits_server <- function(id, pgx, r.contrast = shiny::reactive(NU
       func2 = function() render("60vh"),
       csvFunc = table_data,
       selector = "none"
+    )
+  })
+}
+
+## ------------------------------------------------------- per-CpG stripcharts --
+##
+## The panel the methylation field actually expects alongside a Manhattan
+## (plotCpg in the Bioconductor workflow, meffil.ewas.cpg.plot in meffil). It
+## is the only view that shows whether a hit is driven by a couple of outliers
+## and what the absolute methylation level is: delta-beta 0.05 at beta 0.50 and
+## at beta 0.02 are very different claims. The y axis is therefore fixed to the
+## full [0,1] beta range rather than zooming to the data.
+
+methylome_plot_stripcharts_ui <- function(id, title, caption, info.text, info.methods,
+                                          height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(
+    ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    height = height, width = width, label = "e"
+  )
+}
+
+methylome_plot_stripcharts_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
+                                              r.thresh, r.topn = shiny::reactive(6),
+                                              watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot_data <- shiny::reactive({
+      shiny::req(pgx())
+      p <- pgx()
+      cmp <- r.contrast()
+      if (is.null(cmp) || !cmp %in% names(p$gx.meta$meta)) cmp <- names(p$gx.meta$meta)[1]
+      d <- mp_ewas_table(p, cmp)
+      d$sig <- mp_ewas_sig(d, r.thresh())
+      d <- d[d$sig, , drop = FALSE]
+      shiny::validate(shiny::need(nrow(d) > 0,
+        "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
+      n <- r.topn()
+      if (is.null(n) || is.na(n) || n < 1) n <- 6
+      d <- d[order(d$p), , drop = FALSE][seq_len(min(n, nrow(d))), , drop = FALSE]
+      grp <- mp_contrast_groups(p, cmp)
+      shiny::validate(shiny::need(!is.null(grp), "No group labels for this contrast."))
+      X <- mp_beta(p)
+      ss <- intersect(names(grp), colnames(X))
+      list(d = d, X = X[d$probe, ss, drop = FALSE], grp = factor(grp[ss]))
+    })
+
+    plot.RENDER <- function() {
+      res <- plot_data()
+      d <- res$d; X <- res$X; grp <- res$grp
+      n <- nrow(d)
+      nc <- min(3, n)
+      nr <- ceiling(n / nc)
+      op <- graphics::par(mfrow = c(nr, nc), mar = c(2.6, 3.2, 2.2, 0.6),
+                          las = 1, mgp = c(2, 0.6, 0), cex.axis = 0.85)
+      on.exit(graphics::par(op))
+      lv <- levels(grp)
+      cols <- c("#4575b4", "#d73027")[seq_along(lv)]
+      for (i in seq_len(n)) {
+        y <- as.numeric(X[i, ])
+        graphics::plot(NA, xlim = c(0.5, length(lv) + 0.5), ylim = c(0, 1),
+                       xaxt = "n", xlab = "", ylab = "beta")
+        graphics::axis(1, at = seq_along(lv), labels = lv, tick = FALSE)
+        graphics::abline(h = c(0.2, 0.8), lty = 3, col = "#c9ccc7")
+        for (j in seq_along(lv)) {
+          yy <- y[grp == lv[j]]
+          graphics::points(jitter(rep(j, length(yy)), amount = 0.13), yy,
+                           pch = 19, cex = 0.7,
+                           col = grDevices::adjustcolor(cols[j], 0.65))
+          graphics::segments(j - 0.28, mean(yy, na.rm = TRUE),
+                             j + 0.28, mean(yy, na.rm = TRUE),
+                             lwd = 2.5, col = cols[j])
+        }
+        lab <- if (!is.na(d$gene[i]) && d$gene[i] != "") {
+          paste0(d$probe[i], "  (", d$gene[i], ")")
+        } else d$probe[i]
+        graphics::title(main = lab, cex.main = 0.95, font.main = 1)
+        graphics::mtext(sprintf("d-beta %+.3f   q %.2g", d$dbeta[i], d$q[i]),
+                        side = 3, line = 0.1, cex = 0.62, col = "#697586")
+      }
+    }
+
+    PlotModuleServer(
+      "pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = shiny::reactive({
+        r <- plot_data()
+        cbind(probe = rownames(r$X), as.data.frame(r$X))
+      }),
+      renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
+      res = c(90, 130), pdf.width = 9, pdf.height = 6, add.watermark = watermark
     )
   })
 }

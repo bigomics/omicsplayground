@@ -16,6 +16,8 @@
 ## layout_columns splits the height evenly and the alert eats a whole share.
 MP_TAB_PAD <- "padding-top: 28px;"
 MP_TAB_HEIGHT <- "calc(100vh - 40px)"
+## Sub-tabbed screens lose another strip of height to the nav_tab chrome.
+MP_SUBTAB_HEIGHT <- "calc(100vh - 96px)"
 
 ## Every tab is the same shape: a nudged wrapper around one layout_columns.
 mp_tab <- function(...) shiny::div(style = MP_TAB_PAD, ...)
@@ -34,6 +36,9 @@ methylome_ui <- function(id = "methylome") {
       bigdash::sidebarItem("Methylome character", ns("character-tab")),
       bigdash::sidebarItem("EWAS", ns("ewas-tab"))
     ),
+    ## tabSettings need a settings container to render into; without this the
+    ## right-hand settings panel never appears. qsee_ui() declares the same.
+    settings = bigdash::settings("Settings", id = id),
     bigdash::bigTabs(
       id = id,
 
@@ -137,54 +142,76 @@ methylome_ui <- function(id = "methylome") {
       ),
 
       ## -------------------------------------------------------------- EWAS --
+      ## Two sub-tabs: the result (where the signal is, and which CpGs) and
+      ## the supporting views (is it inflated, where does it sit, and do the
+      ## top hits hold up per sample).
       bigdash::bigTabItem(
         ns("ewas-tab"),
         ## Inputs are declared in the board namespace, not a sub-module: the
-        ## threshold drives the Manhattan, the enrichment and the hit table.
+        ## threshold drives both sub-tabs.
         methylome_ewas_inputs(id),
-        mp_tab(bslib::layout_columns(
-          col_widths = 12,
-          height = MP_TAB_HEIGHT,
-          row_heights = list("auto", 1, 1.45),
-          bs_alert("The differential methylation already computed for this dataset, shown genome-wide. This is the one screen here that uses a contrast."),
-          methylome_plot_manhattan_ui(
-            ns("ewas_manhattan"),
-            title = "Manhattan",
-            caption = "Genome-wide significance by chromosome position.",
-            info.text = "Every tested CpG plotted at its genomic position against significance. Significant probes are coloured by direction: red where methylation increases, blue where it decreases.",
-            info.methods = "Probes are ordered by chromosome and position using the array annotation; the chromosome field is a cytoband so the arm and band are stripped first. Alternating grey shades separate chromosomes. The dashed line is the conventional 1e-7 array-wide threshold rather than a naive Bonferroni over all probes.",
-            height = c("100%", "700px"), width = c("auto", "100%")
-          ),
-          bslib::layout_columns(
-            height = "100%",
-            col_widths = c(7, 5),
-            methylome_table_hits_ui(
-              ns("ewas_hits"),
-              title = "CpGs passing the threshold",
-              info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on.",
-              caption = "Significant CpGs with gene, genomic context and effect size.",
-              height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
-            ),
+        mp_tab(bslib::navset_tab(
+
+          bslib::nav_panel(
+            title = "Manhattan & hits",
             bslib::layout_columns(
-              height = "100%",
               col_widths = 12,
-              row_heights = list(1, 1),
-              methylome_plot_qq_ui(
-              ns("ewas_qq"),
-              title = "QQ and inflation",
-              caption = "Observed against expected p-values, with lambda.",
-              info.text = "The genomic inflation factor lambda summarises how far the p-value distribution departs from the null. It rises with genuine widespread signal as well as with confounding, so it is a prompt to look rather than a pass or fail.",
-              info.methods = "Observed -log10 p-values against the uniform expectation. Lambda is the median chi-square statistic divided by its null expectation.",
-              height = c("100%", "700px"), width = c("auto", "100%")
-            ),
-            methylome_plot_enrichment_ui(
-              ns("ewas_enrich"),
-              title = "Where the hits sit",
-              caption = "Genomic context of the significant CpGs.",
-              info.text = "Whether the significant CpGs concentrate in islands, shores, shelves or open sea. Shore enrichment with island depletion is the classic pattern in differential methylation.",
-              info.methods = "Odds ratio of each Relation_to_Island category among significant probes versus the probes actually tested in this contrast, not the whole array. A half-count is added to each cell so empty categories remain finite.",
-              height = c("100%", "700px"), width = c("auto", "100%")
+              height = MP_SUBTAB_HEIGHT,
+              row_heights = list("auto", 1.05, 1.2),
+              bs_alert("The differential methylation already computed for this dataset, shown genome-wide. Set the threshold in the settings panel on the right; the line, the coloured points and the table all follow it."),
+              methylome_plot_manhattan_ui(
+                ns("ewas_manhattan"),
+                title = "Manhattan",
+                caption = "Genome-wide significance by chromosome position.",
+                info.text = "Every tested CpG plotted at its genomic position against significance. Probes passing the threshold are coloured by direction: red where methylation increases, blue where it decreases.",
+                info.methods = "Probes are ordered by chromosome and position using the array annotation; the chromosome field is a cytoband so the arm and band are stripped first. Alternating grey shades separate chromosomes. A q-value cut-off has no fixed position on a -log10(p) axis, so the dashed line is drawn at the largest p-value that still passes, and is omitted entirely when nothing does.",
+                height = c("100%", "700px"), width = c("auto", "100%")
+              ),
+              methylome_table_hits_ui(
+                ns("ewas_hits"),
+                title = "CpGs passing the threshold",
+                info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on.",
+                caption = "Significant CpGs with gene, genomic context and effect size.",
+                height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+              )
             )
+          ),
+
+          bslib::nav_panel(
+            title = "QQ & context",
+            bslib::layout_columns(
+              col_widths = 12,
+              height = MP_SUBTAB_HEIGHT,
+              row_heights = list("auto", 1, 1.35),
+              bs_alert("Whether the result holds up: how far the p-values depart from the null, where in the genome the hits concentrate, and what the top hits look like sample by sample."),
+              bslib::layout_columns(
+                height = "100%",
+                col_widths = c(5, 7),
+                methylome_plot_qq_ui(
+                  ns("ewas_qq"),
+                  title = "QQ and inflation",
+                  caption = "Observed against expected p-values, with lambda.",
+                  info.text = "The genomic inflation factor lambda summarises how far the p-value distribution departs from the null. It rises with genuine widespread signal as well as with confounding, so it is a prompt to look rather than a pass or fail.",
+                  info.methods = "Observed -log10 p-values against the uniform expectation. Lambda is the median chi-square statistic divided by its null expectation.",
+                  height = c("100%", "700px"), width = c("auto", "100%")
+                ),
+                methylome_plot_enrichment_ui(
+                  ns("ewas_enrich"),
+                  title = "Where the hits sit",
+                  caption = "Genomic context of the significant CpGs.",
+                  info.text = "Whether the significant CpGs concentrate in islands, shores, shelves or open sea. Shore enrichment with island depletion is the classic pattern in differential methylation.",
+                  info.methods = "Odds ratio of each Relation_to_Island category among probes passing the threshold versus the probes actually tested in this contrast, not the whole array. A half-count is added to each cell so empty categories remain finite.",
+                  height = c("100%", "700px"), width = c("auto", "100%")
+                )
+              ),
+              methylome_plot_stripcharts_ui(
+                ns("ewas_strips"),
+                title = "Top CpGs, sample by sample",
+                caption = "Per-sample beta for the most significant CpGs, split by group.",
+                info.text = "Beta value of every sample at each of the top CpGs. This is the panel that shows whether a hit is real or driven by a couple of outliers, and at what absolute level of methylation it sits - a 0.05 difference at beta 0.50 and at beta 0.02 are very different claims.",
+                info.methods = "The most significant CpGs passing the current threshold, one panel each, points jittered within group with a bar at the group mean. The y axis is fixed to the full [0,1] beta range rather than zooming to the data, so panels stay comparable and the absolute level stays visible. Dotted guides at 0.2 and 0.8. How many CpGs are drawn is set in the settings panel.",
+                height = c("100%", "700px"), width = c("auto", "100%")
+              )
             )
           )
         ))

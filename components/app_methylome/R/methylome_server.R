@@ -41,11 +41,18 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       )
     })
 
+    r_topn <- shiny::reactive({
+      n <- input$top_n
+      if (is.null(n) || is.na(n) || n < 1) 6 else min(as.integer(n), 12)
+    })
+
     methylome_plot_manhattan_server("ewas_manhattan", PGX, r_contrast, r_thresh,
                                     watermark = watermark)
     methylome_plot_qq_server("ewas_qq", PGX, r_contrast, watermark = watermark)
     methylome_plot_enrichment_server("ewas_enrich", PGX, r_contrast, r_thresh,
                                      watermark = watermark)
     methylome_table_hits_server("ewas_hits", PGX, r_contrast, r_thresh)
+    methylome_plot_stripcharts_server("ewas_strips", PGX, r_contrast, r_thresh,
+                                      r_topn, watermark = watermark)
   })
 }
