@@ -1,5 +1,5 @@
 
-#app .col-sm-1.well {
+#app-shell .col-sm-1.well {
     width: 75px;
     background-color: #2c3e50;
     display: flex;
@@ -9,7 +9,7 @@
     height: 100vh;
 }
 
-#app .col-sm-11 {
+#app-shell .col-sm-11 {
     width: calc(100% - 75px);
     height: 100vh;
     padding: 0px;
@@ -63,12 +63,12 @@
     padding-bottom: 3px;
 }
 
-#app .col-sm-11>.tab-content {
+#app-shell .col-sm-11>.tab-content {
     margin-top: -15px;
     height: 100%;
 }
 
-#app .col-sm-11>.tab-content>.tab-pane {
+#app-shell .col-sm-11>.tab-content>.tab-pane {
     background-color: #F7FAFD;
     height: calc(100vh + 15px);
 }

@@ -2,6 +2,7 @@ setwd('components/app/R')
 source('global.R')
 source('ui.R')
 source('server.R')
+options(shiny.otel.collect = "none") 
 shinyApp(
     ui = app_ui,
     server = app_server,

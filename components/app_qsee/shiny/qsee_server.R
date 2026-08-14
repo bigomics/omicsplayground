@@ -21,42 +21,21 @@ qsee_server <- function(id, pgx=NULL, parent=NULL) {
       has_shown_no_data_popup <- shiny::reactiveVal(FALSE)
 
       ## bigdash only auto-selects the first tab of a bigPage() that is
-      ## already visible at the moment Shiny connects, and its
-      ## openSidebar()/openSettings() helpers hardcode the *default*
-      ## (unscoped) container ids -- both are no-ops for a nested, scoped
-      ## bigPage() like this one. On top of that, the app-wide init script
-      ## in temp.js (`$('.sidebar-label').trigger('click')`, ~250ms after
-      ## page load) targets *every* `.sidebar-label` on the page, unscoped,
-      ## so it collapses this module's own left menu as a side effect even
-      ## though Qsee isn't shown yet.
-      ## Once Qsee is first shown: select its first tab, force its own left
-      ## menu back open, and force its own right settings panel open+locked
-      ## -- all scoped to this module's own containers.
+      ## already visible at the moment Shiny connects. `bigdash.openSidebar()`
+      ## / `bigdash.openSettings()` now scope themselves to the calling
+      ## module's own bigPage() (via `session`), so they no longer no-op or
+      ## leak into other bigPage() instances on the page for a nested, scoped
+      ## bigPage() like this one -- requires bigdash >= the version adding
+      ## scoped nav helpers (PR bigomics/bigdash#feat/scoped-sidebar-settings-nav).
+      ## Once Qsee is first shown: select its first tab and force its own
+      ## left menu / right settings panel open.
       initial_tab_selected <- shiny::reactiveVal(FALSE)
       shiny::observeEvent(input$is_visible, {
         shiny::req(isTRUE(input$is_visible))
         if (!shiny::isolate(initial_tab_selected())) {
           bigdash.selectTab(session, session$ns("normalize-tab"))
-
-          shinyjs::runjs(sprintf(
-            "(function() {
-              var sidebarEl = $('#%s');
-              if (sidebarEl.length && !sidebarEl.hasClass('sidebar-expanded')) {
-                sidebarEl.find('.sidebar-label').trigger('click');
-              }
-              var settingsEl = $('#%s');
-              if (settingsEl.length) {
-                if (!settingsEl.hasClass('settings-expanded')) {
-                  settingsEl.trigger('mouseenter');
-                }
-                if (!settingsEl.hasClass('settings-locked')) {
-                  settingsEl.find('.settings-lock').trigger('click');
-                }
-              }
-            })();",
-            session$ns("sidebar-container"),
-            session$ns("settings-container")
-          ))
+          bigdash.openSidebar(session)
+          bigdash.openSettings(session = session)
 
           initial_tab_selected(TRUE)
         }
