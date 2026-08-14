@@ -47,6 +47,7 @@ if(!file.exists('00SourceAll.R')) {
   source('app_methylome/R/methylome_ewas.R',encoding='UTF-8')
   source('app_methylome/R/methylome_ledger.R',encoding='UTF-8')
   source('app_methylome/R/methylome_model.R',encoding='UTF-8')
+  source('app_methylome/R/methylome_regions.R',encoding='UTF-8')
   source('app_methylome/R/methylome_server.R',encoding='UTF-8')
   source('app_methylome/R/methylome_ui.R',encoding='UTF-8')
   source('app_methylome/R/methylome_utils.R',encoding='UTF-8')

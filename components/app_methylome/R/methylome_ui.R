@@ -232,6 +232,31 @@ methylome_ui <- function(id = "methylome") {
           ),
 
           bslib::nav_panel(
+            title = "Regions & pathways",
+            methylome_regions_inputs(id),
+            bslib::layout_columns(
+              col_widths = 12,
+              height = MP_SUBTAB_HEIGHT,
+              row_heights = list("auto", 1, 1),
+              bs_alert("Region-level and gene-set views of the current model. Both run on demand from the settings panel, against the contrast and threshold set on the other sub-tabs."),
+              methylome_table_dmr_ui(
+                ns("ewas_dmr"),
+                title = "Differentially methylated regions",
+                info.text = "Contiguous runs of CpGs that move together, which is the unit methylation phenotypes actually occur in - promoter island hypermethylation, hypomethylated blocks - rather than isolated probes. Single-CpG regions are excluded; those are already in the hits table.",
+                caption = "Regions called from the fitted model by dmrff.",
+                height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+              ),
+              methylome_table_enrich_ui(
+                ns("ewas_enrichgs"),
+                title = "Gene sets (probe-bias corrected)",
+                info.text = "Gene-set enrichment of the hit list, corrected for the number of probes per gene. Genes carry very different probe counts, so an uncorrected test returns the same probe-dense developmental sets whatever the biology; gometh reweights with Wallenius noncentral hypergeometric and also handles CpGs mapping to several genes.",
+                caption = "GO or KEGG terms enriched among the significant CpGs.",
+                height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+              )
+            )
+          ),
+
+          bslib::nav_panel(
             title = "QQ & context",
             bslib::layout_columns(
               col_widths = 12,

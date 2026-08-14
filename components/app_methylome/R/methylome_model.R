@@ -204,6 +204,9 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
     formula = paste0("~ ", lv[2], " vs ", lv[1],
                      if (length(used)) paste0(" + ", paste(used, collapse = " + ")) else
                        "   (unadjusted)"),
+    ## dmrff needs the standard error, which limma does not return directly;
+    ## se = |logFC / t|, so keep the moderated t alongside.
+    t = tt$t,
     n = nrow(dat), groups = table(dat$.group),
     dropped_covars = dropped, masked = length(masked),
     covars = used

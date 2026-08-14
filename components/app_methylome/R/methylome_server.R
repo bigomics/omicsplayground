@@ -191,5 +191,26 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_table_hits_server("ewas_hits", r_ewas, r_thresh)
     methylome_plot_stripcharts_server("ewas_strips", PGX, r_ewas, r_thresh,
                                       r_topn, watermark = watermark)
+
+    ## ------------------------------------------- regions and gene sets --
+    ## Both are minutes-scale on a full array, so both are explicit.
+    r_regions <- shiny::eventReactive(input$run_dmr, {
+      p <- PGX(); res <- r_ewas()
+      gap <- input$dmr_maxgap
+      if (is.null(gap) || is.na(gap) || gap < 1) gap <- 500
+      dmrs <- mp_call_dmrs(p, res, maxgap = gap)
+      list(dmrs = dmrs, genes = mp_dmr_genes(p, dmrs, res$data))
+    })
+    methylome_table_dmr_server("ewas_dmr", PGX, r_regions)
+
+    r_enrich <- shiny::eventReactive(input$run_gometh, {
+      p <- PGX(); d <- r_ewas()$data
+      sig <- mp_ewas_sig(d, r_thresh())
+      arr <- if (!is.null(p$meth_type) && grepl("EPIC", p$meth_type, ignore.case = TRUE)) "EPIC" else "450K"
+      mp_run_gometh(d$probe[sig], d$probe,
+                    collection = if (is.null(input$gs_collection)) "GO" else input$gs_collection,
+                    array_type = arr)
+    })
+    methylome_table_enrich_server("ewas_enrichgs", r_enrich)
   })
 }
