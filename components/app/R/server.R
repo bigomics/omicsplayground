@@ -171,12 +171,6 @@ app_server <- function(input, output, session) {
     nav_count = reactive(nav$count)
   )
 
-  ## AppSettingsBoard(
-  ##   "app_settings",
-  ##   auth = auth,
-  ##   pgx = PGX
-  ## )
-
   if (isTRUE(opt$ENABLE_ADMIN)) {
     AdminPanelBoard(
       "admin_panel",
@@ -191,7 +185,6 @@ app_server <- function(input, output, session) {
   )
 
   ## Do not display "Welcome" tab on the menu
-  #bigdash.hideMenuItem(session, "welcome-tab")
   ## Hide admin tab by default (will be shown for admin users after login)
   if (isTRUE(opt$ENABLE_ADMIN)) {
     bigdash.hideMenuItem(session, "admin-tab")
@@ -217,14 +210,7 @@ app_server <- function(input, output, session) {
 
   shinyjs::onclick("logo-bigomics", {
     shinyjs::runjs("console.info('logo-bigomics clicked')")
-    #bigdash.selectTab(session, selected = "welcome-tab")
-    #shinyjs::runjs("sidebarClose()")
-    #shinyjs::runjs("settingsClose()")
   })
-
-  ## observeEvent(input$menu_createreport, {
-  ##   shinyjs::click("load-generate_report-show_report_modal")
-  ## })
 
   output$current_user <- shiny::renderText({
     ## trigger on change of user
@@ -1003,24 +989,14 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Modules
   ## -------------------------------------------------------------
-
-  ##if (isTRUE(opt$ENABLE_ACROSS)) {
-  if (TRUE) {
-    ## The on-demand TileDB build (prompted the first time the user opens
-    ## this tab) lives inside AcrossBoard itself; `current_page` tells the
-    ## module when the root "app-sidebar" navset switches to it, since that
-    ## navset is outside the module's own namespace.
-    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
-                current_page = shiny::reactive(input[["app-sidebar"]]))
-  }
   
-  if(opt$DEVMODE) {
-    dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
-=======
   if(isTRUE(opt$DEVMODE)) {
-    dbg("[SERVER] WARNING: DEVMODE modules enabled!")
-    
+    dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
+
     launcher_server("apps", parent = session, load_example = load_example)
+
+    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+      current_page = shiny::reactive(input[["app-sidebar"]]))
     qsee_server("qsee", pgx = PGX, parent = session)
 
     RunMonitorServer("runmonitor")

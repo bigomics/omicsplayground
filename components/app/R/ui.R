@@ -107,18 +107,20 @@ app_ui <- function(x) {
         id = "app-sidebar",
         ##widths = c("50px","calc(100% - 50px)"),
         widths = c(1,11),
-        selected = "Apps",
+        selected = "Home",
         well = TRUE,
-        ## bslib::nav_panel(
-        ##   title = "Home",
-        ##   icon = icon("home"),
-        ##   omicspanel(WelcomeBoardUI("welcome2"))
-        ## ),
         bslib::nav_panel(
-          title = "Apps",
-          icon = icon("app-store-ios", style="font-size: 38px;"),
-          launcher_ui("apps")
+          title = "Home",
+          icon = icon("home"),
+          omicspanel(WelcomeBoardUI("welcome2"))
         ),
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel(
+            title = "Apps",
+            icon = icon("app-store-ios", style="font-size: 38px;"),
+            launcher_ui("apps")
+          )
+        },
         bslib::nav_panel(
           title = "Library",
           icon=icon("book"),
@@ -154,19 +156,7 @@ app_ui <- function(x) {
             omicspanel(RunMonitorUI("runmonitor"))
           )
         },
-        ## Hidden panels (e.g. tools)
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(title = "Tools", icon = icon("tools"),
-            tools_ui("tools")
-          )
-        },
-        ## Hidden panels (e.g. tools)
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel_hidden("Prism",
-            div(prism_ui("prism"), class='px-4 py-0')
-          )
-        },
->>>>>>> edgy
+        ## Hidden panels
         bslib::nav_panel_hidden("Upload",
           omicspanel(UploadUI("upload"))
         ),
@@ -178,19 +168,28 @@ app_ui <- function(x) {
             omicspanel(AdminPanelUI("admin_panel"))
           )
         },
-        ## bslib::nav_panel_hidden("Prism",
-        ##   omicspanel(prism_ui("prism"))
-        ## ),
-        ## bslib::nav_panel_hidden("IDconvert",
-        ##   omicspanel(idconvert_ui("idconvert"))
-        ## ),
-        bslib::nav_panel_hidden("Qsee",
-          omicspanel(qsee_ui("qsee"))
-        ),
-        bslib::nav_panel_hidden(
-          value = "AcrossDatasets",
-          omicspanel(AcrossUI("across"))
-        ),
+        ## Tools
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel_hidden("Prism",
+            omicspanel(prism_ui("prism"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden("IDconvert",
+            omicspanel(idconvert_ui("idconvert"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden("Qsee",
+            omicspanel(qsee_ui("qsee"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden(
+            value = "AcrossDatasets",
+            omicspanel(AcrossUI("across"))
+          )
+        },
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),
