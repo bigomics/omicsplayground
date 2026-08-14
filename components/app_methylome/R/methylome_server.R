@@ -59,16 +59,22 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     })
 
     ## ------------------------------------------------------- EWAS model --
+    ## The contrast picker is populated by an observer, so it is still NULL on
+    ## the first pass; include it in the trigger or the initial fit runs with
+    ## no contrast and the failure sticks. Refitting on a contrast change is
+    ## also the right behaviour - it is a different question, not a tweak.
     r_ewas <- shiny::eventReactive(
-      list(input$run_ewas, r_dataset()),
+      list(input$run_ewas, r_dataset(), input$ewas_contrast),
       {
         p <- PGX()
         shiny::req(p)
         cmp <- input$ewas_contrast
-        if (is.null(cmp)) {
+        if (is.null(cmp) || !nzchar(cmp)) {
           cmp <- colnames(p$contrasts)[1]
           if (is.null(cmp) && !is.null(p$gx.meta)) cmp <- names(p$gx.meta$meta)[1]
         }
+        ## Wait rather than fail if nothing is resolvable yet.
+        shiny::req(!is.null(cmp) && nzchar(cmp))
         cf <- if (isTRUE(input$ewas_adjust_cells)) r_cells() else NULL
         fit <- mp_fit_ewas(p, cmp, covars = input$ewas_covars,
                            cellfracs = cf, mask = input$ewas_mask)
@@ -194,23 +200,38 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
 
     ## ------------------------------------------- regions and gene sets --
     ## Both are minutes-scale on a full array, so both are explicit.
-    r_regions <- shiny::eventReactive(input$run_dmr, {
+    ## reactiveVal rather than eventReactive: an eventReactive that has never
+    ## fired simply does not run, so its table renders blank instead of saying
+    ## what to press. This way the table gets NULL and shows the prompt.
+    regions_val <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$run_dmr, {
       p <- PGX(); res <- r_ewas()
       gap <- input$dmr_maxgap
       if (is.null(gap) || is.na(gap) || gap < 1) gap <- 500
-      dmrs <- mp_call_dmrs(p, res, maxgap = gap)
-      list(dmrs = dmrs, genes = mp_dmr_genes(p, dmrs, res$data))
+      shiny::withProgress(message = "Calling regions...", value = 0.4, {
+        dmrs <- mp_call_dmrs(p, res, maxgap = gap)
+        regions_val(list(dmrs = dmrs, genes = mp_dmr_genes(p, dmrs, res$data)))
+      })
     })
+    ## A new model invalidates any regions already called.
+    shiny::observeEvent(r_ewas(), regions_val(NULL), ignoreInit = TRUE)
+    r_regions <- shiny::reactive(regions_val())
     methylome_table_dmr_server("ewas_dmr", PGX, r_regions)
 
-    r_enrich <- shiny::eventReactive(input$run_gometh, {
+    enrich_val <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$run_gometh, {
       p <- PGX(); d <- r_ewas()$data
       sig <- mp_ewas_sig(d, r_thresh())
       arr <- if (!is.null(p$meth_type) && grepl("EPIC", p$meth_type, ignore.case = TRUE)) "EPIC" else "450K"
-      mp_run_gometh(d$probe[sig], d$probe,
-                    collection = if (is.null(input$gs_collection)) "GO" else input$gs_collection,
-                    array_type = arr)
+      shiny::withProgress(message = "Testing gene sets...", value = 0.4, {
+        enrich_val(mp_run_gometh(
+          d$probe[sig], d$probe,
+          collection = if (is.null(input$gs_collection)) "GO" else input$gs_collection,
+          array_type = arr))
+      })
     })
+    shiny::observeEvent(r_ewas(), enrich_val(NULL), ignoreInit = TRUE)
+    r_enrich <- shiny::reactive(enrich_val())
     methylome_table_enrich_server("ewas_enrichgs", r_enrich)
   })
 }

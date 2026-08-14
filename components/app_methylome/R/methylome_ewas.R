@@ -68,7 +68,27 @@ methylome_ewas_inputs <- function(id) {
                           min = 2, max = 12, step = 1),
       "How many of the most significant CpGs to draw as per-sample beta stripcharts.",
       placement = "top"
-    )
+    ),
+    ## bigdash::tabSettings is per bigTabItem, not per nav_panel, so the
+    ## Regions & pathways controls live here rather than inside that sub-tab -
+    ## a second tabSettings block nested in a nav_panel never renders.
+    shiny::tags$hr(style = "margin:10px 0;"),
+    withTooltip(
+      shiny::numericInput(ns("dmr_maxgap"), "Max gap between CpGs (bp):",
+                          value = 500, min = 100, max = 5000, step = 100),
+      "CpGs further apart than this are not joined into the same region.",
+      placement = "top"
+    ),
+    shiny::actionButton(ns("run_dmr"), "Call regions",
+                        class = "btn btn-primary btn-sm", width = "100%"),
+    withTooltip(
+      shiny::selectInput(ns("gs_collection"), "Gene-set collection:",
+                         choices = c("GO", "KEGG"), selected = "GO"),
+      "Which annotation collection to test the hit list against.",
+      placement = "top"
+    ),
+    shiny::actionButton(ns("run_gometh"), "Test gene sets",
+                        class = "btn btn-primary btn-sm", width = "100%")
   )
 }
 

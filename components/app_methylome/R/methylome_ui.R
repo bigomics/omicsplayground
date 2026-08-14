@@ -233,7 +233,6 @@ methylome_ui <- function(id = "methylome") {
 
           bslib::nav_panel(
             title = "Regions & pathways",
-            methylome_regions_inputs(id),
             bslib::layout_columns(
               col_widths = 12,
               height = MP_SUBTAB_HEIGHT,

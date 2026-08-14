@@ -175,36 +175,3 @@ methylome_table_enrich_server <- function(id, r.enrich, scrollY = "26vh") {
                       csvFunc = table_data, selector = "none")
   })
 }
-
-## ---------------------------------------------------------------- settings --
-
-methylome_regions_inputs <- function(id) {
-  ns <- shiny::NS(id)
-  bigdash::tabSettings(
-    withTooltip(
-      shiny::numericInput(ns("dmr_maxgap"), "Max gap between CpGs (bp):",
-                          value = 500, min = 100, max = 5000, step = 100),
-      "CpGs further apart than this are not joined into the same region.",
-      placement = "top"
-    ),
-    shiny::div(
-      style = "margin-top:6px;",
-      shiny::actionButton(ns("run_dmr"), "Call regions",
-                          class = "btn btn-primary btn-sm", width = "100%")
-    ),
-    shiny::tags$hr(style = "margin:10px 0;"),
-    withTooltip(
-      shiny::selectInput(ns("gs_collection"), "Gene-set collection:",
-                         choices = c("GO", "KEGG"), selected = "GO"),
-      "Which annotation collection to test the hit list against.",
-      placement = "top"
-    ),
-    shiny::div(
-      style = "margin-top:6px;",
-      shiny::actionButton(ns("run_gometh"), "Test gene sets",
-                          class = "btn btn-primary btn-sm", width = "100%"),
-      shiny::div(style = "margin-top:6px; font-size:11.5px; color:#697586;",
-                 "Corrected for probes per gene; both steps run on the current model and threshold.")
-    )
-  )
-}
