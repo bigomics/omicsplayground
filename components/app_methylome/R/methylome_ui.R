@@ -8,6 +8,18 @@
 ## png/pdf/svg/csv downloads come from the platform rather than being
 ## reimplemented here.
 
+## bigdash pulls its app container 15px above the viewport - it assumes a
+## navbar occupies that strip, and this board hides its navbar - so without a
+## correction the first element on every tab is clipped by the app top bar.
+## Push the content back down, then size the tab to the space that is really
+## left. Rows are "auto" for the alert and 1 for the content, otherwise
+## layout_columns splits the height evenly and the alert eats a whole share.
+MP_TAB_PAD <- "padding-top: 28px;"
+MP_TAB_HEIGHT <- "calc(100vh - 40px)"
+
+## Every tab is the same shape: a nudged wrapper around one layout_columns.
+mp_tab <- function(...) shiny::div(style = MP_TAB_PAD, ...)
+
 methylome_ui <- function(id = "methylome") {
   ns <- shiny::NS(id)
 
@@ -28,11 +40,13 @@ methylome_ui <- function(id = "methylome") {
       ## ------------------------------------------------------------ ledger --
       bigdash::bigTabItem(
         ns("ledger-tab"),
-        bslib::layout_columns(
+        mp_tab(bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = MP_TAB_HEIGHT,
+          row_heights = list("auto", 1),
           bs_alert("Per-sample quality and identity for a methylation cohort. Nothing on this screen needs a contrast; it answers what is true of each sample."),
           bslib::layout_columns(
+            height = "100%",
             col_widths = c(7, 5),
             methylome_table_ledger_ui(
               ns("ledger_tbl"),
@@ -50,17 +64,19 @@ methylome_ui <- function(id = "methylome") {
               height = c("100%", "700px"), width = c("auto", "100%")
             )
           )
-        )
+        ))
       ),
 
       ## --------------------------------------------------------------- age --
       bigdash::bigTabItem(
         ns("age-tab"),
-        bslib::layout_columns(
+        mp_tab(bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = MP_TAB_HEIGHT,
+          row_heights = list("auto", 1, "auto"),
           bs_alert("Epigenetic age from the wateRmelon clocks. A clock computed on a fraction of its probes returns a confident wrong number, so any clock missing probes is withheld rather than shown with a caveat."),
           bslib::layout_columns(
+            height = "100%",
             col_widths = c(6, 6),
             methylome_plot_clocks_ui(
               ns("age_clocks"),
@@ -86,17 +102,19 @@ methylome_ui <- function(id = "methylome") {
             caption = "Clock probe coverage and whether the estimate is usable.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           )
-        )
+        ))
       ),
 
       ## --------------------------------------------------------- character --
       bigdash::bigTabItem(
         ns("character-tab"),
-        bslib::layout_columns(
+        mp_tab(bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = MP_TAB_HEIGHT,
+          row_heights = list("auto", 1),
           bs_alert("Where methylation sits in the genome. Both panels read the CpG island and gene-position annotation that playbase produces for every methylation dataset."),
           bslib::layout_columns(
+            height = "100%",
             col_widths = c(6, 6),
             methylome_plot_context_ui(
               ns("char_island"),
@@ -115,15 +133,16 @@ methylome_ui <- function(id = "methylome") {
               height = c("100%", "700px"), width = c("auto", "100%"), label = "b"
             )
           )
-        )
+        ))
       ),
 
       ## -------------------------------------------------------------- EWAS --
       bigdash::bigTabItem(
         ns("ewas-tab"),
-        bslib::layout_columns(
+        mp_tab(bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = MP_TAB_HEIGHT,
+          row_heights = list("auto", 1.15, 1),
           bs_alert("The differential methylation already computed for this dataset, shown genome-wide. This is the one screen here that uses a contrast."),
           methylome_plot_manhattan_ui(
             ns("ewas_manhattan"),
@@ -131,9 +150,10 @@ methylome_ui <- function(id = "methylome") {
             caption = "Genome-wide significance by chromosome position.",
             info.text = "Every tested CpG plotted at its genomic position against significance. Significant probes are coloured by direction: red where methylation increases, blue where it decreases.",
             info.methods = "Probes are ordered by chromosome and position using the array annotation; the chromosome field is a cytoband so the arm and band are stripped first. Alternating grey shades separate chromosomes. The dashed line is the conventional 1e-7 array-wide threshold rather than a naive Bonferroni over all probes.",
-            height = c("42%", "700px"), width = c("auto", "100%")
+            height = c("100%", "700px"), width = c("auto", "100%")
           ),
           bslib::layout_columns(
+            height = "100%",
             col_widths = c(5, 7),
             methylome_plot_qq_ui(
               ns("ewas_qq"),
@@ -152,7 +172,7 @@ methylome_ui <- function(id = "methylome") {
               height = c("100%", "700px"), width = c("auto", "100%")
             )
           )
-        )
+        ))
       )
     )
   )
