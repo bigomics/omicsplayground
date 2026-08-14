@@ -139,10 +139,13 @@ methylome_ui <- function(id = "methylome") {
       ## -------------------------------------------------------------- EWAS --
       bigdash::bigTabItem(
         ns("ewas-tab"),
+        ## Inputs are declared in the board namespace, not a sub-module: the
+        ## threshold drives the Manhattan, the enrichment and the hit table.
+        methylome_ewas_inputs(id),
         mp_tab(bslib::layout_columns(
           col_widths = 12,
           height = MP_TAB_HEIGHT,
-          row_heights = list("auto", 1.15, 1),
+          row_heights = list("auto", 1, 1.45),
           bs_alert("The differential methylation already computed for this dataset, shown genome-wide. This is the one screen here that uses a contrast."),
           methylome_plot_manhattan_ui(
             ns("ewas_manhattan"),
@@ -154,8 +157,19 @@ methylome_ui <- function(id = "methylome") {
           ),
           bslib::layout_columns(
             height = "100%",
-            col_widths = c(5, 7),
-            methylome_plot_qq_ui(
+            col_widths = c(7, 5),
+            methylome_table_hits_ui(
+              ns("ewas_hits"),
+              title = "CpGs passing the threshold",
+              info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on.",
+              caption = "Significant CpGs with gene, genomic context and effect size.",
+              height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+            ),
+            bslib::layout_columns(
+              height = "100%",
+              col_widths = 12,
+              row_heights = list(1, 1),
+              methylome_plot_qq_ui(
               ns("ewas_qq"),
               title = "QQ and inflation",
               caption = "Observed against expected p-values, with lambda.",
@@ -170,6 +184,7 @@ methylome_ui <- function(id = "methylome") {
               info.text = "Whether the significant CpGs concentrate in islands, shores, shelves or open sea. Shore enrichment with island depletion is the classic pattern in differential methylation.",
               info.methods = "Odds ratio of each Relation_to_Island category among significant probes versus the probes actually tested in this contrast, not the whole array. A half-count is added to each cell so empty categories remain finite.",
               height = c("100%", "700px"), width = c("auto", "100%")
+            )
             )
           )
         ))

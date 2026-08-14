@@ -27,8 +27,25 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_plot_context_server("char_island", PGX, what = "island", watermark = watermark)
     methylome_plot_context_server("char_gene", PGX, what = "gene", watermark = watermark)
 
-    methylome_plot_manhattan_server("ewas_manhattan", PGX, r_contrast, watermark = watermark)
+    ## Threshold shared by the Manhattan line, the context enrichment and the
+    ## hit table. Defaults hold until the settings panel has initialised.
+    r_thresh <- shiny::reactive({
+      v <- input$thresh_value
+      if (is.null(v) || is.na(v) || v <= 0 || v > 1) v <- 0.05
+      db <- input$min_dbeta
+      if (is.null(db) || is.na(db) || db < 0) db <- 0
+      list(
+        type = if (is.null(input$thresh_type)) "q" else input$thresh_type,
+        value = v,
+        min_dbeta = db
+      )
+    })
+
+    methylome_plot_manhattan_server("ewas_manhattan", PGX, r_contrast, r_thresh,
+                                    watermark = watermark)
     methylome_plot_qq_server("ewas_qq", PGX, r_contrast, watermark = watermark)
-    methylome_plot_enrichment_server("ewas_enrich", PGX, r_contrast, watermark = watermark)
+    methylome_plot_enrichment_server("ewas_enrich", PGX, r_contrast, r_thresh,
+                                     watermark = watermark)
+    methylome_table_hits_server("ewas_hits", PGX, r_contrast, r_thresh)
   })
 }
