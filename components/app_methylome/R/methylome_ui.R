@@ -34,6 +34,7 @@ methylome_ui <- function(id = "methylome") {
       bigdash::sidebarItem("Sample ledger", ns("ledger-tab")),
       bigdash::sidebarItem("Epigenetic age", ns("age-tab")),
       bigdash::sidebarItem("Methylome character", ns("character-tab")),
+      bigdash::sidebarItem("Cell composition", ns("deconv-tab")),
       bigdash::sidebarItem("EWAS", ns("ewas-tab"))
     ),
     ## tabSettings need a settings container to render into; without this the
@@ -151,6 +152,45 @@ methylome_ui <- function(id = "methylome") {
               info.methods = "Per-probe mean beta across all samples, averaged within each UCSC RefGene group from the array annotation. Probes annotated to several groups are assigned their first.",
               height = c("100%", "700px"), width = c("auto", "100%"), label = "b"
             )
+          )
+        ))
+      ),
+
+      ## ------------------------------------------------------ composition --
+      bigdash::bigTabItem(
+        ns("deconv-tab"),
+        methylome_deconv_inputs(id),
+        mp_tab(bslib::layout_columns(
+          col_widths = 12,
+          height = MP_TAB_HEIGHT,
+          row_heights = list("auto", 1, 1),
+          bs_alert("Estimated cell proportions, projected onto a reference panel. Cell composition is the dominant confounder in bulk-tissue methylation, so this screen exists as much to supply covariates to the EWAS model as to be read on its own."),
+          bslib::layout_columns(
+            height = "100%",
+            col_widths = c(7, 5),
+            methylome_plot_composition_ui(
+              ns("comp_bars"),
+              title = "Composition per sample",
+              caption = "Estimated proportion of each reference cell type.",
+              info.text = "One stacked bar per sample. Samples are ordered by the first categorical phenotype, so a difference in composition between groups shows up as a visible block rather than being scattered across the axis.",
+              info.methods = "Houseman-style constrained projection of each sample's betas onto a reference panel of cell-type-discriminating CpGs, via meffilEstimateCellCountsFromBetas. Proportions are not forced to sum to exactly one; small deviations are expected.",
+              height = c("100%", "700px"), width = c("auto", "100%")
+            ),
+            methylome_table_composition_ui(
+              ns("comp_tbl"),
+              title = "Estimated proportions",
+              info.text = "The per-sample proportions, downloadable as CSV for use elsewhere.",
+              caption = "Per-sample cell-type proportions.",
+              height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+            )
+          ),
+          methylome_plot_compgroup_ui(
+            ns("comp_group"),
+            title = "Composition by phenotype",
+            caption = "Each cell type compared across the groups of the contrast.",
+            info.text = "This is the confounding check. If composition differs between the groups being compared, an unadjusted differential-methylation result is largely a picture of that difference rather than of the phenotype - adjust for these proportions in the EWAS model.",
+            info.methods = "Boxplot of each estimated proportion against the selected phenotype, samples jittered over it, with a two-sample t-test for two-level phenotypes and a Kruskal-Wallis test otherwise.",
+            height = c("100%", "700px"), width = c("auto", "100%")
           )
         ))
       ),

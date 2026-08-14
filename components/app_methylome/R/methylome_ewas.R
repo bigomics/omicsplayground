@@ -2,52 +2,70 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-## EWAS. The only screen here that reads pgx$gx.meta - the differential
-## methylation already computed at upload, which no methylation board has
-## displayed before.
+## EWAS. The model is fitted here rather than read from the pgx, so the user
+## can adjust for cell composition, batch, age and anything else on the sample
+## sheet - see methylome_model.R for why that is not optional.
 
 ## ---------------------------------------------------------------- settings --
 
-## Threshold drives the Manhattan line, which probes count as hits, the
-## context enrichment and the hit table, so it lives in the tab settings
-## rather than as a per-plot option.
 methylome_ewas_inputs <- function(id) {
   ns <- shiny::NS(id)
   bigdash::tabSettings(
     withTooltip(
-      shiny::selectInput(
-        ns("thresh_type"), "Threshold on:",
-        choices = c("FDR (q-value)" = "q", "Nominal p-value" = "p"),
-        selected = "q"
+      shiny::selectInput(ns("ewas_contrast"), "Contrast:", choices = NULL),
+      "Which comparison to test.",
+      placement = "top"
+    ),
+    withTooltip(
+      shiny::selectizeInput(ns("ewas_covars"), "Adjust for:", choices = NULL,
+                            multiple = TRUE,
+                            options = list(placeholder = "none (unadjusted)")),
+      "Covariates added to the model. In bulk tissue an unadjusted comparison is usually a test of cell composition rather than of the phenotype, so adjusting is the norm rather than the exception.",
+      placement = "top"
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("ewas_adjust_cells"), "Adjust for cell composition", FALSE),
+      "Add the estimated cell proportions as covariates. Estimate them first on the Cell composition screen.",
+      placement = "top"
+    ),
+    withTooltip(
+      shiny::checkboxGroupInput(
+        ns("ewas_mask"), "Mask probes:",
+        choices = c("Common SNP in probe" = "snp", "Cross-reactive" = "xreactive"),
+        selected = c("snp", "xreactive")
       ),
+      "Probes carrying a common SNP measure genotype rather than methylation; cross-reactive probes map to more than one locus. Both are standard QC exclusions.",
+      placement = "top"
+    ),
+    shiny::div(
+      style = "margin-top:6px;",
+      shiny::actionButton(ns("run_ewas"), "Run EWAS",
+                          class = "btn btn-primary btn-sm", width = "100%"),
+      shiny::uiOutput(ns("ewas_model"))
+    ),
+    shiny::tags$hr(style = "margin:10px 0;"),
+    withTooltip(
+      shiny::selectInput(ns("thresh_type"), "Threshold on:",
+                         choices = c("FDR (q-value)" = "q", "Nominal p-value" = "p"),
+                         selected = "q"),
       "Call hits on the multiple-testing corrected q-value, or on the raw p-value.",
       placement = "top"
     ),
     withTooltip(
-      shiny::numericInput(
-        ns("thresh_value"), "Cut-off:",
-        value = 0.05, min = 0, max = 1, step = 0.01
-      ),
+      shiny::numericInput(ns("thresh_value"), "Cut-off:", value = 0.05,
+                          min = 0, max = 1, step = 0.01),
       "Probes at or below this value are called hits and listed in the table.",
       placement = "top"
     ),
     withTooltip(
-      shiny::numericInput(
-        ns("min_dbeta"), "Minimum |delta-beta|:",
-        value = 0, min = 0, max = 1, step = 0.01
-      ),
-      paste(
-        "Effect-size filter on the beta difference between the two groups.",
-        "A large M-value change can still be a negligible change in methylation,",
-        "so significance alone is a weak filter. 0 disables it."
-      ),
+      shiny::numericInput(ns("min_dbeta"), "Minimum |delta-beta|:", value = 0,
+                          min = 0, max = 1, step = 0.01),
+      "Effect-size filter on the beta difference between groups. 0 disables it. A hard cut deletes the real signal of a population EWAS, where true differences are typically under 5%.",
       placement = "top"
     ),
     withTooltip(
-      shiny::numericInput(
-        ns("top_n"), "Top CpGs to chart:",
-        value = 6, min = 2, max = 12, step = 1
-      ),
+      shiny::numericInput(ns("top_n"), "Top CpGs to chart:", value = 6,
+                          min = 2, max = 12, step = 1),
       "How many of the most significant CpGs to draw as per-sample beta stripcharts.",
       placement = "top"
     )
@@ -57,13 +75,11 @@ methylome_ewas_inputs <- function(id) {
 ## ------------------------------------------------------------------ shared --
 
 ## Per-sample group labels for a contrast. pgx$contrasts holds the actual
-## labels; exp.matrix only holds signed weights, so prefer the former and
-## fall back to the sign when it is absent.
+## labels; exp.matrix only holds signed weights, so prefer the former.
 mp_contrast_groups <- function(pgx, cmp) {
   ct <- pgx$contrasts
   if (!is.null(ct) && cmp %in% colnames(ct)) {
-    g <- as.character(ct[, cmp])
-    names(g) <- rownames(ct)
+    g <- as.character(ct[, cmp]); names(g) <- rownames(ct)
     g[!is.na(g) & g != ""]
   } else {
     em <- pgx$model.parameters$exp.matrix
@@ -73,57 +89,24 @@ mp_contrast_groups <- function(pgx, cmp) {
   }
 }
 
-## Note pgx$genes$chr is a cytoband ("16q12.2"), not a bare chromosome, so the
-## arm and band are stripped exactly as board.epigenomics does.
-mp_ewas_table <- function(pgx, contrast = NULL) {
-  mp_require_methylomics(pgx)
-  shiny::validate(shiny::need(!is.null(pgx$gx.meta),
-    "This dataset has no differential methylation result."))
-  cmp <- contrast
-  if (is.null(cmp) || !cmp %in% names(pgx$gx.meta$meta)) cmp <- names(pgx$gx.meta$meta)[1]
-  m <- pgx$gx.meta$meta[[cmp]]
-  g <- pgx$genes[rownames(m), , drop = FALSE]
+## Attach the array annotation to a fitted table. pgx$genes$chr is a cytoband
+## ("16q12.2"), not a bare chromosome, so the arm and band are stripped as
+## board.epigenomics does.
+mp_ewas_annotate <- function(pgx, tab) {
+  g <- pgx$genes[tab$probe, , drop = FALSE]
   cc <- grep("^chr$|chrom", tolower(colnames(g)))[1]
   pc <- grep("^pos$|position", tolower(colnames(g)))[1]
   isl <- mp_context_col(pgx, "island")
   loc <- mp_context_col(pgx, "gene")
-  idx <- match(rownames(m), rownames(pgx$genes))
-
-  data.frame(
-    probe = rownames(m),
-    gene = if ("symbol" %in% colnames(g)) as.character(g$symbol) else NA,
-    p = as.numeric(m$meta.p), q = as.numeric(m$meta.q), fx = as.numeric(m$meta.fx),
-    dbeta = mp_delta_beta(pgx, cmp)[rownames(m)],
-    chr = if (!is.na(cc)) sub("(p|q|cen).*", "", sub("^chr", "", as.character(g[[cc]]))) else NA,
-    pos = if (!is.na(pc)) suppressWarnings(as.numeric(sub(";.*", "", g[[pc]]))) else NA,
-    island = if (!is.null(isl)) sub(";.*", "", isl[idx]) else NA,
-    location = if (!is.null(loc)) sub(";.*", "", loc[idx]) else NA,
-    stringsAsFactors = FALSE
-  )
+  idx <- match(tab$probe, rownames(pgx$genes))
+  tab$gene <- if ("symbol" %in% colnames(g)) as.character(g$symbol) else NA
+  tab$chr  <- if (!is.na(cc)) sub("(p|q|cen).*", "", sub("^chr", "", as.character(g[[cc]]))) else NA
+  tab$pos  <- if (!is.na(pc)) suppressWarnings(as.numeric(sub(";.*", "", g[[pc]]))) else NA
+  tab$island   <- if (!is.null(isl)) sub(";.*", "", isl[idx]) else NA
+  tab$location <- if (!is.null(loc)) sub(";.*", "", loc[idx]) else NA
+  tab
 }
 
-## The stored effect size is a logFC on M-values, which is not a quantity
-## anyone reads. Recompute the difference in mean beta between the two groups
-## of the contrast, which is what the field reports.
-mp_delta_beta <- function(pgx, contrast) {
-  X <- mp_beta(pgx)
-  na <- stats::setNames(rep(NA_real_, nrow(X)), rownames(X))
-  grp <- mp_contrast_groups(pgx, contrast)
-  em <- pgx$model.parameters$exp.matrix
-  if (is.null(grp) || is.null(em) || !contrast %in% colnames(em)) return(na)
-  ## Numerator of "A_vs_B" is the positively weighted side.
-  w <- em[, contrast]
-  up <- unique(stats::na.omit(grp[names(w)[w > 0]]))[1]
-  g1 <- names(grp)[grp == up]
-  g0 <- names(grp)[grp != up]
-  g1 <- intersect(g1, colnames(X))
-  g0 <- intersect(g0, colnames(X))
-  if (!length(g1) || !length(g0)) return(na)
-  round(rowMeans(X[, g1, drop = FALSE], na.rm = TRUE) -
-          rowMeans(X[, g0, drop = FALSE], na.rm = TRUE), 4)
-}
-
-## Which probes are hits under the current settings.
 mp_ewas_sig <- function(d, thresh) {
   stat <- if (identical(thresh$type, "p")) d$p else d$q
   ok <- !is.na(stat) & stat <= thresh$value
@@ -133,8 +116,8 @@ mp_ewas_sig <- function(d, thresh) {
   ok
 }
 
-## Where to draw the line on a -log10(p) axis. A q-value cut-off has no fixed
-## p, so use the largest p that still passes; with no hits there is no line.
+## A q-value cut-off has no fixed position on a -log10(p) axis, so use the
+## largest p that still passes; with no hits there is no line.
 mp_ewas_hline <- function(d, thresh) {
   if (identical(thresh$type, "p")) return(-log10(thresh$value))
   sig <- !is.na(d$q) & d$q <= thresh$value
@@ -146,31 +129,34 @@ mp_lambda <- function(p) {
   stats::median(stats::qchisq(1 - p, 1), na.rm = TRUE) / stats::qchisq(0.5, 1)
 }
 
+## Empirical-null bias and inflation. Applied as a diagnostic only: bacon on
+## an unadjusted model would launder confounding into well-calibrated-looking
+## p-values, which is worse than an honest lambda.
+mp_bacon <- function(tstat) {
+  if (!requireNamespace("bacon", quietly = TRUE)) return(NULL)
+  tryCatch({
+    bc <- bacon::bacon(teststatistics = as.numeric(tstat[is.finite(tstat)]))
+    list(bias = as.numeric(bacon::bias(bc)),
+         inflation = as.numeric(bacon::inflation(bc)))
+  }, error = function(e) NULL)
+}
+
 ## ---------------------------------------------------------------- Manhattan --
 
 methylome_plot_manhattan_ui <- function(id, title, caption, info.text, info.methods,
                                         height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(
-    ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height, width = width, label = "a"
-  )
+    height = height, width = width, label = "a")
 }
 
-methylome_plot_manhattan_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
-                                            r.thresh, watermark = FALSE) {
+methylome_plot_manhattan_server <- function(id, r.ewas, r.thresh, watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
-    plot_data <- shiny::reactive({
-      shiny::req(pgx())
-      mp_ewas_table(pgx(), r.contrast())
-    })
     plot.RENDER <- function() {
-      d <- plot_data()
+      d <- r.ewas()$data
       th <- r.thresh()
-      ## Carry significance as a column so it survives every subset and
-      ## reorder below without a parallel vector to keep in step.
       d$sig <- mp_ewas_sig(d, th)
       d <- d[!is.na(d$chr) & !is.na(d$pos) & is.finite(d$pos) & is.finite(d$p), ]
       shiny::validate(shiny::need(nrow(d) > 0, "No probes carry chromosome and position."))
@@ -179,16 +165,14 @@ methylome_plot_manhattan_server <- function(id, pgx, r.contrast = shiny::reactiv
       d$chr <- factor(d$chr, levels = chrs)
       d <- d[order(d$chr, d$pos), ]
       mx <- vapply(split(d$pos, d$chr), function(z) if (length(z)) max(z) else 0, numeric(1))
-      off <- c(0, utils::head(cumsum(as.numeric(mx) * 1.02), -1))
-      names(off) <- chrs
+      off <- c(0, utils::head(cumsum(as.numeric(mx) * 1.02), -1)); names(off) <- chrs
       d$gx <- d$pos + off[as.character(d$chr)]
       op <- graphics::par(mar = c(4, 4.5, 1, 1), las = 1); on.exit(graphics::par(op))
       cols <- ifelse(as.integer(d$chr) %% 2 == 0, "#a9b6c4", "#7f8f9f")
       plot(d$gx, -log10(d$p), pch = 19, cex = .35, col = cols, xaxt = "n",
            xlab = "chromosome", ylab = expression(-log[10](p)))
       graphics::points(d$gx[d$sig], -log10(d$p[d$sig]), pch = 19, cex = .6,
-        col = ifelse(d$dbeta[d$sig] > 0 | is.na(d$dbeta[d$sig]),
-                     MP_PAL$hyper, MP_PAL$hypo))
+        col = ifelse(d$dbeta[d$sig] > 0 | is.na(d$dbeta[d$sig]), MP_PAL$hyper, MP_PAL$hypo))
       graphics::axis(1, at = tapply(d$gx, d$chr, stats::median, na.rm = TRUE),
                      labels = levels(d$chr), tick = FALSE, cex.axis = .7)
       h <- mp_ewas_hline(d, th)
@@ -203,7 +187,7 @@ methylome_plot_manhattan_server <- function(id, pgx, r.contrast = shiny::reactiv
       }
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
-      csvFunc = plot_data, renderFunc = shiny::renderPlot,
+      csvFunc = shiny::reactive(r.ewas()$data), renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot, res = c(90, 130),
       pdf.width = 10, pdf.height = 5, add.watermark = watermark)
   })
@@ -214,33 +198,32 @@ methylome_plot_manhattan_server <- function(id, pgx, r.contrast = shiny::reactiv
 methylome_plot_qq_ui <- function(id, title, caption, info.text, info.methods,
                                  height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(
-    ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height, width = width, label = "b"
-  )
+    height = height, width = width, label = "b")
 }
 
-methylome_plot_qq_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
-                                     watermark = FALSE) {
+methylome_plot_qq_server <- function(id, r.ewas, watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
-    plot_data <- shiny::reactive({
-      shiny::req(pgx()); mp_ewas_table(pgx(), r.contrast())
-    })
     plot.RENDER <- function() {
-      d <- plot_data()
+      res <- r.ewas(); d <- res$data
       pv <- sort(d$p[!is.na(d$p)])
       shiny::req(length(pv) > 0)
       op <- graphics::par(mar = c(4, 4.5, 1, 1), las = 1); on.exit(graphics::par(op))
       plot(-log10(stats::ppoints(length(pv))), -log10(pv), pch = 19, cex = .35,
            col = MP_PAL$grey, xlab = "expected", ylab = "observed")
       graphics::abline(0, 1, lty = 2, col = MP_PAL$hypo)
-      graphics::legend("topleft", bty = "n",
-                       legend = sprintf("lambda = %.3f", mp_lambda(d$p)))
+      lab <- sprintf("lambda = %.3f", mp_lambda(d$p))
+      if (!is.null(res$bacon)) {
+        lab <- c(lab,
+                 sprintf("bacon inflation = %.3f", res$bacon$inflation),
+                 sprintf("bacon bias = %+.3f", res$bacon$bias))
+      }
+      graphics::legend("topleft", bty = "n", legend = lab)
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
-      csvFunc = plot_data, renderFunc = shiny::renderPlot,
+      csvFunc = shiny::reactive(r.ewas()$data), renderFunc = shiny::renderPlot,
       renderFunc2 = shiny::renderPlot, res = c(90, 130),
       pdf.width = 6, pdf.height = 6, add.watermark = watermark)
   })
@@ -251,20 +234,16 @@ methylome_plot_qq_server <- function(id, pgx, r.contrast = shiny::reactive(NULL)
 methylome_plot_enrichment_ui <- function(id, title, caption, info.text, info.methods,
                                          height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(
-    ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height, width = width, label = "c"
-  )
+    height = height, width = width, label = "c")
 }
 
-methylome_plot_enrichment_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
-                                             r.thresh, watermark = FALSE) {
+methylome_plot_enrichment_server <- function(id, r.ewas, r.thresh, watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx())
-      d <- mp_ewas_table(pgx(), r.contrast())
+      d <- r.ewas()$data
       d$sig <- mp_ewas_sig(d, r.thresh())
       d <- d[!is.na(d$island), ]
       sig <- d$sig
@@ -272,8 +251,7 @@ methylome_plot_enrichment_server <- function(id, pgx, r.contrast = shiny::reacti
         "Too few hits at this threshold to test context enrichment."))
       lv <- intersect(c("Island", "N_Shore", "S_Shore", "N_Shelf", "S_Shelf", "OpenSea"),
                       unique(d$island))
-      ## Background is the probes actually tested in this contrast, not the
-      ## whole array, or every category comes out enriched.
+      ## Background is the probes actually tested, not the whole array.
       or <- vapply(lv, function(k) {
         a <- sum(sig & d$island == k); b <- sum(sig) - a
         c1 <- sum(!sig & d$island == k); d1 <- sum(!sig) - c1
@@ -284,8 +262,6 @@ methylome_plot_enrichment_server <- function(id, pgx, r.contrast = shiny::reacti
     })
     plot.RENDER <- function() {
       e <- plot_data(); shiny::req(nrow(e) > 0)
-      ## Six horizontal categories in a short panel: trim the margin and the
-      ## label size so none of them get clipped.
       op <- graphics::par(mar = c(4, 6.5, 0.5, 1.5), las = 1, mgp = c(2.2, 0.6, 0))
       on.exit(graphics::par(op))
       cols <- ifelse(e$log2_or >= 0, MP_PAL$hyper, MP_PAL$hypo)
@@ -309,12 +285,10 @@ methylome_table_hits_ui <- function(id, title, info.text, caption, height, width
                 caption = caption, height = height, width = width, label = "d")
 }
 
-methylome_table_hits_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
-                                        r.thresh, scrollY = "22vh") {
+methylome_table_hits_server <- function(id, r.ewas, r.thresh, scrollY = "22vh") {
   shiny::moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      shiny::req(pgx())
-      d <- mp_ewas_table(pgx(), r.contrast())
+      d <- r.ewas()$data
       sig <- mp_ewas_sig(d, r.thresh())
       shiny::validate(shiny::need(any(sig),
         "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
@@ -323,34 +297,25 @@ methylome_table_hits_server <- function(id, pgx, r.contrast = shiny::reactive(NU
       out <- data.frame(
         CpG = d$probe,
         Gene = ifelse(is.na(d$gene) | d$gene == "", "-", d$gene),
-        Chr = d$chr,
-        Position = d$pos,
+        Chr = d$chr, Position = d$pos,
         Context = ifelse(is.na(d$island), "-", d$island),
         Region = ifelse(is.na(d$location) | d$location == "", "-", d$location),
         `Delta beta` = d$dbeta,
-        Direction = ifelse(is.na(d$dbeta), "-",
-                           ifelse(d$dbeta > 0, "hyper", "hypo")),
-        `P value` = signif(d$p, 3),
-        FDR = signif(d$q, 3),
+        Direction = ifelse(is.na(d$dbeta), "-", ifelse(d$dbeta > 0, "hyper", "hypo")),
+        `P value` = signif(d$p, 3), FDR = signif(d$q, 3),
         check.names = FALSE, stringsAsFactors = FALSE
       )
       rownames(out) <- NULL
       out
     })
-
-    render <- function(scrollY) {
-      dt <- table_data()
-      shiny::req(dt)
-      DT::datatable(dt,
-        class = "compact hover", rownames = FALSE,
+    render <- function(sy) {
+      dt <- table_data(); shiny::req(dt)
+      DT::datatable(dt, class = "compact hover", rownames = FALSE,
         extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
         selection = list(mode = "single", target = "row"),
-        options = list(
-          dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
-          scrollY = scrollY, scrollResize = TRUE, deferRender = TRUE,
-          order = list(list(8, "asc"))
-        )
-      ) |>
+        options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
+                       scrollY = sy, scrollResize = TRUE, deferRender = TRUE,
+                       order = list(list(8, "asc")))) |>
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
         DT::formatStyle("Direction",
           color = DT::styleEqual(c("hyper", "hypo"), c(MP_PAL$hyper, MP_PAL$hypo)),
@@ -361,72 +326,52 @@ methylome_table_hits_server <- function(id, pgx, r.contrast = shiny::reactive(NU
           backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center")
     }
-
-    TableModuleServer(
-      "tblmod",
-      func = function() render(scrollY),
-      func2 = function() render("60vh"),
-      csvFunc = table_data,
-      selector = "none"
-    )
+    TableModuleServer("tblmod", func = function() render(scrollY),
+                      func2 = function() render("60vh"),
+                      csvFunc = table_data, selector = "none")
   })
 }
 
 ## ------------------------------------------------------- per-CpG stripcharts --
 ##
-## The panel the methylation field actually expects alongside a Manhattan
-## (plotCpg in the Bioconductor workflow, meffil.ewas.cpg.plot in meffil). It
-## is the only view that shows whether a hit is driven by a couple of outliers
-## and what the absolute methylation level is: delta-beta 0.05 at beta 0.50 and
-## at beta 0.02 are very different claims. The y axis is therefore fixed to the
-## full [0,1] beta range rather than zooming to the data.
+## The panel the field expects next to a Manhattan (plotCpg in the Bioconductor
+## workflow, meffil.ewas.cpg.plot in meffil): the only view showing whether a
+## hit is outlier-driven and at what absolute methylation level it sits.
 
 methylome_plot_stripcharts_ui <- function(id, title, caption, info.text, info.methods,
                                           height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(
-    ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
-    height = height, width = width, label = "e"
-  )
+    height = height, width = width, label = "e")
 }
 
-methylome_plot_stripcharts_server <- function(id, pgx, r.contrast = shiny::reactive(NULL),
-                                              r.thresh, r.topn = shiny::reactive(6),
+methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
+                                              r.topn = shiny::reactive(6),
                                               watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      shiny::req(pgx())
-      p <- pgx()
-      cmp <- r.contrast()
-      if (is.null(cmp) || !cmp %in% names(p$gx.meta$meta)) cmp <- names(p$gx.meta$meta)[1]
-      d <- mp_ewas_table(p, cmp)
-      d$sig <- mp_ewas_sig(d, r.thresh())
-      d <- d[d$sig, , drop = FALSE]
+      p <- pgx(); res <- r.ewas()
+      d <- res$data
+      d <- d[mp_ewas_sig(d, r.thresh()), , drop = FALSE]
       shiny::validate(shiny::need(nrow(d) > 0,
         "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
-      n <- r.topn()
-      if (is.null(n) || is.na(n) || n < 1) n <- 6
+      n <- r.topn(); if (is.null(n) || is.na(n) || n < 1) n <- 6
       d <- d[order(d$p), , drop = FALSE][seq_len(min(n, nrow(d))), , drop = FALSE]
-      grp <- mp_contrast_groups(p, cmp)
+      grp <- mp_contrast_groups(p, res$contrast)
       shiny::validate(shiny::need(!is.null(grp), "No group labels for this contrast."))
       X <- mp_beta(p)
       ss <- intersect(names(grp), colnames(X))
       list(d = d, X = X[d$probe, ss, drop = FALSE], grp = factor(grp[ss]))
     })
-
     plot.RENDER <- function() {
-      res <- plot_data()
-      d <- res$d; X <- res$X; grp <- res$grp
-      n <- nrow(d)
-      nc <- min(3, n)
-      nr <- ceiling(n / nc)
+      res <- plot_data(); d <- res$d; X <- res$X; grp <- res$grp
+      n <- nrow(d); nc <- min(3, n); nr <- ceiling(n / nc)
       op <- graphics::par(mfrow = c(nr, nc), mar = c(2.6, 3.2, 2.2, 0.6),
                           las = 1, mgp = c(2, 0.6, 0), cex.axis = 0.85)
       on.exit(graphics::par(op))
-      lv <- levels(grp)
-      cols <- c("#4575b4", "#d73027")[seq_along(lv)]
+      lv <- levels(grp); cols <- c("#4575b4", "#d73027")[seq_along(lv)]
       for (i in seq_len(n)) {
         y <- as.numeric(X[i, ])
         graphics::plot(NA, xlim = c(0.5, length(lv) + 0.5), ylim = c(0, 1),
@@ -450,15 +395,11 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.contrast = shiny::react
                         side = 3, line = 0.1, cex = 0.62, col = "#697586")
       }
     }
-
-    PlotModuleServer(
-      "pltmod", plotlib = "base", func = plot.RENDER,
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
       csvFunc = shiny::reactive({
-        r <- plot_data()
-        cbind(probe = rownames(r$X), as.data.frame(r$X))
+        r <- plot_data(); cbind(probe = rownames(r$X), as.data.frame(r$X))
       }),
       renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
-      res = c(90, 130), pdf.width = 9, pdf.height = 6, add.watermark = watermark
-    )
+      res = c(90, 130), pdf.width = 9, pdf.height = 6, add.watermark = watermark)
   })
 }

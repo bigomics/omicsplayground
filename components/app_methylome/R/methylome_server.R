@@ -11,11 +11,93 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## standalone harness can pass a readRDS() result directly.
     PGX <- if (shiny::is.reactive(pgx)) pgx else shiny::reactive(pgx)
 
-    ## Only contrast-driven screen; everything else is per-sample.
-    r_contrast <- shiny::reactive({
+    ## The app hands us a reactiveValues, which is not itself reactive: PGX()
+    ## returns the same object every time and never invalidates. Reading its
+    ## fields inside a reactive does create a dependency, so derive an explicit
+    ## change signal and trigger off that instead - otherwise the pickers are
+    ## populated once, before any dataset exists, and never again.
+    r_dataset <- shiny::reactive({
       p <- PGX()
-      if (is.null(p$gx.meta)) NULL else names(p$gx.meta$meta)[1]
+      shiny::req(p)
+      paste(p$name, ncol(p$X), paste(colnames(p$contrasts), collapse = ","))
     })
+
+    ## ---------------------------------------------------------- choices --
+    ## Populate the model pickers from whatever the loaded dataset offers.
+    shiny::observeEvent(r_dataset(), {
+      p <- PGX()
+      shiny::req(p)
+      cmps <- colnames(p$contrasts)
+      if (is.null(cmps) && !is.null(p$gx.meta)) cmps <- names(p$gx.meta$meta)
+      shiny::updateSelectInput(session, "ewas_contrast", choices = cmps,
+                               selected = cmps[1])
+      shiny::updateSelectizeInput(session, "ewas_covars",
+                                  choices = mp_model_vars(p), selected = character(0),
+                                  server = TRUE)
+      phe <- mp_model_vars(p)
+      shiny::updateSelectInput(session, "comp_pheno", choices = phe, selected = phe[1])
+    })
+
+    ## ----------------------------------------------------- cell fractions --
+    ## Deconvolution is a projection over ~500 CpGs but still not instant, and
+    ## it is a prerequisite for the adjusted model, so it is explicit.
+    applied_ref <- shiny::reactiveVal(NULL)
+    r_cells <- shiny::eventReactive(
+      list(input$run_deconv, r_dataset()),
+      {
+        shiny::req(PGX())
+        applied_ref(input$deconv_ref)
+        mp_cell_counts(PGX(), if (is.null(input$deconv_ref)) MP_DECONV_REFS[1] else input$deconv_ref)
+      },
+      ignoreNULL = FALSE
+    )
+    output$deconv_stale <- shiny::renderUI({
+      a <- applied_ref()
+      if (is.null(a) || identical(a, input$deconv_ref)) return(NULL)
+      shiny::div(style = "margin-top:6px; font-size:11.5px; color:#8a5a06;",
+                 "Reference changed - press Estimate composition to apply.")
+    })
+
+    ## ------------------------------------------------------- EWAS model --
+    r_ewas <- shiny::eventReactive(
+      list(input$run_ewas, r_dataset()),
+      {
+        p <- PGX()
+        shiny::req(p)
+        cmp <- input$ewas_contrast
+        if (is.null(cmp)) {
+          cmp <- colnames(p$contrasts)[1]
+          if (is.null(cmp) && !is.null(p$gx.meta)) cmp <- names(p$gx.meta$meta)[1]
+        }
+        cf <- if (isTRUE(input$ewas_adjust_cells)) r_cells() else NULL
+        fit <- mp_fit_ewas(p, cmp, covars = input$ewas_covars,
+                           cellfracs = cf, mask = input$ewas_mask)
+        d <- mp_ewas_annotate(p, fit$table)
+        list(data = d, contrast = cmp, meta = fit,
+             bacon = mp_bacon(stats::qnorm(fit$table$p / 2) *
+                              sign(fit$table$logFC_M)))
+      },
+      ignoreNULL = FALSE
+    )
+
+    ## The fitted model, printed so the user can see what was actually tested.
+    output$ewas_model <- shiny::renderUI({
+      m <- r_ewas()$meta
+      shiny::div(
+        style = "margin-top:8px; font-size:11.5px; color:#697586; line-height:1.5;",
+        shiny::tags$b("Model: "), m$formula, shiny::tags$br(),
+        sprintf("n = %d  (%s)", m$n,
+                paste(names(m$groups), m$groups, collapse = " / ")),
+        shiny::tags$br(),
+        sprintf("%s probes masked", format(m$masked, big.mark = ",")),
+        if (length(m$dropped_covars)) {
+          shiny::tags$div(style = "color:#8a5a06;",
+            paste("dropped:", paste(m$dropped_covars, collapse = ", ")))
+        }
+      )
+    })
+
+    r_contrast <- shiny::reactive(r_ewas()$contrast)
 
     methylome_table_ledger_server("ledger_tbl", PGX)
     methylome_plot_betadist_server("ledger_dens", PGX, watermark = watermark)
@@ -44,7 +126,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## previous dataset's ages.
     applied <- shiny::reactiveVal(NULL)
     r_clockset <- shiny::eventReactive(
-      list(input$recompute_clocks, PGX()),
+      list(input$recompute_clocks, r_dataset()),
       {
         shiny::req(PGX())
         a <- list(clocks = r_clocks(), min_cov = r_mincov())
@@ -95,13 +177,19 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(n) || is.na(n) || n < 1) 6 else min(as.integer(n), 12)
     })
 
-    methylome_plot_manhattan_server("ewas_manhattan", PGX, r_contrast, r_thresh,
+    methylome_plot_composition_server("comp_bars", PGX, r_cells, watermark = watermark)
+    methylome_table_composition_server("comp_tbl", r_cells)
+    methylome_plot_compgroup_server("comp_group", PGX, r_cells,
+                                    shiny::reactive(input$comp_pheno),
                                     watermark = watermark)
-    methylome_plot_qq_server("ewas_qq", PGX, r_contrast, watermark = watermark)
-    methylome_plot_enrichment_server("ewas_enrich", PGX, r_contrast, r_thresh,
+
+    methylome_plot_manhattan_server("ewas_manhattan", r_ewas, r_thresh,
+                                    watermark = watermark)
+    methylome_plot_qq_server("ewas_qq", r_ewas, watermark = watermark)
+    methylome_plot_enrichment_server("ewas_enrich", r_ewas, r_thresh,
                                      watermark = watermark)
-    methylome_table_hits_server("ewas_hits", PGX, r_contrast, r_thresh)
-    methylome_plot_stripcharts_server("ewas_strips", PGX, r_contrast, r_thresh,
+    methylome_table_hits_server("ewas_hits", r_ewas, r_thresh)
+    methylome_plot_stripcharts_server("ewas_strips", PGX, r_ewas, r_thresh,
                                       r_topn, watermark = watermark)
   })
 }
