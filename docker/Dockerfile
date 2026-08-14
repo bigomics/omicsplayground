@@ -10,7 +10,9 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/playbase:latest
+# Overridable so a trixie playbase can be used without retagging :latest.
+ARG BASE_IMAGE=bigomics/playbase:latest
+FROM ${BASE_IMAGE}
 
 ARG BRANCH=master
 RUN echo Building Docker image from branch '$BRANCH'
@@ -27,15 +29,17 @@ RUN apt update && apt install -y fonts-lato
 
 WORKDIR /tmp
 
+# Keep in sync with docker/Dockerfile.update -- see playbase dev/PINS.md.
+# tinytex is installed on top of this quarto, so this block must stay here.
 RUN ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "arm64" ]; then \
-        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-arm64.deb; \
+        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-arm64.deb; \
     elif [ "$ARCH" = "amd64" ]; then \
-        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.56/quarto-1.5.56-linux-amd64.deb; \
+        wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-amd64.deb; \
     else \
         echo "Unsupported architecture: $ARCH"; exit 1; \
     fi && \
-    dpkg -i quarto-1.5.56-linux-*.deb; \
+    dpkg -i quarto-1.8.27-linux-*.deb; \
     quarto install tinytex
 
 #------------------------------------------------------------

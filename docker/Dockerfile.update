@@ -10,7 +10,9 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:beta
+# Overridable so a trixie base can be used without retagging :beta.
+ARG BASE_IMAGE=bigomics/omicsplayground:beta
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)
@@ -24,7 +26,10 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN apt update && apt install -y libpoppler-cpp-dev
 
 #------------------------------------------------------------
-# Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
+# Update quarto. A base built from docker/Dockerfile already ships this exact
+# version, so this is then a no-op reinstall; it stays because :beta is a
+# hand-blessed tag that may be an older image with typst 0.11. Once :beta is
+# always built from docker/Dockerfile this block can go. See playbase dev/PINS.md.
 #------------------------------------------------------------
 RUN ARCH=$(dpkg --print-architecture) && \
     wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-${ARCH}.deb && \
