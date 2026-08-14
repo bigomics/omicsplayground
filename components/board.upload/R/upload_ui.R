@@ -51,7 +51,7 @@ UploadUI <- function(id) {
                   inputId = ns("selected_organism"),
                   label = NULL,
                   choices = NULL,
-                  multiple = FALSE,
+                  multiple = TRUE,
                   width = "400px"
                 )
               ),
