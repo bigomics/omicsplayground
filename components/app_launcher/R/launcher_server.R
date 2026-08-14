@@ -9,7 +9,7 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @export
-launcher_server <- function(id, parent, load_example = NULL) {
+launcher_server <- function(id, parent, load_example = NULL, on_launch_qsee = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -30,7 +30,11 @@ launcher_server <- function(id, parent, load_example = NULL) {
     })
     
     observeEvent(input$launch_qsee, {
-      bslib::nav_select("app-sidebar", "Qsee", session=parent)
+      if (is.function(on_launch_qsee)) {
+        on_launch_qsee()
+      } else {
+        bslib::nav_select("app-sidebar", "Qsee", session=parent)
+      }
     })
 
     observeEvent(input$launch_idconvert, {

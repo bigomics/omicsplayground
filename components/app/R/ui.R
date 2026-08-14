@@ -94,44 +94,10 @@ app_ui <- function(x) {
       signout_link <- nav_signout("Sign out", onClick = NULL,
         href = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#"))
     }
-    
-    omicspanel <- function(p) {
-      div(p, style="margin: 0 8px 0 8px;", class = "omicspanel")
-    }  
-    
+
     ## Plain bslib page rather than an outer bigdash::bigPage(): the
     ## "Dashboard" and "Qsee" nav_panels below embed opg_ui()/qsee_ui(),
-    ## each their own bigdash::bigPage(). An outer bigPage() here would make
-    ## those *nested* bigPage()s rather than parallel siblings, and (since
-    ## opg_ui() defaults to the same "app" id as an unconfigured outer
-    ## bigPage()) produced a real, previously-worked-around bug: two
-    ## `.bigdash-app` roots both resolving to id/data-bigdash-id="app", so
-    ## bigdash's settings-lock click handler got bound twice on the same
-    ## icon and the lock appeared unresponsive. This outer shell never used
-    ## its own bigdash sidebar/settings anyway (no `sidebar`/`settings` args
-    ## were ever passed to the old bigPage() call here), so nothing is lost
-    ## by not being a bigPage() -- `bigdash::dependencies()` still loads
-    ## bigdash's CSS/JS for the nested boards, and the wrapper div below
-    ## reproduces the same layout bigPage() produced when given an empty
-    ## sidebar/settings and `navbar = NULL`.
-    ##
-    ## `id = "app-shell"` (deliberately *not* "app", to avoid recreating the
-    ## exact collision above) replaces the `id="app"` that used to sit on
-    ## bigPage()'s own wrapper div: scss/components/_app.scss and
-    ## _utils.scss style the navset_pill_list's `.col-sm-1.well`/`.col-sm-11`
-    ## columns via `#app-shell .col-sm-*` (see scss/components/_app.scss),
-    ## so this id needs to stay put here for that CSS to keep matching.
-    ##
-    ## `header` stays *nested inside* the `#app-shell` div (as bigPage() also
-    ## nested it inside its own `id="app"` div), rather than as a sibling of
-    ## it directly under <body>. header's hidden `visNetworkOutput("a", ...)`
-    ## carries bslib's `.html-fill-item` class; bslib promotes <body> itself
-    ## to a `.html-fill-container` (with a flex `gap`) whenever a fill item
-    ## exists anywhere on the page, regardless of page function used. As a
-    ## *direct* body child sibling of #app-shell, that gap rendered as a
-    ## visible gap above #app-shell (rail shifted down, blank strip up top);
-    ## nested inside it, the gap falls inside #app-shell instead, same as
-    ## the original layout.
+    ## each their own bigdash::bigPage(). 
     ui <- shiny::bootstrapPage(
       title = "BigOmics",
       theme = bigdash::big_theme(),
@@ -217,11 +183,6 @@ app_ui <- function(x) {
             if(isTRUE(opt$DEVMODE)) {
               bslib::nav_panel_hidden("IDconvert",
                 omicspanel(idconvert_ui("idconvert"))
-              )
-            },
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("Qsee",
-                omicspanel(qsee_ui("qsee"))
               )
             },
             if(isTRUE(opt$DEVMODE)) {

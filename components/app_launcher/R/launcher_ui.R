@@ -127,9 +127,10 @@ launcher_ui <- function(id) {
     shiny::actionButton(
       ns(action$input),
       label = action$label,
-      class = paste("btn btn-sm", action$class %||% "btn-outline-primary"),
-      icon = if (!is.null(action$icon)) shiny::icon(action$icon),
-      style = "font-size: 1rem; padding: 6px 18px;"
+      class = paste("launcher-quick-action btn btn-sm",
+        action$class %||% "btn-outline-primary"),
+      icon = if (!is.null(action$icon)) shiny::icon(action$icon)
+      ##style = "font-size: 1rem; padding: 6px 18px;"
     )
   }
 
