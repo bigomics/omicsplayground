@@ -5,92 +5,9 @@
 ## EWAS. The model is fitted here rather than read from the pgx, so the user
 ## can adjust for cell composition, batch, age and anything else on the sample
 ## sheet - see methylome_model.R for why that is not optional.
+##
+## The settings panel lives in methylome_ewas_inputs.R.
 
-## ---------------------------------------------------------------- settings --
-
-methylome_ewas_inputs <- function(id) {
-  ns <- shiny::NS(id)
-  bigdash::tabSettings(
-    withTooltip(
-      shiny::selectInput(ns("ewas_contrast"), "Contrast:", choices = NULL),
-      "Which comparison to test.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::selectizeInput(ns("ewas_covars"), "Adjust for:", choices = NULL,
-                            multiple = TRUE,
-                            options = list(placeholder = "none (unadjusted)")),
-      "Covariates added to the model. In bulk tissue an unadjusted comparison is usually a test of cell composition rather than of the phenotype, so adjusting is the norm rather than the exception.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::checkboxInput(ns("ewas_adjust_cells"), "Adjust for cell composition", FALSE),
-      "Add the estimated cell proportions as covariates. Estimate them first on the Cell composition screen.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::checkboxGroupInput(
-        ns("ewas_mask"), "Mask probes:",
-        choices = c("Common SNP in probe" = "snp", "Cross-reactive" = "xreactive"),
-        selected = c("snp", "xreactive")
-      ),
-      "Probes carrying a common SNP measure genotype rather than methylation; cross-reactive probes map to more than one locus. Both are standard QC exclusions.",
-      placement = "top"
-    ),
-    shiny::div(
-      style = "margin-top:6px;",
-      shiny::actionButton(ns("run_ewas"), "Run EWAS",
-                          class = "btn btn-primary btn-sm", width = "100%"),
-      shiny::uiOutput(ns("ewas_model"))
-    ),
-    shiny::tags$hr(style = "margin:10px 0;"),
-    withTooltip(
-      shiny::selectInput(ns("thresh_type"), "Threshold on:",
-                         choices = c("FDR (q-value)" = "q", "Nominal p-value" = "p"),
-                         selected = "q"),
-      "Call hits on the multiple-testing corrected q-value, or on the raw p-value.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::numericInput(ns("thresh_value"), "Cut-off:", value = 0.05,
-                          min = 0, max = 1, step = 0.01),
-      "Probes at or below this value are called hits and listed in the table.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::numericInput(ns("min_dbeta"), "Minimum |delta-beta|:", value = 0,
-                          min = 0, max = 1, step = 0.01),
-      "Effect-size filter on the beta difference between groups. 0 disables it. A hard cut deletes the real signal of a population EWAS, where true differences are typically under 5%.",
-      placement = "top"
-    ),
-    withTooltip(
-      shiny::numericInput(ns("top_n"), "Top CpGs to chart:", value = 6,
-                          min = 2, max = 12, step = 1),
-      "How many of the most significant CpGs to draw as per-sample beta stripcharts.",
-      placement = "top"
-    ),
-    ## bigdash::tabSettings is per bigTabItem, not per nav_panel, so the
-    ## Regions & pathways controls live here rather than inside that sub-tab -
-    ## a second tabSettings block nested in a nav_panel never renders.
-    shiny::tags$hr(style = "margin:10px 0;"),
-    withTooltip(
-      shiny::numericInput(ns("dmr_maxgap"), "Max gap between CpGs (bp):",
-                          value = 500, min = 100, max = 5000, step = 100),
-      "CpGs further apart than this are not joined into the same region.",
-      placement = "top"
-    ),
-    shiny::actionButton(ns("run_dmr"), "Call regions",
-                        class = "btn btn-primary btn-sm", width = "100%"),
-    withTooltip(
-      shiny::selectInput(ns("gs_collection"), "Gene-set collection:",
-                         choices = c("GO", "KEGG"), selected = "GO"),
-      "Which annotation collection to test the hit list against.",
-      placement = "top"
-    ),
-    shiny::actionButton(ns("run_gometh"), "Test gene sets",
-                        class = "btn btn-primary btn-sm", width = "100%")
-  )
-}
 
 ## ------------------------------------------------------------------ shared --
 

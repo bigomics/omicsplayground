@@ -205,9 +205,12 @@ methylome_ui <- function(id = "methylome") {
         ## threshold drives both sub-tabs.
         methylome_ewas_inputs(id),
         mp_tab(bslib::navset_tab(
+          ## id + explicit values so the settings panel can show only the
+          ## controls that belong to the visible sub-tab.
+          id = ns("ewas_subtab"),
 
           bslib::nav_panel(
-            title = "Manhattan & hits",
+            title = "Manhattan & hits", value = "hits",
             bslib::layout_columns(
               col_widths = 12,
               height = MP_SUBTAB_HEIGHT,
@@ -232,7 +235,7 @@ methylome_ui <- function(id = "methylome") {
           ),
 
           bslib::nav_panel(
-            title = "Regions & pathways",
+            title = "Regions & pathways", value = "regions",
             bslib::layout_columns(
               col_widths = 12,
               height = MP_SUBTAB_HEIGHT,
@@ -256,7 +259,7 @@ methylome_ui <- function(id = "methylome") {
           ),
 
           bslib::nav_panel(
-            title = "QQ & context",
+            title = "QQ & context", value = "qq",
             bslib::layout_columns(
               col_widths = 12,
               height = MP_SUBTAB_HEIGHT,
