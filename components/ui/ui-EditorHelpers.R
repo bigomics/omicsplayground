@@ -11,6 +11,62 @@
 ## ---------------------------------------------------------------
 
 
+#' Parse label_features input into feature names
+#'
+#' Universal parser: splits on newlines first, then for each line
+#' tries exact match against known names. If no exact match, tries
+#' splitting on spaces. Falls back to grep for keyword search.
+#'
+#' @param text The raw label_features input string
+#' @param all_names Character vector of all valid feature names
+#' @return Character vector of matched feature names
+parse_label_features <- function(text, all_names) {
+  if (is.null(text) || text == "") {
+    return(NULL)
+  }
+  lines <- trimws(strsplit(text, "\n")[[1]])
+  lines <- lines[lines != ""]
+  if (length(lines) == 0) {
+    return(NULL)
+  }
+
+  matched <- unlist(lapply(lines, function(line) {
+    ## 1. Exact match for the whole line
+    if (line %in% all_names) {
+      return(line)
+    }
+    ## 2. Extract quoted strings first, then split remainder on spaces
+    quoted <- regmatches(line, gregexpr('"[^"]*"', line))[[1]]
+    remainder <- gsub('"[^"]*"', "", line)
+    ## Unquote
+    quoted <- gsub('^"|"$', "", quoted)
+    ## Split remainder on spaces
+    rest_tokens <- trimws(strsplit(trimws(remainder), "\\s+")[[1]])
+    rest_tokens <- rest_tokens[rest_tokens != ""]
+    tokens <- c(quoted, rest_tokens)
+    if (length(tokens) == 0) {
+      return(NULL)
+    }
+    ## Collect exact matches + grep remaining tokens
+    exact <- tokens[tokens %in% all_names]
+    remaining <- tokens[!tokens %in% all_names]
+    grepped <- if (length(remaining) > 0) {
+      unlist(lapply(remaining, function(tok) {
+        grep(tok, all_names, value = TRUE, ignore.case = TRUE)
+      }))
+    }
+    result <- c(exact, grepped)
+    if (length(result) > 0) {
+      return(result)
+    }
+    ## 3. Grep fallback for the whole line (if nothing matched at all)
+    grep(line, all_names, value = TRUE, ignore.case = TRUE)
+  }))
+
+  unique(matched)
+}
+
+
 ## ---------------------------------------------------------------
 ## 1. Color helpers
 ## ---------------------------------------------------------------

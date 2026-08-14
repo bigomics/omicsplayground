@@ -22,9 +22,10 @@ library(dplyr)
 
 ## Make the shared styles and JS assets from the main app available.
 ## (matches components/app/R/global.R and ui.R)
-www_path <- normalizePath("../../app/R/www", mustWork = FALSE)
+www_path <- normalizePath("../../assets", mustWork = FALSE)
 if (dir.exists(www_path)) {
   shiny::addResourcePath("custom", www_path)
+  shiny::addResourcePath("assets", www_path)
 } else {
   message("[test/app.R] WARNING: www dir not found at ", www_path)
 }

@@ -249,7 +249,11 @@ upload_module_normalization_server <- function(
         ntop_features <- if (isTRUE(input$bec_full_features)) Inf else 1000
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+        ## NPM does not scale: drop it for many samples or for the very large
+        ## feature space of methylation arrays.
+        if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
+          methods <- methods[methods != "NPM"]
+        }
         shiny::updateSelectInput(
           session,
           "bec_method",

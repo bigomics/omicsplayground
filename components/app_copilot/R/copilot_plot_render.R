@@ -144,7 +144,7 @@ copilot_prerender_plotly <- function(plot_obj) {
     displaylogo = FALSE
   )
   # Register plotly_click so the global PlotModule click listener
-  # (event_data("plotly_click") in ui-PlotModule.R) doesn't warn about an
+  # (event_data("plotly_click") in bigdash R/plot-module.R) doesn't warn about an
   # unregistered source "A" when this plot is the one being clicked.
   # CAVEAT: that PlotModule observer also reads click_data$key and writes to
   # parent_session$input$label_features. Because copilot plots inherit the

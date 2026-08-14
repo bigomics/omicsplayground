@@ -46,14 +46,11 @@ app_ui <- function(x) {
     )
 
     header <- shiny::tagList(
-      shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
+      shiny::tags$head(htmltools::includeHTML(file.path(APPDIR,"assets/hubspot-embed.html"))),
       ##    gtag2, ## Google Tag Manager???
       shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
       shiny::tags$script(src = "custom/close-message.js"),
-      shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
       shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
-      shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
       visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
@@ -110,7 +107,7 @@ app_ui <- function(x) {
         id = "app-sidebar",
         ##widths = c("50px","calc(100% - 50px)"),
         widths = c(1,11),
-        selected = ifelse( isTRUE(opt$DEVMODE), "Apps", "Home"),
+        selected = "Home",
         well = TRUE,
         bslib::nav_panel(
           title = "Home",
@@ -123,7 +120,7 @@ app_ui <- function(x) {
             icon = icon("app-store-ios", style="font-size: 38px;"),
             launcher_ui("apps")
           )
-        },        
+        },
         bslib::nav_panel(
           title = "Library",
           icon=icon("book"),
@@ -159,7 +156,7 @@ app_ui <- function(x) {
             omicspanel(RunMonitorUI("runmonitor"))
           )
         },
-        ## Hidden panels (e.g. tools)
+        ## Hidden panels
         bslib::nav_panel_hidden("Upload",
           omicspanel(UploadUI("upload"))
         ),
@@ -171,21 +168,28 @@ app_ui <- function(x) {
             omicspanel(AdminPanelUI("admin_panel"))
           )
         },
-        bslib::nav_panel_hidden("Prism",
-          omicspanel(prism_ui("prism"))
-        ),
-        bslib::nav_panel_hidden("IDconvert",
-          omicspanel(idconvert_ui("idconvert"))
-        ),
-        bslib::nav_panel_hidden("Qsee",
-          omicspanel(qsee_ui("qsee"))
-        ),
-        bslib::nav_panel_hidden(
-          value = "AcrossDatasets",
-          #title = HTML("Across&nbsp;datasets"),
-          #icon = icon("layer-group"),
-          omicspanel(AcrossUI("across"))
-        ),
+        ## Tools
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel_hidden("Prism",
+            omicspanel(prism_ui("prism"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden("IDconvert",
+            omicspanel(idconvert_ui("idconvert"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden("Qsee",
+            omicspanel(qsee_ui("qsee"))
+          )
+        },
+        if(isTRUE(opt$DEVMODE)) {        
+          bslib::nav_panel_hidden(
+            value = "AcrossDatasets",
+            omicspanel(AcrossUI("across"))
+          )
+        },
         ## lower settings buttons
         bslib::nav_spacer(),
         bslib::nav_panel("Settings", icon=icon("cog"),

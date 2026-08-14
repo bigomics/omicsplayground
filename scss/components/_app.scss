@@ -32,6 +32,7 @@
     font-size: 0.8em;
     padding: 15px 0 4px 0;
     white-space: normal;
+    line-height: 1;
 }
 
 #app-sidebar .nav-link.active {
@@ -59,6 +60,7 @@
 
 #app-sidebar i {
     font-size: 30px;
+    padding-bottom: 3px;
 }
 
 #app .col-sm-11>.tab-content {

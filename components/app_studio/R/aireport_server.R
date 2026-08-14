@@ -117,7 +117,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
     ns <- session$ns ## NAMESPACE
     
     pdf_tempdir <- tempdir()
-    opg.logo = file.path(OPG,"components/app/R/www/bigomics-logo-small.png")
+    opg.logo = file.path(OPG,"components/assets/bigomics-logo-small.png")
     logopath = file.path(pdf_tempdir,"logo.png")
     file.copy(opg.logo, logopath)
     

@@ -83,3 +83,51 @@ load_color_theme <- function(user_dir) {
     error = function(e) NULL
   )
 }
+
+#' Push theme colour changes into the plot editor's colour inputs.
+#'
+#' Registered as the `bigdash.editor_theme_observer` hook (see
+#' \code{bigdash::bd_hook}) and called by PlotModuleServer with the calling
+#' module's session.  Lives here rather than in bigdash because
+#' COLOR_THEME_MAPPING names the editor's own input IDs.
+#'
+#' @param parent_session Session of the board module owning the editor inputs.
+plotmodule_theme_observer <- function(parent_session) {
+
+  theme <- get_color_theme()
+
+  ## For each theme key, observe changes and push to editor colour inputs.
+  ## We use Shiny.setInputValue via JS to directly set the server-side
+  ## input value.  This is more reliable than updateColourInput because
+  ## the colourpicker widget may not be initialised when its container
+  ## (the editor modal) is hidden.  We also call updateColourInput so
+  ## that when the user does open the editor modal, the widget shows the
+  ## correct swatch colour.
+  ## ignoreInit = FALSE so lazily-loaded modules pick up values that
+  ## were changed before the module was navigated to.
+  lapply(names(COLOR_THEME_MAPPING), function(key) {
+    input_ids <- COLOR_THEME_MAPPING[[key]]
+    shiny::observeEvent(theme[[key]],
+      {
+        val <- theme[[key]]
+        for (inp in input_ids) {
+          full_id <- parent_session$ns(inp)
+          shinyjs::runjs(sprintf(
+            "Shiny.setInputValue('%s', '%s')",
+            full_id, val
+          ))
+          colourpicker::updateColourInput(parent_session, inp, value = val)
+        }
+      },
+      ignoreInit = FALSE
+    )
+  })
+
+  ## Palette observer
+  shiny::observeEvent(theme$palette,
+    {
+      shiny::updateSelectInput(parent_session, "palette", selected = theme$palette)
+    },
+    ignoreInit = FALSE
+  )
+}

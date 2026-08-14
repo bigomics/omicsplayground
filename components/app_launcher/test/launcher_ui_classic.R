@@ -29,7 +29,7 @@ launcher_ui_classic <- function(id) {
       row_heights = "320px",
       bslib::card(
         class = "tools-card",
-        bslib::card_image(src=base64enc::dataURI(file = "www/applets/converter.png"),
+        bslib::card_image(src=base64enc::dataURI(file = "assets/applets/converter.png"),
           width=320, height=160, class="p-3" ),
         bslib::card_header("ID Converter"),
         bslib::card_body(
@@ -39,7 +39,7 @@ launcher_ui_classic <- function(id) {
       ),
       bslib::card(
         class = "tools-card",
-        bslib::card_image(src=base64enc::dataURI(file = "www/applets/qsee-bsee.png"),
+        bslib::card_image(src=base64enc::dataURI(file = "assets/applets/qsee-bsee.png"),
           width=320, height=160, class="p-3" ),
         bslib::card_header("Qsee/Bsee"),
         bslib::card_body(
@@ -49,7 +49,7 @@ launcher_ui_classic <- function(id) {
       ),
       bslib::card(
         class = "tools-card",
-        bslib::card_image(src=base64enc::dataURI(file = "www/applets/smartprism.png"),
+        bslib::card_image(src=base64enc::dataURI(file = "assets/applets/smartprism.png"),
           width=320, height=160, class="p-3" ),
         bslib::card_header("SmartPrism"),
         bslib::card_body(

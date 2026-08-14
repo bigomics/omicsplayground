@@ -1,4 +1,4 @@
-// components/app/R/www/prism-webr.js
+// components/assets/prism-webr.js
 //
 // Client-side, sandboxed R execution for the PRISM board's chartbot.
 // Runs LLM-generated ggplot2 code inside webR (R compiled to WASM) instead of
