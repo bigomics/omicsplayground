@@ -111,8 +111,8 @@ methylome_ui <- function(id = "methylome") {
               ns("age_group"),
               title = "Age acceleration by phenotype",
               caption = "Residual of DNAm age on chronological age, split by group.",
-              info.text = "Age acceleration is what is left of the epigenetic age once the chronological age is accounted for: positive means the methylome looks older than the person is. This is the point where a per-sample metric becomes a comparison the rest of the platform can use.",
-              info.methods = "Residuals of a linear fit of the first selected clock on chronological age, boxplotted against the first categorical phenotype, with samples jittered over it and a two-sample t-test when the phenotype has two levels. Without a chronological age column the raw DNAm age is shown instead.",
+              info.text = "Age acceleration is what is left of the epigenetic age once the chronological age is accounted for: positive means the methylome looks older than the person is. This is the point where a per-sample metric becomes a comparison the rest of the platform can use. Pick the clock and the phenotype in the settings panel.",
+              info.methods = "Residuals of a linear fit of the selected clock on chronological age, boxplotted against the selected phenotype, with samples jittered over it, a two-sample t-test for two levels and a Kruskal-Wallis test otherwise. Ticking cell-composition adjustment adds the estimated proportions to that fit, giving intrinsic acceleration - without it, a cohort whose groups differ in blood composition reports that difference as an accelerated methylome. Without a chronological age column the raw DNAm age is shown instead.",
               height = c("100%", "700px"), width = c("auto", "100%")
             ),
             methylome_table_coverage_ui(
@@ -239,21 +239,33 @@ methylome_ui <- function(id = "methylome") {
             bslib::layout_columns(
               col_widths = 12,
               height = MP_SUBTAB_HEIGHT,
-              row_heights = list("auto", 1, 1),
-              bs_alert("Region-level and gene-set views of the current model. Both run on demand from the settings panel, against the contrast and threshold set on the other sub-tabs."),
-              methylome_table_dmr_ui(
-                ns("ewas_dmr"),
-                title = "Differentially methylated regions",
-                info.text = "Contiguous runs of CpGs that move together, which is the unit methylation phenotypes actually occur in - promoter island hypermethylation, hypomethylated blocks - rather than isolated probes. Single-CpG regions are excluded; those are already in the hits table.",
-                caption = "Regions called from the fitted model by dmrff.",
-                height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+              row_heights = list("auto", 1.15, 1),
+              bs_alert("Region-level and gene-set views of the current model. Both run on demand from the settings panel, against the outcome and threshold set on the other sub-tabs."),
+              methylome_plot_dmrregion_ui(
+                ns("ewas_dmrplot"),
+                title = "Region detail",
+                caption = "Methylation across one called region, by genomic position.",
+                info.text = "A region in the table is only a set of numbers; this is what it looks like. A real DMR is a run of neighbouring CpGs all moving the same way, separating the groups across the whole region. One CpG pulling its neighbours along produces a similar table row and an obviously different picture.",
+                info.methods = "Beta values of every CpG in the region plus 30% flanking context on each side, drawn against genomic position. Faint lines are individual samples, heavy lines the mean of each group - or of the low, middle and top tertile when the outcome is continuous. The shaded box is the called region, so flanking probes are visibly outside it, and the track under the axis carries the CpG island context of each probe.",
+                height = c("100%", "700px"), width = c("auto", "100%")
               ),
-              methylome_table_enrich_ui(
-                ns("ewas_enrichgs"),
-                title = "Gene sets (probe-bias corrected)",
-                info.text = "Gene-set enrichment of the hit list, corrected for the number of probes per gene. Genes carry very different probe counts, so an uncorrected test returns the same probe-dense developmental sets whatever the biology; gometh reweights with Wallenius noncentral hypergeometric and also handles CpGs mapping to several genes.",
-                caption = "GO or KEGG terms enriched among the significant CpGs.",
-                height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+              bslib::layout_columns(
+                height = "100%",
+                col_widths = c(6, 6),
+                methylome_table_dmr_ui(
+                  ns("ewas_dmr"),
+                  title = "Differentially methylated regions",
+                  info.text = "Contiguous runs of CpGs that move together, which is the unit methylation phenotypes actually occur in - promoter island hypermethylation, hypomethylated blocks - rather than isolated probes. Single-CpG regions are excluded; those are already in the hits table.",
+                  caption = "Regions called from the fitted model by dmrff.",
+                  height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+                ),
+                methylome_table_enrich_ui(
+                  ns("ewas_enrichgs"),
+                  title = "Gene sets (probe-bias corrected)",
+                  info.text = "Gene-set enrichment of the hit list, corrected for the number of probes per gene. Genes carry very different probe counts, so an uncorrected test returns the same probe-dense developmental sets whatever the biology; gometh reweights with Wallenius noncentral hypergeometric and also handles CpGs mapping to several genes.",
+                  caption = "GO or KEGG terms enriched among the significant CpGs.",
+                  height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+                )
               )
             )
           ),

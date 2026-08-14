@@ -289,45 +289,63 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
                                               watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      p <- pgx(); res <- r.ewas()
+      p <- pgx(); res <- r.ewas(); m <- res$meta
       d <- res$data
       d <- d[mp_ewas_sig(d, r.thresh()), , drop = FALSE]
       shiny::validate(shiny::need(nrow(d) > 0,
         "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
       n <- r.topn(); if (is.null(n) || is.na(n) || n < 1) n <- 6
       d <- d[order(d$p), , drop = FALSE][seq_len(min(n, nrow(d))), , drop = FALSE]
-      grp <- mp_contrast_groups(p, res$contrast)
-      shiny::validate(shiny::need(!is.null(grp), "No group labels for this contrast."))
       X <- mp_beta(p)
-      ss <- intersect(names(grp), colnames(X))
-      list(d = d, X = X[d$probe, ss, drop = FALSE], grp = factor(grp[ss]))
+      ss <- intersect(m$samples, colnames(X))
+      shiny::validate(shiny::need(length(ss) > 2, "No samples left for this model."))
+      list(d = d, X = X[d$probe, ss, drop = FALSE], grp = droplevels(m$strata[ss]),
+           x = if (isTRUE(m$continuous)) m$x[ss] else NULL,
+           outcome = res$contrast)
     })
     plot.RENDER <- function() {
       res <- plot_data(); d <- res$d; X <- res$X; grp <- res$grp
       n <- nrow(d); nc <- min(3, n); nr <- ceiling(n / nc)
-      op <- graphics::par(mfrow = c(nr, nc), mar = c(2.6, 3.2, 2.2, 0.6),
+      op <- graphics::par(mfrow = c(nr, nc), mar = c(3.4, 3.2, 2.2, 0.6),
                           las = 1, mgp = c(2, 0.6, 0), cex.axis = 0.85)
       on.exit(graphics::par(op))
-      lv <- levels(grp); cols <- c("#4575b4", "#d73027")[seq_along(lv)]
-      for (i in seq_len(n)) {
-        y <- as.numeric(X[i, ])
-        graphics::plot(NA, xlim = c(0.5, length(lv) + 0.5), ylim = c(0, 1),
-                       xaxt = "n", xlab = "", ylab = "beta")
-        graphics::axis(1, at = seq_along(lv), labels = lv, tick = FALSE)
-        graphics::abline(h = c(0.2, 0.8), lty = 3, col = "#c9ccc7")
-        for (j in seq_along(lv)) {
-          yy <- y[grp == lv[j]]
-          graphics::points(jitter(rep(j, length(yy)), amount = 0.13), yy,
-                           pch = 19, cex = 0.7,
-                           col = grDevices::adjustcolor(cols[j], 0.65))
-          graphics::segments(j - 0.28, mean(yy, na.rm = TRUE),
-                             j + 0.28, mean(yy, na.rm = TRUE),
-                             lwd = 2.5, col = cols[j])
-        }
-        lab <- if (!is.na(d$gene[i]) && d$gene[i] != "") {
+      lv <- levels(grp)
+      cols <- grDevices::colorRampPalette(c(MP_PAL$hypo, MP_PAL$hyper))(max(2, length(lv)))
+      lab_i <- function(i) {
+        if (!is.na(d$gene[i]) && d$gene[i] != "") {
           paste0(d$probe[i], "  (", d$gene[i], ")")
         } else d$probe[i]
-        graphics::title(main = lab, cex.main = 0.95, font.main = 1)
+      }
+      for (i in seq_len(n)) {
+        y <- as.numeric(X[i, ])
+        if (!is.null(res$x)) {
+          ## Continuous outcome: the regression itself is the honest picture,
+          ## and shows whether the slope rides on a couple of extreme samples.
+          graphics::plot(res$x, y, pch = 19, cex = 0.75, ylim = c(0, 1),
+                         col = grDevices::adjustcolor(MP_PAL$hypo, 0.6),
+                         xlab = res$outcome, ylab = "beta")
+          graphics::abline(h = c(0.2, 0.8), lty = 3, col = "#c9ccc7")
+          good <- is.finite(res$x) & is.finite(y)
+          if (sum(good) > 2) {
+            graphics::abline(stats::lm(y[good] ~ res$x[good]),
+                             col = MP_PAL$hyper, lwd = 1.6)
+          }
+        } else {
+          graphics::plot(NA, xlim = c(0.5, length(lv) + 0.5), ylim = c(0, 1),
+                         xaxt = "n", xlab = "", ylab = "beta")
+          graphics::axis(1, at = seq_along(lv), labels = lv, tick = FALSE)
+          graphics::abline(h = c(0.2, 0.8), lty = 3, col = "#c9ccc7")
+          for (j in seq_along(lv)) {
+            yy <- y[grp == lv[j]]
+            graphics::points(jitter(rep(j, length(yy)), amount = 0.13), yy,
+                             pch = 19, cex = 0.7,
+                             col = grDevices::adjustcolor(cols[j], 0.65))
+            graphics::segments(j - 0.28, mean(yy, na.rm = TRUE),
+                               j + 0.28, mean(yy, na.rm = TRUE),
+                               lwd = 2.5, col = cols[j])
+          }
+        }
+        graphics::title(main = lab_i(i), cex.main = 0.95, font.main = 1)
         graphics::mtext(sprintf("d-beta %+.3f   q %.2g", d$dbeta[i], d$q[i]),
                         side = 3, line = 0.1, cex = 0.62, col = "#697586")
       }

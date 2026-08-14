@@ -29,13 +29,27 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       shiny::req(p)
       cmps <- colnames(p$contrasts)
       if (is.null(cmps) && !is.null(p$gx.meta)) cmps <- names(p$gx.meta$meta)
-      shiny::updateSelectInput(session, "ewas_contrast", choices = cmps,
-                               selected = cmps[1])
+      ## One picker, two groups: a two-group contrast or a continuous exposure
+      ## are the same model to limma, so they are the same choice to the user.
+      cont <- setdiff(mp_continuous_vars(p), cmps)
+      ch <- list()
+      if (length(cmps)) ch[["Contrasts"]] <- cmps
+      if (length(cont)) ch[["Continuous variables"]] <- cont
+      shiny::updateSelectInput(session, "ewas_contrast", choices = ch,
+                               selected = if (length(cmps)) cmps[1] else cont[1])
       shiny::updateSelectizeInput(session, "ewas_covars",
                                   choices = mp_model_vars(p), selected = character(0),
                                   server = TRUE)
       phe <- mp_model_vars(p)
       shiny::updateSelectInput(session, "comp_pheno", choices = phe, selected = phe[1])
+      ## Acceleration is split by group, so only the categorical columns.
+      cat_vars <- Filter(function(k) {
+        u <- unique(as.character(p$samples[[k]]))
+        u <- u[!is.na(u) & u != ""]
+        length(u) >= 2 && length(u) <= 8
+      }, phe)
+      shiny::updateSelectInput(session, "acc_pheno", choices = cat_vars,
+                               selected = cat_vars[1])
     })
 
     ## ----------------------------------------------------- cell fractions --
@@ -93,7 +107,8 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
         style = "margin-top:8px; font-size:11.5px; color:#697586; line-height:1.5;",
         shiny::tags$b("Model: "), m$formula, shiny::tags$br(),
         sprintf("n = %d  (%s)", m$n,
-                paste(names(m$groups), m$groups, collapse = " / ")),
+                if (is.null(m$groups)) m$desc
+                else paste(names(m$groups), m$groups, collapse = " / ")),
         shiny::tags$br(),
         sprintf("%s probes masked", format(m$masked, big.mark = ",")),
         if (length(m$dropped_covars)) {
@@ -156,9 +171,27 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       )
     })
 
+    ## Only clocks that survived the coverage floor can be the acceleration
+    ## clock, and the list changes with every recompute - keep the current
+    ## choice when it is still usable rather than snapping back to the first.
+    shiny::observeEvent(r_clockset(), {
+      cl <- r_clockset()
+      if (is.null(cl) || !ncol(cl$age)) return()
+      cur <- shiny::isolate(input$acc_clock)
+      shiny::updateSelectInput(
+        session, "acc_clock", choices = colnames(cl$age),
+        selected = if (!is.null(cur) && cur %in% colnames(cl$age)) cur else colnames(cl$age)[1]
+      )
+    })
+
     methylome_plot_agecor_server("age_cor", r_clockset, watermark = watermark)
     methylome_plot_clocks_server("age_clocks", r_clockset, watermark = watermark)
-    methylome_plot_agegroup_server("age_group", PGX, r_clockset, watermark = watermark)
+    methylome_plot_agegroup_server("age_group", PGX, r_clockset,
+                                   shiny::reactive(input$acc_pheno),
+                                   shiny::reactive(input$acc_clock),
+                                   r_cells,
+                                   shiny::reactive(isTRUE(input$acc_intrinsic)),
+                                   watermark = watermark)
     methylome_table_coverage_server("age_cov", r_clockset)
 
     methylome_plot_context_server("char_island", PGX, what = "island", watermark = watermark)
@@ -216,7 +249,28 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## A new model invalidates any regions already called.
     shiny::observeEvent(r_ewas(), regions_val(NULL), ignoreInit = TRUE)
     r_regions <- shiny::reactive(regions_val())
+
+    ## Which region the detail plot draws. Rebuilt whenever regions are called;
+    ## the value is the row index so the plot needs no lookup.
+    shiny::observeEvent(regions_val(), {
+      rg <- regions_val()
+      if (is.null(rg) || !nrow(rg$dmrs)) {
+        shiny::updateSelectInput(session, "dmr_pick", choices = character(0))
+        return()
+      }
+      lab <- sprintf("%s:%s-%s  %s  (%d CpGs)", rg$dmrs$chr,
+                     format(rg$dmrs$start, big.mark = ","),
+                     format(rg$dmrs$end, big.mark = ","),
+                     rg$genes, rg$dmrs$n)
+      shiny::updateSelectInput(session, "dmr_pick",
+                               choices = stats::setNames(seq_along(lab), lab),
+                               selected = 1)
+    }, ignoreNULL = FALSE)
+
     methylome_table_dmr_server("ewas_dmr", PGX, r_regions)
+    methylome_plot_dmrregion_server("ewas_dmrplot", PGX, r_ewas, r_regions,
+                                    shiny::reactive(input$dmr_pick),
+                                    watermark = watermark)
 
     enrich_val <- shiny::reactiveVal(NULL)
     shiny::observeEvent(input$run_gometh, {

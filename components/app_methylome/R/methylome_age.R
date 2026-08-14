@@ -73,6 +73,28 @@ methylome_age_inputs <- function(id) {
       shiny::actionButton(ns("recompute_clocks"), "Recompute clocks",
                           class = "btn btn-primary btn-sm", width = "100%"),
       shiny::uiOutput(ns("clock_stale"))
+    ),
+
+    ## ---- acceleration panel ----
+    ## Which clock and which phenotype used to be whatever came first in the
+    ## sample sheet, so on a cohort whose first categorical column is the slide
+    ## or plate the headline read "age acceleration by phenotype" over a t-test
+    ## against batch. Both are now chosen.
+    shiny::tags$hr(style = "margin:12px 0;"),
+    withTooltip(
+      shiny::selectInput(ns("acc_clock"), "Acceleration clock:", choices = NULL),
+      "Which clock the acceleration panel uses. Only clocks that passed the coverage floor are listed.",
+      placement = "top"
+    ),
+    withTooltip(
+      shiny::selectInput(ns("acc_pheno"), "Acceleration phenotype:", choices = NULL),
+      "Which sample variable the acceleration is split by.",
+      placement = "top"
+    ),
+    withTooltip(
+      shiny::checkboxInput(ns("acc_intrinsic"), "Adjust for cell composition", FALSE),
+      "Intrinsic acceleration: regress out the estimated cell proportions as well as chronological age, so a shift in blood composition is not reported as an accelerated methylome. Estimate the proportions first on the Cell composition screen.",
+      placement = "top"
     )
   )
 }
@@ -243,53 +265,82 @@ methylome_plot_agegroup_ui <- function(id, title, caption, info.text, info.metho
   )
 }
 
-methylome_plot_agegroup_server <- function(id, pgx, r.clockset, watermark = FALSE) {
+methylome_plot_agegroup_server <- function(id, pgx, r.clockset,
+                                           r.pheno = shiny::reactive(NULL),
+                                           r.clock = shiny::reactive(NULL),
+                                           r.cells = shiny::reactive(NULL),
+                                           r.intrinsic = shiny::reactive(FALSE),
+                                           watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx())
       p <- pgx(); cl <- r.clockset()
-      grp <- NULL; gname <- NULL
-      for (cn in colnames(p$samples)) {
-        v <- as.character(p$samples[[cn]])
-        u <- unique(v[!is.na(v) & v != ""])
-        if (length(u) >= 2 && length(u) <= 6 && !grepl("age", tolower(cn))) {
-          grp <- v; gname <- cn; break
-        }
+      shiny::validate(shiny::need(!is.null(cl) && ncol(cl$age) > 0,
+        "No clock has enough probe coverage at this setting."))
+      gname <- r.pheno()
+      shiny::validate(shiny::need(!is.null(gname) && nzchar(gname) &&
+                                    gname %in% colnames(p$samples),
+        "Pick a phenotype for the acceleration panel in the settings."))
+      k <- r.clock()
+      if (is.null(k) || !k %in% colnames(cl$age)) k <- colnames(cl$age)[1]
+      ## Intrinsic acceleration needs the proportions; asking for it without
+      ## having estimated them is a prompt, not a silent fall back to raw.
+      cf <- NULL
+      if (isTRUE(r.intrinsic())) {
+        cf <- r.cells()
+        shiny::validate(shiny::need(!is.null(cf) && nrow(cf) > 0,
+          "Estimate cell composition first on the Cell composition screen, or untick the adjustment."))
       }
-      list(cl = cl, grp = grp, gname = gname)
+      list(cl = cl, grp = as.character(p$samples[[gname]]), gname = gname,
+           clock = k, cf = cf)
     })
     plot.RENDER <- function() {
       d <- plot_data()
-      cl <- d$cl
-      shiny::validate(shiny::need(!is.null(cl) && ncol(cl$age) > 0,
-        "No clock has enough probe coverage at this setting."))
-      shiny::validate(shiny::need(!is.null(d$grp), "No categorical phenotype on this dataset."))
+      cl <- d$cl; k <- d$clock
+      age <- cl$age[[k]]
       ## Acceleration is the residual of DNAm age on chronological age. Without
       ## a chronological age we can only show the raw DNAm age.
       if (!is.null(cl$chron)) {
-        y <- stats::resid(stats::lm(cl$age[[1]] ~ cl$chron, na.action = stats::na.exclude))
-        ylab <- paste0(colnames(cl$age)[1], " age acceleration (years)")
+        df <- data.frame(.a = age, .c = cl$chron, row.names = rownames(cl$age))
+        adj <- ""
+        if (!is.null(d$cf)) {
+          ## Match on sample name, not position - the proportions come from a
+          ## separate run and need not be in the clock table's order.
+          cf <- d$cf[match(rownames(df), rownames(d$cf)), , drop = FALSE]
+          ## One proportion is redundant with the rest, so drop the largest and
+          ## keep the design full rank - same rule as the EWAS model.
+          cf <- cf[, order(-colMeans(cf, na.rm = TRUE)), drop = FALSE][, -1, drop = FALSE]
+          for (cn in colnames(cf)) df[[cn]] <- as.numeric(cf[, cn])
+          adj <- " intrinsic"
+        }
+        y <- stats::resid(stats::lm(.a ~ ., data = df, na.action = stats::na.exclude))
+        ylab <- paste0(k, adj, " age acceleration (years)")
       } else {
-        y <- cl$age[[1]]
-        ylab <- paste0(colnames(cl$age)[1], " DNAm age (years)")
+        y <- age
+        ylab <- paste0(k, " DNAm age (years)")
       }
       keep <- !is.na(d$grp) & d$grp != "" & !is.na(y)
+      shiny::validate(shiny::need(sum(keep) > 2, "Too few samples with this phenotype."))
       g <- factor(d$grp[keep]); y <- y[keep]
+      shiny::validate(shiny::need(nlevels(g) >= 2,
+        "This phenotype has a single level across the cohort."))
       op <- graphics::par(mar = c(4.2, 4.4, 1, 1), las = 1); on.exit(graphics::par(op))
       graphics::boxplot(y ~ g, col = "#dce7f2", border = "#444444",
                         xlab = d$gname, ylab = ylab, outline = FALSE)
       graphics::points(jitter(as.numeric(g), 0.6), y, pch = 19,
                        col = grDevices::adjustcolor(MP_PAL$grey, .6), cex = .8)
       if (!is.null(cl$chron)) graphics::abline(h = 0, lty = 3, col = MP_PAL$grey)
-      if (nlevels(g) == 2) {
-        pv <- stats::t.test(y ~ g)$p.value
-        graphics::mtext(sprintf("t-test p = %.3g", pv), side = 3, adj = 1,
-                        cex = 0.8, col = MP_PAL$grey)
+      lab <- if (nlevels(g) == 2) {
+        sprintf("t-test p = %.3g", stats::t.test(y ~ g)$p.value)
+      } else {
+        sprintf("Kruskal-Wallis p = %.3g", stats::kruskal.test(y ~ g)$p.value)
       }
+      graphics::mtext(lab, side = 3, adj = 1, cex = 0.8, col = MP_PAL$grey)
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
       csvFunc = shiny::reactive({
-        d <- plot_data(); cbind(group = d$grp, d$cl$age)
+        d <- plot_data()
+        cbind(sample = rownames(d$cl$age), phenotype = d$grp, d$cl$age)
       }),
       renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
       res = c(90, 130), pdf.width = 6, pdf.height = 6, add.watermark = watermark)

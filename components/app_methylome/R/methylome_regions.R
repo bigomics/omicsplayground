@@ -41,8 +41,10 @@ mp_call_dmrs <- function(pgx, res, maxgap = 500) {
   se[!is.finite(se) | se <= 0] <- NA
 
   beta <- mp_beta(pgx)
-  grp <- mp_contrast_groups(pgx, res$contrast)
-  ss <- intersect(names(grp), colnames(beta))
+  ## The samples the model was actually fitted on, not every sample carrying a
+  ## contrast label: incomplete covariates drop rows, and dmrff must see the
+  ## same set the summary statistics came from.
+  ss <- intersect(res$meta$samples, colnames(beta))
   M <- playbase::betaToM(beta[d$probe, ss, drop = FALSE])
 
   ok <- !is.na(se)
@@ -109,6 +111,119 @@ methylome_table_dmr_server <- function(id, pgx, r.regions, scrollY = "26vh") {
     TableModuleServer("tblmod", func = function() render(scrollY),
                       func2 = function() render("60vh"),
                       csvFunc = table_data, selector = "none")
+  })
+}
+
+## ---------------------------------------------------------- region detail --
+##
+## A DMR as a table row is not interpretable: a run of ten CpGs moving together
+## and one strong CpG dragging its neighbours produce similar statistics. This
+## is the plot the field draws instead (DMRcate::DMR.plot, coMET) - methylation
+## against genomic position across the region, so coherence is visible.
+
+## Probes inside a region, plus flanking context so the region has an edge.
+mp_region_probes <- function(res, dmr, pad = 0.3) {
+  d <- res$data
+  w <- max(500, (dmr$end - dmr$start) * pad)
+  k <- !is.na(d$chr) & d$chr == sub("^chr", "", dmr$chr) & !is.na(d$pos) &
+    d$pos >= dmr$start - w & d$pos <= dmr$end + w
+  d <- d[k, , drop = FALSE]
+  d[order(d$pos), , drop = FALSE]
+}
+
+## Island context shading for the track under the axis.
+MP_ISLAND_COL <- c(Island = "#2c6b3f", N_Shore = "#7bab84", S_Shore = "#7bab84",
+                   N_Shelf = "#c3ddc7", S_Shelf = "#c3ddc7", OpenSea = "#eef1ee")
+
+methylome_plot_dmrregion_ui <- function(id, title, caption, info.text, info.methods,
+                                        height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    height = height, width = width, label = "c")
+}
+
+methylome_plot_dmrregion_server <- function(id, pgx, r.ewas, r.regions, r.pick,
+                                            watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot_data <- shiny::reactive({
+      rg <- r.regions()
+      shiny::validate(shiny::need(!is.null(rg) && nrow(rg$dmrs) > 0,
+        "No regions to draw. Press Call regions in the settings panel."))
+      res <- r.ewas()
+      i <- suppressWarnings(as.integer(r.pick()))
+      if (!length(i) || is.na(i)) i <- 1L
+      i <- max(1L, min(i, nrow(rg$dmrs)))
+      dm <- rg$dmrs[i, ]
+      d <- mp_region_probes(res, dm)
+      shiny::validate(shiny::need(nrow(d) >= 2,
+        "Too few positioned probes around this region to draw it."))
+      X <- mp_beta(pgx())
+      ss <- intersect(res$meta$samples, colnames(X))
+      list(dm = dm, gene = rg$genes[i], d = d,
+           B = X[d$probe, ss, drop = FALSE],
+           grp = droplevels(res$meta$strata[ss]),
+           continuous = isTRUE(res$meta$continuous))
+    })
+
+    plot.RENDER <- function() {
+      z <- plot_data(); d <- z$d; B <- z$B; grp <- z$grp; dm <- z$dm
+      lv <- levels(grp)
+      cols <- grDevices::colorRampPalette(c(MP_PAL$hypo, MP_PAL$hyper))(max(2, length(lv)))
+      op <- graphics::par(mar = c(4.2, 4.4, 2.4, 1), las = 1, mgp = c(2.6, 0.6, 0))
+      on.exit(graphics::par(op))
+
+      xr <- range(d$pos)
+      ## Room under zero for the island track.
+      graphics::plot(NA, xlim = xr, ylim = c(-0.1, 1), yaxt = "n",
+                     xlab = sprintf("chr%s position (bp)", sub("^chr", "", dm$chr)),
+                     ylab = "beta")
+      graphics::axis(2, at = seq(0, 1, 0.25))
+      ## The called region, so flanking context is visibly outside it.
+      graphics::rect(dm$start, 0, dm$end, 1, col = "#f2f5f8", border = NA)
+      graphics::abline(h = c(0.2, 0.8), lty = 3, col = "#c9ccc7")
+
+      ## Every sample, faint, then the stratum means over the top.
+      for (j in seq_along(lv)) {
+        ss <- names(grp)[grp == lv[j]]
+        for (s in ss) {
+          graphics::lines(d$pos, B[, s], col = grDevices::adjustcolor(cols[j], 0.12))
+        }
+      }
+      for (j in seq_along(lv)) {
+        mu <- rowMeans(B[, names(grp)[grp == lv[j]], drop = FALSE], na.rm = TRUE)
+        graphics::lines(d$pos, mu, col = cols[j], lwd = 2.6)
+        graphics::points(d$pos, mu, col = cols[j], pch = 19, cex = 0.8)
+      }
+
+      ## Island context track.
+      isl <- ifelse(is.na(d$island), "OpenSea", d$island)
+      tc <- ifelse(isl %in% names(MP_ISLAND_COL), MP_ISLAND_COL[isl], "#eef1ee")
+      graphics::rect(d$pos - diff(xr) * 0.004, -0.075,
+                     d$pos + diff(xr) * 0.004, -0.03, col = tc, border = NA)
+      graphics::mtext("island context", side = 1, line = -1.1, adj = 0,
+                      cex = 0.65, col = MP_PAL$grey)
+
+      graphics::title(main = sprintf("chr%s:%s-%s   %s   %d CpGs",
+                                     sub("^chr", "", dm$chr),
+                                     format(dm$start, big.mark = ","),
+                                     format(dm$end, big.mark = ","),
+                                     z$gene, dm$n),
+                      cex.main = 1, font.main = 1)
+      graphics::legend("topright", bty = "n", horiz = TRUE, cex = 0.8,
+                       legend = lv, col = cols[seq_along(lv)], lwd = 2.6,
+                       title = if (z$continuous) "outcome tertile" else NULL)
+    }
+
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = shiny::reactive({
+        z <- plot_data()
+        cbind(probe = z$d$probe, pos = z$d$pos, island = z$d$island,
+              as.data.frame(z$B))
+      }),
+      renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
+      res = c(90, 130), pdf.width = 9, pdf.height = 5.5, add.watermark = watermark)
   })
 }
 

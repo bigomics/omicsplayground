@@ -1,0 +1,95 @@
+## Model paths: two-group contrast, continuous outcome, EPICv2 refusal, and
+## the region-detail helper. Run from components/app_methylome/test.
+suppressMessages({library(shiny); library(limma); library(playbase); library(minfi)})
+MP_PAL <- list(hypo = "#4575b4", hyper = "#d73027", grey = "#8697a6",
+               ok = "#18753a", bad = "#a8202c", warn = "#8a5a06")
+setwd("../R")
+for (f in c("methylome_utils.R", "methylome_ewas.R", "methylome_model.R",
+            "methylome_regions.R", "methylome_deconv.R")) source(f)
+
+ok <- function(lbl, cond) cat(sprintf("%-54s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
+pgx <- local({ e <- new.env(); load("../../../data/GSE43976-methyl-mini.pgx", envir = e)
+               get("pgx", envir = e) })
+
+## ------------------------------------------------- contrast (regression) ----
+cat("\n== two-group contrast ==\n")
+fc <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"))
+ok("fits", nrow(fc$table) > 1000)
+ok("not flagged continuous", !isTRUE(fc$continuous))
+ok("groups reported", !is.null(fc$groups) && length(fc$groups) == 2)
+ok("strata has 2 levels", nlevels(fc$strata) == 2)
+ok("strata named by sample", all(names(fc$strata) %in% colnames(pgx$X)))
+ok("samples recorded", length(fc$samples) == fc$n)
+ok("delta-beta on beta scale", max(abs(fc$table$dbeta), na.rm = TRUE) <= 1)
+ok("finds signal", sum(fc$table$q < 0.05, na.rm = TRUE) > 500)
+
+## ------------------------------------------------------ continuous outcome ----
+cat("\n== continuous outcome ==\n")
+cv <- mp_continuous_vars(pgx)
+ok("age offered as continuous", "age" %in% cv)
+ok("contrast not offered as continuous", !any(colnames(pgx$contrasts) %in% cv))
+ok("is_continuous(age)", mp_is_continuous(pgx, "age"))
+ok("is_continuous(contrast) FALSE", !mp_is_continuous(pgx, "monocytes_vs_whole_blood"))
+
+fx <- mp_fit_ewas(pgx, "age", mask = c("snp", "xreactive"))
+ok("fits", nrow(fx$table) > 1000)
+ok("flagged continuous", isTRUE(fx$continuous))
+ok("groups NULL, desc set", is.null(fx$groups) && nzchar(fx$desc))
+ok("formula names the variable", grepl("age \\(continuous\\)", fx$formula))
+ok("strata is tertiles", nlevels(fx$strata) == 3)
+ok("x returned per sample", length(fx$x) == fx$n)
+## Slope of beta per year: tiny, and must not be a group difference.
+ok("delta-beta is a per-year slope", max(abs(fx$table$dbeta), na.rm = TRUE) < 0.1)
+ok("finds age signal", sum(fx$table$q < 0.05, na.rm = TRUE) > 20)
+
+## The known age CpGs must surface, or the design is wired to the wrong column.
+ax <- mp_ewas_annotate(pgx, fx$table)
+top <- utils::head(ax$gene[order(ax$p)], 60)
+top <- unique(unlist(strsplit(top[!is.na(top)], ";")))
+ok("ELOVL2 or FHL2 in top 60", any(c("ELOVL2", "FHL2") %in% top))
+
+## Adjusting for a covariate must change the answer but still fit. Only the 52
+## samples carrying an age enter this model, and within them sex, cell_type and
+## ms_status are all constant - smoking is the one that varies.
+fxa <- mp_fit_ewas(pgx, "age", covars = "smoking", mask = c("snp", "xreactive"))
+ok("continuous + covariate fits", grepl("smoking", fxa$formula))
+ok("adjustment changes the result", !identical(fxa$table$p, fx$table$p))
+## A covariate that does not vary within the fitted subset must be dropped by
+## name rather than silently making the design rank-deficient.
+fxc <- mp_fit_ewas(pgx, "age", covars = "sex", mask = character(0))
+ok("constant covariate dropped, not fitted",
+   length(fxc$covars) == 0 && any(grepl("^sex", fxc$dropped_covars)))
+## The outcome must never also enter as its own covariate.
+fxs <- mp_fit_ewas(pgx, "age", covars = c("age", "smoking"), mask = character(0))
+ok("outcome dropped from covariates", !"age" %in% fxs$covars)
+
+## ------------------------------------------------------------- region plot ----
+cat("\n== region detail ==\n")
+res <- list(data = mp_ewas_annotate(pgx, fc$table), contrast = "monocytes_vs_whole_blood",
+            meta = fc)
+d <- res$data
+d <- d[!is.na(d$chr) & !is.na(d$pos), ]
+ch <- names(sort(table(d$chr), decreasing = TRUE))[1]
+pp <- sort(d$pos[d$chr == ch])
+dmr <- data.frame(chr = paste0("chr", ch), start = pp[10], end = pp[20], n = 11)
+rp <- mp_region_probes(res, dmr)
+ok("region probes found", nrow(rp) >= 11)
+ok("all on the region chromosome", all(rp$chr == ch))
+ok("sorted by position", !is.unsorted(rp$pos))
+ok("includes flanking context", min(rp$pos) <= dmr$start && max(rp$pos) >= dmr$end)
+
+## ------------------------------------------------------------------ EPICv2 ----
+cat("\n== EPICv2 ==\n")
+v2 <- pgx
+rownames(v2$X) <- paste0(sub("_.*", "", rownames(pgx$X)), "_TC21")
+ok("EPICv2 detected by probe suffix", mp_array_type(v2) == "EPICv2")
+ok("450K still detected", mp_array_type(pgx) == "450K")
+refused <- function(expr) inherits(tryCatch(expr, error = function(e) e), "error")
+ok("manifest refuses EPICv2", refused(mp_manifest(v2)))
+ok("model refuses EPICv2", refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood")))
+ok("model refuses EPICv2 with masking off",
+   refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood", mask = character(0))))
+
+cat("\ncontrast hits:", sum(fc$table$q < 0.05, na.rm = TRUE),
+    " | age hits:", sum(fx$table$q < 0.05, na.rm = TRUE), "\n")
+cat("top age genes:", paste(utils::head(top, 8), collapse = ", "), "\n")

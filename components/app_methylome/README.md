@@ -19,7 +19,8 @@ Run it locally with `make methylome` (see the bottom of this file).
 | | Select by family or individually; coverage floor; recompute on demand | A clock below the floor is **withheld**, not estimated from partial probes |
 | | DNAm age vs chronological age per clock, with *r* | |
 | | Pairwise clock agreement | |
-| | Age acceleration by phenotype, with t-test | Residual of DNAm age on chronological age |
+| | Age acceleration by phenotype, clock and phenotype both selectable | Residual of DNAm age on chronological age; t-test for two levels, Kruskal-Wallis above |
+| | **Intrinsic** acceleration, adjusted for cell composition | Optional. Without it, a cohort whose groups differ in blood composition reports that as an accelerated methylome |
 | | Per-clock coverage table | Names each clock and why it was withheld |
 | **Methylome character** | Mean beta by relation to CpG island (island / shore / shelf / open sea) | |
 | | Mean beta by position in gene (TSS1500 → 3'UTR) | |
@@ -28,13 +29,15 @@ Run it locally with `make methylome` (see the bottom of this file).
 | | Per-sample stacked bars, ordered by phenotype | |
 | | Each cell type compared across groups, with a test | The confounding check |
 | | Proportions table, CSV export | Feeds the EWAS model as covariates |
-| **EWAS — Manhattan & hits** | **limma fitted in-app**, with a contrast selector | Replaces the unadjusted result stored at upload |
+| **EWAS — Manhattan & hits** | **limma fitted in-app**, with an outcome selector | Replaces the unadjusted result stored at upload |
+| | **Two-group contrast or continuous exposure** — age, BMI, pack-years, dose | One picker, two optgroups. For a continuous outcome Δβ is the slope: methylation change per unit |
 | | Covariates from any sample column; cell-composition adjustment | Rank-deficiency and residual-df checks refuse a bad design |
 | | Probe masking: common-SNP and cross-reactive | 52,116 SNP probes on 450K (90,084 on EPIC); 53,498 cross-reactive |
 | | Fitted formula, n per group and masked count printed | Visible on every EWAS sub-tab |
 | | Manhattan with adjustable threshold (FDR or nominal p), optional \|Δβ\| filter | Threshold line drawn at the largest passing p, omitted when nothing passes |
 | | Hits table: gene, island context, gene region, **Δβ**, direction, p, FDR | Δβ on the beta scale, not the M-value logFC |
 | **EWAS — Regions & pathways** | DMR calling | `dmrff` — runs on the summary statistics already produced |
+| | **Region detail plot**: methylation vs genomic position across a selected region | Per-sample lines, group (or tertile) means, island track, flanking context. Shows whether a region is coherent or one CpG dragging its neighbours |
 | | Gene-set testing corrected for probes-per-gene | `missMethyl::gometh` |
 | **EWAS — QQ & context** | QQ plot with λ, plus bacon bias and inflation | bacon is **diagnostic only** and does not adjust p-values |
 | | Island-context enrichment of hits vs the tested background | Background is the probes tested in this contrast, not the whole array |
@@ -58,6 +61,15 @@ and the `array.type` passed to `gometh`. `test/test-arrays.Rscript` checks the
 whole chain on both: the real 450K dataset, and an EPIC dataset synthesised
 from the EPIC manifest with planted signal.
 
+**EPIC v2 is detected and refused, not analysed.** Its probe IDs carry
+replicate suffixes (`cg00000029_TC21`) that match neither manifest, so the
+EPIC-only fraction comes out at zero and the array would otherwise be reported
+as 450K — annotation, SNP masking and the gene-set background all degrading
+with nothing said. The suffix is detected instead and everything needing
+annotation refuses with an explicit message. Supporting it properly needs
+`IlluminaHumanMethylationEPICv2anno.20a1.hg38`, which is not installed and is
+not in the configured repositories, plus logic to collapse replicate probes.
+
 ## Design decisions worth knowing
 
 - **The model is fitted in the app, not read from the pgx.** The stored result
@@ -78,6 +90,14 @@ from the EPIC manifest with planted signal.
   would launder confounding into well-calibrated-looking p-values.
 - **Expensive steps are explicit.** Clocks, deconvolution, the model, DMRs and
   gene sets each run on a button, not on every settings change.
+- **Nothing picks its own variable.** The acceleration panel used to take the
+  first sample column with 2–6 levels, which on a sheet whose first such column
+  is the slide or plate silently produced a t-test against batch under an
+  "age acceleration by phenotype" heading. Clock and phenotype are now both
+  chosen; a panel that cannot name its variable refuses instead of guessing.
+- **Covariates that do not vary are dropped by name.** A model fitted on the
+  subset carrying a value for the outcome can find a covariate constant within
+  that subset — the drop is reported, not silently absorbed into the intercept.
 
 ## Out of scope
 
@@ -108,6 +128,7 @@ Also unavailable: GrimAge, whose coefficients are not public.
 | `test/app.R` | Standalone harness for the screens |
 | `test/build-test-pgx.Rscript` | Builds the demo dataset from GSE43976 |
 | `test/test-arrays.Rscript` | 450K and EPIC verification |
+| `test/test-model.Rscript` | Contrast and continuous fits, EPICv2 refusal, region helper |
 
 ## Running it
 
