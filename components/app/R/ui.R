@@ -155,6 +155,18 @@ app_ui <- function(x) {
           )
         },
         ## Hidden panels (e.g. tools)
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel(title = "Tools", icon = icon("tools"),
+            tools_ui("tools")
+          )
+        },
+        ## Hidden panels (e.g. tools)
+        if(isTRUE(opt$DEVMODE)) {
+          bslib::nav_panel_hidden("Prism",
+            div(prism_ui("prism"), class='px-4 py-0')
+          )
+        },
+>>>>>>> edgy
         bslib::nav_panel_hidden("Upload",
           omicspanel(UploadUI("upload"))
         ),

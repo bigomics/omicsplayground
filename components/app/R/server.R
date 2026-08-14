@@ -1003,8 +1003,6 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Modules
   ## -------------------------------------------------------------
-  launcher_server("apps", parent = session, load_example = load_example)
-  qsee_server("qsee", pgx = PGX, parent = session)
 
   ##if (isTRUE(opt$ENABLE_ACROSS)) {
   if (TRUE) {
@@ -1018,6 +1016,13 @@ app_server <- function(input, output, session) {
   
   if(opt$DEVMODE) {
     dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
+=======
+  if(isTRUE(opt$DEVMODE)) {
+    dbg("[SERVER] WARNING: DEVMODE modules enabled!")
+    
+    launcher_server("apps", parent = session, load_example = load_example)
+    qsee_server("qsee", pgx = PGX, parent = session)
+
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
     prism_server("prism")
