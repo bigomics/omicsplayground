@@ -135,9 +135,14 @@ plotmodule_theme_observer <- function(parent_session) {
   ## replaces the old `ignoreInit = FALSE`, which existed so a lazily loaded
   ## module would pick up values changed before it was navigated to.
   reg$targets[[length(reg$targets) + 1L]] <- parent_session
-  .push_theme_to(list(parent_session), shiny::isolate(
-    shiny::reactiveValuesToList(get_color_theme())
-  ))
+  current <- shiny::isolate(shiny::reactiveValuesToList(get_color_theme()))
+  .push_theme_to(list(parent_session), current)
+  ## `palette` is not in COLOR_THEME_MAPPING, so .push_theme_to() skips it and
+  ## it needs seeding separately -- the old code got this from the palette
+  ## observer's ignoreInit = FALSE.
+  if (!is.null(current$palette)) {
+    shiny::updateSelectInput(parent_session, "palette", selected = current$palette)
+  }
 
   ## The observers themselves are installed once per browser session, not once
   ## per plot module. Previously every module installed its own set: with 70
