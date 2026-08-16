@@ -53,7 +53,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary else ct$bar_color
 
   # Default editor content
-  volcano_content <- shiny::div(
+  delayedAssign("volcano_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -251,10 +251,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Heatmap specific content
-  heatmap_content <- shiny::div(
+  delayedAssign("heatmap_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -338,10 +338,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Barplot specific content
-  barplot_content <- shiny::div(
+  delayedAssign("barplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -447,10 +447,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatterplot specific content
-  scatterplot_content <- shiny::div(
+  delayedAssign("scatterplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -488,10 +488,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Feature map specific content
-  featuremap_content <- shiny::div(
+  delayedAssign("featuremap_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -558,10 +558,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Enrichment plot specific content
-  enrichment_content <- shiny::div(
+  delayedAssign("enrichment_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -606,10 +606,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Clustering scatterplot (categorical palette) specific content
-  clustering_content <- shiny::div(
+  delayedAssign("clustering_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -650,10 +650,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Clustering scatterplot + Prism Theme panel (for PCA and phenoplot only)
-  clustering_prism_content <- shiny::div(
+  delayedAssign("clustering_prism_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -738,10 +738,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Grouped barplot: palette selector + bar ordering
-  grouped_barplot_content <- shiny::div(
+  delayedAssign("grouped_barplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -802,10 +802,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Gradient scatterplot: low/high color pickers only (no labels)
-  gradient_content <- shiny::div(
+  delayedAssign("gradient_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -846,10 +846,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Significance scatter: colors for significance categories
-  significance_content <- shiny::div(
+  delayedAssign("significance_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -897,10 +897,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatter with highlight: point color, highlight color, and labels
-  scatter_highlight_content <- shiny::div(
+  delayedAssign("scatter_highlight_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -943,10 +943,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Rank/density plot: fill, outline, and highlight colors
-  rank_plot_content <- shiny::div(
+  delayedAssign("rank_plot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -988,10 +988,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatter up/down: up/down colors + label control (MA plot, etc.)
-  scatter_updown_content <- shiny::div(
+  delayedAssign("scatter_updown_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1032,11 +1032,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Boxplot (methylation): single box color when ungrouped, palette when grouped.
   # The two divs are toggled by the server based on grouping state via shinyjs.
-  boxplot_methyl_content <- shiny::div(
+  delayedAssign("boxplot_methyl_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1084,10 +1084,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Correlation matrix: up/down colors only
-  correlation_matrix_content <- shiny::div(
+  delayedAssign("correlation_matrix_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1122,14 +1122,14 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Boxplot with optional grouping: single bar color (ungrouped) + palette (grouped)
   group_by_input_js <- paste0("input['", ns_parent("group_by_feature_class"), "']")
   ungrouped_cond <- paste0("!", group_by_input_js, " || ", group_by_input_js, " == '<ungrouped>'")
   grouped_cond <- paste0(group_by_input_js, " && ", group_by_input_js, " != '<ungrouped>'")
 
-  expression_boxplot_content <- shiny::div(
+  delayedAssign("expression_boxplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1246,7 +1246,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Return content based on plot type
   switch(plot_type,
