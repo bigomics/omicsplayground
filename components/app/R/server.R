@@ -120,7 +120,9 @@ app_server <- function(input, output, session) {
   } else if (authentication == "none") {
     auth <- NoAuthenticationModule(
       id = "auth",
-      show_modal = TRUE
+      ## DEV_AUTOLOAD skips the splash: show_modal = FALSE makes the module
+      ## log the user in straight away instead of waiting for "Sure I am!".
+      show_modal = !isTRUE(opt$DEV_AUTOLOAD)
     )
   } else if (authentication == "none2") {
     ## no authentication but also not showing main modal (enter)
@@ -173,6 +175,63 @@ app_server <- function(input, output, session) {
   ## TRUE while a background TileDB build is running, so re-opening the Across
   ## tab does not prompt for (or launch) a second build.
   tiledb_building <- reactiveVal(FALSE)
+
+  ## ---------------------------------------------------------------
+  ## DEV_AUTOLOAD: come up straight on the Dashboard
+  ## ---------------------------------------------------------------
+  ##
+  ## For local development and automated testing. Skips the sign-in splash
+  ## (see NoAuthenticationModule above), loads the example dataset and opens
+  ## the Dashboard, so the app reaches a usable state with no clicking.
+  ##
+  ## Requires AUTHENTICATION = none; with any real authentication method the
+  ## splash is not ours to skip and this only does the dataset half.
+  ## Never enable it on a deployed instance.
+  if (isTRUE(opt$DEV_AUTOLOAD)) {
+    ## NoAuthenticationModule only flips `logged` inside resetUSER(), which it
+    ## calls from the showLogin output's renderUI -- so with the splash
+    ## suppressed nothing logs the user in. Call the module's own resetUSER()
+    ## rather than setting $logged by hand: it also clears MODULES_LOADED,
+    ## which is a cross-session global. Without that reset the previous
+    ## session's value survives, MODULES_TO_LOAD comes out empty, and no board
+    ## UI is ever inserted -- the Dashboard opens blank.
+    shiny::isolate({
+      if (is.function(auth$resetUSER)) {
+        auth$resetUSER()
+      } else {
+        auth$logged <- TRUE
+      }
+    })
+
+    dev_autoload_started <- FALSE
+
+    shiny::observe({
+      shiny::req(isTRUE(auth$logged))
+      if (dev_autoload_started) {
+        return()
+      }
+      dev_autoload_started <<- TRUE
+      ## board.loading answers load_example() by looking for the
+      ## "example-data" row in its dataset table; bumping before that table
+      ## is populated just raises "No example data". Give it a moment.
+      shinyjs::delay(3000, {
+        info("[DEV_AUTOLOAD] loading example dataset")
+        load_example(1)
+      })
+    })
+
+    ## ignoreNULL so this only fires once a dataset is actually active; no
+    ## req() here, because observeEvent(once = TRUE) destroys itself via
+    ## on.exit() even when the handler aborts.
+    shiny::observeEvent(PGX$name,
+      {
+        info("[DEV_AUTOLOAD] dataset ready, opening Dashboard")
+        bslib::nav_select("app-sidebar", "Dashboard", session = session)
+      },
+      once = TRUE,
+      ignoreNULL = TRUE
+    )
+  }
 
   ## Default boards ------------------------------------------
   ## WelcomeBoard("welcome",
