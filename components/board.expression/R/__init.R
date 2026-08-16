@@ -11,6 +11,20 @@ MODULE.expression <- list(
       bio = "Find biomarkers"
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    ## Started eagerly at dataset load (see opg_server.R), so only its UI is
+    ## still to be inserted -- but it must be registered, or load_board()
+    ## would skip the tab and the board would never appear.
+    "diffexpr-tab" = function(...) invisible(NULL),
+    "corr-tab" = function(PGX, labeltype = NULL)
+      CorrelationBoard("corr", pgx = PGX, labeltype = labeltype),
+    "bio-tab" = function(PGX, labeltype = NULL)
+      BiomarkerBoard("bio", pgx = PGX),
+    "timeseries-tab" = function(PGX, labeltype = NULL)
+      TimeSeriesBoard("timeseries", pgx = PGX, labeltype = labeltype)
+  ),
   module_server = function(PGX, labeltype = NULL) {
     info("[SERVER] calling CorrelationBoard module")
     CorrelationBoard("corr",

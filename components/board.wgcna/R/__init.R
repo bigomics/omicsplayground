@@ -56,6 +56,18 @@ MODULE.wgcna <- list(
       )
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    "wgcna-tab" = function(PGX, save_pgx = NULL)
+      WgcnaBoard("wgcna", pgx = PGX, save_pgx = save_pgx),
+    "consensus-tab" = function(PGX, save_pgx = NULL)
+      ConsensusWGCNA_Board(id = "consensus", pgx = PGX),
+    "preservation-tab" = function(PGX, save_pgx = NULL)
+      PreservationWGCNA_Board(id = "preservation", pgx = PGX),
+    "mwgcna-tab" = function(PGX, save_pgx = NULL)
+      MultiWGCNA_Board("mwgcna", pgx = PGX, save_pgx = save_pgx)
+  ),
   module_server = function(PGX, save_pgx = NULL) {
     WgcnaBoard("wgcna",
       pgx = PGX,

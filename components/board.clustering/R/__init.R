@@ -9,6 +9,14 @@ MODULE.clustering <- list(
       clusterfeatures = "Features"
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    "clustersamples-tab" = function(PGX, labeltype = NULL)
+      ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype),
+    "clusterfeatures-tab" = function(PGX, labeltype = NULL)
+      FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
+  ),
   module_server = function(PGX, labeltype = NULL) {
     info("[SERVER] calling ClusteringBoard module")
     ClusteringBoard("clustersamples",

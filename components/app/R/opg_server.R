@@ -82,6 +82,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "Clustering")
         loaded$clustering <- 0
+        reset_group_tabs(MODULE.clustering)
       }
       if (x == "Expression") {
         lapply(names(MODULE.expression$module_menu()), function(x) {
@@ -89,6 +90,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "Expression")
         loaded$expression <- 0
+        reset_group_tabs(MODULE.expression)
       }
       if (x == "GeneSets") {
         lapply(names(MODULE.enrichment$module_menu()), function(x) {
@@ -96,6 +98,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "GeneSets")
         loaded$enrichment <- 0
+        reset_group_tabs(MODULE.enrichment)
       }
       if (x == "Compare") {
         lapply(names(MODULE.compare$module_menu()), function(x) {
@@ -103,6 +106,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "Compare")
         loaded$compare <- 0
+        reset_group_tabs(MODULE.compare)
       }
       if (x == "SystemsBio") {
         lapply(names(MODULE.systems$module_menu()), function(x) {
@@ -110,6 +114,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "SystemsBio")
         loaded$systems <- 0
+        reset_group_tabs(MODULE.systems)
       }
       if (x == "MultiOmics") {
         lapply(names(MODULE.multiomics$module_menu()), function(x) {
@@ -117,6 +122,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "MultiOmics")
         loaded$multiomics <- 0
+        reset_group_tabs(MODULE.multiomics)
       }
       if (x == "WGCNA") {
         lapply(names(MODULE.wgcna$module_menu()), function(x) {
@@ -124,6 +130,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "WGCNA")
         loaded$wgcna <- 0
+        reset_group_tabs(MODULE.wgcna)
       }
       if (x == "Epigenomics") {
         lapply(names(MODULE.epigenomics$module_menu()), function(x) {
@@ -131,6 +138,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         })
         bigdash.hideMenuElement(session, "Epigenomics")
         loaded$epigenomics <- 0
+        reset_group_tabs(MODULE.epigenomics)
       }
     })
 
@@ -314,7 +322,18 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     
   })
 
-  insertBigTabUI2 <- function(ui, menu) {
+  ## `only`: insert just this tab's UI instead of the whole group's. Building a
+  ## group's UI is the larger half of opening it -- measured 3.9-6.0s of a
+  ## 5.7-9.3s first click, against 1.8-3.3s for starting its servers -- and
+  ## most of it is for boards the user has not asked for.
+  insertBigTabUI2 <- function(ui, menu, only = NULL) {
+    if (!is.null(only)) {
+      keep <- vapply(ui, function(x) identical(x[[1]], only), logical(1))
+      ui <- ui[keep]
+      if (!length(ui)) {
+        return(invisible(NULL))
+      }
+    }
     for (i in 1:length(ui)) {
       for (j in 2:length(ui[[i]])) {
         shiny::insertUI(
@@ -350,82 +369,83 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     epigenomics = 0
   )
 
+  ## ---------------------------------------------------------------
+  ## Per-board loading
+  ## ---------------------------------------------------------------
+  ##
+  ## A board group used to be materialised whole: clicking one tab built and
+  ## started every board in its group. Open Differential Expression and you
+  ## also paid for Correlation, Biomarker and TimeSeries.
+  ##
+  ## load_board() does one board. Both halves have to move together -- a board
+  ## server whose UI is not in the DOM loses the updateSelectInput() calls it
+  ## makes while initialising -- so the UI is inserted first, then that board's
+  ## server is started, then the tab is latched.
+  ##
+  ## Which boards a group can load this way is given by its `module_servers`,
+  ## a list of server functions keyed by tab name. A group without one is left
+  ## to the eager path.
+  loaded_tabs <- new.env(parent = emptyenv())
+
+  load_board <- function(tab, mod, run_server) {
+    if (is.null(tab) || isTRUE(loaded_tabs[[tab]])) {
+      return(invisible(FALSE))
+    }
+    fn <- mod$module_servers[[tab]]
+    if (is.null(fn)) {
+      return(invisible(FALSE))
+    }
+    ## Latch before running: a board that errors must not re-insert its UI on
+    ## every later click.
+    loaded_tabs[[tab]] <- TRUE
+    info("[SERVER:UI:2] loading board ", tab)
+    insertBigTabUI2(mod$module_ui2(), mod$module_menu(), only = tab)
+    run_server(fn)
+    tab_control()
+    invisible(TRUE)
+  }
+
+  ## Called wherever a group is torn down (datatype change), so its boards load
+  ## again next time they are opened.
+  reset_group_tabs <- function(mod) {
+    for (tab in names(mod$module_servers)) {
+      if (!is.null(loaded_tabs[[tab]])) rm(list = tab, envir = loaded_tabs)
+    }
+  }
+
   observeEvent(input$nav, {
     dbg("[SERVER] input$nav =", input$nav)
 
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
-      loaded$clustering == 0) {
-      info("[SERVER:UI:2] reacted: calling Clustering module")
-      mod <- MODULE.clustering
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype)
-      loaded$clustering <- 1
-      tab_control()
+    ## Phase 1 (at dataset load) inserts the tab shells; before that there is
+    ## nothing for insertUI() to target. Acting earlier would mark the board
+    ## loaded while its UI silently went nowhere, and it would never appear --
+    ## reachable by clicking a sidebar item while the dashboard is still
+    ## initialising.
+    shiny::req(PGX$name)
+
+    if (input$nav %in% names(MODULE.clustering$module_servers)) {
+      load_board(input$nav, MODULE.clustering, function(f) f(PGX, labeltype = labeltype))
     }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
-      loaded$expression == 0) {
-      info("[SERVER:UI:2] reacted: calling Expression module")
-      mod <- MODULE.expression
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype)
-      loaded$expression <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.expression$module_servers)) {
+      load_board(input$nav, MODULE.expression, function(f) f(PGX, labeltype = labeltype))
     }
-    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
-      loaded$enrichment == 0) {
-      info("[SERVER:UI:2] reacted: calling Enrichment module")
-      mod <- MODULE.enrichment
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype, env = env)
-      loaded$enrichment <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.enrichment$module_servers)) {
+      load_board(input$nav, MODULE.enrichment, function(f) f(PGX, labeltype = labeltype, env = env))
     }
-    if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
-      info("[SERVER:UI] reacted: calling Compare module")
-      mod <- MODULE.compare
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
-      loaded$compare <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.compare$module_servers)) {
+      load_board(input$nav, MODULE.compare, function(f) f(PGX, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir))
     }
-    if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
-      loaded$systems == 0) {
-      info("[SERVER:UI:2] reacted: calling Systems module")
-      mod <- MODULE.systems
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$systems <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.systems$module_servers)) {
+      load_board(input$nav, MODULE.systems, function(f) f(PGX))
     }
-    if (input$nav %in% c(
-      "mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
-      "deepnet-tab"
-    ) && loaded$multiomics == 0) {
-      info("[SERVER:UI:2] reacted: calling Multi-Omics module")
-      mod <- MODULE.multiomics
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$multiomics <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.multiomics$module_servers)) {
+      load_board(input$nav, MODULE.multiomics, function(f) f(PGX))
     }
-    if (input$nav %in% c(
-      "wgcna-tab", "mwgcna-tab", "consensus-tab",
-      "preservation-tab"
-    ) && loaded$wgcna == 0) {
-      info("[SERVER:UI:2] reacted: calling WGCNA module")
-      mod <- MODULE.wgcna
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, save_pgx = env$save_pgx)
-      loaded$wgcna <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.wgcna$module_servers)) {
+      load_board(input$nav, MODULE.wgcna, function(f) f(PGX, save_pgx = env$save_pgx))
     }
-    if (input$nav %in% c("ideograms-tab") && loaded$epigenomics == 0) {
-      info("[SERVER:UI:2] reacted: calling Epigenomics module")
-      mod <- MODULE.epigenomics
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$epigenomics <- 1
-      tab_control()
+    if (input$nav %in% names(MODULE.epigenomics$module_servers)) {
+      load_board(input$nav, MODULE.epigenomics, function(f) f(PGX))
     }
   })
 

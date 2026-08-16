@@ -56,6 +56,18 @@ MODULE.systems <- list(
       )
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    "drug-tab" = function(PGX)
+      DrugConnectivityBoard("drug", pgx = PGX),
+    "tcga-tab" = function(PGX)
+      TcgaBoard("tcga", pgx = PGX),
+    "cell-tab" = function(PGX)
+      SingleCellBoard("cell", pgx = PGX),
+    "pcsf-tab" = function(PGX)
+      PcsfBoard("pcsf", pgx = PGX)
+  ),
   module_server = function(PGX) {
     DrugConnectivityBoard("drug",
       pgx = PGX

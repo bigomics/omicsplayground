@@ -29,6 +29,20 @@ MODULE.multiomics <- list(
       list("deepnet-tab", DeepNetUI("deepnet"))
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    "mofa-tab" = function(PGX)
+      MofaBoard("mofa", pgx = PGX),
+    "mgsea-tab" = function(PGX)
+      MGseaBoard("mgsea", pgx = PGX),
+    "snf-tab" = function(PGX)
+      SNFBoard("snf", pgx = PGX),
+    "lasagna-tab" = function(PGX)
+      LasagnaBoard("lasagna", pgx = PGX),
+    "deepnet-tab" = function(PGX)
+      DeepNetBoard("deepnet", pgx = PGX)
+  ),
   module_server = function(PGX) {
     info("[SERVER] calling MofaBoard module")
     MofaBoard("mofa", pgx = PGX)

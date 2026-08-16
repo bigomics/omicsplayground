@@ -46,6 +46,16 @@ MODULE.compare <- list(
       )
     )
   },
+  ## Per-board servers, keyed by tab, so opg_server can start just the board
+  ## that was opened. module_server() above stays for the eager path.
+  module_servers = list(
+    "isect-tab" = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL)
+      IntersectionBoard("isect", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods, selected_gsetmethods = env$enrich$selected_gsetmethods),
+    "comp-tab" = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL)
+      CompareBoard("comp", pgx = PGX, pgx_dir = reactive(auth$user_dir), labeltype = labeltype),
+    "cmap-tab" = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL)
+      ConnectivityBoard("cmap", pgx = PGX, auth = auth, reload_pgxdir = reload_pgxdir)
+  ),
   module_server = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL) {
     IntersectionBoard("isect",
       pgx = PGX,
