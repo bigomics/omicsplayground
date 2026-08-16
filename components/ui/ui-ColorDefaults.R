@@ -35,28 +35,64 @@ COLOR_THEME_MAPPING <- list(
 )
 
 ## ---------------------------------------------------------------
-## Singleton reactive store (module-level environment)
+## Per-session reactive store
 ## ---------------------------------------------------------------
+##
+## The store must NOT be a process-level singleton. reactiveValues() registers
+## an onDestroy handler on whatever reactive domain is current when it is
+## created, and any later write raises "Can't access reactive ...; its module
+## session has been destroyed". A store built during the first browser session
+## and cached for the process is therefore already dead for the second one:
+## reload the page and the first write (appsettings_server.R, on auth$logged)
+## fails. It also leaked one user's theme into the next session.
+##
+## So: one store per browser session, kept on the session's userData.
 
 .color_theme_env <- new.env(parent = emptyenv())
-.color_theme_env$theme <- NULL
+.color_theme_env$theme <- NULL ## fallback for use outside any session
+
+.new_color_theme <- function() {
+  do.call(shiny::reactiveValues, COLOR_THEME_DEFAULTS)
+}
+
+#' The colour theme store for the current browser session.
+#'
+#' Anchored on the *root* session rather than the calling module session: the
+#' theme is app-wide, and a module session can be torn down (its UI removed)
+#' long before the browser session ends, which would kill the store early.
+#' Module sessions share the root session's `userData`, so every board sees
+#' the same object.
+#'
+#' @param session reactive domain to anchor on; defaults to the current one
+#' @return reactiveValues
+color_theme_store <- function(session = shiny::getDefaultReactiveDomain()) {
+  if (is.null(session)) {
+    ## No reactive domain: console, tests, or UI built outside a session. A
+    ## reactiveValues created with no domain registers no onDestroy handler,
+    ## so it is never marked destroyed and is safe to keep for the process.
+    if (is.null(.color_theme_env$theme)) {
+      .color_theme_env$theme <- .new_color_theme()
+    }
+    return(.color_theme_env$theme)
+  }
+
+  root <- if (is.function(session$rootScope)) session$rootScope() else session
+  if (is.null(root$userData$color_theme)) {
+    root$userData$color_theme <- shiny::withReactiveDomain(root, .new_color_theme())
+  }
+  root$userData$color_theme
+}
 
 #' Initialise the colour theme reactive store (call once in server).
 #' @return invisible reactiveValues
 init_color_theme <- function() {
-  if (is.null(.color_theme_env$theme)) {
-    .color_theme_env$theme <- do.call(shiny::reactiveValues, COLOR_THEME_DEFAULTS)
-  }
-  invisible(.color_theme_env$theme)
+  invisible(color_theme_store())
 }
 
 #' Return the colour theme reactive store.
 #' @return reactiveValues
 get_color_theme <- function() {
-  if (is.null(.color_theme_env$theme)) {
-    init_color_theme()
-  }
-  .color_theme_env$theme
+  color_theme_store()
 }
 
 #' Save the colour theme to a user directory as JSON.
