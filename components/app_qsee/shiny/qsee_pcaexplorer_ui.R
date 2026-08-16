@@ -60,7 +60,15 @@ qsee_pcaexplorer_inputs <- function(id) {
 
 qsee_pcaexplorer_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "PCA explorer",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_pcaexplorer_ui_output <- function(ns) {
   biplot_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
     bslib::navset_card_tab(
@@ -166,18 +174,11 @@ qsee_pcaexplorer_ui <- function(id) {
     )
   )
 
-  pcaexplorer_panel <- bslib::navset_tab(
+  bslib::navset_tab(
     id = ns("board_tab"),
     bslib::nav_panel(title = "Biplot", value = "Biplot", biplot_panel),
     bslib::nav_panel(title = "PCA pairs", value = "PCA pairs", pairs_panel),
     bslib::nav_panel(title = "Loadings", value = "Loadings", loadings_panel),
     bslib::nav_panel(title = "Feature PCA", value = "Feature PCA", feature_panel)
-  )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "PCA explorer",
-    qsee_visibility_probe(ns),
-    pcaexplorer_panel
   )
 }

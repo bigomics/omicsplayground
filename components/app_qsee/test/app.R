@@ -19,6 +19,7 @@ library(shiny)
 library(bslib)
 library(dplyr)
 #library(playbase)
+library(bigdash)
 
 ## Make the shared styles and JS assets from the main app available.
 ## (matches components/app/R/global.R and ui.R)
@@ -68,6 +69,9 @@ ui <- bslib::page_fillable(
     )
   ),
   shinyjs::useShinyjs(),
+  ## PlotModuleUI() wraps every plot in bigLoaders::useSpinner(), which is
+  ## inert without these assets. The main app adds them in app/R/ui.R.
+  bigLoaders::addBigLoaderDeps(),
   qsee_ui("qsee")
 )
 

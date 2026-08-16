@@ -19,7 +19,15 @@ qsee_filtering_inputs <- function(id) {
 
 qsee_filtering_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "SD Filtering",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_filtering_ui_output <- function(ns) {
   pca_infotext <-
     "PCA of the top-N most variable features (different N per panel). Good filtering preserves major biological structure in the first few PCs."
 
@@ -29,8 +37,7 @@ qsee_filtering_ui <- function(id) {
   hist_infotext <-
     "Distribution of feature standard deviations across the dataset. The dashed line indicates the current threshold for top-SD features."
 
-  filtering_panel <-
-    bslib::navset_tab(
+  bslib::navset_tab(
       bslib::nav_panel(
         title = "SD Filtering",
         bslib::layout_columns(
@@ -71,12 +78,5 @@ qsee_filtering_ui <- function(id) {
         )
       )
     )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "SD Filtering",
-    qsee_visibility_probe(ns),
-    filtering_panel
-  )
 }
 

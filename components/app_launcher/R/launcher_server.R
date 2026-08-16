@@ -9,7 +9,8 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @export
-launcher_server <- function(id, parent, load_example = NULL, on_launch_qsee = NULL) {
+launcher_server <- function(id, parent, load_example = NULL,
+                            app_launchers = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -20,21 +21,24 @@ launcher_server <- function(id, parent, load_example = NULL, on_launch_qsee = NU
     observeEvent(input$launch_playground, {
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
+    
+    observeEvent(input$launch_qsee, {
+      run_qsee <- app_launchers[["qsee"]]
+      if (!is.null(run_qsee) && is.function(run_qsee)) {
+        run_qsee()
+      } 
+    })
 
     observeEvent(input$launch_across, {
-      bslib::nav_select("app-sidebar", "AcrossDatasets", session=parent)
+      run_across <- app_launchers[["across"]]
+      if (!is.null(run_across) && is.function(run_across)) {
+        run_across()
+      } 
+      ##bslib::nav_select("app-sidebar", "AcrossDatasets", session=parent)
     })
 
     observeEvent(input$launch_prism, {
       bslib::nav_select("app-sidebar", "Prism", session=parent)
-    })
-    
-    observeEvent(input$launch_qsee, {
-      if (is.function(on_launch_qsee)) {
-        on_launch_qsee()
-      } else {
-        bslib::nav_select("app-sidebar", "Qsee", session=parent)
-      }
     })
 
     observeEvent(input$launch_idconvert, {

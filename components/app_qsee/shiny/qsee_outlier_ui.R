@@ -10,13 +10,20 @@ qsee_outlier_inputs <- function(id) {
 
 qsee_outlier_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Outlier analysis",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_outlier_ui_output <- function(ns) {
   zscore_infotext <- "Z-score based outlier detection. Multi-panel barplots show per-sample and per-feature outlier scores (or summary statistics). Horizontal lines mark common significance thresholds."
   heatmap_infotext <- "Clustered heatmap of the most outlier-ish features (row-centered and scaled). Dendrograms highlight extreme patterns."
   pca_infotext <- "PCA plot of samples colored by selected phenotype. Outliers often appear as distant points."
 
-  outlier_panel <-
-    bslib::navset_tab(
+  bslib::navset_tab(
       bslib::nav_panel(
         title = "Z-scores",
         bslib::layout_columns(
@@ -55,12 +62,5 @@ qsee_outlier_ui <- function(id) {
         )
       )
     )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "Outlier analysis",
-    qsee_visibility_probe(ns),
-    outlier_panel
-  )
 }
 

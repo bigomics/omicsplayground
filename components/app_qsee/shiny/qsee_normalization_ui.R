@@ -17,12 +17,20 @@ qsee_normalization_inputs <- function(id) {
 
 qsee_normalization_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Normalization",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_normalization_ui_output <- function(ns) {
   box_infotext <- "Boxplots of log-expression values (random feature subset) grouped by phenotype. Ideal normalization removes technical variation so that phenotype groups align across methods."
   hist_infotext <- "Density distributions of log-intensities per sample after each normalization method. Good normalization reduces batch effects while preserving biological signal."
   pca_infotext <- "PCA of samples after each normalization (colored by selected phenotype). Effective normalization should cluster samples by biology rather than technical factors."
-  
-  normalization_panel <- bslib::navset_tab(
+
+  bslib::navset_tab(
     bslib::nav_panel(
       title = "Boxplots",
       bslib::layout_columns(
@@ -77,13 +85,5 @@ qsee_normalization_ui <- function(id) {
       )
     )
   )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "Normalization",
-    qsee_visibility_probe(ns),
-    normalization_panel    
-  )
-
 }
 

@@ -135,7 +135,7 @@ app_ui <- function(x) {
             bslib::nav_panel(
               title = "Dashboard",
               icon = icon("chart-line"),
-              opg_ui()
+              opg_ui("app")
             ),
             ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
             ## The runtime "Enable AI" switch further shows/hides them per session
@@ -185,12 +185,12 @@ app_ui <- function(x) {
                 omicspanel(idconvert_ui("idconvert"))
               )
             },
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden(
-                value = "AcrossDatasets",
-                omicspanel(AcrossUI("across"))
-              )
-            },
+            ## if(isTRUE(opt$DEVMODE)) {
+            ##   bslib::nav_panel_hidden(
+            ##     value = "AcrossDatasets",
+            ##     omicspanel(AcrossUI("across"))
+            ##   )
+            ## },
             ## lower settings buttons
             bslib::nav_spacer(),
             bslib::nav_panel("Settings", icon=icon("cog"),

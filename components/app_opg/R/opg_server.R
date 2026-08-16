@@ -2,11 +2,15 @@
 ## NOTE: This is not a real shiny module (yet...). We should move as
 ## much as possible OPG server related code here.
 
-opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
+opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir,
                        load_example = NULL) {
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
-
+  
+  if(id != "app") {
+    stop("FATAL: opg_server is not a proper ShinyModule yet")
+  }
+  
   ## -------------------------------------------------------------
   ## No dataset loaded: offer the example dataset (like Qsee)
   ## -------------------------------------------------------------
@@ -45,7 +49,8 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
             class = "btn btn-outline-primary welcome-btn-sm"
           )
         ),
-        footer = shiny::modalButton("Cancel"),
+        ##footer = shiny::modalButton("Cancel"),
+        footer = NULL,
         size = "s",
         easyClose = FALSE
       )

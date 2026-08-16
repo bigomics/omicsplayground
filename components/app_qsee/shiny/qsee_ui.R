@@ -11,6 +11,7 @@ qsee_ui <- function(id, height = "100%") {
   ## board probes below only report their respective inner tabs.
   ui <- shiny::tagList(
     qsee_visibility_probe(ns),
+    qsee_plot_spinner_js(ns),
     bigdash::bigPage(
       id = id,
       #navbar = bigdash::navbar("Qsee/Bsee"),

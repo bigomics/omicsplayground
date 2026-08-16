@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-opg_ui <- function() {
+opg_ui <- function(id) {
 
   message("\n======================================================")
   message("======================= UI ===========================")
@@ -13,19 +13,11 @@ opg_ui <- function() {
   ## Build USERMENU
   #-------------------------------------------------------
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
-
-  ## upgrade.tab <- NULL
-  ## if (opt$AUTHENTICATION == "firebase") {
-  ##   upgrade.tab <- bigdash::navbarDropdownItem(
-  ##     "Upgrade",
-  ##     onClick = "show_plans()"
-  ##   )
-  ## }
     
   createUI <- function(menu_tree) {
     
     version <- scan(file.path(OPG, "VERSION"), character())[1]
-    id <- "maintabs"
+    ##id <- "maintabs"
     
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
@@ -142,9 +134,10 @@ opg_ui <- function() {
     )
     
     bigdash::bigPage(
+      id = id,  ## default was 'app'
       shiny.i18n::usei18n(i18n),
       # header,
-      title = "Omics Playground 4",
+      title = "Omics Playground",
       theme = big_theme2,
       navbar = navbar,
       sidebar = sidebar,
@@ -302,41 +295,7 @@ opg_ui <- function() {
         ),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
-      bigdash::bigTabs(
-        ## bigdash::bigTabItem(
-        ##   "welcome-tab",
-        ##   WelcomeBoardInputs("welcome"),
-        ##   WelcomeBoardUI("welcome")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "load-tab",
-        ##   # LoadingInputs("load")
-        ##   LoadingUI("load")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "upload-tab",
-        ##   UploadUI("upload")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "userprofile-tab",
-        ##   UserProfileUI("user_profile")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "usersettings-tab",
-        ##   AppSettingsUI("app_settings")
-        ## ),
-        ## if (isTRUE(opt$ENABLE_ADMIN)) {
-        ##   bigdash::bigTabItem(
-        ##     "admin-tab",
-        ##     AdminPanelUI("admin_panel")
-        ##   )
-        ## }
-        ## bigdash::bigTabItem(
-        ##   "sharing-tab",
-        ##   SharedDatasetsUI("load")
-        ## )
-      )
-      ## UploadUI("upload")
+      bigdash::bigTabs()  ## Empty: all tabs are dynamically inserted
     ) ## end of bigPage
   }
 

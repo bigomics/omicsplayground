@@ -14,14 +14,21 @@ qsee_imputation_inputs <- function(id) {
 
 qsee_imputation_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Missing value analysis",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_imputation_ui_output <- function(ns) {
   dist_infotext <- "Missingness patterns versus intensity: barplots of missing ratio per intensity bin, feature-wise scatterplots, histograms of missing ratios, retention curves, and per-sample missing rates."
   hist_infotext <- "Density distributions of observed versus imputed intensity values for each imputation method."
   pca_infotext <- "PCA of samples after each imputation method (samples colored by phenotype)."
   valid_infotext <- "Imputation validation: imputed values versus known (simulated MAR/MNAR) true values. Higher Pearson correlation indicates better imputation performance."
 
-  imputation_panel <-
-    bslib::navset_tab(
+  bslib::navset_tab(
       bslib::nav_panel(
         title = "Distribution",
         bslib::layout_columns(
@@ -98,12 +105,5 @@ qsee_imputation_ui <- function(id) {
         )
       )
     )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "Missing value analysis",
-    qsee_visibility_probe(ns),
-    imputation_panel
-  )
 }
 

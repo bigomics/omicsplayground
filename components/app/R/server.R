@@ -927,7 +927,9 @@ app_server <- function(input, output, session) {
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir,
+  opg_server( id = "app",
+    input, output, session, PGX, env, auth,
+    reload_pgxdir = reload_pgxdir,
     load_example = load_example)
   
   app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
@@ -989,71 +991,77 @@ app_server <- function(input, output, session) {
   ## -------------------------------------------------------------
   ## Modules
   ## -------------------------------------------------------------
-  
+
+  LAUNCHED <- list()
+  id="Qsee"
+
+  ## Dynamic insertion of App modules (tryout). The UI is inserted via
+  ## nav_insert() and module is lazy initialized. Other apps should
+  ## follow this pattern if succesful.
+  launchModule <- function( id, ui, server) {
+    is.launched <- id %in% names(LAUNCHED)
+
+    dbg("names(LAUNCHED) = ", names(LAUNCHED))
+
+    if (!is.launched) {
+      LAUNCHED[[id]] <<- TRUE
+
+      progress <- shiny::Progress$new(session)
+      on.exit(progress$close())
+      progress$set(message = paste("Launching",id), value = 0.33)
+      
+      bslib::nav_insert(
+        "app-sidebar",
+        bslib::nav_panel_hidden(id, ui),
+        target = "Settings",
+        position = "before",
+        select = TRUE,
+        session = session
+      )
+      bigdash::bigdash.initRoot(session, id)
+      shiny::withReactiveDomain(session, {
+        server()
+      })
+
+      progress$close()
+      
+    } else {
+      bslib::nav_select("app-sidebar", id, session = session)
+    }
+  }
+    
   if(isTRUE(opt$DEVMODE)) {
     dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
 
-    ## Both Qsee's UI (a nested bigdash::bigPage(), 6 sub-boards' worth of
-    ## HTML) and its server (moduleServer + 6 sub-board servers) are real
-    ## cost paid by every DEVMODE session today, whether or not Qsee is
-    ## ever opened. Defer both until the user actually launches it from
-    ## the Apps tile.
-    ##
-    ## The UI is inserted via nav_insert() rather than being built in
-    ## ui.R, which means bigdash's page-ready chrome setup (settings-panel
-    ## relocation, first-tab selection -- see srcjs/settings.js and
-    ## srcjs/sidebar.js in the bigdash package) never sees it: that setup
-    ## only ever scans the DOM once, for whatever bigPage() roots exist at
-    ## that moment. bigdash::bigdash.initRoot() repeats the same per-root
-    ## setup for just this one root, after it's actually been inserted;
-    ## its own click handlers (sidebar collapse, settings drawer, tab
-    ## switching) don't need this since those are bound delegated and
-    ## already cover roots added later. Guard is per-session: repeated
-    ## launcher clicks just re-select the already-wired panel.
-    ##
-    ## launch_qsee() runs from inside launcher_server("apps", ...)'s own
-    ## observeEvent -- i.e. inside the "apps" module's reactive domain.
-    ## qsee_server()'s moduleServer("qsee", ...) call doesn't pass an
-    ## explicit `session`, so it defaults to getDefaultReactiveDomain(),
-    ## which at that point IS the "apps" domain -- nesting qsee's
-    ## namespace as "apps-qsee" instead of a top-level "qsee", silently
-    ## mismatching every id qsee_ui("qsee") already put in the DOM (e.g.
-    ## the upload/load_example/load_pgx buttons: client sends
-    ## "qsee-load_example", server listens on "apps-qsee-load_example",
-    ## neither errors, nothing fires). withReactiveDomain(session, ...)
-    ## resets the ambient domain back to the root session for this call so
-    ## qsee_server()'s own moduleServer() resolves "qsee" at the top level,
-    ## matching the UI.
-    qsee_wired <- FALSE
     launch_qsee <- function() {
-      if (!qsee_wired) {
-        qsee_wired <<- TRUE
-        bslib::nav_insert(
-          "app-sidebar",
-          bslib::nav_panel_hidden("Qsee", omicspanel(qsee_ui("qsee"))),
-          target = "IDconvert",
-          position = "after",
-          select = TRUE,
-          session = session
-        )
-        bigdash::bigdash.initRoot(session, "qsee")
-        shiny::withReactiveDomain(session, {
-          qsee_server("qsee", pgx = PGX, parent = session)
-        })
-      } else {
-        bslib::nav_select("app-sidebar", "Qsee", session = session)
-      }
+      launchModule("qsee",
+        ui = omicspanel(qsee_ui("qsee")),
+        server = function() qsee_server("qsee", pgx = PGX, parent = session)
+      )
     }
 
+    launch_across <- function() {
+      launchModule("across",
+        ui = omicspanel(AcrossUI("across")),
+        server = function() {
+          AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+            current_page = shiny::reactive(input[["app-sidebar"]]))
+        }
+      )
+    }
+    
     launcher_server(
       "apps",
       parent = session,
       load_example = load_example,
-      on_launch_qsee = launch_qsee
+      app_launchers = list(
+        "qsee" = launch_qsee,
+        "across" = launch_across
+      )
     )
 
-    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
-      current_page = shiny::reactive(input[["app-sidebar"]]))
+#    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+#      current_page = shiny::reactive(input[["app-sidebar"]]))
 
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")

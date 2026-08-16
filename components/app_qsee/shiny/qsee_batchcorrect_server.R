@@ -11,6 +11,12 @@ qsee_bsee_server <- function(id, rX, rY) {
       OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
       ## `input$is_visible` is reported by qsee_visibility_probe() in the UI.
       is_visible <- qsee_is_visible(input, label = "qsee_bsee_server")
+      redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_bsee_server")
+      ## Shiny suspends this output while the board's tab is hidden, so the
+      ## body is only built on the first visit and then kept in the DOM.
+      output$ui_output <- shiny::renderUI({
+        qsee_bsee_ui_output(session$ns)
+      })
 
       observeEvent( list(rY()), {
         Y <- rY()
@@ -23,18 +29,22 @@ qsee_bsee_server <- function(id, rX, rY) {
         )
       })
       
-      ## Main precomputation. Visibility gates *when* work may run; cache
-      ## invalidates only when inputs / Recompute change — not on tab
-      ## leave/return.
-      get_results <- qsee_board_cache(
-        is_visible,
-        deps = function() list(rX(), rY(), input$recompute_button),
-        label = "qsee_bsee_server",
-        compute = function() {
+      ## Main precomputation. eventReactive, not reactive: the body reads
+      ## input$main_param without depending on it, so changing the main
+      ## parameter does not kick off a batch correction -- only the inputs
+      ## listed below do, i.e. new data or the Recompute button.
+      ##
+      ## Lazy, like any reactive: the plot outputs that read it are suspended
+      ## while the board is hidden, so nothing runs until the tab is opened
+      ## (but see the observe() below).
+      get_results <- shiny::eventReactive(
+        list(rX(), rY(), input$recompute_button),
+        {
           X <- rX()
           samples <- rY()
           shiny::req(X, samples)
 
+          message("[qsee_bsee_server] computing...")
           progress <- shiny::Progress$new(session, min = 0, max = 1)
           on.exit(progress$close())
           progress$set(message = paste("Normalizing..."), value = 0.1)
@@ -42,16 +52,19 @@ qsee_bsee_server <- function(id, rX, rY) {
           pheno <- colnames(samples)[1]  ## NEED UPDATE!!!
           pheno <- input$main_param
           shiny::req(pheno)
-          
-          res <- bsee_compute_batchcorrect(X, samples, pheno, progress = progress) 
+
+          res <- bsee_compute_batchcorrect(X, samples, pheno, progress = progress)
           return(res)
         }
       )
 
       ## Update selectInputs when results are available and the tab is visible.
-      ## Because get_results() now gates on is_visible() internally, we no
-      ## longer need the req() here for performance reasons (but we keep
-      ## it for clarity).
+      ##
+      ## DO NOT REMOVE the req(is_visible()) below. This is the only eager
+      ## consumer of get_results() -- every other reader is a plot output,
+      ## which Shiny suspends while the board is hidden. Without the guard
+      ## this observer pulls the cache as soon as rX()/rY() arrive and the
+      ## whole batch correction runs even if the tab is never opened.
       observe({
         req(is_visible())
         res <- get_results()
@@ -140,11 +153,12 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot1",
         plotlib = "plotly",
-        func = render.plot_pca_vs_methods,
+        func = qsee_with_redraw(redraw_tick, render.plot_pca_vs_methods),
         add.watermark = FALSE
       )
 
       heatmap_panels <- shiny::reactive({
+        redraw_tick()
         res <- get_results()
         shiny::req(res)
         bsee.plot_heatmap_vs_methods_plotly(res)
@@ -154,14 +168,14 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot3",
         plotlib = "plotly",
-        func = render.plot_scores,
+        func = qsee_with_redraw(redraw_tick, render.plot_scores),
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot4",
         plotlib = "plotly",
-        func = render.plot_covariate_correlation_heatmap,
+        func = qsee_with_redraw(redraw_tick, render.plot_covariate_correlation_heatmap),
         add.watermark = FALSE
       )
 
@@ -170,21 +184,21 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot5",
         plotlib = "plotly",
-        func = render.plot_pvca_by_phenotype,
+        func = qsee_with_redraw(redraw_tick, render.plot_pvca_by_phenotype),
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot6",
         plotlib = "plotly",
-        func = render.plot_pvca_by_component,
+        func = qsee_with_redraw(redraw_tick, render.plot_pvca_by_component),
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot7",
         plotlib = "plotly",
-        func = render.plot_covariate_analysis,
+        func = qsee_with_redraw(redraw_tick, render.plot_covariate_analysis),
         add.watermark = FALSE
       )
     } ## end-of-server

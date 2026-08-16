@@ -27,7 +27,15 @@ qsee_bsee_inputs <- function(id) {
 
 qsee_bsee_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Batch-effects",
+    qsee_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_bsee_ui_output <- function(ns) {
   clust.infotext <-
     "Clustering of samples before ('uncorrected') and after the different batch-effect correction methods. After batch-effect correction clustering should improve. The silhouette score gives an indication of the clustering performance of the method."
 
@@ -41,8 +49,7 @@ qsee_bsee_ui <- function(id) {
     shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
   )
 
-  batchcorrect_panel <-
-    bslib::navset_tab(
+  bslib::navset_tab(
       bslib::nav_panel(
         title = "Analysis",
         height = "100%",
@@ -115,11 +122,4 @@ qsee_bsee_ui <- function(id) {
         )
       )  ## end of Before vs After panel (was Panel1)
     )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "Batch-effects",
-    qsee_visibility_probe(ns),
-    batchcorrect_panel
-  )
 }
