@@ -1249,7 +1249,9 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   ))
 
   # Return content based on plot type
-  switch(plot_type,
+  ## Only the selected variant is forced -- the others stay unevaluated
+  ## delayedAssign() promises.
+  build_variant <- function() switch(plot_type,
     "volcano" = volcano_content,
     "heatmap" = heatmap_content,
     "barplot" = barplot_content,
@@ -1269,5 +1271,52 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "correlation_matrix" = correlation_matrix_content,
     "scatter_updown" = scatter_updown_content,
     "boxplot_methyl" = boxplot_methyl_content
+  )
+
+  ## ----------------------------------------------------------------
+  ## Lazy body
+  ## ----------------------------------------------------------------
+  ##
+  ## Emit the modal shell now but defer its body. The edit button is a plain
+  ## Bootstrap trigger (bigdash::modalTrigger) pointing at #<ns>plotPopup2, so
+  ## the modal element itself has to exist up front -- but a Bootstrap modal is
+  ## display:none until opened, so Shiny suspends any output inside it. The
+  ## body is therefore not built until the editor is actually opened.
+  ##
+  ## That matters because this runs once per plot module with an editor (66 of
+  ## them) at board materialisation: ~80ms of tag building each, plus ~300 DOM
+  ## nodes and ~24 bound inputs per module parked in a modal nobody opened.
+  ##
+  ## Registering the renderer needs an output object, which we do not have
+  ## here -- this is UI-construction code. session$defineOutput() is the
+  ## equivalent; the current domain during insertUI()-driven board
+  ## construction is the app session, and ns() already yields a fully
+  ## qualified id. With no session at all (UI built outside a reactive
+  ## domain) there is nothing to defer to, so fall back to building inline.
+  session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session) || !is.function(session$defineOutput)) {
+    return(build_variant())
+  }
+
+  body_id <- ns("editor_body")
+  session$defineOutput(
+    body_id,
+    shiny::renderUI({
+      ## The variant is a complete modal; take just what modalUI() put in its
+      ## .modal-body, since the shell below supplies the rest.
+      htmltools::tagQuery(build_variant())$find(".modal-body")$children()$selectedTags()
+    }),
+    body_id
+  )
+
+  shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      shiny::uiOutput(body_id)
+    )
   )
 }
