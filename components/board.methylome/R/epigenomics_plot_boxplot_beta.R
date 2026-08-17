@@ -162,8 +162,14 @@ epigenomics_plot_boxplot_beta_server <- function(id,
         NULL
       }
 
+      ## r.chromosome was in the signature but never read, so the selector in
+      ## the settings panel did nothing here and every chromosome was always
+      ## drawn. playbase normalises these to "chrN" itself, so X and Y are fine.
+      chroms <- r.chromosome()
+      if (is.null(chroms) || !length(chroms) || identical(chroms, "")) chroms <- NULL
       playbase::plotMethylOverview(
         X, annot, pheno,
+        chromosomes = chroms,
         plot.beta.dist = FALSE, plot.beta.boxplots = TRUE,
         box_color = box_color,
         group_colors = group_clrs

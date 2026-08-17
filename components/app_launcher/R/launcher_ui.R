@@ -40,15 +40,6 @@ launcher_ui <- function(id) {
       group = "Dashboards",
       badge = "beta"
     ),
-    list(
-      input = "launch_methylome",
-      icon = "dna",
-      label = "Methylome Profiler",
-      description = "Per-sample methylation profiling",
-      rgb = c(200,90,140),
-      group = "Dashboards",
-      badge = "beta"
-    ),
     ## ----------------- apps ---------------
     list(
       input = "launch_idconvert",

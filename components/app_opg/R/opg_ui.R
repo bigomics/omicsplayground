@@ -295,11 +295,7 @@ opg_ui <- function() {
           "Preservation WGCNA",
           tspan("Preservation analysis using the WGCNA framework")
         ),
-        bigdash::sidebarTabHelp(
-          "ideograms-tab",
-          "Beta Ideograms",
-          tspan("Epigenomics visualizations and analyses for methylomics data.")
-        ),
+        !!!MODULE.methylome$module_help(),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
@@ -374,7 +370,7 @@ opg_ui <- function() {
     ),
     "MultiOmics" = MODULE.multiomics$module_menu(),
     "WGCNA" = MODULE.wgcna$module_menu(),
-    "Epigenomics" = MODULE.epigenomics$module_menu()
+    "Methylome" = MODULE.methylome$module_menu()
   )
 
   info("[opg_ui] >>> creating UI")

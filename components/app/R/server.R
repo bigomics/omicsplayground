@@ -1085,7 +1085,8 @@ app_server <- function(input, output, session) {
     idconvert_server("idconvert")
     qsee_server("qsee", pgx = PGX, parent = session)
 
-    methylome_server("methylome", pgx = PGX)
+    ## Methylome is a Dashboard board now (MODULE.methylome), loaded lazily by
+    ## opg_server like every other board - no app-mode wiring here.
     prism_server("prism")
   }
   

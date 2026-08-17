@@ -28,7 +28,7 @@ methylome_table_ledger_server <- function(id, pgx, scrollY = "22vh") {
       X <- mp_beta(p)
       bim <- mp_bimodality(X)
       drift <- mp_imprint_drift(X)
-      clk <- mp_clocks(X)
+      clk <- mp_clocks(X, method = "horvath")
       sex <- if (mp_has_xy(p)) mp_sex(X) else NULL
       data.frame(
         Bimodality = bim,

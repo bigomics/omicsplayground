@@ -89,13 +89,24 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
         }
         ## Wait rather than fail if nothing is resolvable yet.
         shiny::req(!is.null(cmp) && nzchar(cmp))
-        cf <- if (isTRUE(input$ewas_adjust_cells)) r_cells() else NULL
+        ## Refuse rather than fail open. Asking for cell adjustment and
+        ## silently getting an unadjusted model is the one wrong answer this
+        ## board exists to prevent - and it is invisible, because the formula
+        ## line simply does not mention the fractions.
+        cf <- NULL
+        if (isTRUE(input$ewas_adjust_cells)) {
+          cf <- r_cells()
+          shiny::validate(shiny::need(!is.null(cf) && nrow(cf) > 0,
+            "Cell-composition adjustment was requested but no proportions are available. Estimate them on the Cell composition screen, or untick the adjustment."))
+        }
         fit <- mp_fit_ewas(p, cmp, covars = input$ewas_covars,
                            cellfracs = cf, mask = input$ewas_mask)
         d <- mp_ewas_annotate(p, fit$table)
         list(data = d, contrast = cmp, meta = fit,
-             bacon = mp_bacon(stats::qnorm(fit$table$p / 2) *
-                              sign(fit$table$logFC_M)))
+             ## The moderated t is already a signed test statistic. Rebuilding
+             ## one as qnorm(p/2)*sign(logFC) inverted every z - qnorm(p/2) is
+             ## always negative - which flipped the sign of the reported bias.
+             bacon = mp_bacon(fit$t))
       },
       ignoreNULL = FALSE
     )
@@ -197,6 +208,82 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_plot_context_server("char_island", PGX, what = "island", watermark = watermark)
     methylome_plot_context_server("char_gene", PGX, what = "gene", watermark = watermark)
 
+    ## ------------------------------------------------- methylome landscape --
+    ## Moved from the Epigenomics board. Its plot modules read pgx$X directly
+    ## rather than taking a reactive, so they get the object this board was
+    ## handed, not PGX() - passing the evaluated value would freeze them on
+    ## whichever dataset happened to be loaded when the board was wired.
+    shiny::observeEvent(r_dataset(), {
+      p <- PGX()
+      shiny::req(p$X, p$samples, p$genes)
+      kk <- grep("chr|chromosome|chromosomes|chrom|chroms", tolower(colnames(p$genes)))
+      chroms <- unique(stats::na.omit(sub("(p|q|cen).*", "", as.character(p$genes[, kk[1]]))))
+      chroms <- unique(sub("^chr", "", chroms))
+      sex.chr <- intersect(c("X", "Y"), chroms)
+      chroms <- paste0("chr", c(sort(as.numeric(setdiff(chroms, sex.chr))), sex.chr))
+      shiny::updateSelectizeInput(session, "select_chromosome", choices = chroms,
+                                  selected = utils::head(chroms, 4), server = TRUE)
+      shiny::updateSelectInput(session, "data_samplefilter", choices = colnames(p$X))
+      Y <- p$samples
+      pheno <- colnames(Y)[sapply(Y, function(v) any(!is.na(v) & v != ""))]
+      pheno <- pheno[!grepl("cell_cycle", pheno, ignore.case = TRUE)]
+      shiny::updateSelectInput(session, "select_pheno",
+                               choices = c("<ungrouped>", pheno), selected = "<ungrouped>")
+    })
+
+    ## The ideogram is drawn per chromosome, so it is capped; the boxplot just
+    ## gets narrower columns and is not.
+    ## Autosomes numerically, then X and Y. as.numeric() alone turned "X" and
+    ## "Y" into NA, so selecting a sex chromosome silently drew nothing.
+    mp_sort_chroms <- function(ch) {
+      ch <- unique(sub("^chr", "", as.character(ch)))
+      num <- suppressWarnings(as.numeric(ch))
+      c(as.character(sort(num[!is.na(num)])), intersect(c("X", "Y"), ch))
+    }
+    r_chroms_capped <- shiny::reactive({
+      ch <- mp_sort_chroms(input$select_chromosome)
+      shiny::validate(
+        shiny::need(length(ch) > 0, "Select at least one chromosome in the settings panel."),
+        shiny::need(length(ch) < 7, "Select at most six chromosomes at a time - the ideogram becomes unreadable beyond that.")
+      )
+      ch
+    })
+    r_chroms_all <- shiny::reactive({
+      ch <- mp_sort_chroms(input$select_chromosome)
+      shiny::validate(shiny::need(length(ch) > 0,
+        "Select at least one chromosome in the settings panel."))
+      ch
+    })
+    r_land_samples <- shiny::reactive({
+      ss <- rownames(PGX()$samples)
+      drop <- input$data_samplefilter
+      if (!is.null(drop)) {
+        drop <- intersect(ss, drop[!is.na(drop) & drop != ""])
+        if (length(drop)) ss <- setdiff(ss, drop)
+      }
+      shiny::validate(shiny::need(length(ss) > 0, "No samples remaining after filtering."))
+      ss
+    })
+    r_land_pheno <- shiny::reactive(input$select_pheno)
+
+    ## The landscape screen's "Global beta distribution" was a second beta
+    ## density, of the per-CpG mean across samples. It has been dropped in
+    ## favour of the per-sample one on the Sample ledger: averaging across
+    ## samples pulls the two modes toward the middle, and collapsing samples
+    ## makes the panel unable to answer the question a beta density is for -
+    ## did any one sample fail. It also ignored the phenotype selector while
+    ## documenting that it split by group.
+    dataview_table_beta_server("methyltable", pgx, r.samples = r_land_samples,
+                               r.pheno = r_land_pheno, scrollY = "30vh")
+    epigenomics_plot_boxplot_beta_server("boxplotBeta", pgx,
+                                         r.chromosome = r_chroms_all,
+                                         r.samples = r_land_samples,
+                                         r.pheno = r_land_pheno, watermark = watermark)
+    epigenomics_plot_methylIdeogram_server("methylIdeogram", pgx,
+                                           r.chromosome = r_chroms_capped,
+                                           r.samples = r_land_samples,
+                                           r.pheno = r_land_pheno, watermark = watermark)
+
     ## Threshold shared by the Manhattan line, the context enrichment and the
     ## hit table. Defaults hold until the settings panel has initialised.
     r_thresh <- shiny::reactive({
@@ -216,7 +303,9 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(n) || is.na(n) || n < 1) 6 else min(as.integer(n), 12)
     })
 
-    methylome_plot_composition_server("comp_bars", PGX, r_cells, watermark = watermark)
+    methylome_plot_composition_server("comp_bars", PGX, r_cells,
+                                     shiny::reactive(input$comp_pheno),
+                                     watermark = watermark)
     methylome_table_composition_server("comp_tbl", r_cells)
     methylome_plot_compgroup_server("comp_group", PGX, r_cells,
                                     shiny::reactive(input$comp_pheno),
@@ -224,6 +313,10 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
 
     methylome_plot_manhattan_server("ewas_manhattan", r_ewas, r_thresh,
                                     watermark = watermark)
+    methylome_plot_volcano_server("ewas_volcano", r_ewas, r_thresh,
+                                  watermark = watermark)
+    methylome_plot_hitmap_server("ewas_hitmap", PGX, r_ewas, r_thresh,
+                                 watermark = watermark)
     methylome_plot_qq_server("ewas_qq", r_ewas, watermark = watermark)
     methylome_plot_enrichment_server("ewas_enrich", r_ewas, r_thresh,
                                      watermark = watermark)
@@ -250,26 +343,13 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     shiny::observeEvent(r_ewas(), regions_val(NULL), ignoreInit = TRUE)
     r_regions <- shiny::reactive(regions_val())
 
-    ## Which region the detail plot draws. Rebuilt whenever regions are called;
-    ## the value is the row index so the plot needs no lookup.
-    shiny::observeEvent(regions_val(), {
-      rg <- regions_val()
-      if (is.null(rg) || !nrow(rg$dmrs)) {
-        shiny::updateSelectInput(session, "dmr_pick", choices = character(0))
-        return()
-      }
-      lab <- sprintf("%s:%s-%s  %s  (%d CpGs)", rg$dmrs$chr,
-                     format(rg$dmrs$start, big.mark = ","),
-                     format(rg$dmrs$end, big.mark = ","),
-                     rg$genes, rg$dmrs$n)
-      shiny::updateSelectInput(session, "dmr_pick",
-                               choices = stats::setNames(seq_along(lab), lab),
-                               selected = 1)
-    }, ignoreNULL = FALSE)
-
-    methylome_table_dmr_server("ewas_dmr", PGX, r_regions)
+    ## Clicking a region in the table is what selects it for the detail plot -
+    ## the region is already on screen there, so a second copy of the same list
+    ## in the settings panel was a picker for something the user can just point
+    ## at. TableModuleServer hands back rows_selected for exactly this.
+    dmr_tbl <- methylome_table_dmr_server("ewas_dmr", PGX, r_regions)
     methylome_plot_dmrregion_server("ewas_dmrplot", PGX, r_ewas, r_regions,
-                                    shiny::reactive(input$dmr_pick),
+                                    dmr_tbl$rows_selected,
                                     watermark = watermark)
 
     enrich_val <- shiny::reactiveVal(NULL)

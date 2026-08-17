@@ -186,7 +186,14 @@ upload_module_computepgx_server <- function(
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
         } else if (grepl("methylomics", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("drugs", "connectivity", "wgcna")
+          ## Not drugs/connectivity by default. Both correlate the dataset's
+          ## fold-change against L1000 gene-EXPRESSION signatures after
+          ## collapsing CpGs to gene symbols. A methylation change is not an
+          ## expression change - promoter methylation lowers expression, gene-body
+          ## methylation often raises it - so the correlation compares two
+          ## different quantities that merely share a symbol index. Still
+          ## selectable for anyone who wants it; just not on by default.
+          mm <- c("wgcna")
         } else if (is.olink() || is.nulisa()) {
           mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
         } else {

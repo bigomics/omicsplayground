@@ -101,16 +101,20 @@ methylome_table_dmr_server <- function(id, pgx, r.regions, scrollY = "26vh") {
     })
     render <- function(sy) {
       dt <- table_data(); shiny::req(dt)
-      DT::datatable(dt, class = "compact hover", rownames = FALSE, selection = "none",
+      DT::datatable(dt, class = "compact hover", rownames = FALSE,
+        selection = list(mode = "single", target = "row"),
         extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
         options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
                        scrollY = sy, scrollResize = TRUE, deferRender = TRUE,
                        order = list(list(5, "asc")))) |>
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
     }
+    ## Returned so the caller can drive the region plot from the clicked row -
+    ## rows_selected indexes the data as passed to DT, which is the same order
+    ## as dmrs, so it needs no lookup however the table is sorted on screen.
     TableModuleServer("tblmod", func = function() render(scrollY),
                       func2 = function() render("60vh"),
-                      csvFunc = table_data, selector = "none")
+                      csvFunc = table_data, selector = "single")
   })
 }
 
@@ -152,8 +156,10 @@ methylome_plot_dmrregion_server <- function(id, pgx, r.ewas, r.regions, r.pick,
       shiny::validate(shiny::need(!is.null(rg) && nrow(rg$dmrs) > 0,
         "No regions to draw. Press Call regions in the settings panel."))
       res <- r.ewas()
+      ## No row clicked yet: show the strongest region rather than whichever
+      ## one dmrff happened to return first.
       i <- suppressWarnings(as.integer(r.pick()))
-      if (!length(i) || is.na(i)) i <- 1L
+      if (!length(i) || is.na(i)) i <- which.min(rg$dmrs$p.value)
       i <- max(1L, min(i, nrow(rg$dmrs)))
       dm <- rg$dmrs[i, ]
       d <- mp_region_probes(res, dm)

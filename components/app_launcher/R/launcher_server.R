@@ -33,10 +33,6 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "Qsee", session=parent)
     })
 
-    observeEvent(input$launch_methylome, {
-      bslib::nav_select("app-sidebar", "Methylome", session=parent)
-    })
-
     observeEvent(input$launch_idconvert, {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })

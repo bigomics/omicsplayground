@@ -1,9 +1,9 @@
 # Methylome Profiler
 
-A dedicated app for Illumina methylation array data, reached from the Smart
-Tools launcher as a Dashboard tile. It answers per-sample questions that need
-no experimental groups — epigenetic age, cell composition, methylome character
-— and runs a covariate-adjusted EWAS when groups exist.
+A Dashboard board for Illumina methylation array data, registered as
+`MODULE.methylome` and shown for methylomics datasets. It answers per-sample
+questions that need no experimental groups — epigenetic age, cell composition,
+methylome character — and runs a covariate-adjusted EWAS when groups exist.
 
 Run it locally with `make methylome` (see the bottom of this file).
 
@@ -37,7 +37,7 @@ Run it locally with `make methylome` (see the bottom of this file).
 | | Manhattan with adjustable threshold (FDR or nominal p), optional \|Δβ\| filter | Threshold line drawn at the largest passing p, omitted when nothing passes |
 | | Hits table: gene, island context, gene region, **Δβ**, direction, p, FDR | Δβ on the beta scale, not the M-value logFC |
 | **EWAS — Regions & pathways** | DMR calling | `dmrff` — runs on the summary statistics already produced |
-| | **Region detail plot**: methylation vs genomic position across a selected region | Per-sample lines, group (or tertile) means, island track, flanking context. Shows whether a region is coherent or one CpG dragging its neighbours |
+| | **Region detail plot**: methylation vs genomic position, for the region clicked in the table | Per-sample lines, group (or tertile) means, island track, flanking context. Shows whether a region is coherent or one CpG dragging its neighbours |
 | | Gene-set testing corrected for probes-per-gene | `missMethyl::gometh` |
 | **EWAS — QQ & context** | QQ plot with λ, plus bacon bias and inflation | bacon is **diagnostic only** and does not adjust p-values |
 | | Island-context enrichment of hits vs the tested background | Background is the probes tested in this contrast, not the whole array |
@@ -138,9 +138,10 @@ make methylome pgx=/path/to/dataset.pgx         # stage a specific dataset
 make methylome port=3939
 ```
 
-Then: **Library** → load a methylomics dataset → **Apps** → **Methylome
-Profiler**. The Apps launcher is gated on `opt$DEVMODE`, which the make target
-enables in memory for the session without touching `etc/OPTIONS`.
+Then: **Library** → load a methylomics dataset. Loading one lands directly on
+this board's Sample ledger; the six screens sit under **Methylome** in the
+Dashboard menu. Which menu groups appear for methylation data is set by
+`MODULES_METHYLOMICS` in `etc/OPTIONS`.
 
 Optional dependencies, all degrading gracefully when absent: `methylclock`
 (10 clocks and deconvolution — falls back to 5 clocks and no composition),

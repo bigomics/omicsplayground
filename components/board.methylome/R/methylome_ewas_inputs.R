@@ -34,7 +34,7 @@ methylome_ewas_inputs <- function(id) {
       withTooltip(
         shiny::selectInput(ns("ewas_contrast"), "Outcome:", choices = NULL),
         "What to test against methylation: a two-group contrast, or a continuous variable from the sample sheet such as age, BMI or pack-years. Changing it refits the model.",
-        placement = "top"
+        placement = "left"
       ),
       withTooltip(
         shiny::selectizeInput(ns("ewas_covars"), "Adjust for:", choices = NULL,
@@ -105,11 +105,6 @@ methylome_ewas_inputs <- function(id) {
       ),
       shiny::actionButton(ns("run_dmr"), "Call regions",
                           class = "btn btn-primary btn-sm", width = "100%"),
-      withTooltip(
-        shiny::selectInput(ns("dmr_pick"), "Region to draw:", choices = NULL),
-        "Which called region the detail plot below the table shows. Populated once regions have been called.",
-        placement = "top"
-      ),
       withTooltip(
         shiny::selectInput(ns("gs_collection"), "Gene-set collection:",
                            choices = c("GO", "KEGG"), selected = "GO"),

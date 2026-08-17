@@ -119,6 +119,21 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
     }
   }, ignoreInit = FALSE)
 
+  ## Where the user lands once a dataset has finished loading. Methylation data
+  ## opens on the Methylome board rather than DataView.
+  ##
+  ## Decided here, in the one place that already navigates after a load, rather
+  ## than in a second observer racing this one: whichever ran last would win,
+  ## which made the destination depend on the order the servers happen to be
+  ## constructed in.
+  is_methylomics <- function() {
+    !is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics"
+  }
+  ## The Methylome board is part of the Dashboard now, so landing is always the
+  ## Dashboard; which tab opens inside it is what changes.
+  landing_tab <- function() "Dashboard"
+  landing_bigtab <- function() if (is_methylomics()) "mledger-tab" else "dataview-tab"
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     # depending on datatpye, subset modules enabled and create modules active,
@@ -137,7 +152,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       bigdash.hideMenuElement(session, "SystemsBio")
       bigdash.hideMenuElement(session, "MultiOmics")
       bigdash.hideMenuElement(session, "WGCNA")
-      bigdash.hideMenuElement(session, "Epigenomics")
+      bigdash.hideMenuElement(session, "Methylome")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -197,12 +212,12 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
         bigdash.hideMenuElement(session, "WGCNA")
         loaded$wgcna <- 0
       }
-      if (x == "Epigenomics") {
-        lapply(names(MODULE.epigenomics$module_menu()), function(x) {
+      if (x == "Methylome") {
+        lapply(names(MODULE.methylome$module_menu()), function(x) {
           bigdash.removeTab(session, paste0(x, "-tab"))
         })
-        bigdash.hideMenuElement(session, "Epigenomics")
-        loaded$epigenomics <- 0
+        bigdash.hideMenuElement(session, "Methylome")
+        loaded$methylome <- 0
       }
     })
 
@@ -247,8 +262,8 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
             DataViewBoard("dataview",
               pgx = PGX, labeltype = labeltype
             )
-            bslib::nav_select("app-sidebar", selected = "Dashboard")
-            bigdash.selectTab(session, "dataview-tab")            
+            bslib::nav_select("app-sidebar", selected = landing_tab())
+            bigdash.selectTab(session, landing_bigtab())
           }
           shiny::incProgress(0.1)
 
@@ -337,14 +352,23 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
             })
           }
 
-          if (MODULES_TO_LOAD["Epigenomics"] && exists("MODULE.epigenomics")) {
-            info("[SERVER:UI:1] initializing Epigenomics module")
-            mod <- MODULE.epigenomics
+          if (MODULES_TO_LOAD["Methylome"] && exists("MODULE.methylome")) {
+            info("[SERVER:UI:1] initializing Methylome module")
+            mod <- MODULE.methylome
             insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "Epigenomics")
-            lapply(names(MODULE.epigenomics$module_menu()), function(x) {
+            bigdash.showMenuElement(session, "Methylome")
+            lapply(names(MODULE.methylome$module_menu()), function(x) {
               bigdash.showTab(session, paste0(x, "-tab"))
             })
+            ## Methylation data lands on this board, so build its content and
+            ## server here rather than waiting for the nav observer. Deferring
+            ## it left the user watching spinners after the loading modal had
+            ## already closed.
+            if (is_methylomics() && loaded$methylome == 0) {
+              insertBigTabUI2(mod$module_ui2(), mod$module_menu())
+              mod$module_server(PGX)
+              loaded$methylome <- 1
+            }
           }
 
           MODULES_LOADED <<- MODULES_ACTIVE
@@ -372,12 +396,12 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       )
     }
 
-    ## Goto dataview
-    bslib::nav_select("app-sidebar", selected = "Dashboard")
+    ## Goto dataview, or straight into the Methylome app for methylation data
+    bslib::nav_select("app-sidebar", selected = landing_tab())
     bigdash.openSettings(lock = TRUE)
     bigdash.openSidebar()
     bigdash.showTabs(session)
-    bigdash.selectTab(session, "dataview-tab")
+    bigdash.selectTab(session, landing_bigtab())
 
     ## remove loading modal from LoadingBoard
     shinyjs::delay(2000, {
@@ -419,7 +443,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
     systems = 0,
     multiomics = 0,
     wgcna = 0,
-    epigenomics = 0
+    methylome = 0
   )
 
   observeEvent(input$nav, {
@@ -491,12 +515,13 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       loaded$wgcna <- 1
       tab_control()
     }
-    if (input$nav %in% c("ideograms-tab") && loaded$epigenomics == 0) {
-      info("[SERVER:UI:2] reacted: calling Epigenomics module")
-      mod <- MODULE.epigenomics
+    methylome_tabs <- paste0(names(MODULE.methylome$module_menu()), "-tab")
+    if (input$nav %in% methylome_tabs && loaded$methylome == 0) {
+      info("[SERVER:UI:2] reacted: calling Methylome module")
+      mod <- MODULE.methylome
       insertBigTabUI2(mod$module_ui2(), mod$module_menu())
       mod$module_server(PGX)
-      loaded$epigenomics <- 1
+      loaded$methylome <- 1
       tab_control()
     }
   })
@@ -519,12 +544,22 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
     bigdash.toggleTab(session, "mwgcna-tab", is.multiomics)
     bigdash.toggleTab(session, "wgcna-tab", !is.multiomics || show.beta)
 
-    ## hide beta subtabs..
-    toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
-    toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
-    toggleTab("wgcna-tabs", "AI Report✨", show.beta)
-    toggleTab("mwgcna-tabs", "AI Report✨", show.beta)
-    toggleTab("drug-tabs", "AI Summary✨", show.beta)     
+    ## Hide beta subtabs. Only touch a tabset whose board has actually been
+    ## inserted: boards are loaded lazily, and for a datatype whose module set
+    ## excludes one they are never inserted at all. shiny::showTab on a tabset
+    ## that is not in the DOM throws a client-side "there is no tabsetPanel with
+    ## id ..." error, which is how this surfaced for methylomics.
+    if (isTRUE(loaded$systems > 0)) {
+      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
+      toggleTab("drug-tabs", "AI Summary✨", show.beta)
+    }
+    if (isTRUE(loaded$enrichment > 0)) {
+      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    }
+    if (isTRUE(loaded$wgcna > 0)) {
+      toggleTab("wgcna-tabs", "AI Report✨", show.beta)
+      toggleTab("mwgcna-tabs", "AI Report✨", show.beta)
+    }
 
     ## Control tab to only be displayed if there is custom fc + baseline fc
     has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
@@ -556,12 +591,6 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       bigdash.hideTab(session, "cell-tab")
       bigdash.hideTab(session, "wordcloud-tab")
       bigdash.hideTab(session, "cmap-tab")
-    }
-
-    ## Show Epigenomics only for methylomics data
-    if (!is.null(PGX$datatype) && tolower(PGX$datatype) != "methylomics") {
-      bigdash.hideTab(session, "ideograms-tab")
-      bigdash.hideMenuElement(session, "Epigenomics")
     }
 
     ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)

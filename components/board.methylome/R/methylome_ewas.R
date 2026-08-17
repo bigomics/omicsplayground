@@ -56,9 +56,13 @@ mp_ewas_sig <- function(d, thresh) {
 ## A q-value cut-off has no fixed position on a -log10(p) axis, so use the
 ## largest p that still passes; with no hits there is no line.
 mp_ewas_hline <- function(d, thresh) {
-  if (identical(thresh$type, "p")) return(-log10(thresh$value))
-  sig <- !is.na(d$q) & d$q <= thresh$value
-  if (!any(sig)) return(NA_real_)
+  ## Drawn from the same rule that colours the points and counts the hits -
+  ## using the q cut-off alone put the line somewhere no plotted hit sat
+  ## whenever the effect-size filter was on.
+  sig <- mp_ewas_sig(d, thresh)
+  if (!any(sig)) {
+    return(if (identical(thresh$type, "p")) -log10(thresh$value) else NA_real_)
+  }
   -log10(max(d$p[sig], na.rm = TRUE))
 }
 
@@ -356,5 +360,140 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
       }),
       renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
       res = c(90, 130), pdf.width = 9, pdf.height = 6, add.watermark = watermark)
+  })
+}
+
+## ------------------------------------------------------------------ volcano --
+##
+## Rated near-universal in both the population-EWAS and the cancer literature,
+## and the one view that shows the effect-size/significance trade-off directly.
+## Both axes come from the fitted model, so this cannot be borrowed from the
+## platform's own volcano, which draws the unadjusted result stored at upload.
+
+methylome_plot_volcano_ui <- function(id, title, caption, info.text, info.methods,
+                                      height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    height = height, width = width, label = "b")
+}
+
+methylome_plot_volcano_server <- function(id, r.ewas, r.thresh, watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot.RENDER <- function() {
+      res <- r.ewas(); th <- r.thresh()
+      d <- res$data
+      d <- d[is.finite(d$p) & is.finite(d$dbeta), , drop = FALSE]
+      shiny::validate(shiny::need(nrow(d) > 0, "No probe has both an effect size and a p-value."))
+      sig <- mp_ewas_sig(d, th)
+      op <- graphics::par(mar = c(4.2, 4.5, 1.4, 1), las = 1, mgp = c(2.4, 0.6, 0))
+      on.exit(graphics::par(op))
+      ## For a continuous outcome delta-beta is a slope, so say so on the axis.
+      xlab <- if (isTRUE(res$meta$continuous)) {
+        paste0("delta-beta per unit ", res$contrast)
+      } else {
+        "delta-beta"
+      }
+      graphics::plot(d$dbeta, -log10(d$p), pch = 19, cex = 0.35, col = "#c2ccd6",
+                     xlab = xlab, ylab = expression(-log[10](p)))
+      graphics::abline(v = 0, lty = 3, col = MP_PAL$grey)
+      if (any(sig)) {
+        graphics::points(d$dbeta[sig], -log10(d$p[sig]), pch = 19, cex = 0.6,
+          col = ifelse(d$dbeta[sig] > 0, MP_PAL$hyper, MP_PAL$hypo))
+      }
+      h <- mp_ewas_hline(d, th)
+      if (is.finite(h)) graphics::abline(h = h, lty = 2, col = MP_PAL$grey)
+      if (!is.null(th$min_dbeta) && th$min_dbeta > 0) {
+        graphics::abline(v = c(-1, 1) * th$min_dbeta, lty = 2, col = MP_PAL$grey)
+      }
+      if (any(sig)) {
+        s <- d[sig, , drop = FALSE]
+        s <- s[order(s$p), , drop = FALSE]
+        s <- utils::head(s, 8)
+        lab <- ifelse(is.na(s$gene) | s$gene == "", s$probe, sub(";.*", "", s$gene))
+        graphics::text(s$dbeta, -log10(s$p), labels = lab, pos = 3, cex = 0.7,
+                       col = "#33404d", xpd = NA)
+      }
+      graphics::mtext(sprintf("%s hits", format(sum(sig), big.mark = ",")),
+                      side = 3, adj = 1, cex = 0.75, col = MP_PAL$grey)
+    }
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = shiny::reactive(r.ewas()$data), renderFunc = shiny::renderPlot,
+      renderFunc2 = shiny::renderPlot, res = c(90, 130),
+      pdf.width = 6, pdf.height = 6, add.watermark = watermark)
+  })
+}
+
+## ------------------------------------------------------------- hits heatmap --
+##
+## Samples x top CpGs, samples ordered by the model's own strata. The platform's
+## clustering heatmap selects features by variance across the whole matrix; here
+## the selection IS the analysis - these are the CpGs the adjusted model called -
+## so it cannot be borrowed either.
+
+methylome_plot_hitmap_ui <- function(id, title, caption, info.text, info.methods,
+                                     height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    height = height, width = width, label = "c")
+}
+
+methylome_plot_hitmap_server <- function(id, pgx, r.ewas, r.thresh,
+                                         n.max = 50, watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot_data <- shiny::reactive({
+      p <- pgx(); res <- r.ewas(); m <- res$meta
+      d <- res$data
+      sig <- mp_ewas_sig(d, r.thresh())
+      shiny::validate(shiny::need(sum(sig) >= 2,
+        "Fewer than two CpGs pass the current threshold - nothing to cluster."))
+      d <- d[sig, , drop = FALSE]
+      d <- utils::head(d[order(d$p), , drop = FALSE], n.max)
+      X <- mp_beta(p)
+      ss <- intersect(m$samples, colnames(X))
+      shiny::validate(shiny::need(length(ss) > 1, "No samples left for this model."))
+      grp <- droplevels(m$strata[ss])
+      ord <- order(grp)
+      list(B = X[d$probe, ss[ord], drop = FALSE], grp = grp[ord], d = d)
+    })
+    plot.RENDER <- function() {
+      z <- plot_data(); B <- z$B; grp <- z$grp
+      lv <- levels(grp)
+      gcol <- grDevices::colorRampPalette(c(MP_PAL$hypo, MP_PAL$hyper))(max(2, length(lv)))
+      op <- graphics::par(mar = c(1.5, 8, 3.4, 1), las = 1)
+      on.exit(graphics::par(op))
+      nr <- nrow(B); nc <- ncol(B)
+      ## Beta on a fixed [0,1] scale rather than a row z-score: the absolute
+      ## methylation level is the interpretable quantity, and a z-score makes a
+      ## 2% difference look identical to a 60% one.
+      graphics::image(x = seq_len(nc), y = seq_len(nr),
+                      z = t(B[rev(seq_len(nr)), , drop = FALSE]),
+                      zlim = c(0, 1), axes = FALSE, xlab = "", ylab = "",
+                      col = grDevices::colorRampPalette(
+                        c("#2166ac", "#f7f7f7", "#b2182b"))(64))
+      lab <- ifelse(is.na(z$d$gene) | z$d$gene == "", z$d$probe,
+                    paste0(sub(";.*", "", z$d$gene), "  ", z$d$probe))
+      graphics::axis(2, at = seq_len(nr), labels = rev(lab), tick = FALSE,
+                     cex.axis = 0.5, line = -0.6)
+      ## Group bar above the matrix.
+      bh <- max(1, nr * 0.035)
+      graphics::rect(seq_len(nc) - 0.5, nr + 0.6, seq_len(nc) + 0.5, nr + 0.6 + bh,
+                     col = gcol[as.integer(grp)], border = NA, xpd = NA)
+      graphics::legend("top", horiz = TRUE, bty = "n", inset = c(0, -0.13),
+                       legend = lv, fill = gcol[seq_along(lv)], border = NA,
+                       cex = 0.75, xpd = NA,
+                       title = if (isTRUE(r.ewas()$meta$continuous)) "outcome tertile" else NULL)
+      graphics::mtext(sprintf("%d samples", nc), side = 1, adj = 1, cex = 0.7,
+                      col = MP_PAL$grey, line = 0.2)
+    }
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = shiny::reactive({
+        z <- plot_data(); cbind(probe = rownames(z$B), as.data.frame(z$B))
+      }),
+      renderFunc = shiny::renderPlot, renderFunc2 = shiny::renderPlot,
+      res = c(90, 130), pdf.width = 8, pdf.height = 7, add.watermark = watermark)
   })
 }

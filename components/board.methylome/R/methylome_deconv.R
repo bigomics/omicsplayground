@@ -76,20 +76,24 @@ methylome_plot_composition_ui <- function(id, title, caption, info.text, info.me
   )
 }
 
-methylome_plot_composition_server <- function(id, pgx, r.cells, watermark = FALSE) {
+methylome_plot_composition_server <- function(id, pgx, r.cells,
+                                              r.pheno = shiny::reactive(NULL),
+                                              watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot.RENDER <- function() {
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
         "Cell composition is not available. Press Estimate composition in the settings panel."))
       p <- pgx()
-      ## Order samples by the first categorical phenotype so group differences
-      ## in composition are visible rather than scattered.
-      ord <- seq_len(nrow(cc)); lab <- NULL
-      for (k in colnames(p$samples)) {
-        v <- as.character(p$samples[rownames(cc), k])
-        u <- unique(v[!is.na(v) & v != ""])
-        if (length(u) >= 2 && length(u) <= 6) { ord <- order(v); lab <- v[ord]; break }
+      ## Ordered by the phenotype the user picked, not by whichever sample
+      ## column happened to come first - on a sheet led by slide or plate that
+      ## silently bracketed the bars by batch under a phenotype label.
+      ord <- seq_len(nrow(cc)); lab <- NULL; gname <- r.pheno()
+      if (!is.null(gname) && nzchar(gname) && gname %in% colnames(p$samples)) {
+        v <- as.character(p$samples[rownames(cc), gname])
+        if (length(unique(v[!is.na(v) & v != ""])) >= 2) {
+          ord <- order(v); lab <- v[ord]
+        }
       }
       m <- t(cc[ord, , drop = FALSE])
       op <- graphics::par(mar = c(4.5, 4.2, 1, 7.5), las = 1, xpd = NA)
@@ -97,7 +101,7 @@ methylome_plot_composition_server <- function(id, pgx, r.cells, watermark = FALS
       cols <- grDevices::hcl.colors(nrow(m), "Spectral")
       graphics::barplot(m, col = cols, border = NA, space = 0,
                         ylab = "estimated proportion", xaxt = "n",
-                        xlab = if (is.null(lab)) "samples" else "samples, ordered by phenotype")
+                        xlab = if (is.null(lab)) "samples" else paste("samples, ordered by", gname))
       graphics::legend("topright", inset = c(-0.17, 0), bty = "n",
                        legend = rownames(m), fill = cols, cex = 0.85)
       if (!is.null(lab)) {

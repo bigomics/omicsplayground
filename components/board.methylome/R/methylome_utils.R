@@ -56,17 +56,26 @@ mp_imprint_drift <- function(X) {
   round(colMeans(abs(X[ii, , drop = FALSE] - 0.5), na.rm = TRUE), 3)
 }
 
-mp_clocks <- function(X) {
+## method: "all" fits the five wateRmelon clocks, which is what the Epigenetic
+## age fallback needs. The ledger shows one number and used to pay for five, so
+## it asks for one - the dominant cost on that screen.
+mp_clocks <- function(X, method = "all") {
   ## agep() calls data("age_coefficients") with no package= argument, so the
   ## coefficients only resolve when wateRmelon is attached. Calling it
   ## namespace-qualified silently yields NA ages.
   if (!"package:wateRmelon" %in% search()) {
     suppressPackageStartupMessages(library(wateRmelon))
   }
-  A <- tryCatch(wateRmelon::agep(X, method = "all"), error = function(e) NULL)
+  A <- tryCatch(wateRmelon::agep(X, method = method), error = function(e) NULL)
   if (is.null(A)) return(NULL)
   A <- as.data.frame(A)
   keep <- grep("\\.age$", colnames(A), value = TRUE)
+  ## A single-method call returns one unsuffixed column, so fall back to
+  ## whatever came back rather than returning an empty frame.
+  if (!length(keep)) {
+    colnames(A) <- method
+    return(round(A, 1))
+  }
   out <- A[, keep, drop = FALSE]
   colnames(out) <- sub("\\..*", "", keep)
   round(out, 1)
