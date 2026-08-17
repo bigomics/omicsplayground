@@ -391,10 +391,53 @@ html {
       margin-bottom: 0.3rem; 
   }
 
-  .form-check-input:checked, .shiny-input-container .checkbox input:checked {
-      background-color: aliceblue;
+  // Checkboxes.
+  //
+  // shiny::checkboxInput() emits Bootstrap 3 markup (div.checkbox > label >
+  // input), while form-generating widgets emit BS5's .form-check-input, so
+  // both shapes have to be styled or half the app's checkboxes are missed.
+  //
+  // The checked state used to be `background-color: aliceblue`, which is so
+  // close to white that Bootstrap's white checkmark vanished: a ticked box
+  // was indistinguishable from an empty one, and the blue focus ring read as
+  // "checked" instead. Keep the box white and draw the tick in ink.
+  // NB: `.form-check:not(.form-switch)` is load-bearing -- bslib's
+  // input_switch() is also a .form-check-input, and giving it a checkmark
+  // background-image would replace the switch knob.
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"],
+  .shiny-input-container .checkbox input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.05em;
+      height: 1.05em;
+      vertical-align: -0.15em;
+      border: 1px solid #adb5bd;
+      border-radius: 0.25em;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 100%;
   }
-  
+
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:checked,
+  .shiny-input-container .checkbox input[type="checkbox"]:checked {
+      background-color: #fff;
+      border-color: #212529;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='M5 10.5l3.5 3.5l7-7'/%3e%3c/svg%3e");
+  }
+
+  // the default focus ring is easy to misread as a checked state
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:focus,
+  .shiny-input-container .checkbox input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: none;
+  }
+
+  .shiny-input-container .checkbox label {
+      cursor: pointer;
+      font-weight: 400;
+  }
+
 }
 
 // to work with mouse listeners, we need to remove pointer events from tooltips
