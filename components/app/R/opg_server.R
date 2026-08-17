@@ -205,6 +205,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
             info("[SERVER:UI:1] calling Expression module")
             info("[SERVER:UI:1] calling DiffExprBoard module")
             bigdash.showMenuElement(session, "Expression")
+            ## preload expression board
             ExpressionBoard("diffexpr",
               pgx = PGX, labeltype = labeltype
             ) ->> env$diffexpr
@@ -220,6 +221,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
             info("[SERVER:UI:1] calling GeneSets module")
             info("[SERVER:UI:1] calling EnrichmentBoard module")
             bigdash.showMenuElement(session, "GeneSets")
+            ## preload enrichment board
             EnrichmentBoard("enrich",
               pgx = PGX,
               selected_gxmethods = env$diffexpr$selected_gxmethods
