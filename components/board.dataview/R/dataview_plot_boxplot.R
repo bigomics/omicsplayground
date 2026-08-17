@@ -16,6 +16,17 @@ dataview_plot_boxplot_ui <- function(
       inputId = ns("group_by_feature_class"),
       label = "Group by feature class (available when {Group by} is used)",
       choices = "<ungrouped>"
+    ),
+    shiny::conditionalPanel(
+      condition = "input.group_by_feature_class != '<ungrouped>'",
+      ns = ns,
+      shiny::selectizeInput(
+        inputId = ns("class_filter"),
+        label = "Filter classes",
+        choices = NULL,
+        multiple = TRUE,
+        options = list(placeholder = "All classes shown")
+      )
     )
   )
 
@@ -63,6 +74,36 @@ dataview_plot_boxplot_server <- function(id,
       }
     })
 
+    ## Repopulate the class filter whenever the grouping column (or annotation) changes
+    shiny::observeEvent(
+      {
+        input$group_by_feature_class
+        r.annot()
+      },
+      {
+        annot <- r.annot()
+        class_col <- input$group_by_feature_class
+        valid <- !is.null(annot) && !is.null(class_col) &&
+          class_col != "<ungrouped>" && class_col %in% colnames(annot)
+        if (valid) {
+          classes <- sort(unique(stats::na.omit(as.character(annot[, class_col]))))
+        } else {
+          classes <- character(0)
+        }
+        shiny::updateSelectizeInput(session, "class_filter", choices = classes, selected = classes)
+      },
+      ignoreNULL = FALSE
+    )
+
+    ## Selected classes to keep (NULL = keep all, e.g. before init or nothing filtered out)
+    selected_classes <- shiny::reactive({
+      sel <- input$class_filter
+      if (is.null(sel) || length(sel) == 0) {
+        return(NULL)
+      }
+      sel
+    })
+
     plot_data <- shiny::reactive({
       res <- getCountsTable()
       samples <- r.samples()
@@ -88,6 +129,8 @@ dataview_plot_boxplot_server <- function(id,
       class_col <- input$group_by_feature_class
       shiny::req(class_col, class_col != "<ungrouped>", class_col %in% colnames(annot))
       classes <- sort(unique(stats::na.omit(as.character(annot[, class_col]))))
+      sel <- selected_classes()
+      if (!is.null(sel)) classes <- intersect(classes, sel)
       shiny::req(length(classes) > 0)
       theme_palette <- shiny::isolate(get_color_theme()$palette)
       if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
@@ -122,6 +165,10 @@ dataview_plot_boxplot_server <- function(id,
             long.df <- long.df[idx, , drop = FALSE]
             long.df$class <- annot[match(long.df$gene, rownames(annot)), class_col]
             split <- "class"
+            sel <- selected_classes()
+            if (!is.null(sel)) {
+              long.df <- long.df[long.df$class %in% sel, , drop = FALSE]
+            }
           }
         }
       }
@@ -134,8 +181,8 @@ dataview_plot_boxplot_server <- function(id,
           theme_palette <- shiny::isolate(get_color_theme()$palette)
           if (is.null(theme_palette) || theme_palette == "") theme_palette <- "default"
           fallback_pal <- tryCatch(
-            omics_pal_d(palette = theme_palette)(n_classes),
-            error = function(e) omics_pal_d("default")(n_classes)
+            omics_pal_d(palette = theme_palette)(min(n_classes, 8)),
+            error = function(e) omics_pal_d("default")(min(n_classes, 8))
           )
           palette_colors <- resolve_palette_colors(
             input, n_classes,
@@ -170,9 +217,10 @@ dataview_plot_boxplot_server <- function(id,
       gp <- extract_ggprism_params(input)
 
       if (gp$use_ggprism) {
-        ## --- ggplot2 + ggprism path ---
         p <- playbase::pgx.boxplot.GGPLOT(
-          data = long.df, x = "sample", y = "value",
+          data = long.df,
+          x = "sample",
+          y = "value",
           split = split,
           yaxistitle = ylab,
           color = bar_color,
@@ -184,7 +232,6 @@ dataview_plot_boxplot_server <- function(id,
         p <- apply_editor_theme(p, input)
         fig <- ggplot_as_plotly_image(p)
       } else {
-        ## --- existing plotly path ---
         fig <- playbase::pgx.boxplot.PLOTLY(
           data = long.df,
           x = "sample",
