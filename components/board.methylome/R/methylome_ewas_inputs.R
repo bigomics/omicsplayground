@@ -51,10 +51,14 @@ methylome_ewas_inputs <- function(id) {
       withTooltip(
         shiny::checkboxGroupInput(
           ns("ewas_mask"), "Mask probes:",
-          choices = c("Common SNP in probe" = "snp", "Cross-reactive" = "xreactive"),
+          choices = c("Common SNP in probe" = "snp", "Cross-reactive" = "xreactive",
+                      "Sex chromosomes" = "sexchr"),
+          ## sexchr is left unticked: unlike the other two it is only correct
+          ## for a mixed-sex cohort, and it would delete the answer outright
+          ## in a study of sex.
           selected = c("snp", "xreactive")
         ),
-        "Probes carrying a common SNP measure genotype rather than methylation; cross-reactive probes map to more than one locus. Both are standard QC exclusions.",
+        "Probes carrying a common SNP measure genotype rather than methylation; cross-reactive probes map to more than one locus. Both are standard QC exclusions and are on by default. Dropping X and Y is near-universal in mixed-sex cohorts, where dosage compensation makes every X probe track sex - but it deletes the signal in a single-sex cohort or a study of sex itself, so it is off by default.",
         placement = "top"
       ),
       shiny::actionButton(ns("run_ewas"), "Run EWAS",

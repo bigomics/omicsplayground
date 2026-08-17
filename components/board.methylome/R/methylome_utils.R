@@ -90,11 +90,59 @@ mp_sex <- function(X) {
 
 ## Does the dataset even carry sex chromosomes? GEO matrices are often shipped
 ## with filterXY already applied, in which case we refuse to predict.
-mp_has_xy <- function(pgx) {
+##
+## The chr column a playbase-built pgx carries is a cytoband ("Xp22.2"), not
+## "chrX", so an exact match on X/Y found nothing and sex prediction was off
+## for every such dataset - the ledger simply read "not available". Match the
+## band's leading chromosome, and require enough probes for estimateSex to
+## have something to work with: a handful of X probes yields a uniform,
+## confident and wrong call, which is worse than declining.
+mp_has_xy <- function(pgx, min_probes = 100) {
   cc <- grep("^chr$|chrom", tolower(colnames(pgx$genes)))
   if (!length(cc)) return(FALSE)
   v <- as.character(pgx$genes[[cc[1]]])
-  any(grepl("^(chr)?[XY]$", v, ignore.case = TRUE))
+  sum(grepl("^(chr)?[XY]([pq]|$)", v, ignore.case = TRUE), na.rm = TRUE) >= min_probes
+}
+
+## Recorded sex from the sample sheet, normalised to "F"/"M".
+##
+## Comparing this against the predicted sex is the primary sample-swap
+## detector on methylation arrays: the X/Y signal is unambiguous, so a
+## disagreement is a mislabelled tube far more often than it is biology.
+##
+## Cohorts name the column anything from "Sex" to "gender" and fill it with
+## anything from "F" to "Female" to "XY", so match loosely. Numeric codings
+## (1/2) are deliberately NOT accepted - which digit means male is not
+## standardised, and guessing would invert the very check this exists for.
+## Anything unrecognised stays NA rather than being forced to a side.
+mp_recorded_sex <- function(pgx) {
+  s <- pgx$samples
+  if (is.null(s)) return(NULL)
+  k <- grep("^(sex|gender)$", tolower(colnames(s)))
+  if (!length(k)) k <- grep("sex|gender", tolower(colnames(s)))
+  if (!length(k)) return(NULL)
+  v <- tolower(trimws(as.character(s[[k[1]]])))
+  out <- rep(NA_character_, length(v))
+  out[grepl("^(f|female|woman|women|xx)$", v)] <- "F"
+  out[grepl("^(m|male|man|men|xy)$", v)] <- "M"
+  if (!any(!is.na(out))) return(NULL)
+  stats::setNames(out, rownames(s))
+}
+
+## Per-sample verdict on predicted vs recorded sex, aligned to `samples`.
+## Split out from the ledger so it is testable without a browser, and so the
+## degrade-gracefully cases are in one place rather than nested in a
+## data.frame() call: no recorded column and no prediction both mean "we
+## cannot say", which must never read as agreement.
+mp_sex_check <- function(pgx, predicted, samples) {
+  rec <- mp_recorded_sex(pgx)
+  if (is.null(rec) || is.null(predicted)) return(rep("not available", length(samples)))
+  rec <- rec[samples]
+  ## predicted_sex is "Female"/"Male"; take the initial rather than trusting
+  ## the full spelling to stay put across wateRmelon versions.
+  pred <- toupper(substr(as.character(predicted), 1, 1))
+  ifelse(is.na(rec) | !pred %in% c("F", "M"), "no record",
+         ifelse(rec == pred, "ok", "MISMATCH"))
 }
 
 mp_context_col <- function(pgx, what = c("island", "gene")) {

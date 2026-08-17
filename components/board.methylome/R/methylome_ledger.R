@@ -30,17 +30,24 @@ methylome_table_ledger_server <- function(id, pgx, scrollY = "22vh") {
       drift <- mp_imprint_drift(X)
       clk <- mp_clocks(X, method = "horvath")
       sex <- if (mp_has_xy(p)) mp_sex(X) else NULL
+      ## A predicted sex is only worth showing next to what the sample sheet
+      ## claims: on its own it confirms nothing, and disagreement is the
+      ## cheapest sample-swap signal an array gives you.
+      sexchk <- mp_sex_check(p, if (is.null(sex)) NULL else sex$predicted_sex,
+                             colnames(X))
       data.frame(
         Bimodality = bim,
         `Missing %` = round(100 * colMeans(is.na(X)), 2),
         `DNAm age` = if (!is.null(clk)) clk[[1]] else NA,
         `Sex predicted` = if (!is.null(sex)) as.character(sex$predicted_sex) else "not available",
+        `Sex check` = sexchk,
         `Imprint drift` = drift,
         ## Cohort-relative, because absolute cut-offs do not transfer between
         ## platforms or tissues.
         Verdict = {
           bad <- (!is.na(drift) & drift > median(drift, na.rm = TRUE) + 3 * mad(drift, na.rm = TRUE)) |
-            (bim < median(bim, na.rm = TRUE) - 3 * mad(bim, na.rm = TRUE))
+            (bim < median(bim, na.rm = TRUE) - 3 * mad(bim, na.rm = TRUE)) |
+            sexchk == "MISMATCH"
           ifelse(bad, "CHECK", "PASS")
         },
         row.names = colnames(X), check.names = FALSE, stringsAsFactors = FALSE
@@ -62,7 +69,11 @@ methylome_table_ledger_server <- function(id, pgx, scrollY = "22vh") {
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
         DT::formatStyle("Verdict",
           color = DT::styleEqual(c("PASS", "CHECK"), c(MP_PAL$ok, MP_PAL$warn)),
-          fontWeight = "bold")
+          fontWeight = "bold") |>
+        ## Only the mismatch is coloured - "ok" and "no record" are both
+        ## uneventful, and red on a missing record would cry wolf.
+        DT::formatStyle("Sex check",
+          color = DT::styleEqual("MISMATCH", MP_PAL$bad, default = MP_PAL$grey))
     }
 
     TableModuleServer(

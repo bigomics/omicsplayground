@@ -44,7 +44,7 @@ methylome_ui_ledger <- function(id = "methylome") {
       methylome_table_ledger_ui(
         ns("ledger_tbl"),
         title = "Per-sample checks",
-        info.text = "One row per sample. Bimodality is the fraction of probes outside the intermediate 0.3-0.7 band; a healthy methylome sits near 0.9. Imprint drift is the mean absolute deviation of imprinted DMRs from their expected 0.5. DNAm age here is a single quick estimate with no coverage check - the Epigenetic age screen is where clocks are chosen, withheld below a coverage floor, and compared.",
+        info.text = "One row per sample. Bimodality is the fraction of probes outside the intermediate 0.3-0.7 band; a healthy methylome sits near 0.9. Imprint drift is the mean absolute deviation of imprinted DMRs from their expected 0.5. Sex check compares the sex predicted from the X/Y probes against a recorded sex column in the sample sheet: a MISMATCH is the cheapest sample-swap signal an array gives you, and reads 'no record' rather than 'ok' when the sheet does not say. DNAm age here is a single quick estimate with no coverage check - the Epigenetic age screen is where clocks are chosen, withheld below a coverage floor, and compared.",
         caption = "Per-sample quality, identity and epigenetic age.",
         height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
       ),
@@ -106,7 +106,7 @@ methylome_ui_age <- function(id = "methylome") {
       methylome_table_coverage_ui(
         ns("age_cov"),
         title = "Clocks and coverage",
-        info.text = "What each selected clock is, its median estimate, and whether this dataset carries enough of its CpGs to compute it at all.",
+        info.text = "What each selected clock is, its median estimate, and whether this dataset carries enough of its CpGs to compute it at all. Two columns say what is lost: the fraction of the clock's CpGs absent from this dataset, and the fraction of its total absolute model weight those CpGs carried. They diverge - a clock can lose 5% of its probes and 40% of its weight if the missing ones are the heavy ones - which is why the ageing literature reports both. A dash means the coefficients are not reachable for that clock.",
         caption = "Per-clock coverage and whether the estimate is usable.",
         height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
       )

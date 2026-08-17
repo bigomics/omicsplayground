@@ -5,7 +5,7 @@ MP_PAL <- list(hypo = "#4575b4", hyper = "#d73027", grey = "#8697a6",
                ok = "#18753a", bad = "#a8202c", warn = "#8a5a06")
 setwd("../R")
 for (f in c("methylome_utils.R", "methylome_ewas.R", "methylome_model.R",
-            "methylome_regions.R", "methylome_deconv.R")) source(f)
+            "methylome_regions.R", "methylome_deconv.R", "methylome_age.R")) source(f)
 
 ok <- function(lbl, cond) cat(sprintf("%-54s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
 pgx <- local({ e <- new.env(); load("../../../data/GSE43976-methyl-mini.pgx", envir = e)
@@ -90,6 +90,89 @@ ok("model refuses EPICv2", refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood")))
 ok("model refuses EPICv2 with masking off",
    refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood", mask = character(0))))
 
+## ------------------------------------------------------------- sex check ----
+## The sample-swap detector. Its failure mode is silent agreement, so the
+## cases that must NOT read as "ok" are the ones worth pinning down.
+cat("\n== sex check ==\n")
+rec <- mp_recorded_sex(pgx)
+ok("recorded sex found", !is.null(rec) && length(rec) == nrow(pgx$samples))
+ok("normalised to F/M", all(stats::na.omit(unique(rec)) %in% c("F", "M")))
+ok("counts match the sheet", sum(rec == "F", na.rm = TRUE) == 82 &&
+     sum(rec == "M", na.rm = TRUE) == 13)
+
+## A "gender" column with long labels must resolve the same way.
+pg <- pgx
+pg$samples$sex <- NULL
+pg$samples$Gender <- ifelse(pgx$samples$sex == "female", "Female", "Male")
+ok("gender column matched", identical(unname(mp_recorded_sex(pg)), unname(rec)))
+
+## 1/2 coding is not standardised, so it must decline rather than guess: a
+## wrong guess inverts every verdict this check exists to produce.
+pn <- pgx; pn$samples$sex <- ifelse(pgx$samples$sex == "female", 1, 2)
+ok("numeric coding declined", is.null(mp_recorded_sex(pn)))
+
+pnone <- pgx; pnone$samples$sex <- NULL
+ok("no sex column -> NULL", is.null(mp_recorded_sex(pnone)))
+
+ss <- colnames(pgx$X)
+allf <- rep("Female", length(ss))
+chk <- mp_sex_check(pgx, allf, ss)
+ok("agreement reads ok", sum(chk == "ok") == 82)
+ok("disagreement reads MISMATCH", sum(chk == "MISMATCH") == 13)
+ok("no prediction is not agreement",
+   all(mp_sex_check(pgx, NULL, ss) == "not available"))
+ok("no recorded column is not agreement",
+   all(mp_sex_check(pnone, allf, ss) == "not available"))
+## An unresolved value must read "no record", never "ok" against a prediction.
+pu <- pgx; pu$samples$sex[1:3] <- "unknown"
+ok("unresolved value reads no record",
+   sum(mp_sex_check(pu, allf, ss) == "no record") == 3)
+
+## pgx$genes$chr is a cytoband ("Xp22.2"), so an exact match on "X" found
+## nothing and sex prediction was dead on every playbase-built dataset.
+ok("cytoband X/Y detected", {
+  px <- pgx; px$genes$chr <- rep("Xp22.2", nrow(px$genes)); mp_has_xy(px)
+})
+ok("a handful of X probes still declines", !mp_has_xy(pgx))
+
+## ----------------------------------------------------- sex-chromosome mask ----
+cat("\n== sex-chromosome mask ==\n")
+xy <- mp_sexchr_probes(pgx)
+ok("450K X/Y probes found", length(xy) > 10000)
+ok("mask is off by default",
+   !"sexchr" %in% eval(formals(mp_masked_probes)$mask))
+ok("sexchr adds to the other masks",
+   all(mp_masked_probes(pgx, c("snp", "xreactive")) %in%
+         mp_masked_probes(pgx, c("snp", "xreactive", "sexchr"))))
+ok("selecting it alone masks only X/Y",
+   setequal(mp_masked_probes(pgx, "sexchr"), xy))
+
+## ------------------------------------------------------------ clock weight ----
+## Coverage as a probe count treats a high-weight CpG like a trivial one.
+cat("\n== clock weight coverage ==\n")
+w <- mp_clock_weights("Horvath")
+ok("Horvath weights reachable", !is.null(w) && length(w) == 353)
+ok("intercept excluded", !any(grepl("intercept", names(w), ignore.case = TRUE)))
+ok("weights are magnitudes", all(w >= 0))
+ok("BNN has no weight vector", is.null(mp_clock_weights("BNN")))
+
+cv <- mp_clock_coverage("Horvath", rownames(pgx$X))
+ok("both fractions in [0,1]", all(cv >= 0 & cv <= 1))
+ok("full coverage loses nothing",
+   all(mp_clock_coverage("Horvath", names(w)) == 0))
+ok("unknown clock returns NA", all(is.na(mp_clock_coverage("BNN", rownames(pgx$X)))))
+## The whole reason both columns exist: losing the single heaviest CpG is
+## 0.3% of the probes and a far larger share of the model. A probe count
+## alone cannot see that.
+heavy <- names(w)[which.max(w)]
+cvh <- mp_clock_coverage("Horvath", setdiff(names(w), heavy))
+ok("one heavy CpG costs more weight than probes",
+   cvh[["weight"]] > 3 * cvh[["probe"]])
+
 cat("\ncontrast hits:", sum(fc$table$q < 0.05, na.rm = TRUE),
     " | age hits:", sum(fx$table$q < 0.05, na.rm = TRUE), "\n")
+cat("Horvath on this dataset: CpGs missing", sprintf("%.2f%%", 100 * cv[["probe"]]),
+    "| weight missing", sprintf("%.2f%%", 100 * cv[["weight"]]), "\n")
+cat("drop the heaviest Horvath CpG:", sprintf("%.2f%%", 100 * cvh[["probe"]]),
+    "of probes ->", sprintf("%.2f%%", 100 * cvh[["weight"]]), "of weight\n")
 cat("top age genes:", paste(utils::head(top, 8), collapse = ", "), "\n")

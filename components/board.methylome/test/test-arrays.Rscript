@@ -2,7 +2,10 @@
 suppressMessages({library(shiny); library(limma); library(playbase); library(minfi)})
 MP_PAL <- list(hypo="#4575b4", hyper="#d73027", grey="#8697a6",
                ok="#18753a", bad="#a8202c", warn="#8a5a06")
-setwd("/home/massagno/bigomics/GitHub/omicsplayground-methylome-app/components/app_methylome/R")
+## Relative, so a rename of the board directory cannot strand this again - an
+## absolute path to app_methylome/R survived the move to board.methylome and
+## left the whole suite dying on this line.
+setwd("../R")
 for (f in c("methylome_utils.R","methylome_ewas.R","methylome_model.R",
             "methylome_regions.R","methylome_deconv.R")) source(f)
 

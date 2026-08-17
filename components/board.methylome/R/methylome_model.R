@@ -166,11 +166,33 @@ mp_manifest <- function(pgx) {
   ann
 }
 
+## X and Y probes. Read from the manifest rather than from pgx$genes, whose
+## chr column is a cytoband ("Xp22.2") in every playbase-built pgx and would
+## need parsing; the manifest already says "chrX".
+##
+## Why this is a mask at all: in a mixed-sex cohort every X probe separates
+## the sexes by dosage compensation alone, so any phenotype even mildly
+## correlated with sex picks up a block of spurious X hits. Adjusting for sex
+## does not fix it - the effect is not additive on the beta scale.
+mp_sexchr_probes <- function(pgx) {
+  ann <- mp_manifest(pgx)
+  if (is.null(ann) || !"chr" %in% colnames(ann)) return(character(0))
+  rownames(ann)[ann$chr %in% c("chrX", "chrY")]
+}
+
 ## Which probes survive the selected masks.
+##
+## Note the default: SNP and cross-reactive are on because they are
+## unconditionally wrong probes - they measure genotype or the wrong locus
+## whatever the cohort. The sex-chromosome mask is conditionally right: it is
+## near-universal in mixed-sex population EWAS, and plainly wrong in a
+## single-sex cohort or in any study whose question is sex itself, where it
+## would silently delete the signal. So it is offered, unticked.
 mp_masked_probes <- function(pgx, mask = c("snp", "xreactive")) {
   out <- character(0)
   if ("snp" %in% mask) out <- c(out, mp_snp_probes(pgx))
   if ("xreactive" %in% mask) out <- c(out, mp_xreactive_probes())
+  if ("sexchr" %in% mask) out <- c(out, mp_sexchr_probes(pgx))
   unique(out)
 }
 

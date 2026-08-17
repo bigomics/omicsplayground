@@ -128,7 +128,7 @@ mp_clock_set <- function(pgx, clocks = MP_CLOCK_ALL, min_cov = 0.8) {
       ok <- vapply(ages, function(v) any(!is.na(v)), logical(1))
       return(list(age = round(ages[, ok, drop = FALSE], 1),
                   all = ages, acc = acc, chron = chron,
-                  source = "methylclock",
+                  source = "methylclock", probes = rownames(X),
                   withheld = names(ok)[!ok]))
     }
   }
@@ -142,7 +142,61 @@ mp_clock_set <- function(pgx, clocks = MP_CLOCK_ALL, min_cov = 0.8) {
   names(nm) <- sub("\\..*", "", miss)
   ok <- intersect(colnames(A), names(nm)[nm == 0])
   list(age = A[, ok, drop = FALSE], all = A, acc = NULL, chron = chron,
-       source = "wateRmelon", withheld = setdiff(colnames(A), ok))
+       source = "wateRmelon", probes = rownames(X),
+       withheld = setdiff(colnames(A), ok))
+}
+
+## ------------------------------------------------------------ clock weights --
+
+## Where each clock's published coefficients live. methylclockData is the same
+## source methylclock itself fits from, so nothing here is a transcribed
+## constant - the weights are read from the installed package at call time.
+## BNN is absent on purpose: it is a neural net, not a weighted sum, so
+## "fraction of model weight" is undefined for it.
+MP_CLOCK_COEF_FN <- c(
+  Horvath = "get_coefHorvath", skinHorvath = "get_coefSkin",
+  Hannum  = "get_coefHannum",  BLUP        = "get_coefBLUP",
+  EN      = "get_coefEN",      PedBE       = "get_coefPedBE",
+  Wu      = "get_coefWu",      Levine      = "get_coefLevine",
+  TL      = "get_coefTL"
+)
+
+## get_coefBLUP() alone is a 320k-row ExperimentHub read, so cache per clock.
+MP_CLOCK_COEF_CACHE <- new.env(parent = emptyenv())
+
+#' |coefficient| per CpG for one clock, or NULL when no reachable weight vector.
+mp_clock_weights <- function(clock) {
+  if (!is.null(MP_CLOCK_COEF_CACHE[[clock]])) return(MP_CLOCK_COEF_CACHE[[clock]])
+  fn <- MP_CLOCK_COEF_FN[clock]
+  if (is.na(fn) || !requireNamespace("methylclockData", quietly = TRUE)) return(NULL)
+  d <- tryCatch(
+    as.data.frame(do.call(getExportedValue("methylclockData", fn), list())),
+    error = function(e) NULL)
+  if (is.null(d) || !all(c("CpGmarker", "CoefficientTraining") %in% colnames(d))) {
+    return(NULL)
+  }
+  ## The intercept carries a large coefficient and no probe. Left in the
+  ## denominator it dwarfs the CpGs and every clock looks well covered.
+  d <- d[!grepl("intercept", d$CpGmarker, ignore.case = TRUE), , drop = FALSE]
+  w <- abs(suppressWarnings(as.numeric(d$CoefficientTraining)))
+  names(w) <- as.character(d$CpGmarker)
+  w <- w[!is.na(w)]
+  if (!length(w)) return(NULL)
+  MP_CLOCK_COEF_CACHE[[clock]] <- w
+  w
+}
+
+#' What a clock loses on this array: fraction of its CpGs absent, and the
+#' fraction of its total absolute weight those CpGs carried.
+#'
+#' A probe count treats a high-weight CpG like a trivial one, which is why
+#' Lussier 2024 reports both - on EPICv2 DunedinPoAm loses far more weight
+#' than probes. Returns c(NA, NA) when the weights are not reachable.
+mp_clock_coverage <- function(clock, probes) {
+  w <- mp_clock_weights(clock)
+  if (is.null(w) || is.null(probes)) return(c(probe = NA_real_, weight = NA_real_))
+  gone <- !names(w) %in% probes
+  c(probe = mean(gone), weight = sum(w[gone]) / sum(w))
 }
 
 ## First numeric sample column that looks like a chronological age.
@@ -193,9 +247,16 @@ methylome_plot_agecor_server <- function(id, r.clockset, watermark = FALSE) {
         good <- !is.na(ch) & !is.na(y)
         if (sum(good) > 2) {
           graphics::abline(stats::lm(y[good] ~ ch[good]), col = MP_PAL$hyper, lwd = 1.6)
-          graphics::title(main = sprintf("%s   r = %.2f", colnames(a)[i],
-                                         stats::cor(ch[good], y[good])),
-                          cex.main = 1, font.main = 1)
+          ## r alone hides a systematic offset: a clock reading ten years high
+          ## on every sample still correlates at 0.99. The clocks literature
+          ## pairs it with the median absolute error for exactly that reason,
+          ## and median rather than mean because one failed sample should not
+          ## set the headline number.
+          mae <- stats::median(abs(y[good] - ch[good]))
+          graphics::title(main = sprintf("%s   r = %.2f   MAE = %.1f y",
+                                         colnames(a)[i],
+                                         stats::cor(ch[good], y[good]), mae),
+                          cex.main = 0.95, font.main = 1)
         }
       }
     }
@@ -362,6 +423,11 @@ methylome_table_coverage_server <- function(id, r.clockset) {
       shiny::validate(shiny::need(!is.null(cl), "Clocks could not be computed."))
       nm <- colnames(cl$all)
       usable <- colnames(cl$age)
+      ## Two views of the same loss. The probe fraction is what the coverage
+      ## floor is applied to; the weight fraction is what actually moves the
+      ## estimate, and the two diverge badly on reduced arrays.
+      miss <- vapply(nm, mp_clock_coverage, numeric(2), probes = cl$probes)
+      pct <- function(v) ifelse(is.na(v), "-", sprintf("%.1f%%", 100 * v))
       data.frame(
         Clock = nm,
         What = ifelse(nm %in% names(MP_CLOCK_NOTE), MP_CLOCK_NOTE[nm], ""),
@@ -369,6 +435,8 @@ methylome_table_coverage_server <- function(id, r.clockset) {
           v <- cl$all[[k]]
           if (k %in% usable && any(!is.na(v))) sprintf("%.1f", stats::median(v, na.rm = TRUE)) else "withheld"
         }, character(1)),
+        `CpGs missing` = pct(miss["probe", ]),
+        `Weight missing` = pct(miss["weight", ]),
         Status = ifelse(nm %in% usable, "usable",
                         "below coverage floor - not estimated"),
         check.names = FALSE, row.names = NULL, stringsAsFactors = FALSE
