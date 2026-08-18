@@ -97,6 +97,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       )
     })
 
+
     ## Warn the user when they switch AI on. ignoreInit avoids firing this
     ## on session start, since "Enable AI" defaults to on -- the equivalent
     ## warning is instead shown once on first visit to the Obi AI tab (see
