@@ -20,7 +20,7 @@ if(0) {
 AiReportSettings <- function(id) {
   ns <- shiny::NS(id)
 
-  info ="AI reports for the current dataset. These reports are AI-generated and can be inaccurate; please always double-check its responses."
+  info ="Reports for the current dataset. These reports are AI-generated and can be inaccurate; please always double-check its responses."
   
   shiny::div(
     style = "padding: 10px 15px;",

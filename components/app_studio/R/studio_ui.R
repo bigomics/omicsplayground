@@ -92,7 +92,7 @@ StudioUI <- function(id) {
 
   board <- OmicsBoardUI(
     id = ns("board"),
-    title = "AI Studio",
+    title = "Studio",
     info = FALSE,
     ui
   )
