@@ -189,7 +189,10 @@ AppSettingsUI <- function(id) {
       ),
 
       # Plot Colors #####
-      bslib::nav_panel(
+      ## DEVMODE-only: with the plot editor's body built lazily, theme changes
+      ## reach plot modules only through DOM-bound inputs, so a palette change
+      ## does not apply until that plot's editor has been opened (PR #1846).
+      if (isTRUE(opt$DEVMODE)) bslib::nav_panel(
         "Plot Colors",
         bslib::layout_columns(
           height = "calc(100vh - 85px)",
