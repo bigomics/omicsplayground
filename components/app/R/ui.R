@@ -58,7 +58,8 @@ app_ui <- function(x) {
       waiter::use_waiter(),
       sever::useSever(),
       bigLoaders::addBigLoaderDeps(),
-      firebase::useFirebase(firestore = TRUE, analytics = TRUE),
+      ## both args are deprecated no-ops in firebase >= 1.0 and only emit a warning
+      firebase::useFirebase(),
       shinybrowser::detect(),
       shinybusy::busy_start_up(
         text = tags$h2("\nPrepping your personal playground..."), mode = "auto",

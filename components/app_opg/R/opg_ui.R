@@ -136,6 +136,14 @@ opg_ui <- function(id) {
     bigdash::bigPage(
       id = id,  ## default was 'app'
       shiny.i18n::usei18n(i18n),
+      ## shiny.i18n's subscribe() hands jQuery's Event object straight to Shiny's
+      ## callback, which expects a boolean, so every update_lang() logs
+      ## "Unexpected input value mode: '[object Object]'". Must come after
+      ## usei18n() so the binding is already registered.
+      shiny::tags$script(shiny::HTML(
+        "Shiny.inputBindings.bindingNames['shiny.shinyi18n'].binding.subscribe =
+           function (el, callback) { $(el).on('change.shinyi18n', function () { callback(false); }); };"
+      )),
       # header,
       title = "Omics Playground",
       theme = big_theme2,
