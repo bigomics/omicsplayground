@@ -63,7 +63,7 @@ qsee_pcaexplorer_ui <- function(id) {
   OmicsBoardUI(
     id = ns("board"),
     title = "PCA explorer",
-    qsee_visibility_probe(ns),
+    bigdash::bd_visibility_probe(ns),
     shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
   )
 }

@@ -8,10 +8,11 @@ qsee_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
 
   ## This probe reports visibility of the whole Qsee module.  The individual
-  ## board probes below only report their respective inner tabs.
+  ## board probes below only report their respective inner tabs. No plots
+  ## are rendered directly under this module, so nothing is ever purged for
+  ## it -- see the purge = FALSE passed to bd_is_visible() in qsee_server.R.
   ui <- shiny::tagList(
-    qsee_visibility_probe(ns),
-    qsee_plot_spinner_js(ns),
+    bigdash::bd_visibility_probe(ns),
     bigdash::bigPage(
       id = id,
       #navbar = bigdash::navbar("Qsee/Bsee"),
@@ -28,9 +29,12 @@ qsee_ui <- function(id, height = "100%") {
         bigdash::sidebarItem("Batch-effects", ns("bsee-tab")),
         bigdash::sidebarItem("SD Filtering", ns("filtering-tab")),
         br(),
-        shiny::actionButton(ns("upload"), "upload CSV"),
-        shiny::actionButton(ns("load_example"), "load example"),
-        shiny::actionButton(ns("load_pgx"), "use current dataset")
+        div(
+          style = "display: flex; flex-direction: column; gap: 6px;",
+          shiny::actionButton(ns("upload"), "upload CSV", width = "100%"),
+          shiny::actionButton(ns("load_example"), "load example", width = "100%"),
+          shiny::actionButton(ns("load_pgx"), "use current dataset", width = "100%")
+        )
       ),
       settings = bigdash::settings("Settings", id = id),
       ## bigdash::sidebarHelp(

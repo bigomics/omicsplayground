@@ -9,9 +9,11 @@ qsee_bsee_server <- function(id, rX, rY) {
     function(input, output, session) {
 
       OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
-      ## `input$is_visible` is reported by qsee_visibility_probe() in the UI.
-      is_visible <- qsee_is_visible(input, label = "qsee_bsee_server")
-      redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_bsee_server")
+      ## Visibility is reported by bigdash::bd_visibility_probe() in the UI.
+      is_visible <- bigdash::bd_is_visible(
+        input, purge = qsee_purge_enabled(), label = "qsee_bsee_server"
+      )
+      redraw_tick <- bigdash::bd_redraw_tick(session = session)
       ## Shiny suspends this output while the board's tab is hidden, so the
       ## body is only built on the first visit and then kept in the DOM.
       output$ui_output <- shiny::renderUI({
@@ -153,7 +155,7 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot1",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_pca_vs_methods),
+        func = render.plot_pca_vs_methods,
         add.watermark = FALSE
       )
 
@@ -168,14 +170,14 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot3",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_scores),
+        func = render.plot_scores,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot4",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_covariate_correlation_heatmap),
+        func = render.plot_covariate_correlation_heatmap,
         add.watermark = FALSE
       )
 
@@ -184,21 +186,21 @@ qsee_bsee_server <- function(id, rX, rY) {
       PlotModuleServer(
         "plot5",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_pvca_by_phenotype),
+        func = render.plot_pvca_by_phenotype,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot6",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_pvca_by_component),
+        func = render.plot_pvca_by_component,
         add.watermark = FALSE
       )
 
       PlotModuleServer(
         "plot7",
         plotlib = "plotly",
-        func = qsee_with_redraw(redraw_tick, render.plot_covariate_analysis),
+        func = render.plot_covariate_analysis,
         add.watermark = FALSE
       )
     } ## end-of-server

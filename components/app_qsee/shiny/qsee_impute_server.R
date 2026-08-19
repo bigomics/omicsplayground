@@ -3,8 +3,10 @@
 qsee_imputation_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "Missing value analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_imputation_server")
-    redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_imputation_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_purge_enabled(), label = "qsee_imputation_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
 
     output$ui_output <- shiny::renderUI({
       qsee_imputation_ui_output(session$ns)
@@ -48,25 +50,25 @@ qsee_imputation_server <- function(id, rX, rY) {
     PlotModuleServer(
       "pca_plots",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.pca_plots),
+      func = render.pca_plots,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "histograms",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.histograms),
+      func = render.histograms,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "distributions",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.distributions),
+      func = render.distributions,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "validation_scatter",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.validation_scatter),
+      func = render.validation_scatter,
       add.watermark = FALSE
     )
   })

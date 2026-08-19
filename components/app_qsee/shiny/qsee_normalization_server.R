@@ -5,8 +5,9 @@ qsee_normalization_server <- function(id, rX, rY) {
 
     OmicsBoard("board", pgx=NULL, title="Normalization", infotext = NULL) 
 
-    is_visible <- qsee_is_visible(input, label = "qsee_normalization_server")
-    redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_normalization_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_purge_enabled(), label = "qsee_normalization_server"
+    )
     ## Shiny suspends this output while the board's tab is hidden, so the
     ## body is only built on the first visit and then kept in the DOM.
     output$ui_output <- shiny::renderUI({
@@ -50,19 +51,19 @@ qsee_normalization_server <- function(id, rX, rY) {
     PlotModuleServer(
       "box_plots",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.box_plots),
+      func = render.box_plots,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "histograms",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.histograms),
+      func = render.histograms,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "pca_plots",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.pca_plots),
+      func = render.pca_plots,
       add.watermark = FALSE
     )
   })

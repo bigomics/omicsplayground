@@ -12,8 +12,10 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
 
     OmicsBoard("board", pgx = NULL, title = "PCA explorer", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_pcaexplorer_server")
-    redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_pcaexplorer_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_purge_enabled(), label = "qsee_pcaexplorer_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
 
     output$ui_output <- shiny::renderUI({
       qsee_pcaexplorer_ui_output(session$ns)

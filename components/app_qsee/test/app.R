@@ -42,14 +42,15 @@ assign(
   envir = globalenv()
 )
 
-## shared UI helpers used by qsee_ui.R / qsee_server.R (same set sourced by
-## the full app in components/00SourceAll.R)
+## shared UI helpers used by qsee_ui.R / qsee_server.R (same set
+## sourced by the full app in components/00SourceAll.R). Would be good
+## to be independent from this.
 ui_files <- list.files("../../ui", pattern = "\\.R$", full.names = TRUE)
 for (f in ui_files) source(f, encoding = "UTF-8")
 
+## Local R/Shiny files of this 'package'
 r_files <- list.files("../R", pattern = "\\.R$", full.names = TRUE)
 for (f in r_files) source(f, encoding = "UTF-8")
-
 app_files <- list.files("../shiny", pattern = "\\.R$", full.names = TRUE)
 for (f in app_files) source(f, encoding = "UTF-8")
 

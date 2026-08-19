@@ -3,8 +3,9 @@
 qsee_filtering_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "SD filtering", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_filtering_server")
-    redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_filtering_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_purge_enabled(), label = "qsee_filtering_server"
+    )
 
     output$ui_output <- shiny::renderUI({
       qsee_filtering_ui_output(session$ns)
@@ -50,19 +51,19 @@ qsee_filtering_server <- function(id, rX, rY) {
     PlotModuleServer(
       "pca_vs_topsd",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.pca_vs_topsd),
+      func = render.pca_vs_topsd,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "variance_vs_topsd",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.variance_vs_topsd),
+      func = render.variance_vs_topsd,
       add.watermark = FALSE
     )
     PlotModuleServer(
       "sd_histogram",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.sd_histogram),
+      func = render.sd_histogram,
       add.watermark = FALSE
     )
   })

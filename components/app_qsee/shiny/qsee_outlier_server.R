@@ -3,8 +3,10 @@
 qsee_outlier_server <- function(id, rX, rY) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "Outlier analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_outlier_server")
-    redraw_tick <- qsee_plotly_purge(is_visible, session, label = "qsee_outlier_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_purge_enabled(), label = "qsee_outlier_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
 
     output$ui_output <- shiny::renderUI({
       qsee_outlier_ui_output(session$ns)
@@ -34,7 +36,7 @@ qsee_outlier_server <- function(id, rX, rY) {
     PlotModuleServer(
       "outlier_zscores",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.outlier_zscores),
+      func = render.outlier_zscores,
       add.watermark = FALSE
     )
 
@@ -48,7 +50,7 @@ qsee_outlier_server <- function(id, rX, rY) {
     PlotModuleServer(
       "outlier_pca",
       plotlib = "plotly",
-      func = qsee_with_redraw(redraw_tick, render.outlier_pca),
+      func = render.outlier_pca,
       add.watermark = FALSE
     )
   })
