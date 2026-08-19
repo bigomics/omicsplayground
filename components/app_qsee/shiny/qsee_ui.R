@@ -65,38 +65,18 @@ qsee_ui <- function(id, height = "100%") {
       ##     "SD filtering to remove low-variance features. Includes PCA of top-SD features, cumulative variance explained, and SD histogram."
       ##   )
       ## ),
+      ## Each bigTabItem() holds only its sidebar inputs up front. The board
+      ## body (OmicsBoardUI + its visibility probe) is inserted lazily by
+      ## bigdash::bigTabsLazy() in qsee_server.R, on that tab's first visit --
+      ## see the comment there for why.
       bigdash::bigTabs(
         id = id,
-        bigdash::bigTabItem(
-          ns("normalize-tab"),
-          qsee_normalization_inputs(ns("normalize")),
-          qsee_normalization_ui(ns("normalize"))
-        ),
-        bigdash::bigTabItem(
-          ns("impute-tab"),
-          qsee_imputation_inputs(ns("impute")),
-          qsee_imputation_ui(ns("impute"))
-        ),
-        bigdash::bigTabItem(
-          ns("pcaexplorer-tab"),
-          qsee_pcaexplorer_inputs(ns("pcaexplorer")),
-          qsee_pcaexplorer_ui(ns("pcaexplorer"))
-        ),
-        bigdash::bigTabItem(
-          ns("outlier-tab"),
-          qsee_outlier_inputs(ns("outlier")),
-          qsee_outlier_ui(ns("outlier"))
-        ),
-        bigdash::bigTabItem(
-          ns("bsee-tab"),
-          qsee_bsee_inputs(ns("bsee")),
-          qsee_bsee_ui(ns("bsee"))
-        ),
-        bigdash::bigTabItem(
-          ns("filtering-tab"),
-          qsee_filtering_inputs(ns("filtering")),
-          qsee_filtering_ui(ns("filtering"))
-        )
+        bigdash::bigTabItem(ns("normalize-tab"), qsee_normalization_inputs(ns("normalize"))),
+        bigdash::bigTabItem(ns("impute-tab"), qsee_imputation_inputs(ns("impute"))),
+        bigdash::bigTabItem(ns("pcaexplorer-tab"), qsee_pcaexplorer_inputs(ns("pcaexplorer"))),
+        bigdash::bigTabItem(ns("outlier-tab"), qsee_outlier_inputs(ns("outlier"))),
+        bigdash::bigTabItem(ns("bsee-tab"), qsee_bsee_inputs(ns("bsee"))),
+        bigdash::bigTabItem(ns("filtering-tab"), qsee_filtering_inputs(ns("filtering")))
       )
     )
   )
