@@ -68,38 +68,81 @@ qsee_imputation_plot_histograms_plotly <- function(res, nmax = 1e5) {
   impX <- res$impX
   ii <- which(!is.na(impX[[1]]))
   jj <- which(is.na(impX[[1]]))
+  ## True class sizes: AUC of each curve is scaled to this, even if the
+  ## values used for the shape are downsampled below.
+  n_obs <- length(ii)
+  n_imp <- length(jj)
   if (length(ii) > nmax) ii <- sample(ii, nmax)
   if (length(jj) > nmax) jj <- sample(jj, nmax)
-  cmap <- c(observed = "#989898", imputed = "#bf616a")
+
+  ## Shared breaks so observed / imputed sit on the same x grid.
+  all_vals <- unlist(lapply(impX, function(X) {
+    c(as.numeric(X[ii]), if (length(jj)) as.numeric(X[jj]))
+  }), use.names = FALSE)
+  all_vals <- all_vals[is.finite(all_vals)]
+  if (!length(all_vals)) {
+    return(qsee_plotly_empty("No data"))
+  }
+  breaks <- graphics::hist(all_vals, breaks = 80, plot = FALSE)$breaks
+
+  count_curve <- function(vals, n_true) {
+    vals <- as.numeric(vals)
+    vals <- vals[is.finite(vals)]
+    mids <- (breaks[-1] + breaks[-length(breaks)]) / 2
+    if (!length(vals) || n_true <= 0) {
+      return(list(x = mids, y = rep(0, length(mids))))
+    }
+    h <- graphics::hist(vals, breaks = breaks, plot = FALSE)
+    ## density integrates to 1; multiply by class size so AUC = n_true.
+    y <- h$density * n_true
+    if (length(mids) >= 4L) {
+      fit <- stats::loess(y ~ mids, data.frame(mids = mids, y = y), span = 0.25)
+      y <- pmax(as.numeric(fit$fitted), 0)
+    }
+    list(x = mids, y = y)
+  }
+
+  add_filled <- function(p, curve, name, col) {
+    rgb <- grDevices::col2rgb(col)
+    plotly::add_trace(
+      p,
+      x = curve$x, y = curve$y, type = "scatter", mode = "lines",
+      name = name, fill = "tozeroy",
+      line = list(color = col, width = 1.5),
+      fillcolor = sprintf("rgba(%d,%d,%d,0.45)", rgb[1], rgb[2], rgb[3]),
+      hoverinfo = "text",
+      text = paste0(
+        "<b>", name, "</b><br>x: ", round(curve$x, 2),
+        "<br>count: ", round(curve$y, 1)
+      )
+    )
+  }
 
   panels <- lapply(names(impX), function(name) {
     X <- impX[[name]]
     obs <- as.numeric(X[ii])
     imp <- if (length(jj)) as.numeric(X[jj]) else numeric(0)
-    imp <- imp[!is.na(imp)]
-    n <- max(length(obs), length(imp))
-    dat <- list(observed = c(obs, rep(NA_real_, n - length(obs))))
-    if (length(imp)) dat$imputed <- c(imp, rep(NA_real_, n - length(imp)))
-    p <- omicsplots::pgx.plot_density(
-      dat,
-      n_breaks = 80, color = cmap,
-      xlab = "intensity (log2)", showlegend = TRUE
-    )
-    ## pgx.plot_density() builds via ggplotly(), so p$x$data is only
-    ## populated once the widget is actually built -- do that before
-    ## touching per-trace styling below, else the loop is a no-op.
-    p <- plotly::plotly_build(p)
-    ## Add filled area under each density curve
-    for (i in seq_along(p$x$data)) {
-      col <- p$x$data[[i]]$line$color
-      rgb <- grDevices::col2rgb(col)
-      p$x$data[[i]]$fill <- "tozeroy"
-      p$x$data[[i]]$fillcolor <- sprintf("rgba(%d,%d,%d,0.45)", rgb[1], rgb[2], rgb[3])
+    imp <- imp[is.finite(imp)]
+    p <- plotly::plot_ly()
+    p <- add_filled(p, count_curve(obs, n_obs), "observed", "#989898")
+    if (n_imp > 0 && length(imp)) {
+      p <- add_filled(p, count_curve(imp, n_imp), "imputed", "#bf616a")
     }
-    p
+    p <- plotly::layout(
+      p,
+      xaxis = list(title = list(text = "intensity (log2)")),
+      yaxis = list(title = list(text = "Count")),
+      showlegend = TRUE
+    )
+    omicsplots::plotly_theme(p, plot_type = "density")
   })
   names(panels) <- names(impX)
-  qsee_plotly_grid(panels, n_cols = 3, x_title = "intensity (log2)", y_title = "Density")
+  qsee_plotly_grid(
+    panels, n_cols = 3,
+    x_title = "intensity (log2)", y_title = "Count",
+    margin = c(0.05, 0.05, 0.10, 0.08),
+    title_yshift = 14
+  )
 }
 
 #' Plotly version of [qsee_imputation_plot_distributions()].

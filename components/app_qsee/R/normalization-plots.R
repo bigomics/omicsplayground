@@ -111,7 +111,8 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
                              x_title = NULL, y_title = NULL,
                              share_x = FALSE, share_y = FALSE,
                              margin = c(0.02, 0.02, 0.05, 0.05),
-                             axis_titles = FALSE) {
+                             axis_titles = FALSE,
+                             title_yshift = 18) {
   panels <- Filter(Negate(is.null), panels)
   if (!length(panels)) {
     return(qsee_plotly_empty())
@@ -136,7 +137,7 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
       panels,
       n_cols = n_cols, share_x = share_x, share_y = share_y,
       margin = margin, x_title = x_title, y_title = y_title,
-      build = "standard"
+      title_yshift = title_yshift, build = "standard"
     )))
   }
 
@@ -160,12 +161,13 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
       p,
       text = paste0("<b>", names(panels)[i], "</b>"),
       x = mean(dx), y = dy[2], xref = "paper", yref = "paper",
-      xanchor = "center", showarrow = FALSE, yshift = 10,
+      xanchor = "center", yanchor = "bottom",
+      showarrow = FALSE, cliponaxis = FALSE, yshift = title_yshift,
       font = list(size = 13)
     )
   }
   qsee_plotly_sanitize(
-    plotly::layout(p, margin = list(l = 60, r = 20, t = 40, b = 60))
+    plotly::layout(p, margin = list(l = 90, r = 25, t = 60, b = 80))
   )
 }
 
