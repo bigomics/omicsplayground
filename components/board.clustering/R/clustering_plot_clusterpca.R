@@ -19,6 +19,19 @@ clustering_plot_clustpca_ui <- function(
   ns <- shiny::NS(id)
 
   plot_opts <- shiny::tagList(
+    ## only PCA has variance to show, so the view selector lives behind the same
+    ## layout gate as the arrows. Its own panel: the three selectors below apply
+    ## to every layout and must stay outside it.
+    shiny::conditionalPanel(
+      "input.hm_clustmethod == 'pca'",
+      ns = parent,
+      withTooltip(
+        shiny::selectInput(ns("plot_type"), "Plot type:",
+          choices = c("samples", "variance explained"), width = "100%"
+        ),
+        "Show the samples in PCA space, or how much variance each component explains."
+      )
+    ),
     withTooltip(
       shiny::selectInput(ns("hmpca.colvar"), "Color/label:", choices = NULL, width = "100%"),
       "Set colors/labels according to a given phenotype."
@@ -40,29 +53,32 @@ clustering_plot_clustpca_ui <- function(
     shiny::conditionalPanel(
       "input.hm_clustmethod == 'pca'",
       ns = parent,
-      withTooltip(
-        shiny::selectInput(ns("pca_arrows"), "Arrows:",
-          choices = c("<none>", "features", "phenotypes"), width = "100%"
-        ),
-        "Overlay a biplot: arrows for the top feature loadings, or for the direction in which each phenotype increases."
-      ),
+      ## nested rather than folded into the condition above: that panel is keyed
+      ## on the parent namespace, plot_type on this one, and a single condition
+      ## string only resolves one of them
       shiny::conditionalPanel(
-        "input.pca_arrows != '<none>'",
+        "input.plot_type == 'samples'",
         ns = ns,
         withTooltip(
-          shiny::numericInput(ns("pca_numarrows"), "Number of arrows:",
-            value = 3, min = 1, max = 50, step = 1, width = "100%"
+          shiny::selectInput(ns("pca_arrows"), "Arrows:",
+            choices = c("<none>", "features", "phenotypes"), width = "100%"
           ),
-          "How many arrows to label and draw, ranked by length. Lower numbers keep the plot readable."
+          "Overlay a biplot: arrows for the top feature loadings, or for the direction in which each phenotype increases."
         ),
-        withTooltip(
-          shiny::checkboxInput(ns("pca_repel"), "repel labels", value = TRUE),
-          "Move overlapping arrow labels apart. Switch off to pin each label to its own arrow tip."
+        shiny::conditionalPanel(
+          "input.pca_arrows != '<none>'",
+          ns = ns,
+          withTooltip(
+            shiny::numericInput(ns("pca_numarrows"), "Number of arrows:",
+              value = 3, min = 1, max = 50, step = 1, width = "100%"
+            ),
+            "How many arrows to label and draw, ranked by length. Lower numbers keep the plot readable."
+          ),
+          withTooltip(
+            shiny::checkboxInput(ns("pca_repel"), "repel labels", value = TRUE),
+            "Move overlapping arrow labels apart. Switch off to pin each label to its own arrow tip."
+          )
         )
-      ),
-      withTooltip(
-        shiny::checkboxInput(ns("pca_varplot"), "variance explained"),
-        "Show how much variance each component explains, instead of the samples."
       )
     ),
     withTooltip(
@@ -261,7 +277,7 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_text(
             x = pos[, 1], y = pos[, 2], text = rownames(df),
             textposition = "top center",
-            textfont = list(size = 12 * cex, color = "#4D4D4D"),
+            textfont = list(size = 12 * cex, color = unname(omics_colors("super_dark_grey"))),
             showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
           )
         }
@@ -273,6 +289,15 @@ clustering_plot_clustpca_server <- function(id,
 
         if (!is.null(arrows) && nrow(arrows) && max(abs(arrows)) > 0) {
           aa <- scale_arrows(arrows, pos)
+          ## saturated accent: the points run on muted_light (desaturated and
+          ## lightened), so the biplot overlay reads as an overlay and not as
+          ## another group, and its labels stay apart from the grey sample ones
+          arrow.clr <- unname(omics_colors("terra_cotta"))
+          ## derived, not written out: a literal rgba() would go stale the day
+          ## terra_cotta changes
+          arrow.seg <- sprintf(
+            "rgba(%s,0.6)", paste(grDevices::col2rgb(arrow.clr), collapse = ",")
+          )
           ## Arrows are drawn as traces, NOT as annotations: plotly.repel takes
           ## ownership of layout.annotations at render time (plotly-repel.js
           ## relayouts the whole array), which wipes anything annotation-drawn.
@@ -283,14 +308,14 @@ clustering_plot_clustpca_server <- function(id,
               x = as.vector(rbind(0, aa$x, NA)),
               y = as.vector(rbind(0, aa$y, NA)),
               type = "scatter", mode = "lines",
-              line = list(color = "#4D4D4D", width = 1.8),
+              line = list(color = arrow.clr, width = 1.8),
               showlegend = FALSE, hoverinfo = "skip", inherit = FALSE
             ) %>%
             plotly::add_trace(
               x = aa$x, y = aa$y,
               type = "scatter", mode = "markers",
               marker = list(
-                symbol = "arrow", size = 12, color = "#4D4D4D",
+                symbol = "arrow", size = 12, color = arrow.clr,
                 angle = atan2(aa$x, aa$y) * 180 / pi
               ),
               text = aa$text, hoverinfo = "text",
@@ -306,7 +331,7 @@ clustering_plot_clustpca_server <- function(id,
           plt <- plt %>% plotly::add_annotations(
             x = aa$lx, y = aa$ly, text = aa$text,
             showarrow = FALSE,
-            font = list(color = "#333333", size = 13 * cex),
+            font = list(color = arrow.clr, size = 13 * cex),
             bgcolor = "rgba(255,255,255,0.65)", borderpad = 2
           )
           if (isTRUE(input$pca_repel) && requireNamespace("plotly.repel", quietly = TRUE)) {
@@ -315,8 +340,9 @@ clustering_plot_clustpca_server <- function(id,
               data = data.frame(x = aa$x, y = aa$y, text = aa$text),
               x = ~x, y = ~y, text = ~text,
               box_padding = 0.4, point_padding = 0.3, max_overlaps = 20,
-              font = list(color = "#333333", size = 13 * cex),
-              segment = list(color = "#999999", width = 1)
+              font = list(color = arrow.clr, size = 13 * cex),
+              ## leader lines are connective tissue, not data: same hue, faded
+              segment = list(color = arrow.seg, width = 1)
             )
           }
         }
@@ -392,26 +418,28 @@ clustering_plot_clustpca_server <- function(id,
       if (!is.null(arrows) && nrow(arrows) && max(abs(arrows)) > 0) {
         aa <- scale_arrows(arrows, pos)
         df.a <- data.frame(x = aa$x, y = aa$y, lx = aa$lx, ly = aa$ly, text = aa$text)
+        ## same accent as the plotly path, see the note there
+        arrow.clr <- unname(omics_colors("terra_cotta"))
         p <- p +
           ggplot2::geom_segment(
             data = df.a,
             ggplot2::aes(x = 0, y = 0, xend = x, yend = y),
             arrow = ggplot2::arrow(length = ggplot2::unit(0.18, "cm"), type = "closed"),
-            colour = "grey30", linewidth = 0.5, inherit.aes = FALSE
+            colour = arrow.clr, linewidth = 0.5, inherit.aes = FALSE
           ) +
           if (isTRUE(input$pca_repel)) {
             ggrepel::geom_text_repel(
               data = df.a,
               ggplot2::aes(x = x, y = y, label = text),
-              colour = "grey20", size = 3 * cex, inherit.aes = FALSE,
+              colour = arrow.clr, size = 3 * cex, inherit.aes = FALSE,
               box.padding = 0.4, point.padding = 0.3,
-              segment.colour = "grey60", max.overlaps = 20
+              segment.colour = arrow.clr, segment.alpha = 0.6, max.overlaps = 20
             )
           } else {
             ggplot2::geom_text(
               data = df.a,
               ggplot2::aes(x = lx, y = ly, label = text),
-              colour = "grey20", size = 3 * cex, inherit.aes = FALSE
+              colour = arrow.clr, size = 3 * cex, inherit.aes = FALSE
             )
           }
       }
@@ -628,10 +656,10 @@ clustering_plot_clustpca_server <- function(id,
       gp <- extract_ggprism_params(input)
       do3d <- isTRUE(input$plot3d)
 
-      ## the variance toggle replaces the scatter in this same panel. Check the
-      ## layout too: the checkbox keeps its value while hidden, so switching to
+      ## the variance view replaces the scatter in this same panel. Check the
+      ## layout too: the selector keeps its value while hidden, so switching to
       ## tsne/umap must not leave a PCA scree plot on screen.
-      if (isTRUE(input$pca_varplot) && clustmethod() == "pca") {
+      if (identical(input$plot_type, "variance explained") && clustmethod() == "pca") {
         palette <- if (!is.null(input$palette)) input$palette else "muted_light"
         if (palette %in% c("original", "default", "custom", "")) palette <- "muted_light"
         if (gp$use_ggprism) {
