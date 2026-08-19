@@ -429,7 +429,6 @@ if(!file.exists('00SourceAll.R')) {
   source('ui/bs-components.R',encoding='UTF-8')
   source('ui/ui-AiCards.R',encoding='UTF-8')
   source('ui/ui-alerts.R',encoding='UTF-8')
-  source('ui/ui-board-visibility.R',encoding='UTF-8')
   source('ui/ui-boardHeader.R',encoding='UTF-8')
   source('ui/ui-code.R',encoding='UTF-8')
   source('ui/ui-ColorDefaults.R',encoding='UTF-8')

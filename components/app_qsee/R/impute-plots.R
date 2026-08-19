@@ -131,11 +131,14 @@ qsee_imputation_plot_distributions_plotly <- function(res, Y, ph) {
   )
 
   ## 2. missing ratio vs. average intensity, per feature
-  panels[["missingness vs. intensity (features)"]] <- omicsplots::pgx.plot_scatter(
-    x = x.avg, y = x.nar,
-    labels = rownames(X),
-    xlab = "average intensity (log2)", ylab = "missing ratio",
-    max_points = 5000
+  panels[["missingness vs. intensity (features)"]] <- plotly::layout(
+    omicsplots::pgx.plot_scatter(
+      x = x.avg, y = x.nar,
+      labels = rownames(X),
+      xlab = "average intensity (log2)", ylab = "missing ratio",
+      max_points = 5000
+    ),
+    yaxis = list(range = c(0, 1.2))
   )
 
   ## 3. distribution of the non-zero missing ratios

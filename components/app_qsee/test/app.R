@@ -64,16 +64,28 @@ pgx <- NULL
 QSEE_LAZY=FALSE
 QSEE_PURGE=FALSE
 QSEE_LAZY=TRUE
-#QSEE_PURGE=TRUE
+QSEE_PURGE=TRUE
 
 ui <- bslib::page_fillable(
   ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
+  theme = bslib::bs_theme(base_font = bslib::font_google("Lato")),
   padding = 0, gap = 0,
   shiny::tags$head(
     shiny::tags$link(
       rel = "stylesheet",
       href = "custom/styles.min.css"
-    )
+    ),
+    shiny::tags$link(
+      rel = "stylesheet",
+      href = "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+    ),
+    shiny::tags$style(HTML("
+      :root {
+        --bs-font-sans-serif: 'Lato', sans-serif;
+        --bs-body-font-family: 'Lato', sans-serif;
+      }
+      html, body { font-family: 'Lato', sans-serif; }
+    "))
   ),
   shinyjs::useShinyjs(),
   ## PlotModuleUI() wraps every plot in bigLoaders::useSpinner(), which is

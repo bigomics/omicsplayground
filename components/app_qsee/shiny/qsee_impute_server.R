@@ -14,6 +14,17 @@ qsee_imputation_server <- function(id, rX, rY, purge = NULL) {
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
     })
+    shiny::observeEvent(is_visible(), {
+      shiny::req(isTRUE(is_visible()))
+      rawX <- rX()
+      shiny::req(rawX)
+      if (!anyNA(rawX)) {
+        shinyalert::shinyalert(
+          text = "note, data has no missing values",
+          type = "warning"
+        )
+      }
+    })
     tr_marlevel <- shiny::reactive(input$marlevel) %>% shiny::debounce(1000)
     tr_mnarlevel <- shiny::reactive(input$mnarlevel) %>% shiny::debounce(1000)
     ## Lazy: only the board's plot outputs read this, and Shiny suspends

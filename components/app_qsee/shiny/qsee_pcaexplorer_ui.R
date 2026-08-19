@@ -71,6 +71,7 @@ qsee_pcaexplorer_ui <- function(id) {
 qsee_pcaexplorer_ui_output <- function(ns) {
   biplot_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Biplot",
@@ -99,11 +100,12 @@ qsee_pcaexplorer_ui_output <- function(ns) {
 
   pairs_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     PlotModuleUI(
       ns("scatterpairs"),
       title = "PC scatterpair matrix",
       plotlib = "base",
-      height = c("800px", "80vh")
+      height = c("100%", "80vh")
     ),
     bslib::layout_columns(
       col_widths = 12,
@@ -125,6 +127,7 @@ qsee_pcaexplorer_ui_output <- function(ns) {
 
   loadings_panel <- bslib::layout_columns(
     col_widths = c(6, 6),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Loadings",
@@ -148,6 +151,7 @@ qsee_pcaexplorer_ui_output <- function(ns) {
 
   feature_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Feature PCA",
@@ -181,4 +185,5 @@ qsee_pcaexplorer_ui_output <- function(ns) {
     bslib::nav_panel(title = "Loadings", value = "Loadings", loadings_panel),
     bslib::nav_panel(title = "Feature PCA", value = "Feature PCA", feature_panel)
   )
+
 }

@@ -41,6 +41,46 @@ qsee_plotly_empty <- function(msg = "No data") {
   omicsplots::plotly_theme(p)
 }
 
+#' Drop mixed/empty names that htmlwidgets:::shouldEval rejects.
+#'
+#' plotly::subplot() can leave `$x$attrs` as a mix of named and unnamed
+#' entries (typical when an empty panel is merged with data panels).
+#' htmlwidgets then errors with: 'options' must be a fully named list,
+#' or have no names (NULL).
+#' @noRd
+qsee_plotly_fix_names <- function(x) {
+  if (!is.list(x) || is.environment(x) || is.function(x)) {
+    return(x)
+  }
+  if (inherits(x, c("data.frame", "POSIXt", "Date", "factor", "formula"))) {
+    return(x)
+  }
+  if (typeof(x) %in% c("closure", "builtin", "special", "externalptr")) {
+    return(x)
+  }
+  nm <- names(x)
+  if (!is.null(nm) && length(x) && any(is.na(nm) | !nzchar(nm))) {
+    names(x) <- NULL
+  }
+  for (i in seq_along(x)) {
+    xi <- x[[i]]
+    if (is.list(xi) && !is.environment(xi) && !is.function(xi)) {
+      x[[i]] <- qsee_plotly_fix_names(xi)
+    }
+  }
+  x
+}
+
+#' Sanitize a plotly widget for htmlwidgets serialization.
+#' @noRd
+qsee_plotly_sanitize <- function(p) {
+  if (!inherits(p, "htmlwidget") || is.null(p$x)) {
+    return(p)
+  }
+  p$x <- qsee_plotly_fix_names(p$x)
+  p
+}
+
 #' Fetch an omicsplots internal, or NULL when unavailable.
 #' @noRd
 qsee_plotly_internal <- function(name) {
@@ -77,7 +117,7 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
     return(qsee_plotly_empty())
   }
   if (length(panels) == 1L) {
-    return(panels[[1]])
+    return(qsee_plotly_sanitize(panels[[1]]))
   }
 
   build_light <- qsee_plotly_internal(".plotly_build_light")
@@ -92,12 +132,12 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
   if (!is.null(dedupe)) panels <- dedupe(panels)
 
   if (!axis_titles && !is.null(assemble)) {
-    return(assemble(
+    return(qsee_plotly_sanitize(assemble(
       panels,
       n_cols = n_cols, share_x = share_x, share_y = share_y,
       margin = margin, x_title = x_title, y_title = y_title,
       build = "standard"
-    ))
+    )))
   }
 
   ## Own assembly: keeps the per-panel axis titles that .assemble_subplot
@@ -124,7 +164,9 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
       font = list(size = 13)
     )
   }
-  plotly::layout(p, margin = list(l = 60, r = 20, t = 40, b = 60))
+  qsee_plotly_sanitize(
+    plotly::layout(p, margin = list(l = 60, r = 20, t = 40, b = 60))
+  )
 }
 
 #' Add a text-label layer to a plotly panel.

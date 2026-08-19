@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-qsee_server <- function(id, pgx=NULL, parent=NULL, purge=NULL, lazy=TRUE) {
+qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, lazy=TRUE) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -39,15 +39,6 @@ qsee_server <- function(id, pgx=NULL, parent=NULL, purge=NULL, lazy=TRUE) {
       ## No plots are rendered directly under the top-level Qsee module, so
       ## nothing is ever purged on its behalf -- purge = FALSE.
       is_visible <- bigdash::bd_is_visible(input, purge = FALSE, label="BOARD")
-      active <- bd_active_tab()
-
-      board_active <- reactive(isTRUE(!is.null(active()) && active()!=""))      
-      shiny::observeEvent( list(active(),is_visible()), {
-        message("[qsee_server:board] input$nav =", input$nav)
-        message("[qsee_server:board] board_active =", board_active())
-        message("[qsee_server:board] bd_is_visible =", is_visible())
-        message("[qsee_server:board] bd_active_tab =", active())
-      })
       
       initial_tab_selected <- shiny::reactiveVal(FALSE)
       shiny::observeEvent(is_visible(), {
@@ -56,13 +47,17 @@ qsee_server <- function(id, pgx=NULL, parent=NULL, purge=NULL, lazy=TRUE) {
           bigdash.selectTab(session, session$ns("normalize-tab"))
           bigdash.openSidebar(session)
           bigdash.openSettings(session = session)
-
           initial_tab_selected(TRUE)
         }
       })
 
       shiny::observeEvent( list(pgx$X, pgx$samples), {
-        uploaded$X <- pgx$X
+        if(matx == "counts") {
+          prior <- quantile(pgx$counts[pgx$counts>0], probs=0.001, na.rm=TRUE)[1]
+          uploaded$X <- log2(pgx$counts + prior)
+        } else {
+          uploaded$X <- pgx$X
+        }
         uploaded$Y <- pgx$samples
       })
 
@@ -108,16 +103,26 @@ qsee_server <- function(id, pgx=NULL, parent=NULL, purge=NULL, lazy=TRUE) {
       ## Handle popup buttons
       shiny::observeEvent(input$load_example_from_popup, {
         shiny::removeModal()
-        example_pgx <- playdata::GEIGER_PGX
-        uploaded$X <- example_pgx$X
-        uploaded$Y <- example_pgx$samples[,-1]
+        pgx <- playdata::GEIGER_PGX
+        if(matx == "counts") {
+          prior <- quantile(pgx$counts[pgx$counts>0], probs=0.001, na.rm=TRUE)[1]
+          uploaded$X <- log2(pgx$counts + prior)
+        } else {
+          uploaded$X <- pgx$X          
+        }
+        uploaded$Y <- pgx$samples[,-1]
         message("[qsee_server:board] loaded example data from popup")
       })
 
       shiny::observeEvent(input$counts_csv, {
         shiny::req(input$counts_csv)
         df <- playbase::read_counts(input$counts_csv$datapath)
-        uploaded$X <- as.matrix(df)
+        df <- as.matrix(df)
+        if(!playbase::is_logged(df)) {
+          prior <- quantile(df[df>0], probs=0.001, na.rm=TRUE)[1]          
+          df <- log2(df + prior)
+        }
+        uploaded$X <- df
       })
 
       shiny::observeEvent(input$samples_csv, {

@@ -33,7 +33,7 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
           style = "display: flex; flex-direction: column; gap: 6px;",
           shiny::actionButton(ns("upload"), "upload CSV", width = "100%"),
           shiny::actionButton(ns("load_example"), "load example", width = "100%"),
-          shiny::actionButton(ns("load_pgx"), "use current dataset", width = "100%")
+          shiny::actionButton(ns("load_pgx"), "use current pgx", width = "100%")
         )
       ),
       settings = bigdash::settings("Settings", id = id),
