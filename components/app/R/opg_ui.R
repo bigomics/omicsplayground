@@ -14,14 +14,6 @@ opg_ui <- function() {
   #-------------------------------------------------------
   VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-  ## upgrade.tab <- NULL
-  ## if (opt$AUTHENTICATION == "firebase") {
-  ##   upgrade.tab <- bigdash::navbarDropdownItem(
-  ##     "Upgrade",
-  ##     onClick = "show_plans()"
-  ##   )
-  ## }
-    
   createUI <- function(menu_tree) {
     
     version <- scan(file.path(OPG, "VERSION"), character())[1]

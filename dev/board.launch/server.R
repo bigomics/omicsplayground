@@ -33,21 +33,11 @@ app_server <- function(input, output, session) {
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       domain = opt$DOMAIN
       )
-  } else if (!is.null(authentication) && authentication == "firebase") {
-      auth <- FirebaseAuthenticationModule(
-      id = "auth",
-      domain = opt$DOMAIN,
-      firebase.rds = "firebase.rds",
-      credentials_file = credentials_file,
-      allow_personal = opt$ALLOW_PERSONAL_EMAIL,
-      allow_new_users = opt$ALLOW_NEW_USERS
-      )
   } else if (!is.null(authentication) && authentication == "email-link") {
       auth <- EmailLinkAuthenticationModule(
       id = "auth",
       pgx_dir = PGX.DIR,
       domain = opt$DOMAIN,
-      firebase.rds = "firebase.rds",
       credentials_file = credentials_file,
       allow_personal = opt$ALLOW_PERSONAL_EMAIL,
       allow_new_users = opt$ALLOW_NEW_USERS
