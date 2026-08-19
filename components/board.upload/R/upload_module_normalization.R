@@ -6,6 +6,37 @@ upload_module_normalization_ui <- function(id, height = "100%") {
   uiOutput(ns("normalization"), fill = TRUE)
 }
 
+#' Realign a counts matrix to the rows of a normalized X.
+#'
+#' Normalization may drop and/or reorder rows, so counts has to follow. Mirrors
+#' playbase::pgx.preprocess(), which is what the compute path actually runs -- keep
+#' the two in step.
+#'
+#' Do NOT use intersect() here: it returns UNIQUE names, and indexing a matrix by a
+#' duplicated name returns only the FIRST matching row, so duplicated features were
+#' silently collapsed (999 -> 969 on the shipped salmon-ENSOKI fixture).
+#'
+#' ponytail: the duplicate branch assumes no normalizer both reorders rows AND has
+#' duplicated names -- it keeps counts in its original order. Methylation BMIQ does
+#' reorder (to its probe manifest), so a methylation array with duplicated probe IDs
+#' would come out misaligned. pgx.createPGX compares rownames element-wise, so that
+#' case errors rather than corrupting silently. Same caveat as playbase.
+#'
+#' @param X normalized matrix, the reference for row identity and order
+#' @param counts counts matrix to realign
+#' @return counts, subset to X's features
+#' @noRd
+realign_counts_to_X <- function(X, counts) {
+  if (!identical(rownames(X), rownames(counts))) {
+    if (anyDuplicated(rownames(counts))) {
+      counts <- counts[rownames(counts) %in% rownames(X), , drop = FALSE]
+    } else {
+      counts <- counts[rownames(X), , drop = FALSE]
+    }
+  }
+  counts
+}
+
 
 upload_module_normalization_server <- function(
   id,
@@ -148,7 +179,11 @@ upload_module_normalization_server <- function(
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
             nX <- try(playbase::normalizeMethylation(X, m, meth_type()), silent = TRUE)
-            if (!is.null(nX)) X <- nX
+            ## Must check try-error, not just NULL: on failure try() returns the
+            ## error object, which this then assigned to X. req(dim(X)) downstream
+            ## silently blocks cleanX and the panel goes blank with no message.
+            ## playbase::pgx.preprocess has the inherits() guard; this did not.
+            if (!inherits(nX, "try-error") && !is.null(nX)) X <- nX
             rm(nX)
           } else {
             dbg("[normalization_server:normalizedX] normalizing data using", m)
@@ -166,9 +201,9 @@ upload_module_normalization_server <- function(
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
         X <- normalizedX()
         counts <- imputedX()$counts
-        kk <- intersect(rownames(X), rownames(counts))
-        X <- X[kk, , drop = FALSE]
-        counts <- counts[kk, , drop = FALSE]
+        ## See realign_counts_to_X() at the top of this file: the previous
+        ## intersect() based realignment silently collapsed duplicated features.
+        counts <- realign_counts_to_X(X, counts)
         is.mox <- playbase::is.multiomics(rownames(counts))
         if (input$remove_outliers) {
           threshold <- input$outlier_threshold
@@ -181,7 +216,10 @@ upload_module_normalization_server <- function(
             }
           }
           res <- playbase::detectOutlierSamples(X, plot = FALSE)
-          is.outlier <- (res$z.outlier > threshold)
+          ## NA-safe, matching pgx.preprocess: a non-finite z-score must not read as
+          ## an outlier, and must not reach the if() below as NA (which errors with
+          ## "missing value where TRUE/FALSE needed").
+          is.outlier <- !is.na(res$z.outlier) & (res$z.outlier > threshold)
           if (any(is.outlier) && !all(is.outlier)) {
             X <- X[, which(!is.outlier), drop = FALSE]
             counts <- counts[, colnames(X), drop = FALSE]
@@ -254,10 +292,25 @@ upload_module_normalization_server <- function(
         if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
           methods <- methods[methods != "NPM"]
         }
+        ## Preserve the user's choice. updateSelectInput() with `choices` but no
+        ## `selected` makes Shiny select the FIRST choice -- "ComBat" -- so every
+        ## time this comparison re-ran (it is reactive on bec_param,
+        ## bec_full_features and the upstream matrices) it silently discarded the
+        ## selected method, and the dataset was computed with ComBat instead.
+        ## Falls back to the first method only when the current one is genuinely
+        ## unavailable, e.g. NPM is dropped just above.
+        ##
+        ## isolate() is essential: a plain read would make this reactive depend on
+        ## bec_method, so merely picking a method in the dropdown would re-run the
+        ## whole 5-method comparison (minutes, behind a blocking progress modal)
+        ## instead of just re-rendering the preview plot from the cached result.
+        cur <- shiny::isolate(input$bec_method)
+        keep <- if (!is.null(cur) && cur %in% methods) cur else methods[1]
         shiny::updateSelectInput(
           session,
           "bec_method",
-          choices = methods
+          choices = methods,
+          selected = keep
         )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
@@ -601,7 +654,10 @@ upload_module_normalization_server <- function(
 
       ## sample outlier PCA plot
       plot.outlierPCA <- function(pos, z, z0, shownames) {
-        is.outlier <- (z > z0)
+        ## NA-safe, same reason as cleanX: a non-finite z-score would otherwise
+        ## make any(is.outlier) return NA and the if() below throw
+        ## "missing value where TRUE/FALSE needed".
+        is.outlier <- !is.na(z) & (z > z0)
         col1 <- "grey70"
         cex1 <- cut(nrow(pos),
           breaks = c(0, 40, 100, 250, 1000, 999999),
