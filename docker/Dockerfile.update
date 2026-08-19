@@ -82,6 +82,12 @@ RUN R -e "BiocManager::install('wateRmelon')"
 RUN R -e "devtools::install_github('bigomics/metaLINCS')"
 RUN R -e "BiocManager::install('karyoploteR')"
 RUN R -e "BiocManager::install('regioneR')"
+# playbase.epigenetics lists these under Suggests, but the methylation path
+# needs them: the Illumina manifests are require()d by annotate_methylomics
+# and by BMIQ, and the clocks are fitted at dataset creation now, not on a
+# button in the app.
+RUN R -e "BiocManager::install(c('IlluminaHumanMethylation450kanno.ilmn12.hg19', 'IlluminaHumanMethylationEPICanno.ilm10b4.hg19'))"
+RUN R -e "BiocManager::install(c('methylclock', 'methylclockData'))"
 
 #------------------------------------------------------------
 # Add supporting R libraries
@@ -187,7 +193,7 @@ fi
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
     if [ -n "$GITHUB_PAT" ]; then \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi', 'bigomics/playbase-epigenetics'))" && \
       rm -f /root/.Rhistory; \
     fi
 
