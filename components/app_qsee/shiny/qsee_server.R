@@ -3,13 +3,20 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-qsee_server <- function(id, pgx=NULL, parent=NULL) {
+qsee_server <- function(id, pgx=NULL, parent=NULL, purge=NULL, lazy=TRUE) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      
+
       message("[qsee_server:board] called ")
-      
+
+      ## Resolved once and threaded down to every board's own bd_is_visible()
+      ## call (see qsee_resolve_purge()): NULL (the default) keeps whatever
+      ## ENABLE_PLOTLY_PURGE in etc/OPTIONS says; an explicit TRUE/FALSE here
+      ## overrides it for the whole module, e.g. to A/B compare purge on vs
+      ## off from the test harness without touching etc/OPTIONS.
+      purge_enabled <- qsee_resolve_purge(purge)
+
       ## Holds user-uploaded matrices from the upload modal (NULL = use defaults)
       uploaded <- shiny::reactiveValues(
         X = NULL,
@@ -132,42 +139,57 @@ qsee_server <- function(id, pgx=NULL, parent=NULL) {
         uploaded$Y
       })
       
-      ## Lazy boards: bigTabsLazy() inserts each board's UI (built in
-      ## qsee_ui.R's bigTabItem(), see comment there) and calls its server
+      ## lazy = TRUE (default): bigTabsLazy() inserts each board's UI (built
+      ## in qsee_ui.R's bigTabItem(), see comment there) and calls its server
       ## the first time that tab is opened, instead of paying for all six
       ## boards' moduleServer setup unconditionally at Qsee startup.
-      lazy_tabs <- list(
-        "normalize-tab" = list(
-          ui     = function() qsee_normalization_ui(session$ns("normalize")),
-          server = function() qsee_normalization_server("normalize", rX=getX, rY=getY)
-        ),
-        "impute-tab" = list(
-          ui     = function() qsee_imputation_ui(session$ns("impute")),
-          server = function() qsee_imputation_server("impute", rX=getX, rY=getY)
-        ),
-        "bsee-tab" = list(
-          ui     = function() qsee_bsee_ui(session$ns("bsee")),
-          server = function() qsee_bsee_server("bsee", rX=getX, rY=getY)
-        ),
-        "outlier-tab" = list(
-          ui     = function() qsee_outlier_ui(session$ns("outlier")),
-          server = function() qsee_outlier_server("outlier", rX=getX, rY=getY)
-        ),
-        "filtering-tab" = list(
-          ui     = function() qsee_filtering_ui(session$ns("filtering")),
-          server = function() qsee_filtering_server("filtering", rX=getX, rY=getY)
-        ),
-        "pcaexplorer-tab" = list(
-          ui     = function() qsee_pcaexplorer_ui(session$ns("pcaexplorer")),
-          server = function() qsee_pcaexplorer_server("pcaexplorer", rX=getX, rY=getY)
+      ## lazy = FALSE calls every board server directly here instead, up
+      ## front -- the pre-bigTabsLazy behaviour, kept switchable for an A/B
+      ## comparison of the two. Must match the `lazy` given to qsee_ui() for
+      ## the same `id`: qsee_ui(lazy=FALSE) already builds every board's UI
+      ## up front, so bigTabsLazy() would find nothing left to insert.
+      if (isTRUE(lazy)) {
+        lazy_tabs <- list(
+          "normalize-tab" = list(
+            ui     = function() qsee_normalization_ui(session$ns("normalize")),
+            server = function() qsee_normalization_server("normalize", rX=getX, rY=getY, purge=purge_enabled)
+          ),
+          "impute-tab" = list(
+            ui     = function() qsee_imputation_ui(session$ns("impute")),
+            server = function() qsee_imputation_server("impute", rX=getX, rY=getY, purge=purge_enabled)
+          ),
+          "bsee-tab" = list(
+            ui     = function() qsee_bsee_ui(session$ns("bsee")),
+            server = function() qsee_bsee_server("bsee", rX=getX, rY=getY, purge=purge_enabled)
+          ),
+          "outlier-tab" = list(
+            ui     = function() qsee_outlier_ui(session$ns("outlier")),
+            server = function() qsee_outlier_server("outlier", rX=getX, rY=getY, purge=purge_enabled)
+          ),
+          "filtering-tab" = list(
+            ui     = function() qsee_filtering_ui(session$ns("filtering")),
+            server = function() qsee_filtering_server("filtering", rX=getX, rY=getY, purge=purge_enabled)
+          ),
+          "pcaexplorer-tab" = list(
+            ui     = function() qsee_pcaexplorer_ui(session$ns("pcaexplorer")),
+            server = function() qsee_pcaexplorer_server("pcaexplorer", rX=getX, rY=getY, purge=purge_enabled)
+          )
         )
-      )
-      ## bigTabsLazy() matches tabs by the fully-namespaced name bigTabItem()
-      ## was given in qsee_ui.R (e.g. "qsee-normalize-tab"). Namespace these
-      ## from the list's own names rather than a separately hand-kept vector,
-      ## so reordering an entry above can't silently desync the two.
-      names(lazy_tabs) <- session$ns(names(lazy_tabs))
-      loaded <- bigdash::bigTabsLazy(lazy_tabs, id = id)
+        ## bigTabsLazy() matches tabs by the fully-namespaced name
+        ## bigTabItem() was given in qsee_ui.R (e.g. "qsee-normalize-tab").
+        ## Namespace these from the list's own names rather than a
+        ## separately hand-kept vector, so reordering an entry above can't
+        ## silently desync the two.
+        names(lazy_tabs) <- session$ns(names(lazy_tabs))
+        loaded <- bigdash::bigTabsLazy(lazy_tabs, id = id)
+      } else {
+        qsee_normalization_server("normalize", rX=getX, rY=getY, purge=purge_enabled)
+        qsee_imputation_server("impute", rX=getX, rY=getY, purge=purge_enabled)
+        qsee_bsee_server("bsee", rX=getX, rY=getY, purge=purge_enabled)
+        qsee_outlier_server("outlier", rX=getX, rY=getY, purge=purge_enabled)
+        qsee_filtering_server("filtering", rX=getX, rY=getY, purge=purge_enabled)
+        qsee_pcaexplorer_server("pcaexplorer", rX=getX, rY=getY, purge=purge_enabled)
+      }
 
       ## If no dataset is loaded (X is NULL/empty), show a helpful popup only
       ## after the Qsee module itself is visible.  In the main application Qsee

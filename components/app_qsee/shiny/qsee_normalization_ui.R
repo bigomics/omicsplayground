@@ -1,16 +1,40 @@
 
 qsee_normalization_inputs <- function(id) {
   ns <- shiny::NS(id)
-  
+
   bigdash::tabSettings(
-    shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
-    shiny::sliderInput(
-      ns("noise"),
-      "Noise amount:",
-      min = 0,
-      max = 2,
-      value = 1,
-      step = 0.1
+    ## tabSettings()'s own wrapper (.tab-settings) is a plain block with no
+    ## fixed height, so it can't be the flex container the spacer below
+    ## needs. min-height is viewport-relative (not a % of that ill-defined
+    ## parent) so this stretches reliably regardless: bigdash's own
+    ## #<id>-settings-content starts ~70px below the top of the (height:
+    ## 100vh) settings sidebar -- see bigdash R/settings.R -- so that much
+    ## is reserved here too.
+    div(
+      style = "display: flex; flex-direction: column; min-height: calc(100vh - 90px);",
+      shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
+      ## Flexible spacer: pushes everything after it (developer options, if
+      ## shown) down to the bottom of the sidebar, however little or much
+      ## sits above.
+      div(style = "flex: 1 1 auto;"),
+      ## Dev-only: no client-side DEVMODE plumbing exists anywhere in this
+      ## app, so -- same as every other DEVMODE gate (e.g.
+      ## board.user/R/appsettings_ui.R) -- this is decided once in R when
+      ## the UI is built, not with a conditionalPanel().
+      if (qsee_opt_enabled("DEVMODE", FALSE)) {
+        shiny::tagList(
+          shiny::hr(),
+          shiny::h5("Developer options", class = "text-danger"),
+          shiny::sliderInput(
+            ns("noise"),
+            "Noise amount:",
+            min = 0,
+            max = 2,
+            value = 1,
+            step = 0.1
+          )
+        )
+      }
     )
   )
 }

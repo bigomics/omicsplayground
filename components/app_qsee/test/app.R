@@ -27,6 +27,7 @@ www_path <- normalizePath("../../assets", mustWork = FALSE)
 if (dir.exists(www_path)) {
   shiny::addResourcePath("custom", www_path)
   shiny::addResourcePath("assets", www_path)
+  shiny::addResourcePath("static", www_path)
 } else {
   message("[test/app.R] WARNING: www dir not found at ", www_path)
 }
@@ -60,6 +61,11 @@ pgx <- playbase::pgx.load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.p
 if (!exists("pgx")) pgx <- playdata::GEIGER_PGX
 pgx <- NULL
 
+QSEE_LAZY=FALSE
+QSEE_PURGE=FALSE
+QSEE_LAZY=TRUE
+#QSEE_PURGE=TRUE
+
 ui <- bslib::page_fillable(
   ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
   padding = 0, gap = 0,
@@ -73,12 +79,12 @@ ui <- bslib::page_fillable(
   ## PlotModuleUI() wraps every plot in bigLoaders::useSpinner(), which is
   ## inert without these assets. The main app adds them in app/R/ui.R.
   bigLoaders::addBigLoaderDeps(),
-  qsee_ui("qsee")
+  qsee_ui("qsee", lazy = QSEE_LAZY)
 )
 
 server <- function(input, output, session) {
   ## The qsee_server module now registers its own outputs and PlotModuleServers
-  qsee_server("qsee", pgx = pgx)
+  qsee_server("qsee", pgx = pgx, purge = QSEE_PURGE, lazy = QSEE_LAZY)
 }
 
 shinyApp(ui, server)

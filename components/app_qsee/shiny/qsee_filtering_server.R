@@ -1,10 +1,10 @@
 ## This file is part of the Omics Playground project.
 
-qsee_filtering_server <- function(id, rX, rY) {
+qsee_filtering_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "SD filtering", infotext = NULL)
     is_visible <- bigdash::bd_is_visible(
-      input, purge = qsee_purge_enabled(), label = "qsee_filtering_server"
+      input, purge = qsee_resolve_purge(purge), label = "qsee_filtering_server"
     )
 
     output$ui_output <- shiny::renderUI({

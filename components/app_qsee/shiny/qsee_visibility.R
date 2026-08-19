@@ -30,14 +30,27 @@ qsee_purge_enabled <- function() {
   qsee_opt_enabled("ENABLE_PLOTLY_PURGE", TRUE)
 }
 
+#' Resolve a board's `purge` setting: an explicit override, or the option.
+#'
+#' `qsee_server(purge = ...)` threads a single value down through every
+#' board so it can be flipped for the whole app at launch (e.g. for an
+#' on/off A-B comparison from the test harness) without touching
+#' etc/OPTIONS. `NULL` (the default all the way down) keeps the existing
+#' per-install [qsee_purge_enabled()] behaviour; `TRUE`/`FALSE` overrides it.
+#'
+#' @param purge `NULL`, or an explicit `TRUE`/`FALSE` override.
+qsee_resolve_purge <- function(purge = NULL) {
+  if (is.null(purge)) qsee_purge_enabled() else isTRUE(purge)
+}
+
 ## NOTE: boards deliberately have no lazy-mount helper. Each board UI puts
 ## its body behind `shiny::uiOutput(ns("lazy_body"))` and the server fills it
 ## with a plain `renderUI()`. Shiny suspends hidden outputs by default
 ## (`suspendWhenHidden = TRUE`), and a board sitting in an inactive bigdash
 ## `.big-tab` is `display:none`, so that renderUI does not run until the tab
 ## is first shown -- and the built body then stays in the DOM. Pair with
-## `bigdash::bd_is_visible(input, purge = qsee_purge_enabled())` to drop the
-## drawn Plotly trees while hidden.
+## `bigdash::bd_is_visible(input, purge = qsee_resolve_purge(purge))` to drop
+## the drawn Plotly trees while hidden.
 
 ## NOTE: boards also have no precomputation-cache helper. A board's heavy
 ## work is a plain `shiny::reactive()`, which already caches (returning to a

@@ -1,10 +1,10 @@
 ## This file is part of the Omics Playground project.
 
-qsee_imputation_server <- function(id, rX, rY) {
+qsee_imputation_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     OmicsBoard("board", pgx = NULL, title = "Missing value analysis", infotext = NULL)
     is_visible <- bigdash::bd_is_visible(
-      input, purge = qsee_purge_enabled(), label = "qsee_imputation_server"
+      input, purge = qsee_resolve_purge(purge), label = "qsee_imputation_server"
     )
     redraw_tick <- bigdash::bd_redraw_tick(session = session)
 

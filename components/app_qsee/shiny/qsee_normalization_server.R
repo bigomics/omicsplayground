@@ -1,12 +1,12 @@
 ## This file is part of the Omics Playground project.
 
-qsee_normalization_server <- function(id, rX, rY) {
+qsee_normalization_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
     OmicsBoard("board", pgx=NULL, title="Normalization", infotext = NULL) 
 
     is_visible <- bigdash::bd_is_visible(
-      input, purge = qsee_purge_enabled(), label = "qsee_normalization_server"
+      input, purge = qsee_resolve_purge(purge), label = "qsee_normalization_server"
     )
     ## Shiny suspends this output while the board's tab is hidden, so the
     ## body is only built on the first visit and then kept in the DOM.

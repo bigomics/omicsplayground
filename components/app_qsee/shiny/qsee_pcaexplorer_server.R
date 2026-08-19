@@ -8,12 +8,12 @@
 ## app_qsee/R/pcaexplorer-plots.R.
 ##
 
-qsee_pcaexplorer_server <- function(id, rX, rY) {
+qsee_pcaexplorer_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
     OmicsBoard("board", pgx = NULL, title = "PCA explorer", infotext = NULL)
     is_visible <- bigdash::bd_is_visible(
-      input, purge = qsee_purge_enabled(), label = "qsee_pcaexplorer_server"
+      input, purge = qsee_resolve_purge(purge), label = "qsee_pcaexplorer_server"
     )
     redraw_tick <- bigdash::bd_redraw_tick(session = session)
 

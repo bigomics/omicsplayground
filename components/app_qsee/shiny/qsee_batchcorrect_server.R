@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-qsee_bsee_server <- function(id, rX, rY) {
+qsee_bsee_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -11,7 +11,7 @@ qsee_bsee_server <- function(id, rX, rY) {
       OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
       ## Visibility is reported by bigdash::bd_visibility_probe() in the UI.
       is_visible <- bigdash::bd_is_visible(
-        input, purge = qsee_purge_enabled(), label = "qsee_bsee_server"
+        input, purge = qsee_resolve_purge(purge), label = "qsee_bsee_server"
       )
       redraw_tick <- bigdash::bd_redraw_tick(session = session)
       ## Shiny suspends this output while the board's tab is hidden, so the
