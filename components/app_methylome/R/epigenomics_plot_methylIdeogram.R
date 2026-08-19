@@ -80,7 +80,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- playbase.epigenetics::mToBeta(pgx$X)
       genes <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(genes) <- sub("_.*", "", rownames(genes))
@@ -147,7 +147,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
         }
       }
 
-      playbase::plotMethylIdeogram(X, annot, pheno, chromosomes,
+      playbase.epigenetics::plotMethylIdeogram(X, annot, pheno, chromosomes,
         bin_size = bin_size,
         probe_count_bars = !input$remove_probecounts_bar,
         pheno_lines = input$show_pheno_lines,

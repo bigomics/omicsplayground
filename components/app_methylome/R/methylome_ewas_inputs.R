@@ -33,7 +33,7 @@ methylome_ewas_inputs <- function(id) {
     on_tab("hits", x = shiny::tagList(
       withTooltip(
         shiny::selectInput(ns("ewas_contrast"), "Outcome:", choices = NULL),
-        "What to test against methylation: a two-group contrast, or a continuous variable from the sample sheet such as age, BMI or pack-years. Changing it refits the model.",
+        "What to test against methylation: a two-group contrast, a continuous variable from the sample sheet such as age, BMI or pack-years, or a categorical variable. A categorical variable with three or more levels is tested with a moderated F-test - 'does any group differ' - which has no single direction, so the volcano and region calling are unavailable for it. Changing it refits the model.",
         placement = "left"
       ),
       withTooltip(
@@ -46,6 +46,11 @@ methylome_ewas_inputs <- function(id) {
       withTooltip(
         shiny::checkboxInput(ns("ewas_adjust_cells"), "Adjust for cell composition", FALSE),
         "Add the estimated cell proportions as covariates. Estimate them first on the Cell composition screen.",
+        placement = "top"
+      ),
+      withTooltip(
+        shiny::checkboxInput(ns("ewas_sva"), "Adjust for latent factors (SVA)", FALSE),
+        "Estimate surrogate variables from the methylation matrix itself and add them to the model. This is the confounding control available when no deconvolution reference exists for the tissue: it catches batch, composition and unmeasured structure without needing a column for them. The outcome is protected during the estimation, but surrogate variables can still absorb signal that genuinely tracks the phenotype - the literature's answer is to report both models, and the formula line above says which one you are looking at. The delta-beta column stays the raw difference of group means and is not adjusted by anything in the model, so it can sit beside a much less significant p-value once latent factors are removed. Adds runtime: seconds on a probe subset, minutes on a full array.",
         placement = "top"
       ),
       withTooltip(
@@ -62,7 +67,14 @@ methylome_ewas_inputs <- function(id) {
         placement = "top"
       ),
       shiny::actionButton(ns("run_ewas"), "Run EWAS",
-                          class = "btn btn-primary btn-sm", width = "100%")
+                          class = "btn btn-primary btn-sm", width = "100%"),
+      withTooltip(
+        shiny::actionButton(ns("run_catalog"), "Look up hits in EWAS Catalog",
+                            class = "btn btn-outline-primary btn-sm", width = "100%",
+                            style = "margin-top:6px;"),
+        "Queries ewascatalog.org for the top 50 CpGs passing the threshold and adds a Reported column to the hits table, naming the traits each CpG has already been associated with and how many studies found it. Counts are a floor - the API returns at most 500 records per CpG. 'Not reported' means the CpG is absent from that catalog, which is not the same as novel biology. Needs outbound network from the server; it says so if there is none.",
+        placement = "top"
+      )
     )),
 
     ## ---- what was fitted: context everywhere ----
@@ -86,7 +98,7 @@ methylome_ewas_inputs <- function(id) {
     withTooltip(
       shiny::numericInput(ns("min_dbeta"), "Minimum |delta-beta|:", value = 0,
                           min = 0, max = 1, step = 0.01),
-      "Effect-size filter on the beta difference between groups. 0 disables it. A hard cut deletes the real signal of a population EWAS, where true differences are typically under 5%.",
+      "Effect-size filter on the beta difference between groups. 0 disables it. A hard cut deletes the real signal of a population EWAS, where true differences are typically under 5%. For a categorical outcome with three or more levels there is no signed difference, so this filters on the beta range instead - the largest group mean minus the smallest - which is unsigned but still a methylation difference.",
       placement = "top"
     ),
 

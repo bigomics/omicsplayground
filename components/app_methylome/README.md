@@ -1,9 +1,11 @@
 # Methylome Profiler
 
-A Dashboard board for Illumina methylation array data, registered as
-`MODULE.methylome` and shown for methylomics datasets. It answers per-sample
-questions that need no experimental groups — epigenetic age, cell composition,
-methylome character — and runs a covariate-adjusted EWAS when groups exist.
+A standalone app for Illumina methylation array data, wired like Qsee and
+Prism (`methylome_ui()` / `methylome_server()` in `components/app`), and the
+only screens a methylomics dataset opens: loading one bypasses the Dashboard
+entirely and lands here. It answers per-sample questions that need no
+experimental groups — epigenetic age, cell composition, methylome character —
+and runs a covariate-adjusted EWAS when groups exist.
 
 Run it locally with `make methylome` (see the bottom of this file).
 
@@ -11,12 +13,12 @@ Run it locally with `make methylome` (see the bottom of this file).
 
 | Screen | Capability | Notes |
 |---|---|---|
-| **Sample ledger** | Per-sample bimodality, missingness, imprinted-DMR drift | Flagging is cohort-relative (3 MAD), not an absolute cut-off |
+| **Sample ledger** | Per-sample bimodality, imprinted-DMR drift, DNAm age, sex check | Flagging is cohort-relative (3 MAD), not an absolute cut-off |
 | | DNAm age per sample | |
 | | Predicted sex, including aneuploidies | Refuses to predict when X/Y probes are absent |
 | | Beta density per sample | Bimodality check against the expected 0.2 / 0.8 peaks |
-| **Epigenetic age** | 10 clocks: Horvath, skinHorvath, Hannum, BNN, BLUP, EN, PedBE, Wu, Levine (PhenoAge), TL | via `methylclock`; falls back to the 5 in `wateRmelon` if absent |
-| | Select by family or individually; coverage floor; recompute on demand | A clock below the floor is **withheld**, not estimated from partial probes |
+| **Epigenetic age** | 10 clocks: Horvath, skinHorvath, Hannum, BNN, BLUP, EN, PedBE, Wu, Levine (PhenoAge), TL | Fitted once at dataset creation onto `pgx$meth$clocks` by `playbase.epigenetics::compute_clocks()`; a dataset without the slot is fitted live on a button |
+| | Select by family or individually; coverage floor | Both apply instantly - they filter a fit made with no floor and no selection. A clock below the floor is **withheld**, not estimated from partial probes |
 | | DNAm age vs chronological age per clock, with *r* | |
 | | Pairwise clock agreement | |
 | | Age acceleration by phenotype, clock and phenotype both selectable | Residual of DNAm age on chronological age; t-test for two levels, Kruskal-Wallis above |
@@ -88,8 +90,10 @@ not in the configured repositories, plus logic to collapse replicate probes.
   (Mansell et al. 2019, *BMC Genomics* 20:366).
 - **bacon reports, it does not correct.** Applying it to an unadjusted model
   would launder confounding into well-calibrated-looking p-values.
-- **Expensive steps are explicit.** Clocks, deconvolution, the model, DMRs and
-  gene sets each run on a button, not on every settings change.
+- **Expensive steps are explicit.** Deconvolution, the model, DMRs and gene
+  sets each run on a button, not on every settings change. Clocks used to as
+  well; they are now precomputed, and the button is only what a dataset
+  without the stored fit falls back to.
 - **Nothing picks its own variable.** The acceleration panel used to take the
   first sample column with 2–6 levels, which on a sheet whose first such column
   is the slide or plate silently produced a t-test against batch under an
@@ -125,7 +129,6 @@ Also unavailable: GrimAge, whose coefficients are not public.
 | `R/methylome_ewas.R`, `R/methylome_ewas_inputs.R` | EWAS panels and settings |
 | `R/methylome_regions.R` | DMRs and gene-set testing |
 | `inst/masking/cross_reactive_probes.csv` | Chen 2013, McCartney 2016, Zhou non-SNP mask |
-| `test/app.R` | Standalone harness for the screens |
 | `test/build-test-pgx.Rscript` | Builds the demo dataset from GSE43976 |
 | `test/test-arrays.Rscript` | 450K and EPIC verification |
 | `test/test-model.Rscript` | Contrast and continuous fits, EPICv2 refusal, region helper |
@@ -139,9 +142,9 @@ make methylome port=3939
 ```
 
 Then: **Library** → load a methylomics dataset. Loading one lands directly on
-this board's Sample ledger; the six screens sit under **Methylome** in the
-Dashboard menu. Which menu groups appear for methylation data is set by
-`MODULES_METHYLOMICS` in `etc/OPTIONS`.
+the Sample ledger of this app; no Dashboard board is loaded for methylation
+data at all, so the six screens in the left sidebar are the whole platform for
+that dataset. The **Apps** launcher (DEVMODE only) also has a tile for it.
 
 Optional dependencies, all degrading gracefully when absent: `methylclock`
 (10 clocks and deconvolution — falls back to 5 clocks and no composition),

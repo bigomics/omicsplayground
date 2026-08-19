@@ -28,7 +28,7 @@ dataview_table_beta_server <- function(id,
   moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- playbase.epigenetics::mToBeta(pgx$X)
       Y <- pgx$samples
       annot <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))

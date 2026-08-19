@@ -29,12 +29,17 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       shiny::req(p)
       cmps <- colnames(p$contrasts)
       if (is.null(cmps) && !is.null(p$gx.meta)) cmps <- names(p$gx.meta$meta)
-      ## One picker, two groups: a two-group contrast or a continuous exposure
-      ## are the same model to limma, so they are the same choice to the user.
+      ## One picker, three groups: a two-group contrast, a continuous exposure
+      ## and a multi-level factor are all the same machinery to limma, so they
+      ## are the same choice to the user. Without the third group a three-level
+      ## phenotype is unreachable - playbase builds contrasts two groups at a
+      ## time, so nothing in the first two groups can express it.
       cont <- setdiff(mp_continuous_vars(p), cmps)
+      cat <- setdiff(mp_categorical_vars(p), cmps)
       ch <- list()
       if (length(cmps)) ch[["Contrasts"]] <- cmps
       if (length(cont)) ch[["Continuous variables"]] <- cont
+      if (length(cat)) ch[["Categorical variables"]] <- cat
       shiny::updateSelectInput(session, "ewas_contrast", choices = ch,
                                selected = if (length(cmps)) cmps[1] else cont[1])
       shiny::updateSelectizeInput(session, "ewas_covars",
@@ -55,16 +60,27 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## ----------------------------------------------------- cell fractions --
     ## Deconvolution is a projection over ~500 CpGs but still not instant, and
     ## it is a prerequisite for the adjusted model, so it is explicit.
+    ## Button-driven, not dataset-driven. Deconvolution quantile-normalises the
+    ## whole matrix and runs a QP per sample - tens of seconds and gigabytes on
+    ## a real cohort. With r_dataset() in the trigger it ran on every load,
+    ## which as a standalone app means every load, because the UI is in the DOM
+    ## from page load and nothing suspends it.
     applied_ref <- shiny::reactiveVal(NULL)
-    r_cells <- shiny::eventReactive(
-      list(input$run_deconv, r_dataset()),
-      {
-        shiny::req(PGX())
-        applied_ref(input$deconv_ref)
-        mp_cell_counts(PGX(), if (is.null(input$deconv_ref)) MP_DECONV_REFS[1] else input$deconv_ref)
-      },
-      ignoreNULL = FALSE
-    )
+    cells_val <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$run_deconv, {
+      shiny::req(PGX())
+      applied_ref(input$deconv_ref)
+      shiny::withProgress(
+        message = "Estimating cell composition...", value = 0.4,
+        cells_val(mp_cell_counts(
+          PGX(), if (is.null(input$deconv_ref)) MP_DECONV_REFS[1] else input$deconv_ref))
+      )
+    })
+    shiny::observeEvent(r_dataset(), {
+      cells_val(NULL)
+      applied_ref(NULL)
+    }, ignoreInit = TRUE)
+    r_cells <- shiny::reactive(cells_val())
     output$deconv_stale <- shiny::renderUI({
       a <- applied_ref()
       if (is.null(a) || identical(a, input$deconv_ref)) return(NULL)
@@ -77,8 +93,12 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## the first pass; include it in the trigger or the initial fit runs with
     ## no contrast and the failure sticks. Refitting on a contrast change is
     ## also the right behaviour - it is a different question, not a tweak.
+    ## Also button-driven. The contrast picker is repopulated on every dataset
+    ## load, so having input$ewas_contrast in the trigger fired a full limma
+    ## fit the moment a dataset arrived - masking, betaToM over every probe,
+    ## eBayes - before the user had asked for anything.
     r_ewas <- shiny::eventReactive(
-      list(input$run_ewas, r_dataset(), input$ewas_contrast),
+      input$run_ewas,
       {
         p <- PGX()
         shiny::req(p)
@@ -99,16 +119,26 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
           shiny::validate(shiny::need(!is.null(cf) && nrow(cf) > 0,
             "Cell-composition adjustment was requested but no proportions are available. Estimate them on the Cell composition screen, or untick the adjustment."))
         }
-        fit <- mp_fit_ewas(p, cmp, covars = input$ewas_covars,
-                           cellfracs = cf, mask = input$ewas_mask)
+        ## sva is an SVD plus IRW iterations over the whole probe matrix -
+        ## seconds on a subset, minutes on a full array - so the fit gets a
+        ## progress bar rather than an unexplained pause.
+        fit <- shiny::withProgress(
+          message = "Fitting model...", value = 0.4,
+          mp_fit_ewas(p, cmp, covars = input$ewas_covars,
+                      cellfracs = cf, mask = input$ewas_mask,
+                      n_sv = if (isTRUE(input$ewas_sva)) -1L else 0L))
         d <- mp_ewas_annotate(p, fit$table)
         list(data = d, contrast = cmp, meta = fit,
              ## The moderated t is already a signed test statistic. Rebuilding
              ## one as qnorm(p/2)*sign(logFC) inverted every z - qnorm(p/2) is
              ## always negative - which flipped the sign of the reported bias.
-             bacon = mp_bacon(fit$t))
+             ## bacon models a signed z; an F is not one, so the anova branch
+             ## gets no bias estimate rather than a confident wrong one.
+             bacon = if (isTRUE(fit$anova)) NULL else mp_bacon(fit$t))
       },
-      ignoreNULL = FALSE
+      ## Nothing until the button is actually pressed. ignoreNULL = FALSE here
+      ## would fire the fit at startup, which is the behaviour being removed.
+      ignoreNULL = TRUE, ignoreInit = TRUE
     )
 
     ## The fitted model, printed so the user can see what was actually tested.
@@ -151,39 +181,45 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(v) || is.na(v)) 0.8 else v
     })
 
-    ## methylclock takes ~20s on a full cohort, so the clock set is computed
-    ## once and shared across the four panels, and only on demand: reacting to
-    ## every checkbox tick would refit ten clocks each time. Loading a new
-    ## dataset also triggers it, otherwise the panels would keep showing the
-    ## previous dataset's ages.
-    applied <- shiny::reactiveVal(NULL)
-    r_clockset <- shiny::eventReactive(
-      list(input$recompute_clocks, r_dataset()),
-      {
-        shiny::req(PGX())
-        a <- list(clocks = r_clocks(), min_cov = r_mincov())
-        applied(a)
-        mp_clock_set(PGX(), a$clocks, a$min_cov)
-      },
-      ignoreNULL = FALSE
-    )
-
-    ## Tell the user when the panels are showing something older than the
-    ## current settings, rather than letting them wonder if it worked.
-    output$clock_stale <- shiny::renderUI({
-      a <- applied()
-      if (is.null(a)) return(NULL)
-      stale <- !identical(sort(a$clocks), sort(r_clocks())) ||
-        !isTRUE(all.equal(a$min_cov, r_mincov()))
-      if (!stale) return(NULL)
-      shiny::div(
-        style = "margin-top:6px; font-size:11.5px; color:#8a5a06;",
-        "Settings changed - press Recompute to apply."
+    ## The clocks now come with the dataset, so the panels fill in on load and
+    ## both settings apply instantly - they filter a fit that used neither.
+    ##
+    ## A pgx built before the slot existed has nothing to filter, and fitting
+    ## ten clocks takes ~40s on a full cohort. That used to run on every
+    ## dataset load: as a board the UI was inserted lazily so nothing read it
+    ## until you opened this screen, but as an app the whole UI is in the DOM
+    ## from page load, so it fired every time - and R being single-threaded,
+    ## any click during those 40s queues behind it, which is what made the
+    ## Library's own loading modal look like it took forever to appear. So the
+    ## fallback stays behind the button, and its raw fit is kept in a
+    ## reactiveVal that a new dataset clears rather than letting the panels
+    ## show the previous cohort's ages.
+    live_val <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$recompute_clocks, {
+      shiny::req(PGX())
+      ## Nothing to do when the dataset already carries its clocks - pressing
+      ## the button would refit for 40s and land on the same numbers.
+      if (!is.null(mp_stored_clocks(PGX()))) return()
+      shiny::withProgress(
+        message = "Computing epigenetic clocks...", value = 0.4,
+        live_val(playbase.epigenetics::compute_clocks(mp_beta(PGX())))
       )
+    })
+    shiny::observeEvent(r_dataset(), live_val(NULL), ignoreInit = TRUE)
+
+    r_clockset <- shiny::reactive({
+      p <- PGX()
+      shiny::req(p)
+      ## The stored path never touches mp_beta(), so the datatype check has to
+      ## happen here or an RNA-seq dataset would be told to press a button.
+      mp_require_methylomics(p)
+      cl <- mp_stored_clocks(p)
+      if (!is.null(cl)) cl$stored <- TRUE else cl <- live_val()
+      mp_clock_filter(cl, r_clocks(), r_mincov(), mp_chronological_age(p))
     })
 
     ## Only clocks that survived the coverage floor can be the acceleration
-    ## clock, and the list changes with every recompute - keep the current
+    ## clock, and the list changes with the floor - keep the current
     ## choice when it is still usable rather than snapping back to the first.
     shiny::observeEvent(r_clockset(), {
       cl <- r_clockset()
@@ -320,7 +356,35 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_plot_qq_server("ewas_qq", r_ewas, watermark = watermark)
     methylome_plot_enrichment_server("ewas_enrich", r_ewas, r_thresh,
                                      watermark = watermark)
-    methylome_table_hits_server("ewas_hits", r_ewas, r_thresh)
+    ## ------------------------------------------------ EWAS Catalog lookup --
+    ## One HTTP request per CpG and no batch endpoint, so the list is capped and
+    ## the lookup is explicit. reactiveVal, not eventReactive: the table has to
+    ## render without it, since most runs never press the button.
+    catalog_val <- shiny::reactiveVal(NULL)
+    shiny::observeEvent(input$run_catalog, {
+      d <- r_ewas()$data
+      sig <- mp_ewas_sig(d, r_thresh())
+      cpgs <- utils::head(d$probe[sig][order(d$p[sig])], MP_CATALOG_MAX)
+      if (!length(cpgs)) {
+        shiny::showNotification("No CpG passes the current threshold.",
+                                type = "warning")
+        return()
+      }
+      out <- shiny::withProgress(message = "Querying the EWAS Catalog...",
+                                 value = 0.4, playbase.epigenetics::ewas_catalog_lookup(cpgs))
+      ## Degrade to a message, never a hang: the deployed container may have no
+      ## outbound network at all, which no package check can see.
+      if (is.null(out)) {
+        shiny::showNotification(
+          "The EWAS Catalog is not reachable from this server.",
+          type = "error", duration = 8)
+      }
+      catalog_val(out)
+    })
+    shiny::observeEvent(r_ewas(), catalog_val(NULL), ignoreInit = TRUE)
+
+    methylome_table_hits_server("ewas_hits", r_ewas, r_thresh,
+                                shiny::reactive(catalog_val()))
     methylome_plot_stripcharts_server("ewas_strips", PGX, r_ewas, r_thresh,
                                       r_topn, watermark = watermark)
 

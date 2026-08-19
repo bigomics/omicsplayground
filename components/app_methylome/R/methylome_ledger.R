@@ -25,32 +25,18 @@ methylome_table_ledger_server <- function(id, pgx, scrollY = "22vh") {
     table_data <- shiny::reactive({
       shiny::req(pgx())
       p <- pgx()
-      X <- mp_beta(p)
-      bim <- mp_bimodality(X)
-      drift <- mp_imprint_drift(X)
-      clk <- mp_clocks(X, method = "horvath")
-      sex <- if (mp_has_xy(p)) mp_sex(X) else NULL
-      ## A predicted sex is only worth showing next to what the sample sheet
-      ## claims: on its own it confirms nothing, and disagreement is the
-      ## cheapest sample-swap signal an array gives you.
-      sexchk <- mp_sex_check(p, if (is.null(sex)) NULL else sex$predicted_sex,
-                             colnames(X))
-      data.frame(
-        Bimodality = bim,
-        `Missing %` = round(100 * colMeans(is.na(X)), 2),
-        `DNAm age` = if (!is.null(clk)) clk[[1]] else NA,
-        `Sex predicted` = if (!is.null(sex)) as.character(sex$predicted_sex) else "not available",
-        `Sex check` = sexchk,
-        `Imprint drift` = drift,
-        ## Cohort-relative, because absolute cut-offs do not transfer between
-        ## platforms or tissues.
-        Verdict = {
-          bad <- (!is.na(drift) & drift > median(drift, na.rm = TRUE) + 3 * mad(drift, na.rm = TRUE)) |
-            (bim < median(bim, na.rm = TRUE) - 3 * mad(bim, na.rm = TRUE)) |
-            sexchk == "MISMATCH"
-          ifelse(bad, "CHECK", "PASS")
-        },
-        row.names = colnames(X), check.names = FALSE, stringsAsFactors = FALSE
+      ## Same Horvath the Epigenetic age screen shows, read off the stored fit
+      ## rather than refitted. Without one, sample_qc() falls back to the
+      ## wateRmelon single-clock path - fitting ten clocks to print one column
+      ## is not worth it here (nor at upload, where there is no stored fit).
+      st <- mp_stored_clocks(p)
+      ages <- NULL
+      if (!is.null(st)) {
+        j <- grep("^horvath$", colnames(st$age), ignore.case = TRUE)
+        if (length(j)) ages <- st$age[[j[1]]]
+      }
+      playbase.epigenetics::sample_qc(
+        mp_beta(p), annot = p$genes, samples = p$samples, ages = ages
       )
     })
 

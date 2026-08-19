@@ -372,6 +372,19 @@ LoadingBoard <- function(id,
 
     loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
 
+      ## A loader that lasts the whole way. The withProgress inside this
+      ## function ends when the pgx object is in memory, which is well before
+      ## the user is actually taken anywhere - leaving several seconds with no
+      ## sign that anything is still happening. This sticky notification is
+      ## opened here and removed in opg_server once the navigation has been
+      ## issued, so something is always on screen between click and arrival.
+      ## Addressed by id on the app session, so either side can own it.
+      shiny::showNotification(
+        "Loading dataset...",
+        id = "opg_loading", duration = NULL, closeButton = FALSE,
+        type = "message", session = parent
+      )
+
       ## During loading show loading pop-up modal
       firstpgx <- (length(names(pgx))==0)
       if(firstpgx) {

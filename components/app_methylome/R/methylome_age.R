@@ -2,15 +2,25 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-## Epigenetic age. Clocks come from methylclock when it is installed, which
-## covers ten of them, and fall back to the five in wateRmelon otherwise, so
-## the board still works on an image without the heavier dependency.
+## Epigenetic age. The fitting itself lives in playbase.epigenetics and now
+## runs once at dataset creation, landing on pgx$meth$clocks. This file reads
+## that slot when it is there and refits live when it is not - every pgx built
+## before the slot existed still works, so the live path stays.
 ##
 ## A clock fitted on a fraction of its probes returns a confident wrong number
 ## (we have seen -13.5 years), so anything below the coverage floor is
-## withheld rather than shown with a caveat.
+## withheld rather than shown with a caveat. The floor and the clock selection
+## are display filters over a fit that used neither: they change what is shown,
+## never what any clock says.
 
-MP_HAS_METHYLCLOCK <- function() requireNamespace("methylclock", quietly = TRUE)
+## Shown only on the fallback path: a dataset built by the current pipeline
+## carries its clocks and the panels fill in on load.
+MP_NO_CLOCKS <- paste(
+  "This dataset has no stored epigenetic clocks - it predates them, or they",
+  "were fitted with a different version of the clock package. Press Compute",
+  "clocks in the settings panel to fit them here; ten clocks take around 40",
+  "seconds, so it is not done unasked."
+)
 
 ## Families for the settings panel. Names are methylclock's own clock ids.
 MP_CLOCK_FAMILIES <- list(
@@ -55,7 +65,7 @@ methylome_age_inputs <- function(id) {
         selected = c(MP_CLOCK_FAMILIES[["Chronological age"]],
                      MP_CLOCK_FAMILIES[["Biological age"]])
       ),
-      "Individual clocks. This list is what is actually computed; the families above just set it.",
+      "Individual clocks. This list is what is shown; every clock is fitted regardless, so ticking one costs nothing.",
       placement = "top"
     ),
     withTooltip(
@@ -66,13 +76,13 @@ methylome_age_inputs <- function(id) {
       "A clock with fewer than this fraction of its CpGs present is withheld rather than estimated from partial data.",
       placement = "top"
     ),
-    ## Fitting ten clocks takes ~20s, so the settings above are staged and
-    ## only applied on demand rather than recomputing on every tick.
+    ## Both settings above apply instantly - they filter a fit that used
+    ## neither. The button only exists for a dataset with no stored clocks,
+    ## where there is nothing to filter until something is fitted.
     shiny::div(
       style = "margin-top: 6px;",
-      shiny::actionButton(ns("recompute_clocks"), "Recompute clocks",
-                          class = "btn btn-primary btn-sm", width = "100%"),
-      shiny::uiOutput(ns("clock_stale"))
+      shiny::actionButton(ns("recompute_clocks"), "Compute clocks",
+                          class = "btn btn-primary btn-sm", width = "100%")
     ),
 
     ## ---- acceleration panel ----
@@ -101,90 +111,61 @@ methylome_age_inputs <- function(id) {
 
 ## ------------------------------------------------------------------ shared --
 
-## Returns: age = data.frame of ages per usable clock, cov = per-clock
-## coverage, acc = age acceleration when a chronological age column exists.
+## The stored fit, or NULL when this pgx has none we are willing to trust.
+##
+## "Willing to trust" is deliberately narrow: the ages must line up with the
+## samples actually loaded, and the package that produced them must still be
+## the one installed. A methylclock upgrade can move a coefficient set, and a
+## silently stale age is worse than a slow one. The one version mismatch that
+## is NOT treated as stale is the package having gone away entirely - a stored
+## methylclock fit beats refitting live on the wateRmelon fallback.
+mp_stored_clocks <- function(pgx) {
+  cl <- pgx$meth$clocks
+  if (is.null(cl) || is.null(cl$age) || is.null(cl$source)) return(NULL)
+  if (!identical(rownames(cl$age), colnames(pgx$X))) return(NULL)
+  have <- tryCatch(as.character(utils::packageVersion(cl$source)),
+                   error = function(e) NA_character_)
+  if (!is.na(have) && !identical(have, cl$version)) return(NULL)
+  cl
+}
+
+## Turn a raw fit (all clocks, no floor) into what the panels show. Nothing
+## here refits anything: the selection and the coverage floor only decide
+## which columns are displayed and which are withheld.
+mp_clock_filter <- function(cl, clocks, min_cov, chron) {
+  if (is.null(cl)) return(NULL)
+  all <- cl$age[, intersect(clocks, colnames(cl$age)), drop = FALSE]
+  if (!ncol(all)) all <- cl$age
+  cov <- cl$cov[match(colnames(all), cl$cov$clock), , drop = FALSE]
+  ## wateRmelon reports no coverage fraction, only whether anything is
+  ## missing, so on that path the floor degrades to "nothing missing".
+  keep <- ifelse(is.na(cov$probe), cov$complete %in% TRUE, cov$probe >= min_cov) &
+    vapply(all, function(v) any(!is.na(v)), logical(1))
+  list(age = round(all[, keep, drop = FALSE], 1), all = all, cov = cov,
+       chron = chron, source = cl$source, stored = isTRUE(cl$stored))
+}
+
+## Returns: age = data.frame of ages per usable clock, all = every selected
+## clock, cov = per-clock coverage, chron = chronological age when the sample
+## sheet has one.
 mp_clock_set <- function(pgx, clocks = MP_CLOCK_ALL, min_cov = 0.8) {
-  X <- mp_beta(pgx)
-  chron <- mp_chronological_age(pgx)
-
-  if (MP_HAS_METHYLCLOCK()) {
-    df <- data.frame(CpGName = rownames(X), X, check.names = FALSE)
-    want <- intersect(clocks, MP_CLOCK_ALL)
-    if (!length(want)) want <- MP_CLOCK_ALL
-    args <- list(x = df, clocks = want, cell.count = FALSE, min.perc = min_cov)
-    ## DNAmAge errors on age = NULL, so only pass it when we actually have one.
-    if (!is.null(chron)) args$age <- chron
-    res <- tryCatch(do.call(methylclock::DNAmAge, args),
-                    error = function(e) {
-                      warning("[methylome] DNAmAge failed: ", conditionMessage(e))
-                      NULL
-                    })
-    if (!is.null(res)) {
-      res <- as.data.frame(res)
-      ages <- res[, intersect(want, colnames(res)), drop = FALSE]
-      acc  <- res[, grep("ageAcc", colnames(res), value = TRUE), drop = FALSE]
-      rownames(ages) <- colnames(X)
-      if (ncol(acc)) rownames(acc) <- colnames(X)
-      ok <- vapply(ages, function(v) any(!is.na(v)), logical(1))
-      return(list(age = round(ages[, ok, drop = FALSE], 1),
-                  all = ages, acc = acc, chron = chron,
-                  source = "methylclock", probes = rownames(X),
-                  withheld = names(ok)[!ok]))
-    }
-  }
-
-  ## Fallback: wateRmelon's five.
-  A <- mp_clocks(X)
-  if (is.null(A)) return(NULL)
-  raw <- as.data.frame(wateRmelon::agep(X, method = "all"))
-  miss <- grep("n_missing$", colnames(raw), value = TRUE)
-  nm <- if (length(miss)) vapply(raw[miss], max, numeric(1)) else rep(0, ncol(A))
-  names(nm) <- sub("\\..*", "", miss)
-  ok <- intersect(colnames(A), names(nm)[nm == 0])
-  list(age = A[, ok, drop = FALSE], all = A, acc = NULL, chron = chron,
-       source = "wateRmelon", probes = rownames(X),
-       withheld = setdiff(colnames(A), ok))
+  cl <- mp_stored_clocks(pgx)
+  if (!is.null(cl)) cl$stored <- TRUE
+  ## No stored fit: this pgx predates the slot, or its provenance moved. Fit
+  ## live, exactly as before - same function the pipeline calls, so the two
+  ## paths cannot drift apart.
+  if (is.null(cl)) cl <- playbase.epigenetics::compute_clocks(mp_beta(pgx))
+  mp_clock_filter(cl, clocks, min_cov, mp_chronological_age(pgx))
 }
 
 ## ------------------------------------------------------------ clock weights --
 
-## Where each clock's published coefficients live. methylclockData is the same
-## source methylclock itself fits from, so nothing here is a transcribed
-## constant - the weights are read from the installed package at call time.
-## BNN is absent on purpose: it is a neural net, not a weighted sum, so
-## "fraction of model weight" is undefined for it.
-MP_CLOCK_COEF_FN <- c(
-  Horvath = "get_coefHorvath", skinHorvath = "get_coefSkin",
-  Hannum  = "get_coefHannum",  BLUP        = "get_coefBLUP",
-  EN      = "get_coefEN",      PedBE       = "get_coefPedBE",
-  Wu      = "get_coefWu",      Levine      = "get_coefLevine",
-  TL      = "get_coefTL"
-)
-
-## get_coefBLUP() alone is a 320k-row ExperimentHub read, so cache per clock.
-MP_CLOCK_COEF_CACHE <- new.env(parent = emptyenv())
+## Both of these moved to playbase.epigenetics, where the fitting lives; the
+## wrappers stay because the coverage table and the tests read "missing" and
+## the package reports "present".
 
 #' |coefficient| per CpG for one clock, or NULL when no reachable weight vector.
-mp_clock_weights <- function(clock) {
-  if (!is.null(MP_CLOCK_COEF_CACHE[[clock]])) return(MP_CLOCK_COEF_CACHE[[clock]])
-  fn <- MP_CLOCK_COEF_FN[clock]
-  if (is.na(fn) || !requireNamespace("methylclockData", quietly = TRUE)) return(NULL)
-  d <- tryCatch(
-    as.data.frame(do.call(getExportedValue("methylclockData", fn), list())),
-    error = function(e) NULL)
-  if (is.null(d) || !all(c("CpGmarker", "CoefficientTraining") %in% colnames(d))) {
-    return(NULL)
-  }
-  ## The intercept carries a large coefficient and no probe. Left in the
-  ## denominator it dwarfs the CpGs and every clock looks well covered.
-  d <- d[!grepl("intercept", d$CpGmarker, ignore.case = TRUE), , drop = FALSE]
-  w <- abs(suppressWarnings(as.numeric(d$CoefficientTraining)))
-  names(w) <- as.character(d$CpGmarker)
-  w <- w[!is.na(w)]
-  if (!length(w)) return(NULL)
-  MP_CLOCK_COEF_CACHE[[clock]] <- w
-  w
-}
+mp_clock_weights <- function(clock) playbase.epigenetics::clock_weights(clock)
 
 #' What a clock loses on this array: fraction of its CpGs absent, and the
 #' fraction of its total absolute weight those CpGs carried.
@@ -193,10 +174,7 @@ mp_clock_weights <- function(clock) {
 #' Lussier 2024 reports both - on EPICv2 DunedinPoAm loses far more weight
 #' than probes. Returns c(NA, NA) when the weights are not reachable.
 mp_clock_coverage <- function(clock, probes) {
-  w <- mp_clock_weights(clock)
-  if (is.null(w) || is.null(probes)) return(c(probe = NA_real_, weight = NA_real_))
-  gone <- !names(w) %in% probes
-  c(probe = mean(gone), weight = sum(w[gone]) / sum(w))
+  1 - playbase.epigenetics::clock_coverage(clock, probes)
 }
 
 ## First numeric sample column that looks like a chronological age.
@@ -230,6 +208,7 @@ methylome_plot_agecor_server <- function(id, r.clockset, watermark = FALSE) {
     plot_data <- r.clockset
     plot.RENDER <- function() {
       cl <- plot_data()
+      shiny::validate(shiny::need(!is.null(cl), MP_NO_CLOCKS))
       shiny::validate(shiny::need(!is.null(cl) && ncol(cl$age) > 0,
         "No clock has enough probe coverage at this setting."))
       shiny::validate(shiny::need(!is.null(cl$chron),
@@ -287,6 +266,7 @@ methylome_plot_clocks_server <- function(id, r.clockset, watermark = FALSE) {
     plot_data <- r.clockset
     plot.RENDER <- function() {
       cl <- plot_data()
+      shiny::validate(shiny::need(!is.null(cl), MP_NO_CLOCKS))
       shiny::validate(shiny::need(!is.null(cl) && ncol(cl$age) >= 2,
         "Select at least two clocks with enough coverage to compare them."))
       a <- cl$age
@@ -336,7 +316,8 @@ methylome_plot_agegroup_server <- function(id, pgx, r.clockset,
     plot_data <- shiny::reactive({
       shiny::req(pgx())
       p <- pgx(); cl <- r.clockset()
-      shiny::validate(shiny::need(!is.null(cl) && ncol(cl$age) > 0,
+      shiny::validate(shiny::need(!is.null(cl), MP_NO_CLOCKS))
+      shiny::validate(shiny::need(ncol(cl$age) > 0,
         "No clock has enough probe coverage at this setting."))
       gname <- r.pheno()
       shiny::validate(shiny::need(!is.null(gname) && nzchar(gname) &&
@@ -420,14 +401,15 @@ methylome_table_coverage_server <- function(id, r.clockset) {
   shiny::moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
       cl <- r.clockset()
-      shiny::validate(shiny::need(!is.null(cl), "Clocks could not be computed."))
+      shiny::validate(shiny::need(!is.null(cl), MP_NO_CLOCKS))
       nm <- colnames(cl$all)
       usable <- colnames(cl$age)
       ## Two views of the same loss. The probe fraction is what the coverage
       ## floor is applied to; the weight fraction is what actually moves the
-      ## estimate, and the two diverge badly on reduced arrays.
-      miss <- vapply(nm, mp_clock_coverage, numeric(2), probes = cl$probes)
-      pct <- function(v) ifelse(is.na(v), "-", sprintf("%.1f%%", 100 * v))
+      ## estimate, and the two diverge badly on reduced arrays. Both come with
+      ## the fit rather than being recomputed here - reading the coefficients
+      ## back means a 320k-row ExperimentHub fetch for BLUP alone.
+      pct <- function(v) ifelse(is.na(v), "-", sprintf("%.1f%%", 100 * (1 - v)))
       data.frame(
         Clock = nm,
         What = ifelse(nm %in% names(MP_CLOCK_NOTE), MP_CLOCK_NOTE[nm], ""),
@@ -435,8 +417,8 @@ methylome_table_coverage_server <- function(id, r.clockset) {
           v <- cl$all[[k]]
           if (k %in% usable && any(!is.na(v))) sprintf("%.1f", stats::median(v, na.rm = TRUE)) else "withheld"
         }, character(1)),
-        `CpGs missing` = pct(miss["probe", ]),
-        `Weight missing` = pct(miss["weight", ]),
+        `CpGs missing` = pct(cl$cov$probe),
+        `Weight missing` = pct(cl$cov$weight),
         Status = ifelse(nm %in% usable, "usable",
                         "below coverage floor - not estimated"),
         check.names = FALSE, row.names = NULL, stringsAsFactors = FALSE

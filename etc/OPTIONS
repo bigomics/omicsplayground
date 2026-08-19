@@ -48,16 +48,6 @@ COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 # level (components/app_copilot/) post edgy_merge_copilot, not as a board.
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
-# Methylomics: without this the datatype falls back to setdiff(MODULES,"MultiOmics")
-# in global.R, i.e. the full transcriptomics menu. Dropped here:
-#   Compare     - isect/comp/cmap all match features by gene symbol across
-#                 datasets, putting a methylation effect on the same axis as an
-#                 expression one; cmap correlates against expression signatures.
-#   SystemsBio  - drug does the same against L1000; cell and wordcloud are never
-#                 computed for methylomics; tcga errors on CpG ids; pcsf is
-#                 already hidden for probe-level data.
-# Expression and GeneSets are kept deliberately: both have known methylation
-# caveats (unadjusted stored model; probes-per-gene bias in enrichment) but
-# removing them would leave a non-DEVMODE methylation user with no differential
-# or enrichment analysis at all.
-MODULES_METHYLOMICS = Datasets;DataView;Clustering;Expression;GeneSets;WGCNA;Methylome
+# No MODULES_METHYLOMICS: methylation datasets do not use the Dashboard at all.
+# opg_server.R activates no board for them and navigates straight to the
+# standalone Methylome app, so there is no module list left to configure.

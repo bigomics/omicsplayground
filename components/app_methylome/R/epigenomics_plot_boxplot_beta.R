@@ -96,7 +96,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- playbase.epigenetics::mToBeta(pgx$X)
       Y <- pgx$samples
       annot <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
@@ -167,7 +167,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
       ## drawn. playbase normalises these to "chrN" itself, so X and Y are fine.
       chroms <- r.chromosome()
       if (is.null(chroms) || !length(chroms) || identical(chroms, "")) chroms <- NULL
-      playbase::plotMethylOverview(
+      playbase.epigenetics::plotMethylOverview(
         X, annot, pheno,
         chromosomes = chroms,
         plot.beta.dist = FALSE, plot.beta.boxplots = TRUE,

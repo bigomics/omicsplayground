@@ -393,7 +393,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           ## counts is 2**X (beta values for methylomics): back to the analysis scale
           log2counts <- if (is.meth) counts else log2(counts)
         } else if (is.meth) {
-          log2counts <- playbase::mToBeta(counts)
+          log2counts <- playbase.epigenetics::mToBeta(counts)
         } else {
           if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
             offset <- 1e-6

@@ -83,7 +83,7 @@ message("[methylome] DEVMODE enabled for this session only; etc/OPTIONS untouche
 source("ui.R")
 source("server.R")
 
-message("[methylome] Library -> load a methylomics dataset -> Apps -> Methylome Profiler")
+message("[methylome] Library -> load a methylomics dataset; it opens the Methylome app directly")
 
 shinyApp(
   ui = app_ui,

@@ -180,6 +180,12 @@ app_ui <- function(x) {
         bslib::nav_panel_hidden("Qsee",
           omicspanel(qsee_ui("qsee"))
         ),
+        ## Not DEVMODE-gated: a methylation dataset bypasses the Dashboard and
+        ## lands here (see opg_server.R), so this panel has to exist on every
+        ## build, not only the ones that show the Apps launcher.
+        bslib::nav_panel_hidden("Methylome",
+          omicspanel(methylome_ui("methylome"))
+        ),
         bslib::nav_panel_hidden(
           value = "AcrossDatasets",
           #title = HTML("Across&nbsp;datasets"),

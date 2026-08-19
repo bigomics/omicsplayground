@@ -1078,15 +1078,17 @@ app_server <- function(input, output, session) {
     })
   }
   
+  ## Methylome is a standalone app, and deliberately outside the DEVMODE block
+  ## below: methylation datasets skip the Dashboard entirely and are navigated
+  ## straight here, which only works if the server is always wired.
+  methylome_server("methylome", pgx = PGX)
+
   if(opt$DEVMODE) {
     dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
     launcher_server("apps", parent = session)
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
     qsee_server("qsee", pgx = PGX, parent = session)
-
-    ## Methylome is a Dashboard board now (MODULE.methylome), loaded lazily by
-    ## opg_server like every other board - no app-mode wiring here.
     prism_server("prism")
   }
   

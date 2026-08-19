@@ -114,7 +114,15 @@ AppSettingsBoard <- function(id, auth, pgx) {
           # showCancelButton = TRUE
         )
       }
-    })
+    },
+    ## Only when the user actually switches AI on, which is what the comment
+    ## above says this is for. Without ignoreInit, observeEvent also fires once
+    ## at session start because enable_ai already holds TRUE, so every session
+    ## opened with a warning nobody asked for - and shinyalert leaves its
+    ## .sweet-overlay behind at z-index 10000 with pointer-events:auto, above
+    ## every modal in the app. That is the invisible sheet that made a
+    ## maximised plot render correctly and then refuse to be closed.
+    ignoreInit = TRUE)
     
     shiny::observeEvent(
       {

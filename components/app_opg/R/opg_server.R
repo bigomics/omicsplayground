@@ -120,7 +120,8 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
   }, ignoreInit = FALSE)
 
   ## Where the user lands once a dataset has finished loading. Methylation data
-  ## opens on the Methylome board rather than DataView.
+  ## does not use the Dashboard at all - it opens the standalone Methylome app,
+  ## whose UI and server are wired in components/app (nav panel "Methylome").
   ##
   ## Decided here, in the one place that already navigates after a load, rather
   ## than in a second observer racing this one: whichever ran last would win,
@@ -129,18 +130,18 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
   is_methylomics <- function() {
     !is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics"
   }
-  ## The Methylome board is part of the Dashboard now, so landing is always the
-  ## Dashboard; which tab opens inside it is what changes.
-  landing_tab <- function() "Dashboard"
-  landing_bigtab <- function() if (is_methylomics()) "mledger-tab" else "dataview-tab"
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
     # depending on datatpye, subset modules enabled and create modules active,
     if (tolower(PGX$datatype) == "multi-omics") {
       MODULES_ACTIVE <- MODULES_MULTIOMICS
-    } else if (tolower(PGX$datatype) == "methylomics") {
-      MODULES_ACTIVE <- MODULES_METHYLOMICS
+    } else if (is_methylomics()) {
+      ## Methylation bypasses the Dashboard: no board is active, so nothing is
+      ## inserted below and the removal loop tears down whatever a previously
+      ## loaded dataset left behind. The user is sent to the Methylome app at
+      ## the tail of this observer instead.
+      MODULES_ACTIVE <- array(FALSE, length(MODULES), dimnames = list(MODULES))
     } else {
       MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
     }
@@ -152,7 +153,6 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       bigdash.hideMenuElement(session, "SystemsBio")
       bigdash.hideMenuElement(session, "MultiOmics")
       bigdash.hideMenuElement(session, "WGCNA")
-      bigdash.hideMenuElement(session, "Methylome")
     }
     # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
@@ -212,13 +212,6 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
         bigdash.hideMenuElement(session, "WGCNA")
         loaded$wgcna <- 0
       }
-      if (x == "Methylome") {
-        lapply(names(MODULE.methylome$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "Methylome")
-        loaded$methylome <- 0
-      }
     })
 
     if (env$load$is_data_loaded()) { # == 1) {
@@ -246,11 +239,24 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
         insertBigTabUI(additional_ui_tabs[tab])
       }
 
-      ## show the dashboard item in app sidebar
+      ## Show the dashboard item in app sidebar.
+      ##
+      ## Not for methylation: nothing is inserted into the Dashboard for it, so
+      ## an enabled nav item just leads to an empty shell, and Studio/Copilot
+      ## are built around the gene-level model this datatype does not produce.
+      ## Both directions matter - a user who loads transcriptomics and then
+      ## methylation must have these switched back off, so this is if/else
+      ## rather than a skip.
       #bslib::nav_show("app-sidebar", "Dashboard")
-      shinyjs::enable(selector = "a[data-value='Dashboard']")
-      shinyjs::enable(selector = "a[data-value='Studio']")
-      shinyjs::enable(selector = "a[data-value='Copilot']")
+      if (is_methylomics()) {
+        shinyjs::disable(selector = "a[data-value='Dashboard']")
+        shinyjs::disable(selector = "a[data-value='Studio']")
+        shinyjs::disable(selector = "a[data-value='Copilot']")
+      } else {
+        shinyjs::enable(selector = "a[data-value='Dashboard']")
+        shinyjs::enable(selector = "a[data-value='Studio']")
+        shinyjs::enable(selector = "a[data-value='Copilot']")
+      }
       
       shiny::withProgress(
         message = "Preparing your dashboard (server)...",
@@ -262,8 +268,8 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
             DataViewBoard("dataview",
               pgx = PGX, labeltype = labeltype
             )
-            bslib::nav_select("app-sidebar", selected = landing_tab())
-            bigdash.selectTab(session, landing_bigtab())
+            bslib::nav_select("app-sidebar", selected = "Dashboard")
+            bigdash.selectTab(session, "dataview-tab")
           }
           shiny::incProgress(0.1)
 
@@ -352,25 +358,6 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
             })
           }
 
-          if (MODULES_TO_LOAD["Methylome"] && exists("MODULE.methylome")) {
-            info("[SERVER:UI:1] initializing Methylome module")
-            mod <- MODULE.methylome
-            insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "Methylome")
-            lapply(names(MODULE.methylome$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-            ## Methylation data lands on this board, so build its content and
-            ## server here rather than waiting for the nav observer. Deferring
-            ## it left the user watching spinners after the loading modal had
-            ## already closed.
-            if (is_methylomics() && loaded$methylome == 0) {
-              insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-              mod$module_server(PGX)
-              loaded$methylome <- 1
-            }
-          }
-
           MODULES_LOADED <<- MODULES_ACTIVE
 
           if (env$load$is_data_loaded() > 0) {
@@ -396,17 +383,52 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       )
     }
 
-    ## Goto dataview, or straight into the Methylome app for methylation data
-    bslib::nav_select("app-sidebar", selected = landing_tab())
-    bigdash.openSettings(lock = TRUE)
-    bigdash.openSidebar()
-    bigdash.showTabs(session)
-    bigdash.selectTab(session, landing_bigtab())
+    ## Goto dataview, or straight into the Methylome app for methylation data.
+    ## Nothing was inserted into the Dashboard for methylomics, so there is no
+    ## dashboard shell to open and no tab to select - only the navigation.
+    ##
+    ## This is a branch, never an early return: the modal cleanup below has to
+    ## run on every path. Returning from here once left the startup modal up
+    ## with its backdrop and the body unscrollable, and the app looked hung.
+    if (is_methylomics()) {
+      bslib::nav_select("app-sidebar", selected = "Methylome")
+    } else {
+      bslib::nav_select("app-sidebar", selected = "Dashboard")
+      bigdash.openSettings(lock = TRUE)
+      bigdash.openSidebar()
+      bigdash.showTabs(session)
+      bigdash.selectTab(session, "dataview-tab")
+    }
 
-    ## remove loading modal from LoadingBoard
-    shinyjs::delay(2000, {
-      shiny::removeModal()
-    })
+    ## Remove the loading/startup modal from LoadingBoard.
+    ##
+    ## This was a shinyjs::delay(2000, ...) whose expression never ran - the
+    ## scheduling line is reached but the callback never fires, so the startup
+    ## modal stayed open behind the whole app with its backdrop up and the body
+    ## unscrollable. Maximising a plot then swapped that modal for the plot
+    ## popup, and closing the popup cleared Bootstrap's backdrop but not the
+    ## rest, which is how it surfaced: "fullscreen a plot and the platform
+    ## greys out". shinyjs::runjs works fine in this same scope (the sidebar
+    ## opens through it above), so the delay is the broken part - drop it and
+    ## remove the modal directly.
+    ##
+    ## The navigation above has been issued, so the "Loading dataset..."
+    ## notification opened by loadAndActivatePGX has done its job and comes
+    ## down at the same moment.
+    shiny::removeNotification("opg_loading")
+    shiny::removeModal()
+    ## stop-scrolling comes from shinyalert/sweetalert and nothing takes it back
+    ## off, so it outlives whatever put it there and leaves overflow:hidden on
+    ## the body for the rest of the session.
+    shinyjs::runjs(paste(
+      "$('body').removeClass('stop-scrolling').css('overflow','');",
+      ## Belt and braces: any sweetalert overlay still in the DOM with no alert
+      ## attached is an invisible click-blocker at z-index 10000. The root fix
+      ## is not raising the alert spuriously (appsettings_server.R), but a
+      ## stray one left by any other alert would do the same damage.
+      "$('.sweet-overlay').filter(function(){",
+      "  return $('.sweet-alert:visible').length === 0; }).remove();"
+    ))
     
   })
 
@@ -442,8 +464,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
     compare = 0,
     systems = 0,
     multiomics = 0,
-    wgcna = 0,
-    methylome = 0
+    wgcna = 0
   )
 
   observeEvent(input$nav, {
@@ -515,15 +536,6 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       loaded$wgcna <- 1
       tab_control()
     }
-    methylome_tabs <- paste0(names(MODULE.methylome$module_menu()), "-tab")
-    if (input$nav %in% methylome_tabs && loaded$methylome == 0) {
-      info("[SERVER:UI:2] reacted: calling Methylome module")
-      mod <- MODULE.methylome
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$methylome <- 1
-      tab_control()
-    }
   })
 
 
@@ -564,7 +576,11 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
     ## Control tab to only be displayed if there is custom fc + baseline fc
     has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
       length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
-    toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    ## Same lazy-load guard as the beta subtabs above: methylomics never loads
+    ## the Expression board at all, so this tabset is not in the DOM.
+    if (isTRUE(loaded$expression > 0)) {
+      toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    }
 
     ## Dynamically show upon availability in pgx object
     tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
@@ -593,20 +609,8 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir,
       bigdash.hideTab(session, "cmap-tab")
     }
 
-    ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)
-    if (!is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics") {
-      is_dmp <- if (!is.null(PGX$dma)) {
-        PGX$dma == "Differentially methylated positions"
-      } else {
-        ## fallback for old pgx files without dma field: CpG probe IDs start with "cg"
-        mean(grepl("^cg[0-9]+", rownames(PGX$X))) > 0.5
-      }
-      if (is_dmp) {
-        bigdash.hideTab(session, "pcsf-tab")
-      } else {
-        bigdash.showTab(session, "pcsf-tab")
-      }
-    }
+    ## (No methylomics branch here any more: that datatype loads no Dashboard
+    ## board at all, so there is no pcsf-tab - or any other tab - to hide.)
 
   }
 

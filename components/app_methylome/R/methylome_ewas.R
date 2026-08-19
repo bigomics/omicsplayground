@@ -112,8 +112,11 @@ methylome_plot_manhattan_server <- function(id, r.ewas, r.thresh, watermark = FA
       cols <- ifelse(as.integer(d$chr) %% 2 == 0, "#a9b6c4", "#7f8f9f")
       plot(d$gx, -log10(d$p), pch = 19, cex = .35, col = cols, xaxt = "n",
            xlab = "chromosome", ylab = expression(-log[10](p)))
-      graphics::points(d$gx[d$sig], -log10(d$p[d$sig]), pch = 19, cex = .6,
-        col = ifelse(d$dbeta[d$sig] > 0 | is.na(d$dbeta[d$sig]), MP_PAL$hyper, MP_PAL$hypo))
+      ## An F-test across three or more groups has no direction, so hits get one
+      ## accent colour rather than a hyper/hypo split that would be invented.
+      hitcol <- if (isTRUE(r.ewas()$meta$anova)) MP_PAL$bad else
+        ifelse(d$dbeta[d$sig] > 0 | is.na(d$dbeta[d$sig]), MP_PAL$hyper, MP_PAL$hypo)
+      graphics::points(d$gx[d$sig], -log10(d$p[d$sig]), pch = 19, cex = .6, col = hitcol)
       graphics::axis(1, at = tapply(d$gx, d$chr, stats::median, na.rm = TRUE),
                      labels = levels(d$chr), tick = FALSE, cex.axis = .7)
       h <- mp_ewas_hline(d, th)
@@ -226,10 +229,13 @@ methylome_table_hits_ui <- function(id, title, info.text, caption, height, width
                 caption = caption, height = height, width = width, label = "d")
 }
 
-methylome_table_hits_server <- function(id, r.ewas, r.thresh, scrollY = "22vh") {
+methylome_table_hits_server <- function(id, r.ewas, r.thresh,
+                                        r.catalog = shiny::reactive(NULL),
+                                        scrollY = "22vh") {
   shiny::moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
-      d <- r.ewas()$data
+      res <- r.ewas(); d <- res$data
+      anova_fit <- isTRUE(res$meta$anova)
       sig <- mp_ewas_sig(d, r.thresh())
       shiny::validate(shiny::need(any(sig),
         "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
@@ -241,16 +247,31 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh, scrollY = "22vh") 
         Chr = d$chr, Position = d$pos,
         Context = ifelse(is.na(d$island), "-", d$island),
         Region = ifelse(is.na(d$location) | d$location == "", "-", d$location),
-        `Delta beta` = d$dbeta,
-        Direction = ifelse(is.na(d$dbeta), "-", ifelse(d$dbeta > 0, "hyper", "hypo")),
+        ## Unsigned across k groups, so it is named for what it is.
+        effect = d$dbeta,
+        Direction = if (anova_fit) "-" else
+          ifelse(is.na(d$dbeta), "-", ifelse(d$dbeta > 0, "hyper", "hypo")),
         `P value` = signif(d$p, 3), FDR = signif(d$q, 3),
         check.names = FALSE, stringsAsFactors = FALSE
       )
+      colnames(out)[colnames(out) == "effect"] <-
+        if (anova_fit) "Beta range" else "Delta beta"
+      if (anova_fit && !is.null(d$Fstat)) out$F <- signif(d$Fstat, 3)
+      cat <- r.catalog()
+      if (!is.null(cat)) {
+        i <- match(d$probe, cat$probe)
+        rep <- cat$reported[i]
+        ## Absent from the catalog is absent from the catalog, not novel
+        ## biology - and a CpG that was never looked up says so separately.
+        out$Reported <- ifelse(is.na(i), "not looked up",
+                               ifelse(rep == "", "not reported", rep))
+      }
       rownames(out) <- NULL
       out
     })
     render <- function(sy) {
       dt <- table_data(); shiny::req(dt)
+      eff <- if ("Beta range" %in% colnames(dt)) "Beta range" else "Delta beta"
       DT::datatable(dt, class = "compact hover", rownames = FALSE,
         extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
         selection = list(mode = "single", target = "row"),
@@ -261,8 +282,8 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh, scrollY = "22vh") 
         DT::formatStyle("Direction",
           color = DT::styleEqual(c("hyper", "hypo"), c(MP_PAL$hyper, MP_PAL$hypo)),
           fontWeight = "bold") |>
-        DT::formatStyle("Delta beta",
-          background = DT::styleColorBar(c(-1, 1) * max(abs(dt$`Delta beta`), na.rm = TRUE),
+        DT::formatStyle(eff,
+          background = DT::styleColorBar(c(-1, 1) * max(abs(dt[[eff]]), na.rm = TRUE),
                                          "#dce7f2"),
           backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center")
@@ -305,7 +326,7 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
       shiny::validate(shiny::need(length(ss) > 2, "No samples left for this model."))
       list(d = d, X = X[d$probe, ss, drop = FALSE], grp = droplevels(m$strata[ss]),
            x = if (isTRUE(m$continuous)) m$x[ss] else NULL,
-           outcome = res$contrast)
+           anova = isTRUE(m$anova), outcome = res$contrast)
     })
     plot.RENDER <- function() {
       res <- plot_data(); d <- res$d; X <- res$X; grp <- res$grp
@@ -350,8 +371,12 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
           }
         }
         graphics::title(main = lab_i(i), cex.main = 0.95, font.main = 1)
-        graphics::mtext(sprintf("d-beta %+.3f   q %.2g", d$dbeta[i], d$q[i]),
-                        side = 3, line = 0.1, cex = 0.62, col = "#697586")
+        ## The k-group effect is a range, so a signed "+0.12" would read as a
+        ## direction the F-test never established.
+        graphics::mtext(
+          if (res$anova) sprintf("beta range %.3f   q %.2g", d$dbeta[i], d$q[i])
+          else sprintf("d-beta %+.3f   q %.2g", d$dbeta[i], d$q[i]),
+          side = 3, line = 0.1, cex = 0.62, col = "#697586")
       }
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
@@ -383,6 +408,12 @@ methylome_plot_volcano_server <- function(id, r.ewas, r.thresh, watermark = FALS
   shiny::moduleServer(id, function(input, output, session) {
     plot.RENDER <- function() {
       res <- r.ewas(); th <- r.thresh()
+      ## Refuse rather than approximate: the x axis of a volcano is a signed
+      ## effect, and a difference among three or more groups does not have one.
+      ## Plotting the unsigned beta range here would look like a volcano and
+      ## mean something else.
+      shiny::validate(shiny::need(!isTRUE(res$meta$anova),
+        "This model is an F-test across three or more groups, which has no single direction - so there is no volcano to draw. The stripcharts on the QQ & context sub-tab show what each group actually does at the top CpGs."))
       d <- res$data
       d <- d[is.finite(d$p) & is.finite(d$dbeta), , drop = FALSE]
       shiny::validate(shiny::need(nrow(d) > 0, "No probe has both an effect size and a p-value."))
@@ -497,3 +528,11 @@ methylome_plot_hitmap_server <- function(id, pgx, r.ewas, r.thresh,
       res = c(90, 130), pdf.width = 8, pdf.height = 7, add.watermark = watermark)
   })
 }
+
+## ----------------------------------------------------------- EWAS Catalog --
+##
+## The lookup itself is playbase.epigenetics::ewas_catalog_lookup() - HTTP and parsing,
+## nothing Shiny about it. Only the policy of how far down the hit list to go
+## belongs here: serial GETs against an undocumented rate limit, and fifty is
+## as far as anyone reads.
+MP_CATALOG_MAX <- 50L

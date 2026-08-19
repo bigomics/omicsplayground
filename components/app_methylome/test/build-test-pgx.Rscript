@@ -1,6 +1,11 @@
 ## Build a small methylomics pgx from the GSE43976 stratified subset.
 ## Phenotype is derived from the data (Horvath DNAm age split at the median),
 ## because the GEO matrix ships anonymised sample names and no metadata.
+##
+## STALE: this predates the shipped data/GSE43976-methyl-mini.pgx, which
+## carries the real GEO sample sheet (cell_type/age/sex/ms_status/smoking) and
+## two contrasts. Its input computed.rds is also gone. Re-derive both before
+## running it - as written it would replace the demo with a weaker one.
 suppressMessages({library(playbase); library(wateRmelon)})
 
 ## Local env has playdata 0.1.0, which predates playdata::PHOSPHOSITE that
@@ -74,6 +79,15 @@ pgx <- playbase::pgx.computePGX(
 pgx$samples$.dnam_age  <- round(age, 1)
 pgx$samples$.age_accel <- round(as.numeric(residuals(lm(age ~ seq_along(age)))), 2)
 
-saveRDS(pgx, "GSE43976-methyl-mini.pgx")
+## Epigenetic clocks are fitted by pgx.computePGX itself, on pgx$meth$clocks.
+## Nothing to do here but check they arrived and agree with a live fit - that
+## equivalence is what lets the app read the slot instead of refitting.
+cl <- pgx$meth$clocks
+stopifnot(!is.null(cl), identical(rownames(cl$age), colnames(pgx$X)))
+stopifnot(isTRUE(all.equal(cl$age, playbase.epigenetics::compute_clocks(pgx$X)$age)))
+message("[build] clocks: ", cl$source, " ", cl$version, " | ",
+        paste(colnames(cl$age), collapse = ","))
+
+save(pgx, file = "GSE43976-methyl-mini.pgx", compress = TRUE)
 message("[build] saved. X dim: ", paste(dim(pgx$X), collapse = " x "),
         " | genes cols: ", paste(head(colnames(pgx$genes), 12), collapse = ","))

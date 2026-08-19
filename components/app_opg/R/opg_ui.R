@@ -295,7 +295,6 @@ opg_ui <- function() {
           "Preservation WGCNA",
           tspan("Preservation analysis using the WGCNA framework")
         ),
-        !!!MODULE.methylome$module_help(),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
@@ -369,8 +368,7 @@ opg_ui <- function() {
       tcga = "TCGA survival (beta)"
     ),
     "MultiOmics" = MODULE.multiomics$module_menu(),
-    "WGCNA" = MODULE.wgcna$module_menu(),
-    "Methylome" = MODULE.methylome$module_menu()
+    "WGCNA" = MODULE.wgcna$module_menu()
   )
 
   info("[opg_ui] >>> creating UI")

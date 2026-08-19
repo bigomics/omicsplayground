@@ -27,6 +27,11 @@ mp_call_dmrs <- function(pgx, res, maxgap = 500) {
     "The dmrff package is not installed, so region calling is unavailable."))
   d <- res$data
   fit <- res$meta
+  ## dmrff combines a signed estimate and its standard error across neighbouring
+  ## probes. An F-test across three or more groups produces neither, and any
+  ## stand-in for them would be an invented direction, so refuse.
+  shiny::validate(shiny::need(!isTRUE(fit$anova),
+    "Region calling needs a signed effect and its standard error per probe. This model is an F-test across three or more groups, which has neither. Fit a two-group contrast or a continuous outcome to call regions."))
   shiny::validate(shiny::need(!is.null(fit$t),
     "This model did not return moderated t statistics."))
 
@@ -45,7 +50,7 @@ mp_call_dmrs <- function(pgx, res, maxgap = 500) {
   ## contrast label: incomplete covariates drop rows, and dmrff must see the
   ## same set the summary statistics came from.
   ss <- intersect(res$meta$samples, colnames(beta))
-  M <- playbase::betaToM(beta[d$probe, ss, drop = FALSE])
+  M <- playbase.epigenetics::betaToM(beta[d$probe, ss, drop = FALSE])
 
   ok <- !is.na(se)
   out <- tryCatch(

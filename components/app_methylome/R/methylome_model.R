@@ -37,21 +37,26 @@ mp_snp_probes <- function(pgx, maf = 0.05) {
 }
 
 ## Cross-reactive / multi-mapping probes, from the bundled published lists.
-## The board is sourced, not installed, so search the plausible working
-## directories: the app runs from components/app/R, tests from
-## app_methylome/test.
+##
+## Anchored on OPG rather than on the working directory: the app runs with its
+## cwd in components/app/R, and a candidate list of relative paths alone once
+## resolved to nothing there, leaving this mask a silent no-op - 53,498 probes
+## the checkbox claimed to exclude were being tested, while the summary line
+## still reported the SNP mask's count and so looked like both had applied.
+## pgx.system.file() is not usable here: it only ever resolves
+## components/board.<name>, and this is an app, not a board.
+##
+## The relative fallbacks are for the headless test harness, which runs from
+## the test/ directory without the app's globals.
 MP_XREACTIVE_CACHE <- new.env(parent = emptyenv())
 
 mp_xreactive_probes <- function() {
   if (!is.null(MP_XREACTIVE_CACHE$p)) return(MP_XREACTIVE_CACHE$p)
   rel <- file.path("masking", "cross_reactive_probes.csv")
-  cand <- c(
-    system.file(rel, package = "app_methylome"),
-    file.path("../../app_methylome/inst", rel),
-    file.path("app_methylome/inst", rel),
-    file.path("../inst", rel),
-    file.path("components/app_methylome/inst", rel)
-  )
+  cand <- character(0)
+  if (exists("OPG")) cand <- file.path(OPG, "components", "app_methylome", "inst", rel)
+  cand <- c(cand, file.path("../inst", rel),
+            file.path("components/app_methylome/inst", rel))
   f <- cand[nzchar(cand) & file.exists(cand)][1]
   if (is.na(f)) {
     warning("[methylome] cross-reactive probe list not found; that mask is a no-op")
@@ -229,21 +234,55 @@ mp_continuous_vars <- function(pgx) {
   sort(colnames(s)[keep])
 }
 
-## The outcome picker offers contrasts and continuous variables in one list,
-## so which path to take is decided by what was picked. A contrast wins on a
-## name clash - it is the more specific object.
+## Categorical sample columns usable as an EWAS outcome directly.
+##
+## playbase builds every contrast as a two-group comparison, so a three-level
+## phenotype (disease stage, treatment arm, tissue) is not merely refused by
+## the model - it is unreachable from the picker. Offering the column itself is
+## the only way into the F-test path.
+##
+## Two-level columns are included even though a contrast usually exists for
+## them: it keeps one code path (the k = 2 branch is what a two-level column
+## takes), and a sample column with no matching contrast would otherwise be
+## untestable. At least three samples per level, or the group mean the F-test
+## compares is noise.
+mp_categorical_vars <- function(pgx, max_levels = 8, min_per_level = 3) {
+  s <- pgx$samples
+  if (is.null(s)) return(character(0))
+  cont <- mp_continuous_vars(pgx)
+  keep <- vapply(colnames(s), function(k) {
+    if (k %in% cont) return(FALSE)
+    v <- as.character(s[[k]])
+    tb <- table(v[!is.na(v) & v != ""])
+    length(tb) >= 2 && length(tb) <= max_levels && all(tb >= min_per_level)
+  }, logical(1))
+  sort(colnames(s)[keep])
+}
+
+## The outcome picker offers contrasts, continuous and categorical variables in
+## one list, so which path to take is decided by what was picked. A contrast
+## wins on a name clash - it is the more specific object.
 mp_is_continuous <- function(pgx, sel) {
   if (is.null(sel) || !nzchar(sel)) return(FALSE)
   if (sel %in% colnames(pgx$contrasts)) return(FALSE)
   sel %in% mp_continuous_vars(pgx)
 }
 
+mp_is_categorical <- function(pgx, sel) {
+  if (is.null(sel) || !nzchar(sel)) return(FALSE)
+  if (sel %in% colnames(pgx$contrasts)) return(FALSE)
+  sel %in% mp_categorical_vars(pgx)
+}
+
 #' Fit the differential-methylation model.
 #'
-#' @param contrast a contrast name, or the name of a continuous sample column.
+#' @param contrast a contrast name, or the name of a continuous or categorical
+#'   sample column.
+#' @param n_sv surrogate variables to append to the design: 0 off, -1 estimate
+#'   with sva::num.sv, a positive number to force that many.
 #' @return list(table, formula, n, groups, strata, dropped_covars, masked, ...)
 mp_fit_ewas <- function(pgx, contrast, covars = character(0),
-                        cellfracs = NULL, mask = character(0)) {
+                        cellfracs = NULL, mask = character(0), n_sv = 0) {
   mp_require_methylomics(pgx)
   mp_require_array(pgx)
   shiny::validate(shiny::need(!is.null(contrast) && nzchar(contrast),
@@ -261,12 +300,18 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
       "Too few samples carry a value for this variable."))
     dat <- data.frame(.x = as.numeric(x[ss]), row.names = ss)
   } else {
-    grp <- mp_contrast_groups(pgx, contrast)
+    grp <- if (mp_is_categorical(pgx, contrast)) {
+      g <- as.character(pgx$samples[[contrast]])
+      names(g) <- rownames(pgx$samples)
+      g[!is.na(g) & g != ""]
+    } else {
+      mp_contrast_groups(pgx, contrast)
+    }
     shiny::validate(shiny::need(!is.null(grp), "This contrast has no group labels."))
     ss <- intersect(names(grp), colnames(beta))
     grp <- droplevels(factor(grp[ss]))
-    shiny::validate(shiny::need(nlevels(grp) == 2,
-      "This model handles two-group contrasts. For a multi-level or continuous phenotype, pick the variable itself from the Continuous variables group of the outcome list."))
+    shiny::validate(shiny::need(nlevels(grp) >= 2,
+      "This outcome has only one group. Pick a contrast or a variable that varies."))
     dat <- data.frame(.group = grp, row.names = ss, stringsAsFactors = FALSE)
   }
 
@@ -301,9 +346,12 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
       "This variable is constant once incomplete covariates are dropped."))
   } else {
     dat$.group <- droplevels(dat$.group)
-    shiny::validate(shiny::need(nlevels(dat$.group) == 2,
-      "One group has no samples left once incomplete covariates are dropped."))
+    shiny::validate(shiny::need(nlevels(dat$.group) >= 2,
+      "Only one group has samples left once incomplete covariates are dropped."))
   }
+  ## Three or more groups is a moderated F-test, not a difference of two means:
+  ## no signed effect and no single t exists, which several panels care about.
+  anova_fit <- !continuous && nlevels(dat$.group) >= 3
 
   ## A continuous outcome keeps the intercept and tests its own slope; a
   ## contrast drops it and tests the difference of the two group means.
@@ -328,7 +376,53 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   ## Fit on M-values, report on beta. M is the right scale for testing
   ## (Du 2010) but is not interpretable as a change in methylation.
   B <- beta[probes, rownames(dat), drop = FALSE]
-  M <- playbase::betaToM(B)
+  M <- playbase.epigenetics::betaToM(B)
+
+  ## ------------------------------------------------------- latent factors --
+  ## Surrogate variables: the only confounding control left when no
+  ## deconvolution reference exists for the tissue. The outcome is protected by
+  ## sitting in mod and not in mod0, so sva estimates structure orthogonal to
+  ## the question rather than removing the answer.
+  sv_note <- NULL
+  if (n_sv != 0) {
+    shiny::validate(shiny::need(requireNamespace("sva", quietly = TRUE),
+      "The sva package is not installed, so latent-factor adjustment is unavailable."))
+    outcome_cols <- if (continuous) ".x" else grep("^\\.group", colnames(design), value = TRUE)
+    mod0 <- design[, setdiff(colnames(design), outcome_cols), drop = FALSE]
+    ## The contrast design is fitted without an intercept (~ 0 + .group), so
+    ## dropping the group columns can leave a null model with no constant term.
+    if (!any(apply(mod0, 2, function(z) length(unique(z)) == 1))) {
+      mod0 <- cbind(Intercept = 1, mod0)
+    }
+    sv <- tryCatch({
+      k <- if (n_sv < 0) sva::num.sv(M, design, method = "be") else as.integer(n_sv)
+      ## Cap: ten SVs is already more latent structure than a typical cohort
+      ## supports, and every SV costs a residual degree of freedom.
+      k <- min(k, 10L, nrow(dat) - ncol(design) - 2L)
+      if (k < 1) NULL else {
+        ## sva narrates its IRW iterations on stdout; the progress bar already
+        ## says what is happening.
+        invisible(utils::capture.output(
+          obj <- sva::sva(M, mod = design, mod0 = mod0, n.sv = k)))
+        obj$sv
+      }
+    }, error = function(e) e)
+    shiny::validate(shiny::need(!inherits(sv, "error"),
+      paste0("Surrogate-variable estimation failed on this design: ",
+             if (inherits(sv, "error")) conditionMessage(sv) else "",
+             ". Untick the latent-factor adjustment, or drop a covariate.")))
+    if (is.null(sv)) {
+      ## Degrade to the unadjusted model, but say so - a silent fall-back is
+      ## exactly the fail-open this board exists to prevent.
+      sv_note <- "no latent factors detected"
+    } else {
+      colnames(sv) <- paste0("SV", seq_len(ncol(sv)))
+      design <- cbind(design, sv)
+      used <- c(used, colnames(sv))
+      shiny::validate(shiny::need(nrow(dat) - ncol(design) >= 2,
+        "Not enough residual degrees of freedom once the surrogate variables are added - drop a covariate."))
+    }
+  }
 
   if (continuous) {
     fit2 <- limma::eBayes(limma::lmFit(M, design), trend = TRUE)
@@ -347,35 +441,59 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
     desc <- sprintf("%s from %.4g to %.4g", contrast, min(dat$.x), max(dat$.x))
   } else {
     lv <- levels(dat$.group)
-    g1 <- make.names(paste0(".group", lv[1]))
-    g2 <- make.names(paste0(".group", lv[2]))
+    gcol <- make.names(paste0(".group", lv))
     fit <- limma::lmFit(M, design)
-    cm <- limma::makeContrasts(contrasts = paste0(g2, "-", g1), levels = design)
+    ## Every level against the first. With one contrast limma returns the
+    ## moderated t; with k-1 it returns the moderated F of "any difference
+    ## among the groups", which is the multi-level test. Testing the k group
+    ## coefficients directly would instead ask whether every group mean is
+    ## zero - true of no M-value anywhere.
+    cm <- limma::makeContrasts(contrasts = paste0(gcol[-1], "-", gcol[1]),
+                               levels = design)
     fit2 <- limma::eBayes(limma::contrasts.fit(fit, cm), trend = TRUE)
     tt <- limma::topTable(fit2, number = Inf, sort.by = "none")
-    dbeta <- rowMeans(B[, dat$.group == lv[2], drop = FALSE], na.rm = TRUE) -
-             rowMeans(B[, dat$.group == lv[1], drop = FALSE], na.rm = TRUE)
-    head <- paste0("~ ", lv[2], " vs ", lv[1])
+    if (anova_fit) {
+      ## An F-test has no direction, so the effect size is the spread of the
+      ## group means on the beta scale: unsigned, still a methylation
+      ## difference, and still meaningful to the |delta-beta| filter.
+      mu <- lapply(lv, function(l)
+        rowMeans(B[, dat$.group == l, drop = FALSE], na.rm = TRUE))
+      dbeta <- do.call(pmax, mu) - do.call(pmin, mu)
+      head <- sprintf("~ %s (F-test across %d groups)", contrast, length(lv))
+    } else {
+      dbeta <- rowMeans(B[, dat$.group == lv[2], drop = FALSE], na.rm = TRUE) -
+               rowMeans(B[, dat$.group == lv[1], drop = FALSE], na.rm = TRUE)
+      head <- paste0("~ ", lv[2], " vs ", lv[1])
+    }
     strata <- dat$.group
     groups <- table(dat$.group)
     desc <- NULL
   }
   names(strata) <- rownames(dat)
 
+  tab <- data.frame(
+    probe = rownames(tt),
+    logFC_M = if (anova_fit) NA_real_ else tt$logFC,
+    dbeta = round(dbeta[rownames(tt)], 4),
+    p = tt$P.Value, q = tt$adj.P.Val,
+    stringsAsFactors = FALSE
+  )
+  ## Only on the anova branch: the F is what was tested there, and there is no
+  ## single log fold change across k-1 contrasts to report in its place.
+  if (anova_fit) tab$Fstat <- tt$F
+
   list(
-    table = data.frame(
-      probe = rownames(tt),
-      logFC_M = tt$logFC,
-      dbeta = round(dbeta[rownames(tt)], 4),
-      p = tt$P.Value, q = tt$adj.P.Val,
-      stringsAsFactors = FALSE
-    ),
+    table = tab,
     formula = paste0(head,
                      if (length(used)) paste0(" + ", paste(used, collapse = " + ")) else
-                       "   (unadjusted)"),
+                       "   (unadjusted)",
+                     if (!is.null(sv_note)) paste0("   [", sv_note, "]")),
     ## dmrff needs the standard error, which limma does not return directly;
-    ## se = |logFC / t|, so keep the moderated t alongside.
-    t = tt$t,
+    ## se = |logFC / t|, so keep the moderated t alongside. NULL on the anova
+    ## branch so nothing downstream mistakes an F for a signed t.
+    t = if (anova_fit) NULL else tt$t,
+    anova = anova_fit,
+    n_sv = if (is.null(sv_note)) sum(grepl("^SV[0-9]+$", used)) else 0L,
     n = nrow(dat), groups = groups, desc = desc,
     continuous = continuous,
     x = if (continuous) stats::setNames(dat$.x, rownames(dat)) else NULL,

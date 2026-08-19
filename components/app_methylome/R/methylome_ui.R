@@ -2,37 +2,65 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-## Methylome board screens. One function per screen, returning the content that
-## the platform inserts into its bigTabItem; the settings panels live in their
-## own *_inputs() functions and are declared in __init.R. Every panel is a
-## PlotModule or TableModule, so info/methods, maximize and the png/pdf/svg/csv
-## downloads come from the platform rather than being reimplemented here.
+## Methylome Profiler shell. Same construction as qsee_ui(): a bigdash page
+## with one sidebarItem per screen and one bigTabItem holding it. The screens
+## themselves are the methylome_ui_*() functions below, one per tab, and the
+## settings panels live in their own *_inputs() functions declared alongside
+## them in the tab. Every panel is a PlotModule or TableModule, so info/methods,
+## maximize, and the png/pdf/svg/csv downloads come from the platform rather
+## than being reimplemented here.
 
-## Board tabs sit inside the platform shell. The padding correction this had as
-## a standalone app is gone with the app's own navbar, and the height is the
-## platform's own convention rather than a full viewport.
-## Derived from board.dataview, which fills correctly at "calc(100vh - 140px)"
-## with a tabset strip above its content. The plain screens here have only the
-## OmicsBoardUI header, so they get that strip's ~38px back; the two screens
-## that carry their own navset_tab match dataview exactly. The previous 181px
-## over-subtracted and left a band of dead space under every board.
-MP_TAB_HEIGHT <- "calc(100vh - 102px)"
-MP_SUBTAB_HEIGHT <- "calc(100vh - 140px)"
+## bigdash pulls its app container 15px above the viewport - it assumes a
+## navbar occupies that strip, and this app hides its navbar - so without a
+## correction the first element on every tab is clipped by the app top bar.
+## Push the content back down, then size the tab to the space that is really
+## left. Rows are "auto" for the alert and 1 for the content, otherwise
+## layout_columns splits the height evenly and the alert eats a whole share.
+MP_TAB_PAD <- "padding-top: 28px;"
+MP_TAB_HEIGHT <- "calc(100vh - 40px)"
+## Sub-tabbed screens lose another strip of height to the nav_tab chrome.
+MP_SUBTAB_HEIGHT <- "calc(100vh - 96px)"
 
-## Pass-through. Every other board hands its layout_columns to the platform
-## directly; wrapping it in a div breaks the height chain and the first row is
-## clipped against the top of the panel.
-mp_tab <- function(...) {
-  a <- list(...)
-  if (length(a) == 1) a[[1]] else shiny::tagList(...)
+## Every tab is the same shape: a nudged wrapper around one layout_columns.
+mp_tab <- function(...) shiny::div(style = MP_TAB_PAD, ...)
+
+methylome_ui <- function(id = "methylome") {
+  ns <- shiny::NS(id)
+
+  bigdash::bigPage(
+    id = id,
+    navbar = shiny::div(style = "visibility: hidden; display: none;"),
+    sidebar = bigdash::sidebar(
+      "Methylome Profiler",
+      id = id,
+      bigdash::sidebarItem("Sample ledger", ns("ledger-tab")),
+      bigdash::sidebarItem("Epigenetic age", ns("age-tab")),
+      bigdash::sidebarItem("Methylome character", ns("character-tab")),
+      bigdash::sidebarItem("Methylome landscape", ns("landscape-tab")),
+      bigdash::sidebarItem("Cell composition", ns("deconv-tab")),
+      bigdash::sidebarItem("EWAS", ns("ewas-tab"))
+    ),
+    ## tabSettings need a settings container to render into; without this the
+    ## right-hand settings panel never appears. qsee_ui() declares the same.
+    settings = bigdash::settings("Settings", id = id),
+    bigdash::bigTabs(
+      id = id,
+      bigdash::bigTabItem(ns("ledger-tab"), methylome_ui_ledger(id)),
+      bigdash::bigTabItem(ns("age-tab"),
+        methylome_age_inputs(id), methylome_ui_age(id)),
+      bigdash::bigTabItem(ns("character-tab"), methylome_ui_character(id)),
+      bigdash::bigTabItem(ns("landscape-tab"),
+        methylome_landscape_inputs(id), methylome_ui_landscape(id)),
+      bigdash::bigTabItem(ns("deconv-tab"),
+        methylome_deconv_inputs(id), methylome_ui_deconv(id)),
+      bigdash::bigTabItem(ns("ewas-tab"),
+        methylome_ewas_inputs(id), methylome_ui_ewas(id))
+    )
+  )
 }
 
 methylome_ui_ledger <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_ledger"),
-    title = "Sample ledger",
-    info = FALSE,
   mp_tab(bslib::layout_columns(
     col_widths = 12,
     height = MP_TAB_HEIGHT,
@@ -58,15 +86,10 @@ methylome_ui_ledger <- function(id = "methylome") {
       )
     )
   ))
-  )
 }
 
 methylome_ui_age <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_age"),
-    title = "Epigenetic age",
-    info = FALSE,
   mp_tab(bslib::layout_columns(
     col_widths = 12,
     height = MP_TAB_HEIGHT,
@@ -112,15 +135,10 @@ methylome_ui_age <- function(id = "methylome") {
       )
     )
   ))
-  )
 }
 
 methylome_ui_character <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_character"),
-    title = "Methylome character",
-    info = FALSE,
   mp_tab(bslib::layout_columns(
     col_widths = 12,
     height = MP_TAB_HEIGHT,
@@ -147,15 +165,10 @@ methylome_ui_character <- function(id = "methylome") {
       )
     )
   ))
-  )
 }
 
 methylome_ui_landscape <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_landscape"),
-    title = "Methylome landscape",
-    info = FALSE,
   mp_tab(bslib::navset_tab(
     id = ns("landscape_subtab"),
 
@@ -211,15 +224,10 @@ methylome_ui_landscape <- function(id = "methylome") {
       )
     )
   ))
-  )
 }
 
 methylome_ui_deconv <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_deconv"),
-    title = "Cell composition",
-    info = FALSE,
   mp_tab(bslib::layout_columns(
     col_widths = 12,
     height = MP_TAB_HEIGHT,
@@ -253,15 +261,10 @@ methylome_ui_deconv <- function(id = "methylome") {
       height = c("100%", "700px"), width = c("auto", "100%")
     )
   ))
-  )
 }
 
 methylome_ui_ewas <- function(id = "methylome") {
   ns <- shiny::NS(id)
-  OmicsBoardUI(
-    id = ns("board_ewas"),
-    title = "EWAS",
-    info = FALSE,
   mp_tab(bslib::navset_tab(
     ## id + explicit values so the settings panel can show only the
     ## controls that belong to the visible sub-tab.
@@ -300,7 +303,7 @@ methylome_ui_ewas <- function(id = "methylome") {
           methylome_table_hits_ui(
             ns("ewas_hits"),
             title = "CpGs passing the threshold",
-            info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on.",
+            info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on. For a categorical outcome with three or more levels the model is an F-test, which has no direction: the column becomes an unsigned beta range (largest group mean minus smallest), Direction reads '-', and the F statistic is shown. Press 'Look up hits in EWAS Catalog' in the settings panel to add a Reported column naming the traits each CpG is already associated with.",
             caption = "Significant CpGs with gene, genomic context and effect size.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           ),
@@ -390,5 +393,4 @@ methylome_ui_ewas <- function(id = "methylome") {
       )
     )
   ))
-  )
 }

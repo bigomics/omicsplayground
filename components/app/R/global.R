@@ -336,16 +336,14 @@ ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
   "Welcome", "Summary", "Datasets", "DataView", "Clustering", "Expression",
-  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Methylome"
+  "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
 if (is.null(opt$MODULES_MULTIOMICS)) opt$MODULES_MULTIOMICS <- MODULES
 if (is.null(opt$MODULES_TRANSCRIPTOMICS)) opt$MODULES_TRANSCRIPTOMICS <- MODULES
-if (is.null(opt$MODULES_METHYLOMICS)) opt$MODULES_METHYLOMICS <- setdiff(MODULES, "MultiOmics")
 MODULES_ENABLED <- array(MODULES %in% opt$MODULES_ENABLED, dimnames = list(MODULES))
 MODULES_MULTIOMICS <- array(MODULES %in% opt$MODULES_MULTIOMICS, dimnames = list(MODULES))
 MODULES_TRANSCRIPTOMICS <- array(MODULES %in% opt$MODULES_TRANSCRIPTOMICS, dimnames = list(MODULES))
-MODULES_METHYLOMICS <- array(MODULES %in% opt$MODULES_METHYLOMICS, dimnames = list(MODULES))
 MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 
 ## ------------------------------------------------
