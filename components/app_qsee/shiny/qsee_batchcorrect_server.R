@@ -49,7 +49,7 @@ qsee_bsee_server <- function(id, rX, rY) {
           message("[qsee_bsee_server] computing...")
           progress <- shiny::Progress$new(session, min = 0, max = 1)
           on.exit(progress$close())
-          progress$set(message = paste("Normalizing..."), value = 0.1)
+          progress$set(message = paste("Computing batchcorrection..."), value = 0.1)
 
           pheno <- colnames(samples)[1]  ## NEED UPDATE!!!
           pheno <- input$main_param
@@ -67,8 +67,19 @@ qsee_bsee_server <- function(id, rX, rY) {
       ## which Shiny suspends while the board is hidden. Without the guard
       ## this observer pulls the cache as soon as rX()/rY() arrive and the
       ## whole batch correction runs even if the tab is never opened.
+      ##
+      ## req(nzchar(input$main_param)) too: get_results() reads input$main_param
+      ## without depending on it (see above), so its *first* read is what
+      ## freezes the phenotype it computes against until the next real trigger
+      ## (new data or Recompute). With a lazily-loaded board, this observer's
+      ## own is_visible() and main_param's updateSelectInput() round trip (in
+      ## the observeEvent(rY()) above) both start at the same moment a tab is
+      ## first opened -- without waiting here too, is_visible() can win that
+      ## race and force the first read while main_param is still "", wedging
+      ## get_results() on an empty phenotype for the rest of the session.
       observe({
         req(is_visible())
+        req(nzchar(input$main_param))
         res <- get_results()
 
         bparams <- c()

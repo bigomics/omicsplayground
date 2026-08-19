@@ -136,38 +136,38 @@ qsee_server <- function(id, pgx=NULL, parent=NULL) {
       ## qsee_ui.R's bigTabItem(), see comment there) and calls its server
       ## the first time that tab is opened, instead of paying for all six
       ## boards' moduleServer setup unconditionally at Qsee startup.
-      loaded <- bigdash::bigTabsLazy(
-        list(
-          "normalize-tab" = list(
-            ui     = function() qsee_normalization_ui(session$ns("normalize")),
-            server = function() qsee_normalization_server("normalize", rX=getX, rY=getY)
-          ),
-          "impute-tab" = list(
-            ui     = function() qsee_imputation_ui(session$ns("impute")),
-            server = function() qsee_imputation_server("impute", rX=getX, rY=getY)
-          ),
-          "bsee-tab" = list(
-            ui     = function() qsee_bsee_ui(session$ns("bsee")),
-            server = function() qsee_bsee_server("bsee", rX=getX, rY=getY)
-          ),
-          "outlier-tab" = list(
-            ui     = function() qsee_outlier_ui(session$ns("outlier")),
-            server = function() qsee_outlier_server("outlier", rX=getX, rY=getY)
-          ),
-          "filtering-tab" = list(
-            ui     = function() qsee_filtering_ui(session$ns("filtering")),
-            server = function() qsee_filtering_server("filtering", rX=getX, rY=getY)
-          ),
-          "pcaexplorer-tab" = list(
-            ui     = function() qsee_pcaexplorer_ui(session$ns("pcaexplorer")),
-            server = function() qsee_pcaexplorer_server("pcaexplorer", rX=getX, rY=getY)
-          )
-        ) |> stats::setNames(session$ns(c(
-          "normalize-tab", "impute-tab", "bsee-tab",
-          "outlier-tab", "filtering-tab", "pcaexplorer-tab"
-        ))),
-        id = id
+      lazy_tabs <- list(
+        "normalize-tab" = list(
+          ui     = function() qsee_normalization_ui(session$ns("normalize")),
+          server = function() qsee_normalization_server("normalize", rX=getX, rY=getY)
+        ),
+        "impute-tab" = list(
+          ui     = function() qsee_imputation_ui(session$ns("impute")),
+          server = function() qsee_imputation_server("impute", rX=getX, rY=getY)
+        ),
+        "bsee-tab" = list(
+          ui     = function() qsee_bsee_ui(session$ns("bsee")),
+          server = function() qsee_bsee_server("bsee", rX=getX, rY=getY)
+        ),
+        "outlier-tab" = list(
+          ui     = function() qsee_outlier_ui(session$ns("outlier")),
+          server = function() qsee_outlier_server("outlier", rX=getX, rY=getY)
+        ),
+        "filtering-tab" = list(
+          ui     = function() qsee_filtering_ui(session$ns("filtering")),
+          server = function() qsee_filtering_server("filtering", rX=getX, rY=getY)
+        ),
+        "pcaexplorer-tab" = list(
+          ui     = function() qsee_pcaexplorer_ui(session$ns("pcaexplorer")),
+          server = function() qsee_pcaexplorer_server("pcaexplorer", rX=getX, rY=getY)
+        )
       )
+      ## bigTabsLazy() matches tabs by the fully-namespaced name bigTabItem()
+      ## was given in qsee_ui.R (e.g. "qsee-normalize-tab"). Namespace these
+      ## from the list's own names rather than a separately hand-kept vector,
+      ## so reordering an entry above can't silently desync the two.
+      names(lazy_tabs) <- session$ns(names(lazy_tabs))
+      loaded <- bigdash::bigTabsLazy(lazy_tabs, id = id)
 
       ## If no dataset is loaded (X is NULL/empty), show a helpful popup only
       ## after the Qsee module itself is visible.  In the main application Qsee
