@@ -66,13 +66,12 @@ qsee_developer_options <- function(id, ...) {
 
 #' Standalone page wrapper for a QSEE (or other bigdash) applet.
 #'
-#' Fills the viewport (min-height 800px), loads Playground styles + Lato,
-#' and attaches shinyjs / bigLoaders deps used by PlotModule.
-qsee_app_shell <- function(..., theme = NULL, min_height = 800) {
+#' Fills the viewport, loads Playground styles + Lato, and attaches
+#' shinyjs / bigLoaders deps used by PlotModule.
+qsee_app_shell <- function(..., theme = NULL) {
   if (is.null(theme)) {
     theme <- bslib::bs_theme(base_font = bslib::font_google("Lato"))
   }
-  mh <- as.integer(min_height)
   bslib::page_fillable(
     theme = theme,
     padding = 0,
@@ -83,36 +82,31 @@ qsee_app_shell <- function(..., theme = NULL, min_height = 800) {
         rel = "stylesheet",
         href = "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap"
       ),
-      shiny::tags$style(HTML(sprintf("
+      shiny::tags$style(HTML("
         :root {
           --bs-font-sans-serif: 'Lato', sans-serif;
           --bs-body-font-family: 'Lato', sans-serif;
         }
         html, body {
           font-family: 'Lato', sans-serif;
-          height: 100%%;
-          min-height: %dpx;
+          height: 100%;
           margin: 0;
           overflow: hidden;
-        }
-        @media (max-height: %dpx) {
-          html, body { overflow-y: auto; }
         }
         .bslib-page-fill,
         .bigdash-app,
         .big-full-page,
         .bigdash-sidebar-shell,
         .bigdash-settings-shell {
-          height: 100%% !important;
-          max-height: 100%%;
-          min-height: %dpx;
+          height: 100% !important;
+          max-height: 100%;
         }
         .bigdash-app > .flex-grow-1 {
           min-height: 0;
           overflow: hidden;
         }
         html .content { min-height: 0; }
-      ", mh, mh - 1L, mh)))
+      "))
     ),
     shinyjs::useShinyjs(),
     bigLoaders::addBigLoaderDeps(),
@@ -135,7 +129,6 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
       .bigdash-settings-shell {
         height: 100% !important;
         max-height: 100%;
-        min-height: 800px;
       }
       .bigdash-app > .flex-grow-1 {
         min-height: 0;
