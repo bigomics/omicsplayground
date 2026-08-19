@@ -53,7 +53,7 @@ qsee_developer_options <- function(id, ...) {
     ")),
     bslib::accordion(
       id = ns("dev_options"),
-      open = FALSE,
+      open = TRUE,
       class = "qsee-dev-options",
       bslib::accordion_panel(
         value = "developer-options",
@@ -148,21 +148,22 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
         flex-direction: column !important;
         overflow: hidden;
       }
-      .bigdash-settings-shell > .settings {
+      .bigdash-settings-shell.settings-expanded > .settings {
         flex: 1 1 auto;
         min-height: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
-      .bigdash-settings-shell [id$='-settings-content'] {
+      .bigdash-settings-shell.settings-expanded [id$='-settings-content'] {
         flex: 1 1 auto;
         min-height: 0;
         height: 100%;
         display: flex;
         flex-direction: column;
       }
-      .bigdash-settings-shell .tab-settings:not(.d-none) {
+      /* Only while expanded: jQuery .hide() on collapse must be able to win. */
+      .bigdash-settings-shell.settings-expanded .tab-settings:not(.d-none) {
         flex: 1 1 auto;
         min-height: 0;
         height: 100%;
