@@ -3,6 +3,66 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+#' Collapsible developer-options block for QSEE settings sidebars.
+#'
+#' Borderless and transparent so it inherits the settings pane (aliceblue)
+#' instead of looking like a Bootstrap card.
+qsee_developer_options <- function(id, ...) {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::tags$style(HTML("
+      .qsee-dev-options {
+        --bs-accordion-bg: transparent;
+        --bs-accordion-active-bg: transparent;
+        --bs-accordion-btn-bg: transparent;
+        --bs-accordion-border-width: 0;
+        --bs-accordion-border-color: transparent;
+        --bs-accordion-btn-focus-box-shadow: none;
+        --bs-accordion-inner-border-radius: 0;
+        --bs-accordion-border-radius: 0;
+        --bs-accordion-btn-icon: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23dc3545%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z%27/%3e%3c/svg%3e');
+        --bs-accordion-btn-active-icon: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23dc3545%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z%27/%3e%3c/svg%3e');
+      }
+      .qsee-dev-options .accordion-item,
+      .qsee-dev-options .accordion-header,
+      .qsee-dev-options .accordion-button,
+      .qsee-dev-options .accordion-button:not(.collapsed),
+      .qsee-dev-options .accordion-collapse,
+      .qsee-dev-options .accordion-body {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+      .qsee-dev-options .accordion-button:focus {
+        box-shadow: none !important;
+        border-color: transparent !important;
+      }
+      .qsee-dev-options .accordion-button,
+      .qsee-dev-options .accordion-body {
+        padding-left: 0;
+        padding-right: 0;
+      }
+      /* Bottom-aligned: closed points up (open toward content), open points down. */
+      .qsee-dev-options .accordion-button::after {
+        transform: rotate(-180deg);
+      }
+      .qsee-dev-options .accordion-button:not(.collapsed)::after {
+        transform: rotate(0deg);
+      }
+    ")),
+    bslib::accordion(
+      id = ns("dev_options"),
+      open = FALSE,
+      class = "qsee-dev-options",
+      bslib::accordion_panel(
+        value = "developer-options",
+        title = shiny::span("Developer options", class = "text-danger"),
+        ...
+      )
+    )
+  )
+}
 
 qsee_ui <- function(id, height = "100%", lazy = TRUE) {
   ns <- shiny::NS(id)
@@ -12,6 +72,51 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
   ## are rendered directly under this module, so nothing is ever purged for
   ## it -- see the purge = FALSE passed to bd_is_visible() in qsee_server.R.
   ui <- shiny::tagList(
+    shiny::tags$style(HTML("
+      .bigdash-app,
+      .big-full-page,
+      .bigdash-sidebar-shell,
+      .bigdash-settings-shell {
+        height: 100% !important;
+        max-height: 100%;
+        min-height: 800px;
+      }
+      .bigdash-app > .flex-grow-1 {
+        min-height: 0;
+        overflow: hidden;
+      }
+      /* Beat Bootstrap d-md-block (display:block !important) so the
+         settings pane is a column and developer options can sit at the bottom. */
+      .bigdash-settings-shell.settings-expanded {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden;
+      }
+      .bigdash-settings-shell > .settings {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .bigdash-settings-shell [id$='-settings-content'] {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .bigdash-settings-shell .tab-settings:not(.d-none) {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 100%;
+        display: flex !important;
+        flex-direction: column;
+      }
+      .qsee-dev-options {
+        margin-top: auto;
+      }
+    ")),
     bigdash::bd_visibility_probe(ns),
     bigdash::bigPage(
       id = id,

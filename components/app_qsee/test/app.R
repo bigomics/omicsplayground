@@ -84,7 +84,30 @@ ui <- bslib::page_fillable(
         --bs-font-sans-serif: 'Lato', sans-serif;
         --bs-body-font-family: 'Lato', sans-serif;
       }
-      html, body { font-family: 'Lato', sans-serif; }
+      html, body {
+        font-family: 'Lato', sans-serif;
+        height: 100%;
+        min-height: 800px;
+        margin: 0;
+        overflow: hidden;
+      }
+      @media (max-height: 799px) {
+        html, body { overflow-y: auto; }
+      }
+      .bslib-page-fill,
+      .bigdash-app,
+      .big-full-page,
+      .bigdash-sidebar-shell,
+      .bigdash-settings-shell {
+        height: 100% !important;
+        max-height: 100%;
+        min-height: 800px;
+      }
+      .bigdash-app > .flex-grow-1 {
+        min-height: 0;
+        overflow: hidden;
+      }
+      html .content { min-height: 0; }
     "))
   ),
   shinyjs::useShinyjs(),

@@ -68,6 +68,8 @@ qsee_filtering_plot_variance_vs_topsd_plotly <- function(res, topsd = NULL,
     ylab = "Variance explained (%)",
     title = "Variance vs. topSD"
   )
+  ## pgx.plot_multiline() hardcodes line width 2; half that here.
+  p <- plotly::style(p, line = list(width = 1))
   p <- plotly::add_trace(
     p,
     x = nn, y = pcx[nn], type = "scatter", mode = "markers", inherit = FALSE,

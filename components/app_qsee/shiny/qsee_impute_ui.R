@@ -4,10 +4,25 @@ qsee_imputation_inputs <- function(id) {
   ns <- shiny::NS(id)
 
   bigdash::tabSettings(
-    shiny::selectInput(ns("colorby"), "Color by:", choices=NULL),
+    ## Same flex column as qsee_normalization_inputs(): stretch the
+    ## settings pane and pin developer options to the bottom.
     div(
-      shiny::sliderInput(ns("marlevel"), "Add MAR:", 0, 1, 0, 0.05),
-      shiny::sliderInput(ns("mnarlevel"), "Add MNAR:", 0, 1, 0, 0.05)
+      style = "display: flex; flex-direction: column; flex: 1 1 auto; height: 100%; min-height: 0;",
+      shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
+      div(style = "flex: 1 1 auto;"),
+      qsee_developer_options(
+        id,
+        shiny::sliderInput(
+          ns("marlevel"),
+          shiny::span("Add MAR:", class = "text-danger"),
+          0, 1, 0, 0.05
+        ),
+        shiny::sliderInput(
+          ns("mnarlevel"),
+          shiny::span("Add MNAR:", class = "text-danger"),
+          0, 1, 0, 0.05
+        )
+      )
     )
   )
 }

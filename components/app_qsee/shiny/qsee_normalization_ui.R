@@ -11,7 +11,7 @@ qsee_normalization_inputs <- function(id) {
     ## 100vh) settings sidebar -- see bigdash R/settings.R -- so that much
     ## is reserved here too.
     div(
-      style = "display: flex; flex-direction: column; min-height: calc(100vh - 90px);",
+      style = "display: flex; flex-direction: column; flex: 1 1 auto; height: 100%; min-height: 0;",
       shiny::selectInput(ns("colorby"), "Color by:", choices = NULL),
       ## Flexible spacer: pushes everything after it (developer options, if
       ## shown) down to the bottom of the sidebar, however little or much
@@ -22,12 +22,11 @@ qsee_normalization_inputs <- function(id) {
       ## board.user/R/appsettings_ui.R) -- this is decided once in R when
       ## the UI is built, not with a conditionalPanel().
       if (qsee_opt_enabled("DEVMODE", FALSE)) {
-        shiny::tagList(
-          shiny::hr(),
-          shiny::h5("Developer options", class = "text-danger"),
+        qsee_developer_options(
+          id,
           shiny::sliderInput(
             ns("noise"),
-            "Noise amount:",
+            shiny::span("Noise amount:", class = "text-danger"),
             min = 0,
             max = 2,
             value = 1,
@@ -109,5 +108,7 @@ qsee_normalization_ui_output <- function(ns) {
       )
     )
   )
+
+  
 }
 
