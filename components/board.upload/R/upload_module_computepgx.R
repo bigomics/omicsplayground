@@ -539,38 +539,47 @@ upload_module_computepgx_server <- function(
                   )
                 )
               ),
-              bslib::card(
-                shiny::checkboxGroupInput(
-                  ns("gset_methods"),
-                  htmltag_with_info_url(
-                    "<h4>Enrichment methods:</h4>",
-                    "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
+              ## Methylomics never displays gene sets - the Methylome app runs
+              ## missMethyl::gometh with its own collection - and compute drops
+              ## whatever is ticked here. Hide it rather than discard silently.
+              if (upload_datatype() != "methylomics") {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("gset_methods"),
+                    htmltag_with_info_url(
+                      "<h4>Enrichment methods:</h4>",
+                      "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
+                    ),
+                    GENESET.METHODS(),
+                    selected = GENESET.SELECTED()
                   ),
-                  GENESET.METHODS(),
-                  selected = GENESET.SELECTED()
-                ),
-              ),
+                )
+              },
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
-                div(
-                  style = "margin-top:-18px;",
-                  shiny::checkboxInput(
-                    ns("do_extra"), "Compute extra methods", TRUE
-                  )
-                ),
-                conditionalPanel(
-                  "input.do_extra == true",
-                  ns = ns,
+                if (upload_datatype() != "methylomics") {
                   div(
-                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
-                    shiny::checkboxGroupInput(
-                      ns("extra_methods"),
-                      NULL,
-                      choices = EXTRA.METHODS(),
-                      selected = EXTRA.SELECTED()
+                    style = "margin-top:-18px;",
+                    shiny::checkboxInput(
+                      ns("do_extra"), "Compute extra methods", TRUE
                     )
                   )
-                ),
+                },
+                if (upload_datatype() != "methylomics") {
+                  conditionalPanel(
+                    "input.do_extra == true",
+                    ns = ns,
+                    div(
+                      style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                      shiny::checkboxGroupInput(
+                        ns("extra_methods"),
+                        NULL,
+                        choices = EXTRA.METHODS(),
+                        selected = EXTRA.SELECTED()
+                      )
+                    )
+                  )
+                },
                 div(
                   style = "margin-top:12px;",
                   shiny::checkboxInput(
@@ -1116,11 +1125,37 @@ upload_module_computepgx_server <- function(
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
+        ## Methylomics opens the standalone Methylome app and never builds the
+        ## Dashboard (app_opg/R/opg_server.R), so nothing displays gene sets,
+        ## meta.go, WGCNA or any embedding: the app refits limma itself and
+        ## calls missMethyl::gometh with its own collection.
+        ##
+        ## The gene-level fit still has to run. pgx.checkObject() requires
+        ## gx.meta, and a pgx that fails it is skipped by
+        ## pgxinfo.updateDatasetFolder() - the dataset would never reach the
+        ## Library. opg_server.R also reads gx.meta$meta[[1]]$fc unguarded.
+        ##
+        ## Gene sets go off via add.gmt, NOT via gset.methods: the geneset
+        ## branch is gated on nrow(pgx$GMT), so an empty method vector still
+        ## reaches compute_testGenesets and errors there.
+        add.gmt <- TRUE
+        do.cluster <- TRUE
+        if (upload_datatype() == "methylomics") {
+          gx.methods <- "trend.limma"
+          extra.methods <- c()
+          add.gmt <- FALSE
+          do.cluster <- FALSE
+        }
+
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
         flt <- input$filter_methods
-        append.symbol <- ("append.symbol" %in% flt)
+        ## Never for methylation: appending the symbol rewrites cg00000029 ->
+        ## cg00000029_RBL2, and every probe lookup downstream keys on the bare
+        ## ID - the epigenetic clocks end up with zero coverage and no ages.
+        append.symbol <- ("append.symbol" %in% flt) &&
+          upload_datatype() != "methylomics"
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
         average.duplicated <- ("average.duplicated" %in% flt)
@@ -1283,7 +1318,8 @@ upload_module_computepgx_server <- function(
           covariates = covariates,
           dma = dma, ## NEW
           ## ---------
-          do.cluster = TRUE,
+          do.cluster = do.cluster,
+          add.gmt = add.gmt,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
@@ -1293,7 +1329,6 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design,
           prune.samples = prune.samples,
-          do.cluster = TRUE,
           libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),
