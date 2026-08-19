@@ -173,6 +173,34 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
       .qsee-dev-options {
         margin-top: auto;
       }
+      .bigdash-sidebar-shell.sidebar-expanded {
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      .bigdash-sidebar-shell.sidebar-expanded > .sidebar {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+      }
+      .bigdash-sidebar-shell.sidebar-expanded .sidebar-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .qsee-sidebar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: auto;
+        padding-top: 1.25rem;
+        padding-bottom: 0.5rem;
+      }
+      .sidebar-collapsed .qsee-sidebar-actions {
+        display: none;
+      }
       html.bslib-has-full-screen .bslib-full-screen .html-widget.iheatmapr,
       html.bslib-has-full-screen .bslib-full-screen .iheatmapr.html-widget {
         height: calc(100vh - 90px) !important;
@@ -195,9 +223,8 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
         bigdash::sidebarItem("Outlier analysis", ns("outlier-tab")),
         bigdash::sidebarItem("Batch-effects", ns("bsee-tab")),
         bigdash::sidebarItem("SD Filtering", ns("filtering-tab")),
-        br(),
         div(
-          style = "display: flex; flex-direction: column; gap: 6px;",
+          class = "qsee-sidebar-actions",
           shiny::actionButton(ns("upload"), "upload CSV", width = "100%"),
           shiny::actionButton(ns("load_example"), "load example", width = "100%"),
           shiny::actionButton(ns("load_pgx"), "use current pgx", width = "100%")
