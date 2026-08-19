@@ -172,6 +172,11 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
       .qsee-dev-options {
         margin-top: auto;
       }
+      html.bslib-has-full-screen .bslib-full-screen .html-widget.iheatmapr,
+      html.bslib-has-full-screen .bslib-full-screen .iheatmapr.html-widget {
+        height: calc(100vh - 90px) !important;
+        width: 100% !important;
+      }
     ")),
     bigdash::bd_visibility_probe(ns),
     bigdash::bigPage(

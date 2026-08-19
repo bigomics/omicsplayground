@@ -36,7 +36,15 @@ qsee_imputation_plot_heatmaps_plotly <- function(res, nmax = 200) {
     fastcluster::hclust(stats::as.dist(1 - corX), method = "ward.D2")
   }
   X <- impX[[1]]
-  sel <- rowMeans(is.na(X)) < 0.50 & rowMeans(is.na(X)) > 0
+  miss <- rowMeans(is.na(X))
+  sel <- miss < 0.50 & miss > 0
+  ## No (partially) missing features: still draw the top-SD complete rows.
+  if (!any(sel)) {
+    sel <- miss < 0.50
+  }
+  if (!any(sel)) {
+    sel <- rep(TRUE, nrow(X))
+  }
   X <- X[sel, , drop = FALSE]
   X <- X[order(-matrixStats::rowSds(X, na.rm = TRUE)), , drop = FALSE]
   X <- utils::head(X, nmax)

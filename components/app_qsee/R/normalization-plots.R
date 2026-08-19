@@ -133,12 +133,16 @@ qsee_plotly_grid <- function(panels, n_cols = 3L,
   if (!is.null(dedupe)) panels <- dedupe(panels)
 
   if (!axis_titles && !is.null(assemble)) {
-    return(qsee_plotly_sanitize(assemble(
+    assemble_args <- list(
       panels,
       n_cols = n_cols, share_x = share_x, share_y = share_y,
       margin = margin, x_title = x_title, y_title = y_title,
-      title_yshift = title_yshift, build = "standard"
-    )))
+      build = "standard"
+    )
+    if ("title_yshift" %in% names(formals(assemble))) {
+      assemble_args$title_yshift <- title_yshift
+    }
+    return(qsee_plotly_sanitize(do.call(assemble, assemble_args)))
   }
 
   ## Own assembly: keeps the per-panel axis titles that .assemble_subplot
@@ -294,6 +298,25 @@ qsee_plotly_refline <- function(p, v = NULL, h = NULL, xrange = NULL, yrange = N
 #' @param prefix output-id prefix, must match the server side
 #' @param n number of slots to reserve
 #' @noRd
+#' Drop the colorbar title on an iheatmapr/plotly heatmap widget.
+#' @noRd
+qsee_heatmap_hide_legend_title <- function(w) {
+  tryCatch({
+    if (methods::is(w, "Iheatmap")) {
+      w <- iheatmapr::to_widget(w)
+    }
+    if (!inherits(w, "htmlwidget") || is.null(w$x$data)) {
+      return(w)
+    }
+    for (i in seq_along(w$x$data)) {
+      if (!is.null(w$x$data[[i]]$colorbar)) {
+        w$x$data[[i]]$colorbar$title <- ""
+      }
+    }
+    w
+  }, error = function(e) w)
+}
+
 qsee_plotly_hm_grid_ui <- function(ns, prefix, n = 6L, ncol = 3L,
                                    height = "330px") {
   cells <- lapply(seq_len(n), function(i) {

@@ -50,11 +50,11 @@ bsee.plot_heatmap_vs_methods_plotly <- function(res, nmax = 400) {
     xx <- utils::head(xx[order(-apply(xx, 1, stats::sd, na.rm = TRUE)), , drop = FALSE], nmax)
     xx <- xx - rowMeans(xx, na.rm = TRUE)
     xx <- abs(xx)**0.5 * sign(xx)
-    omicsplots::pgx.plot_heatmap(
+    qsee_heatmap_hide_legend_title(omicsplots::pgx.plot_heatmap(
       xx,
       cluster_rows = TRUE, cluster_cols = TRUE,
       scale = "none", show_dendro = FALSE
-    )
+    ))
   })
   names(panels) <- names(xlist)
   panels

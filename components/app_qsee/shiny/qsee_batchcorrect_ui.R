@@ -54,8 +54,8 @@ qsee_bsee_ui_output <- function(ns) {
         title = "Analysis",
         height = "100%",
         bslib::layout_columns(
-          col_widths = 6,
-          row_heights = c(1,1),
+          col_widths = c(6, 6, 6, 6),
+          row_heights = c(1, 1),
           height = "calc(100vh - 140px)",
           heights_equal = "row",
           PlotModuleUI(
@@ -67,22 +67,28 @@ qsee_bsee_ui_output <- function(ns) {
             options = clust.options,
             height = c("100%", "70vh")
           ),
-          bslib::card(
-            full_screen = TRUE,
-            bslib::card_header("Heatmap"),
-            qsee_plotly_hm_grid_ui(ns, "bsee", n = 6L, ncol = 3L)
-          ),
           PlotModuleUI(
             ns("plot3"),
             title = "Statistics and score",
-            plotlib = "plotly"
+            plotlib = "plotly",
+            height = c("100%", "70vh")
+          ),
+          bslib::card(
+            full_screen = TRUE,
+            class = "html-fill-item html-fill-container",
+            bslib::card_header("Heatmap"),
+            qsee_plotly_hm_grid_ui(
+              ns, "bsee", n = 6L, ncol = 3L,
+              height = "calc(25vh - 65px)"
+            )
           ),
           PlotModuleUI(
             ns("plot4"),
             title = "Covariate correlation",
             info.text = covariate.info,
             caption = covariate.info,
-            plotlib = "plotly"
+            plotlib = "plotly",
+            height = c("100%", "70vh")
           )
         )
       ),  ## end of Analysis panel (was Panel2)
