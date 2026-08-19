@@ -1350,13 +1350,17 @@ UploadBoard <- function(id,
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
       preprocess = shiny::reactive(compute_input$preprocess),
+      ## The QC removal travels inside `preprocess` (drop_samples), so
+      ## pgx.preprocess() drops those columns from the raw counts before
+      ## normalizing and createPGX's align step follows with samples and
+      ## contrasts. A script passing the same settings gets the same matrix.
       rawCountsRT = shiny::reactive(checked_samples_counts()$COUNTS),
       rawAnnotRT = shiny::reactive(checked_annot()$matrix),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
-      contrastsRT = modified_ct,
+      contrastsRT = shiny::reactive(modified_ct()),
       annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),

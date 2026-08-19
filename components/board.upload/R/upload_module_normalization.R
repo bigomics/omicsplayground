@@ -77,7 +77,7 @@ upload_module_normalization_server <- function(
           }
         } else {
           if (upload_datatype() == "methylomics") {
-            X <- playbase::mToBeta(counts)
+            X <- playbase.epigenetics::mToBeta(counts)
             prior <- 0
           } else {
             prior0 <- playbase::getPrior(counts)
@@ -147,7 +147,7 @@ upload_module_normalization_server <- function(
           if (upload_datatype() == "multi-omics") {
             X <- playbase::normalizeMultiOmics(X)
           } else if (upload_datatype() == "methylomics") {
-            nX <- try(playbase::normalizeMethylation(X, m, meth_type()), silent = TRUE)
+            nX <- try(playbase.epigenetics::normalizeMethylation(X, m, meth_type()), silent = TRUE)
             if (!is.null(nX)) X <- nX
             rm(nX)
           } else {
@@ -159,6 +159,44 @@ upload_module_normalization_server <- function(
         }
 
         return(X)
+      })
+
+      ## ------------------------- methylation sample QC ------------------
+      ## The same per-sample table the Methylome board's sample ledger shows,
+      ## from the same function - one implementation, two screens. At upload
+      ## there is no pgx: sample_qc() takes the matrix, the probe annotation
+      ## and the sample sheet. ages = NULL because pgx$meth$clocks is written
+      ## by pgx.computePGX, which has not run yet, so it fits the single
+      ## wateRmelon Horvath clock live rather than ten clocks for one column.
+      methyl_qc <- reactive({
+        shiny::req(upload_datatype() == "methylomics", dim(normalizedX()))
+        playbase.epigenetics::sample_qc(
+          normalizedX(),
+          annot = imputedX()$annot,
+          samples = r_samples()
+        )
+      })
+
+      ## Samples the user asked to drop. Deliberately never req()s: the compute
+      ## step reads this, and must not block on a panel that was never opened.
+      drop_samples <- reactive({
+        if (upload_datatype() != "methylomics" || !isTRUE(input$drop_flagged)) {
+          return(character(0))
+        }
+        qc <- tryCatch(methyl_qc(), error = function(e) NULL)
+        if (is.null(qc)) {
+          return(character(0))
+        }
+        rownames(qc)[qc$Verdict == "CHECK"]
+      })
+
+      output$flagged_msg <- shiny::renderText({
+        d <- drop_samples()
+        if (!length(d)) {
+          "No samples flagged."
+        } else {
+          paste0(length(d), " sample(s) will be removed: ", paste(d, collapse = ", "))
+        }
       })
 
       ## Remove outliers
@@ -186,6 +224,14 @@ upload_module_normalization_server <- function(
             X <- X[, which(!is.outlier), drop = FALSE]
             counts <- counts[, colnames(X), drop = FALSE]
           }
+        }
+        ## Methylation QC verdicts leave through the same door as the outliers,
+        ## so every downstream preview inherits the removal. Refuses to empty
+        ## the matrix, same as above.
+        drop <- intersect(drop_samples(), colnames(X))
+        if (length(drop) && length(drop) < ncol(X)) {
+          X <- X[, setdiff(colnames(X), drop), drop = FALSE]
+          counts <- counts[, colnames(X), drop = FALSE]
         }
         return(list(counts = counts, X = X))
       })
@@ -964,7 +1010,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_methyl <- function() {
-        X <- playbase::mToBeta(normalizedX())
+        X <- playbase.epigenetics::mToBeta(normalizedX())
         if (input$methyl_plottype == "Density") {
           par(mfrow = c(1, 1), mar = c(3.3, 3.2, 0.8, 0.5), las = 1, mgp = c(2.1, 0.35, 0), tcl = -0.1)
           minfi::densityPlot(X, pal = "gray60", xlab = "Beta signal", main = "", cex.lab = 1.4, cex.axis = 1.3)
@@ -981,7 +1027,7 @@ upload_module_normalization_server <- function(
           grid()
         }
         ## if (input$infer_sex) { ## placeholder
-        ##   S <- playbase::infer_sex_methyl(data = X, meth_type = meth_type())
+        ##   S <- playbase.epigenetics::infer_sex_methyl(data = X, meth_type = meth_type())
         ##   pred_sex <- S[["pred_sex"]]
         ##   x_med <- S[["x_med"]]
         ##   y_med <- S[["y_med"]]
@@ -1039,6 +1085,7 @@ upload_module_normalization_server <- function(
       output$normalization <- shiny::renderUI({
         batch_params <- getBatchParams()
         metadata_vars <- getMetadataVars()
+        is.meth <- upload_datatype() == "methylomics"
 
         ## -----------------------------------------------------------------
         ## Get default values from recompute_pgx if available
@@ -1110,6 +1157,19 @@ upload_module_normalization_server <- function(
 
         batcheff.infotext <-
           "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
+
+        methylqc.infotext <- paste(
+          "One row per sample, the same per-sample checks the Methylome board's",
+          "Sample ledger shows. Bimodality is the fraction of probes outside the",
+          "intermediate 0.3-0.7 band; a healthy methylome sits near 0.9. Imprint",
+          "drift is the mean absolute deviation of imprinted DMRs from their",
+          "expected 0.5. Sex check compares the sex predicted from the X/Y probes",
+          "against a sex column in the sample sheet: a MISMATCH is the cheapest",
+          "sample-swap signal an array gives you. Verdict is cohort-relative",
+          "(median +/- 3 MAD on drift and bimodality) plus any sex mismatch.",
+          "Tick 'drop samples flagged by methylation QC' under Remove outliers",
+          "to exclude every CHECK row from the computed dataset."
+        )
 
         methyl.infotext <- "Density plot of beta values. Optionally, sample-specific beanplot of beta value distribution can be plotted."
 
@@ -1280,6 +1340,26 @@ upload_module_normalization_server <- function(
                     ns = ns,
                     shiny::sliderInput(ns("outlier_threshold"), "Select threshold:", 1, 12, default_outlier_threshold, 1)
                   ),
+                  ## The methylation QC table gives a per-sample PASS/CHECK
+                  ## verdict, not a score, so there is no threshold to slide -
+                  ## an all-or-nothing switch is the honest control, and the
+                  ## table beside it names every sample it would take. The
+                  ## count is echoed here so the switch is never a black box.
+                  if (is.meth) {
+                    shiny::checkboxInput(
+                      ns("drop_flagged"),
+                      "drop samples flagged by methylation QC", FALSE
+                    )
+                  },
+                  if (is.meth) {
+                    shiny::conditionalPanel("input.drop_flagged == true",
+                      ns = ns,
+                      shiny::div(
+                        style = "font-size: 85%; color: #8a5a06;",
+                        shiny::textOutput(ns("flagged_msg"))
+                      )
+                    )
+                  },
                   br()
                 ),
                 bslib::accordion_panel(
@@ -1342,10 +1422,15 @@ upload_module_normalization_server <- function(
             ## ----------- menu ------------
             navmenu,
             ## ----------- canvas ------------
-            bslib::layout_columns(
-              col_widths = c(6, 6),
-              row_heights = c(3, 3),
-              heights_equal = "row",
+            do.call(bslib::layout_columns, c(
+              list(
+                ## bslib turns a NULL argument into an empty grid cell rather
+                ## than dropping it, hence the Filter + do.call.
+                col_widths = if (is.meth) c(6, 6, 6, 6, 12) else c(6, 6),
+                row_heights = if (is.meth) c(3, 3, 3) else c(3, 3),
+                heights_equal = "row"
+              ),
+              Filter(Negate(is.null), list(
               ## --------new
               if (upload_datatype() == "methylomics") {
                 PlotModuleUI(
@@ -1396,8 +1481,21 @@ upload_module_normalization_server <- function(
                 height = c("auto", "100%"),
                 info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#batch-correction",
                 show.maximize = FALSE
-              )
-            )
+              ),
+              if (is.meth) {
+                TableModuleUI(
+                  ns("methylqc"),
+                  title = "Methylation sample QC",
+                  info.text = methylqc.infotext,
+                  caption = methylqc.infotext,
+                  height = c("auto", "100%"),
+                  width = c("auto", "100%"),
+                  label = "",
+                  show.maximize = FALSE
+                )
+              }
+              ))
+            ))
           ),
           div(shiny::checkboxInput(ns("normalizationUI"), NULL, TRUE), style = "visibility:hidden")
         )
@@ -1443,6 +1541,35 @@ upload_module_normalization_server <- function(
         pdf.width = 12,
         pdf.height = 6,
         add.watermark = FALSE
+      )
+
+      TableModuleServer(
+        "methylqc",
+        func = function() {
+          qc <- methyl_qc()
+          shiny::req(qc)
+          DT::datatable(qc,
+            class = "compact hover", rownames = TRUE,
+            extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
+            selection = "none",
+            options = list(
+              dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
+              scrollY = "22vh", scrollResize = TRUE, deferRender = TRUE
+            )
+          ) |>
+            DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
+            DT::formatStyle("Verdict",
+              color = DT::styleEqual(c("PASS", "CHECK"), c("#18753a", "#8a5a06")),
+              fontWeight = "bold"
+            ) |>
+            ## Only the mismatch is coloured - "ok" and "no record" are both
+            ## uneventful, and red on a missing record would cry wolf.
+            DT::formatStyle("Sex check",
+              color = DT::styleEqual("MISMATCH", "#a8202c", default = "#8697a6")
+            )
+        },
+        csvFunc = methyl_qc,
+        selector = "none"
       )
 
       PlotModuleServer(
@@ -1515,6 +1642,7 @@ upload_module_normalization_server <- function(
           impute_method = input$impute_method,
           remove_outliers = isTRUE(input$remove_outliers),
           outlier_threshold = input$outlier_threshold,
+          drop_samples = drop_samples(),
           meth_type = meth_type()
         )
       })
