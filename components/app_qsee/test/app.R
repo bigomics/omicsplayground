@@ -66,54 +66,7 @@ QSEE_PURGE=FALSE
 QSEE_LAZY=TRUE
 QSEE_PURGE=TRUE
 
-ui <- bslib::page_fillable(
-  ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
-  theme = bslib::bs_theme(base_font = bslib::font_google("Lato")),
-  padding = 0, gap = 0,
-  shiny::tags$head(
-    shiny::tags$link(
-      rel = "stylesheet",
-      href = "custom/styles.min.css"
-    ),
-    shiny::tags$link(
-      rel = "stylesheet",
-      href = "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap"
-    ),
-    shiny::tags$style(HTML("
-      :root {
-        --bs-font-sans-serif: 'Lato', sans-serif;
-        --bs-body-font-family: 'Lato', sans-serif;
-      }
-      html, body {
-        font-family: 'Lato', sans-serif;
-        height: 100%;
-        min-height: 800px;
-        margin: 0;
-        overflow: hidden;
-      }
-      @media (max-height: 799px) {
-        html, body { overflow-y: auto; }
-      }
-      .bslib-page-fill,
-      .bigdash-app,
-      .big-full-page,
-      .bigdash-sidebar-shell,
-      .bigdash-settings-shell {
-        height: 100% !important;
-        max-height: 100%;
-        min-height: 800px;
-      }
-      .bigdash-app > .flex-grow-1 {
-        min-height: 0;
-        overflow: hidden;
-      }
-      html .content { min-height: 0; }
-    "))
-  ),
-  shinyjs::useShinyjs(),
-  ## PlotModuleUI() wraps every plot in bigLoaders::useSpinner(), which is
-  ## inert without these assets. The main app adds them in app/R/ui.R.
-  bigLoaders::addBigLoaderDeps(),
+ui <- qsee_app_shell(
   qsee_ui("qsee", lazy = QSEE_LAZY)
 )
 
