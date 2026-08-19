@@ -574,6 +574,17 @@ app_server <- function(input, output, session) {
       bigdash.toggleMenuItem(session, "upload-tab", isTRUE(enable_upload))
       dbg("[SERVER] ENABLE_UPLOAD for user = ", enable_upload)
 
+      ## Pin this user to the basic menu: FORCE_BASIC in their OPTIONS file or
+      ## user DB row (falls back to the deployment-wide value in etc/OPTIONS,
+      ## since auth$options starts as a copy of the global opt). Switched on and
+      ## disabled, so it is not a default the user can undo in Settings.
+      force_basic <- isTRUE(as.logical(auth$options$FORCE_BASIC))
+      if (force_basic) {
+        bslib::toggle_switch("menu_basic", value = TRUE)
+        shinyjs::disable("menu_basic")
+      }
+      dbg("[SERVER] FORCE_BASIC for user = ", force_basic)
+
       ## Show/hide admin tab based on user's ADMIN status AND global ENABLE_ADMIN option
       if (isTRUE(opt$ENABLE_ADMIN)) {
         is_admin <- isTRUE(auth$ADMIN)

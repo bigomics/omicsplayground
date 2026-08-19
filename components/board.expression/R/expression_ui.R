@@ -19,7 +19,7 @@ ExpressionInputs <- function(id) {
     ),
     bslib::layout_column_wrap(
       width = 1 / 2,
-      class = "advanced-option",
+      class = advanced_option(id),
       withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",
@@ -40,7 +40,6 @@ ExpressionInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("gx_accordion"),
-      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Options",

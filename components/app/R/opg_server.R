@@ -157,7 +157,7 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
           shiny::insertUI(
             selector = "#big-tabs",
             where = "beforeEnd",
-            ui = ui[[i]],
+            ui = lock_advanced(ui[[i]]),
             immediate = TRUE
           )
         }

@@ -31,6 +31,13 @@ AdminPanelUI <- function(id) {
 
   fullH <- "calc(100vh - 181px)"
 
+  ## Both choosers list every board of the full sidebar menu, labelled with its
+  ## group so "Samples" and "Features" are not ambiguous.
+  menu_tree <- opg_menu_tree()
+  basic_choices <- unlist(lapply(names(menu_tree), function(g) {
+    stats::setNames(names(menu_tree[[g]]), paste0(g, " - ", menu_tree[[g]]))
+  }))
+
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
@@ -62,6 +69,44 @@ AdminPanelUI <- function(id) {
           info.text = "Editable table of user credentials from the CREDENTIALS file.",
           caption = "Edit user credentials and save changes.",
           height = c("100%", TABLE_HEIGHT_MODAL)
+        )
+      )
+    ),
+    shiny::tabPanel(
+      "Basic Menu",
+      bslib::layout_columns(
+        col_widths = c(6, 6, 12),
+        ## bound the height so the two lists scroll inside their cards and the
+        ## Save row stays on screen instead of running off the bottom
+        height = fullH,
+        row_heights = list(1, "auto"),
+        bslib::card(
+          bslib::card_header("Basic menu items"),
+          bslib::card_body(
+            bs_alert("Choose which menu items are kept when a user switches on 'Basic menu' in Settings. The choice applies to the whole deployment; users see it after a page reload."),
+            shiny::checkboxGroupInput(
+              ns("basic_menu"),
+              label = NULL,
+              choices = basic_choices,
+              selected = opt$BASIC_MENU
+            )
+          )
+        ),
+        bslib::card(
+          bslib::card_header("Locked settings"),
+          bslib::card_body(
+            bs_alert("Choose which boards have their advanced settings greyed out in the settings sidebar. Unticked boards keep their options fully usable in basic mode. Boards with no advanced settings are unaffected either way."),
+            shiny::checkboxGroupInput(
+              ns("basic_locked"),
+              label = NULL,
+              choices = basic_choices,
+              selected = opt$BASIC_LOCKED
+            )
+          )
+        ),
+        div(
+          shiny::textOutput(ns("basic_menu_status")),
+          shiny::actionButton(ns("save_basic_menu"), "Save", class = "btn-primary")
         )
       )
     ),

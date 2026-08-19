@@ -16,7 +16,6 @@ PathwayInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("fa_accordion"),
-      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Options",

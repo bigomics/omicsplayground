@@ -16,7 +16,7 @@ EnrichmentInputs <- function(id) {
     ),
     bslib::layout_column_wrap(
       width = 1 / 2,
-      class = "advanced-option",
+      class = advanced_option(id),
       withTooltip(
         shiny::selectInput(ns("gs_fdr"), "FDR", c(1e-9, 1e-6, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.5, 1), selected = 0.2),
         "Set the false discovery rate (FDR) threshold.",
@@ -33,7 +33,6 @@ EnrichmentInputs <- function(id) {
     shiny::br(),
     bslib::accordion(
       id = ns("gs_accordion"),
-      class = "advanced-option",
       open = FALSE,
       bslib::accordion_panel(
         "Options",

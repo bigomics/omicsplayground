@@ -3,6 +3,65 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+#' Full sidebar menu: module group -> named vector of boards (id = title).
+#' Shared with the admin panel, which offers these as the basic-menu choices.
+opg_menu_tree <- function() {
+  list(
+    "DataView" = c(
+      dataview = "DataView"
+    ),
+    "Clustering" = c(
+      clustersamples = "Samples",
+      clusterfeatures = "Features"
+    ),
+    "Expression" = c(
+      diffexpr = "Differential expression",
+      timeseries = "TimeSeries", ## here???
+      corr = "Correlation analysis",
+      bio = "Find biomarkers"
+    ),
+    "GeneSets" = c(
+      enrich = "Geneset Enrichment",
+      sig = "Test geneset",
+      pathway = "Pathway analysis",
+      wordcloud = "Word cloud"
+    ),
+    "Compare" = c(
+      isect = "Compare signatures",
+      comp = "Compare datasets",
+      cmap = "Similar experiments"
+    ),
+    "SystemsBio" = c(
+      drug = "Drug connectivity",
+      cell = "Cell profiling",
+      pcsf = "PCSF",
+      tcga = "TCGA survival (beta)"
+    ),
+    "MultiOmics" = MODULE.multiomics$module_menu(),
+    "WGCNA" = MODULE.wgcna$module_menu(),
+    "Epigenomics" = MODULE.epigenomics$module_menu()
+  )
+}
+
+
+#' Flat sidebar menu for BASIC mode: the boards the admin selected, in
+#' full-menu order. The selection is chosen in Admin panel > Basic menu and
+#' persisted per deploy in etc/BASIC_MENU-<HOSTNAME> (read in global.R).
+opg_basic_menu_tree <- function(menu_tree = opg_menu_tree(), boards = opt$BASIC_MENU) {
+  tabs <- unlist(unname(menu_tree))
+  ## a flat entry loses its group heading, so a few titles must stand alone
+  relabel <- c(clustersamples = "Cluster Samples", clusterfeatures = "Cluster Features")
+  hit <- intersect(names(relabel), names(tabs))
+  tabs[hit] <- relabel[hit]
+  boards <- intersect(names(tabs), boards) ## drops unknown/disabled boards
+  if (!length(boards)) boards <- intersect(names(tabs), BASIC_MENU_DEFAULT)
+  ## NOTE: the list key must equal the tab name (see createMenu in opg_ui),
+  ## otherwise the entry renders as a collapsible group holding one identical
+  ## item ("Cluster Samples > Cluster Samples").
+  lapply(stats::setNames(boards, boards), function(b) tabs[b])
+}
+
+
 opg_ui <- function() {
 
   message("\n======================================================")
@@ -82,6 +141,11 @@ opg_ui <- function() {
         }
         bigdash::sidebarMenu(title, !!!ee)
       }
+      ## a config can filter every board out (see MODULES_ENABLED below); an
+      ## empty menu is survivable, `for (i in 1:0)` is not
+      if (!length(tree)) {
+        return(HTML(""))
+      }
       menu <- list()
       for (i in 1:length(tree)) {
         tab.names <- names(tree[[i]])
@@ -97,14 +161,7 @@ opg_ui <- function() {
       HTML(unlist(menu))
     }
 
-    ## NOTE: the list key must equal the tab name (see createMenu above),
-    ## otherwise the entry renders as a collapsible group holding one
-    ## identical item ("Cluster Samples > Cluster Samples").
-    basic_menu_tree <- list(
-      "dataview"       = c(dataview       = "DataView"),
-      "clustersamples" = c(clustersamples = "Cluster Samples"),
-      "diffexpr"       = c(diffexpr       = "Differential expression")
-    )
+    basic_menu_tree <- opg_basic_menu_tree(menu_tree)
 
     initial_is_full <- (opt$USER_LEVEL != "BASIC")
     info("[opg_ui] creating sidebar menu")
@@ -356,41 +413,7 @@ opg_ui <- function() {
   }
 
 
-  full_menu_tree <- list(
-    "DataView" = c(
-      dataview = "DataView"
-    ),
-    "Clustering" = c(
-      clustersamples = "Samples",
-      clusterfeatures = "Features"
-    ),
-    "Expression" = c(
-      diffexpr = "Differential expression",
-      timeseries = "TimeSeries", ## here???
-      corr = "Correlation analysis",
-      bio = "Find biomarkers"
-    ),
-    "GeneSets" = c(
-      enrich = "Geneset Enrichment",
-      sig = "Test geneset",
-      pathway = "Pathway analysis",
-      wordcloud = "Word cloud"
-    ),
-    "Compare" = c(
-      isect = "Compare signatures",
-      comp = "Compare datasets",
-      cmap = "Similar experiments"
-    ),
-    "SystemsBio" = c(
-      drug = "Drug connectivity",
-      cell = "Cell profiling",
-      pcsf = "PCSF",
-      tcga = "TCGA survival (beta)"
-    ),
-    "MultiOmics" = MODULE.multiomics$module_menu(),
-    "WGCNA" = MODULE.wgcna$module_menu(),
-    "Epigenomics" = MODULE.epigenomics$module_menu()
-  )
+  full_menu_tree <- opg_menu_tree()
 
   info("[opg_ui] >>> creating UI")
   ui <- createUI(full_menu_tree)

@@ -13,13 +13,7 @@ log_admin_action <- function(admin_email, action, subjects,
   if (length(subjects) == 0) {
     return(invisible())
   }
-  host <- NULL
-  if (exists("opt", inherits = TRUE)) host <- opt$HOSTNAME
-  if (is.null(host) || !nzchar(host)) {
-    host <- toupper(Sys.info()[["nodename"]])
-  }
-  host <- gsub("[^A-Za-z0-9._-]", "_", host)
-  log.file <- file.path(ETC, paste0("PGXADMIN-", host, ".log"))
+  log.file <- file.path(ETC, paste0("PGXADMIN-", opg_hostname(), ".log"))
   log.entry <- data.frame(
     date = format(Sys.time(), tz = "CET"),
     admin = admin_email,
@@ -103,6 +97,46 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
       "datamanager",
       auth = auth
     )
+
+    ## ----------------------------------------------------------------------
+    ## Basic menu chooser. Persisted per deploy in etc/BASIC_MENU-<HOSTNAME>
+    ## and read back by global.R at startup. `opt` is per R process (ShinyProxy
+    ## gives each user their own), so other sessions pick this up on reload.
+    ## ----------------------------------------------------------------------
+
+    basic_menu_status <- shiny::reactiveVal("")
+    output$basic_menu_status <- shiny::renderText(basic_menu_status())
+
+    shiny::observeEvent(input$save_basic_menu, {
+      shiny::req(isTRUE(auth$ADMIN))
+      boards <- input$basic_menu
+      locked <- input$basic_locked %||% character(0) ## unticking all is allowed
+      if (!length(boards)) {
+        basic_menu_status("Select at least one menu item.")
+        return()
+      }
+      tryCatch(
+        {
+          writeLines(boards, etc_host_file("BASIC_MENU"))
+          writeLines(locked, etc_host_file("BASIC_LOCKED"))
+          opt$BASIC_MENU <<- boards
+          opt$BASIC_LOCKED <<- locked
+          log_admin_action(
+            admin_email = auth$email,
+            action = "basic_menu",
+            subjects = paste(
+              c(boards, if (length(locked)) paste0("locked:", locked) else "locked:none"),
+              collapse = ";"
+            )
+          )
+          basic_menu_status(paste0(
+            "Saved at ", format(Sys.time(), "%H:%M:%S"),
+            " - users see it after a page reload."
+          ))
+        },
+        error = function(e) basic_menu_status(paste("Save failed:", e$message))
+      )
+    })
 
     ## ================================================================================
     ## =================================== END ========================================

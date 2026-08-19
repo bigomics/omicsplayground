@@ -465,3 +465,53 @@ clean_custom_features <- function(features) {
   features <- paste(feature_list, collapse = ", ")
   return(features)
 }
+
+
+## Class for a settings block that BASIC users get greyed out (see
+## body.basic-mode in scss/components/_app.scss). Which boards are affected is
+## the admin's choice (Admin panel > Basic menu); a board the admin left out
+## keeps its advanced settings live. Only needed for blocks that are NOT an
+## accordion -- lock_advanced() below catches those on every board by itself.
+advanced_option <- function(board) {
+  if (board %in% opt$BASIC_LOCKED) "advanced-option" else NULL
+}
+
+
+## Should this accordion in a settings sidebar be greyed out for BASIC users?
+##
+## Nearly every one holds advanced parameters (FDR and thresholds, layout and
+## network knobs), so they are marked wholesale rather than by hand on each
+## board -- that also covers boards nobody has marked yet. Two exceptions stay
+## live, because greying sets `pointer-events: none` and would make them
+## unusable rather than merely locked:
+##   - it contains an action button (WGCNA and Multiomics WGCNA put their
+##     "Recompute" button inside the accordion, next to its parameters)
+##   - it opts out explicitly with class "keep-live"
+## NOTE: read the class with tagGetAttribute() -- bslib::accordion() emits
+## several `class` attributes and x$attribs$class is only the first of them.
+is_locked_block <- function(x) {
+  classes <- htmltools::tagGetAttribute(x, "class")
+  if (isTRUE(grepl("keep-live", classes))) {
+    return(FALSE)
+  }
+  length(htmltools::tagQuery(x)$find(".action-button")$selectedTags()) == 0
+}
+
+
+## Grey out the advanced settings of one board tab for BASIC users. Which
+## boards are affected is the admin's choice (Admin panel > Basic menu).
+lock_advanced <- function(tab) {
+  if (!inherits(tab, "shiny.tag")) {
+    return(tab)
+  }
+  ## no data-name -> NA -> matches nothing, so the tab is left alone
+  board <- sub("-tab$", "", as.character(tab$attribs[["data-name"]])[1])
+  if (!board %in% opt$BASIC_LOCKED) {
+    return(tab)
+  }
+  htmltools::tagQuery(tab)$
+    find(".tab-settings .accordion")$
+    filter(function(x, i) is_locked_block(x))$
+    addClass("advanced-option")$
+    allTags()
+}

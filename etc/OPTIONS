@@ -34,6 +34,14 @@ DEVMODE              = FALSE
 HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
+# Boards kept in the flat BASIC menu. Also editable in Admin panel > Basic
+# Menu, which writes etc/BASIC_MENU-<HOSTNAME> and overrides this line. A
+# hostname-less etc/BASIC_MENU is read as a default for every server sharing
+# the mounted etc/ folder.
+#BASIC_MENU          = dataview;clustersamples;diffexpr
+# Pin users to the basic menu (they cannot switch back). Also settable per
+# user in <user_dir>/OPTIONS or the user DB row.
+#FORCE_BASIC         = TRUE
 
 LLM_MAXTURNS         = 100
 ENABLE_AI            = TRUE
