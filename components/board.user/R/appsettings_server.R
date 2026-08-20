@@ -11,16 +11,11 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## module for system resources
     user_table_resources_server("resources", pgx = pgx)
 
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>User Profile</strong>"),
-        shiny::HTML(
-          "The User Settings page allows you to change overall settings
+    OmicsBoard(
+      "board", pgx, title = "Settings",
+      infotext = "The User Settings page allows you to change overall settings
                 that will alter how the app looks and functions."
-        ),
-        easyClose = TRUE, size = "l"
-      ))
-    })
+    )
 
     ## ----------------------------------------------------------------
     ## AI Features — provider, credentials and model selection

@@ -29,6 +29,8 @@ BiomarkerBoard <- function(id, pgx) {
     and provides expression boxplots by phenotype classes for features present in
     the tree.", js = FALSE)
 
+    OmicsBoard("board", pgx, title = "Biomarker Selection", infotext = pdx_infotext)
+
     ## =========================================================================
     ## ======================== OBSERVERS ======================================
     ## =========================================================================
@@ -47,15 +49,6 @@ BiomarkerBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
-
-    shiny::observeEvent(input$pdx_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Biomarker Board</strong>"),
-        shiny::HTML(pdx_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
-
 
     shiny::observe({
       shiny::req(pgx$X)

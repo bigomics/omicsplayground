@@ -11,9 +11,9 @@ AppSettingsUI <- function(id) {
 
   initial_is_basic <- (opt$USER_LEVEL == "BASIC")
 
-  div(
-    boardHeader(title = "Settings", info_link = ns("board_info")),
-
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Settings",
     bslib::navset_pill_list(
       id = ns("tabs1"),
       widths = c(2,10),

@@ -125,9 +125,9 @@ IntersectionUI <- function(id) {
     )
   )
 
-  ## return this div
-  div(
-    boardHeader(title = "Compare signatures", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Compare signatures",
     tabs
   )
 }

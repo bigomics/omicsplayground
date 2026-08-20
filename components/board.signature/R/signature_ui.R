@@ -247,8 +247,9 @@ SignatureUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Test signatures", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Test signatures",
     bslib::layout_columns(
       col_widths = c(8, 4),
       left.panel,

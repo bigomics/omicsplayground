@@ -23,6 +23,8 @@ IntersectionBoard <- function(
 
 ", js = FALSE)
 
+    OmicsBoard("board", pgx, title = "Intersection Analysis", infotext = infotext)
+
     ## delayed input
     input_comparisons <- shiny::reactive({
       input$comparisons
@@ -35,14 +37,6 @@ IntersectionBoard <- function(
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Intersection Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     ## update choices upon change of data set
     shiny::observe({

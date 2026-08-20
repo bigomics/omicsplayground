@@ -144,8 +144,9 @@ CorrelationUI <- function(id) {
   )
 
   ## full page
-  div(
-    boardHeader(title = "Correlation analysis", info_link = ns("data_info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Correlation analysis",
     tabs
   )
 }

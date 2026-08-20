@@ -209,8 +209,9 @@ PathwayUI <- function(id) {
     ) ## Enrichment map tabpanel
   ) ## end of tabset panel
 
-  page_ui <- div(
-    boardHeader(title = "Pathway Analysis", info_link = ns("fa_info")),
+  page_ui <- OmicsBoardUI(
+    id = ns("board"),
+    title = "Pathway Analysis",
     tabs
   )
   return(page_ui)
