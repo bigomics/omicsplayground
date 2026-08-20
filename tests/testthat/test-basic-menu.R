@@ -7,28 +7,48 @@ BASIC_MENU_DEFAULT <- c("dataview", "clustersamples", "diffexpr")
 
 .tree <- list(
   "DataView" = c(dataview = "DataView"),
-  "Clustering" = c(clustersamples = "Samples", clusterfeatures = "Features"),
+  "Clustering" = c(clustersamples = "Cluster Samples", clusterfeatures = "Cluster Features"),
   "Expression" = c(diffexpr = "Differential expression", corr = "Correlation analysis")
 )
 
-test_that("basic menu keeps the admin selection, in full-menu order", {
-  m <- opg_basic_menu_tree(.tree, c("corr", "dataview"))
+test_that("basic tabs are the admin's selection, narrowed to loaded modules", {
+  MODULES_LOADED <<- c(DataView = TRUE, Clustering = TRUE, Expression = FALSE)
+  on.exit(rm(MODULES_LOADED, envir = globalenv()), add = TRUE)
 
-  expect_equal(names(m), c("dataview", "corr"))
-  ## key must equal the tab name, else createMenu renders a nested group
-  expect_equal(names(m[["corr"]]), "corr")
-  expect_equal(unname(m[["corr"]]), "Correlation analysis")
+  ## Expression is not loaded, so its boards are not in the universe at all --
+  ## bigdash.filterTabs() is absolute and would resurrect their menu items
+  expect_equal(opg_loaded_tabs(.tree), c("dataview-tab", "clustersamples-tab", "clusterfeatures-tab"))
+
+  expect_equal(
+    opg_basic_tabs(c("clustersamples", "dataview"), opg_loaded_tabs(.tree)),
+    c("dataview-tab", "clustersamples-tab")
+  )
+  ## a selection that survives nothing falls back to the default rather than
+  ## leaving BASIC users with an unfiltered menu
+  expect_equal(
+    opg_basic_tabs("diffexpr", opg_loaded_tabs(.tree)),
+    c("dataview-tab", "clustersamples-tab")
+  )
 })
 
-test_that("flattened clustering entries get a standalone title", {
-  m <- opg_basic_menu_tree(.tree, "clustersamples")
-  expect_equal(unname(m[["clustersamples"]]), "Cluster Samples")
+test_that("an unusable selection falls back instead of unfiltering everything", {
+  MODULES_LOADED <<- c(DataView = TRUE, Clustering = TRUE, Expression = TRUE)
+  on.exit(rm(MODULES_LOADED, envir = globalenv()), add = TRUE)
+  tabs <- opg_loaded_tabs(.tree)
+
+  ## filterTabs() treats an empty vector as "no filtering", which would show
+  ## the full menu to a BASIC user -- the default has to step in first
+  expect_equal(opg_basic_tabs("nosuchboard", tabs), paste0(BASIC_MENU_DEFAULT, "-tab"))
+  expect_equal(opg_basic_tabs(character(0), tabs), paste0(BASIC_MENU_DEFAULT, "-tab"))
 })
 
-test_that("unknown boards are dropped and an empty result falls back to the default", {
-  expect_equal(names(opg_basic_menu_tree(.tree, c("dataview", "nosuchboard"))), "dataview")
-  expect_equal(names(opg_basic_menu_tree(.tree, "nosuchboard")), BASIC_MENU_DEFAULT)
-  expect_equal(names(opg_basic_menu_tree(.tree, character(0))), BASIC_MENU_DEFAULT)
+test_that("nothing loaded yet is a no-op, not a broken menu", {
+  MODULES_LOADED <<- c(DataView = FALSE, Clustering = FALSE, Expression = FALSE)
+  on.exit(rm(MODULES_LOADED, envir = globalenv()), add = TRUE)
+
+  ## fires at session start, before any dataset is loaded
+  expect_length(opg_loaded_tabs(.tree), 0)
+  expect_length(opg_basic_tabs("dataview", opg_loaded_tabs(.tree)), 0)
 })
 
 ## --- advanced_option(): which boards get their settings greyed out ---------
@@ -98,13 +118,6 @@ test_that("real bslib accordions: keep-live and action buttons stay usable", {
     )
   )
   expect_equal(marked(lock_advanced(settings(compute))), 0)
-})
-
-test_that("an empty basic menu is survivable, not a crash", {
-  ## createMenu() does `for (i in 1:length(tree))`, so an empty tree used to
-  ## take down the whole UI build
-  tree <- list("GeneSets" = c(enrich = "Geneset Enrichment"))
-  expect_length(opg_basic_menu_tree(tree, "nosuchboard"), 0)
 })
 
 test_that("lock_advanced passes through anything that is not a tab tag", {
