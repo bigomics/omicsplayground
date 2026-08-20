@@ -299,17 +299,6 @@ ExpressionUI <- function(id) {
     )
   ) ## end tabs2 = bottom tabsetPanel
 
-  ## div(
-  ##   boardHeader(title = "Differential expression", info_link = ns("gx_info")),
-  ##   bslib::layout_columns(
-  ##     col_widths = 12,
-  ##     height = fullH,
-  ##     gap = "0px",
-  ##     tabs1,
-  ##     tabs2
-  ##   )
-  ## )
-
   OmicsBoardUI(
     title = "Differential expression",
     ns = ns,

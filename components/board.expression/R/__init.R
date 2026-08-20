@@ -71,5 +71,21 @@ MODULE.expression <- list(
         BiomarkerUI("bio")
       )
     )
+  },
+  module_lazy = function(PGX, labeltype = NULL, ...) {
+    list(
+      "corr-tab" = list(
+        ui     = function() CorrelationUI("corr"),
+        server = function() CorrelationBoard("corr", pgx = PGX, labeltype = labeltype)
+      ),
+      "timeseries-tab" = list(
+        ui     = function() TimeSeriesUI("timeseries"),
+        server = function() TimeSeriesBoard("timeseries", pgx = PGX, labeltype = labeltype)
+      ),
+      "bio-tab" = list(
+        ui     = function() BiomarkerUI("bio"),
+        server = function() BiomarkerBoard("bio", pgx = PGX)
+      )
+    )
   }
 )

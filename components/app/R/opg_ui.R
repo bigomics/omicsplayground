@@ -317,38 +317,45 @@ opg_ui <- function() {
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
-        ## bigdash::bigTabItem(
-        ##   "welcome-tab",
-        ##   WelcomeBoardInputs("welcome"),
-        ##   WelcomeBoardUI("welcome")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "load-tab",
-        ##   # LoadingInputs("load")
-        ##   LoadingUI("load")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "upload-tab",
-        ##   UploadUI("upload")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "userprofile-tab",
-        ##   UserProfileUI("user_profile")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "usersettings-tab",
-        ##   AppSettingsUI("app_settings")
-        ## ),
-        ## if (isTRUE(opt$ENABLE_ADMIN)) {
-        ##   bigdash::bigTabItem(
-        ##     "admin-tab",
-        ##     AdminPanelUI("admin_panel")
-        ##   )
-        ## }
-        ## bigdash::bigTabItem(
-        ##   "sharing-tab",
-        ##   SharedDatasetsUI("load")
-        ## )
+        ## Static shells for all possible tabs.  bigTabsLazy() in the
+        ## server will populate the heavy UI on first visit.
+        ## DataView
+        bigdash::bigTabItem("dataview-tab",  DataViewInputs("dataview"), create_loader("dataview-loader")),
+        ## Clustering
+        bigdash::bigTabItem("clustersamples-tab",  ClusteringInputs("clustersamples"), create_loader("clustersamples-loader")),
+        bigdash::bigTabItem("clusterfeatures-tab", FeatureMapInputs("clusterfeatures"), create_loader("clusterfeatures-loader")),
+        ## Expression
+        bigdash::bigTabItem("diffexpr-tab",  ExpressionInputs("diffexpr"), create_loader("diffexpr-loader")),
+        bigdash::bigTabItem("timeseries-tab", TimeSeriesInputs("timeseries"), create_loader("timeseries-loader")),
+        bigdash::bigTabItem("corr-tab",      CorrelationInputs("corr"), create_loader("corr-loader")),
+        bigdash::bigTabItem("bio-tab",       BiomarkerInputs("bio"), create_loader("bio-loader")),
+        ## GeneSets
+        bigdash::bigTabItem("enrich-tab",    tagList(EnrichmentInputs("enrich"), create_loader("enrich-loader"))),
+        bigdash::bigTabItem("sig-tab",       tagList(SignatureInputs("sig"), create_loader("sig-loader"))),
+        bigdash::bigTabItem("pathway-tab",   tagList(PathwayInputs("pathway"), create_loader("pathway-loader"))),
+        bigdash::bigTabItem("wordcloud-tab", tagList(WordCloudInputs("wordcloud"), create_loader("wordcloud-loader"))),
+        ## Compare
+        bigdash::bigTabItem("isect-tab", IntersectionInputs("isect"), create_loader("isect-loader")),
+        bigdash::bigTabItem("comp-tab",  CompareInputs("comp"), create_loader("comp-loader")),
+        bigdash::bigTabItem("cmap-tab",  ConnectivityInputs("cmap"), create_loader("cmap-loader")),
+        ## SystemsBio
+        bigdash::bigTabItem("drug-tab", DrugConnectivityInputs("drug"), create_loader("drug-loader")),
+        bigdash::bigTabItem("tcga-tab", TcgaInputs("tcga"), create_loader("tcga-loader")),
+        bigdash::bigTabItem("cell-tab", SingleCellInputs("cell"), create_loader("cell-loader")),
+        bigdash::bigTabItem("pcsf-tab", PcsfInputs("pcsf"), create_loader("pcsf-loader")),
+        ## MultiOmics
+        bigdash::bigTabItem("mofa-tab",    MofaInputs("mofa"), create_loader("mofa-loader")),
+        bigdash::bigTabItem("mgsea-tab",   MGseaInputs("mgsea"), create_loader("mgsea-loader")),
+        bigdash::bigTabItem("snf-tab",     SNFInputs("snf"), create_loader("snf-loader")),
+        bigdash::bigTabItem("lasagna-tab", LasagnaInputs("lasagna"), create_loader("lasagna-loader")),
+        bigdash::bigTabItem("deepnet-tab", DeepNetInputs("deepnet"), create_loader("deepnet-loader")),
+        ## WGCNA
+        bigdash::bigTabItem("wgcna-tab",        WgcnaInputs("wgcna"), create_loader("wgcna-loader")),
+        bigdash::bigTabItem("consensus-tab",    ConsensusWGCNA_Inputs("consensus"), create_loader("consensus-loader")),
+        bigdash::bigTabItem("preservation-tab", PreservationWGCNA_Inputs("preservation"), create_loader("preservation-loader")),
+        bigdash::bigTabItem("mwgcna-tab",       MultiWGCNA_Inputs("mwgcna"), create_loader("mwgcna-loader")),
+        ## Epigenomics
+        bigdash::bigTabItem("ideograms-tab", EpigenomicsInputs("epigenomics"), create_loader("ideograms-loader"))
       )
       ## UploadUI("upload")
     ) ## end of bigPage
