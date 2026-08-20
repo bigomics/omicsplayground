@@ -78,6 +78,26 @@ MODULE.wgcna <- list(
       save_pgx = save_pgx
     )
   },
+  module_lazy = function(PGX, save_pgx = NULL, ...) {
+    list(
+      "wgcna-tab" = list(
+        ui     = function() WgcnaUI("wgcna"),
+        server = function() WgcnaBoard("wgcna", pgx = PGX, save_pgx = save_pgx)
+      ),
+      "consensus-tab" = list(
+        ui     = function() ConsensusWGCNA_UI("consensus"),
+        server = function() ConsensusWGCNA_Board(id = "consensus", pgx = PGX)
+      ),
+      "preservation-tab" = list(
+        ui     = function() PreservationWGCNA_UI("preservation"),
+        server = function() PreservationWGCNA_Board(id = "preservation", pgx = PGX)
+      ),
+      "mwgcna-tab" = list(
+        ui     = function() MultiWGCNA_UI("mwgcna"),
+        server = function() MultiWGCNA_Board("mwgcna", pgx = PGX, save_pgx = save_pgx)
+      )
+    )
+  },
   module_help = function() {
     list(
       bigdash::sidebarTabHelp(

@@ -77,5 +77,25 @@ MODULE.enrichment <- list(
         WordCloudUI("wordcloud")
       )
     )
+  },
+  module_lazy = function(PGX, labeltype = NULL, env = NULL, ...) {
+    list(
+      ## "enrich-tab" = list(
+      ##   ui     = function() EnrichmentUI("enrich"),
+      ##   server = function() EnrichmentBoard("enrich", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods)
+      ## ),
+      "sig-tab" = list(
+        ui     = function() SignatureUI("sig"),
+        server = function() SignatureBoard("sig", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods)
+      ),
+      "pathway-tab" = list(
+        ui     = function() PathwayUI("pathway"),
+        server = function() PathwayBoard("pathway", pgx = PGX, selected_gsetmethods = env$enrich$selected_gsetmethods)
+      ),
+      "wordcloud-tab" = list(
+        ui     = function() WordCloudUI("wordcloud"),
+        server = function() WordCloudBoard("wordcloud", pgx = PGX)
+      )
+    )
   }
 )

@@ -65,5 +65,33 @@ MODULE.compare <- list(
       auth = auth,
       reload_pgxdir = reload_pgxdir
     )
+  },
+  module_lazy = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL, ...) {
+    list(
+      "isect-tab" = list(
+        ui     = function() IntersectionUI("isect"),
+        server = function() IntersectionBoard("isect",
+          pgx = PGX,
+          selected_gxmethods = env$diffexpr$selected_gxmethods,
+          selected_gsetmethods = env$enrich$selected_gsetmethods
+        )
+      ),
+      "comp-tab" = list(
+        ui     = function() CompareUI("comp"),
+        server = function() CompareBoard("comp",
+          pgx = PGX,
+          pgx_dir = reactive(auth$user_dir),
+          labeltype = labeltype
+        )
+      ),
+      "cmap-tab" = list(
+        ui     = function() ConnectivityUI("cmap"),
+        server = function() ConnectivityBoard("cmap",
+          pgx = PGX,
+          auth = auth,
+          reload_pgxdir = reload_pgxdir
+        )
+      )
+    )
   }
 )

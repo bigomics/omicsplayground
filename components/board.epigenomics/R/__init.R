@@ -27,6 +27,14 @@ MODULE.epigenomics <- list(
   module_server = function(PGX) {
     EpigenomicsBoard("epigenomics", pgx = PGX)
   },
+  module_lazy = function(PGX, ...) {
+    list(
+      "ideograms-tab" = list(
+        ui     = function() EpigenomicsUI("epigenomics"),
+        server = function() EpigenomicsBoard("epigenomics", pgx = PGX)
+      )
+    )
+  },
   module_help = function() {
     list(
       bigdash::sidebarTabHelp(

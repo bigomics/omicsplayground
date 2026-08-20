@@ -45,5 +45,17 @@ MODULE.clustering <- list(
         FeatureMapUI("clusterfeatures")
       )
     )
+  },
+  module_lazy = function(PGX, labeltype = NULL, ...) {
+    list(
+      "clustersamples-tab" = list(
+        ui     = function() ClusteringUI("clustersamples"),
+        server = function() ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
+      ),
+      "clusterfeatures-tab" = list(
+        ui     = function() FeatureMapUI("clusterfeatures"),
+        server = function() FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
+      )
+    )
   }
 )

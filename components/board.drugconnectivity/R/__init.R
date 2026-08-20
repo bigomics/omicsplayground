@@ -72,5 +72,25 @@ MODULE.systems <- list(
     PcsfBoard("pcsf",
       pgx = PGX
     )
+  },
+  module_lazy = function(PGX, ...) {
+    list(
+      "drug-tab" = list(
+        ui     = function() DrugConnectivityUI("drug"),
+        server = function() DrugConnectivityBoard("drug", pgx = PGX)
+      ),
+      "tcga-tab" = list(
+        ui     = function() TcgaUI("tcga"),
+        server = function() TcgaBoard("tcga", pgx = PGX)
+      ),
+      "cell-tab" = list(
+        ui     = function() SingleCellUI("cell"),
+        server = function() SingleCellBoard("cell", pgx = PGX)
+      ),
+      "pcsf-tab" = list(
+        ui     = function() PcsfUI("pcsf"),
+        server = function() PcsfBoard("pcsf", pgx = PGX)
+      )
+    )
   }
 )
