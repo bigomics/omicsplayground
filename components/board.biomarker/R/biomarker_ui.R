@@ -66,7 +66,7 @@ BiomarkerUI <- function(id) {
   fullH <- "calc(100vh - 200px)"
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Biomarker Selection",
     shiny::tabsetPanel(
       id = ns("tabs1"),

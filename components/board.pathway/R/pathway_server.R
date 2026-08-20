@@ -33,7 +33,7 @@ PathwayBoard <- function(id,
     <br><br><br><br>
     <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=AB4FSqin7aqqYU_n&amp;start=100' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"), js = FALSE)
 
-    OmicsBoard("board", pgx, title = "Pathway Analysis", infotext = fa_infotext)
+    OmicsBoard(session, pgx, title = "Pathway Analysis", infotext = fa_infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

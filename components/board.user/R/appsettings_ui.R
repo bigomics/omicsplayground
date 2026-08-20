@@ -12,7 +12,7 @@ AppSettingsUI <- function(id) {
   initial_is_basic <- (opt$USER_LEVEL == "BASIC")
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Settings",
     bslib::navset_pill_list(
       id = ns("tabs1"),

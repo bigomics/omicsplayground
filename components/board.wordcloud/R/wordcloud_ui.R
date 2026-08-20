@@ -95,7 +95,7 @@ WordCloudUI <- function(id) {
     )
   )
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Word cloud",
     tabs
   )

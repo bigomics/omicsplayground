@@ -126,7 +126,7 @@ IntersectionUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Compare signatures",
     tabs
   )

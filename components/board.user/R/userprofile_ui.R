@@ -9,7 +9,7 @@ UserProfileUI <- function(id) {
   div(
     class = "row",
     OmicsBoardUI(
-      id = ns("board"),
+      ns = ns,
       title = "User Profile",
       shiny::tabsetPanel(
         id = ns("tabs1"),

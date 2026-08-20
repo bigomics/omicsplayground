@@ -32,7 +32,7 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
     ##   ))
     ## })
 
-    OmicsBoard("board", pgx, title="WGCNA", infotext = youtube_link) 
+    OmicsBoard(session, pgx, title="WGCNA", infotext = youtube_link) 
     
     ## ================================================================================
     ## ========================== OBSERVE FUNCTIONS ===================================

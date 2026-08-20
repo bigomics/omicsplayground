@@ -13,7 +13,7 @@ PcsfBoard <- function(id, pgx) {
       "This PCSF analysis module..."
     )
 
-    OmicsBoard("board", pgx, title = "PCSF Network Analysis", infotext = as.character(pcsf_info))
+    OmicsBoard(session, pgx, title = "PCSF Network Analysis", infotext = as.character(pcsf_info))
 
     ## ========================================================================
     ## ============================ OBSERVERS =================================

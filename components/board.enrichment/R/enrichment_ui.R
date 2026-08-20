@@ -370,7 +370,7 @@ EnrichmentUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Geneset enrichment",
     bslib::layout_columns(
       col_widths = 12,

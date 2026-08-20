@@ -77,7 +77,7 @@ MultiWGCNA_UI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Multiomics WGCNA",
     shiny::tabsetPanel(
       id = ns("tabs"),

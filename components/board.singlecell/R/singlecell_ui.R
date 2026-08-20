@@ -31,7 +31,7 @@ SingleCellUI <- function(id) {
 
   ns <- shiny::NS(id) ## namespace
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Cell Profiling",
     shiny::tabsetPanel(
       id = ns("tabs"),

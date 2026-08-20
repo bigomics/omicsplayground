@@ -312,7 +312,7 @@ ExpressionUI <- function(id) {
 
   OmicsBoardUI(
     title = "Differential expression",
-    id = ns("board"),
+    ns = ns,
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,

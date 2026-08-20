@@ -30,7 +30,7 @@ MofaBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    OmicsBoard("board", pgx, title = "Multi-Omics Factor Analysis", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Multi-Omics Factor Analysis", infotext = infotext)
 
 
     # Observe tabPanel change to update Settings visibility
