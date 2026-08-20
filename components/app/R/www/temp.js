@@ -193,9 +193,16 @@ Shiny.addCustomMessageHandler('redirect_nonce', function(message) {
 var hrefUpdatedStatus = {};  // Object to track href update status for each popover
 
 document.addEventListener('shown.bs.popover', function(event) {
-	// Get the popover container (Bootstrap 5 attaches the popover to the body by default)
-	var popover = document.body.querySelector('.popover');
-  
+	// The popover that was just shown, found through the trigger's own
+	// aria-describedby (Bootstrap points it at the tip while that tip is open).
+	// document.body.querySelector('.popover') walked the whole page instead --
+	// every board and every node inside every drawn SVG -- to reach a popover
+	// Bootstrap appends at the end of <body>, and returned the wrong one
+	// whenever more than one was open.
+	var trigger = event.target;
+	var popoverId = trigger && trigger.getAttribute && trigger.getAttribute('aria-describedby');
+	var popover = popoverId ? document.getElementById(popoverId) : null;
+
 	if (!popover) {
 	  console.log("Popover not found.");
 	  return;
@@ -244,4 +251,10 @@ document.addEventListener('shown.bs.popover', function(event) {
   
 	// Start observing the target node for configured mutations
 	observer.observe(targetNode, config);
+
+	// Dropped when the popover closes. Without this every single show left a
+	// live observer behind, for the whole session.
+	trigger.addEventListener('hidden.bs.popover', function () {
+	  observer.disconnect();
+	}, { once: true });
   });
