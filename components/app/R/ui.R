@@ -45,16 +45,28 @@ app_ui <- function(x) {
       .where = "declarations"
     )
 
+    ## Cache-bust on mtime. These responses carry no Cache-Control and no ETag,
+    ## so browsers fall back to heuristic caching and keep a stylesheet or a
+    ## script from an earlier deploy - which shows up as the app rendering with
+    ## half its CSS, or a JS fix that appears not to have landed. Both "custom"
+    ## and "static" are addResourcePath'd to www, so one mtime lookup serves.
+    bust <- function(path) {
+      f <- file.path("www", basename(path))
+      if (!file.exists(f)) return(path)
+      paste0(path, "?v=", as.integer(file.mtime(f)))
+    }
+
     header <- shiny::tagList(
       shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
       ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
-      shiny::tags$head(shiny::tags$script(src = "static/copy-info-helper.js")),
-      shiny::tags$script(src = "custom/close-message.js"),
-      shiny::tags$head(shiny::tags$script(src = "static/add-tick-helper.js")),
-      shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
-      shiny::tags$head(shiny::tags$script(src = "custom/dropdown-helper.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
+      shiny::tags$head(shiny::tags$script(src = bust("custom/temp.js"))),
+      shiny::tags$head(shiny::tags$script(src = bust("static/copy-info-helper.js"))),
+      shiny::tags$script(src = bust("custom/close-message.js")),
+      shiny::tags$head(shiny::tags$script(src = bust("static/add-tick-helper.js"))),
+      shiny::tags$head(shiny::tags$script(src = bust("static/shared-badges.js"))),
+      shiny::tags$head(shiny::tags$script(src = bust("custom/dropdown-helper.js"))),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet",
+                                        href = bust("custom/styles.min.css"))),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
       visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
       shinyjs::useShinyjs(),
