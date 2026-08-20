@@ -38,25 +38,19 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     }
   )
 
-  ## Basic or full menu. bigdash.filterTabs() narrows the one sidebar menu to
-  ## the admin's board selection and lets sidebarMenu(promote_single) flatten
-  ## whatever group is left holding a single item; leaving BASIC mode widens it
-  ## back to the loaded boards. Both ends stay inside opg_loaded_tabs()
-  ## because filterTabs is absolute -- see that helper in opg_ui.
-  ##
-  ## The body class drives the board-level simplifications (greyed
-  ## .advanced-option blocks, hidden extra tabs) in scss/components/_app.scss
-  ## -- CSS so it also applies to boards inserted lazily, after this observer
-  ## has already run.
+  ## Hide/show basic or full menu. The body class drives the board-level
+  ## simplifications (greyed .advanced-option blocks, hidden extra tabs) in
+  ## scss/components/_app.scss -- CSS so it also applies to boards that are
+  ## inserted lazily, after this observer has already run.
   observeEvent(input$menu_basic, {
     if (isTRUE(input$menu_basic)) {
-      bigdash::bigdash.filterTabs(session, opg_basic_tabs())
+      shinyjs::runjs("$('#menu-basic').removeClass('nodisp').show(); $('#menu-full').addClass('nodisp').hide();")
       shinyjs::addClass(selector = "body", class = "basic-mode")
       ## the active tab may be one we are about to hide
       shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
       shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
     } else {
-      bigdash::bigdash.filterTabs(session, opg_loaded_tabs())
+      shinyjs::runjs("$('#menu-full').removeClass('nodisp').show(); $('#menu-basic').addClass('nodisp').hide();")
       shinyjs::removeClass(selector = "body", class = "basic-mode")
     }
   }, ignoreInit = FALSE)

@@ -11,10 +11,8 @@ opg_menu_tree <- function() {
       dataview = "DataView"
     ),
     "Clustering" = c(
-      ## titles stand alone: sidebarMenu(promote_single) shows the item on its
-      ## own, without the "Clustering" heading, once it is the only one left
-      clustersamples = "Cluster Samples",
-      clusterfeatures = "Cluster Features"
+      clustersamples = "Samples",
+      clusterfeatures = "Features"
     ),
     "Expression" = c(
       diffexpr = "Differential expression",
@@ -46,34 +44,21 @@ opg_menu_tree <- function() {
 }
 
 
-## Board id -> tab name. Guarded because paste0(character(0), "-tab") is
-## "-tab", not character(0) -- that bogus name reaches filterTabs() before any
-## module is loaded and hides every tab in the menu.
-tab_names <- function(boards) {
-  if (!length(boards)) character(0) else paste0(boards, "-tab")
-}
-
-
-#' Board tabs of every module that is currently loaded.
-#'
-#' The universe both menu modes work within. bigdash.filterTabs() is absolute
-#' -- it shows exactly what you pass and hides everything else -- so a call
-#' that reaches outside this set resurrects menu items whose board was removed
-#' with its module (see bigdash.removeTab in opg_server).
-opg_loaded_tabs <- function(menu_tree = opg_menu_tree()) {
-  loaded <- intersect(names(menu_tree), names(MODULES_LOADED)[MODULES_LOADED])
-  tab_names(unlist(lapply(menu_tree[loaded], names), use.names = FALSE))
-}
-
-
-#' Board tabs the flat BASIC menu keeps: the admin's selection (Admin panel >
-#' Basic menu, persisted per deploy -- see global.R), narrowed to what is
-#' actually loaded. Falls back to the built-in default if the selection leaves
-#' nothing; bigdash.filterTabs() treats an empty list as "no filtering".
-opg_basic_tabs <- function(boards = opt$BASIC_MENU, tabs = opg_loaded_tabs()) {
-  keep <- intersect(tabs, tab_names(boards))
-  if (!length(keep)) keep <- intersect(tabs, tab_names(BASIC_MENU_DEFAULT))
-  keep
+#' Flat sidebar menu for BASIC mode: the boards the admin selected, in
+#' full-menu order. The selection is chosen in Admin panel > Basic menu and
+#' persisted per deploy in etc/BASIC_MENU-<HOSTNAME> (read in global.R).
+opg_basic_menu_tree <- function(menu_tree = opg_menu_tree(), boards = opt$BASIC_MENU) {
+  tabs <- unlist(unname(menu_tree))
+  ## a flat entry loses its group heading, so a few titles must stand alone
+  relabel <- c(clustersamples = "Cluster Samples", clusterfeatures = "Cluster Features")
+  hit <- intersect(names(relabel), names(tabs))
+  tabs[hit] <- relabel[hit]
+  boards <- intersect(names(tabs), boards) ## drops unknown/disabled boards
+  if (!length(boards)) boards <- intersect(names(tabs), BASIC_MENU_DEFAULT)
+  ## NOTE: the list key must equal the tab name (see createMenu in opg_ui),
+  ## otherwise the entry renders as a collapsible group holding one identical
+  ## item ("Cluster Samples > Cluster Samples").
+  lapply(stats::setNames(boards, boards), function(b) tabs[b])
 }
 
 
@@ -154,10 +139,7 @@ opg_ui <- function() {
           tab.title <- tabs[i]
           ee[[i]] <- sidebar_menu_item(tab.title, tab.name)
         }
-        ## promote_single: when BASIC mode filters this group down to one item,
-        ## show it as a flat top-level entry instead of a lone collapsed
-        ## subitem ("Clustering > Cluster Samples" -> "Cluster Samples")
-        bigdash::sidebarMenu(title, !!!ee, promote_single = TRUE)
+        bigdash::sidebarMenu(title, !!!ee)
       }
       ## a config can filter every board out (see MODULES_ENABLED below); an
       ## empty menu is survivable, `for (i in 1:0)` is not
@@ -179,7 +161,11 @@ opg_ui <- function() {
       HTML(unlist(menu))
     }
 
+    basic_menu_tree <- opg_basic_menu_tree(menu_tree)
+
+    initial_is_full <- (opt$USER_LEVEL != "BASIC")
     info("[opg_ui] creating sidebar menu")
+    info("[opg_ui] initial_is_full = ", initial_is_full)
     
     sidebar <- bigdash::sidebar(
       "Menu",
@@ -194,9 +180,16 @@ opg_ui <- function() {
       ##     size     = "mini"
       ##   )
       ## ),
-      ## one menu: BASIC mode filters it with bigdash.filterTabs() in
-      ## opg_server, it is no longer a second copy rendered alongside
-      createMenu(menu_tree)
+      div(
+        id = "menu-full",
+        class = "nodisp", style = "diplay: none;",
+        createMenu(menu_tree)
+      ),
+      div(
+        id = "menu-basic",
+        class = "nodisp", style = "diplay: none;",        
+        createMenu(basic_menu_tree)
+      )
     )
     
     big_theme2 <- bigdash::big_theme()
