@@ -23,7 +23,7 @@ IntersectionBoard <- function(
 
 ", js = FALSE)
 
-    OmicsBoard("board", pgx, title = "Intersection Analysis", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Intersection Analysis", infotext = infotext)
 
     ## delayed input
     input_comparisons <- shiny::reactive({

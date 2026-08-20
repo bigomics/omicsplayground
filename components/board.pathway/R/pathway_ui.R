@@ -210,7 +210,7 @@ PathwayUI <- function(id) {
   ) ## end of tabset panel
 
   page_ui <- OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Pathway Analysis",
     tabs
   )
