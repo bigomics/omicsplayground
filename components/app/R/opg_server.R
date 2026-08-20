@@ -46,9 +46,14 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     if (isTRUE(input$menu_basic)) {
       shinyjs::runjs("$('#menu-basic').removeClass('nodisp').show(); $('#menu-full').addClass('nodisp').hide();")
       shinyjs::addClass(selector = "body", class = "basic-mode")
-      ## the active tab may be one we are about to hide
-      shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
-      shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
+      ## The active tab may be one we are about to hide. Only once the boards
+      ## exist -- they are inserted when a dataset loads, and addressing a
+      ## tabsetPanel that is not in the DOM yet just logs "there is no
+      ## tabsetPanel with id ..." in the browser console.
+      if (env$load$is_data_loaded() > 0) {
+        shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
+        shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
+      }
     } else {
       shinyjs::runjs("$('#menu-full').removeClass('nodisp').show(); $('#menu-basic').addClass('nodisp').hide();")
       shinyjs::removeClass(selector = "body", class = "basic-mode")
