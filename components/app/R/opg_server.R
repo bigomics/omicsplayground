@@ -90,22 +90,35 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     lazy_tabs <- c(lazy_tabs, MODULE.epigenomics$module_lazy(PGX = PGX))
   }
 
-  ## Preload enrich-tab so selected_gsetmethods is available
-  lazy_tabs[["enrich-tab"]]$preload <- TRUE
+  ## Set by bigTabsLazy() below; reports which tabs have been materialised so
+  ## far, so tab_control() only drives widgets that actually exist yet.
+  loaded_tabs <- function() character(0)
 
-#  bigdash::bigTabsLazy(lazy_tabs)
+  ## Each tab's shell (opg_ui) shows a spinner until its board arrives, and
+  ## tab_control()'s subtab toggles can only reach a board's tabsetPanel once
+  ## that board exists. Both are per-load concerns, so they hang off the server
+  ## closure: bigTabsLazy() inserts the UI first, then calls this.
+  with_tab_loaded <- function(name, server_fun) {
+    force(name)
+    force(server_fun)
+    function() {
+      if (is.function(server_fun)) server_fun()
+      shinyjs::hide(selector = paste0("[id='", sub("-tab$", "-loader", name), "']"))
+      ## try(): a board that fails to build must not take the whole tab set
+      ## with it, and tab_control() reads a lot of PGX.
+      try(tab_control(), silent = TRUE)
+    }
+  }
+  lazy_tabs <- Map(
+    function(name, spec) {
+      spec$server <- with_tab_loaded(name, spec$server)
+      spec
+    },
+    names(lazy_tabs), lazy_tabs
+  )
 
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
-
-    # depending on datatpye, subset modules enabled and create modules active,
-    ## if (tolower(PGX$datatype) == "multi-omics") {
-    ##   MODULES_ACTIVE <- MODULES_MULTIOMICS
-    ## } else if (tolower(PGX$datatype) == "methylomics") {
-    ##   MODULES_ACTIVE <- MODULES_METHYLOMICS
-    ## } else {
-    ##   MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
-    ## }
 
     ## On the first dataset upload, we initialize the modules and
     ## UI. Preload modules get materialized here immediately, all
@@ -117,115 +130,18 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         message = "Preparing your dashboard...",
         value = 0,
         {
-          bigdash::bigTabsLazy(lazy_tabs)
+          loaded_tabs <<- bigdash::bigTabsLazy(lazy_tabs)
 
           shinyjs::enable(selector = "a[data-value='Dashboard']")
           shinyjs::enable(selector = "a[data-value='Studio']")
           shinyjs::enable(selector = "a[data-value='Copilot']")
         })
-        
-      ## bigdash.hideMenuElement(session, "Clustering")
-      ## bigdash.hideMenuElement(session, "Expression")
-      ## bigdash.hideMenuElement(session, "GeneSets")
-      ## bigdash.hideMenuElement(session, "Compare")
-      ## bigdash.hideMenuElement(session, "SystemsBio")
-      ## bigdash.hideMenuElement(session, "MultiOmics")
-      ## bigdash.hideMenuElement(session, "WGCNA")
-      ## bigdash.hideMenuElement(session, "Epigenomics")
-      
     }
-    
-    ##MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
-    ##MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE    
-    ## lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
-    ##   if (x == "DataView") {
-    ##     bigdash.removeTab(session, "dataview-tab")
-    ##     bigdash.hideMenuElement(session, "DataView")
-    ##   }
-    ##   if (x == "Clustering") {
-    ##     lapply(names(MODULE.clustering$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "Clustering")
-    ##   }
-    ##   if (x == "Expression") {
-    ##     lapply(names(MODULE.expression$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "Expression")
-    ##   }
-    ##   if (x == "GeneSets") {
-    ##     lapply(names(MODULE.enrichment$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "GeneSets")
-    ##   }
-    ##   if (x == "Compare") {
-    ##     lapply(names(MODULE.compare$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "Compare")
-    ##   }
-    ##   if (x == "SystemsBio") {
-    ##     lapply(names(MODULE.systems$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "SystemsBio")
-    ##   }
-    ##   if (x == "MultiOmics") {
-    ##     lapply(names(MODULE.multiomics$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "MultiOmics")
-    ##   }
-    ##   if (x == "WGCNA") {
-    ##     lapply(names(MODULE.wgcna$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "WGCNA")
-    ##   }
-    ##   if (x == "Epigenomics") {
-    ##     lapply(names(MODULE.epigenomics$module_menu()), function(x) {
-    ##       bigdash.removeTab(session, paste0(x, "-tab"))
-    ##     })
-    ##     bigdash.hideMenuElement(session, "Epigenomics")
-    ##   }
-    ## })
-    ##
-    ## if (env$load$is_data_loaded()) { # == 1) {
-    ##   if (MODULES_TO_LOAD["DataView"]) {
-    ##     bslib::nav_select("app-sidebar", selected = "Dashboard")
-    ##   }
-    ##   if (MODULES_TO_LOAD["Clustering"]) {
-    ##     bigdash.showMenuElement(session, "Clustering")
-    ##   }
-    ##   if (MODULES_TO_LOAD["Expression"]) {
-    ##     bigdash.showMenuElement(session, "Expression")
-    ##   }
-    ##   if (MODULES_TO_LOAD["GeneSets"]) {
-    ##     bigdash.showMenuElement(session, "GeneSets")
-    ##   }
-    ##   if (MODULES_TO_LOAD["Compare"]) {
-    ##     bigdash.showMenuElement(session, "Compare")
-    ##   }
-    ##   if (MODULES_TO_LOAD["SystemsBio"]) {
-    ##     bigdash.showMenuElement(session, "SystemsBio")
-    ##   }
-    ##   if (MODULES_TO_LOAD["MultiOmics"] && exists("MODULE.multiomics")) {
-    ##     bigdash.showMenuElement(session, "MultiOmics")
-    ##   }
-    ##   if (MODULES_TO_LOAD["WGCNA"] && exists("MODULE.wgcna")) {
-    ##     bigdash.showMenuElement(session, "WGCNA")
-    ##   }
-    ##   if (MODULES_TO_LOAD["Epigenomics"] && exists("MODULE.epigenomics")) {
-    ##     bigdash.showMenuElement(session, "Epigenomics")
-    ##   }
-    ## MODULES_LOADED <<- MODULES_ACTIVE
 
-    ## initially shown. maybe better start with empty menu???
-    all_tabs <- names(lazy_tabs)
-    bigdash.filterTabs(session, all_tabs)
-    
+    ## No "show everything" pass here: tab_control(), reached through the
+    ## trigger below, computes the allowed set from scratch and filterTabs()
+    ## hides whatever is not in it. Showing all 28 tabs first only flashed the
+    ## ones about to be hidden again.
     if (env$load$is_data_loaded() > 0) {
       env$trigger_on_change_dataset(runif(1))
     }
@@ -337,18 +253,22 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     ## Apply filtering — hides tabs + sidebar items not in the allowed set
     bigdash.filterTabs(session, tabs)
 
-    ## Hide Epigenomics sidebar menu group when not methylomics
-    ## if (is.null(PGX$datatype) || tolower(PGX$datatype) != "methylomics") {
-    ##   bigdash.hideMenuElement(session, "Epigenomics")
-    ## }
-
-    ## Subtab toggles inside boards — use try() since tabsetPanels may
-    ## not exist yet. NOTE: should move to bigdash??
-    try(toggleTab("drug-tabs", "Connectivity map (beta)", show.beta), silent = TRUE)
-    try(toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta), silent = TRUE)
-    has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
-      length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
-    try(toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc), silent = TRUE)
+    ## Subtab toggles inside boards. showTab()/hideTab() fail on the *client*
+    ## ("there is no tabsetPanel with id ..."), where a server-side try() cannot
+    ## catch them -- so ask which boards exist before driving their tabsets
+    ## rather than firing at all of them and swallowing the fallout.
+    loaded <- loaded_tabs()
+    if ("drug-tab" %in% loaded) {
+      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta)
+    }
+    if ("pathway-tab" %in% loaded) {
+      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta)
+    }
+    if ("diffexpr-tab" %in% loaded) {
+      has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
+        length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
+      toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    }
 
   }
 
