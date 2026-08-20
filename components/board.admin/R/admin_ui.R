@@ -29,7 +29,7 @@ AdminPanelInputs <- function(id) {
 AdminPanelUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 181px)"
+  fullH <- "calc(100vh - 85px)"
 
   ## Both choosers list every board of the full sidebar menu, labelled with its
   ## group so "Samples" and "Features" are not ambiguous.
@@ -38,9 +38,11 @@ AdminPanelUI <- function(id) {
     stats::setNames(names(menu_tree[[g]]), paste0(g, " - ", menu_tree[[g]]))
   }))
 
-  tabs <- shiny::tabsetPanel(
+  ## same shell as the Settings board (appsettings_ui.R): nav list on the left
+  tabs <- bslib::navset_pill_list(
     id = ns("tabs1"),
-    shiny::tabPanel(
+    widths = c(2, 10),
+    bslib::nav_panel(
       "Overview",
       bslib::layout_columns(
         col_widths = 12,
@@ -56,7 +58,7 @@ AdminPanelUI <- function(id) {
         )
       )
     ),
-    shiny::tabPanel(
+    bslib::nav_panel(
       "User Management",
       bslib::layout_columns(
         col_widths = 12,
@@ -72,7 +74,7 @@ AdminPanelUI <- function(id) {
         )
       )
     ),
-    shiny::tabPanel(
+    bslib::nav_panel(
       "Basic Menu",
       bslib::layout_columns(
         col_widths = c(6, 6, 12),
@@ -110,7 +112,7 @@ AdminPanelUI <- function(id) {
         )
       )
     ),
-    shiny::tabPanel(
+    bslib::nav_panel(
       "Data Management",
       bslib::layout_columns(
         col_widths = 12,
