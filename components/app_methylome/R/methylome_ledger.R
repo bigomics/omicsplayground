@@ -10,6 +10,7 @@
 methylome_table_ledger_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
   TableModuleUI(
+    translate = FALSE,
     ns("tblmod"),
     title = title,
     info.text = info.text,
@@ -78,6 +79,7 @@ methylome_plot_betadist_ui <- function(id, title, caption, info.text, info.metho
                                        height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"),
     plotlib = "base",
     title = title,

@@ -73,6 +73,7 @@ methylome_plot_composition_ui <- function(id, title, caption, info.text, info.me
                                           height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
@@ -127,6 +128,7 @@ methylome_plot_compgroup_ui <- function(id, title, caption, info.text, info.meth
                                         height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
@@ -184,7 +186,8 @@ methylome_plot_compgroup_server <- function(id, pgx, r.cells, r.pheno,
 
 methylome_table_composition_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "c")
 }
 

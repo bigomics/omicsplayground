@@ -26,6 +26,7 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
   )
 
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"),
     plotlib = "ggplot",
     info.text = info.text,

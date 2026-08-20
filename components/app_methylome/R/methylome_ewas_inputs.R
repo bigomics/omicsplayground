@@ -109,8 +109,15 @@ methylome_ewas_inputs <- function(id) {
       placement = "top"
     )),
 
-    ## ---- regions and gene sets: only on their own sub-tab ----
-    on_tab("regions", x = shiny::tagList(
+    ## ---- regions and gene sets: only on their own sub-tab, and only at probe
+    ## level. Both are per-probe answers and refuse on a collapsed fit, and at
+    ## gene-region resolution their panels are not even rendered - so offering
+    ## the buttons there was two controls that could do nothing, with neither
+    ## the explanation nor the Test at picker on screen to say why.
+    shiny::conditionalPanel(
+      condition = "input.ewas_subtab == 'regions' && input.ewas_collapse == 'probe'",
+      ns = ns,
+      shiny::tagList(
       shiny::tags$hr(style = "margin:10px 0;"),
       withTooltip(
         shiny::numericInput(ns("dmr_maxgap"), "Max gap between CpGs (bp):",

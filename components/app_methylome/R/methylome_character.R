@@ -40,6 +40,7 @@ methylome_plot_context_ui <- function(id, title, caption, info.text, info.method
                                       height, width, label = "a") {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),

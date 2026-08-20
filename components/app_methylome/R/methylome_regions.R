@@ -93,7 +93,8 @@ mp_dmr_genes <- function(pgx, dmrs, d) {
 
 methylome_table_dmr_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "a")
 }
 
@@ -159,7 +160,8 @@ MP_ISLAND_COL <- c(Island = "#2c6b3f", N_Shore = "#7bab84", S_Shore = "#7bab84",
 methylome_plot_dmrregion_ui <- function(id, title, caption, info.text, info.methods,
                                         height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "c")
@@ -279,7 +281,8 @@ mp_run_gometh <- function(sig_cpg, all_cpg, collection = "GO", array_type = "450
 
 methylome_table_enrich_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "b")
 }
 

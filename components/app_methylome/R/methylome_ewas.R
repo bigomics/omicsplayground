@@ -108,7 +108,8 @@ mp_bacon <- function(tstat) {
 methylome_plot_manhattan_ui <- function(id, title, caption, info.text, info.methods,
                                         height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "a")
@@ -120,6 +121,13 @@ methylome_plot_manhattan_server <- function(id, r.ewas, r.thresh, watermark = FA
       d <- r.ewas()$data
       th <- r.thresh()
       d$sig <- mp_ewas_sig(d, th)
+      ## Count before the plot drops what it cannot place. A feature with no
+      ## chromosome or position is still a hit; it just cannot be drawn. The
+      ## corner annotation reads as THE hit count, and counting after the drop
+      ## put it 31% below the hits table on the same screen - 6,534 against
+      ## 9,422 - with no hint that the two meant different things.
+      n_hits <- sum(d$sig)
+      n_plotted <- sum(d$sig & !is.na(d$chr) & !is.na(d$pos))
       d <- d[!is.na(d$chr) & !is.na(d$pos) & is.finite(d$pos) & is.finite(d$p), ]
       shiny::validate(shiny::need(nrow(d) > 0, "No probes carry chromosome and position."))
       chrs <- intersect(c(as.character(1:22), "X", "Y"), unique(d$chr))
@@ -143,8 +151,11 @@ methylome_plot_manhattan_server <- function(id, r.ewas, r.thresh, watermark = FA
       h <- mp_ewas_hline(d, th)
       if (is.finite(h)) {
         graphics::abline(h = h, lty = 2, col = MP_PAL$grey)
-        graphics::mtext(sprintf("%s <= %g  (%s hits)", th$type, th$value,
-                                format(sum(d$sig), big.mark = ",")),
+        graphics::mtext(sprintf("%s <= %g  (%s hits%s)", th$type, th$value,
+                                format(n_hits, big.mark = ","),
+                                if (n_plotted < n_hits)
+                                  sprintf("; %s drawn, the rest carry no position",
+                                          format(n_plotted, big.mark = ",")) else ""),
                         side = 3, adj = 1, cex = .75, col = MP_PAL$grey)
       } else {
         graphics::mtext(sprintf("no probe passes %s <= %g", th$type, th$value),
@@ -163,7 +174,8 @@ methylome_plot_manhattan_server <- function(id, r.ewas, r.thresh, watermark = FA
 methylome_plot_qq_ui <- function(id, title, caption, info.text, info.methods,
                                  height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "b")
@@ -199,7 +211,8 @@ methylome_plot_qq_server <- function(id, r.ewas, watermark = FALSE) {
 methylome_plot_enrichment_ui <- function(id, title, caption, info.text, info.methods,
                                          height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "c")
@@ -391,7 +404,8 @@ mp_divergence <- function(res, thresh) {
 methylome_plot_divergence_ui <- function(id, title, caption, info.text, info.methods,
                                          height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "a")
@@ -441,7 +455,8 @@ methylome_plot_divergence_server <- function(id, r.ewas, r.thresh, watermark = F
 
 methylome_table_divergence_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "b")
 }
 
@@ -455,8 +470,8 @@ methylome_table_divergence_server <- function(id, r.ewas, r.thresh, scrollY = "2
         `Body` = round(e$dbeta_body, 4),
         `MeGDP` = round(e$megdp, 4),
         `Opposing` = ifelse(e$opposite, "yes", "-"),
-        `FDR promoter` = signif(e$q_promoter, 3),
-        `FDR body` = signif(e$q_body, 3),
+        `FDR promoter` = e$q_promoter,
+        `FDR body` = e$q_body,
         `Probes promoter` = e$n_promoter,
         `Probes body` = e$n_body,
         check.names = FALSE, stringsAsFactors = FALSE
@@ -468,6 +483,7 @@ methylome_table_divergence_server <- function(id, r.ewas, r.thresh, scrollY = "2
         extensions = c("Scroller"), plugins = "scrollResize", selection = "none",
         options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
                        scrollY = sy, scrollResize = TRUE, deferRender = TRUE)) |>
+        DT::formatSignif(c("FDR promoter", "FDR body"), digits = 3) |>
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
         DT::formatStyle("Opposing",
           color = DT::styleEqual("yes", MP_PAL$hyper), fontWeight = "bold") |>
@@ -489,7 +505,8 @@ methylome_table_divergence_server <- function(id, r.ewas, r.thresh, scrollY = "2
 methylome_plot_traitfreq_ui <- function(id, title, caption, info.text, info.methods,
                                         height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     options = shiny::tagList(
@@ -549,7 +566,8 @@ methylome_plot_traitfreq_server <- function(id, r.catalog, watermark = FALSE) {
 ## it needs no selection made on another sub-tab.
 methylome_table_traits_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "f")
 }
 
@@ -607,7 +625,8 @@ methylome_table_traits_server <- function(id, r.catalog, scrollY = "22vh") {
 
 methylome_table_hits_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "d")
 }
 
@@ -647,7 +666,7 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh, r.catalog,
         effect = d$dbeta,
         Direction = if (anova_fit) "-" else
           ifelse(is.na(d$dbeta), "-", ifelse(d$dbeta > 0, "hyper", "hypo")),
-        `P value` = signif(d$p, 3), FDR = signif(d$q, 3),
+        `P value` = d$p, FDR = d$q,
         check.names = FALSE, stringsAsFactors = FALSE
       )
       colnames(out)[colnames(out) == "effect"] <-
@@ -710,6 +729,10 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh, r.catalog,
                          targets = which(colnames(dt) == "Reported") - 1L,
                          width = "260px")) else list(),
                        order = list(list(which(colnames(dt) == "P value") - 1L, "asc")))) |>
+        ## signif() in the data would leave a double that DT re-serialises at
+        ## full precision - 6.049999999999999e-64 - so the rounding happens at
+        ## render and the column stays numeric, which is what DT sorts on.
+        DT::formatSignif(intersect(c("P value", "FDR", "F"), colnames(dt)), digits = 3) |>
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
         DT::formatStyle("Direction",
           color = DT::styleEqual(c("hyper", "hypo"), c(MP_PAL$hyper, MP_PAL$hypo)),
@@ -750,7 +773,8 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh, r.catalog,
 methylome_plot_stripcharts_ui <- function(id, title, caption, info.text, info.methods,
                                           height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "e")
@@ -847,7 +871,8 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
 methylome_plot_volcano_ui <- function(id, title, caption, info.text, info.methods,
                                       height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "b")
@@ -915,7 +940,8 @@ methylome_plot_volcano_server <- function(id, r.ewas, r.thresh, watermark = FALS
 methylome_plot_hitmap_ui <- function(id, title, caption, info.text, info.methods,
                                      height, width) {
   ns <- shiny::NS(id)
-  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+  PlotModuleUI(
+    translate = FALSE,ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
     height = height, width = width, label = "c")

@@ -200,6 +200,7 @@ methylome_plot_agecor_ui <- function(id, title, caption, info.text, info.methods
                                      height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
@@ -258,6 +259,7 @@ methylome_plot_clocks_ui <- function(id, title, caption, info.text, info.methods
                                      height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
@@ -303,6 +305,7 @@ methylome_plot_agegroup_ui <- function(id, title, caption, info.text, info.metho
                                        height, width) {
   ns <- shiny::NS(id)
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"), plotlib = "base", title = title, caption = caption,
     info.text = info.text, info.methods = info.methods,
     download.fmt = c("png", "pdf", "csv", "svg"),
@@ -369,7 +372,7 @@ methylome_plot_agegroup_server <- function(id, pgx, r.clockset,
       shiny::validate(shiny::need(sum(keep) > 2, "Too few samples with this phenotype."))
       g <- factor(d$grp[keep]); y <- y[keep]
       shiny::validate(shiny::need(nlevels(g) >= 2,
-        "This phenotype has a single level across the cohort."))
+        "Only one group is left once samples with no chronological age are dropped, so there is nothing to compare. Acceleration is a residual on chronological age, so a sample without one cannot be used - check the age column before the phenotype."))
       op <- graphics::par(mar = c(4.2, 4.4, 1, 1), las = 1); on.exit(graphics::par(op))
       graphics::boxplot(y ~ g, col = "#dce7f2", border = "#444444",
                         xlab = d$gname, ylab = ylab, outline = FALSE)
@@ -397,7 +400,8 @@ methylome_plot_agegroup_server <- function(id, pgx, r.clockset,
 
 methylome_table_coverage_ui <- function(id, title, info.text, caption, height, width) {
   ns <- shiny::NS(id)
-  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+  TableModuleUI(
+    translate = FALSE,ns("tblmod"), title = title, info.text = info.text,
                 caption = caption, height = height, width = width, label = "d")
 }
 

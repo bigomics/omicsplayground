@@ -41,6 +41,7 @@ epigenomics_plot_methylIdeogram_ui <- function(id,
   )
 
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"),
     plotlib = "base",
     info.text = info.text,
