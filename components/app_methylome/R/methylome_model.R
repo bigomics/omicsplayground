@@ -281,8 +281,262 @@ mp_is_categorical <- function(pgx, sel) {
 #' @param n_sv surrogate variables to append to the design: 0 off, -1 estimate
 #'   with sva::num.sv, a positive number to force that many.
 #' @return list(table, formula, n, groups, strata, dropped_covars, masked, ...)
+## ---------------------------------------------------------- chunked fitting ---
+
+## Why fit in pieces at all: the peak of an EWAS is not limma, it is holding the
+## M-value matrix. On an EPIC array with a few hundred samples that is gigabytes,
+## and betaToM() allocates a second copy of it. Fitting a chromosome at a time
+## keeps only one chromosome's M alive, and gives the progress bar something
+## true to say instead of a frozen 40%.
+##
+## This is exact, not an approximation. lmFit is per-feature least squares, so
+## the five per-feature slots below are simply the rows stacked back together;
+## eBayes then runs ONCE over the combined fit, so variance moderation still
+## borrows across every feature and BH still adjusts over the whole array.
+## Moderating per chromosome would have quietly changed every p-value.
+mp_rbind_fits <- function(fits) {
+  fits <- Filter(function(f) !is.null(f) && length(f$sigma) > 0, fits)
+  out <- fits[[1]]
+  out$coefficients   <- do.call(rbind, lapply(fits, function(f) f$coefficients))
+  out$stdev.unscaled <- do.call(rbind, lapply(fits, function(f) f$stdev.unscaled))
+  out$sigma          <- unlist(lapply(fits, function(f) f$sigma), use.names = TRUE)
+  out$df.residual    <- unlist(lapply(fits, function(f) f$df.residual), use.names = FALSE)
+  out$Amean          <- unlist(lapply(fits, function(f) f$Amean), use.names = TRUE)
+  out
+}
+
+## Features grouped by chromosome, in karyotype order, with everything the
+## annotation could not place last. Chunk labels are what the progress bar says.
+mp_fit_chunks <- function(features, chr) {
+  chr <- sub("(p|q|cen).*", "", sub("^chr", "", as.character(chr)))
+  chr[is.na(chr) | !nzchar(chr)] <- "unplaced"
+  lv <- c(as.character(1:22), "X", "Y", "unplaced")
+  lv <- lv[lv %in% unique(chr)]
+  lv <- c(lv, setdiff(unique(chr), lv))
+  split(features, factor(chr, levels = lv))
+}
+
+## Progress that no-ops outside a Shiny progress context, so the test scripts
+## can call the fit directly.
+mp_tick <- function(amount, detail) {
+  try(shiny::incProgress(amount, detail = detail), silent = TRUE)
+  invisible(NULL)
+}
+
+## lmFit over the chunks. `M` lets the caller hand in an already-materialised
+## M-value matrix (SVA needs one, so there is no point building it twice);
+## otherwise each chunk is converted and dropped as it goes.
+mp_lmfit_chunked <- function(B, design, chunks, M = NULL, transform = TRUE,
+                             label = "") {
+  n <- length(chunks)
+  fits <- vector("list", n)
+  for (i in seq_len(n)) {
+    ii <- chunks[[i]]
+    if (!length(ii)) next
+    Xc <- if (!is.null(M)) M[ii, , drop = FALSE] else {
+      if (transform) playbase.epigenetics::betaToM(B[ii, , drop = FALSE])
+      else B[ii, , drop = FALSE]
+    }
+    fi <- limma::lmFit(Xc, design)
+    ## lmFit drops the row names when handed a single-row matrix, and a
+    ## chromosome really can hold exactly one feature - chrX did, on the demo.
+    ## Unnamed rows then fail to match on the way back and eBayes dies in
+    ## fitFDist with "NA covariate values not allowed". Put them back.
+    rownames(fi$coefficients) <- rownames(Xc)
+    rownames(fi$stdev.unscaled) <- rownames(Xc)
+    names(fi$sigma) <- rownames(Xc)
+    names(fi$Amean) <- rownames(Xc)
+    fits[[i]] <- fi
+    rm(Xc, fi)
+    mp_tick(0.55 / n, sprintf("%schr %s (%s features)", label, names(chunks)[i],
+                              format(length(ii), big.mark = ",")))
+  }
+  fit <- mp_rbind_fits(fits)
+  ## Chunking reorders; hand the rows back in the order they came in.
+  fit[match(rownames(B), rownames(fit$coefficients)), ]
+}
+
+## ------------------------------------------------------ feature collapsing ---
+
+## Testing units coarser than a probe. This is a screening view, not a
+## substitute for a probe-level EWAS, and the literature is specific about why:
+##
+##  - Averaging a WHOLE gene is not defensible. Promoter methylation silences
+##    while gene-body methylation correlates positively with expression (Yang
+##    2014, Cancer Cell 26:577), so the two halves cancel - Ruiz-Arenas &
+##    Gonzalez 2017 (BMC Bioinformatics 18:553): "averaging the effect of the
+##    entire region may provide a signal close to zero because the effects are
+##    compensated". Neighbouring CpGs only co-vary within about a kilobase
+##    anyway (Mansell 2019, BMC Genomics 20:366), and gene bodies are tens of
+##    kb. So there is no whole-gene option here, deliberately.
+##  - Splitting each gene into promoter and body is the established partition:
+##    IMA (Wang 2012, Bioinformatics 28:729) indexes exactly these RefGene
+##    groups, and mCSEA (Martorell-Marugan 2019, Bioinformatics 35:3257) merges
+##    TSS1500/TSS200/5'UTR/1stExon into one promoter rather than testing four
+##    overlapping sub-groups as if they were independent.
+##  - Testing an average is statistically fine as long as the grouping comes
+##    from annotation and not from the data - Smyth, Bioconductor #126448 - and
+##    a median summary holds type I error at 0.0532 against a nominal 0.05
+##    (Gomez 2019, Nucleic Acids Res 47:e98). Hence median, and hence collapsing before
+##    anything looks at the outcome.
+MP_COLLAPSE <- c(
+  "Gene region (promoter / body)" = "gene_region",
+  "Probe (full EWAS)" = "probe"
+)
+
+## mCSEA's partition. 3'UTR sits with the body: it is downstream sequence, not
+## regulatory promoter, and folding it in keeps the feature set to two per gene.
+MP_PROMOTER_GROUPS <- c("TSS1500", "TSS200", "5'UTR", "1stExon")
+MP_BODY_GROUPS     <- c("Body", "3'UTR")
+
+## Smallest number of probes a feature may be built from. A two-probe median is
+## not a summary, and single-probe "features" would just be a probe-level EWAS
+## with the multiple-testing burden quietly reduced.
+MP_MIN_PROBES <- 3L
+
+## Feature key per probe. NA where the probe cannot be assigned, which drops it.
+##
+## The manifest annotates a probe against every transcript it falls in, as
+## parallel semicolon lists, so one probe can read "1stExon;3'UTR". Taking the
+## first entry keeps features disjoint - each probe contributes to exactly one
+## feature, so the tests are not sharing data - at the cost of preferring
+## whichever isoform the manifest happened to list first.
+mp_collapse_key <- function(genes, by) {
+  sym <- sub(";.*", "", as.character(genes$symbol))
+  sym[sym %in% c("", "NA", "-")] <- NA
+  loc <- sub(";.*", "", as.character(genes$genomic_location))
+  region <- ifelse(loc %in% MP_PROMOTER_GROUPS, "promoter",
+            ifelse(loc %in% MP_BODY_GROUPS, "body", NA_character_))
+  ifelse(is.na(sym) | is.na(region), NA_character_, paste0(sym, ":", region))
+}
+
+## The beta matrix rows for whatever the fit actually tested. At probe level
+## that is a plain row subset; on a collapsed fit the features are not rows of
+## pgx$X at all, so the ones being drawn are rebuilt from their member probes.
+## Every panel that plots per-sample beta for a hit goes through here - indexing
+## pgx$X by feature id directly is a subscript-out-of-bounds waiting to happen.
+##
+## Uses the same median over complete probes the fit used, so a stripchart shows
+## the quantity that was tested rather than a differently-summarised cousin.
+mp_feature_beta <- function(pgx, meta, features) {
+  X <- mp_beta(pgx)
+  by <- if (is.null(meta$collapse)) "probe" else meta$collapse
+  if (identical(by, "probe")) {
+    keep <- intersect(features, rownames(X))
+    shiny::validate(shiny::need(length(keep) > 0,
+      "None of these features is in the methylation matrix."))
+    return(X[keep, , drop = FALSE])
+  }
+  key <- mp_collapse_key(pgx$genes[rownames(X), , drop = FALSE], by)
+  keep <- !is.na(key) & key %in% features & rowSums(is.na(X)) == 0
+  shiny::validate(shiny::need(any(keep),
+    "None of the top features could be traced back to its probes."))
+  Xs <- X[keep, , drop = FALSE]
+  f <- factor(key[keep])
+  out <- t(vapply(split(seq_len(nrow(Xs)), f),
+                  function(i) matrixStats::colMedians(Xs[i, , drop = FALSE]),
+                  numeric(ncol(Xs))))
+  colnames(out) <- colnames(Xs)
+  out[intersect(features, rownames(out)), , drop = FALSE]
+}
+
+## Collapse a beta matrix to features, and build the annotation the downstream
+## panels read.
+##
+## Median, not mean: a median survives one blown probe, it is IMA's default,
+## and coMethDMR measured the two as equivalent on type I error (0.0532 vs
+## 0.0545 against a nominal 0.05). The cost is that Delta-beta becomes a
+## difference of medians - still a methylation difference, still on the beta
+## scale, but not the same quantity as a probe-level Delta-beta.
+##
+## Probes with any missing value across the fitted samples are dropped before
+## the median rather than skipped inside it. A summary taken over a different
+## probe subset per sample moves with the missingness pattern, and because
+## probes within a feature sit at very different baseline beta, that shift can
+## exceed the effect being looked for.
+mp_collapse_beta <- function(B, genes, by, min_probes = MP_MIN_PROBES) {
+  g <- genes[rownames(B), , drop = FALSE]
+  key <- mp_collapse_key(g, by)
+  n_in <- nrow(B)
+  n_unassigned <- sum(is.na(key))
+  complete <- rowSums(is.na(B)) == 0
+  n_incomplete <- sum(!is.na(key) & !complete)
+  ok <- !is.na(key) & complete
+  shiny::validate(shiny::need(sum(ok) > 100,
+    "Almost no probe carries both a gene region and a complete set of values, so this dataset cannot be collapsed. Test at probe level."))
+  B <- B[ok, , drop = FALSE]; key <- key[ok]; g <- g[ok, , drop = FALSE]
+
+  ## Features below the floor are dropped whole, not silently thinned.
+  cnt <- table(key)
+  big <- names(cnt)[cnt >= min_probes]
+  n_small <- sum(cnt < min_probes)
+  keep <- key %in% big
+  shiny::validate(shiny::need(sum(keep) > 100,
+    sprintf("No gene region reaches %d probes in this dataset. Test at probe level.",
+            min_probes)))
+  B <- B[keep, , drop = FALSE]; key <- key[keep]; g <- g[keep, , drop = FALSE]
+
+  f <- factor(key)
+  idx <- split(seq_len(nrow(B)), f)
+  X <- t(vapply(idx, function(i) matrixStats::colMedians(B[i, , drop = FALSE]),
+                numeric(ncol(B))))
+  colnames(X) <- colnames(B)
+
+  ## One annotation row per feature, in the same order as X.
+  ng <- nlevels(f); gi <- as.integer(f)
+  ## Commonest non-empty value per feature, with the count that backs it.
+  ## The count is not decoration: a gene body routinely spans island, shore,
+  ## shelf and open sea, so a bare majority label asserts a context most of the
+  ## feature's probes may disagree with.
+  pick2 <- function(v) {
+    v <- as.character(v)
+    keepv <- !is.na(v) & nzchar(v)
+    out <- list(v = rep(NA_character_, ng), n = rep(NA_integer_, ng))
+    if (!any(keepv)) return(out)
+    d <- data.table::data.table(g = gi[keepv], v = v[keepv])
+    d <- d[, list(n = .N), by = c("g", "v")]
+    data.table::setorderv(d, c("g", "n", "v"), c(1L, -1L, 1L))
+    d <- d[!duplicated(d$g)]
+    out$v[d$g] <- d$v
+    out$n[d$g] <- as.integer(d$n)
+    out
+  }
+  pick <- function(v) pick2(v)$v
+  ppos <- split(suppressWarnings(as.numeric(sub(";.*", "", g$pos))), f)
+  ## Median for anything that needs one number on an axis - the Manhattan draws
+  ## features at a position. Start and end because a feature is a span, not a
+  ## point: on this array the 90th percentile spans ~10kb and the worst 1.6Mb,
+  ## so a lone midpoint claims a precision the feature does not have.
+  pos <- vapply(ppos, stats::median, numeric(1), na.rm = TRUE)
+  pos_start <- vapply(ppos, function(z) suppressWarnings(min(z, na.rm = TRUE)), numeric(1))
+  pos_end   <- vapply(ppos, function(z) suppressWarnings(max(z, na.rm = TRUE)), numeric(1))
+  pos_start[!is.finite(pos_start)] <- NA_real_
+  pos_end[!is.finite(pos_end)] <- NA_real_
+  isl <- pick2(sub(";.*", "", g$Relation_to_Island))
+  annot <- data.frame(
+    symbol = sub(":(promoter|body)$", "", levels(f)),
+    region = sub("^.*:", "", levels(f)),
+    chr = pick(sub(";.*", "", g$chr)),
+    pos = as.numeric(pos),
+    pos_start = as.numeric(pos_start),
+    pos_end = as.numeric(pos_end),
+    genomic_location = pick(sub(";.*", "", g$genomic_location)),
+    Relation_to_Island = isl$v,
+    island_n = isl$n,
+    n_probes = as.integer(table(f)),
+    row.names = levels(f), stringsAsFactors = FALSE
+  )
+  list(X = X, genes = annot, n_probes_in = n_in,
+       n_unassigned = n_unassigned, n_incomplete = n_incomplete,
+       n_small_features = n_small, min_probes = min_probes)
+}
+
 mp_fit_ewas <- function(pgx, contrast, covars = character(0),
-                        cellfracs = NULL, mask = character(0), n_sv = 0) {
+                        cellfracs = NULL, mask = character(0), n_sv = 0,
+                        ## Probe level, i.e. a real EWAS, is the honest default
+                        ## for a programmatic caller. The app's picker defaults
+                        ## to gene instead, and always passes it explicitly.
+                        collapse = "probe") {
   mp_require_methylomics(pgx)
   mp_require_array(pgx)
   shiny::validate(shiny::need(!is.null(contrast) && nzchar(contrast),
@@ -376,7 +630,29 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   ## Fit on M-values, report on beta. M is the right scale for testing
   ## (Du 2010) but is not interpretable as a change in methylation.
   B <- beta[probes, rownames(dat), drop = FALSE]
-  M <- playbase.epigenetics::betaToM(B)
+  ## Collapse after masking, not before: the SNP and cross-reactive lists are
+  ## probe ids, so a masked probe has to be gone before its beta is averaged
+  ## into a feature. Collapsing a working copy here - pgx is never touched, so
+  ## switching resolution is a refit, not a re-upload.
+  collapsed <- NULL
+  if (!identical(collapse, "probe")) {
+    collapsed <- mp_collapse_beta(B, pgx$genes, collapse)
+    B <- collapsed$X
+    shiny::validate(shiny::need(nrow(B) > 50,
+      "Collapsing left too few features to test."))
+  }
+  ## Chromosome is the chunk key. On a collapsed fit it comes off the collapsed
+  ## annotation, since those features are not rows of pgx$genes.
+  chr_src <- if (is.null(collapsed)) pgx$genes[rownames(B), , drop = FALSE]
+             else collapsed$genes[rownames(B), , drop = FALSE]
+  cc <- grep("^chr$|chrom", tolower(colnames(chr_src)))[1]
+  chunks <- mp_fit_chunks(rownames(B),
+                          if (!is.na(cc)) chr_src[[cc]] else rep(NA, nrow(B)))
+
+  ## SVA estimates genome-wide latent structure, so it needs the whole matrix -
+  ## there is no per-chromosome version of that question. When it is on we pay
+  ## for one full M and then reuse it for the fit rather than rebuilding chunks.
+  M <- if (n_sv != 0) playbase.epigenetics::betaToM(B) else NULL
 
   ## ------------------------------------------------------- latent factors --
   ## Surrogate variables: the only confounding control left when no
@@ -425,12 +701,16 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   }
 
   if (continuous) {
-    fit2 <- limma::eBayes(limma::lmFit(M, design), trend = TRUE)
+    ## One eBayes over the combined fit, never per chunk: the moderation has to
+    ## borrow across every feature or the p-values are not the ones a
+    ## whole-array fit would give.
+    fit2 <- limma::eBayes(mp_lmfit_chunked(B, design, chunks, M), trend = TRUE)
     tt <- limma::topTable(fit2, coef = ".x", number = Inf, sort.by = "none")
     ## Effect size on the beta scale is the slope of beta on the outcome, so
     ## the same design is refitted on B. Reported per unit of the outcome -
     ## a delta-beta of 0.004 for age means 0.4% methylation per year.
-    dbeta <- limma::lmFit(B, design)$coefficients[, ".x"]
+    dbeta <- mp_lmfit_chunked(B, design, chunks, transform = FALSE,
+                              label = "effect size, ")$coefficients[, ".x"]
     head <- paste0("~ ", contrast, " (continuous)")
     ## Tertiles, so the per-CpG and per-region panels have one code path
     ## whether the outcome is a contrast or a continuous exposure.
@@ -442,7 +722,7 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   } else {
     lv <- levels(dat$.group)
     gcol <- make.names(paste0(".group", lv))
-    fit <- limma::lmFit(M, design)
+    fit <- mp_lmfit_chunked(B, design, chunks, M)
     ## Every level against the first. With one contrast limma returns the
     ## moderated t; with k-1 it returns the moderated F of "any difference
     ## among the groups", which is the multi-level test. Testing the k group
@@ -496,6 +776,18 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
     n_sv = if (is.null(sv_note)) sum(grepl("^SV[0-9]+$", used)) else 0L,
     n = nrow(dat), groups = groups, desc = desc,
     continuous = continuous,
+    ## Which unit was tested. Every panel keyed on CpG ids reads this and
+    ## refuses rather than showing an empty answer as if it were a real one.
+    collapse = collapse,
+    collapse_annot = if (is.null(collapsed)) NULL else collapsed$genes,
+    collapse_note = if (is.null(collapsed)) NULL else sprintf(
+      "%s gene regions from %s probes  -  dropped %s with no gene region, %s with missing values, and %s region(s) under %d probes",
+      format(nrow(collapsed$X), big.mark = ","),
+      format(collapsed$n_probes_in, big.mark = ","),
+      format(collapsed$n_unassigned, big.mark = ","),
+      format(collapsed$n_incomplete, big.mark = ","),
+      format(collapsed$n_small_features, big.mark = ","),
+      collapsed$min_probes),
     x = if (continuous) stats::setNames(dat$.x, rownames(dat)) else NULL,
     strata = strata, samples = rownames(dat),
     dropped_covars = dropped, masked = length(masked),

@@ -8,9 +8,15 @@
 ## dmrff rather than DMRcate: dmrff runs on EWAS summary statistics, which is
 ## exactly what the model step already produces, and its entire dependency
 ## list is parallel + ggplot2. DMRcate would drag in bsseq, Gviz, biomaRt,
-## missMethyl and an ExperimentHub package that downloads at runtime. A 2024
-## BMC Bioinformatics comparison also put dmrff at the highest power with a
-## controlled false-positive rate.
+## missMethyl and an ExperimentHub package that downloads at runtime.
+##
+## The dependency argument is the whole argument. An earlier version of this
+## comment claimed "a 2024 BMC Bioinformatics comparison put dmrff at the
+## highest power with a controlled false-positive rate" - there is no such
+## paper, and the published DMR benchmarks (Mallik 2019, Brief Bioinform
+## 20:2224; Zheng 2022, Epigenetics 17:2241) do not include dmrff at all.
+## dmrff itself has never been journal-published either: it is still a preprint
+## (Suderman 2018, bioRxiv 508556). Worth knowing before quoting it in a paper.
 
 ## ------------------------------------------------------------------- DMRs --
 
@@ -23,6 +29,7 @@ mp_can_dmrff <- function() requireNamespace("dmrff", quietly = TRUE)
 #' error directly, but se = logFC / t and t = logFC / se, so it comes back
 #' out of the moderated t statistic.
 mp_call_dmrs <- function(pgx, res, maxgap = 500) {
+  `%||%` <- function(x, y) if (is.null(x)) y else x
   shiny::validate(shiny::need(mp_can_dmrff(),
     "The dmrff package is not installed, so region calling is unavailable."))
   d <- res$data
@@ -32,6 +39,11 @@ mp_call_dmrs <- function(pgx, res, maxgap = 500) {
   ## stand-in for them would be an invented direction, so refuse.
   shiny::validate(shiny::need(!isTRUE(fit$anova),
     "Region calling needs a signed effect and its standard error per probe. This model is an F-test across three or more groups, which has neither. Fit a two-group contrast or a continuous outcome to call regions."))
+  ## dmrff joins neighbouring probes by genomic position. A collapsed fit has
+  ## already merged them, and a feature's position is the median of the probes
+  ## that went into it - joining those would be calling regions of regions.
+  shiny::validate(shiny::need(identical(fit$collapse %||% "probe", "probe"),
+    "Region calling works on per-probe statistics, and this model was fitted on collapsed features. Set 'Test at' back to probe level to call regions."))
   shiny::validate(shiny::need(!is.null(fit$t),
     "This model did not return moderated t statistics."))
 
@@ -90,7 +102,7 @@ methylome_table_dmr_server <- function(id, pgx, r.regions, scrollY = "26vh") {
     table_data <- shiny::reactive({
       dd <- r.regions()
       shiny::validate(shiny::need(!is.null(dd) && nrow(dd$dmrs) > 0,
-        "No differentially methylated regions found. Press Call regions in the settings panel, or relax the model."))
+        "No regions called yet. Fit a model on the Manhattan & hits sub-tab first, then press Call regions in the settings panel."))
       x <- dd$dmrs
       data.frame(
         Region = sprintf("%s:%s-%s", x$chr, format(x$start, big.mark = ","),
@@ -159,7 +171,7 @@ methylome_plot_dmrregion_server <- function(id, pgx, r.ewas, r.regions, r.pick,
     plot_data <- shiny::reactive({
       rg <- r.regions()
       shiny::validate(shiny::need(!is.null(rg) && nrow(rg$dmrs) > 0,
-        "No regions to draw. Press Call regions in the settings panel."))
+        "No regions to draw. Fit a model on the Manhattan & hits sub-tab, then press Call regions in the settings panel."))
       res <- r.ewas()
       ## No row clicked yet: show the strongest region rather than whichever
       ## one dmrff happened to return first.
@@ -276,7 +288,7 @@ methylome_table_enrich_server <- function(id, r.enrich, scrollY = "26vh") {
     table_data <- shiny::reactive({
       e <- r.enrich()
       shiny::validate(shiny::need(!is.null(e) && nrow(e) > 0,
-        "No gene-set result. Press Test gene sets in the settings panel."))
+        "No gene-set result yet. Fit a model on the Manhattan & hits sub-tab, then press Test gene sets in the settings panel."))
       keep <- utils::head(e, 300)
       data.frame(
         Term = if ("TERM" %in% colnames(keep)) keep$TERM else keep$TERM_ID,

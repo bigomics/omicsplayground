@@ -97,7 +97,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## load, so having input$ewas_contrast in the trigger fired a full limma
     ## fit the moment a dataset arrived - masking, betaToM over every probe,
     ## eBayes - before the user had asked for anything.
-    r_ewas <- shiny::eventReactive(
+    r_ewas_fit <- shiny::eventReactive(
       input$run_ewas,
       {
         p <- PGX()
@@ -122,24 +122,48 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
         ## sva is an SVD plus IRW iterations over the whole probe matrix -
         ## seconds on a subset, minutes on a full array - so the fit gets a
         ## progress bar rather than an unexplained pause.
+        ## Starts low and is driven by the fit's own per-chromosome ticks, so
+        ## the bar reports where it actually is rather than sitting at 40%.
         fit <- shiny::withProgress(
-          message = "Fitting model...", value = 0.4,
+          message = "Fitting model...", value = 0.05, detail = "preparing",
           mp_fit_ewas(p, cmp, covars = input$ewas_covars,
                       cellfracs = cf, mask = input$ewas_mask,
-                      n_sv = if (isTRUE(input$ewas_sva)) -1L else 0L))
-        d <- mp_ewas_annotate(p, fit$table)
-        list(data = d, contrast = cmp, meta = fit,
+                      n_sv = if (isTRUE(input$ewas_sva)) -1L else 0L,
+                      collapse = if (is.null(input$ewas_collapse)) "gene_region"
+                                 else input$ewas_collapse))
+        d <- mp_ewas_annotate(p, fit$table, annot = fit$collapse_annot)
+        res <- list(data = d, contrast = cmp, meta = fit,
              ## The moderated t is already a signed test statistic. Rebuilding
              ## one as qnorm(p/2)*sign(logFC) inverted every z - qnorm(p/2) is
              ## always negative - which flipped the sign of the reported bias.
              ## bacon models a signed z; an F is not one, so the anova branch
              ## gets no bias estimate rather than a confident wrong one.
              bacon = if (isTRUE(fit$anova)) NULL else mp_bacon(fit$t))
+        res
       },
       ## Nothing until the button is actually pressed. ignoreNULL = FALSE here
       ## would fire the fit at startup, which is the behaviour being removed.
       ignoreNULL = TRUE, ignoreInit = TRUE
     )
+
+    ## An eventReactive that has never fired is silent, so every panel on this
+    ## screen rendered as an empty card with no hint that a button was waiting.
+    ## A flag in front of it turns that into one prompt, shared by all of them.
+    ##
+    ## Deliberately a thin wrapper and not a reactiveVal holding the result:
+    ## mp_fit_ewas() refuses a rank-deficient design, a missing cell-fraction
+    ## estimate and too few complete samples with validate(), and those refusals
+    ## only reach the panels because they propagate out of a reactive. Moving
+    ## the fit into an observer would swallow every one of them.
+    ewas_asked <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(input$run_ewas, ewas_asked(TRUE))
+    ## A new dataset invalidates the fit that was made against the old one.
+    shiny::observeEvent(r_dataset(), ewas_asked(FALSE), ignoreInit = TRUE)
+
+    r_ewas <- shiny::reactive({
+      shiny::validate(shiny::need(ewas_asked(), MP_NO_EWAS))
+      r_ewas_fit()
+    })
 
     ## The fitted model, printed so the user can see what was actually tested.
     output$ewas_model <- shiny::renderUI({
@@ -339,6 +363,35 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(n) || is.na(n) || n < 1) 6 else min(as.integer(n), 12)
     })
 
+    ## EWAS Catalog rows for the current hit list, read once and shared by the
+    ## hits table, the trait-frequency plot, the per-CpG detail and the two
+    ## subtitle counts. Each read materialises ~129 MB for ~0.7s, so five
+    ## consumers reading it themselves would be five reads per threshold nudge.
+    ## The catalog is indexed by CpG id, so it has nothing to say about a fit
+    ## collapsed to genes or gene regions. That is a fact about the catalog, not
+    ## a reason to withhold the hit list: this returns `ok = FALSE` with the
+    ## reason and lets each consumer decide. The dedicated catalog panels refuse;
+    ## the hits table simply drops its two catalog columns and still shows the
+    ## hits, which is the whole point of the screen.
+    MP_CATALOG_NA <- paste(
+      "The EWAS Catalog is indexed by CpG, so it has nothing to say about a fit",
+      "collapsed to genes or gene regions. Set 'Test at' to probe level to use it."
+    )
+    r_catalog <- shiny::reactive({
+      res <- r_ewas()
+      if (!identical(res$meta$collapse, "probe")) {
+        return(list(ok = FALSE, reason = MP_CATALOG_NA))
+      }
+      d <- res$data
+      sig <- mp_ewas_sig(d, r_thresh())
+      probes <- d$probe[sig]
+      if (!length(probes)) {
+        return(list(ok = FALSE, reason = "No CpG passes the current threshold."))
+      }
+      list(ok = TRUE, probes = probes,
+           traits = playbase.epigenetics::ewas_catalog_traits(probes))
+    })
+
     methylome_plot_composition_server("comp_bars", PGX, r_cells,
                                      shiny::reactive(input$comp_pheno),
                                      watermark = watermark)
@@ -356,35 +409,10 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     methylome_plot_qq_server("ewas_qq", r_ewas, watermark = watermark)
     methylome_plot_enrichment_server("ewas_enrich", r_ewas, r_thresh,
                                      watermark = watermark)
-    ## ------------------------------------------------ EWAS Catalog lookup --
-    ## One HTTP request per CpG and no batch endpoint, so the list is capped and
-    ## the lookup is explicit. reactiveVal, not eventReactive: the table has to
-    ## render without it, since most runs never press the button.
-    catalog_val <- shiny::reactiveVal(NULL)
-    shiny::observeEvent(input$run_catalog, {
-      d <- r_ewas()$data
-      sig <- mp_ewas_sig(d, r_thresh())
-      cpgs <- utils::head(d$probe[sig][order(d$p[sig])], MP_CATALOG_MAX)
-      if (!length(cpgs)) {
-        shiny::showNotification("No CpG passes the current threshold.",
-                                type = "warning")
-        return()
-      }
-      out <- shiny::withProgress(message = "Querying the EWAS Catalog...",
-                                 value = 0.4, playbase.epigenetics::ewas_catalog_lookup(cpgs))
-      ## Degrade to a message, never a hang: the deployed container may have no
-      ## outbound network at all, which no package check can see.
-      if (is.null(out)) {
-        shiny::showNotification(
-          "The EWAS Catalog is not reachable from this server.",
-          type = "error", duration = 8)
-      }
-      catalog_val(out)
-    })
-    shiny::observeEvent(r_ewas(), catalog_val(NULL), ignoreInit = TRUE)
-
-    methylome_table_hits_server("ewas_hits", r_ewas, r_thresh,
-                                shiny::reactive(catalog_val()))
+    methylome_plot_traitfreq_server("ewas_traitfreq", r_catalog,
+                                    watermark = watermark)
+    methylome_table_hits_server("ewas_hits", r_ewas, r_thresh, r_catalog)
+    methylome_table_traits_server("ewas_traits", r_catalog)
     methylome_plot_stripcharts_server("ewas_strips", PGX, r_ewas, r_thresh,
                                       r_topn, watermark = watermark)
 
@@ -404,7 +432,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       })
     })
     ## A new model invalidates any regions already called.
-    shiny::observeEvent(r_ewas(), regions_val(NULL), ignoreInit = TRUE)
+    shiny::observeEvent(r_ewas_fit(), regions_val(NULL), ignoreInit = TRUE)
     r_regions <- shiny::reactive(regions_val())
 
     ## Clicking a region in the table is what selects it for the detail plot -
@@ -418,7 +446,13 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
 
     enrich_val <- shiny::reactiveVal(NULL)
     shiny::observeEvent(input$run_gometh, {
-      p <- PGX(); d <- r_ewas()$data
+      p <- PGX(); res <- r_ewas(); d <- res$data
+      ## gometh's whole point is reweighting by probes per gene, and it takes
+      ## CpG ids to do it. A collapsed fit has already averaged those probes
+      ## away, so the correction has nothing to correct and the ids would not
+      ## resolve either.
+      shiny::validate(shiny::need(identical(res$meta$collapse, "probe"),
+        "Bias-corrected gene-set testing needs per-probe CpG ids, and this model was fitted on collapsed features. Set 'Test at' back to probe level."))
       sig <- mp_ewas_sig(d, r_thresh())
       arr <- mp_array_type(p)
       shiny::withProgress(message = "Testing gene sets...", value = 0.4, {
@@ -428,8 +462,17 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
           array_type = arr))
       })
     })
-    shiny::observeEvent(r_ewas(), enrich_val(NULL), ignoreInit = TRUE)
+    shiny::observeEvent(r_ewas_fit(), enrich_val(NULL), ignoreInit = TRUE)
     r_enrich <- shiny::reactive(enrich_val())
     methylome_table_enrich_server("ewas_enrichgs", r_enrich)
+
+    ## Promoter vs body. Region calling and gene-set testing are both per-probe
+    ## answers and refuse on a collapsed fit, which left this sub-tab dead there;
+    ## this is the question only the collapsed fit can answer, so it takes their
+    ## place. Both directions refuse cleanly, so nothing has to know which fit
+    ## is live.
+    methylome_plot_divergence_server("ewas_divplot", r_ewas, r_thresh,
+                                     watermark = watermark)
+    methylome_table_divergence_server("ewas_divtbl", r_ewas, r_thresh)
   })
 }

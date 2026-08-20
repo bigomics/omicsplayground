@@ -8,6 +8,15 @@
 ## pgx$genes (450K/EPIC annotation) and pgx$gx.meta (the EWAS already computed
 ## at upload). No screen needs a contrast except EWAS.
 
+## Shown by every panel on the EWAS screen until a model has been fitted. One
+## string in one place, so the whole screen says the same thing and says what
+## to press rather than rendering an empty card.
+MP_NO_EWAS <- paste(
+  "No model has been fitted yet.",
+  "Open the settings panel on the right, choose an Outcome,",
+  "and press Run EWAS. Everything on this screen follows that fit."
+)
+
 MP_PAL <- list(
   hypo = "#4575b4", hyper = "#d73027", grey = "#8697a6",
   ok = "#18753a", bad = "#a8202c", warn = "#8a5a06"

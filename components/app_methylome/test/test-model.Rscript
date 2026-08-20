@@ -168,48 +168,250 @@ ok("estimate is capped at ten", fe$n_sv <= 10)
 ok("zero SVs would degrade, not error",
    fe$n_sv > 0 || grepl("no latent factors", fe$formula))
 
-## ------------------------------------------------------- EWAS Catalog ----
-## Canned response, trimmed to three records: the shape is a positional
-## results array plus a fields vector naming the columns. No network.
-cat("\n== EWAS catalog ==\n")
-fx_json <- paste0(
-  '{"results": [',
-  '["Dugue PA","MCCS","31552803","2019-09-25","Smoking",null,"a","t1","DNA methylation","Smoking","age",',
-  '"M Values",null,"Illumina HumanMethylation450","Whole blood",null,"1851","1","Adults","Both","European",',
-  '"cg05575921","chr5:373378","5",373378,"AHRR","North shore","-1.26","0","0",null,"study_a"],',
-  '["Sikdar S","CHARGE","31536415","2019-09-19","Smoking",null,"b","t2","DNA methylation","Smoking","age",',
-  '"Beta Values",null,"Illumina HumanMethylation450","Whole blood",null,"15907","16","Adults","Both","European",',
-  '"cg05575921","chr5:373378","5",373378,"AHRR","North shore","-0.03","0.0008","0",null,"study_b"],',
-  '["Hillary RF","GS","10.1101/x","2023-06-09","Age",null,"c","t3","DNA methylation","Age","sex",',
-  '"M values",null,"Illumina HumanMethylationEPIC","Whole blood",null,"17902","1","Adults","Both","European",',
-  '"cg05575921","chr5:373378","5",373378,"AHRR","North shore","-0.05","0.0016","5.8e-221",null,"study_c"]],',
-  '"fields": ["author","consortium","pmid","date","trait","efo","analysis","source","outcome","exposure",',
-  '"covariates","outcome_units","exposure_units","methylation_array","tissue","further_details","n",',
-  '"n_cohorts","age","sex","ethnicity","cpg","chrpos","chr","pos","gene","type","beta","se","p",',
-  '"details","study_id"]}')
-ok("traits summarised, most-studied first",
-   playbase.epigenetics::ewas_catalog_traits(fx_json) == "Smoking (2); Age (1)")
-ok("study count is unique studies, not rows",
-   grepl("Smoking \\(2\\)", playbase.epigenetics::ewas_catalog_traits(fx_json)))
-ok("trait list is capped with a remainder",
-   playbase.epigenetics::ewas_catalog_traits(fx_json, max_traits = 1) == "Smoking (2); +1 more")
-## An unknown CpG answers with an empty object; nothing may look like a hit.
-ok("unknown CpG reads as no record", playbase.epigenetics::ewas_catalog_traits("{}") == "")
-ok("malformed JSON reads as no record", playbase.epigenetics::ewas_catalog_traits("not json at all") == "")
-ok("missing fields vector reads as no record",
-   playbase.epigenetics::ewas_catalog_traits('{"results": [["x"]]}') == "")
-ok("empty request needs no network", is.null(playbase.epigenetics::ewas_catalog_lookup(character(0))))
-## Live smoke test, skipped without egress - CI has none and the deployed
-## container may not either.
-if (requireNamespace("curl", quietly = TRUE) && curl::has_internet()) {
-  live <- playbase.epigenetics::ewas_catalog_lookup(c("cg05575921", "cg00000029"))
-  ok("live lookup returns one row per CpG",
-     !is.null(live) && nrow(live) == 2 && all(live$probe == c("cg05575921", "cg00000029")))
-  ok("live lookup knows the smoking CpG",
-     !is.null(live) && grepl("moking", live$reported[1]))
-} else {
-  cat("live EWAS Catalog smoke test skipped (no internet)\n")
+## --------------------------------------------------- collapsed testing ----
+## Coarser testing units: gene x region and gene. The point is a cheap first
+## pass, so what matters is that the collapse is honest about what it dropped
+## and that everything keyed on CpG ids refuses rather than answering emptily.
+cat("\n== collapsed testing ==\n")
+fpr <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"))
+fgr <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"),
+                   collapse = "gene_region")
+ok("probe level is the default", identical(fpr$collapse, "probe"))
+ok("probe level carries no collapse annotation", is.null(fpr$collapse_annot))
+ok("collapsing reduces the feature count", nrow(fgr$table) < nrow(fpr$table))
+ok("collapsed fit carries its own annotation", !is.null(fgr$collapse_annot))
+ok("collapsed fit says what it dropped", grepl("no gene region", fgr$collapse_note))
+## Whole-gene averaging cancels promoter against body, so it is not offered.
+ok("there is no whole-gene level", !("gene" %in% MP_COLLAPSE))
+ok("features are GENE:promoter or GENE:body",
+   all(grepl(":(promoter|body)$", fgr$table$probe)))
+ok("both region types are produced",
+   length(unique(sub("^.*:", "", fgr$table$probe))) == 2)
+ok("promoter merges the four RefGene promoter groups",
+   setequal(MP_PROMOTER_GROUPS, c("TSS1500", "TSS200", "5\'UTR", "1stExon")))
+## Median, not mean - IMA's default, and coMethDMR measured it at nominal
+## type I error. A mean would be pulled by one blown probe.
+ok("the feature value is a median of its probes", {
+  fx <- fgr$collapse_annot[1, ]
+  bb <- mp_feature_beta(pgx, fgr, rownames(fgr$collapse_annot)[1])
+  is.matrix(bb) && nrow(bb) == 1
+})
+ok("no feature is built from fewer than 3 probes",
+   min(fgr$collapse_annot$n_probes) >= MP_MIN_PROBES)
+## An aggregated row must not assert per-probe precision it does not have.
+agr0 <- mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)
+ok("collapsed rows carry a span, not just a midpoint",
+   all(c("pos_start", "pos_end") %in% colnames(agr0)))
+ok("the span is well ordered", all(agr0$pos_start <= agr0$pos_end, na.rm = TRUE))
+ok("the median position sits inside the span",
+   all(agr0$pos >= agr0$pos_start & agr0$pos <= agr0$pos_end, na.rm = TRUE))
+ok("features really do span more than a point",
+   any(agr0$pos_end > agr0$pos_start, na.rm = TRUE))
+ok("context carries how many probes back it",
+   "island_n" %in% colnames(agr0) &&
+     all(agr0$island_n <= agr0$n_probes, na.rm = TRUE))
+ok("some contexts are a minority label, which is the point",
+   any(agr0$island_n < agr0$n_probes, na.rm = TRUE))
+ok("region is the partition, not the commonest RefGene sub-group",
+   setequal(unique(agr0$region), c("promoter", "body")))
+ok("probe-level rows carry none of these",
+   !any(c("region", "pos_start", "island_n") %in%
+          colnames(mp_ewas_annotate(pgx, fpr$table))))
+ok("probe count reaches the results table",
+   "n_probes" %in% colnames(mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)))
+ok("features are disjoint - no probe in two features", {
+  kk <- mp_collapse_key(pgx$genes, "gene_region")
+  length(kk) == nrow(pgx$genes) && !is.list(kk)
+})
+## Masking is a probe-level list, so it has to bite before the averaging.
+fnm <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = character(0),
+                   collapse = "gene_region")
+ok("masking applies before collapsing", nrow(fnm$table) != nrow(fgr$table))
+## The annotation the downstream panels read must resolve for collapsed features.
+agr <- mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)
+ok("collapsed gene resolves", mean(!is.na(agr$gene)) > 0.9)
+## Not 100%: a third of this dataset's probes carry no cytoband, so a feature
+## whose every probe lacks one inherits none. Collapsing takes the commonest
+## value among the members, so it resolves strictly more than probe level does.
+apr <- mp_ewas_annotate(pgx, fpr$table)
+ok("collapsed chr resolves for most features", mean(!is.na(agr$chr)) > 0.85)
+ok("collapsing improves chr coverage over probe level",
+   mean(!is.na(agr$chr)) > mean(!is.na(apr$chr)))
+ok("collapsed pos is numeric", is.numeric(agr$pos) && mean(!is.na(agr$pos)) > 0.9)
+ok("collapsed island relation resolves", mean(!is.na(agr$island)) > 0.5)
+## Refusals: region calling is a per-probe answer.
+res_gr <- list(data = agr, meta = fgr, contrast = "monocytes_vs_whole_blood")
+ok("region calling refuses a collapsed fit",
+   refused_with(mp_call_dmrs(pgx, res_gr), "collapsed features"))
+res_pr <- list(data = mp_ewas_annotate(pgx, fpr$table), meta = fpr,
+               contrast = "monocytes_vs_whole_blood")
+ok("region calling still runs at probe level", !refused(mp_call_dmrs(pgx, res_pr)))
+ok("the picker offers exactly two levels",
+   setequal(unname(MP_COLLAPSE), c("gene_region", "probe")))
+## Gene first, because the picker's default is the first entry: a fast pass is
+## the useful thing to land on. mp_fit_ewas() itself still defaults to probe,
+## so a programmatic caller never collapses without asking.
+ok("the picker leads with the collapsed level", unname(MP_COLLAPSE)[1] == "gene_region")
+ok("the function default is still a real EWAS",
+   identical(formals(mp_fit_ewas)$collapse, "probe"))
+
+## Every panel that plots per-sample beta for a hit goes through mp_feature_beta.
+## Indexing pgx$X by feature id directly was a subscript-out-of-bounds on the
+## hitmap the moment the fit was collapsed, so this is checked at all three
+## levels, not just the one that happens to be a plain row subset.
+thr <- list(type = "q", value = 0.05, min_dbeta = 0)
+for (lvl in c("probe", "gene_region")) {
+  ff <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"),
+                    collapse = lvl)
+  dd <- mp_ewas_annotate(pgx, ff$table, annot = ff$collapse_annot)
+  hits <- dd[mp_ewas_sig(dd, thr), , drop = FALSE]
+  topf <- utils::head(hits[order(hits$p), ]$probe, 50)
+  BB <- mp_feature_beta(pgx, ff, topf)
+  ok(paste0("[", lvl, "] top hits resolve to a beta matrix"), nrow(BB) > 0)
+  ok(paste0("[", lvl, "] rows are the features asked for"), all(rownames(BB) %in% topf))
+  ok(paste0("[", lvl, "] beta stays in [0,1]"),
+     min(BB, na.rm = TRUE) >= 0 && max(BB, na.rm = TRUE) <= 1)
+  ok(paste0("[", lvl, "] manhattan has chr and pos"),
+     sum(!is.na(dd$chr) & !is.na(dd$pos)) > 100)
+  ok(paste0("[", lvl, "] volcano has an effect size"), sum(!is.na(dd$dbeta)) > 100)
+  ok(paste0("[", lvl, "] island context resolves"), sum(!is.na(dd$island)) > 50)
 }
+
+## ----------------------------------------------------- promoter vs body ----
+## The one comparison only the collapsed fit can make. Promoter and gene body
+## move in opposite directions for real biological reasons, so a gene where
+## they disagree is a finding - and it is the pattern that makes whole-gene
+## averaging meaningless in the first place.
+cat("\n== promoter vs body ==\n")
+thr_pb <- list(type = "q", value = 0.05, min_dbeta = 0)
+res_pb <- list(data = mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot),
+               meta = fgr, contrast = "monocytes_vs_whole_blood")
+dv <- mp_divergence(res_pb, thr_pb)
+ok("one row per gene carrying both features", !anyDuplicated(dv$gene))
+ok("every row really has both", all(!is.na(dv$dbeta_promoter) & !is.na(dv$dbeta_body)))
+ok("opposite means opposite sign",
+   all(dv$opposite == (sign(dv$dbeta_promoter) != sign(dv$dbeta_body))))
+## MeGDP is defined body-minus-promoter (Li 2019, Genome Res 29:270); getting
+## the sign backwards would silently invert every row of the table.
+ok("MeGDP follows the published direction, body minus promoter",
+   isTRUE(all.equal(dv$megdp, dv$dbeta_body - dv$dbeta_promoter)))
+ok("both_sig agrees with the threshold",
+   all(dv$both_sig == (dv$q_promoter <= 0.05 & dv$q_body <= 0.05)))
+ok("opposing hits are found in the demo", sum(dv$both_sig & dv$opposite) > 0)
+ok("probe counts are carried for both halves",
+   all(!is.na(dv$n_promoter)) && all(!is.na(dv$n_body)))
+ok("sorted with the findings first", dv$both_sig[1])
+## A probe-level fit has no promoter/body split to compare.
+ok("refuses a probe-level fit",
+   refused_with(mp_divergence(list(data = mp_ewas_annotate(pgx, fpr$table),
+                                   meta = fpr, contrast = "x"), thr_pb),
+                "collapsed to gene regions"))
+## An F-test reports an unsigned beta range, so "opposite" has no meaning.
+pgx_pb <- pgx
+pgx_pb$samples$.pb_tert <- cut(rank(pgx$samples$age), 3, labels = c("lo", "mid", "hi"))
+f_anova_pb <- mp_fit_ewas(pgx_pb, ".pb_tert", mask = c("snp", "xreactive"),
+                          collapse = "gene_region")
+ok("refuses an F-test, which has no direction",
+   refused_with(mp_divergence(list(
+     data = mp_ewas_annotate(pgx_pb, f_anova_pb$table, annot = f_anova_pb$collapse_annot),
+     meta = f_anova_pb, contrast = ".pb_tert"), thr_pb), "no direction"))
+
+## ------------------------------------------------------ chunked fitting ----
+## The fit runs a chromosome at a time to keep one chromosome's M-values alive
+## instead of the whole array's. That is only acceptable if it is exact, so the
+## claim is tested directly: stacking per-chunk lmFits and moderating once must
+## reproduce a whole-matrix fit to the bit.
+cat("\n== chunked fitting ==\n")
+ck <- mp_fit_chunks(rownames(pgx$X), pgx$genes$chr)
+ok("every feature lands in exactly one chunk",
+   length(unlist(ck, use.names = FALSE)) == nrow(pgx$X) &&
+     !anyDuplicated(unlist(ck, use.names = FALSE)))
+ok("chunks are karyotype ordered", {
+  nm <- setdiff(names(ck), "unplaced")
+  identical(nm, intersect(c(as.character(1:22), "X", "Y"), nm))
+})
+ok("unplaced features go last, not silently dropped",
+   !("unplaced" %in% names(ck)) || utils::tail(names(ck), 1) == "unplaced")
+
+set.seed(7)
+Mx <- matrix(rnorm(5000 * 30), 5000, 30,
+             dimnames = list(paste0("f", 1:5000), paste0("s", 1:30)))
+gx <- factor(rep(c("a", "b"), each = 15))
+dz <- stats::model.matrix(~ 0 + gx); colnames(dz) <- make.names(colnames(dz))
+cz <- limma::makeContrasts(contrasts = "gxb-gxa", levels = dz)
+ref_tt <- limma::topTable(
+  limma::eBayes(limma::contrasts.fit(limma::lmFit(Mx, dz), cz), trend = TRUE),
+  number = Inf, sort.by = "none")
+## Deliberately uneven and out of order, the way real chromosomes are.
+ckz <- split(rownames(Mx), sample(rep(1:24, length.out = nrow(Mx))))
+fz <- mp_rbind_fits(lapply(ckz, function(ii) limma::lmFit(Mx[ii, , drop = FALSE], dz)))
+fz <- fz[match(rownames(Mx), rownames(fz$coefficients)), ]
+got_tt <- limma::topTable(
+  limma::eBayes(limma::contrasts.fit(fz, cz), trend = TRUE),
+  number = Inf, sort.by = "none")[rownames(ref_tt), ]
+ok("stacked chunks reproduce the whole-matrix logFC",
+   isTRUE(all.equal(ref_tt$logFC, got_tt$logFC)))
+ok("stacked chunks reproduce the moderated t",
+   isTRUE(all.equal(ref_tt$t, got_tt$t)))
+ok("stacked chunks reproduce the p-values",
+   isTRUE(all.equal(ref_tt$P.Value, got_tt$P.Value)))
+ok("BH still adjusts over every feature, not per chunk",
+   isTRUE(all.equal(ref_tt$adj.P.Val, got_tt$adj.P.Val)))
+ok("eBayes trend uses the combined Amean",
+   isTRUE(all.equal(ref_tt$AveExpr, got_tt$AveExpr)))
+
+## ------------------------------------------------------- EWAS Catalog ----
+## The catalog now ships in playdata rather than being fetched over HTTP, so
+## there is no fixture and no network gate. Parsing is covered by
+## playbase.epigenetics' own tests; what matters here is that the app's probes
+## come back annotated in the shape the hits table renders.
+cat("\n== EWAS catalog ==\n")
+cat_hits <- playbase.epigenetics::ewas_catalog_lookup(c("cg05575921", "cg00000029", "cgNOTREAL"))
+ok("one row per CpG, in the order asked",
+   nrow(cat_hits) == 3 && all(cat_hits$probe == c("cg05575921", "cg00000029", "cgNOTREAL")))
+ok("traits summarised, most-studied first",
+   grepl("^Smoking \\([0-9]+\\)", cat_hits$reported[1]))
+ok("trait list is capped with a remainder", grepl("; \\+[0-9]+ more$", cat_hits$reported[1]))
+ok("unknown CpG reads as no record", cat_hits$reported[3] == "")
+ok("trait list is capped where asked",
+   playbase.epigenetics::ewas_catalog_lookup("cg05575921", max_traits = 1)$reported ==
+     "Smoking (46); +187 more")
+ok("empty request answers empty", is.null(playbase.epigenetics::ewas_catalog_lookup(character(0))))
+
+## The per-probe summary and the links the hits table renders. The catalog is a
+## downloaded file rendered with escape = FALSE, so the escaping is a test, not
+## a detail.
+cat_probes <- c("cg05575921", "cg00000029", "cgNOTREAL")
+cat_tr <- playbase.epigenetics::ewas_catalog_traits(cat_probes)
+cat_sum <- mp_catalog_summary(cat_tr, cat_probes, max_traits = 2)
+ok("summary keeps one row per probe, in order", identical(cat_sum$probe, cat_probes))
+ok("unknown probe summarises to zero", cat_sum$studies[3] == 0L && cat_sum$reported[3] == "")
+ok("studies totals every trait of the CpG",
+   cat_sum$studies[1] == sum(cat_tr$n[as.character(cat_tr$cpg) == "cg05575921"]))
+ok("n_traits counts past the two that are shown", cat_sum$n_traits[1] > 2)
+ok("two traits then a remainder", grepl("^[^;]+; [^;]+; \\+[0-9]+ more$", cat_sum$reported[1]))
+
+cat_html <- mp_catalog_reported_html(cat_sum$reported, cat_sum$probe)
+ok("traits link to their catalog page", grepl("ewascatalog.org/\\?trait=Smoking", cat_html[1]))
+ok("the remainder links to the CpG page", grepl("\\?cpg=cg05575921", cat_html[1]))
+ok("links open in a new tab with noopener",
+   grepl("target='_blank' rel='noopener'", cat_html[1], fixed = TRUE))
+## The arrow icon is the anchor; the trait text beside it must stay plain, or
+## clicking a name navigates away when the user meant to select the row.
+ok("the icon is what is wrapped in the anchor",
+   grepl("<a [^>]*><i class='fa-solid fa-arrow-up-right-from-square weblink'></i></a>",
+         cat_html[1]))
+ok("the trait text itself is not a link",
+   !grepl("<a [^>]*>Smoking", cat_html[1]) && grepl("Smoking \\(46\\)", cat_html[1]))
+ok("an absent CpG says so rather than rendering empty", grepl("not reported", cat_html[3]))
+
+## A trait carrying markup must not escape into the page.
+evil <- data.frame(cpg = factor("cgX"), trait = factor("<img src=x onerror=alert(1)>"),
+                   n = 3L, stringsAsFactors = FALSE)
+evil_html <- mp_catalog_reported_html(mp_catalog_summary(evil, "cgX")$reported, "cgX")
+ok("trait markup is HTML-escaped in the label",
+   grepl("&lt;img", evil_html) && !grepl("<img", evil_html))
+ok("trait markup is URL-encoded in the href", grepl("%3Cimg", evil_html))
 
 ## ------------------------------------------------------------- region plot ----
 cat("\n== region detail ==\n")

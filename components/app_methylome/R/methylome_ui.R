@@ -72,7 +72,7 @@ methylome_ui_ledger <- function(id = "methylome") {
       methylome_table_ledger_ui(
         ns("ledger_tbl"),
         title = "Per-sample checks",
-        info.text = "One row per sample. Bimodality is the fraction of probes outside the intermediate 0.3-0.7 band; a healthy methylome sits near 0.9. Imprint drift is the mean absolute deviation of imprinted DMRs from their expected 0.5. Sex check compares the sex predicted from the X/Y probes against a recorded sex column in the sample sheet: a MISMATCH is the cheapest sample-swap signal an array gives you, and reads 'no record' rather than 'ok' when the sheet does not say. DNAm age here is a single quick estimate with no coverage check - the Epigenetic age screen is where clocks are chosen, withheld below a coverage floor, and compared.",
+        info.text = "One row per sample. Bimodality is the fraction of probes outside the intermediate 0.3-0.7 band and sits near 0.9 in a healthy methylome - a low value usually means failed normalisation or degraded DNA. Imprint drift is the mean absolute departure of imprinted DMRs from their expected 0.5. Sex check compares the sex predicted from the X/Y probes against a recorded sex column, and MISMATCH is the cheapest sample-swap signal an array gives you; it reads 'no record' when the sheet does not say. Verdict is relative, not absolute: CHECK marks a sample more than 3 MADs from the cohort median on drift or bimodality, or a sex mismatch - so PASS means 'not an outlier in this cohort', and under five samples nothing is ever flagged. DNAm age is Horvath, read off the stored clock fit; the Epigenetic age screen is where clocks are chosen and withheld below a coverage floor.",
         caption = "Per-sample quality, identity and epigenetic age.",
         height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
       ),
@@ -80,8 +80,8 @@ methylome_ui_ledger <- function(id = "methylome") {
         ns("ledger_dens"),
         title = "Beta distribution",
         caption = "Density of beta values per sample.",
-        info.text = "Beta values cover [0,1] and should be bimodal, enriched near 0.2 (hypomethylated) and 0.8 (hypermethylated). A sample that flattens out has usually failed normalisation.",
-        info.methods = "Per-sample kernel density over a fixed random subsample of 6,000 probes, drawn with a common seed so samples remain comparable. Dashed guides at beta 0.2 and 0.8.",
+        info.text = "Beta covers [0,1] and should be strongly bimodal: most probes sit near 0.2 (unmethylated) or near 0.8 (methylated), with little density between. Every sample should trace nearly the same curve. One that flattens out, or whose modes sit noticeably inward of the rest, has usually failed normalisation or come from degraded DNA - and it is the same sample the Bimodality column flags. This is a shape check, not a quantitative one: a real differential-methylation effect is far too small to be visible here.",
+        info.methods = "Per-sample kernel density over a fixed random subsample of 6,000 probes, drawn with a common seed so the curves stay comparable between redraws. At most 24 samples are drawn; beyond that the panel is unreadable and the Bimodality column is the better summary. Dashed guides at beta 0.2 and 0.8. Densities are computed on beta rather than M-values, since the two modes this panel checks for are a property of the bounded beta scale.",
         height = c("100%", "700px"), width = c("auto", "100%")
       )
     )
@@ -102,16 +102,16 @@ methylome_ui_age <- function(id = "methylome") {
         ns("age_cor"),
         title = "DNAm age vs chronological age",
         caption = "Each clock against the reported age of the sample.",
-        info.text = "The headline check on any epigenetic clock: how closely it tracks the age actually recorded for the sample. Points on the dashed identity line are samples whose methylome matches their years; the fitted line shows the clock's overall calibration in this cohort.",
-        info.methods = "Up to four selected clocks, each plotted against the first chronological age column found in the sample sheet. Dashed line is parity, solid line is the least-squares fit, and the panel title carries the Pearson correlation.",
+        info.text = "The headline check on a clock: how closely it tracks the age actually recorded for each sample. Points on the dashed identity line are samples whose methylome matches their years; the solid line is the clock's calibration in this cohort. Read r and MAE together - a clock reading ten years high on every sample still correlates at 0.99, and only the median absolute error shows it. A tight line with a large offset means the clock works but was trained on another tissue; scatter with no line means it has nothing to say here.",
+        info.methods = "Up to four of the selected clocks, each against the first sample column that looks like a chronological age - numeric, named age or chron, ignoring anything named for DNAm age, acceleration or a group, and needing at least three values that vary. Dashed line is parity, solid line the least-squares fit, and each title carries the Pearson correlation and the median absolute error in years; median rather than mean, so one failed sample does not set the headline number. The clocks themselves are fitted by methylclock at dataset creation (Pelegi-Siso 2021, Bioinformatics 37:1759); the coverage floor only decides which are shown.",
         height = c("100%", "700px"), width = c("auto", "100%")
       ),
       methylome_plot_clocks_ui(
         ns("age_clocks"),
         title = "Clock agreement",
         caption = "Every selected clock against every other.",
-        info.text = "Different clocks were trained on different tissues and CpG sets. Where they agree the estimate is trustworthy; where they diverge, the sample or its normalisation deserves a look.",
-        info.methods = "Pairwise scatter of the selected clocks, identity line dotted in the lower panels, Pearson correlation printed in the upper panels.",
+        info.text = "Different clocks were trained on different tissues, different CpG sets and, in some cases, a different target: Horvath and Hannum predict years, PhenoAge was trained on mortality risk and TL on telomere length. Where clocks of the same kind agree, the estimate is trustworthy; where they diverge, the tissue match or the normalisation deserves a look. Disagreement between a chronological clock and a biological one is expected and is not a fault - it is roughly what age acceleration measures.",
+        info.methods = "Pairwise scatter of every selected clock that passed the coverage floor, so the panel needs at least two usable ones. Identity line dotted in the lower panels, Pearson correlation printed in the upper panels. All clocks come from the same fit, so the correlations are across samples, never across probe sets.",
         height = c("100%", "700px"), width = c("auto", "100%")
       )
     ),
@@ -122,14 +122,14 @@ methylome_ui_age <- function(id = "methylome") {
         ns("age_group"),
         title = "Age acceleration by phenotype",
         caption = "Residual of DNAm age on chronological age, split by group.",
-        info.text = "Age acceleration is what is left of the epigenetic age once the chronological age is accounted for: positive means the methylome looks older than the person is. This is the point where a per-sample metric becomes a comparison the rest of the platform can use. Pick the clock and the phenotype in the settings panel.",
-        info.methods = "Residuals of a linear fit of the selected clock on chronological age, boxplotted against the selected phenotype, with samples jittered over it, a two-sample t-test for two levels and a Kruskal-Wallis test otherwise. Ticking cell-composition adjustment adds the estimated proportions to that fit, giving intrinsic acceleration - without it, a cohort whose groups differ in blood composition reports that difference as an accelerated methylome. Without a chronological age column the raw DNAm age is shown instead.",
+        info.text = "Age acceleration is what is left of the epigenetic age once chronological age is accounted for: positive means the methylome looks older than the person is. This is the point where a per-sample number becomes a comparison. It inherits everything the clock inherits, so a group difference in blood composition shows up here as accelerated ageing unless the adjustment is ticked - which is why that box exists. Pick the clock and the phenotype in the settings panel.",
+        info.methods = "Residuals of a linear fit of the selected clock on chronological age, boxplotted against the selected phenotype with samples jittered over it, a two-sample t-test for two levels and a Kruskal-Wallis test otherwise. Ticking cell-composition adjustment adds the estimated proportions to that fit, giving intrinsic acceleration in the sense of Chen 2016 (Aging 8:1844); the largest proportion is dropped so the design stays full rank. Without a chronological age column no residual can be taken and the raw DNAm age is shown instead, which is not acceleration.",
         height = c("100%", "700px"), width = c("auto", "100%")
       ),
       methylome_table_coverage_ui(
         ns("age_cov"),
         title = "Clocks and coverage",
-        info.text = "What each selected clock is, its median estimate, and whether this dataset carries enough of its CpGs to compute it at all. Two columns say what is lost: the fraction of the clock's CpGs absent from this dataset, and the fraction of its total absolute model weight those CpGs carried. They diverge - a clock can lose 5% of its probes and 40% of its weight if the missing ones are the heavy ones - which is why the ageing literature reports both. A dash means the coefficients are not reachable for that clock.",
+        info.text = "What each selected clock is, its median estimate across the cohort, and whether this dataset carries enough of its CpGs to compute it at all. Two columns say what is lost: the fraction of the clock's CpGs absent here, and the fraction of its total absolute model weight those CpGs carried. They diverge - a clock can lose 5% of its probes and 40% of its weight if the missing ones are the heavy ones - which is why the ageing literature reports both (Lussier 2024, Clin Epigenetics 16:166). A clock below the coverage floor reads 'withheld' rather than being estimated from partial data, because a clock fitted on a fraction of its probes returns a confident wrong number. A dash means the coefficients are not reachable for that clock. Both the floor and the clock selection are display filters over a fit that used neither.",
         caption = "Per-clock coverage and whether the estimate is usable.",
         height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
       )
@@ -151,16 +151,16 @@ methylome_ui_character <- function(id = "methylome") {
         ns("char_island"),
         title = "Mean beta by relation to CpG island",
         caption = "Methylation across islands, shores, shelves and open sea.",
-        info.text = "CpG islands are normally unmethylated while the surrounding shores, shelves and open sea are progressively more methylated. A flat profile here means something has gone wrong upstream.",
-        info.methods = "Per-probe mean beta across all samples, averaged within each Relation_to_Island category from the array annotation. Bars are coloured by the beta value itself.",
+        info.text = "CpG islands are normally unmethylated while the surrounding shores, shelves and open sea are progressively more methylated, so the bars should fall away from the island in a clear staircase. A flat profile means something has gone wrong upstream - failed normalisation, or an annotation that did not match the array. This is a property of the cohort as a whole, not of any contrast; it is the same shape in a tumour and in healthy tissue, and only the depth of the staircase moves.",
+        info.methods = "Per-probe mean beta across all samples, averaged within each Relation_to_Island category from the array annotation. Probes carrying a semicolon-separated list are assigned their first entry. Bars are coloured by the beta value itself, on the same hypo-to-hyper scale as the ideogram, and dotted guides sit at 0.2 and 0.8.",
         height = c("100%", "700px"), width = c("auto", "100%"), label = "a"
       ),
       methylome_plot_context_ui(
         ns("char_gene"),
         title = "Mean beta by position in gene",
         caption = "Methylation across promoter, exon, body and UTR.",
-        info.text = "Promoters (TSS200, TSS1500, 1st exon) are normally unmethylated while gene bodies and 3'UTRs are methylated. This promoter-to-body gradient is the first thing a methylation analyst checks.",
-        info.methods = "Per-probe mean beta across all samples, averaged within each UCSC RefGene group from the array annotation. Probes annotated to several groups are assigned their first.",
+        info.text = "Promoters (TSS1500, TSS200, 5'UTR, 1st exon) are normally unmethylated while gene bodies and 3'UTRs are methylated, and this promoter-to-body gradient is the first thing a methylation analyst checks. It is also the reason the EWAS screen tests promoter and body separately rather than averaging a whole gene: the two halves sit at opposite ends of this plot, so a whole-gene average cancels. An absent gradient points at the annotation rather than at the biology.",
+        info.methods = "Per-probe mean beta across all samples, averaged within each UCSC RefGene group from the array annotation. Probes annotated to several groups are assigned their first, so each probe contributes once. Probes with no gene position are pooled as 'unannotated'; that bar is usually intergenic open sea and is expected to be high.",
         height = c("100%", "700px"), width = c("auto", "100%"), label = "b"
       )
     )
@@ -187,7 +187,7 @@ methylome_ui_landscape <- function(id = "methylome") {
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%"),
             title = "Methylation table",
-            info.text = "Beta profiles stratified per chromosome. CpG probes are mapped to their chromosome from the array annotation. With the phenotype set to <ungrouped> the mean beta per chromosome is given across all samples ('Ave') and for each sample; selecting a phenotype gives the mean per group instead.",
+            info.text = "Mean beta per chromosome. Autosomes should be near-identical - global methylation does not vary by chromosome in a healthy sample - so this table is read for what stands out rather than for its values. X sits lower in males than in females, Y is present only in males, and an autosome away from its neighbours points at a copy-number difference or at probes that failed on part of the array. With the phenotype set to <ungrouped> the columns are the individual samples plus their average; selecting a phenotype replaces them with one column per group. Probes are mapped to a chromosome from the array annotation, whose chr field is a cytoband, so the arm and band are stripped and centromeric entries dropped; Ave is the mean of the columns shown.",
             caption = "Beta methylation profiles stratified per chromosome."
           ),
           epigenomics_plot_boxplot_beta_ui(
@@ -195,8 +195,8 @@ methylome_ui_landscape <- function(id = "methylome") {
           title = "Beta chromosomal profiles",
           label = "",
           caption = "Boxplots of beta values per chromosome.",
-          info.text = "Beta values per chromosome. A normal autosome sits in the same place as its neighbours; a chromosome that stands apart is worth a look, and the sex chromosomes are expected to differ.",
-          info.methods = "For each chromosome the mean beta is computed within each sample first, so the boxplot shows the spread of per-sample means rather than the spread of individual probes. Which chromosomes are drawn is set in the settings panel.",
+          info.text = "Beta per chromosome across the cohort. A normal autosome sits in the same place as its neighbours and the boxes are tight; the sex chromosomes are expected to differ, and X is the one chromosome where a wide box is informative rather than alarming. A single autosome standing apart is worth chasing - copy number, a failed array region, or an annotation mismatch. With a phenotype selected the boxes split by group, which is where a global methylation shift between groups would show.",
+          info.methods = "For each chromosome the mean beta is computed within each sample first, so a box shows the spread of per-sample means rather than the spread of individual probes - which is why the boxes are far narrower than the beta distribution on the Sample ledger. Probes whose annotation names a centromere are dropped. Which chromosomes are drawn, which samples are excluded and which phenotype splits the boxes are all set in the settings panel; the panel menu also removes X and Y.",
           info.references = NULL, info.extra_link = NULL,
             height = c("100%", "600px"), width = c("100%", "100%")
           )
@@ -216,8 +216,8 @@ methylome_ui_landscape <- function(id = "methylome") {
           title = "Methylation ideograms",
           label = "",
           caption = "Chromosome ideogram of average beta per genomic region.",
-          info.text = "Beta values laid out along each chromosome, so large-scale features - hypomethylated blocks, whole-arm shifts - are visible in a way a Manhattan or a density plot cannot show.",
-          info.methods = "Built with karyoploteR. The beta matrix and annotation are restricted to their shared CpGs, chromosome and position columns are detected by name, and features without coordinates are dropped. Per-CpG mean beta is computed across the retained samples, and per group as well when a two-level phenotype is given. Each CpG becomes a GRanges entry coloured by its mean: blue below 0.2, yellow between, red above 0.8; positions outside the reference chromosome lengths (hg19 or mm10) are discarded. CpGs are then binned in fixed windows (1 Mb by default) and smoothed with a density-weighted LOESS. Panel 1 is the scatter of per-CpG means, subsampled to 200,000 points, with dashed guides at 0.2 and 0.8 and the smoothed trend over it - two coloured lines in two-group mode. Panel 2 is the per-bin delta-beta in two-group mode (red where group 1 exceeds group 2, blue where group 2 exceeds group 1), or a log-scaled probe-density coverage track otherwise.",
+          info.text = "Beta laid out along the chromosomes themselves, so large-scale features - hypomethylated blocks, whole-arm shifts, a differentially methylated region large enough to see - are visible in a way a Manhattan or a density plot cannot show. The trend line is what to read: the cloud of individual CpGs is bimodal everywhere and says little on its own. With a two-level phenotype selected, the lower track becomes the difference between the groups, and its axis is autoscaled, so check the numbers before reading a band as large.",
+          info.methods = "Drawn with karyoploteR (Gel & Serra 2017, Bioinformatics 33:3088) against hg19, or mm10 for mouse. Beta and annotation are restricted to their shared CpGs, and probes with no coordinate or a position outside the reference chromosome length are dropped. Panel 1 is the per-CpG mean beta across the retained samples, subsampled to 200,000 points, coloured blue below 0.2, yellow between and red above 0.8, with dashed guides at those values. The trend over it bins CpGs in fixed 1 Mb windows and smooths them with a LOESS weighted by the CpGs per bin; it is pooled across samples unless the per-phenotype average is ticked in the panel menu, which splits it in two. Panel 2 is the per-bin difference between the two groups when a two-level phenotype is selected, and a log-scaled probe-density track otherwise.",
           info.references = NULL, info.extra_link = NULL,
           height = c("100%", "600px"), width = c("100%", "100%")
         )
@@ -240,14 +240,14 @@ methylome_ui_deconv <- function(id = "methylome") {
         ns("comp_bars"),
         title = "Composition per sample",
         caption = "Estimated proportion of each reference cell type.",
-        info.text = "One stacked bar per sample. Samples are ordered by the first categorical phenotype, so a difference in composition between groups shows up as a visible block rather than being scattered across the axis.",
-        info.methods = "Houseman-style constrained projection of each sample's betas onto a reference panel of cell-type-discriminating CpGs, via meffilEstimateCellCountsFromBetas. Proportions are not forced to sum to exactly one; small deviations are expected.",
+        info.text = "One stacked bar per sample. Samples are ordered by the phenotype picked in the settings, so a difference in composition between groups reads as a visible block rather than being scattered along the axis - and that block is the thing to look for, because it is what will otherwise be reported as differential methylation. A single sample with an extreme profile is either real biology or a projection that failed on a poor-quality array; the Sample ledger will usually say which.",
+        info.methods = "Constrained projection of each sample's betas onto a reference panel of cell-type-discriminating CpGs (Houseman 2012, BMC Bioinformatics 13:86), run through methylclock's meffilEstimateCellCountsFromBetas. The reference panel is chosen in the settings and has to match the tissue: the blood panels are for whole blood, the cord panels for neonatal samples, with saliva and brain panels alongside. Proportions are not forced to sum to exactly one, so small deviations are expected; they are estimates from an external panel, not measurements of this cohort.",
         height = c("100%", "700px"), width = c("auto", "100%")
       ),
       methylome_table_composition_ui(
         ns("comp_tbl"),
         title = "Estimated proportions",
-        info.text = "The per-sample proportions, downloadable as CSV for use elsewhere.",
+        info.text = "The per-sample proportions behind the stacked bars, as numbers - the panel to read when one bar looked wrong, and the CSV to take away for a model fitted elsewhere. Rows are samples, columns are the reference panel's cell types, so the panel chosen in the settings decides which columns exist at all. Values are the raw output of the projection and are not rescaled: a row summing to 0.95 or 1.04 is normal, a row far off that is a failed projection rather than an unusual sample. Inside the app these same estimates are what the EWAS 'Adjust for cell composition' box and the intrinsic age-acceleration option consume.",
         caption = "Per-sample cell-type proportions.",
         height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
       )
@@ -256,8 +256,8 @@ methylome_ui_deconv <- function(id = "methylome") {
       ns("comp_group"),
       title = "Composition by phenotype",
       caption = "Each cell type compared across the groups of the contrast.",
-      info.text = "This is the confounding check. If composition differs between the groups being compared, an unadjusted differential-methylation result is largely a picture of that difference rather than of the phenotype - adjust for these proportions in the EWAS model.",
-      info.methods = "Boxplot of each estimated proportion against the selected phenotype, samples jittered over it, with a two-sample t-test for two-level phenotypes and a Kruskal-Wallis test otherwise.",
+      info.text = "This is the confounding check. If composition differs between the groups being compared, an unadjusted differential-methylation result is largely a picture of that difference rather than of the phenotype - most published blood CpG-age associations lose significance once composition is adjusted for (Jaffe & Irizarry 2014, Genome Biol 15:R31). Anything that shifts the neutrophil-to-lymphocyte ratio does it: infection, obesity, smoking, age. A clear difference here is an instruction to tick the adjustment in the EWAS model, not a result to report.",
+      info.methods = "Boxplot of each estimated proportion against the selected phenotype, samples jittered over it, with a two-sample t-test for two-level phenotypes and a Kruskal-Wallis test otherwise. The p-values are per cell type and are not corrected across the panel, and the proportions are not independent of each other - they are read as a warning flag, not as a result.",
       height = c("100%", "700px"), width = c("auto", "100%")
     )
   ))
@@ -284,16 +284,16 @@ methylome_ui_ewas <- function(id = "methylome") {
             ns("ewas_manhattan"),
             title = "Manhattan",
           caption = "Genome-wide significance by chromosome position.",
-          info.text = "Every tested CpG plotted at its genomic position against significance. Probes passing the threshold are coloured by direction: red where methylation increases, blue where it decreases.",
-            info.methods = "Probes are ordered by chromosome and position using the array annotation; the chromosome field is a cytoband so the arm and band are stripped first. Alternating grey shades separate chromosomes. A q-value cut-off has no fixed position on a -log10(p) axis, so the dashed line is drawn at the largest p-value that still passes, and is omitted entirely when nothing does.",
+          info.text = "Every tested feature at its genomic position against significance. Features passing the threshold are coloured by direction, red where methylation increases and blue where it decreases; an F-test across three or more groups has no direction and gets a single accent colour instead. Read the shape as well as the peaks - a real EWAS is a mostly flat field with a few towers, while signal smeared across whole chromosomes is confounding or batch, and the QQ panel is where to confirm it. On a gene-region fit each point is a region, drawn at the median position of its probes.",
+            info.methods = "Features are ordered by chromosome and position from the array annotation; the stored chromosome field is a cytoband, so the arm and band are stripped first, and anything without a chromosome or a position is dropped. Alternating grey shades separate chromosomes. A q-value cut-off has no fixed position on a -log10(p) axis, so the dashed line is drawn at the largest p-value that still passes the current threshold - including the minimum |delta-beta| filter, so the line always sits exactly where the coloured points begin. When nothing passes, no line is drawn and the corner says so instead of printing a hit count.",
             height = c("100%", "700px"), width = c("auto", "100%")
           ),
           methylome_plot_volcano_ui(
             ns("ewas_volcano"),
             title = "Volcano",
             caption = "Effect size against significance.",
-            info.text = "The view a Manhattan cannot give: how large the change actually is, not just how significant. A CpG can be overwhelmingly significant and move methylation by half a percent. Points are coloured by direction once they pass the threshold, and the strongest hits are labelled.",
-            info.methods = "Delta beta on the x axis against -log10(p) on the y. For a continuous outcome delta beta is the slope per unit of the exposure and the axis says so. The horizontal line is the same threshold drawn on the Manhattan; vertical dashed lines appear only when a minimum |delta-beta| is set. Up to eight of the most significant hits are labelled by gene, or by probe where no gene is annotated.",
+            info.text = "The view a Manhattan cannot give: how large the change is, not just how significant. A CpG can be overwhelmingly significant and move methylation by half a percent - in a population EWAS that is the normal case rather than a disappointment, so read the x axis before the y. Points are coloured by direction once they pass the threshold and the strongest are labelled by gene. There is no volcano for an F-test across three or more groups: its effect is an unsigned range, and drawing it here would imply a direction the test never established.",
+            info.methods = "Delta beta on the x axis against -log10(p) on the y. The model is fitted on M-values, which is the appropriate scale for testing, and the effect is reported on the beta scale, which is the one that means anything (Du 2010, BMC Bioinformatics 11:587). Delta beta is a plain difference of group means and is not adjusted by the covariates, so it can sit beside a much weaker p-value once they are added. For a continuous outcome it is the slope per unit of the exposure and the axis says so. The horizontal line follows the same largest-passing-p rule as the Manhattan; vertical dashed lines appear only when a minimum |delta-beta| is set. Up to eight of the most significant hits are labelled.",
             height = c("100%", "700px"), width = c("auto", "100%")
           )
         ),
@@ -303,16 +303,16 @@ methylome_ui_ewas <- function(id = "methylome") {
           methylome_table_hits_ui(
             ns("ewas_hits"),
             title = "CpGs passing the threshold",
-            info.text = "Every CpG called significant at the current cut-off, most significant first. Delta beta is the difference in mean beta between the two groups of the contrast - the change in methylation itself, not the M-value log fold change the model was fitted on. For a categorical outcome with three or more levels the model is an F-test, which has no direction: the column becomes an unsigned beta range (largest group mean minus smallest), Direction reads '-', and the F statistic is shown. Press 'Look up hits in EWAS Catalog' in the settings panel to add a Reported column naming the traits each CpG is already associated with.",
-            caption = "Significant CpGs with gene, genomic context and effect size.",
+            info.text = "Every feature called at the current cut-off, most significant first. Delta beta is the change in methylation itself, not the M-value log fold change the model was fitted on. For a categorical outcome with three or more levels the model is an F-test, which has no direction: the column becomes an unsigned beta range, Direction reads '-', and the F statistic is shown. Studies and Reported carry the EWAS Catalog evidence; 'not reported' means absent from that catalog, which is not the same as novel biology. When Test at is a gene region, rows are GENE:promoter or GENE:body rather than CpGs, delta beta is a difference of medians across the region and is not comparable to a probe-level delta beta, and Probes shows how many probes the median was taken over - it ranges from 3 to over a thousand. See the Test at tooltip for how the regions are defined.",
+            caption = "Significant CpGs, effect and significance first. Studies and Reported at the end carry the EWAS Catalog evidence: sort Studies ascending for the hits nobody has reported yet, and select a row to fill the detail panel on the EWAS Catalog sub-tab.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           ),
           methylome_plot_hitmap_ui(
             ns("ewas_hitmap"),
             title = "Top hits, sample by sample",
             caption = "Beta of the most significant CpGs across the fitted samples.",
-            info.text = "The hit list as a picture. Rows are the CpGs the model called, columns are the samples it was fitted on, ordered by group. A real result shows as a block that changes at the group boundary; a scattered pattern with no boundary is a warning.",
-            info.methods = "Up to fifty of the most significant CpGs passing the current threshold. Colour is beta on a fixed 0-1 scale - blue unmethylated, red methylated - rather than a row z-score, because the absolute level is the interpretable quantity and a z-score makes a 2% difference look like a 60% one. Samples are ordered by the model's own groups, or by tertile of the exposure for a continuous outcome, and the bar above the matrix carries that grouping.",
+            info.text = "The hit list as a picture. Rows are the features the model called, columns are the samples it was fitted on, ordered by group. A real result reads as a block that changes at the group boundary; a scattered pattern with no boundary means the hits are carried by a few samples, and the stripcharts on the QQ & context sub-tab show which. Some separation is guaranteed - these are the features selected for separating the groups - so the question is whether it is clean, and whether it is the same samples row after row.",
+            info.methods = "Up to fifty of the most significant features passing the current threshold. Colour is beta on a fixed 0-1 scale, blue unmethylated and red methylated, rather than a row z-score: the absolute level is the interpretable quantity, and a z-score makes a 2% difference look like a 60% one. Nothing is clustered - rows stay in p-value order and columns are ordered by the model's own groups, or by tertile of the exposure for a continuous outcome, with the bar above the matrix carrying that grouping. On a gene-region fit the rows are rebuilt from their member probes with the same median the fit used.",
             height = c("100%", "700px"), width = c("auto", "100%")
           )
         )
@@ -324,14 +324,51 @@ methylome_ui_ewas <- function(id = "methylome") {
       bslib::layout_columns(
         col_widths = 12,
         height = MP_SUBTAB_HEIGHT,
-        row_heights = list("auto", 1.15, 1),
-        bs_alert("Region-level and gene-set views of the current model. Both run on demand from the settings panel, against the outcome and threshold set on the other sub-tabs."),
+        row_heights = list("auto", 1),
+        bs_alert("Region-level views of the current model. At probe level: DMR calling and gene-set testing, both run on demand from the settings panel. At gene-region level: how each gene's promoter compares with its body, which is the comparison only that fit can make."),
+        ## Which half of this sub-tab is live follows the Test at picker, not the
+        ## fitted model, so switching resolution swaps the panels immediately and
+        ## the panel's own validate() covers the gap until the refit lands.
+        ##
+        ## Both modes sit inside one plain div rather than being siblings of the
+        ## alert. As direct children of the grid, the hidden one still reserved
+        ## its row and left a tall blank band above whichever mode was showing.
+        shiny::div(
+          style = "height: 100%; min-height: 0;",
+        shiny::conditionalPanel(
+          condition = "input.ewas_collapse != 'probe'", ns = ns,
+          style = "height: 100%;",
+          bslib::layout_columns(
+            height = "100%",
+            col_widths = c(6, 6),
+            methylome_plot_divergence_ui(
+              ns("ewas_divplot"),
+              title = "Promoter against body",
+              caption = "Each gene's promoter change against its gene-body change.",
+              info.text = "The comparison only a gene-region fit can make. Promoter methylation tends to silence a gene while gene-body methylation tracks with expression instead - the DNA methylation paradox (Jones 1999, Trends Genet 15:34; Yang 2014, Cancer Cell 26:577) - so a gene whose two halves move in opposite directions is a specific finding rather than a stronger version of the same one. Points off the dotted diagonal are genes where promoter and body disagree; the two off-axis quadrants are where they disagree in sign. Red points are significant in both halves and opposing - those are the ones worth reading. Grey points did not pass the threshold in both halves.",
+              info.methods = "One point per gene carrying both a promoter and a gene-body feature - about two thirds of genes on a 450K array once the three-probe floor is applied. Axes are the delta beta of each feature, so a difference of medians across that region on the beta scale. Significance is the same threshold set for the rest of the screen, applied to each half independently; a gene counts as opposing when the two delta betas have opposite signs, which is a statement about direction and not about magnitude. The signed difference between the two halves is MeGDP, defined body minus promoter by Li 2019 (Genome Res 29:270), and reported here in that direction. The layout of this plot is not taken from any publication. Note the promoter half inherits the array manifest's RefGene annotation, and over a quarter of Infinium promoter assignments have been reported as questionable (Bizet 2022, Epigenetics 17:2434). An F-test across three or more groups reports an unsigned beta range and is refused rather than compared for direction.",
+              height = c("100%", "700px"), width = c("auto", "100%")
+            ),
+            methylome_table_divergence_ui(
+              ns("ewas_divtbl"),
+              title = "Genes ranked by promoter-body divergence",
+              info.text = "Every gene with both a promoter and a gene-body feature, findings first: significant in both halves, then opposing in sign, then by the size of the gap. Promoter and Body are each region's delta beta on the beta scale, coloured by direction; MeGDP is the signed difference body minus promoter, in the direction Li 2019 (Genome Res 29:270) defines it. Opposing marks the genes whose halves move in opposite directions - the pattern that makes averaging a whole gene meaningless. Probes columns say how many probes each median was taken over, which is worth checking before believing a row: a three-probe promoter and a four-hundred-probe body are not equally well measured.",
+              caption = "Paired promoter and body results per gene.",
+              height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+            )
+          )
+        ),
+        shiny::conditionalPanel(
+          condition = "input.ewas_collapse == 'probe'", ns = ns,
+          style = "height: 100%;",
+          bslib::layout_columns(
+            col_widths = 12, height = "100%", row_heights = list(1.15, 1),
         methylome_plot_dmrregion_ui(
           ns("ewas_dmrplot"),
           title = "Region detail",
           caption = "Methylation across the selected region. Click a row in the table below.",
-          info.text = "A region in the table is only a set of numbers; this is what it looks like. A real DMR is a run of neighbouring CpGs all moving the same way, separating the groups across the whole region. One CpG pulling its neighbours along produces a similar table row and an obviously different picture. Click any row of the table below to draw that region.",
-          info.methods = "Beta values of every CpG in the region plus 30% flanking context on each side, drawn against genomic position. Faint lines are individual samples, heavy lines the mean of each group - or of the low, middle and top tertile when the outcome is continuous. The shaded box is the called region, so flanking probes are visibly outside it, and the track under the axis carries the CpG island context of each probe. The region shown is the one selected in the table; with nothing selected it is the most significant.",
+          info.text = "A region in the table is only a set of numbers; this is what it looks like. A real DMR is a run of neighbouring CpGs all moving the same way and separating the groups across the whole region. One strong CpG dragging its neighbours along produces a similar table row and an obviously different picture, which is the reason this panel sits above the table rather than below it. Click any row to draw that region; with nothing selected the most significant one is shown.",
+          info.methods = "The region view the field draws for a called DMR, following DMRcate's DMR.plot (Peters 2015, Epigenetics Chromatin 8:6) and coMET (Martin 2015, BMC Bioinformatics 16:131). Beta of every CpG in the region plus 30% flanking context on each side, against genomic position. Faint lines are individual samples - only those the model was actually fitted on - and heavy lines the mean of each group, or of the low, middle and top tertile when the outcome is continuous. The shaded box is the called region, so the flanking probes are visibly outside it, and the track under the axis carries each probe's CpG island context. Beta, not M-values, so the vertical distance between the group means is the methylation difference itself.",
           height = c("100%", "700px"), width = c("auto", "100%")
         ),
         bslib::layout_columns(
@@ -340,17 +377,20 @@ methylome_ui_ewas <- function(id = "methylome") {
           methylome_table_dmr_ui(
             ns("ewas_dmr"),
             title = "Differentially methylated regions",
-            info.text = "Contiguous runs of CpGs that move together, which is the unit methylation phenotypes actually occur in - promoter island hypermethylation, hypomethylated blocks - rather than isolated probes. Single-CpG regions are excluded; those are already in the hits table.",
+            info.text = "Contiguous runs of CpGs that move together, the unit methylation phenotypes occur in - promoter island hypermethylation, hypomethylated blocks - rather than isolated probes. Single-CpG regions are dropped: those are already in the hits table. Effect (M) is on the M-value scale the model was fitted on, so it carries a direction and a magnitude but is not a percentage of methylation; click a row to see the region on the beta scale above. Adjusted p is corrected over the regions tested, not over the probes. Regions are called by dmrff, which meta-analyses each probe's estimate and standard error across its neighbours, reading the methylation matrix only to account for the correlation between them (Suderman 2018, bioRxiv preprint - never journal-published). It needs a signed effect per probe, so an F-test across three or more groups is refused, as is a fit collapsed to gene regions.",
             caption = "Regions called from the fitted model by dmrff.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           ),
           methylome_table_enrich_ui(
             ns("ewas_enrichgs"),
             title = "Gene sets (probe-bias corrected)",
-            info.text = "Gene-set enrichment of the hit list, corrected for the number of probes per gene. Genes carry very different probe counts, so an uncorrected test returns the same probe-dense developmental sets whatever the biology; gometh reweights with Wallenius noncentral hypergeometric and also handles CpGs mapping to several genes.",
+            info.text = "Gene-set enrichment of the hit list, corrected for the number of probes per gene. Genes carry very different probe counts, so an uncorrected test returns the same probe-dense developmental sets whatever the biology (Geeleher 2013, Bioinformatics 29:1851). gometh, from missMethyl (Phipson 2016, Bioinformatics 32:286), reweights with Wallenius' noncentral hypergeometric distribution and also handles CpGs mapping to several genes. The test is on the hit list, so it moves with the threshold - a set that appears and disappears as you nudge the cut-off is not a finding. Background is the probes actually tested, not the whole array. Needs at least ten hits and a probe-level fit; a gene-region fit has already averaged away the probe ids the correction runs on.",
             caption = "GO or KEGG terms enriched among the significant CpGs.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           )
+        )
+          )
+        )
         )
       )
     ),
@@ -369,16 +409,16 @@ methylome_ui_ewas <- function(id = "methylome") {
             ns("ewas_qq"),
             title = "QQ and inflation",
             caption = "Observed against expected p-values, with lambda.",
-            info.text = "The genomic inflation factor lambda summarises how far the p-value distribution departs from the null. It rises with genuine widespread signal as well as with confounding, so it is a prompt to look rather than a pass or fail.",
-            info.methods = "Observed -log10 p-values against the uniform expectation. Lambda is the median chi-square statistic divided by its null expectation.",
+            info.text = "How far the whole p-value distribution departs from the null. Points on the diagonal mean nothing beyond chance. A curve that lifts off early and stays up is the signature of a systematic difference between the groups - unadjusted cell composition, batch, population structure - while a tail departing only at the very top is what genuine signal looks like. Lambda puts one number on that departure, but it rises with real widespread signal as well as with confounding, so it is a prompt to look rather than a pass or fail. Where it is high, the answer is usually another covariate, not a stricter threshold.",
+            info.methods = "Observed -log10 p-values against the uniform expectation. Lambda is the median chi-square statistic implied by the p-values divided by its null expectation (Devlin & Roeder 1999, Biometrics 55:997). Where the bacon package is installed, the bias and inflation of an empirical null fitted to the moderated t statistics are printed beside it (van Iterson 2017, Genome Biol 18:19). Both are diagnostics only and nothing is rescaled by them: applying bacon to an unadjusted model would launder confounding into well-calibrated-looking p-values, which is worse than an honest lambda. They are withheld on the F-test branch, where the statistic is an F rather than a signed z and bacon's empirical null does not apply.",
             height = c("100%", "700px"), width = c("auto", "100%")
           ),
           methylome_plot_enrichment_ui(
             ns("ewas_enrich"),
             title = "Where the hits sit",
             caption = "Genomic context of the significant CpGs.",
-            info.text = "Whether the significant CpGs concentrate in islands, shores, shelves or open sea. Shore enrichment with island depletion is the classic pattern in differential methylation.",
-            info.methods = "Odds ratio of each Relation_to_Island category among probes passing the threshold versus the probes actually tested in this contrast, not the whole array. A half-count is added to each cell so empty categories remain finite.",
+            info.text = "Whether the significant CpGs concentrate in islands, shores, shelves or open sea. Shore enrichment with island depletion is the classic pattern in differential methylation (Irizarry 2009, Nat Genet 41:178): islands at active promoters are held unmethylated and have little room to move, while the shores flanking them are where tissue and disease differences sit. A hit list piled into open sea instead is usually reporting something other than regulation - SNP-driven probes, batch, or a copy-number difference between the groups.",
+            info.methods = "Odds ratio of each Relation_to_Island category among the features passing the threshold against the probes actually tested in this contrast, not against the whole array: masked probes and probes dropped for missing values are not in the background, and using the array instead would report the masking as enrichment. A half-count is added to each cell so an empty category stays finite. Bars are the log2 odds ratio; no p-value is given, because neighbouring probes are not independent. The panel refuses on a gene-region fit - an aggregated feature's context is a majority vote over its probes, and a gene body routinely spans island, shore, shelf and open sea, so the odds ratio would be measuring the vote.",
             height = c("100%", "700px"), width = c("auto", "100%")
           )
         ),
@@ -386,9 +426,38 @@ methylome_ui_ewas <- function(id = "methylome") {
           ns("ewas_strips"),
           title = "Top CpGs, sample by sample",
           caption = "Per-sample beta for the most significant CpGs, split by group.",
-          info.text = "Beta value of every sample at each of the top CpGs. This is the panel that shows whether a hit is real or driven by a couple of outliers, and at what absolute level of methylation it sits - a 0.05 difference at beta 0.50 and at beta 0.02 are very different claims.",
-          info.methods = "The most significant CpGs passing the current threshold, one panel each, points jittered within group with a bar at the group mean. The y axis is fixed to the full [0,1] beta range rather than zooming to the data, so panels stay comparable and the absolute level stays visible. Dotted guides at 0.2 and 0.8. How many CpGs are drawn is set in the settings panel.",
+          info.text = "Beta of every sample at each of the top features. This is the panel that shows whether a hit is real or driven by a couple of outliers, and at what absolute level of methylation it sits - a 0.05 difference at beta 0.50 and at beta 0.02 are very different claims, and only one of them survives a second cohort. Look for group clouds that are separated but overlapping; a hit whose groups are perfectly separated by a handful of points is usually a probe problem rather than biology.",
+          info.methods = "The most significant features passing the current threshold, one panel each, points jittered within group with a bar at the group mean. For a continuous outcome the panel becomes a scatter against the exposure with its least-squares line, which is the honest picture of whether the slope rides on a few extreme samples. The y axis is fixed to the full [0,1] beta range rather than zooming to the data, so panels stay comparable and the absolute level stays visible; dotted guides at 0.2 and 0.8. On a gene-region fit each panel is the region's median over its probes. How many are drawn is set in the settings panel.",
           height = c("100%", "700px"), width = c("auto", "100%")
+        )
+      )
+    ),
+
+    bslib::nav_panel(
+      title = "EWAS Catalog", value = "catalog",
+      bslib::layout_columns(
+        col_widths = 12,
+        height = MP_SUBTAB_HEIGHT,
+        row_heights = list("auto", 1),
+        bs_alert("What your hit list is already known for, against the EWAS Catalog (release 2026-04-09, bundled - no lookup happens over the network). Both panels follow the outcome and threshold set on the other sub-tabs. For a single CpG's own record, follow the link on its row in the hits table."),
+        bslib::layout_columns(
+          height = "100%",
+          col_widths = c(7, 5),
+          methylome_plot_traitfreq_ui(
+            ns("ewas_traitfreq"),
+            title = "Already reported for",
+            caption = "Traits your hit list is collectively already associated with.",
+            info.text = "What the whole hit list, taken together, is already known for. A smoking EWAS whose top bar is Smoking is a result behaving as it should. A BMI EWAS whose top bar is Age is a confounding warning no other panel here will give you. The subtitle carries the denominator - how many of your hits appear in the catalog at all - and it matters: most CpGs have never been reported for anything, so a short list of bars over a small denominator says little. Bars count CpGs, so one heavily studied CpG cannot dominate the chart on its own.",
+            info.methods = "Every CpG passing the threshold is looked up in the EWAS Catalog (Battram 2022, Wellcome Open Res 7:41), release 2026-04-09, bundled with the app - no request leaves the container. Traits are counted by how many of your hits carry them. This is a count and deliberately not an enrichment test: whether a CpG is in the catalog at all reflects how many EWASs have been run and on what, so a p-value against that background would be measuring publication history rather than biology.",
+            height = c("100%", "700px"), width = c("auto", "100%")
+          ),
+          methylome_table_traits_ui(
+            ns("ewas_traits"),
+            title = "Every trait, not just the top ones",
+            info.text = "The full trait breakdown of the hit list, which the chart can only show the top of. CpGs is how many of your hits are reported for the trait; Studies is how many catalogued study analyses reported those pairs. The two disagree in a useful way: a trait can be heavily studied on one CpG, or lightly studied across hundreds of them, and only the first is evidence that your hit list as a whole overlaps it. Sort or search for a specific trait, and follow the arrow to its page on ewascatalog.org. Counts come from the bundled EWAS Catalog release 2026-04-09 (Battram 2022, Wellcome Open Res 7:41); absence from it means nobody has published on that CpG, not that the association is new.",
+            caption = "Traits ranked by how much of your hit list they already account for.",
+            height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
+          )
         )
       )
     )

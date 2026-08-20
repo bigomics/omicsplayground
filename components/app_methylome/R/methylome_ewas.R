@@ -29,18 +29,39 @@ mp_contrast_groups <- function(pgx, cmp) {
 ## Attach the array annotation to a fitted table. pgx$genes$chr is a cytoband
 ## ("16q12.2"), not a bare chromosome, so the arm and band are stripped as
 ## board.epigenomics does.
-mp_ewas_annotate <- function(pgx, tab) {
-  g <- pgx$genes[tab$probe, , drop = FALSE]
-  cc <- grep("^chr$|chrom", tolower(colnames(g)))[1]
-  pc <- grep("^pos$|position", tolower(colnames(g)))[1]
-  isl <- mp_context_col(pgx, "island")
-  loc <- mp_context_col(pgx, "gene")
-  idx <- match(tab$probe, rownames(pgx$genes))
+## `annot` overrides pgx$genes: a collapsed fit tests features that are not
+## probes, so its annotation was built by mp_collapse_beta() and pgx$genes has
+## no row for them.
+mp_ewas_annotate <- function(pgx, tab, annot = NULL) {
+  src <- if (is.null(annot)) pgx$genes else annot
+  g <- src[tab$probe, , drop = FALSE]
+  ## Every field comes off the same frame the features were looked up in.
+  ## Island and context used to be read from pgx$genes by row index, which is
+  ## NA for every feature of a collapsed fit - those rows are not probes.
+  col <- function(pat) {
+    hit <- grep(pat, colnames(src), ignore.case = TRUE)
+    if (!length(hit)) NULL else as.character(g[[colnames(src)[hit[1]]]])
+  }
+  cc <- col("^chr$|chrom")
+  pc <- col("^pos$|position")
   tab$gene <- if ("symbol" %in% colnames(g)) as.character(g$symbol) else NA
-  tab$chr  <- if (!is.na(cc)) sub("(p|q|cen).*", "", sub("^chr", "", as.character(g[[cc]]))) else NA
-  tab$pos  <- if (!is.na(pc)) suppressWarnings(as.numeric(sub(";.*", "", g[[pc]]))) else NA
-  tab$island   <- if (!is.null(isl)) sub(";.*", "", isl[idx]) else NA
-  tab$location <- if (!is.null(loc)) sub(";.*", "", loc[idx]) else NA
+  tab$chr  <- if (!is.null(cc)) sub("(p|q|cen).*", "", sub("^chr", "", cc)) else NA
+  tab$pos  <- if (!is.null(pc)) suppressWarnings(as.numeric(sub(";.*", "", pc))) else NA
+  isl <- col("Relation_to_Island")
+  loc <- col("genomic_location|RefGene_Group")
+  tab$island   <- if (!is.null(isl)) sub(";.*", "", isl) else NA
+  tab$location <- if (!is.null(loc)) sub(";.*", "", loc) else NA
+  ## Only a collapsed fit has this. It has to reach the table: probes per gene
+  ## region run from 3 to over a thousand, and a feature built from 400 probes
+  ## has a much smaller residual variance than one built from 3 - so the reader
+  ## needs to see which kind of feature a hit is.
+  if ("n_probes" %in% colnames(g)) tab$n_probes <- as.integer(g$n_probes)
+  ## Collapsed fits carry the extra fields the table needs to be honest about
+  ## what an aggregated row is: the span rather than a midpoint, the partition
+  ## the feature actually belongs to, and how many probes back the context.
+  for (k in c("region", "pos_start", "pos_end", "island_n")) {
+    if (k %in% colnames(g)) tab[[k]] <- g[[k]]
+  }
   tab
 }
 
@@ -187,7 +208,15 @@ methylome_plot_enrichment_ui <- function(id, title, caption, info.text, info.met
 methylome_plot_enrichment_server <- function(id, r.ewas, r.thresh, watermark = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
-      d <- r.ewas()$data
+      res <- r.ewas()
+      ## Refuses on a collapsed fit. The island relation of an aggregated
+      ## feature is a majority vote over its probes, and a gene body routinely
+      ## spans island, shore, shelf and open sea - on this array 12% of features
+      ## carry a label under 60% of their own probes agree with. An odds ratio
+      ## computed over those labels measures the vote, not where the hits sit.
+      shiny::validate(shiny::need(identical(res$meta$collapse, "probe"),
+        "Genomic context is a per-probe property, and this model was fitted on gene regions whose context is a majority vote over their probes. Set 'Test at' to probe level for this panel."))
+      d <- res$data
       d$sig <- mp_ewas_sig(d, r.thresh())
       d <- d[!is.na(d$island), ]
       sig <- d$sig
@@ -221,6 +250,359 @@ methylome_plot_enrichment_server <- function(id, r.ewas, r.thresh, watermark = F
   })
 }
 
+## ---------------------------------------------------------- EWAS Catalog ---
+
+## Deep links back into ewascatalog.org. Both query forms were checked against
+## the live site: ?cpg= returns that CpG's association table, ?trait= returns
+## every CpG reported for the trait. Following a link is the browser's job, so
+## this adds no egress requirement to the container - which is why bundling the
+## data and linking out are not in tension.
+MP_EWAS_SITE <- "https://www.ewascatalog.org/"
+
+## The arrow icon is the link, the text beside it stays plain - same as the
+## signature board does with geneset accessions. Making the label itself the
+## anchor turns every trait name into something that navigates away when you
+## meant to select the row.
+##
+## Trait strings come out of a downloaded file and land in a cell rendered with
+## escape = FALSE, so the value is URL-encoded here and any label the caller
+## prints beside it must be HTML-escaped there. Neither is optional: without
+## them a trait containing a quote or a tag would be injected into the page.
+mp_ewas_link <- function(param, value) {
+  url <- paste0(MP_EWAS_SITE, "?", param, "=",
+                vapply(value, utils::URLencode, character(1), reserved = TRUE, USE.NAMES = FALSE))
+  paste0("<a href='", url, "' target='_blank' rel='noopener' title='Open in the EWAS Catalog'>",
+         "<i class='fa-solid fa-arrow-up-right-from-square weblink'></i></a>")
+}
+
+## The trait list as the table shows it, each trait a link to its catalog page
+## and the trailing "+N more" a link to the CpG's own page - which is where the
+## rest of them are.
+mp_catalog_reported_html <- function(reported, probe) {
+  vapply(seq_along(reported), function(i) {
+    s <- reported[i]
+    if (is.na(s) || !nzchar(s)) {
+      ## Inline rather than a class: styles.min.css is a compiled artefact and
+      ## one grey span is not worth a sass rebuild in the loop.
+      return("<span style='color:#9aa5b1'>not reported</span>")
+    }
+    parts <- strsplit(s, "; ", fixed = TRUE)[[1]]
+    more <- grepl("^\\+[0-9]+ more$", parts)
+    ## "Smoking (46)" -> plain text, then the icon that opens its trait page.
+    linked <- vapply(parts[!more], function(p) {
+      tr <- sub(" \\([0-9]+\\)$", "", p)
+      paste0(htmltools::htmlEscape(p), mp_ewas_link("trait", tr))
+    }, character(1), USE.NAMES = FALSE)
+    if (any(more)) {
+      ## The rest of the traits are on the CpG's own page, so that is where the
+      ## remainder points.
+      linked <- c(linked, paste0(htmltools::htmlEscape(parts[more][1]),
+                                 mp_ewas_link("cpg", probe[i])))
+    }
+    paste(linked, collapse = "; ")
+  }, character(1), USE.NAMES = FALSE)
+}
+
+## Per-probe summary of the catalog slice: the formatted trait list the table
+## shows, plus the two counts worth sorting on. Kept here rather than in
+## playbase.epigenetics because the shape is what this table renders, not a
+## property of the catalog.
+##
+## `studies` counts distinct study analyses across all of a CpG's traits, so it
+## is "how hard has anyone looked at this CpG", which is the number you sort
+## ascending to put your novel hits on top.
+mp_catalog_summary <- function(traits, probes, max_traits = 3) {
+  empty <- data.frame(probe = probes, reported = "", studies = 0L, n_traits = 0L,
+                      stringsAsFactors = FALSE)
+  if (is.null(traits) || !nrow(traits)) return(empty)
+  d <- traits[order(as.integer(traits$cpg), -traits$n), , drop = FALSE]
+  key <- as.character(d$cpg)
+  r <- rle(key)
+  top <- sequence(r$lengths) <= max_traits
+  txt <- vapply(split(sprintf("%s (%d)", as.character(d$trait[top]), d$n[top]),
+                      factor(key[top], levels = r$values)),
+                paste, character(1), collapse = "; ")
+  more <- r$lengths - max_traits
+  txt <- ifelse(more > 0, paste0(txt, "; +", more, " more"), txt)
+  i <- match(probes, r$values)
+  data.frame(
+    probe = probes,
+    reported = ifelse(is.na(i), "", txt[i]),
+    studies = ifelse(is.na(i), 0L, as.integer(vapply(split(d$n, factor(key, levels = r$values)),
+                                                     sum, numeric(1))[i])),
+    n_traits = ifelse(is.na(i), 0L, r$lengths[i]),
+    stringsAsFactors = FALSE
+  )
+}
+
+## ------------------------------------------------- promoter vs body ---
+
+## The one question only the collapsed fit can answer. Promoter methylation
+## silences while gene-body methylation correlates positively with expression
+## (Yang 2014, Cancer Cell 26:577; Jones 2012, Nat Rev Genet 13:484), so a gene
+## whose two halves move in opposite directions is a specific finding - and it
+## is exactly the pattern that makes averaging a whole gene meaningless. On a
+## full 450K array about two thirds of genes carry both features, so this is a
+## view of most of the hit list, not a corner of it.
+mp_divergence <- function(res, thresh) {
+  m <- res$meta
+  shiny::validate(shiny::need(identical(m$collapse, "gene_region"),
+    "This panel compares each gene's promoter against its body, so it needs a fit collapsed to gene regions. Set 'Test at' to gene region."))
+  ## An F-test reports an unsigned beta range, so "opposite directions" has no
+  ## meaning on that branch - refuse rather than compare magnitudes and call it
+  ## a direction.
+  shiny::validate(shiny::need(!isTRUE(m$anova),
+    "This model is an F-test across three or more groups, which has no direction, so promoter and body cannot be compared for opposing change. Fit a two-group contrast or a continuous outcome."))
+  d <- res$data
+  d$sym <- sub(":(promoter|body)$", "", d$probe)
+  d$reg <- sub("^.*:", "", d$probe)
+  pr <- d[d$reg == "promoter", , drop = FALSE]
+  bo <- d[d$reg == "body", , drop = FALSE]
+  g <- intersect(pr$sym, bo$sym)
+  shiny::validate(shiny::need(length(g) > 0,
+    "No gene in this dataset has both a promoter and a gene-body feature that survived the probe floor."))
+  i <- match(g, pr$sym); j <- match(g, bo$sym)
+  out <- data.frame(
+    gene = g,
+    dbeta_promoter = pr$dbeta[i], dbeta_body = bo$dbeta[j],
+    q_promoter = pr$q[i], q_body = bo$q[j],
+    p_promoter = pr$p[i], p_body = bo$p[j],
+    n_promoter = if (is.null(pr$n_probes)) NA_integer_ else pr$n_probes[i],
+    n_body = if (is.null(bo$n_probes)) NA_integer_ else bo$n_probes[j],
+    stringsAsFactors = FALSE
+  )
+  sig_p <- mp_ewas_sig(data.frame(p = out$p_promoter, q = out$q_promoter,
+                                  dbeta = out$dbeta_promoter), thresh)
+  sig_b <- mp_ewas_sig(data.frame(p = out$p_body, q = out$q_body,
+                                  dbeta = out$dbeta_body), thresh)
+  out$both_sig <- sig_p & sig_b
+  ## Sign, not magnitude: the finding is that the two halves disagree.
+  out$opposite <- !is.na(out$dbeta_promoter) & !is.na(out$dbeta_body) &
+    sign(out$dbeta_promoter) != sign(out$dbeta_body)
+  ## Body minus promoter, which is the published direction: Li 2019 defines
+  ## MeGDP as "the numerical DNA methylation difference between gene body and
+  ## promoter regions" (Genome Res 29:270). Computing it the other way round
+  ## would have been the same number wearing a different sign and a made-up
+  ## name, so it follows theirs.
+  out$megdp <- out$dbeta_body - out$dbeta_promoter
+  out[order(-out$both_sig, -out$opposite, -abs(out$megdp)), , drop = FALSE]
+}
+
+methylome_plot_divergence_ui <- function(id, title, caption, info.text, info.methods,
+                                         height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    height = height, width = width, label = "a")
+}
+
+methylome_plot_divergence_server <- function(id, r.ewas, r.thresh, watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot_data <- shiny::reactive(mp_divergence(r.ewas(), r.thresh()))
+    plot.RENDER <- function() {
+      e <- plot_data(); shiny::req(nrow(e) > 0)
+      op <- graphics::par(mar = c(4.2, 4.4, 2.2, 1), las = 1, mgp = c(2.4, 0.6, 0))
+      on.exit(graphics::par(op))
+      lim <- max(abs(c(e$dbeta_promoter, e$dbeta_body)), na.rm = TRUE) * 1.05
+      ## Grey is everything, blue is significant in both, red is significant in
+      ## both AND disagreeing - the only class that is a finding.
+      col <- rep("#d5dbe1", nrow(e))
+      col[e$both_sig] <- MP_PAL$hypo
+      col[e$both_sig & e$opposite] <- MP_PAL$hyper
+      cex <- ifelse(e$both_sig, 0.9, 0.45)
+      plot(e$dbeta_promoter, e$dbeta_body, pch = 19, cex = cex, col = col,
+           xlim = c(-lim, lim), ylim = c(-lim, lim),
+           xlab = "delta beta, promoter", ylab = "delta beta, gene body")
+      graphics::abline(h = 0, v = 0, col = "#9aa5b1")
+      graphics::abline(0, 1, lty = 3, col = "#c2cad2")
+      ## The off-diagonal quadrants are the point, so they are named on the plot.
+      graphics::mtext("promoter up / body down", side = 3, adj = 1, cex = .7,
+                      col = MP_PAL$grey)
+      graphics::mtext("promoter down / body up", side = 1, adj = 0, cex = .7,
+                      col = MP_PAL$grey, line = 2.6)
+      lab <- utils::head(e[e$both_sig & e$opposite, , drop = FALSE], 8)
+      if (nrow(lab)) {
+        graphics::text(lab$dbeta_promoter, lab$dbeta_body, lab$gene,
+                       pos = 3, cex = 0.7, col = "#333333", xpd = NA)
+      }
+      graphics::mtext(sprintf("%s genes with both features  -  %s significant in both, %s of those opposing",
+                              format(nrow(e), big.mark = ","),
+                              format(sum(e$both_sig), big.mark = ","),
+                              format(sum(e$both_sig & e$opposite), big.mark = ",")),
+                      side = 3, adj = 0, cex = .72, col = MP_PAL$grey)
+    }
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = plot_data, renderFunc = shiny::renderPlot,
+      renderFunc2 = shiny::renderPlot, res = c(90, 130),
+      pdf.width = 7, pdf.height = 6, add.watermark = watermark)
+  })
+}
+
+methylome_table_divergence_ui <- function(id, title, info.text, caption, height, width) {
+  ns <- shiny::NS(id)
+  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+                caption = caption, height = height, width = width, label = "b")
+}
+
+methylome_table_divergence_server <- function(id, r.ewas, r.thresh, scrollY = "22vh") {
+  shiny::moduleServer(id, function(input, output, session) {
+    table_data <- shiny::reactive({
+      e <- mp_divergence(r.ewas(), r.thresh())
+      data.frame(
+        Gene = e$gene,
+        `Promoter` = round(e$dbeta_promoter, 4),
+        `Body` = round(e$dbeta_body, 4),
+        `MeGDP` = round(e$megdp, 4),
+        `Opposing` = ifelse(e$opposite, "yes", "-"),
+        `FDR promoter` = signif(e$q_promoter, 3),
+        `FDR body` = signif(e$q_body, 3),
+        `Probes promoter` = e$n_promoter,
+        `Probes body` = e$n_body,
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    })
+    render <- function(sy) {
+      dt <- table_data(); shiny::req(dt)
+      DT::datatable(dt, class = "compact hover", rownames = FALSE,
+        extensions = c("Scroller"), plugins = "scrollResize", selection = "none",
+        options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
+                       scrollY = sy, scrollResize = TRUE, deferRender = TRUE)) |>
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
+        DT::formatStyle("Opposing",
+          color = DT::styleEqual("yes", MP_PAL$hyper), fontWeight = "bold") |>
+        DT::formatStyle(c("Promoter", "Body"),
+          color = DT::styleInterval(0, c(MP_PAL$hypo, MP_PAL$hyper)))
+    }
+    TableModuleServer("tblmod", func = function() render(scrollY),
+                      func2 = function() render("60vh"),
+                      csvFunc = table_data, selector = "none")
+  })
+}
+
+## ----------------------------------------------------- trait frequency (C) ---
+
+## What the hit list, taken together, is already known for. The per-CpG column
+## cannot answer this: it keeps the top traits per CpG and collapses the rest,
+## so a trait sitting fourth on a thousand CpGs is invisible there and top of
+## the chart here.
+methylome_plot_traitfreq_ui <- function(id, title, caption, info.text, info.methods,
+                                        height, width) {
+  ns <- shiny::NS(id)
+  PlotModuleUI(ns("pltmod"), plotlib = "base", title = title, caption = caption,
+    info.text = info.text, info.methods = info.methods,
+    download.fmt = c("png", "pdf", "csv", "svg"),
+    options = shiny::tagList(
+      shiny::sliderInput(ns("topn"), "Traits shown:", min = 5, max = 30, value = 15, step = 5)
+    ),
+    height = height, width = width, label = "e")
+}
+
+methylome_plot_traitfreq_server <- function(id, r.catalog, watermark = FALSE) {
+  shiny::moduleServer(id, function(input, output, session) {
+    plot_data <- shiny::reactive({
+      cc <- r.catalog()
+      ## Refuse with the catalog's own reason - "collapsed fit" and "no hits"
+      ## are different problems and the user needs to know which one this is.
+      shiny::validate(shiny::need(isTRUE(cc$ok), cc$reason))
+      shiny::validate(shiny::need(nrow(cc$traits) > 0,
+        "None of the CpGs passing this threshold is in the EWAS Catalog."))
+      ## Count CpGs per trait, not studies: "how much of my hit list is this
+      ## trait" is the question. A single heavily studied CpG would otherwise
+      ## dominate the chart on its own.
+      tab <- sort(table(droplevels(cc$traits$trait)), decreasing = TRUE)
+      data.frame(trait = names(tab), n_cpgs = as.integer(tab),
+                 pct = 100 * as.integer(tab) / length(cc$probes),
+                 stringsAsFactors = FALSE)
+    })
+    plot.RENDER <- function() {
+      e <- plot_data(); shiny::req(nrow(e) > 0)
+      cc <- r.catalog(); shiny::req(isTRUE(cc$ok))
+      k <- min(nrow(e), if (is.null(input$topn)) 15L else as.integer(input$topn))
+      e <- utils::head(e, k)
+      op <- graphics::par(mar = c(4, 12, 2.2, 1.5), las = 1, mgp = c(2.2, 0.6, 0))
+      on.exit(graphics::par(op))
+      graphics::barplot(rev(e$n_cpgs), horiz = TRUE, col = MP_PAL$hyper, border = NA,
+        names.arg = rev(substr(e$trait, 1, 34)), cex.names = 0.7, cex.axis = 0.8,
+        xlab = "CpGs in your hit list reported for this trait")
+      ## The denominator, always. Without it the bars read as "these traits
+      ## explain my result" when most of the hit list may simply be absent from
+      ## the catalog - which is not the same as novel.
+      n_known <- length(unique(as.character(cc$traits$cpg)))
+      graphics::mtext(sprintf("%s of %s hits appear in the catalog (%.0f%%)",
+                              format(n_known, big.mark = ","),
+                              format(length(cc$probes), big.mark = ","),
+                              100 * n_known / length(cc$probes)),
+                      side = 3, adj = 1, cex = .75, col = MP_PAL$grey)
+    }
+    PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
+      csvFunc = plot_data, renderFunc = shiny::renderPlot,
+      renderFunc2 = shiny::renderPlot, res = c(90, 130),
+      pdf.width = 6, pdf.height = 5, add.watermark = watermark)
+  })
+}
+
+## ------------------------------------------------------- trait breakdown ---
+
+## The tabular twin of the barplot, and the answer to "which traits exactly?".
+## Self-contained: everything it needs is the hit list's own catalog slice, so
+## it needs no selection made on another sub-tab.
+methylome_table_traits_ui <- function(id, title, info.text, caption, height, width) {
+  ns <- shiny::NS(id)
+  TableModuleUI(ns("tblmod"), title = title, info.text = info.text,
+                caption = caption, height = height, width = width, label = "f")
+}
+
+methylome_table_traits_server <- function(id, r.catalog, scrollY = "22vh") {
+  shiny::moduleServer(id, function(input, output, session) {
+    table_data <- shiny::reactive({
+      cc <- r.catalog()
+      shiny::validate(shiny::need(isTRUE(cc$ok), cc$reason))
+      shiny::validate(shiny::need(nrow(cc$traits) > 0,
+        "None of the CpGs passing this threshold is in the EWAS Catalog."))
+      d <- cc$traits
+      n_hits <- length(cc$probes)
+      ## Two different counts, and the difference matters: how many of YOUR
+      ## hits carry the trait, against how many study analyses reported it at
+      ## all. A trait can be heavily studied on one CpG, or lightly studied
+      ## across hundreds of them.
+      agg <- stats::aggregate(cbind(cpgs = rep(1L, nrow(d)), studies = d$n),
+                              by = list(Trait = as.character(d$trait)), FUN = sum)
+      agg <- agg[order(-agg$cpgs, -agg$studies), , drop = FALSE]
+      data.frame(
+        Trait = agg$Trait,
+        CpGs = as.integer(agg$cpgs),
+        `% of hits` = round(100 * agg$cpgs / n_hits, 1),
+        Studies = as.integer(agg$studies),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    })
+    render <- function(sy) {
+      dt <- table_data(); shiny::req(dt)
+      show <- dt
+      show$Trait <- paste0(htmltools::htmlEscape(show$Trait),
+                           mp_ewas_link("trait", show$Trait))
+      DT::datatable(show, class = "compact hover", rownames = FALSE, escape = FALSE,
+        extensions = c("Scroller"), plugins = "scrollResize", selection = "none",
+        options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
+                       scrollY = sy, scrollResize = TRUE, deferRender = TRUE,
+                       order = list(list(1, "desc")))) |>
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
+        DT::formatStyle("CpGs",
+          background = DT::styleColorBar(c(0, max(dt$CpGs, 1L)), "#dce7f2"),
+          backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center") |>
+        DT::formatStyle("Studies",
+          background = DT::styleColorBar(c(0, max(dt$Studies, 1L)), "#e6dcea"),
+          backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center")
+    }
+    TableModuleServer("tblmod", func = function() render(scrollY),
+                      func2 = function() render("60vh"),
+                      csvFunc = table_data, selector = "none")
+  })
+}
+
 ## ------------------------------------------------------------- hits table ---
 
 methylome_table_hits_ui <- function(id, title, info.text, caption, height, width) {
@@ -229,8 +611,7 @@ methylome_table_hits_ui <- function(id, title, info.text, caption, height, width
                 caption = caption, height = height, width = width, label = "d")
 }
 
-methylome_table_hits_server <- function(id, r.ewas, r.thresh,
-                                        r.catalog = shiny::reactive(NULL),
+methylome_table_hits_server <- function(id, r.ewas, r.thresh, r.catalog,
                                         scrollY = "22vh") {
   shiny::moduleServer(id, function(input, output, session) {
     table_data <- shiny::reactive({
@@ -244,9 +625,24 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh,
       out <- data.frame(
         CpG = d$probe,
         Gene = ifelse(is.na(d$gene) | d$gene == "", "-", d$gene),
-        Chr = d$chr, Position = d$pos,
-        Context = ifelse(is.na(d$island), "-", d$island),
-        Region = ifelse(is.na(d$location) | d$location == "", "-", d$location),
+        Chr = d$chr,
+        Position = if (is.null(d$pos_start)) d$pos else
+          ifelse(is.na(d$pos_start), NA_character_,
+                 ifelse(d$pos_start == d$pos_end, format(d$pos_start, big.mark = ",", trim = TRUE),
+                        paste0(format(d$pos_start, big.mark = ",", trim = TRUE), "-",
+                               format(d$pos_end, big.mark = ",", trim = TRUE)))),
+        ## On a collapsed fit these three describe an aggregate, so each says
+        ## how well it does: Context carries the share of probes that actually
+        ## carry it, Region is the partition the feature belongs to rather than
+        ## the commonest RefGene sub-group, and Position is the span.
+        Context = if (is.null(d$island_n)) {
+          ifelse(is.na(d$island), "-", d$island)
+        } else {
+          ifelse(is.na(d$island), "-",
+                 sprintf("%s %d/%d", d$island, d$island_n, d$n_probes))
+        },
+        Region = if (!is.null(d$region)) d$region else
+          ifelse(is.na(d$location) | d$location == "", "-", d$location),
         ## Unsigned across k groups, so it is named for what it is.
         effect = d$dbeta,
         Direction = if (anova_fit) "-" else
@@ -257,27 +653,63 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh,
       colnames(out)[colnames(out) == "effect"] <-
         if (anova_fit) "Beta range" else "Delta beta"
       if (anova_fit && !is.null(d$Fstat)) out$F <- signif(d$Fstat, 3)
-      cat <- r.catalog()
-      if (!is.null(cat)) {
-        i <- match(d$probe, cat$probe)
-        rep <- cat$reported[i]
-        ## Absent from the catalog is absent from the catalog, not novel
-        ## biology - and a CpG that was never looked up says so separately.
-        out$Reported <- ifelse(is.na(i), "not looked up",
-                               ifelse(rep == "", "not reported", rep))
+      ## Which traits each hit is already known for. Absent from the catalog is
+      ## absent from the catalog, not novel biology, so it says so in words.
+      ## Catalog columns only when the catalog can actually answer. A collapsed
+      ## fit still gets its full hit list; it just has no CpG ids to look up.
+      cc <- r.catalog()
+      if (isTRUE(cc$ok)) {
+        cat <- mp_catalog_summary(cc$traits, d$probe, max_traits = 2)
+        out$Reported <- cat$reported
+        out$Studies <- cat$studies
       }
+      ## Collapsed fits only: how many probes went into each feature.
+      if (!is.null(d$n_probes)) out$Probes <- as.integer(d$n_probes)
+      ## What the eye needs first is what the model found: effect, direction and
+      ## significance, straight after the identity. Position and context sit in
+      ## the middle; the catalog evidence goes last, where it can be as wide as
+      ## it likes without pushing the statistics off screen.
+      eff_name <- if (anova_fit) "Beta range" else "Delta beta"
+      ## "CpG" is the wrong word for a collapsed feature; the column is named
+      ## for whatever was actually tested.
+      id_name <- if (identical(res$meta$collapse, "probe")) "CpG" else "Gene region"
+      colnames(out)[colnames(out) == "CpG"] <- id_name
+      front <- c(id_name, "Gene", eff_name, "Direction",
+                 if (anova_fit) "F", "P value", "FDR",
+                 if ("Probes" %in% colnames(out)) "Probes")
+      back <- intersect(c("Studies", "Reported"), colnames(out))
+      mid <- setdiff(colnames(out), c(front, back))
+      out <- out[, c(front, mid, back), drop = FALSE]
       rownames(out) <- NULL
       out
     })
     render <- function(sy) {
       dt <- table_data(); shiny::req(dt)
+      ## Links are built here, not in table_data, so the CSV download stays
+      ## plain text rather than a column of anchor tags.
+      has_cat <- "Reported" %in% colnames(dt)
+      if (has_cat) dt$Reported <- mp_catalog_reported_html(dt$Reported, dt$CpG)
+      ## Only a real CpG has a catalog page to link to.
+      if (has_cat) dt$CpG <- paste0(htmltools::htmlEscape(dt$CpG),
+                                    mp_ewas_link("cpg", dt$CpG))
+      ## Probes-per-feature, bar-scaled so a 400-probe body reads differently
+      ## from a 3-probe promoter at a glance.
+      has_np <- "Probes" %in% colnames(dt)
       eff <- if ("Beta range" %in% colnames(dt)) "Beta range" else "Delta beta"
-      DT::datatable(dt, class = "compact hover", rownames = FALSE,
+      DT::datatable(dt, class = "compact hover", rownames = FALSE, escape = FALSE,
         extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
         selection = list(mode = "single", target = "row"),
         options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
                        scrollY = sy, scrollResize = TRUE, deferRender = TRUE,
-                       order = list(list(8, "asc")))) |>
+                       ## Reported is the widest column by far. It is not
+                       ## character-truncated: the cell is now anchor markup and
+                       ## trunc_display_row() substr's the raw string, which
+                       ## would cut a tag in half. Two traits plus a "+N more"
+                       ## link bounds it instead, and the row click has the rest.
+                       columnDefs = if (has_cat) list(list(
+                         targets = which(colnames(dt) == "Reported") - 1L,
+                         width = "260px")) else list(),
+                       order = list(list(which(colnames(dt) == "P value") - 1L, "asc")))) |>
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
         DT::formatStyle("Direction",
           color = DT::styleEqual(c("hyper", "hypo"), c(MP_PAL$hyper, MP_PAL$hypo)),
@@ -285,6 +717,21 @@ methylome_table_hits_server <- function(id, r.ewas, r.thresh,
         DT::formatStyle(eff,
           background = DT::styleColorBar(c(-1, 1) * max(abs(dt[[eff]]), na.rm = TRUE),
                                          "#dce7f2"),
+          backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center") |>
+        ## How hard anyone has looked at this CpG. Sort ascending for the hits
+        ## nobody has reported yet.
+        DT::formatStyle(if (has_np) "Probes" else eff,
+          background = DT::styleColorBar(
+            if (has_np) c(0, max(dt$Probes, 1L)) else
+              c(-1, 1) * max(abs(dt[[eff]]), na.rm = TRUE), "#e8e2d6"),
+          backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
+          backgroundPosition = "center") |>
+        DT::formatStyle(if (has_cat) "Studies" else eff,
+          background = DT::styleColorBar(
+            if (has_cat) c(0, max(dt$Studies, 1L)) else
+              c(-1, 1) * max(abs(dt[[eff]]), na.rm = TRUE),
+            if (has_cat) "#e6dcea" else "#dce7f2"),
           backgroundSize = "98% 60%", backgroundRepeat = "no-repeat",
           backgroundPosition = "center")
     }
@@ -321,7 +768,9 @@ methylome_plot_stripcharts_server <- function(id, pgx, r.ewas, r.thresh,
         "No CpG passes the current threshold. Relax the cut-off in the settings panel."))
       n <- r.topn(); if (is.null(n) || is.na(n) || n < 1) n <- 6
       d <- d[order(d$p), , drop = FALSE][seq_len(min(n, nrow(d))), , drop = FALSE]
-      X <- mp_beta(p)
+      X <- mp_feature_beta(p, m, d$probe)
+      d <- d[d$probe %in% rownames(X), , drop = FALSE]
+      shiny::validate(shiny::need(nrow(d) > 0, "No feature left to draw."))
       ss <- intersect(m$samples, colnames(X))
       shiny::validate(shiny::need(length(ss) > 2, "No samples left for this model."))
       list(d = d, X = X[d$probe, ss, drop = FALSE], grp = droplevels(m$strata[ss]),
@@ -483,7 +932,10 @@ methylome_plot_hitmap_server <- function(id, pgx, r.ewas, r.thresh,
         "Fewer than two CpGs pass the current threshold - nothing to cluster."))
       d <- d[sig, , drop = FALSE]
       d <- utils::head(d[order(d$p), , drop = FALSE], n.max)
-      X <- mp_beta(p)
+      X <- mp_feature_beta(p, m, d$probe)
+      d <- d[d$probe %in% rownames(X), , drop = FALSE]
+      shiny::validate(shiny::need(nrow(d) >= 2,
+        "Fewer than two features could be traced back to the methylation matrix."))
       ss <- intersect(m$samples, colnames(X))
       shiny::validate(shiny::need(length(ss) > 1, "No samples left for this model."))
       grp <- droplevels(m$strata[ss])
@@ -528,11 +980,3 @@ methylome_plot_hitmap_server <- function(id, pgx, r.ewas, r.thresh,
       res = c(90, 130), pdf.width = 8, pdf.height = 7, add.watermark = watermark)
   })
 }
-
-## ----------------------------------------------------------- EWAS Catalog --
-##
-## The lookup itself is playbase.epigenetics::ewas_catalog_lookup() - HTTP and parsing,
-## nothing Shiny about it. Only the policy of how far down the hit list to go
-## belongs here: serial GETs against an undocumented rate limit, and fifty is
-## as far as anyone reads.
-MP_CATALOG_MAX <- 50L

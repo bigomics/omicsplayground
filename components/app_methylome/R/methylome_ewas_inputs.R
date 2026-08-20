@@ -37,6 +37,12 @@ methylome_ewas_inputs <- function(id) {
         placement = "left"
       ),
       withTooltip(
+        shiny::selectInput(ns("ewas_collapse"), "Test at:",
+                           choices = MP_COLLAPSE, selected = "gene_region"),
+        "What gets tested. Probe level is the real EWAS: one moderated test per CpG. Gene region tests one median beta per GENE:promoter and GENE:body - far fewer features, so a fast first pass on a full array. It is a gene-oriented view, not a more powerful one: sensitive to changes holding across a region, blind to changes confined to a couple of CpGs. Promoter merges TSS1500, TSS200, 5'UTR and 1stExon, body merges Body and 3'UTR - mCSEA's partition (Martorell-Marugan 2019, Bioinformatics 35:3257) over IMA's RefGene groups (Wang 2012, Bioinformatics 28:729). There is no whole-gene option on purpose: promoter methylation tends to silence a gene while gene-body methylation tracks with expression instead (Yang 2014, Cancer Cell 26:577), so a gene's two halves can change in opposite directions and averaging cancels the signal, and neighbouring CpGs co-vary only within about a kilobase (Mansell 2019, BMC Genomics 20:366). Median rather than mean holds type I error at nominal (Gomez 2019, Nucleic Acids Res 47:e98). Masking is applied before collapsing, incomplete probes are dropped, and features under 3 probes are dropped whole; the dataset itself is untouched, so switching back is just a refit.",
+        placement = "left"
+      ),
+      withTooltip(
         shiny::selectizeInput(ns("ewas_covars"), "Adjust for:", choices = NULL,
                               multiple = TRUE,
                               options = list(placeholder = "none (unadjusted)")),
@@ -67,14 +73,7 @@ methylome_ewas_inputs <- function(id) {
         placement = "top"
       ),
       shiny::actionButton(ns("run_ewas"), "Run EWAS",
-                          class = "btn btn-primary btn-sm", width = "100%"),
-      withTooltip(
-        shiny::actionButton(ns("run_catalog"), "Look up hits in EWAS Catalog",
-                            class = "btn btn-outline-primary btn-sm", width = "100%",
-                            style = "margin-top:6px;"),
-        "Queries ewascatalog.org for the top 50 CpGs passing the threshold and adds a Reported column to the hits table, naming the traits each CpG has already been associated with and how many studies found it. Counts are a floor - the API returns at most 500 records per CpG. 'Not reported' means the CpG is absent from that catalog, which is not the same as novel biology. Needs outbound network from the server; it says so if there is none.",
-        placement = "top"
-      )
+                          class = "btn btn-primary btn-sm", width = "100%")
     )),
 
     ## ---- what was fitted: context everywhere ----
