@@ -41,7 +41,6 @@ if(!file.exists('00SourceAll.R')) {
   source('app_launcher/test/launcher_ui_claude.R',encoding='UTF-8')
   source('app_launcher/test/launcher_ui_ds.R',encoding='UTF-8')
   source('app_launcher/test/launcher_ui_grok.R',encoding='UTF-8')
-  source('app_methylome/R/dataview_table_samples.R',encoding='UTF-8')
   source('app_methylome/R/epigenomics_plot_boxplot_beta.R',encoding='UTF-8')
   source('app_methylome/R/epigenomics_plot_methylIdeogram.R',encoding='UTF-8')
   source('app_methylome/R/methylome_age.R',encoding='UTF-8')

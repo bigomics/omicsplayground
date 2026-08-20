@@ -33,11 +33,12 @@ methylome_ui <- function(id = "methylome") {
     sidebar = bigdash::sidebar(
       "Methylome Profiler",
       id = id,
-      bigdash::sidebarItem("Sample ledger", ns("ledger-tab")),
-      bigdash::sidebarItem("Epigenetic age", ns("age-tab")),
-      bigdash::sidebarItem("Methylome character", ns("character-tab")),
-      bigdash::sidebarItem("Methylome landscape", ns("landscape-tab")),
-      bigdash::sidebarItem("Cell composition", ns("deconv-tab")),
+      ## Three screens, ordered by what depends on what. Cell composition used
+      ## to sit fifth of six while being the prerequisite for two screens above
+      ## it - the EWAS fit and intrinsic age acceleration both refuse without
+      ## it and tell the user to go back for it - so it now precedes both.
+      bigdash::sidebarItem("Data overview", ns("overview-tab")),
+      bigdash::sidebarItem("Sample profiles", ns("profiles-tab")),
       bigdash::sidebarItem("EWAS", ns("ewas-tab"))
     ),
     ## tabSettings need a settings container to render into; without this the
@@ -45,25 +46,22 @@ methylome_ui <- function(id = "methylome") {
     settings = bigdash::settings("Settings", id = id),
     bigdash::bigTabs(
       id = id,
-      bigdash::bigTabItem(ns("ledger-tab"), methylome_ui_ledger(id)),
-      bigdash::bigTabItem(ns("age-tab"),
-        methylome_age_inputs(id), methylome_ui_age(id)),
-      bigdash::bigTabItem(ns("character-tab"), methylome_ui_character(id)),
-      bigdash::bigTabItem(ns("landscape-tab"),
-        methylome_landscape_inputs(id), methylome_ui_landscape(id)),
-      bigdash::bigTabItem(ns("deconv-tab"),
-        methylome_deconv_inputs(id), methylome_ui_deconv(id)),
+      bigdash::bigTabItem(ns("overview-tab"),
+        methylome_overview_inputs(id), methylome_ui_overview(id)),
+      bigdash::bigTabItem(ns("profiles-tab"),
+        methylome_profiles_inputs(id), methylome_ui_profiles(id)),
       bigdash::bigTabItem(ns("ewas-tab"),
         methylome_ewas_inputs(id), methylome_ui_ewas(id))
     )
   )
 }
 
-methylome_ui_ledger <- function(id = "methylome") {
-  ns <- shiny::NS(id)
-  mp_tab(bslib::layout_columns(
+mp_panel_qc <- function(ns) {
+  bslib::nav_panel(
+    title = "Sample QC", value = "qc",
+    bslib::layout_columns(
     col_widths = 12,
-    height = MP_TAB_HEIGHT,
+    height = MP_SUBTAB_HEIGHT,
     row_heights = list("auto", 1),
     bs_alert("Per-sample quality and identity for a methylation cohort. Nothing on this screen needs a contrast; it answers what is true of each sample."),
     bslib::layout_columns(
@@ -88,11 +86,12 @@ methylome_ui_ledger <- function(id = "methylome") {
   ))
 }
 
-methylome_ui_age <- function(id = "methylome") {
-  ns <- shiny::NS(id)
-  mp_tab(bslib::layout_columns(
+mp_panel_age <- function(ns) {
+  bslib::nav_panel(
+    title = "Epigenetic age", value = "age",
+    bslib::layout_columns(
     col_widths = 12,
-    height = MP_TAB_HEIGHT,
+    height = MP_SUBTAB_HEIGHT,
     row_heights = list("auto", 1.15, 1),
     bs_alert("Epigenetic clocks for every sample. Pick the clocks in the settings panel on the right, by family or one at a time. A clock computed on a fraction of its probes returns a confident wrong number, so anything below the coverage floor is withheld rather than shown."),
     bslib::layout_columns(
@@ -137,11 +136,12 @@ methylome_ui_age <- function(id = "methylome") {
   ))
 }
 
-methylome_ui_character <- function(id = "methylome") {
-  ns <- shiny::NS(id)
-  mp_tab(bslib::layout_columns(
+mp_panel_context <- function(ns) {
+  bslib::nav_panel(
+    title = "Genomic context", value = "context",
+    bslib::layout_columns(
     col_widths = 12,
-    height = MP_TAB_HEIGHT,
+    height = MP_SUBTAB_HEIGHT,
     row_heights = list("auto", 1),
     bs_alert("Where methylation sits in the genome. Both panels read the CpG island and gene-position annotation that playbase produces for every methylation dataset."),
     bslib::layout_columns(
@@ -167,29 +167,17 @@ methylome_ui_character <- function(id = "methylome") {
   ))
 }
 
-methylome_ui_landscape <- function(id = "methylome") {
-  ns <- shiny::NS(id)
-  mp_tab(bslib::navset_tab(
-    id = ns("landscape_subtab"),
-
+mp_panel_chromosomes <- function(ns) {
     bslib::nav_panel(
-      title = "Methylomics landscape", value = "landscape",
+      title = "Chromosomes", value = "chromosomes",
       bslib::layout_columns(
         col_widths = 12,
         height = MP_SUBTAB_HEIGHT,
         row_heights = list("auto", 1),
-        bs_alert("An overview of the methylation profile across chromosomes and samples. Nothing here needs a contrast; it describes the cohort as it is."),
+        bs_alert("Beta per chromosome across the cohort. Autosomes should sit level with each other; the sex chromosomes are expected to differ, and a lone autosome standing apart points at copy number, a failed array region or an annotation mismatch."),
         bslib::layout_columns(
           height = "100%",
-          col_widths = c(5, 7),
-          dataview_table_beta_ui(
-            id = ns("methyltable"),
-            height = c("100%", TABLE_HEIGHT_MODAL),
-            width = c("auto", "100%"),
-            title = "Methylation table",
-            info.text = "Mean beta per chromosome. Autosomes should be near-identical - global methylation does not vary by chromosome in a healthy sample - so this table is read for what stands out rather than for its values. X sits lower in males than in females, Y is present only in males, and an autosome away from its neighbours points at a copy-number difference or at probes that failed on part of the array. With the phenotype set to <ungrouped> the columns are the individual samples plus their average; selecting a phenotype replaces them with one column per group. Probes are mapped to a chromosome from the array annotation, whose chr field is a cytoband, so the arm and band are stripped and centromeric entries dropped; Ave is the mean of the columns shown.",
-            caption = "Beta methylation profiles stratified per chromosome."
-          ),
+          col_widths = 12,
           epigenomics_plot_boxplot_beta_ui(
             id = ns("boxplotBeta"),
           title = "Beta chromosomal profiles",
@@ -202,10 +190,12 @@ methylome_ui_landscape <- function(id = "methylome") {
           )
         )
       )
-    ),
+    )
+}
 
+mp_panel_ideograms <- function(ns) {
     bslib::nav_panel(
-      title = "Methylation ideograms", value = "ideograms",
+      title = "Ideograms", value = "ideograms",
       bslib::layout_columns(
         col_widths = 12,
         height = MP_SUBTAB_HEIGHT,
@@ -223,14 +213,14 @@ methylome_ui_landscape <- function(id = "methylome") {
         )
       )
     )
-  ))
 }
 
-methylome_ui_deconv <- function(id = "methylome") {
-  ns <- shiny::NS(id)
-  mp_tab(bslib::layout_columns(
+mp_panel_composition <- function(ns) {
+  bslib::nav_panel(
+    title = "Cell composition", value = "composition",
+    bslib::layout_columns(
     col_widths = 12,
-    height = MP_TAB_HEIGHT,
+    height = MP_SUBTAB_HEIGHT,
     row_heights = list("auto", 1, 1),
     bs_alert("Estimated cell proportions, projected onto a reference panel. Cell composition is the dominant confounder in bulk-tissue methylation, so this screen exists as much to supply covariates to the EWAS model as to be read on its own."),
     bslib::layout_columns(
@@ -261,6 +251,62 @@ methylome_ui_deconv <- function(id = "methylome") {
       height = c("100%", "700px"), width = c("auto", "100%")
     )
   ))
+}
+
+## The three screens that answer "what is in this dataset" were three sidebar
+## entries: Sample ledger, Methylome character, Methylome landscape. None of
+## them needs a contrast, a button or a fitted model - they render on load,
+## which is exactly what separated them from every other screen - and two of
+## the three had no settings panel at all, so the right-hand drawer rendered
+## empty on a third of the app. They are one screen with four sub-tabs.
+methylome_ui_overview <- function(id = "methylome") {
+  ns <- shiny::NS(id)
+  mp_tab(bslib::navset_tab(
+    id = ns("overview_subtab"),
+    mp_panel_qc(ns),
+    mp_panel_context(ns),
+    mp_panel_chromosomes(ns),
+    mp_panel_ideograms(ns)
+  ))
+}
+
+## Composition first, deliberately: it is the prerequisite for the intrinsic
+## option on the age sub-tab, and for the EWAS model's cell adjustment.
+methylome_ui_profiles <- function(id = "methylome") {
+  ns <- shiny::NS(id)
+  mp_tab(bslib::navset_tab(
+    id = ns("profiles_subtab"),
+    mp_panel_composition(ns),
+    mp_panel_age(ns)
+  ))
+}
+
+## Merged screens need their controls gated to the sub-tab that owns them,
+## or the drawer shows every screen's settings at once. Same helper shape as
+## methylome_ewas_inputs()'s on_tab().
+methylome_overview_inputs <- function(id) {
+  ns <- shiny::NS(id)
+  bigdash::tabSettings(
+    shiny::conditionalPanel(
+      condition = "input.overview_subtab == 'chromosomes' || input.overview_subtab == 'ideograms'",
+      ns = ns,
+      methylome_landscape_inputs(id, wrap = FALSE)
+    )
+  )
+}
+
+methylome_profiles_inputs <- function(id) {
+  ns <- shiny::NS(id)
+  bigdash::tabSettings(
+    shiny::conditionalPanel(
+      condition = "input.profiles_subtab == 'composition'", ns = ns,
+      methylome_deconv_inputs(id, wrap = FALSE)
+    ),
+    shiny::conditionalPanel(
+      condition = "input.profiles_subtab == 'age'", ns = ns,
+      methylome_age_inputs(id, wrap = FALSE)
+    )
+  )
 }
 
 methylome_ui_ewas <- function(id = "methylome") {
@@ -304,7 +350,7 @@ methylome_ui_ewas <- function(id = "methylome") {
             ns("ewas_hits"),
             title = "CpGs passing the threshold",
             info.text = "Every feature called at the current cut-off, most significant first. Delta beta is the change in methylation itself, not the M-value log fold change the model was fitted on. For a categorical outcome with three or more levels the model is an F-test, which has no direction: the column becomes an unsigned beta range, Direction reads '-', and the F statistic is shown. Studies and Reported carry the EWAS Catalog evidence; 'not reported' means absent from that catalog, which is not the same as novel biology. When Test at is a gene region, rows are GENE:promoter or GENE:body rather than CpGs, delta beta is a difference of medians across the region and is not comparable to a probe-level delta beta, and Probes shows how many probes the median was taken over - it ranges from 3 to over a thousand. See the Test at tooltip for how the regions are defined.",
-            caption = "Significant CpGs, effect and significance first. Studies and Reported at the end carry the EWAS Catalog evidence: sort Studies ascending for the hits nobody has reported yet, and select a row to fill the detail panel on the EWAS Catalog sub-tab.",
+            caption = "Significant CpGs, effect and significance first. Studies and Reported at the end carry the EWAS Catalog evidence: sort Studies ascending for the hits nobody has reported yet; each Reported trait links out to its own catalog page.",
             height = c("100%", TABLE_HEIGHT_MODAL), width = c("auto", "100%")
           ),
           methylome_plot_hitmap_ui(

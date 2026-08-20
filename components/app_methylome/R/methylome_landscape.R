@@ -11,9 +11,13 @@
 ## way to change the chromosomes it drew. All three controls are shown on both
 ## sub-tabs instead, which also means no conditionalPanel is needed.
 
-methylome_landscape_inputs <- function(id) {
+## wrap = FALSE when the controls are being placed inside a merged screen's
+## own tabSettings(), which is the only container the settings drawer reads;
+## nesting a second one there renders nothing.
+methylome_landscape_inputs <- function(id, wrap = TRUE) {
   ns <- shiny::NS(id)
-  bigdash::tabSettings(
+  wrapper <- if (wrap) bigdash::tabSettings else shiny::tagList
+  wrapper(
     withTooltip(
       shiny::selectizeInput(ns("select_chromosome"), "Chromosome:",
                             choices = NULL, multiple = TRUE),

@@ -46,9 +46,13 @@ MP_CLOCK_NOTE <- c(
 
 ## ---------------------------------------------------------------- settings --
 
-methylome_age_inputs <- function(id) {
+## wrap = FALSE when the controls are being placed inside a merged screen's
+## own tabSettings(), which is the only container the settings drawer reads;
+## nesting a second one there renders nothing.
+methylome_age_inputs <- function(id, wrap = TRUE) {
   ns <- shiny::NS(id)
-  bigdash::tabSettings(
+  wrapper <- if (wrap) bigdash::tabSettings else shiny::tagList
+  wrapper(
     withTooltip(
       shiny::checkboxGroupInput(
         ns("clock_families"), "Clock families:",

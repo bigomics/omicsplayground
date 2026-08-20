@@ -333,8 +333,12 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## makes the panel unable to answer the question a beta density is for -
     ## did any one sample fail. It also ignored the phenotype selector while
     ## documenting that it split by group.
-    dataview_table_beta_server("methyltable", pgx, r.samples = r_land_samples,
-                               r.pheno = r_land_pheno, scrollY = "30vh")
+    ## The "Methylation table" that used to sit here is gone: it was the
+    ## chromosome boxplot with the dispersion thrown away - same matrix, same
+    ## annotation, same centromere filter - and its own help conceded it was
+    ## "read for what stands out rather than for its values", which is what a
+    ## boxplot does and a column of means cannot. Past ~20 samples it emitted
+    ## one column per sample and was unreadable.
     epigenomics_plot_boxplot_beta_server("boxplotBeta", pgx,
                                          r.chromosome = r_chroms_all,
                                          r.samples = r_land_samples,
@@ -364,9 +368,9 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     })
 
     ## EWAS Catalog rows for the current hit list, read once and shared by the
-    ## hits table, the trait-frequency plot, the per-CpG detail and the two
-    ## subtitle counts. Each read materialises ~129 MB for ~0.7s, so five
-    ## consumers reading it themselves would be five reads per threshold nudge.
+    ## hits table and the two EWAS Catalog panels. Each read materialises
+    ## ~129 MB for ~0.7s, so three consumers reading it themselves would be
+    ## three reads per threshold nudge.
     ## The catalog is indexed by CpG id, so it has nothing to say about a fit
     ## collapsed to genes or gene regions. That is a fact about the catalog, not
     ## a reason to withhold the hit list: this returns `ok = FALSE` with the

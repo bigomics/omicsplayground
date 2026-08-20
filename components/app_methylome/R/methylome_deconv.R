@@ -40,9 +40,13 @@ mp_cell_counts <- function(pgx, reference = MP_DECONV_REFS[1]) {
 
 ## ---------------------------------------------------------------- settings --
 
-methylome_deconv_inputs <- function(id) {
+## wrap = FALSE when the controls are being placed inside a merged screen's
+## own tabSettings(), which is the only container the settings drawer reads;
+## nesting a second one there renders nothing.
+methylome_deconv_inputs <- function(id, wrap = TRUE) {
   ns <- shiny::NS(id)
-  bigdash::tabSettings(
+  wrapper <- if (wrap) bigdash::tabSettings else shiny::tagList
+  wrapper(
     withTooltip(
       shiny::selectInput(ns("deconv_ref"), "Reference panel:",
                          choices = MP_DECONV_REFS, selected = MP_DECONV_REFS[1]),
@@ -139,9 +143,18 @@ methylome_plot_compgroup_server <- function(id, pgx, r.cells, r.pheno,
         "Cell composition is not available. Press Estimate composition in the settings panel."))
       p <- pgx(); ph <- r.pheno()
       shiny::validate(shiny::need(!is.null(ph) && ph %in% colnames(p$samples),
-        "No categorical phenotype to compare composition against."))
+        "No phenotype selected to compare composition against."))
       v <- as.character(p$samples[rownames(cc), ph])
       keep <- !is.na(v) & v != ""
+      ## The picker is shared with the stacked bars, which order samples by the
+      ## phenotype and are happy with a continuous one. This panel is not: it
+      ## boxplots each group and tests between them, so age or BMI produced one
+      ## box per distinct value at n = 1 and a Kruskal-Wallis across them. The
+      ## old message claimed a categorical check that was never performed.
+      lv <- unique(v[keep])
+      shiny::validate(shiny::need(length(lv) >= 2 && length(lv) <= 8,
+        sprintf("'%s' has %d distinct values, so it cannot group the samples for a comparison. Pick a categorical phenotype - two to eight groups - in the settings panel.",
+                ph, length(lv))))
       g <- droplevels(factor(v[keep])); cc <- cc[keep, , drop = FALSE]
       k <- ncol(cc)
       op <- graphics::par(mfrow = c(ceiling(k / 4), min(4, k)),

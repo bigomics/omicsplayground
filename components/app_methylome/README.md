@@ -7,43 +7,53 @@ entirely and lands here. It answers per-sample questions that need no
 experimental groups — epigenetic age, cell composition, methylome character —
 and runs a covariate-adjusted EWAS when groups exist.
 
+Three screens, ordered by dependency: **Data overview** (what is in this
+dataset, and can I trust it), **Sample profiles** (what each sample is made of
+and how old it looks), **EWAS** (what differs between groups). Composition
+precedes EWAS because the fit consumes it as a covariate.
+
 Run it locally with `make methylome` (see the bottom of this file).
 
 ## Capabilities
 
 | Screen | Capability | Notes |
 |---|---|---|
-| **Sample ledger** | Per-sample bimodality, imprinted-DMR drift, DNAm age, sex check | Flagging is cohort-relative (3 MAD), not an absolute cut-off |
+| **Data overview — Sample QC** | Per-sample bimodality, imprinted-DMR drift, DNAm age, sex check | Flagging is cohort-relative (3 MAD), not an absolute cut-off |
 | | DNAm age per sample | |
 | | Predicted sex, including aneuploidies | Refuses to predict when X/Y probes are absent |
 | | Beta density per sample | Bimodality check against the expected 0.2 / 0.8 peaks |
-| **Epigenetic age** | 10 clocks: Horvath, skinHorvath, Hannum, BNN, BLUP, EN, PedBE, Wu, Levine (PhenoAge), TL | Fitted once at dataset creation onto `pgx$meth$clocks` by `playbase.epigenetics::compute_clocks()`; a dataset without the slot is fitted live on a button |
+| **Sample profiles — Epigenetic age** | 10 clocks: Horvath, skinHorvath, Hannum, BNN, BLUP, EN, PedBE, Wu, Levine (PhenoAge), TL | Fitted once at dataset creation onto `pgx$meth$clocks` by `playbase.epigenetics::compute_clocks()`; a dataset without the slot is fitted live on a button |
 | | Select by family or individually; coverage floor | Both apply instantly - they filter a fit made with no floor and no selection. A clock below the floor is **withheld**, not estimated from partial probes |
 | | DNAm age vs chronological age per clock, with *r* | |
 | | Pairwise clock agreement | |
 | | Age acceleration by phenotype, clock and phenotype both selectable | Residual of DNAm age on chronological age; t-test for two levels, Kruskal-Wallis above |
 | | **Intrinsic** acceleration, adjusted for cell composition | Optional. Without it, a cohort whose groups differ in blood composition reports that as an accelerated methylome |
 | | Per-clock coverage table | Names each clock and why it was withheld |
-| **Methylome character** | Mean beta by relation to CpG island (island / shore / shelf / open sea) | |
-| | Mean beta by position in gene (TSS1500 → 3'UTR) | |
-| | Global mean beta, hypermethylated fraction | |
-| **Cell composition** | Houseman reference projection, 9 panels: adult blood, 4 × cord blood, saliva, DLPFC | Estimator ships inside `methylclock` — no extra dependency |
+| **Data overview — Genomic context** | Mean beta by relation to CpG island (island / shore / shelf / open sea) | |
+| | Mean beta by position in gene (TSS1500 → 3'UTR) | The panel that shows why a whole-gene average cancels: promoter and body sit at opposite ends |
+| **Data overview — Chromosomes** | Beta per chromosome, boxed across the cohort | Per-sample means, so the box is cohort spread; centromeric probes dropped |
+| **Data overview — Ideograms** | Beta drawn along the chromosomes, up to six at a time | `karyoploteR`; with a two-level phenotype the lower track becomes the group difference |
+| **Sample profiles — Cell composition** | Houseman reference projection, 9 panels: adult blood, 4 × cord blood, saliva, DLPFC | Estimator ships inside `methylclock` — no extra dependency |
 | | Per-sample stacked bars, ordered by phenotype | |
 | | Each cell type compared across groups, with a test | The confounding check |
 | | Proportions table, CSV export | Feeds the EWAS model as covariates |
 | **EWAS — Manhattan & hits** | **limma fitted in-app**, with an outcome selector | Replaces the unadjusted result stored at upload |
+| | **Test at**: probe (full EWAS) or gene region | Gene region tests one median beta per `GENE:promoter` and `GENE:body`; mCSEA's partition, no whole-gene option. A screening view, not a substitute |
+| | Fitted a chromosome at a time | Exact: `lmFit` is per-feature, so stacking the chunks and moderating once reproduces a whole-matrix fit |
 | | **Two-group contrast or continuous exposure** — age, BMI, pack-years, dose | One picker, two optgroups. For a continuous outcome Δβ is the slope: methylation change per unit |
 | | Covariates from any sample column; cell-composition adjustment | Rank-deficiency and residual-df checks refuse a bad design |
 | | Probe masking: common-SNP and cross-reactive | 52,116 SNP probes on 450K (90,084 on EPIC); 53,498 cross-reactive |
 | | Fitted formula, n per group and masked count printed | Visible on every EWAS sub-tab |
 | | Manhattan with adjustable threshold (FDR or nominal p), optional \|Δβ\| filter | Threshold line drawn at the largest passing p, omitted when nothing passes |
 | | Hits table: gene, island context, gene region, **Δβ**, direction, p, FDR | Δβ on the beta scale, not the M-value logFC |
-| **EWAS — Regions & pathways** | DMR calling | `dmrff` — runs on the summary statistics already produced |
+| **EWAS — Regions & pathways** | DMR calling | `dmrff` — runs on the summary statistics already produced. Note it is an unpublished preprint |
+| | **Promoter against body** (gene-region fits) | Replaces DMRs and gene sets at that resolution, which are per-probe answers. MeGDP, in Li 2019's direction |
 | | **Region detail plot**: methylation vs genomic position, for the region clicked in the table | Per-sample lines, group (or tertile) means, island track, flanking context. Shows whether a region is coherent or one CpG dragging its neighbours |
 | | Gene-set testing corrected for probes-per-gene | `missMethyl::gometh` |
 | **EWAS — QQ & context** | QQ plot with λ, plus bacon bias and inflation | bacon is **diagnostic only** and does not adjust p-values |
 | | Island-context enrichment of hits vs the tested background | Background is the probes tested in this contrast, not the whole array |
 | | Per-CpG beta stripcharts of the top hits | Fixed [0,1] axis so the absolute methylation level stays visible |
+| **EWAS — EWAS Catalog** | What the hit list is already reported for | Bundled release 2026-04-09 in `playdata` — no network call. Trait frequency plus a full trait breakdown, both linking out |
 
 Every panel is a platform `PlotModule` / `TableModule`, so the info and methods
 popovers, maximize, and PNG / PDF / SVG / CSV download come from the platform
@@ -121,9 +131,12 @@ Also unavailable: GrimAge, whose coefficients are not public.
 |---|---|
 | `R/methylome_ui.R`, `R/methylome_server.R` | Shell and wiring |
 | `R/methylome_utils.R` | Shared helpers and the datatype guard |
-| `R/methylome_ledger.R` | Sample ledger |
+| `R/methylome_ledger.R` | Sample QC panels |
 | `R/methylome_age.R` | Clocks |
 | `R/methylome_character.R` | Genomic context profiles |
+| `R/methylome_landscape.R` | Chromosome and ideogram settings |
+| `R/epigenomics_plot_boxplot_beta.R` | Beta per chromosome |
+| `R/epigenomics_plot_methylIdeogram.R` | karyoploteR ideograms |
 | `R/methylome_deconv.R` | Cell composition |
 | `R/methylome_model.R` | Array inference, probe masking, the limma fit |
 | `R/methylome_ewas.R`, `R/methylome_ewas_inputs.R` | EWAS panels and settings |
@@ -142,11 +155,15 @@ make methylome port=3939
 ```
 
 Then: **Library** → load a methylomics dataset. Loading one lands directly on
-the Sample ledger of this app; no Dashboard board is loaded for methylation
-data at all, so the six screens in the left sidebar are the whole platform for
-that dataset. The **Apps** launcher (DEVMODE only) also has a tile for it.
+the Data overview of this app; no Dashboard board is loaded for methylation
+data at all, so the three screens in the left sidebar are the whole platform
+for that dataset. The **Apps** launcher (DEVMODE only) also has a tile for it.
 
 Optional dependencies, all degrading gracefully when absent: `methylclock`
 (10 clocks and deconvolution — falls back to 5 clocks and no composition),
 `dmrff` (regions), `missMethyl` (gene sets), `bacon` (inflation diagnostics).
-None are currently declared in the Dockerfile.
+
+`docker/Dockerfile.update` installs `methylclock`/`methylclockData`, the two
+Illumina manifests and `playbase.epigenetics`. **`dmrff`, `missMethyl` and
+`bacon` are still absent**, so in the container image DMR calling, gene-set
+testing and the bacon diagnostic all refuse.
