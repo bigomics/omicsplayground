@@ -20,31 +20,6 @@ MODULE.multiomics <- list(
       bigdash::bigTabItem("deepnet-tab", DeepNetInputs("deepnet"), create_loader("deepnet-loader"))
     )
   },
-  module_ui2 = function() {
-    list(
-      list("mofa-tab", MofaUI("mofa")),
-      list("mgsea-tab", MGseaUI("mgsea")),
-      list("snf-tab", SNFUI("snf")),
-      list("lasagna-tab", LasagnaUI("lasagna")),
-      list("deepnet-tab", DeepNetUI("deepnet"))
-    )
-  },
-  module_server = function(PGX) {
-    info("[SERVER] calling MofaBoard module")
-    MofaBoard("mofa", pgx = PGX)
-
-    info("[SERVER] calling MGseaBoard module")
-    MGseaBoard("mgsea", pgx = PGX)
-
-    info("[SERVER] calling SNFBoard module")
-    SNFBoard("snf", pgx = PGX)
-
-    info("[SERVER] calling LasagnaBoard module")
-    LasagnaBoard("lasagna", pgx = PGX)
-
-    info("[SERVER] calling DeepNetBoard module")
-    DeepNetBoard("deepnet", pgx = PGX)
-  },
   module_lazy = function(PGX, ...) {
     list(
       "mofa-tab" = list(

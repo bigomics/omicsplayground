@@ -10,22 +10,6 @@ MODULE.enrichment <- list(
       wordcloud = "Word cloud"
     )
   },
-  module_server = function(PGX, labeltype = NULL, env = NULL) {
-    info("[SERVER] calling SignatureBoard module")
-    SignatureBoard("sig",
-      pgx = PGX,
-      selected_gxmethods = env$diffexpr$selected_gxmethods
-    )
-
-    info("[SERVER] calling PathwayBoard module")
-    PathwayBoard("pathway",
-      pgx = PGX,
-      selected_gsetmethods = env$enrich$selected_gsetmethods
-    )
-
-    info("[SERVER] calling WordCloudBoard module")
-    WordCloudBoard("wordcloud", pgx = PGX)
-  },
   module_ui = function() {
     list(
       bigdash::bigTabItem(
@@ -55,26 +39,6 @@ MODULE.enrichment <- list(
           WordCloudInputs("wordcloud"),
           create_loader("wordcloud-loader")
         )
-      )
-    )
-  },
-  module_ui2 = function() {
-    list(
-      list(
-        "enrich-tab",
-        EnrichmentUI("enrich")
-      ),
-      list(
-        "sig-tab",
-        SignatureUI("sig")
-      ),
-      list(
-        "pathway-tab",
-        PathwayUI("pathway")
-      ),
-      list(
-        "wordcloud-tab",
-        WordCloudUI("wordcloud")
       )
     )
   },

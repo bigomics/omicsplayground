@@ -36,48 +36,6 @@ MODULE.wgcna <- list(
       )
     )
   },
-  module_ui2 = function() {
-    list(
-      list(
-        "wgcna-tab",
-        WgcnaUI("wgcna")
-      ),
-      list(
-        "consensus-tab",
-        ConsensusWGCNA_UI("consensus")
-      ),
-      list(
-        "preservation-tab",
-        PreservationWGCNA_UI("preservation")
-      ),
-      list(
-        "mwgcna-tab",
-        MultiWGCNA_UI("mwgcna")
-      )
-    )
-  },
-  module_server = function(PGX, save_pgx = NULL) {
-    WgcnaBoard("wgcna",
-      pgx = PGX,
-      save_pgx = save_pgx
-    )
-
-    ConsensusWGCNA_Board(
-      id = "consensus",
-      pgx = PGX
-    )
-
-    PreservationWGCNA_Board(
-      id = "preservation",
-      pgx = PGX
-    )
-
-    MultiWGCNA_Board(
-      "mwgcna",
-      pgx = PGX,
-      save_pgx = save_pgx
-    )
-  },
   module_lazy = function(PGX, save_pgx = NULL, ...) {
     list(
       "wgcna-tab" = list(

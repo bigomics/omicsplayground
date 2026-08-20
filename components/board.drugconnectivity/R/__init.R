@@ -36,43 +36,6 @@ MODULE.systems <- list(
       )
     )
   },
-  module_ui2 = function() {
-    list(
-      list(
-        "drug-tab",
-        DrugConnectivityUI("drug")
-      ),
-      list(
-        "tcga-tab",
-        TcgaUI("tcga")
-      ),
-      list(
-        "cell-tab",
-        SingleCellUI("cell")
-      ),
-      list(
-        "pcsf-tab",
-        PcsfUI("pcsf")
-      )
-    )
-  },
-  module_server = function(PGX) {
-    DrugConnectivityBoard("drug",
-      pgx = PGX
-    )
-
-    TcgaBoard("tcga",
-      pgx = PGX
-    )
-
-    SingleCellBoard("cell",
-      pgx = PGX
-    )
-
-    PcsfBoard("pcsf",
-      pgx = PGX
-    )
-  },
   module_lazy = function(PGX, ...) {
     list(
       "drug-tab" = list(
