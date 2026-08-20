@@ -11,23 +11,6 @@ MODULE.expression <- list(
       bio = "Find biomarkers"
     )
   },
-  module_server = function(PGX, labeltype = NULL) {
-    info("[SERVER] calling CorrelationBoard module")
-    CorrelationBoard("corr",
-      pgx = PGX, labeltype = labeltype
-    )
-
-    info("[SERVER] calling BiomarkerBoard module")
-    BiomarkerBoard(
-      "bio",
-      pgx = PGX
-    )
-
-    info("[SERVER] calling TimeSeries module")
-    TimeSeriesBoard("timeseries",
-      pgx = PGX, labeltype = labeltype
-    )
-  },
   module_ui = function() {
     list(
       bigdash::bigTabItem(
@@ -49,26 +32,6 @@ MODULE.expression <- list(
         "bio-tab",
         BiomarkerInputs("bio"),
         create_loader("bio-loader")
-      )
-    )
-  },
-  module_ui2 = function() {
-    list(
-      list(
-        "corr-tab",
-        CorrelationUI("corr")
-      ),
-      list(
-        "timeseries-tab",
-        TimeSeriesUI("timeseries")
-      ),
-      list(
-        "diffexpr-tab",
-        ExpressionUI("diffexpr")
-      ),
-      list(
-        "bio-tab",
-        BiomarkerUI("bio")
       )
     )
   },

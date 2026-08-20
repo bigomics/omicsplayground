@@ -16,17 +16,6 @@ MODULE.epigenomics <- list(
       )
     )
   },
-  module_ui2 = function() {
-    list(
-      list(
-        "ideograms-tab",
-        EpigenomicsUI("epigenomics")
-      )
-    )
-  },
-  module_server = function(PGX) {
-    EpigenomicsBoard("epigenomics", pgx = PGX)
-  },
   module_lazy = function(PGX, ...) {
     list(
       "ideograms-tab" = list(

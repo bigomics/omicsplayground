@@ -9,17 +9,6 @@ MODULE.clustering <- list(
       clusterfeatures = "Features"
     )
   },
-  module_server = function(PGX, labeltype = NULL) {
-    info("[SERVER] calling ClusteringBoard module")
-    ClusteringBoard("clustersamples",
-      pgx = PGX, labeltype = labeltype
-    )
-
-    info("[SERVER] calling FeatureMapBoard module")
-    FeatureMapBoard("clusterfeatures",
-      pgx = PGX, labeltype = labeltype
-    )
-  },
   module_ui = function() {
     list(
       bigdash::bigTabItem(
@@ -31,18 +20,6 @@ MODULE.clustering <- list(
         "clusterfeatures-tab",
         FeatureMapInputs("clusterfeatures"),
         create_loader("clusterfeatures-loader")
-      )
-    )
-  },
-  module_ui2 = function() {
-    list(
-      list(
-        "clustersamples-tab",
-        ClusteringUI("clustersamples")
-      ),
-      list(
-        "clusterfeatures-tab",
-        FeatureMapUI("clusterfeatures")
       )
     )
   },
