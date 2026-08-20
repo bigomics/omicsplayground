@@ -392,8 +392,18 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (!length(probes)) {
         return(list(ok = FALSE, reason = "No CpG passes the current threshold."))
       }
-      list(ok = TRUE, probes = probes,
-           traits = playbase.epigenetics::ewas_catalog_traits(probes))
+      ## playdata::get_file() is system.file(mustWork = TRUE), so a playdata
+      ## built before the catalog landed does not return "" - it throws, and
+      ## the throw would surface as a red error on the main hits table rather
+      ## than on the catalog panels. Degrade to "unavailable" instead.
+      tr <- tryCatch(playbase.epigenetics::ewas_catalog_traits(probes),
+                     error = function(e) e)
+      if (inherits(tr, "error")) {
+        return(list(ok = FALSE, reason = paste(
+          "The bundled EWAS Catalog is not available in this installation:",
+          conditionMessage(tr))))
+      }
+      list(ok = TRUE, probes = probes, traits = tr)
     })
 
     methylome_plot_composition_server("comp_bars", PGX, r_cells,

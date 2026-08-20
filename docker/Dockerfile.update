@@ -88,6 +88,13 @@ RUN R -e "BiocManager::install('regioneR')"
 # button in the app.
 RUN R -e "BiocManager::install(c('IlluminaHumanMethylation450kanno.ilmn12.hg19', 'IlluminaHumanMethylationEPICanno.ilm10b4.hg19'))"
 RUN R -e "BiocManager::install(c('methylclock', 'methylclockData'))"
+# The EWAS screen degrades without these rather than failing, which is exactly
+# why they were missed: bacon silently drops the inflation diagnostic from the
+# QQ plot, and dmrff and missMethyl leave the whole Regions & pathways sub-tab
+# refusing. All three are installed on the dev machines, so the gap only shows
+# in the image. dmrff has no CRAN or Bioconductor release.
+RUN R -e "BiocManager::install(c('bacon', 'missMethyl'))"
+RUN R -e "remotes::install_github('perishky/dmrff', dependencies=FALSE)"
 
 #------------------------------------------------------------
 # Add supporting R libraries
@@ -193,7 +200,8 @@ fi
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
     if [ -n "$GITHUB_PAT" ]; then \
-      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi', 'bigomics/playbase-epigenetics'))" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/playbase-epigenetics', dependencies=FALSE)" && \
       rm -f /root/.Rhistory; \
     fi
 

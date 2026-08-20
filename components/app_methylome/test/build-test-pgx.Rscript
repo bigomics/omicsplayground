@@ -17,7 +17,17 @@ try(assignInNamespace(
   ns = "playbase"
 ), silent = TRUE)
 
-setwd("/tmp/claude-1000/-home-massagno-bigomics-GitHub-omicsplayground-methyl-analysis/4d9e655f-36af-48da-8177-14e37d553518/scratchpad/meth")
+## The input this was written against - a computed.rds of betas and clock ages
+## in a scratch directory on one developer's machine - is gone, and the demo it
+## produced has since been replaced by one carrying the real GEO sample sheet.
+## Kept as the record of how the first demo was built; it refuses rather than
+## silently regenerating a weaker dataset over the shipped one.
+meth_dir <- Sys.getenv("METHYLOME_BUILD_DIR", "")
+if (!nzchar(meth_dir) || !file.exists(file.path(meth_dir, "computed.rds"))) {
+  stop("This script is stale: set METHYLOME_BUILD_DIR to a directory holding computed.rds, ",
+       "and re-derive that input first. See the header.")
+}
+setwd(meth_dir)
 d <- readRDS("computed.rds")
 X <- d$X
 A <- d$age

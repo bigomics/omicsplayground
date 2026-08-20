@@ -74,6 +74,9 @@ Renviron.site
 .Rdata
 inst/doc
 *.csv
+## ...except the published probe blacklists the methylome masking reads at
+## runtime. Without them the mask checkbox silently excludes nothing.
+!components/app_methylome/inst/masking/*.csv
 *.RData
 params*
 processx-error.log

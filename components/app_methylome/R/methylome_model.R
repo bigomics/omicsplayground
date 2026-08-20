@@ -59,9 +59,16 @@ mp_xreactive_probes <- function() {
             file.path("components/app_methylome/inst", rel))
   f <- cand[nzchar(cand) & file.exists(cand)][1]
   if (is.na(f)) {
-    warning("[methylome] cross-reactive probe list not found; that mask is a no-op")
+    ## Refuse rather than warn. A warning goes to a log nobody reads while the
+    ## checkbox stays ticked and excludes nothing - which is exactly how 53,498
+    ## cross-reactive probes were silently tested once already. The file is
+    ## 2.8 MB of published blacklist and .gitignore's blanket *.csv rule kept
+    ## it out of the repo for a while; if it is missing again, say so loudly.
     MP_XREACTIVE_CACHE$p <- character(0)
-    return(character(0))
+    shiny::validate(shiny::need(FALSE, paste(
+      "The cross-reactive probe list is missing from this installation, so that",
+      "mask cannot be applied. Untick 'Cross-reactive' to run without it -",
+      "leaving it ticked would report a mask that did not happen.")))
   }
   d <- utils::read.csv(f, stringsAsFactors = FALSE)
   MP_XREACTIVE_CACHE$p <- unique(as.character(d$probe))
