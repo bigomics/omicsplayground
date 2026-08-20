@@ -207,9 +207,6 @@ qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, la
       shiny::observeEvent(is_visible(), {
 
         X <- uploaded$X
-        message("[qsee_server:board] isnullX = ", is.null(X))
-        message("[qsee_server:board] isvisible = ", is_visible())
-        message("[qsee_server:board] has_shown_popup = ", has_shown_popup())
         
         shiny::req(isTRUE(is_visible()))
         noX <- is.null(X) || length(X) == 0 || nrow(X) == 0 || ncol(X) == 0

@@ -14,8 +14,10 @@ qsee_imputation_server <- function(id, rX, rY, purge = NULL) {
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
     })
+    no_missing_warned <- shiny::reactiveVal(FALSE)
     shiny::observeEvent(is_visible(), {
       shiny::req(isTRUE(is_visible()))
+      shiny::req(!no_missing_warned())
       rawX <- rX()
       shiny::req(rawX)
       if (!anyNA(rawX)) {
@@ -23,6 +25,7 @@ qsee_imputation_server <- function(id, rX, rY, purge = NULL) {
           text = "note, data has no missing values",
           type = "warning"
         )
+        no_missing_warned(TRUE)
       }
     })
     tr_marlevel <- shiny::reactive(input$marlevel) %>% shiny::debounce(1000)
