@@ -434,6 +434,15 @@ mp_feature_beta <- function(pgx, meta, features) {
       "None of these features is in the methylation matrix."))
     return(X[keep, , drop = FALSE])
   }
+  ## Restrict to exactly the probes the fit kept - masked-out probes gone, and
+  ## completeness judged over the model's samples rather than all of them.
+  ## Measured before this: 23% of features differed from the tested value on
+  ## the default settings, by up to 0.48 beta.
+  if (!is.null(meta$fit_probes)) X <- X[intersect(meta$fit_probes, rownames(X)), , drop = FALSE]
+  if (!is.null(meta$samples)) {
+    ss <- intersect(meta$samples, colnames(X))
+    if (length(ss)) X <- X[, ss, drop = FALSE]
+  }
   key <- mp_collapse_key(pgx$genes[rownames(X), , drop = FALSE], by)
   keep <- !is.na(key) & key %in% features & rowSums(is.na(X)) == 0
   shiny::validate(shiny::need(any(keep),
@@ -637,11 +646,20 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   ## Fit on M-values, report on beta. M is the right scale for testing
   ## (Du 2010) but is not interpretable as a change in methylation.
   B <- beta[probes, rownames(dat), drop = FALSE]
+  ## A probe that is NA in every fitted sample gives lmFit a NaN Amean, and
+  ## eBayes(trend = TRUE) uses Amean as its covariate - fitFDist then stops with
+  ## "NA covariate values not allowed" and takes the whole run down. The collapse
+  ## path drops incomplete probes anyway; probe level never did.
+  allna <- rowSums(!is.na(B)) == 0
+  if (any(allna)) B <- B[!allna, , drop = FALSE]
+  shiny::validate(shiny::need(nrow(B) > 100,
+    "Almost every probe is missing across the samples this model fits."))
   ## Collapse after masking, not before: the SNP and cross-reactive lists are
   ## probe ids, so a masked probe has to be gone before its beta is averaged
   ## into a feature. Collapsing a working copy here - pgx is never touched, so
   ## switching resolution is a refit, not a re-upload.
   collapsed <- NULL
+  B_probes <- B
   if (!identical(collapse, "probe")) {
     collapsed <- mp_collapse_beta(B, pgx$genes, collapse)
     B <- collapsed$X
@@ -798,6 +816,12 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
     x = if (continuous) stats::setNames(dat$.x, rownames(dat)) else NULL,
     strata = strata, samples = rownames(dat),
     dropped_covars = dropped, masked = length(masked),
+    ## The exact probe set the features were built from. Rebuilding a feature
+    ## from pgx$X and hoping to land on the same median does not work: the fit
+    ## masked first and dropped probes incomplete across ITS samples, and a
+    ## plot that skips either draws a different number under the caption of the
+    ## one that was tested.
+    fit_probes = if (is.null(collapsed)) NULL else rownames(B_probes),
     covars = used
   )
 }

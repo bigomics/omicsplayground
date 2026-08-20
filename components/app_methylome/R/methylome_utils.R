@@ -41,10 +41,42 @@ mp_require_methylomics <- function(pgx) {
   invisible(TRUE)
 }
 
+## pgx$X is beta for every methylomics dataset the pipeline produces. The
+## conversion below is a safety net for a matrix that is genuinely on the M
+## scale, and the threshold matters: "anything outside [0,1]" is not that test.
+## Batch correction and SVD imputation both push a real beta matrix a little
+## past its bounds - measured at -0.24 and 1.28 on this demo - and converting
+## then destroys it silently, collapsing sd 0.35 to 0.06 inside [0,1] where
+## nothing can detect the damage afterwards. M-values live on roughly
+## [-20, 20], so anything beyond [-1, 2] is unambiguous and a smaller
+## excursion is a bounded beta that spilled; those are clamped, not converted.
+## validate() inside an observeEvent is swallowed: Shiny treats it as a
+## silent error, the observer just stops, and the button reads as having
+## worked - the withProgress flash even looks like success. Every refusal a
+## button can hit has to be turned back into something the user sees.
+mp_on_click <- function(expr) {
+  tryCatch(expr, validation = function(e) {
+    msg <- conditionMessage(e)
+    ## try(): showNotification needs a reactive domain and errors without one,
+    ## which would turn a refusal into a crash when this is called from a test.
+    try(shiny::showNotification(
+      if (nzchar(msg)) msg else "There is nothing to run yet.",
+      type = "warning", duration = 12), silent = TRUE)
+    invisible(msg)
+  })
+}
+
 mp_beta <- function(pgx) {
   mp_require_methylomics(pgx)
   X <- pgx$X
-  if (max(X, na.rm = TRUE) > 1 || min(X, na.rm = TRUE) < 0) X <- playbase.epigenetics::mToBeta(X)
+  rng <- range(X, na.rm = TRUE)
+  if (!all(is.finite(rng))) return(X)
+  if (rng[2] > 2 || rng[1] < -1) {
+    return(playbase.epigenetics::mToBeta(X))
+  }
+  if (rng[2] > 1 || rng[1] < 0) {
+    X[] <- pmin(pmax(X, 0), 1)
+  }
   X
 }
 

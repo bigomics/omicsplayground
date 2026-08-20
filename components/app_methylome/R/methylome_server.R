@@ -436,7 +436,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## fired simply does not run, so its table renders blank instead of saying
     ## what to press. This way the table gets NULL and shows the prompt.
     regions_val <- shiny::reactiveVal(NULL)
-    shiny::observeEvent(input$run_dmr, {
+    shiny::observeEvent(input$run_dmr, mp_on_click({
       p <- PGX(); res <- r_ewas()
       gap <- input$dmr_maxgap
       if (is.null(gap) || is.na(gap) || gap < 1) gap <- 500
@@ -444,7 +444,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
         dmrs <- mp_call_dmrs(p, res, maxgap = gap)
         regions_val(list(dmrs = dmrs, genes = mp_dmr_genes(p, dmrs, res$data)))
       })
-    })
+    }))
     ## A new model invalidates any regions already called.
     shiny::observeEvent(r_ewas_fit(), regions_val(NULL), ignoreInit = TRUE)
     r_regions <- shiny::reactive(regions_val())
@@ -459,7 +459,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
                                     watermark = watermark)
 
     enrich_val <- shiny::reactiveVal(NULL)
-    shiny::observeEvent(input$run_gometh, {
+    shiny::observeEvent(input$run_gometh, mp_on_click({
       p <- PGX(); res <- r_ewas(); d <- res$data
       ## gometh's whole point is reweighting by probes per gene, and it takes
       ## CpG ids to do it. A collapsed fit has already averaged those probes
@@ -475,7 +475,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
           collection = if (is.null(input$gs_collection)) "GO" else input$gs_collection,
           array_type = arr))
       })
-    })
+    }))
     shiny::observeEvent(r_ewas_fit(), enrich_val(NULL), ignoreInit = TRUE)
     r_enrich <- shiny::reactive(enrich_val())
     methylome_table_enrich_server("ewas_enrichgs", r_enrich)

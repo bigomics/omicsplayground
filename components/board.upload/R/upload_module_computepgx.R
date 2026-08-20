@@ -1119,7 +1119,9 @@ upload_module_computepgx_server <- function(
         if (isTRUE(input$dotimeseries)) dotimeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        if (input$do_extra == FALSE) extra.methods <- c()
+        ## NULL, not FALSE, when the checkbox was never rendered - it is hidden
+        ## for methylomics - and `if (NULL == FALSE)` is an error, not FALSE.
+        if (!isTRUE(input$do_extra)) extra.methods <- c()
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
