@@ -514,17 +514,15 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
-                if (upload_datatype() == "methylomics") {
-                  shiny::radioButtons(
-                    inputId = ns("diff_meth"),
-                    label = shiny::HTML("<h4>Methylomics analysis:</h4>"),
-                    choices = c(
-                      "Differentially methylated positions",
-                      "Differentially methylated regions"
-                    ),
-                    selected = "Differentially methylated positions",
-                  )
-                },
+                ## No "positions vs regions" choice for methylomics. Picking
+                ## regions here made compute_testGenes collapse every probe to
+                ## its gene with mergeCpG() and overwrite pgx$counts, pgx$X and
+                ## pgx$genes with the gene-level matrix - which destroys the CpG
+                ## ids the Methylome app keys everything on: the epigenetic
+                ## clocks, the EWAS, the sex check and region calling all break.
+                ## Region calling belongs on the EWAS screen, where dmrff runs
+                ## on the summary statistics of the model the user chose, and
+                ## the probe matrix survives.
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -1219,8 +1217,13 @@ upload_module_computepgx_server <- function(
         if (!any(hb_threshold)) hb_threshold <- FALSE
         covariates <- input$regress_covariates
         if (!is.null(covariates)) covariates <- as.character(covariates)
-        dma <- input$diff_meth # dma = differential meth. analysis
-        if (!is.null(dma)) dma <- as.character(dma)
+        ## Always positions. Regions are called on the EWAS screen from model
+        ## summary statistics; see the note beside the removed selector above.
+        dma <- if (upload_datatype() == "methylomics") {
+          "Differentially methylated positions"
+        } else {
+          NULL
+        }
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
