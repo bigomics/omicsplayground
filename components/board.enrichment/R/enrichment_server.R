@@ -35,17 +35,11 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
+    OmicsBoard("board", pgx, title = "Enrichment Analysis", infotext = gs_infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$gs_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Enrichment Analysis Board</strong>"),
-        shiny::HTML(gs_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     shiny::observe({
       shiny::req(pgx$X)

@@ -16,17 +16,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         js = FALSE
       )
 
+    OmicsBoard("board", pgx, title = "Compare Datasets", infotext = infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Compare Experiments</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(

@@ -199,9 +199,9 @@ ConnectivityUI <- function(id) {
     )
   )
 
-  ## returned UI object
-  div(
-    boardHeader(title = "Similar experiments", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Similar experiments",
     tabs
   )
 }

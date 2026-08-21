@@ -10,7 +10,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     fullH <- 800 ## full height of page
     rowH <- 340 ## full height of page
 
-    cor_infotext <- tspan("The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation.", js = FALSE)
+    cor_infotext <- tspan("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=mBmZNx4z19MoAucQ&amp;start=156' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center><br><br>The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation.", js = FALSE)
 
     COL <- RColorBrewer::brewer.pal(12, "Paired")[seq(1, 12, 2)]
     COL <- RColorBrewer::brewer.pal(9, "Set1")[c(2, 1, 3:9)]
@@ -18,17 +18,11 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     COL2 <- RColorBrewer::brewer.pal(2, "Paired")[1:2]
     COL2 <- COL[1:2]
 
+    OmicsBoard("board", pgx, title = "Correlation analysis", infotext = cor_infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$data_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<center><iframe width='560' height='315' src='https://www.youtube.com/embed/IICgZVUSrpU?si=mBmZNx4z19MoAucQ&amp;start=156' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe><center>"),
-        shiny::HTML(cor_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -43,14 +37,6 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     )
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
-    shiny::observeEvent(input$cor_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Correlation Analysis Board</strong>"),
-        shiny::HTML(cor_infotext),
-        easyClose = TRUE
-      ))
     })
 
     ## update filter choices upon change of data set

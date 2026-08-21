@@ -39,17 +39,11 @@ SignatureBoard <- function(id, pgx,
     CITRICACIDCYCLE.METABOLITES <- "57288 16947 32805 30887 16810 15380 15741 18012 30797 30744 15346 15846 16908 16238 17877 17552 15996 16526 15377"
     UREACYCLE.METABOLITES <- "15729 16349 16941 16467 16199 17672 17053 18012"
 
+    OmicsBoard("board", pgx, title = "Signature Analysis", infotext = infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "xl"
-      ))
-    })
 
     ## ------------------------ observe/reactive function  -----------------------------
 

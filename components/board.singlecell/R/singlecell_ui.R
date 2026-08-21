@@ -30,8 +30,9 @@ SingleCellUI <- function(id) {
   modH <- TABLE_HEIGHT_MODAL
 
   ns <- shiny::NS(id) ## namespace
-  div(
-    boardHeader(title = "Cell Profiling", info_link = ns("infotext")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Cell Profiling",
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

@@ -5,14 +5,10 @@ EpigenomicsBoard <- function(id, pgx) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Epigenomics Board</strong>"),
-        shiny::HTML("Epigenomics visualizations and analyses for methylomics data."),
-        easyClose = TRUE,
-        size = "l"
-      ))
-    })
+    OmicsBoard(
+      "board", pgx, title = "Epigenomics",
+      infotext = "Epigenomics visualizations and analyses for methylomics data."
+    )
 
     shiny::observe({
       shiny::req(pgx$X, pgx$samples, pgx$genes)

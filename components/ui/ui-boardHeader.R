@@ -68,7 +68,7 @@ OmicsBoardUI <- function(id, title, ..., info=TRUE) {
         class = "quick-button", style="border: 0px; background-color: transparent;"),
         style="margin: 28px 5px -20px 0; padding: 0 0 0 80px;")
     ),
-    ...
+    div(...)
   )
 }
 

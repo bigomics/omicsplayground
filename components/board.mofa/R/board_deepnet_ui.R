@@ -62,8 +62,9 @@ DeepNetUI <- function(id) {
   rowH1 <- 250 ## row 1 height
   rowH2 <- 440 ## row 2 height
 
-  shiny::div(
-    boardHeader(title = "Multi-Omics Supervised Auto-Encoder", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Multi-Omics Supervised Auto-Encoder",
     shiny::tabsetPanel(
       id = ns("tabs"),
 

@@ -265,22 +265,25 @@ AcrossUI <- function(id) {
   )
 
   ## Board header spans the full width; the inputs (left) and content (right)
-  ## align on the same baseline below it.
-  bslib::layout_columns(
-    col_widths = 12,
-    gap = 0,
-    height = "calc(100vh - 60px)",
-    row_heights = list("auto", 1),
-    boardHeader(title = "Across Datasets", info_link = ns("info")),
-    bslib::layout_columns(
-      col_widths = c(3, 9),
-      fill = TRUE,
-      bslib::card(
-        bslib::card_body(
-          AcrossInputs(id)
-        )
-      ),
-      content
+  ## align on the same baseline below it. OmicsBoardUI() already splits
+  ## header (auto) / content (1fr) internally, so only the overall height
+  ## needs to be fixed here for the "100%" heights inside `content` to
+  ## resolve against.
+  div(
+    style = "height: calc(100vh - 60px);",
+    OmicsBoardUI(
+      id = ns("board"),
+      title = "Across Datasets",
+      bslib::layout_columns(
+        col_widths = c(3, 9),
+        fill = TRUE,
+        bslib::card(
+          bslib::card_body(
+            AcrossInputs(id)
+          )
+        ),
+        content
+      )
     )
   )
 }
