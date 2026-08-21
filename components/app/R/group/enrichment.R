@@ -1,6 +1,14 @@
 ## make as R6 class?? e.g. add documentation, initialize object,
 ## object id.
 
+## Registry for the GeneSets menu group: which tabs it contains, their
+## sidebar labels (module_menu), the shell each tab renders at boot
+## (module_ui) and the UI + server bigTabsLazy() fills it with on first
+## visit (module_lazy). Read by opg_ui() and opg_server().
+##
+## The boards themselves live in components/board.*; a group draws on
+## whichever of them it needs.
+
 MODULE.enrichment <- list(
   module_menu = function() {
     c(
