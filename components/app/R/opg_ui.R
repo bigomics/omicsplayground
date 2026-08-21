@@ -103,17 +103,6 @@ opg_ui <- function() {
     
     sidebar <- bigdash::sidebar(
       "Menu",
-      ## div(
-      ##   id = "menu-mode-switch",
-      ##   shinyWidgets::switchInput(
-      ##     "menu_mode_toggle",
-      ##     label    = NULL,
-      ##     value    = initial_is_full,
-      ##     onLabel  = "Advanced",
-      ##     offLabel = "Basic",
-      ##     size     = "mini"
-      ##   )
-      ## ),
       div(
         id = "menu-full",
         class = "nodisp", style = "diplay: none;",
