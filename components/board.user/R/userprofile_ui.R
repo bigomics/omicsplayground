@@ -8,9 +8,11 @@ UserProfileUI <- function(id) {
 
   div(
     class = "row",
-    boardHeader(title = "User Profile", info_link = ns("board_info")),
-    shiny::tabsetPanel(
-      id = ns("tabs1"),
+    OmicsBoardUI(
+      id = ns("board"),
+      title = "User Profile",
+      shiny::tabsetPanel(
+        id = ns("tabs1"),
       shiny::tabPanel(
         "User profile",
         bslib::layout_columns(
@@ -35,5 +37,6 @@ UserProfileUI <- function(id) {
         )
       )
     )
+  )
   )
 }

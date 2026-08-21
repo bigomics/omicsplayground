@@ -83,8 +83,9 @@ AdminPanelUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Admin Panel", info_link = ns("board_info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Admin Panel",
     tabs
   )
 }

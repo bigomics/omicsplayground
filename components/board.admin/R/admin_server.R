@@ -62,25 +62,16 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
     ns <- session$ns ## NAMESPACE
     dbg("[AdminPanelBoard] >>> initializing AdminBoard...")
 
+    OmicsBoard(
+      "board", pgx = NULL, title = "Admin Panel",
+      infotext = "The Admin Panel provides administrative functions for managing
+          the OmicsPlayground platform. This panel is only accessible to
+          users with admin privileges."
+    )
+
     ## Check if user is admin - this is a critical security check
     is_admin <- reactive({
       isTRUE(auth$ADMIN)
-    })
-
-    ## ----------------------------------------------------------------------
-    ## More Info (pop up window)
-    ## ----------------------------------------------------------------------
-
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Admin Panel</strong>"),
-        shiny::HTML(
-          "The Admin Panel provides administrative functions for managing
-          the OmicsPlayground platform. This panel is only accessible to
-          users with admin privileges."
-        ),
-        easyClose = TRUE, size = "l"
-      ))
     })
 
     ## ================================================================================

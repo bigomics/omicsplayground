@@ -62,8 +62,9 @@ LasagnaUI <- function(id) {
   rowH1 <- 250
   rowH2 <- 440
 
-  shiny::div(
-    boardHeader(title = "LASAGNA", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "LASAGNA",
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(

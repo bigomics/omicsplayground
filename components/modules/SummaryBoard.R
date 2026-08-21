@@ -20,11 +20,9 @@ SummaryBoardInputs <- function(id) {
 SummaryBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  div(
-    boardHeader(
-      title = "Summary",
-      info_link = ns("summary_info")
-    ),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Summary",
     bslib::layout_columns(
       col_widths = 12,
       height = "calc(100vh - 124px)",
@@ -63,18 +61,7 @@ SummaryBoard <- function(id, pgx) {
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
-    summary_info <- "Summary"
-
-    observeEvent(input$summary_info, {
-      showModal(
-        modalDialog(
-          title = tags$strong("Summary Board"),
-          summary_info,
-          easyClose = TRUE,
-          size = "l"
-        )
-      )
-    })
+    OmicsBoard("board", pgx, title = "Summary", infotext = "Summary")
 
     output$bullet_points <- shiny::renderUI({
       txt <- pgx$wgcna$report$bullets

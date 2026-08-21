@@ -43,14 +43,7 @@ DeepNetBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
-        shiny::HTML(infotext2),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
+    OmicsBoard("board", pgx, title = "Multi-Omics Supervised Auto-Encoder", infotext = infotext2)
 
 
     shiny::observeEvent(

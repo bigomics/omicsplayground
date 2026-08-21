@@ -210,8 +210,9 @@ CompareUI <- function(id) {
   )
 
 
-  div(
-    boardHeader(title = "Compare datasets", info_link = ns("info")),
+  OmicsBoardUI(
+    id = ns("board"),
+    title = "Compare datasets",
     tabs
   )
 }

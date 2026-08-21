@@ -125,17 +125,11 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     query_result <- reactiveVal(NULL)
 
+    OmicsBoard("board", pgx, title = "Across Datasets", infotext = infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Across Datasets</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     shiny::observeEvent(input$zscore_info, {
       shiny::showModal(shiny::modalDialog(
