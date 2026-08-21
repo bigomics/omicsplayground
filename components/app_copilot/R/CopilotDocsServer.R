@@ -8,6 +8,76 @@
 #
 # Delete is a per-row trash icon that writes the file name into a single
 # shared input (input$delete_target) so we don't need one observer per row.
+#
+# Uploads are gated on extension and size. The agent only ingests
+# .pdf/.txt/.md and rejects anything whose extracted text exceeds its own
+# limit; a file the UI accepts but the agent drops appears in this list
+# while being invisible to the assistant, which is how a user ends up
+# believing the chatbot "cannot read" a file it was never given.
+
+# character: extensions the agent can ingest. Must stay in step with
+# omicsagentovi's `.ovi_bootstrap_docs_from_dir()` glob and
+# `ovi_upload_document()`, which reject everything else.
+.COPILOT_DOC_EXTS <- c("pdf", "txt", "md")
+
+# character: the same set as a filename pattern, used to list the directory
+# so the panel can never show a file the agent will not pick up.
+.COPILOT_DOC_PATTERN <- "\\.(pdf|txt|md)$"
+
+# numeric: per-file upload ceiling in bytes, mirroring the agent's 20,000,000
+# extracted-character limit. Bytes are an approximation of characters: for
+# text and Markdown the two are within a rounding error, while a PDF extracts
+# to far less text than it occupies on disk, so this is conservative for
+# PDFs — a large scanned PDF may be refused here even though the agent could
+# have parsed it. Refusing predictably beats accepting and silently dropping.
+.COPILOT_DOC_MAX_BYTES <- 20000000
+
+#' Classify uploaded files against the agent's ingest rules.
+#'
+#' Pure helper so the gate is testable without a Shiny session.
+#'
+#' @param names character vector of uploaded file names.
+#' @param sizes numeric vector of file sizes in bytes.
+#' @return list(ok = logical, reason = character). `reason` is `NA` for
+#'   accepted files and a user-facing explanation otherwise.
+#' @noRd
+.copilot_filter_uploads <- function(names, sizes) {
+  n <- length(names)
+  ok     <- rep(TRUE, n)
+  reason <- rep(NA_character_, n)
+  if (n == 0L) return(list(ok = ok, reason = reason))
+
+  sizes <- suppressWarnings(as.numeric(sizes))
+  ext   <- tolower(tools::file_ext(names))
+
+  bad_ext <- !ext %in% .COPILOT_DOC_EXTS
+  if (any(bad_ext)) {
+    ok[bad_ext] <- FALSE
+    label <- ifelse(nzchar(ext[bad_ext]), paste0(".", ext[bad_ext]),
+                    "no extension")
+    reason[bad_ext] <- sprintf(
+      "%s is not supported - upload %s",
+      label, paste(paste0(".", .COPILOT_DOC_EXTS), collapse = ", ")
+    )
+  }
+
+  too_big <- ok & !is.na(sizes) & sizes > .COPILOT_DOC_MAX_BYTES
+  if (any(too_big)) {
+    ok[too_big] <- FALSE
+    reason[too_big] <- sprintf(
+      "too large (%.1f MB) - the limit is %.0f MB",
+      sizes[too_big] / 1e6, .COPILOT_DOC_MAX_BYTES / 1e6
+    )
+  }
+
+  empty <- ok & !is.na(sizes) & sizes == 0
+  if (any(empty)) {
+    ok[empty] <- FALSE
+    reason[empty] <- "file is empty"
+  }
+
+  list(ok = ok, reason = reason)
+}
 
 #' Copilot docs panel UI.
 #' @param id Shiny module id.
@@ -46,7 +116,11 @@ CopilotDocsServer <- function(id, docs_dir) {
 
     .doc_files <- shiny::reactive({
       .refresh()
-      files <- list.files(docs_dir, full.names = TRUE)
+      # Filter on the same pattern the agent globs. Anything else in the
+      # directory (a stray .json, a file staged by an older build) would
+      # otherwise be listed here as if it were available to the assistant.
+      files <- list.files(docs_dir, full.names = TRUE,
+                          pattern = .COPILOT_DOC_PATTERN, ignore.case = TRUE)
       if (!length(files)) {
         return(data.frame(Name = character(0), Size = character(0),
                           stringsAsFactors = FALSE))
@@ -63,13 +137,42 @@ CopilotDocsServer <- function(id, docs_dir) {
 
     shiny::observeEvent(input$upload, {
       shiny::req(input$upload)
-      for (i in seq_len(nrow(input$upload))) {
+      up <- input$upload
+
+      # Server-side re-check. fileInput's `accept` is a browser hint only —
+      # drag-and-drop and several browsers ignore it — so it cannot be the
+      # only gate.
+      verdict <- .copilot_filter_uploads(up$name, up$size)
+
+      for (i in which(verdict$ok)) {
         file.copy(
-          input$upload$datapath[[i]],
-          file.path(docs_dir, input$upload$name[[i]]),
+          up$datapath[[i]],
+          file.path(docs_dir, up$name[[i]]),
           overwrite = TRUE
         )
       }
+
+      rejected <- which(!verdict$ok)
+      if (length(rejected)) {
+        shiny::showNotification(
+          shiny::tags$div(
+            shiny::tags$b(sprintf(
+              "%d file%s not uploaded",
+              length(rejected), if (length(rejected) == 1L) "" else "s"
+            )),
+            shiny::tags$ul(
+              style = "margin: 4px 0 0 0; padding-left: 18px;",
+              lapply(rejected, function(i) {
+                shiny::tags$li(sprintf("%s - %s", up$name[[i]],
+                                       verdict$reason[[i]]))
+              })
+            )
+          ),
+          type = "error",
+          duration = 12
+        )
+      }
+
       .refresh(.refresh() + 1L)
     })
 
