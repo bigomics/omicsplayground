@@ -303,7 +303,25 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         ),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
-      bigdash::bigTabs()  ## Empty: all tabs are dynamically inserted
+      bigdash::bigTabs(
+        ## One shell per tab: that tab's own inputs -- which settings.js moves
+        ## into the settings drawer at boot -- plus a spinner. bigTabsLazy() in
+        ## the server fills in the board itself on first visit.
+        ##
+        ## Taken from each group's module_ui() rather than spelled out here, so
+        ## a tab's shell and the module_lazy() entry that fills it stay in one
+        ## file and cannot drift apart. DataView is the one tab with no group
+        ## registry of its own.
+        bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader")),
+        MODULE.clustering$module_ui(),
+        MODULE.expression$module_ui(),
+        MODULE.enrichment$module_ui(),
+        MODULE.compare$module_ui(),
+        MODULE.systems$module_ui(),
+        MODULE.multiomics$module_ui(),
+        MODULE.wgcna$module_ui(),
+        MODULE.epigenomics$module_ui()
+      ) 
     ) ## end of bigPage
   }
 
