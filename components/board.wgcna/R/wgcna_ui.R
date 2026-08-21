@@ -49,7 +49,7 @@ WGCNA_REFS <- list(
 WgcnaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  height = "calc(100vh - 135px)"
+  height = "100%"
   
   tabsetpanel <- shiny::tabsetPanel(
     id = ns("tabs"),

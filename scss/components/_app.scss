@@ -62,11 +62,83 @@
 }
 
 #app .col-sm-11>.tab-content {
-    margin-top: -15px;
     height: 100%;
 }
 
 #app .col-sm-11>.tab-content>.tab-pane {
     background-color: #F7FAFD;
-    height: calc(100vh + 15px);
+    height: 100%;
+}
+
+// bigTabs()'s tab container has no explicit height, so it (and each .big-tab
+// pane inside it) sizes itself to its content instead of its properly-sized
+// flex ancestors -- a board taller than the viewport pushes the *whole page*
+// taller (page-level scrollbar + a few px of vertical wiggle) instead of
+// scrolling its own content. Constrain it and let it scroll internally.
+#big-tabs {
+    height: 100%;
+}
+
+// Each board's own OmicsBoardUI() is a bslib fillable layout_columns() (class
+// html-fill-item) whose row_heights = list("auto", 1) row can only actually
+// shrink to fit -- rather than overflowing by however much its content needs
+// -- if its parent is a proper bslib fill container (display:flex;
+// flex-direction:column; min-height:0), which is what html-fill-container
+// itself resolves to. .big-tab wasn't one, so the fill math never applied and
+// the board just overflowed. overflow-y:auto stays as a safety net for a
+// board whose content still can't shrink enough (e.g. a tall data table).
+.big-tab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+// bslib's own CSS already zeroes this exact margin -- `.html-fill-container >
+// .html-fill-item.bslib-mb-spacing { margin-bottom: 0; }` -- but only fires
+// when the parent literally carries the class "html-fill-container", which
+// .big-tab doesn't (we replicated its behaviour above rather than the class
+// itself). Left unset, that spacing (meant for a board dropped in normal
+// document flow) still pushes the grid past .big-tab's own fitted height.
+// Scoped to every nested bslib-grid inside a board, not just the outermost
+// one -- individual boards nest layout_columns() several levels deep for
+// their own sub-layouts, and each one carries this same stray margin.
+.big-tab .bslib-mb-spacing {
+    margin-bottom: 0;
+}
+
+// layout_columns()'s height only ever comes from the R `height=` argument --
+// bslib has no ResizeObserver/JS recalculating it at runtime, it's a static
+// value baked in at render time via --bslib-grid-height. Boards' own internal
+// layout_columns() calls (nested arbitrarily deep inside dataview_ui.R and
+// friends) don't pass one, so every single one falls back to height:auto and
+// renders at whatever its content needs -- overflowing its properly-sized
+// ancestor by that much. Rather than adding height="100%" to every one of
+// those R call sites individually, supply it here once for any such grid
+// anywhere inside a board.
+//
+// !important because a good many boards (clustering_ui.R, dataview_ui.R,
+// correlation_ui.R, ~30 others) instead hardcode a literal
+// height:calc(100vh - <N>px) inline style on this same element -- a magic
+// constant hand-tuned to whatever that board's own header/tabs/banner chrome
+// added up to *before* the fill fixes above changed how much of the viewport
+// that chrome actually consumes. Every one of those constants is now stale
+// (each board's own number, each wrong by a different amount), so rather
+// than re-tuning ~30 magic numbers, this beats the inline style outright.
+.big-tab .bslib-grid.html-fill-item {
+    height: 100% !important;
+}
+
+// OmicsBoardUI()'s 3rd row (bslib::layout_columns(..., div(...))) is a plain,
+// unclassed div holding the board's actual content -- it never got tagged as
+// an html-fill-item, so it doesn't shrink to fit; it just renders at whatever
+// height its content needs and bleeds past its (overflow:visible) fill-item
+// parent by however much that is. Every OmicsBoardUI() board has exactly this
+// shape (fillRow, bd_visibility_probe, div(...)), so :nth-child(3) reliably
+// targets it without reaching into unrelated bslib-grids elsewhere. Let it
+// scroll internally instead of overflowing .big-tab.
+.big-tab > .bslib-grid > .bslib-grid-item:nth-child(3) {
+    overflow-y: auto;
+    overflow-x: hidden;
 }

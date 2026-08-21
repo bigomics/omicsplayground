@@ -48,7 +48,8 @@ OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
   bslib::layout_columns(
     col_widths = 12,
     gap = 0,
-    row_heights = list("auto", 1),
+    height = "100%",
+    row_heights = list("auto", "auto", 1),
     fillRow(
       flex = c(NA, 1, NA),
       style = "margin-top: -6px;",
@@ -67,7 +68,7 @@ OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
         class = "quick-button", style="border: 0px; background-color: transparent;"),
         style="margin: 28px 5px -20px 0; padding: 0 0 0 80px;")
     ),
-    bigdash::bd_visibility_probe(ns),
+    div(bigdash::bd_visibility_probe(ns), height="1px"),
     div(...)
   )
 }

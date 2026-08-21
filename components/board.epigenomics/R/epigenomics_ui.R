@@ -53,7 +53,7 @@ EpigenomicsUI <- function(id) {
         "Methylomics landscape",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
           bslib::layout_columns(
             col_widths = 12,
@@ -103,7 +103,7 @@ EpigenomicsUI <- function(id) {
         "Methylation ideograms",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           epigenomics_plot_methylIdeogram_ui(
             id = ns("methylIdeogram"),
             title = "Methylation Ideograms",

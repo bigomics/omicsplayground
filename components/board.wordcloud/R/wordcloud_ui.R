@@ -14,11 +14,11 @@ WordCloudInputs <- function(id) {
 }
 
 WordCloudUI <- function(id) {
-  fullH <- 750
+  fullH <- "100%"
   rowH <- 660 ## row height of panel
   tabH <- 200 ## row height of panel
   tabH <- "70vh" ## row height of panel
-  halfH <- c("calc(50vh - 70px)", TABLE_HEIGHT_MODAL)
+  halfH <- c("50%", TABLE_HEIGHT_MODAL)
 
   ns <- shiny::NS(id) ## namespace
   shiny::tabsetPanel(

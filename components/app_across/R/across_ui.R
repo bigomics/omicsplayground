@@ -270,7 +270,7 @@ AcrossUI <- function(id) {
   ## needs to be fixed here for the "100%" heights inside `content` to
   ## resolve against.
   div(
-    style = "height: calc(100vh - 60px);",
+    style = "height: 100%;",
     OmicsBoardUI(
       ns = ns,
       title = "Across Datasets",

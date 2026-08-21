@@ -52,12 +52,12 @@ PcsfUI <- function(id) {
         "Gene PCSF",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           ## --------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 181px)",
+            height = "100%",
             bslib::layout_columns(
               col_widths = c(12),
               pcsf_genepanel_seriesplot_ui(
@@ -92,12 +92,12 @@ PcsfUI <- function(id) {
         "Geneset PCSF",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           ## --------- begin tab content ------------
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 181px)",
+            height = "100%",
             bslib::layout_columns(
               col_widths = c(12),
               pcsf_gsetpanel_seriesplot_ui(

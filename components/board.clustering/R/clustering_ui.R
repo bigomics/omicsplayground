@@ -166,7 +166,7 @@ ClusteringUI <- function(id) {
 
   rowH <- 350
   rowH <- "40vh"
-  fullH <- "calc(100vh - 181px)"
+  fullH <- "100%"
 
 
   heatmap_panel <- shiny::tabPanel(
@@ -200,7 +200,7 @@ ClusteringUI <- function(id) {
             )
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
-          height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
+          height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         ),
         bslib::layout_columns(

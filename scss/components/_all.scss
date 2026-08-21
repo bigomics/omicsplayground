@@ -1,4 +1,11 @@
 html {
+  // Also needed on html, not just body: a couple of px of stray horizontal
+  // overflow (Bootstrap's row gutter bleed, third-party widget overlays)
+  // otherwise still inflate documentElement's scrollWidth and force a
+  // page-level horizontal scrollbar even with overflow-x:hidden on body
+  // alone, since body isn't always the element the browser treats as the
+  // page's actual scrolling root.
+  overflow-x: hidden;
 
   body {
       a {
@@ -7,6 +14,12 @@ html {
       }
       font-size: 14px;
 /*    font-family: "Cubano"; */
+
+      // bslib::navset_pill_list()'s Bootstrap .row carries the default
+      // negative gutter margins with no .container to absorb them, bleeding
+      // a few px past the viewport edge and forcing a phantom horizontal
+      // scrollbar. Nothing real lives in that gutter, so clipping it is safe.
+      overflow-x: hidden;
   }
 
   .alert {

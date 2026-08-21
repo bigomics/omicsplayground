@@ -85,8 +85,7 @@ DataViewUI <- function(id) {
 
   imgH <- c(330, 600) ## heights for small and fullscreen image
   imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
-  fullH <- "calc(100vh - 181px)"
-  fullH <- "calc(100vh - 140px)"  
+  fullH <- "100%"
 #  fullH = "100%"
   
   # Overview tab #####
