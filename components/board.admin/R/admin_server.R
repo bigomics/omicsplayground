@@ -63,7 +63,7 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
     dbg("[AdminPanelBoard] >>> initializing AdminBoard...")
 
     OmicsBoard(
-      "board", pgx = NULL, title = "Admin Panel",
+      session, pgx = NULL, title = "Admin Panel",
       infotext = "The Admin Panel provides administrative functions for managing
           the OmicsPlayground platform. This panel is only accessible to
           users with admin privileges."

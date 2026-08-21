@@ -86,7 +86,7 @@ FeatureMapUI <- function(id) {
   fullH <- "calc(100vh - 181px)"
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Cluster features",
     shiny::tabsetPanel(
       id = ns("tabs"),

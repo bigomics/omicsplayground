@@ -66,7 +66,7 @@ CopilotBoardServer <- function(
     dir.create(docs_dir, recursive = TRUE, showWarnings = FALSE)
 
     # --- Board
-    OmicsBoard("board", pgx, title="AI Copilot", infotext = NULL)
+    OmicsBoard(session, pgx, title="AI Copilot", infotext = NULL, purge = FALSE)
     
     # ---- Dataset context card output ----
     output$dataset_info <- shiny::renderUI({

@@ -30,7 +30,7 @@ SNFBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    OmicsBoard("board", pgx, title = "Similarity Network Fusion", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Similarity Network Fusion", infotext = infotext)
 
     ## ========================================================================
     ## ============================= REACTIVES ================================

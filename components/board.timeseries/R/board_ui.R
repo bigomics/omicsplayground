@@ -71,7 +71,7 @@ TimeSeriesUI <- function(id) {
   parallel_info <- HTML("<b>Time clustering</b> groups features with similar variation in time together using KNN. We can see different trends in the expression of groups of genes, or so-called gene modules. The parallel plot is interactive so you can manually order the time points.")
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Time Series",
     shiny::tabsetPanel(
       id = ns("tabs1"),

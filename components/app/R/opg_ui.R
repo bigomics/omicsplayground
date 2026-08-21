@@ -317,38 +317,23 @@ opg_ui <- function() {
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
-        ## bigdash::bigTabItem(
-        ##   "welcome-tab",
-        ##   WelcomeBoardInputs("welcome"),
-        ##   WelcomeBoardUI("welcome")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "load-tab",
-        ##   # LoadingInputs("load")
-        ##   LoadingUI("load")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "upload-tab",
-        ##   UploadUI("upload")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "userprofile-tab",
-        ##   UserProfileUI("user_profile")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "usersettings-tab",
-        ##   AppSettingsUI("app_settings")
-        ## ),
-        ## if (isTRUE(opt$ENABLE_ADMIN)) {
-        ##   bigdash::bigTabItem(
-        ##     "admin-tab",
-        ##     AdminPanelUI("admin_panel")
-        ##   )
-        ## }
-        ## bigdash::bigTabItem(
-        ##   "sharing-tab",
-        ##   SharedDatasetsUI("load")
-        ## )
+        ## One shell per tab: that tab's own inputs -- which settings.js moves
+        ## into the settings drawer at boot -- plus a spinner. bigTabsLazy() in
+        ## the server fills in the board itself on first visit.
+        ##
+        ## Taken from each group's module_ui() rather than spelled out here, so
+        ## a tab's shell and the module_lazy() entry that fills it stay in one
+        ## file and cannot drift apart. DataView is the one tab with no group
+        ## registry of its own.
+        bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader")),
+        MODULE.clustering$module_ui(),
+        MODULE.expression$module_ui(),
+        MODULE.enrichment$module_ui(),
+        MODULE.compare$module_ui(),
+        MODULE.systems$module_ui(),
+        MODULE.multiomics$module_ui(),
+        MODULE.wgcna$module_ui(),
+        MODULE.epigenomics$module_ui()
       )
       ## UploadUI("upload")
     ) ## end of bigPage

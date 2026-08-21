@@ -9,7 +9,7 @@ UserProfileBoard <- function(id, auth, nav_count) {
     dbg("[UserProfileBoard] >>> initializing UserBoard...")
 
     OmicsBoard(
-      "board", pgx = NULL, title = "User Profile",
+      session, pgx = NULL, title = "User Profile",
       infotext = "The User Profile page allows you to view and change your
                 subscription plan and to view the latest news about application
                 development."

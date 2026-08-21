@@ -47,259 +47,105 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     }
   }, ignoreInit = FALSE)
 
+  ## Register all lazy tabs at startup.  bigTabsLazy() will
+  ## materialise each tab's heavy UI (via module_lazy closures)
+  ## the first time the user clicks on it.
+  ## ------------------------------------------------------------
+  lazy_tabs <- list()
+  
+  lazy_tabs[["dataview-tab"]] <- list(
+    ui      = function() DataViewUI("dataview"),
+    server  = function() DataViewBoard("dataview", pgx = PGX, labeltype = labeltype),
+    preload = TRUE
+  )
+
+  lazy_tabs[["diffexpr-tab"]] <- list(
+    ui      = function() ExpressionUI("diffexpr"),
+    server  = function() ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) ->>
+                           env$diffexpr,
+    preload = TRUE
+  )
+
+  lazy_tabs[["enrich-tab"]] = list(
+    ui     = function() EnrichmentUI("enrich"),
+    server = function() EnrichmentBoard("enrich", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods) ->>
+                          env$enrich,
+    preload = TRUE
+  )
+  
+  lazy_tabs <- c(lazy_tabs, MODULE.clustering$module_lazy(PGX = PGX, labeltype = labeltype))
+  lazy_tabs <- c(lazy_tabs, MODULE.expression$module_lazy(PGX = PGX, labeltype = labeltype))
+  lazy_tabs <- c(lazy_tabs, MODULE.enrichment$module_lazy(PGX = PGX, labeltype = labeltype, env = env))
+  lazy_tabs <- c(lazy_tabs, MODULE.compare$module_lazy(PGX = PGX, labeltype = labeltype, auth = auth,
+    env = env, reload_pgxdir = reload_pgxdir))
+  lazy_tabs <- c(lazy_tabs, MODULE.systems$module_lazy(PGX = PGX))
+
+  if (exists("MODULE.multiomics")) {
+    lazy_tabs <- c(lazy_tabs, MODULE.multiomics$module_lazy(PGX = PGX))
+  }
+  if (exists("MODULE.wgcna")) {
+    lazy_tabs <- c(lazy_tabs, MODULE.wgcna$module_lazy(PGX = PGX, save_pgx = env$save_pgx))
+  }
+  if (exists("MODULE.epigenomics")) {
+    lazy_tabs <- c(lazy_tabs, MODULE.epigenomics$module_lazy(PGX = PGX))
+  }
+
+  ## Set by bigTabsLazy() below; reports which tabs have been materialised so
+  ## far, so tab_control() only drives widgets that actually exist yet.
+  loaded_tabs <- function() character(0)
+
+  ## Each tab's shell (opg_ui) shows a spinner until its board arrives, and
+  ## tab_control()'s subtab toggles can only reach a board's tabsetPanel once
+  ## that board exists. Both are per-load concerns, so they hang off the server
+  ## closure: bigTabsLazy() inserts the UI first, then calls this.
+  with_tab_loaded <- function(name, server_fun) {
+    force(name)
+    force(server_fun)
+    function() {
+      if (is.function(server_fun)) server_fun()
+      shinyjs::hide(selector = paste0("[id='", sub("-tab$", "-loader", name), "']"))
+      ## try(): a board that fails to build must not take the whole tab set
+      ## with it, and tab_control() reads a lot of PGX.
+      try(tab_control(), silent = TRUE)
+    }
+  }
+  lazy_tabs <- Map(
+    function(name, spec) {
+      spec$server <- with_tab_loaded(name, spec$server)
+      spec
+    },
+    names(lazy_tabs), lazy_tabs
+  )
+
   ## Modules needed after dataset is loaded (deferred) --------------
   observeEvent(env$load$is_data_loaded(), {
-    # depending on datatpye, subset modules enabled and create modules active,
-    if (tolower(PGX$datatype) == "multi-omics") {
-      MODULES_ACTIVE <- MODULES_MULTIOMICS
-    } else if (tolower(PGX$datatype) == "methylomics") {
-      MODULES_ACTIVE <- MODULES_METHYLOMICS
-    } else {
-      MODULES_ACTIVE <- MODULES_TRANSCRIPTOMICS
-    }
+
+    ## On the first dataset upload, we initialize the modules and
+    ## UI. Preload modules get materialized here immediately, all
+    ## others will only load/show when visited (i.e. lazy)
     if (env$load$is_data_loaded() == 1) {
-      bigdash.hideMenuElement(session, "Clustering")
-      bigdash.hideMenuElement(session, "Expression")
-      bigdash.hideMenuElement(session, "GeneSets")
-      bigdash.hideMenuElement(session, "Compare")
-      bigdash.hideMenuElement(session, "SystemsBio")
-      bigdash.hideMenuElement(session, "MultiOmics")
-      bigdash.hideMenuElement(session, "WGCNA")
-      bigdash.hideMenuElement(session, "Epigenomics")
-    }
-    # ###################### I STILL HAVE TO REMOVE THE UI!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    MODULES_TO_REMOVE <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_LOADED
-    MODULES_TO_LOAD <- xor(MODULES_LOADED, MODULES_ACTIVE) & MODULES_ACTIVE
-
-    lapply(names(MODULES_TO_REMOVE[MODULES_TO_REMOVE]), function(x) {
-      if (x == "DataView") {
-        bigdash.removeTab(session, "dataview-tab")
-        bigdash.hideMenuElement(session, "DataView")
-      }
-      if (x == "Clustering") {
-        lapply(names(MODULE.clustering$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "Clustering")
-        loaded$clustering <- 0
-      }
-      if (x == "Expression") {
-        lapply(names(MODULE.expression$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "Expression")
-        loaded$expression <- 0
-      }
-      if (x == "GeneSets") {
-        lapply(names(MODULE.enrichment$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "GeneSets")
-        loaded$enrichment <- 0
-      }
-      if (x == "Compare") {
-        lapply(names(MODULE.compare$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "Compare")
-        loaded$compare <- 0
-      }
-      if (x == "SystemsBio") {
-        lapply(names(MODULE.systems$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "SystemsBio")
-        loaded$systems <- 0
-      }
-      if (x == "MultiOmics") {
-        lapply(names(MODULE.multiomics$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "MultiOmics")
-        loaded$multiomics <- 0
-      }
-      if (x == "WGCNA") {
-        lapply(names(MODULE.wgcna$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "WGCNA")
-        loaded$wgcna <- 0
-      }
-      if (x == "Epigenomics") {
-        lapply(names(MODULE.epigenomics$module_menu()), function(x) {
-          bigdash.removeTab(session, paste0(x, "-tab"))
-        })
-        bigdash.hideMenuElement(session, "Epigenomics")
-        loaded$epigenomics <- 0
-      }
-    })
-
-    if (env$load$is_data_loaded()) { # == 1) {
-
-      additional_ui_tabs <- list(
-        dataview = bigdash::bigTabItem(
-          "dataview-tab",
-          DataViewInputs("dataview"),
-          DataViewUI("dataview")
-        )
-      )
-
-      insertBigTabUI <- function(ui) {
-        for (i in 1:length(ui)) {
-          shiny::insertUI(
-            selector = "#big-tabs",
-            where = "beforeEnd",
-            ui = ui[[i]],
-            immediate = TRUE
-          )
-        }
-        bigdash.openSettings()
-      }
-      insertBigTabItem <- function(tab) {
-        insertBigTabUI(additional_ui_tabs[tab])
-      }
-
-      ## show the dashboard item in app sidebar
-      #bslib::nav_show("app-sidebar", "Dashboard")
-      shinyjs::enable(selector = "a[data-value='Dashboard']")
-      shinyjs::enable(selector = "a[data-value='Studio']")
-      shinyjs::enable(selector = "a[data-value='Copilot']")
       
+      info("[SERVER] calling bigTabsLazy")
       shiny::withProgress(
-        message = "Preparing your dashboard (server)...",
+        message = "Preparing your dashboard...",
         value = 0,
         {
-          if (MODULES_TO_LOAD["DataView"]) {
-            info("[SERVER] calling DataView module")
-            insertBigTabItem("dataview")
-            DataViewBoard("dataview",
-              pgx = PGX, labeltype = labeltype
-            )
-            bslib::nav_select("app-sidebar", selected = "Dashboard")
-            bigdash.selectTab(session, "dataview-tab")            
-          }
-          shiny::incProgress(0.1)
+          loaded_tabs <<- bigdash::bigTabsLazy(lazy_tabs)
 
-          if (MODULES_TO_LOAD["Clustering"]) {
-            mod <- MODULE.clustering
-            insertBigTabUI(mod$module_ui())
-            info("[SERVER:UI:1] calling Clustering module")
-            bigdash.showMenuElement(session, "Clustering")
-            lapply(names(MODULE.clustering$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-          shiny::incProgress(0.1)
-
-          if (MODULES_TO_LOAD["Expression"]) {
-            mod <- MODULE.expression
-            insertBigTabUI(mod$module_ui())
-            info("[SERVER:UI:1] calling Expression module")
-            info("[SERVER:UI:1] calling DiffExprBoard module")
-            bigdash.showMenuElement(session, "Expression")
-            ExpressionBoard("diffexpr",
-              pgx = PGX, labeltype = labeltype
-            ) ->> env$diffexpr
-            lapply(names(MODULE.expression$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-          shiny::incProgress(0.1)
-
-          if (MODULES_TO_LOAD["GeneSets"]) {
-            mod <- MODULE.enrichment
-            insertBigTabUI(mod$module_ui())
-            info("[SERVER:UI:1] calling GeneSets module")
-            info("[SERVER:UI:1] calling EnrichmentBoard module")
-            bigdash.showMenuElement(session, "GeneSets")
-            EnrichmentBoard("enrich",
-              pgx = PGX,
-              selected_gxmethods = env$diffexpr$selected_gxmethods
-            ) ->> env$enrich
-            lapply(names(MODULE.enrichment$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-          shiny::incProgress(0.1)
-
-          if (MODULES_TO_LOAD["Compare"]) {
-            mod <- MODULE.compare
-            insertBigTabUI(mod$module_ui())
-            info("[SERVER:UI:1] calling Compare module")
-            bigdash.showMenuElement(session, "Compare")
-            lapply(names(MODULE.compare$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-          shiny::incProgress(0.1)
-
-          if (MODULES_TO_LOAD["SystemsBio"]) {
-            mod <- MODULE.systems
-            insertBigTabUI(mod$module_ui())
-            info("[SERVER:UI:1] calling SystemsBio module")
-            bigdash.showMenuElement(session, "SystemsBio")
-            lapply(names(mod$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-            bigdash.toggleTab(session, "tcga-tab", env$user_settings$enable_beta() && dir.exists(file.path(OPG, "libx")))
-          }
-          shiny::incProgress(0.1)
-
-          if (MODULES_TO_LOAD["MultiOmics"] && exists("MODULE.multiomics")) {
-            info("[SERVER:UI:1] initializing MultiOmics module")
-            mod <- MODULE.multiomics
-            insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "MultiOmics")
-            lapply(names(MODULE.multiomics$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-
-          if (MODULES_TO_LOAD["WGCNA"] && exists("MODULE.wgcna")) {
-            info("[SERVER:UI:1] initializing WGCNA module")
-            mod <- MODULE.wgcna
-            insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "WGCNA")
-            lapply(names(MODULE.wgcna$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-
-          if (MODULES_TO_LOAD["Epigenomics"] && exists("MODULE.epigenomics")) {
-            info("[SERVER:UI:1] initializing Epigenomics module")
-            mod <- MODULE.epigenomics
-            insertBigTabUI(mod$module_ui())
-            bigdash.showMenuElement(session, "Epigenomics")
-            lapply(names(MODULE.epigenomics$module_menu()), function(x) {
-              bigdash.showTab(session, paste0(x, "-tab"))
-            })
-          }
-
-          MODULES_LOADED <<- MODULES_ACTIVE
-
-          if (env$load$is_data_loaded() > 0) {
-            env$trigger_on_change_dataset(runif(1))
-          }
-          info("[SERVER:UI:1] calling modules done!")
-        }
-      )
+          shinyjs::enable(selector = "a[data-value='Dashboard']")
+          shinyjs::enable(selector = "a[data-value='Studio']")
+          shinyjs::enable(selector = "a[data-value='Copilot']")
+        })
     }
 
-    if (env$load$is_data_loaded() == 1) {
-      # this is a function - like "handleSettings()" in bigdash- needed to
-      # make the settings sidebar show up for the inserted tabs
-      shinyjs::runjs(
-        "  $('.big-tab')
-          .each((index, el) => {
-            let settings = $(el)
-              .find('.tab-settings')
-              .first();
-            $(settings).data('target', $(el).data('name'));
-            $(settings).appendTo('#settings-content');
-          });"
-      )
+    ## No "show everything" pass here: tab_control(), reached through the
+    ## trigger below, computes the allowed set from scratch and filterTabs()
+    ## hides whatever is not in it. Showing all 28 tabs first only flashed the
+    ## ones about to be hidden again.
+    if (env$load$is_data_loaded() > 0) {
+      env$trigger_on_change_dataset(runif(1))
     }
-
+    
     ## Goto dataview
     bslib::nav_select("app-sidebar", selected = "Dashboard")
     bigdash.openSettings(lock = TRUE)
@@ -311,204 +157,117 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
     shinyjs::delay(2000, {
       shiny::removeModal()
     })
-    
+
   })
 
-  insertBigTabUI2 <- function(ui, menu) {
-    for (i in 1:length(ui)) {
-      for (j in 2:length(ui[[i]])) {
-        shiny::insertUI(
-          selector = paste0("div.big-tab[data-name='", ui[[i]][[1]], "']"),
-          where = "beforeEnd",
-          ui = ui[[i]][[j]],
-          immediate = TRUE
-        )
-      }
-    }
-    shinyjs::runjs(
-      "  $('.big-tab')
-    .each((index, el) => {
-      let settings = $(el)
-        .find('.tab-settings')
-        .first();
-      $(settings).data('target', $(el).data('name'));
-      $(settings).appendTo('#settings-content');
-    });"
-    )
-    bigdash.openSettings()
-    shinyjs::hide(selector = paste0("[id='", names(menu), "-loader']"))
-  }
-
-  loaded <- shiny::reactiveValues(
-    clustering = 0,
-    expression = 0,
-    enrichment = 0,
-    compare = 0,
-    systems = 0,
-    multiomics = 0,
-    wgcna = 0,
-    epigenomics = 0
-  )
-
-  observeEvent(input$nav, {
-    dbg("[SERVER] input$nav =", input$nav)
-
-    if (input$nav %in% c("clustersamples-tab", "clusterfeatures-tab") &&
-      loaded$clustering == 0) {
-      info("[SERVER:UI:2] reacted: calling Clustering module")
-      mod <- MODULE.clustering
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype)
-      loaded$clustering <- 1
-      tab_control()
-    }
-    if (input$nav %in% c("diffexpr-tab", "corr-tab", "bio-tab", "timeseries-tab") &&
-      loaded$expression == 0) {
-      info("[SERVER:UI:2] reacted: calling Expression module")
-      mod <- MODULE.expression
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype)
-      loaded$expression <- 1
-      tab_control()
-    }
-    if (input$nav %in% c("enrich-tab", "sig-tab", "pathway-tab", "wordcloud-tab") &&
-      loaded$enrichment == 0) {
-      info("[SERVER:UI:2] reacted: calling Enrichment module")
-      mod <- MODULE.enrichment
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype, env = env)
-      loaded$enrichment <- 1
-      tab_control()
-    }
-    if (input$nav %in% c("isect-tab", "comp-tab", "cmap-tab") && loaded$compare == 0) {
-      info("[SERVER:UI] reacted: calling Compare module")
-      mod <- MODULE.compare
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, labeltype = labeltype, auth = auth, env = env, reload_pgxdir = reload_pgxdir)
-      loaded$compare <- 1
-      tab_control()
-    }
-    if (input$nav %in% c("drug-tab", "tcga-tab", "cell-tab", "pcsf-tab") &&
-      loaded$systems == 0) {
-      info("[SERVER:UI:2] reacted: calling Systems module")
-      mod <- MODULE.systems
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$systems <- 1
-      tab_control()
-    }
-    if (input$nav %in% c(
-      "mofa-tab", "mgsea-tab", "snf-tab", "lasagna-tab",
-      "deepnet-tab"
-    ) && loaded$multiomics == 0) {
-      info("[SERVER:UI:2] reacted: calling Multi-Omics module")
-      mod <- MODULE.multiomics
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$multiomics <- 1
-      tab_control()
-    }
-    if (input$nav %in% c(
-      "wgcna-tab", "mwgcna-tab", "consensus-tab",
-      "preservation-tab"
-    ) && loaded$wgcna == 0) {
-      info("[SERVER:UI:2] reacted: calling WGCNA module")
-      mod <- MODULE.wgcna
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX, save_pgx = env$save_pgx)
-      loaded$wgcna <- 1
-      tab_control()
-    }
-    if (input$nav %in% c("ideograms-tab") && loaded$epigenomics == 0) {
-      info("[SERVER:UI:2] reacted: calling Epigenomics module")
-      mod <- MODULE.epigenomics
-      insertBigTabUI2(mod$module_ui2(), mod$module_menu())
-      mod$module_server(PGX)
-      loaded$epigenomics <- 1
-      tab_control()
-    }
-  })
-
+  ## tab_control is defined below; called on data load and after each tab
+  ## navigation via bigdash::bigTabsLazy's internal observer.
 
   tab_control <- function() {
 
-    ## show beta feauture
     show.beta <- env$user_settings$enable_beta()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
 
     has.libx <- dir.exists(file.path(OPG, "libx"))
     is.multiomics <- tolower(PGX$datatype) == "multi-omics"
-    
-    ## Hide beta main tabs
-    bigdash.toggleTab(session, "tcga-tab", show.beta && has.libx)
-    bigdash.toggleTab(session, "consensus-tab", show.beta)
-    bigdash.toggleTab(session, "preservation-tab", opt$DEVMODE && show.beta)
-    #bigdash.toggleTab(session, "mwgcna-tab", show.beta && is.multiomics)
-    bigdash.toggleTab(session, "mwgcna-tab", is.multiomics)
-    bigdash.toggleTab(session, "wgcna-tab", !is.multiomics || show.beta)
 
-    ## hide beta subtabs.. only for boards already inserted in the DOM,
-    ## otherwise shiny throws "There is no tabsetPanel with id equal to ..."
-    if (loaded$systems == 1) {
-      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta) ## too slow
-    }
-    if (loaded$enrichment == 1) {
-      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta) ## too slow
+    ## Collect all tab names from the currently active module set
+    ## MODULES_MULTIOMICS/TRANSCRIPTOMICS/METHYLOMICS are logical arrays
+    ## named by module name (e.g. "DataView", "Clustering", ...).
+    if (is.multiomics) {
+      active_mods <- names(MODULES_MULTIOMICS)[MODULES_MULTIOMICS]
+    } else if (tolower(PGX$datatype) == "methylomics") {
+      active_mods <- names(MODULES_METHYLOMICS)[MODULES_METHYLOMICS]
+    } else {
+      active_mods <- names(MODULES_TRANSCRIPTOMICS)[MODULES_TRANSCRIPTOMICS]
     }
 
-    ## Control tab to only be displayed if there is custom fc + baseline fc
-    has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
-      length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
-    if (loaded$expression == 1) {
-      toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
+    module_map <- list(
+      DataView      = "dataview-tab",
+      Clustering    = paste0(names(MODULE.clustering$module_menu()), "-tab"),
+      Expression    = paste0(names(MODULE.expression$module_menu()), "-tab"),
+      GeneSets      = paste0(names(MODULE.enrichment$module_menu()), "-tab"),
+      Compare       = paste0(names(MODULE.compare$module_menu()), "-tab"),
+      SystemsBio    = paste0(names(MODULE.systems$module_menu()), "-tab"),
+      MultiOmics    = if (exists("MODULE.multiomics")) paste0(names(MODULE.multiomics$module_menu()), "-tab"),
+      WGCNA         = if (exists("MODULE.wgcna")) paste0(names(MODULE.wgcna$module_menu()), "-tab"),
+      Epigenomics   = if (exists("MODULE.epigenomics")) paste0(names(MODULE.epigenomics$module_menu()), "-tab")
+    )
+
+    tabs <- character(0)
+    for (mod_name in names(module_map)) {
+      if (mod_name %in% active_mods) {
+        tabs <- c(tabs, module_map[[mod_name]])
+      }
+    }
+    tabs <- unique(tabs)
+
+    ## Beta visibility rules
+    if (!(show.beta && has.libx))             tabs <- setdiff(tabs, "tcga-tab")
+    if (!show.beta)                           tabs <- setdiff(tabs, "consensus-tab")
+    if (!(isTRUE(opt$DEVMODE) && show.beta))  tabs <- setdiff(tabs, "preservation-tab")
+    if (is.multiomics && !show.beta)          tabs <- setdiff(tabs, "wgcna-tab")
+    if (!is.multiomics)                       tabs <- setdiff(tabs, "mwgcna-tab")
+
+    ## Content requirements (replaces tabRequire)
+    if (!rv_has_value(PGX, "drugs"))          tabs <- setdiff(tabs, "drug-tab")
+    if (!rv_has_value(PGX, "wordcloud"))      tabs <- setdiff(tabs, "wordcloud-tab")
+    if (!rv_has_value(PGX, "deconv"))         tabs <- setdiff(tabs, "cell-tab")
+    if (!rv_has_value(PGX, "connectivity"))   tabs <- setdiff(tabs, "cmap-tab")
+    time.vars <- playbase::get_timevars()
+    found.time.var <- any(grepl(paste(time.vars, collapse = "|"), colnames(PGX$samples), ignore.case = TRUE))
+    valid.contrasts <- any(grepl("IA:*", colnames(PGX$contrasts)))
+    if (!(found.time.var && valid.contrasts))             tabs <- setdiff(tabs, "timeseries-tab")
+    gset_avail <- rv_has_value(PGX, "gsetX") && rv_has_value(PGX, "gset.meta")
+    if (!gset_avail) {
+      tabs <- setdiff(tabs, c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab"))
     }
 
-    ## Dynamically show upon availability in pgx object
-    tabRequire(PGX, session, "drug-tab", "drugs", TRUE)
-    tabRequire(PGX, session, "wordcloud-tab", "wordcloud", TRUE)
-    tabRequire(PGX, session, "cell-tab", "deconv", TRUE)
-    tabRequireTS(PGX, session, "timeseries-tab", TRUE)
-    tabRequire(PGX, session, "cmap-tab", "connectivity", TRUE)
-    gset_tabs <- c("enrich-tab", "pathway-tab", "isect-tab", "sig-tab")
-    for (tab_i in gset_tabs) {
-      tabRequire(PGX, session, tab_i, "gsetX", TRUE)
-      tabRequire(PGX, session, tab_i, "gset.meta", TRUE)
-    }
-
-    ## Hide PCSF and WGCNA for metabolomics.
-    # WGCNA will be available upon gmt refactoring
+    ## Datatype-specific filters
     if (PGX$datatype == "metabolomics") {
-      info("[SERVER] disabling modules for metabolomics data")
-      bigdash.hideTab(session, "cmap-tab")
+      tabs <- setdiff(tabs, "cmap-tab")
     }
-
     if (PGX$datatype == "multi-omics") {
-      info("[SERVER] disabling modules for multi-omics data")
-      bigdash.hideTab(session, "drug-tab")
-      bigdash.hideTab(session, "cell-tab")
-      bigdash.hideTab(session, "wordcloud-tab")
-      bigdash.hideTab(session, "cmap-tab")
+      tabs <- setdiff(tabs, c("drug-tab", "cell-tab", "wordcloud-tab", "cmap-tab"))
     }
-
-    ## Show Epigenomics only for methylomics data
     if (!is.null(PGX$datatype) && tolower(PGX$datatype) != "methylomics") {
-      bigdash.hideTab(session, "ideograms-tab")
-      bigdash.hideMenuElement(session, "Epigenomics")
+      tabs <- setdiff(tabs, "ideograms-tab")
     }
 
     ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)
     if (!is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics") {
       is_dmp <- if (!is.null(PGX$dma)) {
-        PGX$dma == "Differentially methylated positions"
+        isTRUE(PGX$dma == "Differentially methylated positions")
       } else {
-        ## fallback for old pgx files without dma field: CpG probe IDs start with "cg"
         mean(grepl("^cg[0-9]+", rownames(PGX$X))) > 0.5
       }
       if (is_dmp) {
-        bigdash.hideTab(session, "pcsf-tab")
-      } else {
-        bigdash.showTab(session, "pcsf-tab")
+        tabs <- setdiff(tabs, "pcsf-tab")
       }
+    }
+
+    if (is.null(PGX$datatype) || tolower(PGX$datatype) != "methylomics") {
+      tabs <- setdiff(tabs, module_map[["Epigenomics"]] )
+    }
+    
+    ## Apply filtering — hides tabs + sidebar items not in the allowed set
+    bigdash.filterTabs(session, tabs)
+
+    ## Subtab toggles inside boards. showTab()/hideTab() fail on the *client*
+    ## ("there is no tabsetPanel with id ..."), where a server-side try() cannot
+    ## catch them -- so ask which boards exist before driving their tabsets
+    ## rather than firing at all of them and swallowing the fallout.
+    loaded <- loaded_tabs()
+    if ("drug-tab" %in% loaded) {
+      toggleTab("drug-tabs", "Connectivity map (beta)", show.beta)
+    }
+    if ("pathway-tab" %in% loaded) {
+      toggleTab("pathway-tabs", "Enrichment Map (beta)", show.beta)
+    }
+    if ("diffexpr-tab" %in% loaded) {
+      has.customfc <- "custom" %in% colnames(PGX$gx.meta$meta[[1]]$fc) &&
+        length(colnames(PGX$gx.meta$meta[[1]]$fc)) > 1
+      toggleTab("diffexpr-tabs1", "FC-FC comparison", has.customfc)
     }
 
   }

@@ -44,7 +44,7 @@ pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differe
 PcsfUI <- function(id) {
   ns <- NS(id)
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Prize-Collecting Steiner Forest",
     shiny::tabsetPanel(
       id = ns("tabs"),
