@@ -3,6 +3,14 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+## Registry for the Compare menu group: which tabs it contains, their
+## sidebar labels (module_menu), the shell each tab renders at boot
+## (module_ui) and the UI + server bigTabsLazy() fills it with on first
+## visit (module_lazy). Read by opg_ui() and opg_server().
+##
+## The boards themselves live in components/board.*; a group draws on
+## whichever of them it needs.
+
 MODULE.compare <- list(
   module_menu = function() {
     c(
