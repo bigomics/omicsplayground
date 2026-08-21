@@ -369,8 +369,9 @@ EnrichmentUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Geneset enrichment", info_link = ns("gs_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Geneset enrichment",
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,

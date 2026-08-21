@@ -35,8 +35,7 @@ boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
   )
 }
 
-OmicsBoardUI <- function(id, title, ..., info=TRUE) {
-  ns <- shiny::NS(id) ## namespace
+OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
   div.link <- NULL
   if(isTRUE(info)) {
     div.link <- withTooltip(
@@ -72,71 +71,76 @@ OmicsBoardUI <- function(id, title, ..., info=TRUE) {
         class = "quick-button", style="border: 0px; background-color: transparent;"),
         style="margin: 28px 5px -20px 0; padding: 0 0 0 80px;")
     ),
-    ...
+    bigdash::bd_visibility_probe(ns),
+    div(...)
   )
 }
 
-OmicsBoard <- function(id, pgx, title, infotext=NULL) {
-  moduleServer(id, function(input, output, session) {
-    ns <- session$ns ## NAMESPACE
+OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
+  input <- session$input
+  output <- session$output
+  ns <- session$ns ## NAMESPACE
 
-    output$current_dataset <- shiny::renderUI({
-      has.pgx <- !is.null(pgx$name) && length(pgx$name) > 0
-      if(has.pgx) {
-        pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
-      } else {
-        pgx.name <- ""
-      }
-      div(
-        shiny::actionButton(
-          ns("dataset_click"), pgx.name,
-          class = "quick-button",
-          style = "border: none; color: black; font-size: 1.2em; background-color: transparent;"
-        ),
-        style = "padding: 30px 0px 0px 0px; text-align: center;"
-      )
-    })
-    
-    ## ------- observe functions -----------
-    shiny::observeEvent(input$board_info, {
-      if(!is.null(infotext)) {
-        shiny::showModal(shiny::modalDialog(
-          title = shiny::HTML(paste0("<strong>",title,"&nbsp;Board</strong>")),
-          shiny::HTML(infotext),
-          easyClose = TRUE, size = "xl"
-        ))
-      }
-    })
+  bigdash::bd_is_visible(
+    input,
+    purge = if (is.null(purge)) isTRUE(opt$ENABLE_PLOTLY_PURGE) else purge
+  )
 
-    shiny::observeEvent(input$logo_click, {
-      ui.showAboutModal()
-    })
-    
-    ## Show experiment info if dataset name is clicked.
-    observeEvent(input$dataset_click, {
-      shiny::req(pgx$name)
-      has.infographic <- !is.null(pgx$wgcna$report$infographic)
-      pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)    
-      if(has.infographic) {
-        img <- pgx$wgcna$report$infographic
-        footer <- gsub("- |\n"," ",pgx$wgcna$report$bullets)
-        footer <- paste("<b>WGCNA graphical abstract</b>. ",footer)
-        ui.showImageModal(img, title=NULL, footer, width=1088)         
-      } else {
-        fields <- c("name", "description", "datatype", "date", "settings",
-          "omicsplayground_version")
-        body <- playbase::pgx.info(pgx, fields=fields, format="html")
-        shiny::showModal(shiny::modalDialog(
-          header = pgx.name,
-          div(HTML(body), style = "font-size: 1.1em;"),
-          footer = NULL,
-          size = "l",
-          easyClose = TRUE,
-          fade = FALSE
-        ))
-      }
-    })
-    
+  output$current_dataset <- shiny::renderUI({
+    has.pgx <- !is.null(pgx$name) && length(pgx$name) > 0
+    if(has.pgx) {
+      pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+    } else {
+      pgx.name <- "(no dataset)"
+    }
+    div(
+      shiny::actionButton(
+        ns("dataset_click"), pgx.name,
+        class = "quick-button",
+        style = "border: none; color: black; font-size: 1.2em; background-color: transparent;"
+      ),
+      style = "padding: 30px 0px 0px 0px; text-align: center;"
+    )
+  })
+
+  ## ------- observe functions -----------
+  shiny::observeEvent(input$board_info, {
+    if(!is.null(infotext)) {
+      shiny::showModal(shiny::modalDialog(
+        title = shiny::HTML(paste0("<strong>",title,"&nbsp;Board</strong>")),
+        shiny::HTML(infotext),
+        easyClose = TRUE, size = "xl"
+      ))
+    }
+  })
+
+  shiny::observeEvent(input$logo_click, {
+    ui.showAboutModal()
+  })
+
+  ## Show experiment info if dataset name is clicked.
+  observeEvent(input$dataset_click, {
+    shiny::req(pgx$name)
+    has.infographic <- !is.null(pgx$wgcna$report$infographic)
+    pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+    if(has.infographic) {
+      img <- pgx$wgcna$report$infographic
+      footer <- gsub("- |\n"," ",pgx$wgcna$report$bullets)
+      footer <- paste("<b>WGCNA graphical abstract</b>. ",footer)
+      ui.showImageModal(img, title=NULL, footer, width=1088)
+    } else {
+      fields <- c("name", "description", "datatype", "date", "settings",
+        "omicsplayground_version")
+      body <- playbase::pgx.info(pgx, fields=fields, format="html")
+      shiny::showModal(shiny::modalDialog(
+        header = pgx.name,
+        div(HTML(body), style = "font-size: 1.1em;"),
+        footer = NULL,
+        size = "l",
+        easyClose = TRUE,
+        fade = FALSE
+      ))
+    }
   })
 }
 

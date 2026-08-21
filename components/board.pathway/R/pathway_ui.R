@@ -45,7 +45,7 @@ PathwayInputs <- function(id) {
 PathwayUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  tabs <- shiny::tabsetPanel(
+  panel <- shiny::tabsetPanel(
     id = ns("tabs"),
     ## ----------------------------- WikiPathway -------------------------------
     shiny::tabPanel(
@@ -209,9 +209,10 @@ PathwayUI <- function(id) {
     ) ## Enrichment map tabpanel
   ) ## end of tabset panel
 
-  page_ui <- div(
-    boardHeader(title = "Pathway Analysis", info_link = ns("fa_info")),
-    tabs
+  OmicsBoardUI(
+    ns = ns,
+    title = "Pathway Analysis",
+    panel
   )
-  return(page_ui)
+
 }

@@ -130,8 +130,9 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Drug Connectivity",
     shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,

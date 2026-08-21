@@ -8,7 +8,7 @@ qsee_bsee_server <- function(id, rX, rY, purge = NULL) {
     id,
     function(input, output, session) {
 
-      OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
+      OmicsBoard(session, pgx = NULL, title = "Batch-effects", infotext = NULL)
       ## Visibility is reported by bigdash::bd_visibility_probe() in the UI.
       is_visible <- bigdash::bd_is_visible(
         input, purge = qsee_resolve_purge(purge), label = "qsee_bsee_server"

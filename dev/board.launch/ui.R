@@ -73,7 +73,6 @@ app_ui <- function() {
       waiter::use_waiter(),
       sever::useSever(),
       bigLoaders::addBigLoaderDeps(),
-      #firebase::useFirebase(firestore = TRUE, analytics = TRUE),
       #shinybusy::busy_start_up(
       #  text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
       #  background = "#2780e3", color = "#ffffff",

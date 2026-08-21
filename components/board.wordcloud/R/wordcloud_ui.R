@@ -94,8 +94,9 @@ WordCloudUI <- function(id) {
       )
     )
   )
-  div(
-    boardHeader(title = "Word cloud", info_link = ns("wc_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Word cloud",
     tabs
   )
 }

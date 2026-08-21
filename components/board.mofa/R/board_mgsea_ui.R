@@ -18,8 +18,9 @@ MGseaUI <- function(id) {
   rowH1 <- 250 ## row 1 height
   rowH2 <- 440 ## row 2 height
 
-  shiny::div(
-    boardHeader(title = "Multi-Omics GSEA", info_link = ns("info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Multi-Omics GSEA",
     shiny::tabsetPanel(
       id = ns("tabs"),
 

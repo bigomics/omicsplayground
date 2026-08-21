@@ -44,9 +44,10 @@ EpigenomicsInputs <- function(id) {
 EpigenomicsUI <- function(id) {
   ns <- shiny::NS(id)
 
-  div(
-    boardHeader(title = "Epigenomics", info_link = ns("board_info")),
-    tabs <- shiny::tabsetPanel(
+  OmicsBoardUI(
+    ns = ns,
+    title = "Epigenomics",
+    shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
         "Methylomics landscape",

@@ -525,17 +525,6 @@ input[type="checkbox"], input[type="radio"] {
     padding: 0
 }
 
-#firebaseAuth {
-    position: absolute;
-    top:32rem;
-    padding-left: 15rem;
-    padding-right: 15rem;
-}
-
-#firebaseBtns{
-    padding-left: 21rem;
-}
-
 .white {
     color: white;
 }

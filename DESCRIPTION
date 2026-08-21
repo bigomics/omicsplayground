@@ -17,6 +17,7 @@ Suggests:
     omicspgx,
     omicspgxmcp,
     omicsplots,
+    plotly.repel,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
@@ -35,6 +36,7 @@ Imports:
     forcats,
     future,
     ggforce,
+    ggrepel,
     ggVennDiagram,
     heatmaply,
     htmltools,
@@ -91,4 +93,3 @@ Remotes:
     url::https://github.com/bigomics/wizardR/archive/HEAD.zip,
     url::https://github.com/Ironholds/rgeolocate/archive/HEAD.zip,
     url::https://github.com/JohnCoene/bsutils/archive/HEAD.zip,
-    url::https://github.com/JohnCoene/firebase/archive/refs/heads/omics.zip,

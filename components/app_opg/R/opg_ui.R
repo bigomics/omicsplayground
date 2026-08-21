@@ -12,8 +12,8 @@ opg_ui <- function(id) {
   #-------------------------------------------------------
   ## Build USERMENU
   #-------------------------------------------------------
-  VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
-    
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
+
   createUI <- function(menu_tree) {
     
     version <- scan(file.path(OPG, "VERSION"), character())[1]
@@ -100,7 +100,7 @@ opg_ui <- function(id) {
     info("[opg_ui] initial_is_full = ", initial_is_full)
     
     sidebar <- bigdash::sidebar(
-      "Playground",
+      "Menu",
       div(
         id = "menu-full",
         class = "nodisp", style = "diplay: none;",

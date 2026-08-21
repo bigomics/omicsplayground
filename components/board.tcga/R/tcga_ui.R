@@ -67,11 +67,9 @@ tcga_info <- "This analysis module computes the survival probability in (more th
 TcgaUI <- function(id) {
   ns <- NS(id)
 
-  div(
-    boardHeader(
-      title = "TCGA",
-      info_link = ns("tcga_info")
-    ),
+  OmicsBoardUI(
+    ns = ns,
+    title = "TCGA",
     tabsetPanel(
       id = ns("tabs1"),
       tabPanel(

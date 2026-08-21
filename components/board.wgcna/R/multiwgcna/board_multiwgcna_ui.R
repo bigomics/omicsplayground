@@ -76,8 +76,9 @@ MultiWGCNA_UI <- function(id) {
   rowH1 <- 250 ## row 1 height
   rowH2 <- 440 ## row 2 height
 
-  shiny::div(
-    boardHeader(title = "Multiomics WGCNA", info_link = ns("info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Multiomics WGCNA",
     shiny::tabsetPanel(
       id = ns("tabs"),
 

@@ -11,7 +11,7 @@ qsee_outlier_inputs <- function(id) {
 qsee_outlier_ui <- function(id) {
   ns <- shiny::NS(id)
   OmicsBoardUI(
-    id = ns("board"),
+    ns,
     title = "Outlier analysis",
     bigdash::bd_visibility_probe(ns),
     shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")

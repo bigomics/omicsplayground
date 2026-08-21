@@ -210,6 +210,7 @@ opt.default <- list(
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
   DEV_AUTOLOAD = FALSE, ## dev/testing: skip sign-in, load example, open Dashboard
+  ENABLE_PLOTLY_PURGE = TRUE, ## drop hidden boards' drawn Plotly/iheatmapr traces, redraw on return
   ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,

@@ -11,7 +11,7 @@
 qsee_pcaexplorer_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    OmicsBoard("board", pgx = NULL, title = "PCA explorer", infotext = NULL)
+    OmicsBoard(session, pgx = NULL, title = "PCA explorer", infotext = NULL)
     is_visible <- bigdash::bd_is_visible(
       input, purge = qsee_resolve_purge(purge), label = "qsee_pcaexplorer_server"
     )

@@ -2,7 +2,7 @@
 
 qsee_filtering_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    OmicsBoard("board", pgx = NULL, title = "SD filtering", infotext = NULL)
+    OmicsBoard(session, pgx = NULL, title = "SD filtering", infotext = NULL)
     is_visible <- bigdash::bd_is_visible(
       input, purge = qsee_resolve_purge(purge), label = "qsee_filtering_server"
     )
