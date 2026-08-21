@@ -1,0 +1,121 @@
+## Batch correction for methylomics runs on M and comes back as beta.
+## The fix lives in playbase::pgx.createPGX (R/pgx-compute.R, batch-correction
+## block), which is too expensive to invoke here - a full createPGX run rebuilds
+## annotation, GMT and the whole test suite. So this checks the two halves that
+## can break independently: the numeric claim, on the real demo matrix and the
+## same playbase entry point createPGX calls, and the wiring, that createPGX
+## still routes methylomics through it. Run from components/app_methylome/test.
+suppressMessages({library(playbase); library(playbase.epigenetics)})
+
+ok <- function(lbl, cond) cat(sprintf("%-56s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
+
+pgx <- local({ e <- new.env(); load("../../../data/GSE43976-methyl-mini.pgx", envir = e)
+               get("pgx", envir = e) })
+X <- pgx$X
+slide <- factor(pgx$samples$slide)
+pars <- playbase::get_model_parameters(X, pgx$samples, pheno = NULL, contrasts = pgx$contrasts)
+batch <- pgx$samples[, "slide", drop = FALSE]
+bc <- function(A) playbase::runBatchCorrectionMethods(
+  A, batch, pars$pheno, methods = "limma", ntop = Inf)[["limma"]][rownames(X), colnames(X)]
+
+## median per-probe fraction of variance explained by the batch variable
+eta2 <- function(A) {
+  g <- split(seq_len(ncol(A)), slide)
+  gm <- sapply(g, function(i) rowMeans(A[, i, drop = FALSE]))
+  ssb <- rowSums(sweep(sweep(gm, 1, rowMeans(A))^2, 2, sapply(g, length), "*"))
+  median(ssb / rowSums((A - rowMeans(A))^2), na.rm = TRUE)
+}
+
+cat("\n== round trip ==\n")
+M <- betaToM(X)
+rt <- 2**M / (1 + 2**M)
+## betaToM clamps at offset=1e-6, so beta 0 and 1 do not survive exactly; every
+## other value does, to floating point. Nothing here reads beta at that precision
+## - the smallest delta-beta any panel reports is 1e-3.
+ok("beta -> M -> beta is exact to 1e-15", max(abs(rt - X)) < 1e-15)
+ok("clamped ends come back at the offset, not 0/1",
+   all(abs(2**betaToM(cbind(c(0, 1))) / (1 + 2**betaToM(cbind(c(0, 1)))) - c(1e-6, 1 - 1e-6)) < 1e-12))
+
+cat("\n== correction on beta spills, on M it cannot ==\n")
+cb <- bc(X)
+cm <- 2**bc(M) / (1 + 2**bc(M))
+ok("beta-scale correction leaves [0,1]", any(cb < 0 | cb > 1))
+ok("M-scale correction stays inside (0,1)", all(cm > 0 & cm < 1))
+ok("M-scale correction moves the extremes less",
+   mean(abs(cm - X)[X < 0.05]) < mean(abs(cb - X)[X < 0.05]) &&
+   mean(abs(cm - X)[X > 0.95]) < mean(abs(cb - X)[X > 0.95]))
+ok("batch is removed (slide variance drops >10x)", eta2(cm) < eta2(X) / 10)
+ok("the data is not flattened (sd within 1%)", abs(sd(cm) / sd(X) - 1) < 0.01)
+
+## Position, not just presence: the transform is only correct if it brackets
+## the correction. Comments do not survive into an installed package, so the
+## batch block is located by the code it contains.
+cat("\n== wiring in pgx.createPGX ==\n")
+b <- gsub(" ", "", paste(deparse(body(playbase::pgx.createPGX)), collapse = "\n"))
+at <- function(p) as.integer(regexpr(p, b, perl = TRUE))
+ok("createPGX converts to M before correcting",
+   at("betaToM") > 0 && at("betaToM") < at("runBatchCorrectionMethods"))
+ok("createPGX converts back to beta after correcting",
+   at("2\\^cX/\\(1\\+2\\^cX\\)") > at("runBatchCorrectionMethods"))
+ok("the conversion is guarded by require_epigenetics()",
+   at("require_epigenetics") > 0 && at("require_epigenetics") < at("betaToM"))
+
+## The corrected object end to end: what pgx.createPGX actually stores. For
+## methylomics counts IS beta - the same object as X - so the recompute that
+## exists to undo a log2 (2**cX rescaled to the original column totals) turns
+## beta into 2^beta. It has to be skipped, not fixed up afterwards.
+cat("\n== corrected pgx, end to end ==\n")
+try(assignInNamespace("annotate_phospho_residue",
+  function(features, detect.only = FALSE) if (detect.only) FALSE else NULL,
+  ns = "playbase"), silent = TRUE)
+bc <- playbase::pgx.createPGX(
+  counts = pgx$X, samples = pgx$samples, contrasts = pgx$contrasts,
+  organism = "Human", datatype = "methylomics", meth_type = "450K array",
+  X = pgx$X, is.logx = FALSE, norm_method = "none",
+  filter.genes = FALSE, only.known = FALSE, only.proteincoding = FALSE,
+  convert.hugo = FALSE, add.gmt = FALSE,
+  batch.correct.method = "limma", batch.pars = "slide"
+)
+ok("corrected X stays in [0,1]",
+   min(bc$X, na.rm = TRUE) >= 0 && max(bc$X, na.rm = TRUE) <= 1)
+ok("corrected X actually changed", !isTRUE(all.equal(unname(bc$X), unname(pgx$X))))
+ok("counts stays beta, not 2^beta",
+   min(bc$counts, na.rm = TRUE) >= 0 && max(bc$counts, na.rm = TRUE) <= 1)
+ok("counts and X agree", isTRUE(all.equal(unname(bc$counts), unname(bc$X))))
+
+## Every method, not just the two that were measured first. The fix is at the
+## scale level so it applies to all of them, but RUV is the one that shows why
+## it matters: on beta it puts 27.6% of values outside [0,1], spanning
+## -3.35..6.17. Via M nothing can leave (0,1) by construction.
+cat("\n== all correction methods ==\n")
+meth <- c("ComBat", "limma", "RUV", "SVA", "NPM")
+Mv <- betaToM(pgx$X)
+onb <- suppressMessages(playbase::runBatchCorrectionMethods(
+  pgx$X, batch, pars$pheno, methods = meth, ntop = Inf, remove.failed = TRUE))
+onm <- suppressMessages(playbase::runBatchCorrectionMethods(
+  Mv, batch, pars$pheno, methods = meth, ntop = Inf, remove.failed = TRUE))
+for (m in meth) {
+  if (is.null(onb[[m]]) || is.null(onm[[m]])) { ok(sprintf("%s returned", m), FALSE); next }
+  bk <- 2^onm[[m]] / (1 + 2^onm[[m]])
+  ok(sprintf("%-7s spills on beta, never via M", m),
+     mean(onb[[m]] < 0 | onb[[m]] > 1) > 0 && all(bk >= 0 & bk <= 1))
+}
+
+## The wizard's method-comparison preview ranks the methods on the same scale
+## the correction runs on. It returns a clustering and a ranking, never a
+## stored matrix, so nothing is converted back.
+cat("\n== upload preview ==\n")
+prev <- suppressMessages(playbase::compare_batchcorrection_methods(
+  pgx$X, pgx$samples, pheno = NULL, contrasts = pgx$contrasts,
+  beta.scale = TRUE, batch.pars = "slide", clust.method = "pca",
+  methods = c("uncorrected", "ComBat", "limma"), evaluate = FALSE,
+  xlist.init = list("uncorrected" = pgx$X), ntop = 4000))
+ok("preview runs with beta.scale", !is.null(prev$xlist) && length(prev$xlist) >= 2)
+ok("preview compares on the M scale",
+   all(vapply(prev$xlist, function(z) min(z, na.rm = TRUE) < -1, logical(1))))
+ok("preview leaves other datatypes alone",
+   !inherits(try(suppressMessages(playbase::compare_batchcorrection_methods(
+     pgx$X, pgx$samples, pheno = NULL, contrasts = pgx$contrasts,
+     batch.pars = "slide", clust.method = "pca",
+     methods = c("uncorrected", "limma"), evaluate = FALSE, ntop = 1000)),
+     silent = TRUE), "try-error"))

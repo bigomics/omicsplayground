@@ -78,6 +78,11 @@ mp_beta <- function(pgx) {
   if (rng[2] > 2 || rng[1] < -1) {
     return(playbase.epigenetics::mToBeta(X))
   }
+  ## The pipeline no longer produces a spilled beta - batch correction runs on
+  ## M and returns through 2^m/(1+2^m), which cannot leave (0,1) - but this
+  ## clamp is not therefore dead. Every methylomics pgx written before that
+  ## change can still carry values outside [0,1], and SVD2 imputation reaches
+  ## them by another route. It is a compatibility guard now, not a live one.
   if (rng[2] > 1 || rng[1] < 0) {
     X[] <- pmin(pmax(X, 0), 1)
   }

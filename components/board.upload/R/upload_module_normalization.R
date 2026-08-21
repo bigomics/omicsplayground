@@ -312,6 +312,9 @@ upload_module_normalization_server <- function(
               samples,
               pheno = NULL,
               contrasts = contrasts,
+              ## Rank the methods on the scale they are valid on - beta is a
+              ## bounded ratio and every method here is an additive correction.
+              beta.scale = (upload_datatype() == "methylomics"),
               batch.pars = batch.pars,
               clust.method = "pca",
               methods = methods,
