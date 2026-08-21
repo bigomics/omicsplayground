@@ -16,7 +16,7 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         js = FALSE
       )
 
-    OmicsBoard("board", pgx, title = "Compare Datasets", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Compare Datasets", infotext = infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

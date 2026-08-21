@@ -68,7 +68,7 @@ UploadBoard <- function(id,
 
     module_infotext <- HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/YTzLkio4M_4?si=eg24X_GphkzAqLGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><center>')
 
-    OmicsBoard("board", pgx, title = "Upload New", infotext = as.character(module_infotext))
+    OmicsBoard(session, pgx, title = "Upload New", infotext = as.character(module_infotext))
 
     observeEvent(auth$logged, {
       all_species <- playbase::allSpecies(col = "species_name")

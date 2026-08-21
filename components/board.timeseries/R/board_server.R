@@ -23,7 +23,7 @@ TimeSeriesBoard <- function(id,
        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    OmicsBoard("board", pgx, title = "TimeSeries", infotext = clust_infotext)
+    OmicsBoard(session, pgx, title = "TimeSeries", infotext = clust_infotext)
 
     tab_elements <- list(
       "Clustering" = list(

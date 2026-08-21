@@ -299,7 +299,7 @@ ClusteringUI <- function(id) {
   )
   
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Cluster Samples",
     shiny::tabsetPanel(
       id = ns("tabs1"),

@@ -21,7 +21,7 @@ SummaryBoardUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Summary",
     bslib::layout_columns(
       col_widths = 12,
@@ -61,7 +61,7 @@ SummaryBoard <- function(id, pgx) {
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
-    OmicsBoard("board", pgx, title = "Summary", infotext = "Summary")
+    OmicsBoard(session, pgx, title = "Summary", infotext = "Summary")
 
     output$bullet_points <- shiny::renderUI({
       txt <- pgx$wgcna$report$bullets

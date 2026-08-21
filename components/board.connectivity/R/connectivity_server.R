@@ -23,7 +23,7 @@ ConnectivityBoard <- function(
       <br><br><center><iframe width='560' height='315' src='https://www.youtube.com/embed/4-2SkBNcTZk?si=m4qEXCuQJo6o-A9o&amp;start=38' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>"
     )
 
-    OmicsBoard("board", pgx, title = "Connectivity Analysis", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Connectivity Analysis", infotext = infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

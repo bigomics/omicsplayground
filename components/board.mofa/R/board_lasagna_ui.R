@@ -63,7 +63,7 @@ LasagnaUI <- function(id) {
   rowH2 <- 440
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "LASAGNA",
     shiny::tabsetPanel(
       id = ns("tabs"),

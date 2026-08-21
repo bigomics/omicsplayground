@@ -131,7 +131,7 @@ DrugConnectivityUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Drug Connectivity",
     shiny::tabsetPanel(
       id = ns("tabs"),

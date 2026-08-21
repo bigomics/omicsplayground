@@ -31,7 +31,7 @@ SNFUI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Similarity Network Fusion",
     shiny::tabsetPanel(
       id = ns("tabs"),

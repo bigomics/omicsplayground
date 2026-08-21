@@ -29,7 +29,7 @@ BiomarkerBoard <- function(id, pgx) {
     and provides expression boxplots by phenotype classes for features present in
     the tree.", js = FALSE)
 
-    OmicsBoard("board", pgx, title = "Biomarker Selection", infotext = pdx_infotext)
+    OmicsBoard(session, pgx, title = "Biomarker Selection", infotext = pdx_infotext)
 
     ## =========================================================================
     ## ======================== OBSERVERS ======================================

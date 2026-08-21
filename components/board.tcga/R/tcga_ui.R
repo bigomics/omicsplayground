@@ -68,7 +68,7 @@ TcgaUI <- function(id) {
   ns <- NS(id)
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "TCGA",
     tabsetPanel(
       id = ns("tabs1"),
