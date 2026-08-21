@@ -407,7 +407,7 @@ jspan <- function(text) tspan(text, js = TRUE)
 #' @export
 create_loader <- function(id) {
   div(
-    class = "loader-container",
+    class = "loader-container bigtabslazy-placeholder",
     id = id,
     div(
       class = "spinner"
