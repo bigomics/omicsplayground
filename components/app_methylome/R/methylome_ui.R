@@ -86,6 +86,53 @@ mp_panel_qc <- function(ns) {
   ))
 }
 
+## Structure before testing: whatever dominates PC1 is what the EWAS will
+## report unless it is adjusted for. The scatter says how the samples fall
+## apart; the heatmap beside it says what they fall apart by.
+mp_panel_structure <- function(ns) {
+  bslib::nav_panel(
+    title = "Sample structure", value = "structure",
+    bslib::layout_columns(
+    col_widths = 12,
+    height = MP_SUBTAB_HEIGHT,
+    row_heights = list("auto", 1),
+    bs_alert("Unsupervised structure, before any contrast is chosen. If a technical variable explains a leading component, adjust for it in the EWAS model - or accept that the result partly measures it."),
+    bslib::layout_columns(
+      height = "100%",
+      col_widths = c(7, 5),
+      methylome_plot_clustpca_ui(
+        ns("overview_pca"),
+        title = "Sample clustering",
+        label = "a",
+        caption = "PCA, t-SNE and UMAP of the cohort, coloured by phenotype.",
+        info.text = "Every sample as a point, positioned by its whole methylome rather than by any single probe. Points that sit together have similar methylomes. Colour by a phenotype and ask whether the grouping you intend to test is the grouping the data already shows: when it is not, the leading structure belongs to something else, and the heatmap beside this panel names it. Switch between PCA, t-SNE and UMAP in the plot options - t-SNE and UMAP separate clusters more readably but their distances between clusters mean nothing, while PCA distances and axis percentages are quantitative. The Arrows control overlays a biplot: <b>features</b> draws the CpGs that define the two components on screen, labelled by probe and gene, and <b>phenotypes</b> draws the direction in which each sample variable increases - so a batch or a sex effect can be read as a direction across the cloud, not just as a colour.",
+        info.methods = "PCA is computed in this panel, on M-values: the 1,000 most variable probes, rows centred, an exact singular value decomposition, and the percentage on each axis is that component's share of the variance of those probes. Loadings come from the same decomposition, which is what makes the feature arrows possible; the phenotype arrows are the correlation of each one-hot encoded sample variable with each component, and a continuous variable is split at its median before encoding, so its arrow reads as \"towards the high half\". Arrow lengths are rescaled to fill the cloud - only direction and relative length carry meaning. t-SNE and UMAP are computed here too, from those same components - which is what the platform does as well, embedding its component reduction rather than the raw matrix - so all three layouts answer to the same feature setting. Both are seeded, so a layout does not reshuffle between redraws. The heatmap beside this panel tests these same components, and the <b>Use all features</b> setting drives both.",
+        info.references = list(
+          list(
+            "Du P, Zhang X, Huang CC, et al. (2010) Comparison of Beta-value and M-value methods for quantifying methylation levels by microarray analysis. BMC Bioinformatics 11:587.",
+            "https://doi.org/10.1186/1471-2105-11-587"
+          ),
+          list(
+            "Melville J (2024) uwot: The Uniform Manifold Approximation and Projection (UMAP) Method for Dimensionality Reduction.",
+            "https://doi.org/10.32614/CRAN.package.uwot"
+          )
+        ),
+        info.extra_link = NULL,
+        height = c("100%", "700px"), width = c("auto", "100%"),
+        parent = ns(NULL)
+      ),
+      methylome_plot_pccovar_ui(
+        ns("overview_pccov"),
+        title = "Components vs sample variables",
+        caption = "What each principal component is made of.",
+        info.text = "One test per cell: does this sample variable explain this principal component? A dark cell high in the grid is the finding that matters - it means a leading axis of your data is that variable. When it is the phenotype you intend to test, the experiment worked. When it is a slide, a plate, a scan date or a sex column, that variable is confounded with everything you are about to report, and belongs in the EWAS model as a covariate. Cell composition is the usual culprit in blood, and the Sample profiles screen estimates it. The number in each cell is the share of that component the variable accounts for; a variable can be significant and still explain very little.",
+        info.methods = "The same principal components the scatter beside it draws - one decomposition per dataset, so the two panels always report the same PC1. By default those come from the 1,000 most variable probes, which is what the platform stores and what minfi::mdsPlot uses; the <b>Use all features</b> setting decomposes every complete probe instead. That setting matters here: on the demo cohort the default cut leaves cell type and sex untouched but drops the slide (batch) association from p 8e-09 to not significant, because batch is a small shift over very many probes rather than a high-variance effect. Columns tested are those the EWAS accepts as covariates. A numeric column with more than ten distinct values is treated as continuous and tested by Pearson correlation; anything else is a grouping of two to twelve levels tested by Kruskal-Wallis. Shading is -log10 p capped at 16, the printed number is the variance of the component explained (r-squared, or eta-squared for a grouping), and bold marks Benjamini-Hochberg q < 0.05 across the whole grid. This panel is independent of the Layout control: t-SNE and UMAP have no components for a variable to be tested against, so the rows here are always principal components and never the axes on the plot.",
+        height = c("100%", "700px"), width = c("auto", "100%")
+      )
+    )
+  ))
+}
+
 mp_panel_age <- function(ns) {
   bslib::nav_panel(
     title = "Epigenetic age", value = "age",
@@ -264,6 +311,7 @@ methylome_ui_overview <- function(id = "methylome") {
   mp_tab(bslib::navset_tab(
     id = ns("overview_subtab"),
     mp_panel_qc(ns),
+    mp_panel_structure(ns),
     mp_panel_context(ns),
     mp_panel_chromosomes(ns),
     mp_panel_ideograms(ns)
@@ -287,6 +335,15 @@ methylome_ui_profiles <- function(id = "methylome") {
 methylome_overview_inputs <- function(id) {
   ns <- shiny::NS(id)
   bigdash::tabSettings(
+    shiny::conditionalPanel(
+      condition = "input.overview_subtab == 'structure'",
+      ns = ns,
+      withTooltip(
+        shiny::checkboxInput(ns("structure_allfeatures"), "Use all features", FALSE),
+        "Off, the components come from the 1,000 most variable probes - the convention, and what the platform stores. On, every complete probe is decomposed: slower, and the only way to see a batch effect, which is a small shift spread over very many probes rather than a high-variance one.",
+        placement = "left"
+      )
+    ),
     shiny::conditionalPanel(
       condition = "input.overview_subtab == 'chromosomes' || input.overview_subtab == 'ideograms'",
       ns = ns,

@@ -51,6 +51,8 @@ if(!file.exists('00SourceAll.R')) {
   source('app_methylome/R/methylome_landscape.R',encoding='UTF-8')
   source('app_methylome/R/methylome_ledger.R',encoding='UTF-8')
   source('app_methylome/R/methylome_model.R',encoding='UTF-8')
+  source('app_methylome/R/methylome_plot_clustpca.R',encoding='UTF-8')
+  source('app_methylome/R/methylome_plot_pccovar.R',encoding='UTF-8')
   source('app_methylome/R/methylome_regions.R',encoding='UTF-8')
   source('app_methylome/R/methylome_server.R',encoding='UTF-8')
   source('app_methylome/R/methylome_ui.R',encoding='UTF-8')

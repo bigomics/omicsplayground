@@ -80,6 +80,7 @@ RUN R -e "install.packages('mirai')"
 RUN R -e "BiocManager::install('minfi')"
 RUN R -e "BiocManager::install('wateRmelon')"
 RUN R -e "devtools::install_github('bigomics/metaLINCS')"
+RUN R -e "remotes::install_github('bigomics/plotly.repel')" # repelled arrow labels on the PCA biplot
 RUN R -e "BiocManager::install('karyoploteR')"
 RUN R -e "BiocManager::install('regioneR')"
 # playbase.epigenetics lists these under Suggests, but the methylation path

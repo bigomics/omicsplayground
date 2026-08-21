@@ -55,6 +55,23 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       }, phe)
       shiny::updateSelectInput(session, "acc_pheno", choices = cat_vars,
                                selected = cat_vars[1])
+
+      ## The clustering scatter is copied from the Dashboard, where its two
+      ## pickers are filled by the BOARD server rather than by the module. Copy
+      ## that too, or both selectInputs render empty and the panel never draws.
+      ##
+      ## Filled from this app's own helper, not playbase::pgx.getCategoricalPhenotypes:
+      ## that one apply()s over the sample sheet and dies with "dim(X) must have
+      ## a positive length" on an empty one, which is exactly what this observer
+      ## sees before a dataset is loaded - and an unhandled error in an observer
+      ## severs the whole session, not just the panel.
+      grp <- mp_categorical_vars(p, max_levels = 12, min_per_level = 1)
+      grp <- grp[grep("sample|patient", grp, invert = TRUE)]
+      shiny::updateSelectInput(session, "overview_pca-hmpca.colvar",
+                               choices = c(grp, "<none>"),
+                               selected = if (length(grp)) grp[1] else "<none>")
+      shiny::updateSelectInput(session, "overview_pca-hmpca.shapevar",
+                               choices = c("<none>", grp), selected = "<none>")
     })
 
     ## ----------------------------------------------------- cell fractions --
@@ -339,6 +356,39 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     ## "read for what stands out rather than for its values", which is what a
     ## boxplot does and a column of means cannot. Past ~20 samples it emitted
     ## one column per sample and was unreadable.
+    ## Components, loadings and phenotype directions for the scatter. One
+    ## decomposition per dataset, shared by the points and by both arrow modes.
+    ## Upstream builds this in the Clustering board server and passes it in; the
+    ## module takes it as an argument, so the board decides the scale - M here.
+    r_pca_components <- shiny::reactive({
+      p <- PGX(); shiny::req(p)
+      ## 1,000 most variable by default; the settings toggle drops the cut.
+      rsd <- if (isTRUE(input$structure_allfeatures)) 0L else 1000L
+      shiny::withProgress(message = "Computing components...", value = 0.5,
+                          mp_pca_components(p, reduce.sd = rsd))
+    })
+
+    ## Raw pgx, like every other panel here: the modules read pgx$X and
+    ## pgx$cluster directly, and the app hands the board a reactiveValues.
+    methylome_plot_clustpca_server(
+      "overview_pca", pgx,
+      selected_samples = shiny::reactive({
+        p <- PGX(); shiny::req(p); colnames(p$X)
+      }),
+      clustmethod = shiny::reactive("pca"),
+      pca_components = r_pca_components,
+      ## PC1 vs PC2, fixed. Upstream lets the user pick any pair of PC1-PC5 from
+      ## the board sidebar; this app has no such sidebar, and the heatmap beside
+      ## the scatter already reports every component against every variable.
+      pca_dims = shiny::reactive(c(1L, 2L)),
+      ## Feature arrows are CpGs; the gene symbol is what makes one readable.
+      labeltype = shiny::reactive("symbol"),
+      watermark = watermark, parent = session$ns)
+    ## Same components the scatter draws - one decomposition, two panels.
+    methylome_plot_pccovar_server("overview_pccov", PGX,
+                                  pca_components = r_pca_components,
+                                  watermark = watermark)
+
     epigenomics_plot_boxplot_beta_server("boxplotBeta", pgx,
                                          r.chromosome = r_chroms_all,
                                          r.samples = r_land_samples,
