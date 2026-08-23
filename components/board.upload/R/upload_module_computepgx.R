@@ -41,8 +41,8 @@ upload_module_computepgx_server <- function(
   upload_gset_methods,
   process_counter,
   reset_upload_text_input,
-  probetype,
-  recompute_pgx = NULL
+  recompute_pgx = NULL,
+  clear_upload
 ) {
   shiny::moduleServer(
     id,
@@ -381,18 +381,6 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-          if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
-            shiny::div(
-              style = "display: flex; justify-content: center; align-items: center;",
-              shiny::tags$h4(
-                "Probe type detection still running, please wait...",
-                style = "color: red;"
-              )
-            )
-          },
-          shiny::div(
-            shiny::uiOutput(ns("probetype_result"))
-          ),
           shiny::div(
             shiny::actionLink(ns("options"), "Computation options",
               icon = icon("cog", lib = "glyphicon")
@@ -791,19 +779,8 @@ upload_module_computepgx_server <- function(
       output$input_recap2 <- renderUI({
         tagList(
           shiny::HTML("<b>Data type:</b>", upload_datatype()),
-          shiny::HTML("<br><b>Organism:</b>", upload_organism()),
-          shiny::HTML("<br><b>Probe type:</b>", probetype())
+          shiny::HTML("<br><b>Organism:</b>", upload_organism())
         )
-      })
-
-      output$probetype_result <- shiny::renderUI({
-        p <- probetype()
-        if (is.null(p) || p == "error") {
-          shiny::div(
-            style = "display: flex; justify-content: center; align-items: center; color: red;",
-            shiny::tags$p("Probes not recognized, please check organism or your probe names.")
-          )
-        }
       })
 
       output$timeseries_checkbox <- renderUI({
@@ -929,6 +906,7 @@ upload_module_computepgx_server <- function(
       # Define a reactive value to store the process object
       PROCESS_LIST <- list()
       computedPGX <- shiny::reactiveVal(NULL)
+      dispatch_computation <- shiny::reactiveVal(FALSE)
       custom_geneset <- list(gmt = NULL, info = NULL)
       custom_fc <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
@@ -1031,7 +1009,9 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      shiny::observeEvent(upload_wizard(), {
+      shiny::observeEvent( upload_wizard(), {
+        dispatch_computation(FALSE) ## reset any stale dispatch signal
+
         if (!is.null(upload_wizard()) && upload_wizard() != "wizard_finished") {
           return(NULL)
         }
@@ -1046,20 +1026,102 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        ## bail out if probetype task is not finished or has error
-        p <- probetype()
-        if (is.null(p) || grepl("error", tolower(p)) || p == "") {
-          dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
-          shinyalert::shinyalert("ERROR", "probetype detection failed",
-            type = "error"
+        ## -----------------------------------------------------------
+        ## Check probe type against selected organism
+        ## -----------------------------------------------------------
+        detected_probetype <- NULL
+        if (upload_datatype() != "methylomics") {
+          probes <- rownames(countsRT())
+          annot.cols <- colnames(annotRT())
+          shinyalert::shinyalert(
+            title = "Checking your data...",
+            text = "Analysing probe types. Please wait.",
+            type = "info",
+            closeOnClickOutside = FALSE,
+            showConfirmButton = FALSE
           )
-          return(NULL)
+
+          dbg("[computepgx_server:upload_wizard] checking probetype...")
+          organism <- upload_organism()
+          dbg("[computepgx_server:upload_wizard] organism = ", organism)
+          
+          detected <- playbase::check_species_probetype(
+            probes = probes,
+            datatype = upload_datatype(),
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols
+          )
+          dbg("[computepgx_server:upload_wizard] detected = ", detected)
+          
+          alt.text <- ""
+          e0 <- length(detected) == 0
+          e1 <- is.null(detected[[organism]])
+          e2 <- all(is.na(detected[[organism]]))
+          e3 <- !(organism %in% names(detected))
+          task_failed <- (e0 || e1 || e2 || e3)
+          alt.text <- ""
+          if (task_failed) {
+            dbg("[computepgx_server:upload_wizard] ERROR probetype not recognized")
+
+            detected_probetype <- NULL
+            detected_species <- setdiff(names(detected), organism)
+            alt.species <- paste(detected_species, collapse = " or ")
+            if (length(alt.species)) {
+              alt.text <- paste0("Are these perhaps <b>", alt.species, "</b>?")
+            }
+            if (upload_datatype() == "metabolomics") {
+              alt.text <- paste0("Valid probes are: <b>ChEBI (recommended), HMDB, PubChem, or KEGG</b>")
+            }
+
+            shinyalert::shinyalert(
+              title = "Probes not recognized!",
+              text = paste0(
+                "Error. Your probes do not match any probe type for <b>",
+                organism, "</b>. Please check your probe names and select ",
+                "another organism. ", alt.text
+              ),
+              type = "error",
+              timer = 0,
+              immediate = TRUE,
+              size = "s",
+              html = TRUE
+            )
+
+            ## abort
+            dbg("[computepgx_server:upload_wizard] upload aborted")
+            clear_upload()
+            
+            return(NULL)
+          }
+
+          detected_probetype <- paste(detected[[organism]], collapse = "+")
+          dbg("[computepgx_server:upload_wizard] detected probetype = ",
+            detected_probetype)
+          
+          ## wrong datatype — warn but don't block
+          if (any(grepl("PROT", detected_probetype)) &&
+            !(grepl("proteomics", upload_datatype(), ignore.case = TRUE))) {
+            shinyalert::shinyalert(
+              title = "Is this proteomics data?",
+              text = paste0(
+                "Warning. Your data seems to be <b>proteomics</b> but you have selected ",
+                "<b>", upload_datatype(), "</b> as data type."
+              ),
+              type = "warning",
+              size = "s",
+              html = TRUE
+            )
+          }
+        } else {
+          detected_probetype <- "CpG probes"
         }
-        shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
 
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
+        dbg("[computepgx_server:upload_wizard] preparing for computing dispatch")
+        dbg("[computepgx_server:upload_wizard] 1:")
+        
         counts <- countsRT()
         countsX <- countsX()
 
@@ -1088,6 +1150,8 @@ upload_module_computepgx_server <- function(
           pgx_preprocess <- preprocess()
         }
 
+        dbg("[computepgx_server:upload_wizard] 2:")
+        
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -1109,6 +1173,8 @@ upload_module_computepgx_server <- function(
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
 
+        dbg("[computepgx_server:upload_wizard] 3:")
+        
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
@@ -1125,7 +1191,8 @@ upload_module_computepgx_server <- function(
           batch.pars <- compute_settings$bc_method$param
         }
         ## --------------------------------
-
+        dbg("[computepgx_server:upload_wizard] 4:")
+        
         only.proteincoding <- FALSE # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
@@ -1144,7 +1211,8 @@ upload_module_computepgx_server <- function(
         libx.dir <- paste0(sub("/$", "", lib.dir), "x") ## set to .../libx
         pgx_save_folder <- auth$user_dir
 
-
+        dbg("[computepgx_server:upload_wizard] 5:")
+        
         ## -----------------------------------------------
         ## Collect user-defined metadata from inputs
         ## -----------------------------------------------
@@ -1165,6 +1233,8 @@ upload_module_computepgx_server <- function(
           ## If all empty, set to NULL
           if (length(user_metadata) == 0) user_metadata <- NULL
         }
+
+        dbg("[computepgx_server:upload_wizard] 6:")
 
         ## -----------------------------------------------
         ## Covariates to regress out
@@ -1192,6 +1262,8 @@ upload_module_computepgx_server <- function(
           regress_ccs = ifelse("Cell cycle scores" %in% covariates, TRUE, FALSE)
         )
 
+        dbg("[computepgx_server:upload_wizard] 7:")
+        
         ## Resolve proteomics subtype from is.olink / is.nulisa reactives
         datatype_subtype <- NULL
         if (upload_datatype() == "proteomics") {
@@ -1204,6 +1276,8 @@ upload_module_computepgx_server <- function(
           }
         }
 
+        dbg("[computepgx_server:upload_wizard] 8:")
+        
         create_ai_reports <- is.null(input$create_ai_reports) || isTRUE(input$create_ai_reports)
         create_ai_infographics <- isTRUE(input$create_ai_infographics)
         llm_model <- getUserOption(session, "llm_model")
@@ -1237,6 +1311,8 @@ upload_module_computepgx_server <- function(
           }
         }
 
+        dbg("[computepgx_server:upload_wizard] preparing params list")
+        
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
@@ -1246,7 +1322,7 @@ upload_module_computepgx_server <- function(
           preprocess = pgx_preprocess,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
-          probe_type = probetype(),
+          probe_type = detected_probetype,
           # ------- extra tables ---------
           annot_table = pgx_annot,
           custom.geneset = custom_geneset,
@@ -1302,6 +1378,13 @@ upload_module_computepgx_server <- function(
           sendSuccessMessageToUser = sendSuccessMessageToUser
         )
 
+        ## -----------------------------------------------------------
+        ## Show confirmation popup with 10-second countdown and cancel.
+        ## Computation starts only if not cancelled.
+        ## -----------------------------------------------------------
+
+        dbg("[computepgx_server:upload_wizard] preparing for computing dispatch")
+
         shinyalert::shinyalert(
           title = "Crunching your data!",
           text = stringr::str_squish("Your dataset will be computed in the background.
@@ -1309,8 +1392,20 @@ upload_module_computepgx_server <- function(
             When it is ready, it will appear in your dataset library. Most datasets
             take between 30 - 60 minutes to complete."),
           type = "info",
-          timer = 60000
+          immediate = TRUE,
+          timer = 0,
+          closeOnClickOutside = FALSE,
+          showCancelButton = TRUE,
+          confirmButtonText = "Start",
+          cancelButtonText = "Cancel",
+          callbackR = function(value) {
+            if (isTRUE(value)) {
+              dispatch_computation(TRUE)
+            }
+          }
         )
+
+        dbg("[computepgx_server:upload_wizard] waiting for Start")        
         bigdash.selectTab(
           session,
           selected = "load-tab"
@@ -1327,39 +1422,47 @@ upload_module_computepgx_server <- function(
         try(rm(annot_table))
         try(rm(custom_geneset))
 
-        process_counter(process_counter() + 1)
-        dbg("[compute PGX process] : starting processx nr: ", process_counter())
-        dbg("[compute PGX process] : process tmpdir = ", tmpdir)
-        dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
+        ## Wait for dispatch signal (confirmed or timer expired) before
+        ## starting the background process.
+        shiny::observeEvent(dispatch_computation(), {
+          req(dispatch_computation())
+          dbg("[computepgx_server:upload_wizard] execute dispatch!")
+          
+          process_counter(process_counter() + 1)
+          dbg("[compute PGX process] : starting processx nr: ", process_counter())
+          dbg("[compute PGX process] : process tmpdir = ", tmpdir)
+          dbg("[compute PGX process] : see error.log => tail -f", paste0(tmpdir, "/processx-error.log"))
 
-        ## write compute transaction to log file, similar to share log
-        log.file <- file.path(ETC, "PGXCOMPUTE.log")
-        log.entry <- data.frame(date = format(Sys.time(), tz = "CET"), user = auth$email, tmpdir = tmpdir)
-        if (file.exists(log.file)) {
-          write.table(log.entry, file = log.file, col.names = FALSE, row.names = FALSE, sep = ",", append = TRUE)
-        } else {
-          write.table(log.entry, file = log.file, col.names = TRUE, row.names = FALSE, sep = ",")
-        }
+          ## write compute transaction to log file, similar to share log
+          log.file <- file.path(ETC, "PGXCOMPUTE.log")
+          log.entry <- data.frame(date = format(Sys.time(), tz = "CET"), user = auth$email, tmpdir = tmpdir)
+          if (file.exists(log.file)) {
+            write.table(log.entry, file = log.file, col.names = FALSE, row.names = FALSE, sep = ",", append = TRUE)
+          } else {
+            write.table(log.entry, file = log.file, col.names = TRUE, row.names = FALSE, sep = ",")
+          }
 
-        new.job <- list(
-          process = processx::process$new(
-            "Rscript",
-            args = c(script_path, tmpdir, OPG),
-            supervise = TRUE,
-            stderr = "|",
-            stdout = "|"
-          ),
-          number = process_counter(),
-          dataset_name = gsub("[ ]", "_", input$selected_name),
-          raw_dir = raw_dir(),
-          stderr = c(),
-          stdout = c()
-        )
-        session$sendCustomMessage("warnOnExit", TRUE)
+          new.job <- list(
+            process = processx::process$new(
+              "Rscript",
+              args = c(script_path, tmpdir, OPG),
+              supervise = TRUE,
+              stderr = "|",
+              stdout = "|"
+            ),
+            number = process_counter(),
+            dataset_name = gsub("[ ]", "_", input$selected_name),
+            raw_dir = raw_dir(),
+            stderr = c(),
+            stdout = c()
+          )
+          session$sendCustomMessage("warnOnExit", TRUE)
 
-        ## append to process list
-        PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
-      }) ## end observe input$compute
+          ## append to process list
+          PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
+        }) ## end observeEvent(dispatch_computation)
+
+      }) ## end observeEvent(upload_wizard)
 
       check_process_status <- reactive({
         if (process_counter() == 0) {
