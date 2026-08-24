@@ -117,11 +117,20 @@ UploadBoard <- function(id,
 
     output$methylomics_subtype_ui <- shiny::renderUI({
       if (upload_datatype() == "methylomics") {
+        ## A caller that already knows the array says so through recompute_pgx
+        ## (the IDAT converter reads it out of the files). Defaulting to 450K
+        ## over EPIC data annotates against the wrong manifest, which is
+        ## silently wrong rather than visibly wrong.
+        want <- recompute_pgx()$meth_type
         shiny::selectInput(
           ns("methylomics_type"),
           label = "Methylomics platform:",
           choices = c("450K array", "EPIC array"),
-          selected = "450K array",
+          selected = if (isTRUE(want %in% c("450K array", "EPIC array"))) {
+            want
+          } else {
+            "450K array"
+          },
           width = "150px"
         )
       } else {
@@ -789,6 +798,13 @@ UploadBoard <- function(id,
         req(!is.null(recompute_pgx()))
         if (!is.null(recompute_pgx()$datatype) && recompute_pgx()$datatype != "") {
           upload_datatype(recompute_pgx()$datatype)
+          ## Sync the visible control too, not just the reactiveVal behind it.
+          ## Left alone it keeps showing the previous datatype, and its own
+          ## observer resets upload_datatype() the moment anything touches it -
+          ## so a caller-set datatype silently reverts.
+          shiny::updateSelectInput(session, "selected_datatype",
+            selected = recompute_pgx()$datatype
+          )
         }
         numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) {

@@ -240,6 +240,32 @@ IDAT_HELP <- list(
     ),
     methods = NULL
   ),
+  send = list(
+    title = "Sending it straight to the upload wizard",
+    text = paste(
+      "The alternative to downloading and re-uploading. <b>Send to upload</b>",
+      "opens the platform's upload wizard with the beta table and the sample",
+      "table already in it, and the datatype and array already set - so the",
+      "conversion never leaves the browser as a file at all.",
+      "<br><br>Everything the wizard normally asks for is still asked for. You",
+      "name the dataset, fill in the groups you want to compare, and choose",
+      "the normalization - including the probe-design correction this",
+      "application deliberately leaves to that step. Nothing is computed",
+      "behind you.",
+      "<br><br>The download is still there and produces the same tables. Use",
+      "it when the beta values are going somewhere other than this platform,",
+      "or when you want a copy before committing to an import."
+    ),
+    methods = paste(
+      "The button writes the conversion into the same channel the upload",
+      "board already watches to pre-fill itself, so there is no second route",
+      "into the wizard to keep in step with the first. The array type sent",
+      "with it is the one <b>playbase.epigenetics::read_idats()</b> detected",
+      "in the files, not a default - the platform's probe annotation is",
+      "manifest-specific, so 450K settings over EPIC data would be wrong in a",
+      "way nothing downstream would show you."
+    )
+  ),
   download = list(
     title = "The download",
     text = paste(
@@ -251,8 +277,9 @@ IDAT_HELP <- list(
       "it. <b>qc.csv</b> is the ledger from the QC tab, including the",
       "raw-intensity columns that cannot be recovered later.",
       "<br><br>Load counts.csv and samples.csv through the normal upload",
-      "screen as datatype methylomics. Probe-design correction is offered",
-      "there, which is why it is not applied here.",
+      "screen as datatype methylomics, or skip the round trip entirely with",
+      "<b>Send to upload</b>. Probe-design correction is offered there, which",
+      "is why it is not applied here.",
       "<br><br>The table is large: six 450K samples are about 57 MB of CSV,",
       "25 MB zipped."
     ),
@@ -483,7 +510,8 @@ idat_progress <- function(path, elapsed = 0) {
 #'
 #' @return \code{list(ok, res, log, msg)}.
 idat_convert <- function(sheet, method = "noob", detect_p = 0.01,
-                         max_fail = 0.05, array = "auto", progress_file = NULL) {
+                         max_fail = 0.05, array = "auto", progress_file = NULL,
+                         sheet_csv = NA_character_) {
   log <- character(0)
   msg <- NA_character_
 
@@ -520,6 +548,8 @@ idat_convert <- function(sheet, method = "noob", detect_p = 0.01,
       ## The QC ledger the package documents as the call to make. A failure
       ## here must not lose the betas we just spent minutes computing.
       if (!is.null(out)) {
+        out$array <- idat_array_type(log)
+        out$samples <- idat_samples(out, sheet_csv)
         out$ledger <- tryCatch(
           cbind(playbase.epigenetics::sample_qc(out$beta, out$annot), out$qc),
           error = function(e) {
@@ -543,6 +573,62 @@ idat_convert <- function(sheet, method = "noob", detect_p = 0.01,
   list(ok = !is.null(res), res = res, log = idat_log_lines(log), msg = msg)
 }
 
+## read_idats() announces the array it detected exactly once. Taking it from
+## there rather than re-deriving it keeps one answer in play: the platform's
+## methylomics annotation is manifest-specific, so a 450K default over EPIC
+## data is the same silent wrong answer array_type() refuses to make.
+idat_array_type <- function(log) {
+  hit <- regmatches(log, regexpr("Array type: [^;]+", log))
+  if (!length(hit)) {
+    return(NA_character_)
+  }
+  trimws(sub("Array type: ", "", hit[1]))
+}
+
+#' The sample table for a conversion: the user's sheet where there was one.
+#'
+#' Rows are aligned to the beta columns and named by them, which is the shape
+#' both the upload board (\code{intersect(colnames(X), rownames(Y))}) and the
+#' downloaded samples.csv need. Columns that only locate files on disk are
+#' dropped - they are not phenotypes and mean nothing on another machine.
+#'
+#' @return data.frame with \code{rownames == colnames(beta)}; a single
+#'   \code{sample} column when the upload carried no usable sheet.
+idat_samples <- function(res, sheet = NA_character_) {
+  ids <- colnames(res$beta)
+  bare <- data.frame(sample = ids, row.names = ids, stringsAsFactors = FALSE)
+  if (is.na(sheet) || !file.exists(sheet)) {
+    return(bare)
+  }
+  df <- tryCatch(utils::read.csv(sheet, stringsAsFactors = FALSE),
+    error = function(e) NULL
+  )
+  if (is.null(df) || !nrow(df)) {
+    return(bare)
+  }
+
+  ## read_idats() names the beta columns from Sample_Name when the sheet has
+  ## one, so that is the join key; without it there is nothing to join on.
+  key <- grep("^sample_name$", colnames(df), ignore.case = TRUE)
+  if (!length(key)) {
+    return(bare)
+  }
+  rownames(df) <- make.unique(as.character(df[[key[1]]]))
+  if (!any(ids %in% rownames(df))) {
+    return(bare)
+  }
+
+  drop <- grepl("^(basename|slide|array|sentrix|sample_name|sample_well|pool_id|filenames?|path)$",
+    colnames(df), ignore.case = TRUE)
+  df <- df[, !drop, drop = FALSE]
+  if (!ncol(df)) {
+    return(bare)
+  }
+  out <- df[ids, , drop = FALSE]
+  rownames(out) <- ids
+  out
+}
+
 #' Bundle a conversion into the three CSVs the upload board wants, zipped.
 #'
 #' counts.csv holds beta values: mToBeta() detects a 0-1 matrix and returns it
@@ -554,13 +640,10 @@ idat_bundle <- function(res, file) {
 
   utils::write.csv(res$beta, file.path(dir, "counts.csv"))
   utils::write.csv(res$ledger, file.path(dir, "qc.csv"))
-  ## A phenotype starter, not a phenotype: sample ids and whatever the sheet
-  ## carried. The user fills in the groups the upload board will ask for.
-  utils::write.csv(
-    data.frame(sample = colnames(res$beta), stringsAsFactors = FALSE),
-    file.path(dir, "samples.csv"),
-    row.names = FALSE
-  )
+  ## The same table the Send to upload button hands over, so the two routes
+  ## into the platform cannot disagree. Row names are the sample ids, which is
+  ## what the upload board matches counts columns against.
+  utils::write.csv(res$samples, file.path(dir, "samples.csv"))
 
   ## zip() is path-relative: run it from the bundle dir so the archive holds
   ## three files, not three nested directories.
@@ -589,8 +672,12 @@ idat_dt <- function(df, rownames = FALSE, ...) {
 #' The application server-side logic
 #'
 #' @param id Shiny module id.
+#' @param recompute_pgx The app-wide reactiveVal the upload board watches. Set
+#'   it and the board opens pre-filled - see the Send to upload button below.
+#'   NULL (the standalone test app) hides that button.
+#' @param parent The parent session, for showing the Upload panel.
 #' @export
-idat_server <- function(id) {
+idat_server <- function(id, recompute_pgx = NULL, parent = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
     ## An IDAT upload is GB-scale; tempdir() outlives the session otherwise.
@@ -617,7 +704,8 @@ idat_server <- function(id) {
     convert_task <- shiny::ExtendedTask$new(
       function(sheet, method, detect_p, max_fail, array, progress_file) {
         promises::future_promise(
-          idat_convert(sheet, method, detect_p, max_fail, array, progress_file)
+          idat_convert(sheet, method, detect_p, max_fail, array, progress_file,
+            sheet_csv = sheet)
         )
       }
     ) |> bslib::bind_task_button("convert")
@@ -835,5 +923,59 @@ idat_server <- function(id) {
       filename = function() "idat_beta.zip",
       content = function(file) idat_bundle(result()$res, file)
     )
+
+    ## ---------------------------- send to upload ---------------------------
+    ## recompute_pgx is the channel the upload board already watches to
+    ## pre-fill itself (upload_server.R: it sets uploaded$counts.csv,
+    ## $samples.csv and the datatype from whatever is put here). Reusing it
+    ## means no new plumbing through UploadBoard, and no second way for a
+    ## dataset to enter the wizard.
+    output$send_ui <- shiny::renderUI({
+      out <- result()
+      if (is.null(recompute_pgx) || is.null(out) || !isTRUE(out$ok)) {
+        return(NULL)
+      }
+      shiny::tagList(
+        shiny::actionButton(session$ns("send"), "Send to upload",
+          icon = shiny::icon("right-to-bracket"),
+          class = "btn-outline-primary mt-2", width = "100%"
+        ),
+        shiny::div(idat_info("send"), style = "text-align: center; margin-top: 4px;")
+      )
+    })
+
+    shiny::observeEvent(input$send, {
+      res <- shiny::req(result()$res)
+
+      ## Show the Upload panel FIRST, then hand the data over. The board opens
+      ## its wizard 250ms after reading this channel, and a panel that is only
+      ## marked active - which is all app/R/server.R's own new_upload observer
+      ## manages for a nav_panel_hidden - paints nothing for the wizard to open
+      ## into. Navigating afterwards instead re-renders the panel out from
+      ## under the wizard, which is how this was first written and why the
+      ## wizard flashed and vanished.
+      if (!is.null(parent)) {
+        bslib::nav_select("app-sidebar", "Upload", session = parent)
+      }
+
+      recompute_pgx(list(
+        counts = res$beta,
+        samples = res$samples,
+        contrast = NULL,
+        organism = "Human", ## the only organism the 450K/EPIC manifests cover
+        datatype = "methylomics",
+        meth_type = res$array,
+        name = "",
+        description = ""
+      ))
+      ## No nav_select here on purpose. app/R/server.R already navigates to
+      ## Upload on new_upload(), which the board bumps 250ms after reading
+      ## this channel - and a second navigation lands *after* the wizard is
+      ## shown and re-renders the panel out from under it.
+      shiny::showNotification(
+        sprintf("Sent %d samples to the upload wizard.", ncol(res$beta)),
+        type = "message"
+      )
+    })
   })
 }

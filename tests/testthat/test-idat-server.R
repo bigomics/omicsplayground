@@ -219,6 +219,61 @@ test_that("every phase pattern matches a real read_idats() message", {
   expect_true(all(diff(IDAT_PHASES$pct) > 0))
 })
 
+## ---- array type and sample table -------------------------------------------
+
+test_that("the detected array type is read back out of the log", {
+  ## Pinned against read_idats()'s actual message: get this wrong and the
+  ## upload board silently annotates EPIC data against the 450K manifest.
+  log <- c(
+    "[playbase.epigenetics::read_idats] Reading 6 IDAT pair(s)...",
+    "[playbase.epigenetics::read_idats] Array type: EPIC array; method: noob",
+    "[playbase.epigenetics::read_idats] Detection p-values..."
+  )
+  expect_equal(idat_array_type(log), "EPIC array")
+  expect_true(is.na(idat_array_type("nothing here")))
+})
+
+test_that("with no sheet the sample table is the ids, named by themselves", {
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  s <- idat_samples(res, NA_character_)
+  expect_equal(rownames(s), c("S1", "S2"))
+  expect_equal(s$sample, c("S1", "S2"))
+})
+
+test_that("a sheet's phenotype columns are carried over, aligned to the betas", {
+  ## Note the sheet's row order differs from the beta columns on purpose.
+  f <- tempfile(fileext = ".csv")
+  write.csv(data.frame(
+    Sample_Name = c("S2", "S1"), Slide = c("x", "y"),
+    Basename = c("/tmp/a", "/tmp/b"), group = c("case", "ctrl"),
+    age = c(61, 44), stringsAsFactors = FALSE
+  ), f, row.names = FALSE)
+
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  s <- idat_samples(res, f)
+  expect_equal(rownames(s), c("S1", "S2"))
+  expect_equal(s$group, c("ctrl", "case"))
+  expect_equal(s$age, c(44, 61))
+  ## Slide/Basename locate files on one machine; they are not phenotypes.
+  expect_false(any(c("Slide", "Basename", "Sample_Name") %in% colnames(s)))
+})
+
+test_that("a sheet that cannot be joined falls back rather than misaligning", {
+  ## No Sample_Name means no key; guessing the order would silently attach the
+  ## wrong phenotype to the wrong sample.
+  f <- tempfile(fileext = ".csv")
+  write.csv(data.frame(Slide = c("a", "b"), group = c("case", "ctrl")), f,
+    row.names = FALSE)
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  expect_equal(colnames(idat_samples(res, f)), "sample")
+
+  ## A sheet naming entirely different samples is no better a join.
+  f2 <- tempfile(fileext = ".csv")
+  write.csv(data.frame(Sample_Name = c("X9", "X8"), group = c("case", "ctrl")),
+    f2, row.names = FALSE)
+  expect_equal(colnames(idat_samples(res, f2)), "sample")
+})
+
 ## ---- download bundle -------------------------------------------------------
 
 test_that("the bundle holds counts/samples/qc and round-trips the betas", {
@@ -226,6 +281,7 @@ test_that("the bundle holds counts/samples/qc and round-trips the betas", {
     dimnames = list(c("cg001", "cg002"), c("S1", "S2")))
   res <- list(
     beta = beta,
+    samples = idat_samples(list(beta = beta)),
     ledger = data.frame(`Median meth` = c(11.2, 11.4), row.names = c("S1", "S2"),
       check.names = FALSE)
   )
@@ -240,8 +296,8 @@ test_that("the bundle holds counts/samples/qc and round-trips the betas", {
   utils::unzip(zip.file, exdir = out)
   back <- as.matrix(read.csv(file.path(out, "counts.csv"), row.names = 1))
   expect_equal(back, beta)
-  expect_equal(
-    read.csv(file.path(out, "samples.csv"), stringsAsFactors = FALSE)$sample,
-    c("S1", "S2")
-  )
+  ## row.names = 1: the upload board matches counts columns against these.
+  samples <- read.csv(file.path(out, "samples.csv"), row.names = 1,
+    stringsAsFactors = FALSE)
+  expect_equal(rownames(samples), c("S1", "S2"))
 })

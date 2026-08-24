@@ -91,7 +91,8 @@ idat_ui <- function(id) {
             class = "btn-primary mb-2",
             width = "100%"
           ),
-          shiny::uiOutput(ns("download_ui"))
+          shiny::uiOutput(ns("download_ui")),
+          shiny::uiOutput(ns("send_ui"))
         )
       ),
       bslib::layout_columns(
