@@ -675,9 +675,8 @@ idat_dt <- function(df, rownames = FALSE, ...) {
 #' @param recompute_pgx The app-wide reactiveVal the upload board watches. Set
 #'   it and the board opens pre-filled - see the Send to upload button below.
 #'   NULL (the standalone test app) hides that button.
-#' @param parent The parent session, for showing the Upload panel.
 #' @export
-idat_server <- function(id, recompute_pgx = NULL, parent = NULL) {
+idat_server <- function(id, recompute_pgx = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
     ## An IDAT upload is GB-scale; tempdir() outlives the session otherwise.
@@ -947,18 +946,13 @@ idat_server <- function(id, recompute_pgx = NULL, parent = NULL) {
     shiny::observeEvent(input$send, {
       res <- shiny::req(result()$res)
 
-      ## Show the Upload panel FIRST, then hand the data over. The board opens
-      ## its wizard 250ms after reading this channel, and a panel that is only
-      ## marked active - which is all app/R/server.R's own new_upload observer
-      ## manages for a nav_panel_hidden - paints nothing for the wizard to open
-      ## into. Navigating afterwards instead re-renders the panel out from
-      ## under the wizard, which is how this was first written and why the
-      ## wizard flashed and vanished.
-      if (!is.null(parent)) {
-        bslib::nav_select("app-sidebar", "Upload", session = parent)
-      }
-
-      recompute_pgx(list(
+      ## Set the channel and nothing else - the same thing the Library's
+      ## recompute button does (loading_table_datasets.R, where the two
+      ## navigation lines next to it are commented out on purpose). The board
+      ## answers by switching to Upload and showing its wizard itself; a
+      ## nav_select from here lands a second panel render on top of the wizard
+      ## and it never appears.
+      payload <- list(
         counts = res$beta,
         samples = res$samples,
         contrast = NULL,
@@ -967,11 +961,14 @@ idat_server <- function(id, recompute_pgx = NULL, parent = NULL) {
         meth_type = res$array,
         name = "",
         description = ""
-      ))
-      ## No nav_select here on purpose. app/R/server.R already navigates to
-      ## Upload on new_upload(), which the board bumps 250ms after reading
-      ## this channel - and a second navigation lands *after* the wizard is
-      ## shown and re-renders the panel out from under it.
+      )
+
+      ## Handed over from a later flush, not this button's. The Library's
+      ## recompute button reaches the same channel from inside a shinyalert
+      ## callbackR, which is a client-originated flush of its own - and that
+      ## is the path where the board's wizard actually opens.
+      shinyjs::delay(300, recompute_pgx(payload))
+
       shiny::showNotification(
         sprintf("Sent %d samples to the upload wizard.", ncol(res$beta)),
         type = "message"

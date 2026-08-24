@@ -30,7 +30,19 @@ source("../R/idat_server.R", encoding = "UTF-8")
 ui <- idat_ui("idat")
 
 server <- function(input, output, session) {
-  idat_server("idat")
+  ## Stand-in for the app-wide channel the upload board watches. There is no
+  ## upload board here, so this only records what Send to upload would hand
+  ## over - enough for the button to render and for the payload to be checked.
+  recompute_pgx <- shiny::reactiveVal(NULL)
+  shiny::observeEvent(recompute_pgx(), {
+    p <- recompute_pgx()
+    message(sprintf(
+      "[test] hand-off: %d x %d betas, %d sample rows, datatype %s, array %s",
+      nrow(p$counts), ncol(p$counts), nrow(p$samples), p$datatype, p$meth_type
+    ))
+  })
+
+  idat_server("idat", recompute_pgx = recompute_pgx)
 }
 
 shinyApp(ui, server)

@@ -1088,7 +1088,7 @@ app_server <- function(input, output, session) {
     launcher_server("apps", parent = session)
     RunMonitorServer("runmonitor")
     idconvert_server("idconvert")
-    idat_server("idat", recompute_pgx = recompute_pgx, parent = session)
+    idat_server("idat", recompute_pgx = recompute_pgx)
     qsee_server("qsee", pgx = PGX, parent = session)
     prism_server("prism")
   }
