@@ -6,7 +6,7 @@ EpigenomicsBoard <- function(id, pgx) {
     ns <- session$ns
 
     OmicsBoard(
-      "board", pgx, title = "Epigenomics",
+      session, pgx, title = "Epigenomics",
       infotext = "Epigenomics visualizations and analyses for methylomics data."
     )
 

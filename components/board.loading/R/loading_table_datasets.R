@@ -520,14 +520,6 @@ loading_table_datasets_server <- function(id,
         menus <- c(menus, as.character(new_menu))
       }
 
-
-      observeEvent(input$share_pgx,
-        {
-          share_pgx(input$share_pgx)
-        },
-        ignoreInit = TRUE
-      )
-
       if (nrow(df) > auth$options$MAX_DATASETS) {
         df_cap <- auth$options$MAX_DATASETS
       } else {
@@ -765,11 +757,12 @@ loading_table_datasets_server <- function(id,
 
     ## ---------------- CHANGE NAME PGX ----------------
     observeEvent(input$changename_pgx, {
+      df <- getFilteredPGXINFO()
       shinyalert::shinyalert(
         title = "Change name",
         text = paste0(
           "Are you sure you want to change the name of your dataset '",
-          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+          df[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset"], "'?"
         ),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
@@ -780,7 +773,7 @@ loading_table_datasets_server <- function(id,
               title = "Enter new name",
               text = paste0(
                 "Rename your dataset '",
-                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "' as:"
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset"], "' as:"
               ),
               type = "input",
               showCancelButton = TRUE,
