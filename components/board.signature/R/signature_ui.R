@@ -248,7 +248,7 @@ SignatureUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Test signatures",
     bslib::layout_columns(
       col_widths = c(8, 4),

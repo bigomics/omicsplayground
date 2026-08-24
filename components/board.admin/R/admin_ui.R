@@ -84,7 +84,7 @@ AdminPanelUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Admin Panel",
     tabs
   )

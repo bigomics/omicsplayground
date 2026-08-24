@@ -19,7 +19,7 @@ MGseaUI <- function(id) {
   rowH2 <- 440 ## row 2 height
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Multi-Omics GSEA",
     shiny::tabsetPanel(
       id = ns("tabs"),

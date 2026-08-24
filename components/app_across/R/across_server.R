@@ -125,7 +125,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     query_result <- reactiveVal(NULL)
 
-    OmicsBoard("board", pgx, title = "Across Datasets", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Across Datasets", infotext = infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

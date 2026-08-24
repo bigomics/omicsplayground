@@ -45,7 +45,7 @@ EpigenomicsUI <- function(id) {
   ns <- shiny::NS(id)
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Epigenomics",
     shiny::tabsetPanel(
       id = ns("tabs"),

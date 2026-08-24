@@ -21,7 +21,7 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
-    OmicsBoard("board", pgx, title = "TCGA", infotext = as.character(tcga_tcgasurv_info))
+    OmicsBoard(session, pgx, title = "TCGA", infotext = as.character(tcga_tcgasurv_info))
 
     ## ========================================================================
     ## ============================ OBSERVERS =================================

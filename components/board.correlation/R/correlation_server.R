@@ -18,7 +18,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     COL2 <- RColorBrewer::brewer.pal(2, "Paired")[1:2]
     COL2 <- COL[1:2]
 
-    OmicsBoard("board", pgx, title = "Correlation analysis", infotext = cor_infotext)
+    OmicsBoard(session, pgx, title = "Correlation analysis", infotext = cor_infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

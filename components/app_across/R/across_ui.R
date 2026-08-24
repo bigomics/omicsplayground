@@ -272,7 +272,7 @@ AcrossUI <- function(id) {
   div(
     style = "height: calc(100vh - 60px);",
     OmicsBoardUI(
-      id = ns("board"),
+      ns = ns,
       title = "Across Datasets",
       bslib::layout_columns(
         col_widths = c(3, 9),

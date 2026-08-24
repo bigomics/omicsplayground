@@ -28,7 +28,7 @@ MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    OmicsBoard("board", pgx, title = "Multiomics WGCNA", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Multiomics WGCNA", infotext = infotext)
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(

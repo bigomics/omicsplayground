@@ -131,7 +131,7 @@ UploadUI <- function(id) {
   ui <- div(
     shinybusy::use_busy_bar(color="#AA0101", height="4px"),
     OmicsBoardUI(
-      id = ns("board"),
+      ns = ns,
       title = "Upload New",
       div(style = "position: relative;", shinyjs::hidden(spinner)),
       uiOutput(ns("upload_wizard")),

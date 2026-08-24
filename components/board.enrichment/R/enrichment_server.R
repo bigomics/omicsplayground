@@ -35,7 +35,7 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
-    OmicsBoard("board", pgx, title = "Enrichment Analysis", infotext = gs_infotext)
+    OmicsBoard(session, pgx, title = "Enrichment Analysis", infotext = gs_infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

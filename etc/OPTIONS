@@ -48,3 +48,4 @@ COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 # level (components/app_copilot/) post edgy_merge_copilot, not as a board.
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
+DEV_AUTOLOAD = TRUE

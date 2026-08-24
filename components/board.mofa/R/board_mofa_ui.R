@@ -277,7 +277,7 @@ MofaUI <- function(id) {
   bslib::page_fillable(
     fillable_mobile = FALSE, # not working here...
     OmicsBoardUI(
-      id = ns("board"),
+      ns = ns,
       title = "Multi-Omics Factor Analysis",
       shiny::tabsetPanel(
         id = ns("tabs"),

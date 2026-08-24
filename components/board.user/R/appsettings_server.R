@@ -12,7 +12,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
     user_table_resources_server("resources", pgx = pgx)
 
     OmicsBoard(
-      "board", pgx, title = "Settings",
+      session, pgx, title = "Settings",
       infotext = "The User Settings page allows you to change overall settings
                 that will alter how the app looks and functions."
     )

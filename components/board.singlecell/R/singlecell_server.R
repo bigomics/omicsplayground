@@ -25,7 +25,7 @@ SingleCellBoard <- function(id, pgx) {
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/BtMQ7Y0NoIA?si=pebNlzthvdZF7h5o&amp;start=35" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
     )
 
-    OmicsBoard("board", pgx, title = "Cell Profiling", infotext = infotext)
+    OmicsBoard(session, pgx, title = "Cell Profiling", infotext = infotext)
 
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================

@@ -298,7 +298,7 @@ WgcnaUI <- function(id) {
   )
 
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "WGCNA",    
     tabsetpanel
   )
