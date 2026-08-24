@@ -2,11 +2,9 @@
 
 TITLE                = 'Omics Playground'
 HOSTNAME             = server.local
-
-#------------- authentication ----------------
-
-AUTHENTICATION       = none
-#AUTHENTICATION      = password
+APACHE_COOKIE_PATH   = /app/omicsplayground/
+#AUTHENTICATION       = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
@@ -14,6 +12,7 @@ ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
 #DOMAIN              = bigomics.ch|demo.com
 BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
+ENABLE_COOKIE_LOGIN  = FALSE
 
 #------------- app options -------------------
 ENABLE_CHIRP         = TRUE
@@ -37,7 +36,6 @@ MAX_SHARED_QUEUE     = 3
 MAX_SESSIONS         = 2
 TIMEOUT              = 0
 WATERMARK            = TRUE
-APACHE_COOKIE_PATH   = /app/omicsplayground/
 HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
@@ -62,3 +60,4 @@ MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
 DEVMODE              = FALSE
 DEV_AUTOLOAD         = FALSE
 ENABLE_PLOTLY_PURGE  = TRUE
+ENABLE_ADMIN         = TRUE
