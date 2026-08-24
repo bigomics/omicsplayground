@@ -37,16 +37,30 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
+    #USE.MIRAI=TRUE
+    USE.MIRAI=FALSE
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
-      future_promise({
-        detected <- playbase::check_species_probetype(
-          probes = probes,
-          datatype = datatype,
-          test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
-          annot.cols = annot.cols
-        )
-        detected
-      })
+      if(USE.MIRAI) {
+        dbg("[UploadBoard] using mirai backend for ExtendedTask")
+        mirai::mirai({
+          playbase::check_species_probetype(          
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols)
+        }, organism=organism, datatype=datatype, probes=probes,
+        annot.cols=annot.cols )
+      } else {
+        dbg("[UploadBoard] using futures backend for ExtendedTask")
+        promises::future_promise({
+          playbase::check_species_probetype(
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols
+          )
+        })
+      }
     })
 
     output$navheader <- shiny::renderUI({

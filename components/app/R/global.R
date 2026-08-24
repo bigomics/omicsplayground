@@ -137,7 +137,8 @@ library(grid)
 library(magrittr)
 library(future)
 library(promises)
-future::plan(future::multicore)  ## multisession hangs
+future::plan(future::multicore) 
+##future::plan(future::multisession)  ## multisession often hangs!
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 .opg_require_omicsai_catalog_api()

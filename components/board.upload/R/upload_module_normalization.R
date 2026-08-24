@@ -1052,6 +1052,7 @@ upload_module_normalization_server <- function(
 
         ## Imputation defaults
         default_zero_as_na <- FALSE
+        if (grepl("proteomics|metabolomics", upload_datatype())) default_zero_as_na <- TRUE
         default_impute <- DEFAULTS$qc$impute
         default_impute_method <- "SVD2"
         if (!is.null(pgx_settings$imputation_method) && is.list(pgx_settings$imputation_method)) {
@@ -1206,7 +1207,7 @@ upload_module_normalization_server <- function(
                       shiny::selectInput(ns("filterthreshold"), NULL,
                         choices = c(
                           ">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
-                          "<=3 valid in any group" = 3, "<=50% valid in any group" = -0.5
+                          "<3 valid in any group" = 3, "<50% valid in any group" = -0.5
                         ),
                         selected = 0.2
                       )

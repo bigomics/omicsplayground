@@ -4,18 +4,36 @@
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1000;
-  }
-  
-  .spinner {
+}
+
+.spinner {
     width: 70px;
     text-align: center;
-  }
-  
-  .spinner > div {
+}
+
+.spinner > div {
     width: 18px;
     height: 18px;
     background-color: #333;
     border-radius: 100%;
     display: inline-block;
     animation: bounce 1.4s infinite ease-in-out both;
+}
+
+
+@keyframes nanobar-sweep {
+  0% {
+    background-position: 0% 50%;
   }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+//.shinybusy-nanobar .bar :not(.visually-hidden)  {
+
+.shinybusy-nanobar .bar {
+    background-image: linear-gradient(90deg, #ffffff, #aa1a1a, #ffffff) !important;
+    background-size: 50% 100% !important;
+    animation: nanobar-sweep 2s ease-in-out infinite normal;
+}
