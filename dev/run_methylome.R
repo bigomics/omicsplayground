@@ -16,7 +16,7 @@
 port <- as.integer(Sys.getenv("METHYLOME_PORT", "3838"))
 pgx_file <- Sys.getenv("METHYLOME_PGX", "")
 
-DEMO <- "GSE43976-methyl-mini.pgx"
+DEMO <- "GSE43976-methyl-demo.pgx"
 
 ## Where the demo dataset might already be sitting. Checked in order, first
 ## hit wins; data/ first so a dataset already in the library is left alone.

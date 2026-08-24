@@ -98,8 +98,16 @@ mp_bacon <- function(tstat) {
   if (!requireNamespace("bacon", quietly = TRUE)) return(NULL)
   tryCatch({
     bc <- bacon::bacon(teststatistics = as.numeric(tstat[is.finite(tstat)]))
-    list(bias = as.numeric(bacon::bias(bc)),
-         inflation = as.numeric(bacon::inflation(bc)))
+    out <- list(bias = as.numeric(bacon::bias(bc)),
+                inflation = as.numeric(bacon::inflation(bc)))
+    ## bacon estimates an empirical null by fitting a three-component mixture,
+    ## which assumes most tests are null. A contrast where they are not - a sex
+    ## EWAS on a dataset carrying the sex chromosomes puts 36% of probes past
+    ## q 0.05 and takes t to -142 - leaves the EM without a null to find, and it
+    ## returns NaN rather than failing. Report nothing instead of printing NaN
+    ## at the reader: lambda is beside it and is still meaningful.
+    if (!all(vapply(out, is.finite, logical(1)))) return(NULL)
+    out
   }, error = function(e) NULL)
 }
 

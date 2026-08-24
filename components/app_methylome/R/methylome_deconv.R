@@ -164,15 +164,31 @@ methylome_plot_compgroup_server <- function(id, pgx, r.cells, r.pheno,
       on.exit(graphics::par(op))
       for (i in seq_len(k)) {
         y <- cc[, i]
+        ## A reference panel routinely returns a cell type this cohort does not
+        ## have, and the projection puts it at zero plus floating-point dust -
+        ## values around 1e-17. Two things then go wrong. Testing that dust
+        ## reports a p-value (CD8T came back at 0.00131 on a column whose
+        ## largest value was 3e-17), and drawing it puts the axis on a scale
+        ## where the exponent is the only thing on screen. Neither is a result.
+        flat <- !any(is.finite(y)) || diff(range(y, na.rm = TRUE)) < 1e-8
+        ## outline = FALSE sets the y range from the boxes and whiskers alone,
+        ## so a genuine outlier - one sample really did have Eos = 0.14 - was
+        ## drawn off-panel while the table beside it printed the value. The
+        ## points are overlaid regardless, so the range has to cover them.
+        ylim <- if (flat) c(0, 1) else range(c(0, y), na.rm = TRUE)
         graphics::boxplot(y ~ g, col = "#dce7f2", border = "#444444",
-                          xlab = "", ylab = "proportion", outline = FALSE)
+                          xlab = "", ylab = "proportion", outline = FALSE,
+                          ylim = ylim)
         graphics::points(jitter(as.numeric(g), 0.55), y, pch = 19, cex = 0.6,
                          col = grDevices::adjustcolor(MP_PAL$grey, 0.6))
-        pv <- tryCatch(
+        pv <- if (flat) NA else tryCatch(
           if (nlevels(g) == 2) stats::t.test(y ~ g)$p.value
           else stats::kruskal.test(y ~ g)$p.value, error = function(e) NA)
-        graphics::title(main = sprintf("%s   p = %.3g", colnames(cc)[i], pv),
-                        cex.main = 0.95, font.main = 1)
+        graphics::title(
+          main = if (flat) sprintf("%s   not detected", colnames(cc)[i])
+                 else sprintf("%s   p = %.3g", colnames(cc)[i], pv),
+          cex.main = 0.95, font.main = 1,
+          col.main = if (flat) MP_PAL$grey else "black")
       }
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
