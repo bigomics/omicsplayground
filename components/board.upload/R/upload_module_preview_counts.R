@@ -29,7 +29,8 @@ upload_table_preview_counts_server <- function(id,
 
     GEO_alert_shown <- reactiveVal(FALSE)
 
-    table_data <- shiny::reactive({
+    table_data <- shiny::eventReactive(uploaded$counts.csv,
+    {
       shiny::req(!is.null(uploaded$counts.csv))
       dt <- uploaded$counts.csv
       nrow0 <- nrow(dt)

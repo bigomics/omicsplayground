@@ -1017,6 +1017,23 @@ UploadBoard <- function(id,
       }
     )
 
+    .clear_upload <- function() {
+      message("[ComputePgxServer:input$compute] clearing files")
+      isolate({
+        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        upload_organism(input$selected_organism)
+        upload_name(NULL)
+        upload_description(NULL)
+        show_comparison_builder(TRUE)
+        selected_contrast_input(FALSE)
+        loaded_samples(FALSE)
+        sum_techreps(FALSE) ## new az
+        orig_sample_matrix(NULL)
+        orig_counts_matrix(NULL) ## new az
+        vars_selected(NULL)
+      })
+    }
 
     # observe show_modal and start modal
     shiny::observeEvent(
@@ -1038,21 +1055,9 @@ UploadBoard <- function(id,
           )
           return(NULL)
         }
-        
-        isolate({
-          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          upload_organism(input$selected_organism)
-          upload_name(NULL)
-          upload_description(NULL)
-          show_comparison_builder(TRUE)
-          selected_contrast_input(FALSE)
-          loaded_samples(FALSE)
-          sum_techreps(FALSE) ## new az
-          orig_sample_matrix(NULL)
-          orig_counts_matrix(NULL) ## new az
-          vars_selected(NULL)
-        })
+
+        ## clear previous files
+        .clear_upload()         
         
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
@@ -1373,7 +1378,8 @@ UploadBoard <- function(id,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype,
-      recompute_pgx = recompute_pgx
+      recompute_pgx = recompute_pgx,
+      .clear_upload = .clear_upload
     )
 
     ## ------------------------------------------------

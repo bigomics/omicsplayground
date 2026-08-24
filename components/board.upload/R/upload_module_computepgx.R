@@ -42,7 +42,8 @@ upload_module_computepgx_server <- function(
   process_counter,
   reset_upload_text_input,
   probetype,
-  recompute_pgx = NULL
+  recompute_pgx = NULL,
+  .clear_upload
 ) {
   shiny::moduleServer(
     id,
@@ -1357,6 +1358,9 @@ upload_module_computepgx_server <- function(
         )
         session$sendCustomMessage("warnOnExit", TRUE)
 
+        ## clear out current files
+        .clear_upload()
+        
         ## append to process list
         PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
       }) ## end observe input$compute
