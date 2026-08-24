@@ -18,15 +18,6 @@ upload_module_makecontrast_ui <- function(id) {
           shiny::div(
             shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
-              ## shiny::selectizeInput(
-              ##   inputId = ns("param"),
-              ##   NULL,
-              ##   width = "100%",
-              ##   choices = "<samples>",
-              ##   selected = "<samples>",
-              ##   multiple = TRUE,
-              ##   options = list(maxItems = 3)
-              ## )
               uiOutput(ns("param_select"))
              ,
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
@@ -161,26 +152,6 @@ upload_module_makecontrast_server <- function(
         }
       )
 
-      ## observeEvent(
-      ##   {
-      ##     list(phenoRT(), upload_wizard(), show_comparison_builder())
-      ##   },
-      ##   {
-      ##     req(
-      ##       upload_wizard() == "step_comparisons",
-      ##       show_comparison_builder() == TRUE
-      ##     )
-      ##     phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-      ##     phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-      ##     psel <- c(grep("sample|patient|name|id|^[.]",
-      ##       phenotypes,
-      ##       value = TRUE, invert = TRUE
-      ##     ), phenotypes)[1]
-      ##     updateSelectInput(session, "param", choices = phenotypes, selected = psel)
-      ##   }
-      ## )
-
-
       output$param_select <- renderUI({
 
         shiny::req(phenoRT())
@@ -198,7 +169,6 @@ upload_module_makecontrast_server <- function(
           phenotypes,
           value = TRUE, invert = TRUE
         ), phenotypes)[1]
-        ##updateSelectInput(session, "param", choices = phenotypes, selected = psel)
         shiny::selectizeInput(
           inputId = ns("param"),
           NULL,
