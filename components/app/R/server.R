@@ -18,6 +18,10 @@ app_server <- function(input, output, session) {
   ## Initialise the global colour theme (in-session only)
   init_color_theme()
 
+  ## Mark shinyalert dependencies as already loaded so the first call
+  ## skips lazy insertUI (which causes 8-10s delay while JS downloads).
+  session$userData$.shinyalert_added <- TRUE
+
   info("[SERVER] getwd = ", normalizePath(getwd()))
   info("[SERVER] SESSION = ", session$token)
 
