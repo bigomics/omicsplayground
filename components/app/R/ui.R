@@ -53,22 +53,12 @@ app_ui <- function(x) {
       shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
       shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
-      ## visnetwork must be inside a proper tagList, NOT named, otherwise
-      ## all subsequent items (shinyalert, shinyjs, waiter, etc.) are
-      ## silently dropped from the DOM (R's tagList treats named args as
-      ## attributes, not children).
-      shiny::tagList(
-        shinyjs::useShinyjs(),
-        shinyalert::useShinyalert(force = TRUE),
-        waiter::use_waiter(),
-        sever::useSever(),
-        bigLoaders::addBigLoaderDeps(),
-        shinybrowser::detect(),
-        ## If you need to load visNetwork JS library, add:
-        ## visNetwork::visNetworkOutput("a", height = "0px")
-        ## BUT ensure it is NOT a named argument, or it will silently
-        ## drop all subsequent items from the DOM (ask me how I know).
-      ),
+      visnetwork = visNetwork::visNetworkOutput("a", height = "0px"),
+      shinyjs::useShinyjs(),
+      waiter::use_waiter(),
+      sever::useSever(),
+      bigLoaders::addBigLoaderDeps(),
+      shinybrowser::detect(),
       shinybusy::busy_start_up(
         text = tags$h2("\nPrepping your personal playground..."), mode = "auto",
         background = "#2780e3", color = "#ffffff",
