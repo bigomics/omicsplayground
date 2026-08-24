@@ -32,6 +32,8 @@ if(!file.exists('00SourceAll.R')) {
   source('app_copilot/R/CopilotEvidenceUI.R',encoding='UTF-8')
   source('app_copilot/R/CopilotHistoryServer.R',encoding='UTF-8')
   source('app_copilot/R/CopilotReportsServer.R',encoding='UTF-8')
+  source('app_idat/R/idat_server.R',encoding='UTF-8')
+  source('app_idat/R/idat_ui.R',encoding='UTF-8')
   source('app_idconvert/R/idconvert_server.R',encoding='UTF-8')
   source('app_idconvert/R/idconvert_ui.R',encoding='UTF-8')
   source('app_launcher/R/launcher_server.R',encoding='UTF-8')

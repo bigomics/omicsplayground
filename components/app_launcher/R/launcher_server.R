@@ -41,5 +41,9 @@ launcher_server <- function(id, parent) {
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })
 
+    observeEvent(input$launch_idat, {
+      bslib::nav_select("app-sidebar", "IDAT", session=parent)
+    })
+
   })
 }

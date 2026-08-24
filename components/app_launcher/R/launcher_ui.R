@@ -59,6 +59,14 @@ launcher_ui <- function(id) {
       group = "Apps"
     ),
     list(
+      input = "launch_idat",
+      icon = "file-import",
+      label = "IDAT Converter",
+      description = "IDAT files to beta table",
+      rgb = c(70,150,120),
+      group = "Apps"
+    ),
+    list(
       input = "launch_prism",
       icon = "wand-magic-sparkles",
       label = "SmartPrism",
@@ -147,8 +155,8 @@ launcher_ui <- function(id) {
     ## app launcher grid, grouped by section
     shiny::div(
       style = "padding: 35px 15% 0 15%;",
-      group_section("Dashboards", Filter(function(a) a$group == "Dashboards", apps))
-      ##group_section("Apps", Filter(function(a) a$group == "Apps", apps))      
+      group_section("Dashboards", Filter(function(a) a$group == "Dashboards", apps)),
+      group_section("Apps", Filter(function(a) a$group == "Apps", apps))
     ),
 
     ## credits

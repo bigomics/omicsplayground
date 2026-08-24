@@ -189,6 +189,9 @@ app_ui <- function(x) {
         bslib::nav_panel_hidden("IDconvert",
           omicspanel(idconvert_ui("idconvert"))
         ),
+        bslib::nav_panel_hidden("IDAT",
+          omicspanel(idat_ui("idat"))
+        ),
         bslib::nav_panel_hidden("Qsee",
           omicspanel(qsee_ui("qsee"))
         ),
