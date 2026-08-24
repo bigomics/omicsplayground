@@ -327,8 +327,10 @@ html {
   div#navheader-current-section {
     font-size: 30px;
     font-weight: 600;
-    margin: 15px 0 5px 0px;
-    padding-top: 10px;
+    // 17px tighter than it used to be (was margin-top 15 + padding-top 10):
+    // this puts the title's baseline on the same line as the sidebar's "Menu"
+    // heading instead of floating well below it.
+    margin: 8px 0 5px 0px;
   }
 
   div#navheader-dataset-stats {

@@ -58,10 +58,6 @@ DeepNetInputs <- function(id) {
 DeepNetUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "100%" ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
   OmicsBoardUI(
     ns = ns,
     title = "Multi-Omics Supervised Auto-Encoder",
@@ -74,6 +70,7 @@ DeepNetUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Multi-Omics integration by deep learning</b>. Here we integrate multi-omics data using a multi-view supervised auto-encoder. This architecture is a combination of (multiple) auto-encoders and a multilayer perceptron (MLP) classifier that uses a merge of the bottleneck layers for prediction.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
@@ -172,13 +169,13 @@ DeepNetUI <- function(id) {
         )
       ), ## end of tabPanel
 
-
       ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Biomarker heatmap",
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -205,6 +202,7 @@ DeepNetUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have high foldchange and large input gradient.")),
           bslib::layout_columns(
             col_widths = c(6, 6, 12),

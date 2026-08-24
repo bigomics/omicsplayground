@@ -54,10 +54,11 @@ EpigenomicsUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
+          row_heights = list("auto", 1),
           bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
           bslib::layout_columns(
             col_widths = 12,
-            row_heights = list(1.33, 1),
+            row_heights = list(4, 3),
             bslib::layout_columns(
               col_widths = c(6, 6),
               epigenomics_plot_beta_dist_ui(

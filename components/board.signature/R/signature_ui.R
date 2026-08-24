@@ -82,6 +82,7 @@ SignatureUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("Overlay your custom list of genes on top of the volcano plots for each comparison. You can enter your list of genes on the right."),
         bslib::layout_columns(
           col_widths = 12,
@@ -123,6 +124,7 @@ SignatureUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("This panel shows your custom list of genes on top of the GSEA enrichment plots for each comparison. Enter your list of genes in the right box."),
         bslib::layout_columns(
           col_widths = 12,
@@ -164,6 +166,7 @@ SignatureUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("This panel compares other gene sets with your custom list of genes to find similar genesets. Similarity is measured using Fisher's test."),
         bslib::layout_columns(
           col_widths = 12,
@@ -196,6 +199,7 @@ SignatureUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("The markers plot shows the expression levels of the tested genes in the dataset samples as a colored t-SNE plot in red (highly expressed) and light grey (low expressed). The first figure shows the single-sample enrichment of your signature list in red (upregulation) and blue (downregulation)."),
         bslib::layout_columns(
           col_widths = 12,

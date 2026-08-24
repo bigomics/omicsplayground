@@ -26,10 +26,6 @@ SNFInputs <- function(id) {
 SNFUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "100%" ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
   OmicsBoardUI(
     ns = ns,
     title = "Similarity Network Fusion",
@@ -40,6 +36,7 @@ SNFUI <- function(id) {
         bslib::layout_columns(
           col_widths = 12,
           height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Similarity Network Fusion</b> (SNF) is a network-based method for multi-omics integration by taking multiple views of a network and fusing them together to construct an overall status matrix (Wang et al., 2014). By integrating multiple datatypes, SNF improves the clustering of the samples.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(

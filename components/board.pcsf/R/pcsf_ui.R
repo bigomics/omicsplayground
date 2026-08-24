@@ -54,6 +54,7 @@ PcsfUI <- function(id) {
           col_widths = 12,
           height = "100%",
           ## --------- begin tab content ------------
+          row_heights = list("auto", 1),
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -94,6 +95,7 @@ PcsfUI <- function(id) {
           col_widths = 12,
           height = "100%",
           ## --------- begin tab content ------------
+          row_heights = list("auto", 1),
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),

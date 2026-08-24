@@ -49,6 +49,8 @@ OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
     col_widths = 12,
     gap = 0,
     height = "100%",
+    class = "omicsboard",
+    style = "padding-bottom: 5px;",
     row_heights = list("auto", "auto", 1),
     fillRow(
       flex = c(NA, 1, NA),
@@ -59,16 +61,12 @@ OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
         div.link
       ),
       shiny::uiOutput(ns("current_dataset")),
-#      div( tags$a(
-#        href="http://www.bigomics.ch", target = "_blank", 
-#        shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px")),
-#        style="margin: 34px 5px -20px 0; padding: 0 0 0 80px;")
       div(shiny::actionButton(ns("logo_click"),
         shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px"),
         class = "quick-button", style="border: 0px; background-color: transparent;"),
-        style="margin: 28px 5px -20px 0; padding: 0 0 0 80px;")
+        style="margin: 11px 5px -20px 0; padding: 0 0 0 80px;")
     ),
-    div(bigdash::bd_visibility_probe(ns), height="1px"),
+    div(bigdash::bd_visibility_probe(ns), height="0px", style='width: 100%;'),
     div(...)
   )
 }
@@ -96,7 +94,7 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
         class = "quick-button",
         style = "border: none; color: black; font-size: 1.2em; background-color: transparent;"
       ),
-      style = "padding: 30px 0px 0px 0px; text-align: center;"
+      style = "padding: 13px 0px 0px 0px; text-align: center;"
     )
   })
 

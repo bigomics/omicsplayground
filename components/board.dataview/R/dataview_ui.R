@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-
 #' DataView module UI Input function
 #'
 #' @description A shiny Module. Renders the input parts (sidebar contents) for the module.
@@ -83,8 +82,6 @@ DataViewInputs <- function(id) {
 DataViewUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  imgH <- c(330, 600) ## heights for small and fullscreen image
-  imgH <- c("40vh", "70vh") ## heights for small and fullscreen image
   fullH <- "100%"
 #  fullH = "100%"
   
@@ -298,7 +295,7 @@ DataViewUI <- function(id) {
       bs_alert("In the Sample information panel, more complete information about samples can be found."),
       bslib::layout_columns(
         col_widths = 12,
-        row_heights = list(1.33, 1),
+        row_heights = list(4, 3),
         bslib::layout_columns(
           width = 6,
           dataview_plot_phenoheatmap_ui(

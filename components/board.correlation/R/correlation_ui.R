@@ -51,9 +51,6 @@ CorrelationInputs <- function(id) {
 CorrelationUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "100%" ## full height of page
-  rowH <- 340 ## full height of page
-
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
     shiny::tabPanel(

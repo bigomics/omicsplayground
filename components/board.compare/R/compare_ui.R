@@ -87,7 +87,6 @@ CompareUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- "100%"
-  tabH <- "70vh"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -96,6 +95,9 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        ## list(), not c() -- c() coerces the 1 to "1" and bslib then emits
+        ## the invalid "auto 1", which CSS drops, letting both rows stretch.
+        row_heights = list("auto", 1),
         bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
         bslib::layout_columns(
           col_widths = c(6, 6),
@@ -140,6 +142,7 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("Compare signatures by plotting their fold-changes as pairwise scatterplots. Highly correlated logFC signatures suggest similar experiments. Data comparison between datasets of the same species is done via gene symbol and datasets from diff species is done using the human ortholog"),
         bslib::layout_columns(
           col_widths = c(6, 6),
@@ -180,6 +183,7 @@ CompareUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("If the samples are exactly the same in your two datasets, you can plot their gene expression and find highly correlated features, e.g. for genes and proteins."),
         bslib::layout_columns(
           col_widths = c(6, 6),
@@ -208,7 +212,6 @@ CompareUI <- function(id) {
       )
     )
   )
-
 
   OmicsBoardUI(
     ns = ns,

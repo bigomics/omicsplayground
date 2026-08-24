@@ -41,15 +41,12 @@ MofaInputs <- function(id) {
 MofaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "100%" ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
   panel1 <- shiny::tabPanel(
     "Overview",
     bslib::layout_columns(
       col_widths = 12,
       height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(HTML("<b>Multi‐Omics Factor Analysis (MOFA)</b> is a computational, factorization-based framework for multi‐omics data integration. The inferred latent 'factors' (or 'modules') represent the underlying principal axes of heterogeneity across the samples.")),
       bslib::layout_columns(
         col_widths = c(7, 5),
@@ -111,6 +108,7 @@ MofaUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(HTML("<b>Factor response analysis.</b> Associations of factors with our trait of interest are quantified by the correlation between factor and trait vectors. Factors with high (absolute) factor-trait correlation show large differences between phenotype conditions.")),
       bslib::layout_columns(
         height = "100%",
@@ -167,6 +165,7 @@ MofaUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(HTML("<b>MOFA weights.</b> For all features in the module, we compute the gene significance (GS) as the correlation of its gene expression and the phenotype (or trait). We also define the 'module membership' (MM) as the correlation of the gene expression and the module eigengene. We can identify 'driver genes' that have high GS as well as high MM.")),
       bslib::layout_columns(
         height = "100%",
@@ -222,6 +221,7 @@ MofaUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(HTML("<b>Factor enrichment.</b> To understand the biological function for each factor, we can perform a geneset enrichment analysis using its factor loadings. For a selected geneset, the boxes show the joint enrichment, mixed heatmap, pathwaydiagram and feature table.")),
       bslib::layout_columns(
         height = "100%",
@@ -288,6 +288,5 @@ MofaUI <- function(id) {
       )
     )
   )
-
 
 }

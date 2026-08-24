@@ -65,6 +65,7 @@ ConnectivityUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
         bslib::layout_columns(
           col_widths = c(6, 6),
@@ -110,6 +111,7 @@ ConnectivityUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = "100%",
+        row_heights = list("auto", 1, 1),
         bs_alert("Compare the fold-change of similar signatures across different experiments."),
         bslib::layout_columns(
           col_widths = c(3, 9),

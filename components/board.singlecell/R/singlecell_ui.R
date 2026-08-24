@@ -25,9 +25,6 @@ SingleCellInputs <- function(id) {
 
 SingleCellUI <- function(id) {
   fullH <- "100%" ## full height of panel
-  imgH <- 680 ## row height of panel
-  tabH <- 200 ## row height of panel
-  modH <- TABLE_HEIGHT_MODAL
 
   ns <- shiny::NS(id) ## namespace
   OmicsBoardUI(
