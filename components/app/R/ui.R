@@ -146,7 +146,7 @@ app_ui <- function(x) {
           title = "Library",
           icon=icon("book"),
           nav_page(
-            div(LoadingUI("load"), class = "px-4 py-0")
+            div(LoadingUI("load"), class = "px-4 py-0 fullheight-page")
           )
         ),
         bslib::nav_panel(
@@ -170,14 +170,14 @@ app_ui <- function(x) {
             title = HTML("AI&nbsp;Studio"),
             value="Studio",
             icon = icon("clapperboard"),
-            div(StudioUI("studio"), class = "px-4 py-0")
+            div(StudioUI("studio"), class = "px-4 py-0 fullheight-page")
           )
         },
         if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
           bslib::nav_panel(
             title = tagList(icon("robot"), tags$br(), "Obi"),
             value = "Copilot",
-            div(CopilotBoardUI("copilot2"), class = "px-4 py-0")
+            div(CopilotBoardUI("copilot2"), class = "px-4 py-0 fullheight-page")
           )
         },
         if(isTRUE(opt$DEVMODE)) {

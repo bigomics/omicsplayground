@@ -29,7 +29,7 @@ AdminPanelInputs <- function(id) {
 AdminPanelUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 181px)"
+  fullH <- "100%"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),

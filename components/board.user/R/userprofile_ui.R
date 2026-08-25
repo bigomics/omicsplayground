@@ -16,7 +16,7 @@ UserProfileUI <- function(id) {
       shiny::tabPanel(
         "User profile",
         bslib::layout_columns(
-          height = "calc(100vh - 183px)",
+          height = "100%",
           col_widths = c(4, 8),
           wellPanel(
             shiny::h4("Subscription"),

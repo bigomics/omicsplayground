@@ -40,7 +40,6 @@ WgcnaInputs <- function(id) {
   )
 }
 
-
 WGCNA_REFS <- list(
   list("Langfelder, P., Horvath, S. WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 9, 559 (2008).", "https://doi.org/10.1186/1471-2105-9-559"),
   list("Langfelder P, Luo R, Oldham MC, Horvath S (2011) Is My Network Module Preserved and Reproducible? PLoS Comput Biol 7(1): e1001057.", "https://doi.org/10.1371/journal.pcbi.1001057")
@@ -49,7 +48,7 @@ WGCNA_REFS <- list(
 WgcnaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  height = "calc(100vh - 135px)"
+  height = "100%"
   
   tabsetpanel <- shiny::tabsetPanel(
     id = ns("tabs"),
@@ -58,6 +57,7 @@ WgcnaUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = height,
+        row_heights = list("auto", 1),
         bs_alert(HTML("<b>Module detection.</b> <b>(a)</b> Modules are detected using the dynamic branch cutting approach. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold. <b>(c)</b> Topological overlap matrix visualized as heatmap. <b>(d)</b> Dimensionality reduction map of features colored by module. <b>(e)</b> Size of WGCNA modules.")),
         bslib::layout_columns(
           col_widths = 12,
@@ -134,6 +134,7 @@ WgcnaUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = height,
+        row_heights = list("auto", 1),
         bs_alert(HTML("<b>Eigengene analysis.</b> The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(a)</b> Module-trait correlation identifies modules that are significantly associated with the measured traits. <b>(b)</b> Clustering of eigengenes. <b>(c)</b> Clustering of trait vectors. <b>(d)</b> Correlation of eigengene and traits as heatmap, <b>(e)</b> as dendrogram and <b>(f)</b> as graph.")),
         bslib::layout_columns(
           col_widths = c(4, 4, 4, 4, 4, 4),
@@ -195,6 +196,7 @@ WgcnaUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = height,
+        row_heights = list("auto", 1),
         bs_alert(HTML("<b>Module analysis.</b>  <b>(a)</b> Summary of module. <b>(b)</b> Correlation of module eigengene with traits. <b>(c)</b> Circle network of top hub genes. </b>  <b>(d)</b> Table of importance score to identify 'driver genes' of the module. <b>(e)</b> Plot of gene significance paramters.")),
         bslib::layout_columns(
           height = "100%",
@@ -256,6 +258,7 @@ WgcnaUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = height,
+        row_heights = list("auto", 1),
         bs_alert(HTML("<b>Module Enrichment.</b> <b>(a)</b> Enrichment heatmap of top most enriched genesets in module. <b>(b)</b> Expression heatmap of genes in selected geneset. <b>(c)</b> Functional enrichment of the module calculated using Fisher's exact test. <b>(d)</b> Top enriched genesets in module.")),
         bslib::layout_columns(
           col_widths = c(7, 5, 7, 5),

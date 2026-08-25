@@ -20,7 +20,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "App settings",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           row_heights = "50%",
           ## AI card moved to "AI Features" tab; 1 content card + spacer = c(5,7)
           col_widths = c(5, 7),
@@ -69,7 +69,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "AI Features",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           col_widths = c(4, 8),
           bslib::card(
             bslib::card_header("AI Provider"),
@@ -166,7 +166,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "New features",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           PlotModuleUI(
             ns("newfeatures"),
             outputFunc = htmlOutput,
@@ -179,7 +179,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "Package versions",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           TableModuleUI(
             ns("packages"),
             info.text = "Packages and versions used in Omics Playground.",
@@ -195,7 +195,7 @@ AppSettingsUI <- function(id) {
       if (isTRUE(opt$DEVMODE)) bslib::nav_panel(
         "Plot Colors",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           row_heights = "50%",
           col_widths = c(3,3,3,3),
           bslib::card(
@@ -250,7 +250,7 @@ AppSettingsUI <- function(id) {
         "Resource info",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 85px)",
+          height = "100%",
           user_table_resources_ui(ns("resources"))
         )
       )
