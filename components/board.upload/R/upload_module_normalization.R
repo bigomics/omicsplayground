@@ -1019,8 +1019,10 @@ upload_module_normalization_server <- function(
             return(NULL)
           }
           pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
-          all.pars <- setdiff(colnames(samples), pars$pheno.pars)
-          all.pars <- union(all.pars, pars$batch.pars)
+          safe.pars <- setdiff(colnames(samples), pars$pheno.pars)
+          safe.pars <- union(safe.pars, pars$batch.pars)
+          confounded.pars <- intersect(colnames(samples), pars$pheno.pars)
+          all.pars <- c(safe.pars, confounded.pars)
           names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
             paste(all.pars, "*"), all.pars
           )
