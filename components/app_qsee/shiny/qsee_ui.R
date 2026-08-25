@@ -199,6 +199,26 @@ qsee_ui <- function(id, height = "100%", lazy = TRUE) {
         height: calc(100vh - 90px) !important;
         width: 100% !important;
       }
+      /* Fill the fullheight-page container: bigdash-page is a flex item of
+         .fullheight-page with h-100 (height:100%) but no flex-grow, so it sizes
+         to content instead of filling the window. */
+      .fullheight-page > .bigdash-page {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      /* Fill the big-tabs chain so every inner board (OmicsBoardUI) resolves
+         height:100% against a definite ancestor. */
+      #qsee-big-tabs {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      #qsee-big-tabs > .big-tab:not(.d-none) {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
     ")),
     bigdash::bd_visibility_probe(ns),
     bigdash::bigPage(

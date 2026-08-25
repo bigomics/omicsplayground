@@ -236,7 +236,8 @@ qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, la
                   class = "btn btn-outline-primary welcome-btn-sm"
                 )
               ),
-              footer = shiny::modalButton("Cancel"),
+              #footer = shiny::modalButton("Cancel"),
+              footer = NULL,
               size = "s",
               easyClose = FALSE
             )

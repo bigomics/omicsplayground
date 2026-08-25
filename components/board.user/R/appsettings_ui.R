@@ -21,7 +21,7 @@ AppSettingsUI <- function(id) {
         "App settings",
         bslib::layout_columns(
           height = "100%",
-          row_heights = "50%",
+          row_heights = 1,
           ## AI card moved to "AI Features" tab; 1 content card + spacer = c(5,7)
           col_widths = c(5, 7),
           bslib::card(
@@ -196,7 +196,7 @@ AppSettingsUI <- function(id) {
         "Plot Colors",
         bslib::layout_columns(
           height = "100%",
-          row_heights = "50%",
+          row_heights = 1,
           col_widths = c(3,3,3,3),
           bslib::card(
             bslib::card_header("Directional Colors"),

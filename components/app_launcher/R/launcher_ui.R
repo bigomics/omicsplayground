@@ -41,9 +41,9 @@ launcher_ui <- function(id) {
       badge = "beta"
     ),
     list(
-      input = "launch_methryl",
+      input = "launch_mythril",
       icon = "gem",
-      label = "Methryl",
+      label = "Mythril",
       description = "Methylation explorer",
       rgb = c(155,155,165),
       group = "Dashboards",
@@ -90,6 +90,23 @@ launcher_ui <- function(id) {
     )
     # Add more quick actions here following the same structure
   )
+
+  ## The Qsee / Across / ID Converter / SmartPrism panels only exist in
+  ## DEVMODE (ui.R renders them conditionally), so in other deployments their
+  ## tiles would be dead buttons -- hide them. "Chat with Obi" mirrors the
+  ## Copilot panel's own ENABLE_AI / packages gate.
+  if (!isTRUE(opt$DEVMODE)) {
+    apps <- Filter(
+      function(a) !a$input %in% c("launch_idconvert", "launch_prism"),
+      apps
+    )
+  }
+  if (!(isTRUE(opt$ENABLE_AI) && copilot_packages_ok())) {
+    quick_actions <- Filter(function(a)
+      a$input != "chat_with_obi",
+      quick_actions
+    )
+  }
 
   app_tile <- function(app) {
     rgb2hex <- function(r,g,b) rgb(r, g, b, maxColorValue = 255)
@@ -196,8 +213,10 @@ launcher_ui <- function(id) {
         margin_bottom = "40px"
       ),
 
-      ##group_section("Apps", Filter(function(a) a$group == "Apps", apps), app_tile,
-      ##  body_class = "app-launcher-grid app-launcher-grid-apps"),
+      if (isTRUE(opt$DEVMODE)) {
+        group_section("Apps", Filter(function(a) a$group == "Apps", apps), app_tile,
+          body_class = "app-launcher-grid app-launcher-grid-apps")
+      }
 
     ),
 

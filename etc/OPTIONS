@@ -60,7 +60,7 @@ MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
 
 #------------- developer options ---------------
 
-DEVMODE              = TRUE
-DEV_AUTOLOAD         = TRUE
+DEVMODE              = FALSE
+DEV_AUTOLOAD         = FALSE
 ENABLE_PLOTLY_PURGE  = TRUE
-ENABLE_ADMIN         = TRUE
+ENABLE_ADMIN         = FALSE

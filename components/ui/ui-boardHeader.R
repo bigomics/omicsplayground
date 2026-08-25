@@ -3,10 +3,12 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-## used for navset_pill in main
-omicspanel <- function(p) {
-  div(p, style="margin: 0 8px 0 8px;", class = "omicspanel")
-}  
+## used for navset_pill in main. fullheight-page is on by default so every
+## panel fills to the window bottom instead of sizing to content -- pass
+## class = NULL to opt out.
+omicspanel <- function(p, class = "fullheight-page") {
+  div(p, style="margin: 0 8px 0 8px;", class = trimws(paste("omicspanel", class)))
+}
 
 header_infotext <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
@@ -35,7 +37,11 @@ boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
   )
 }
 
-OmicsBoardUI <- function(ns, title, ..., subtitle=NULL, info=TRUE) {
+## header_margin: margin-top of the title row. Boards that need extra
+## breathing room at the top of the window (AI Studio, Obi AI) pass a
+## positive value; everything else keeps the -12px that tucks the title
+## baseline in line with the sidebar's "Menu" heading.
+OmicsBoardUI <- function(ns, title, ..., subtitle=NULL, info=TRUE, header_margin="-12px") {
   div.info <- NULL
   if(isTRUE(info)) {
     div.info <- withTooltip(
@@ -58,7 +64,7 @@ OmicsBoardUI <- function(ns, title, ..., subtitle=NULL, info=TRUE) {
     row_heights = list("auto", "auto", 1),
     fillRow(
       flex = c(NA, 1, NA),
-      style = "margin-top: -12px;",
+      style = paste0("margin-top: ", header_margin, ";"),
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, "&nbsp;")),
@@ -90,7 +96,8 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     if(has.pgx) {
       pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
     } else {
-      pgx.name <- "(no dataset)"
+      ##pgx.name <- "(no dataset)"
+      pgx.name <- ""
     }
     div(
       shiny::actionButton(

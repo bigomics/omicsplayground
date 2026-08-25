@@ -1046,43 +1046,43 @@ output$current_user <- shiny::renderText({
     }
   }
     
-  if(isTRUE(opt$DEVMODE)) {
-    dbg("[SERVER] WARNING: DEVMODE experimental modules enabled!")
+  ## The launcher (home page) server must be attached in every deployment --
+  ## gating it on DEVMODE left all home-page buttons without handlers. The
+  ## qsee/across launchers only exist in DEVMODE, where their panels are
+  ## injected dynamically; launcher_server() no-ops on missing launchers.
+  app_launchers <- list()
 
-    launch_qsee <- function() {
-      launchModule("qsee",
-        ui = omicspanel(qsee_ui("qsee")),
-        server = function() qsee_server("qsee", pgx = PGX, parent = session)
-      )
-    }
-
-    launch_across <- function() {
-      launchModule("across",
-        ui = omicspanel(AcrossUI("across")),
-        server = function() {
-          AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
-            current_page = shiny::reactive(input[["app-sidebar"]]))
-        }
-      )
-    }
-    
-    launcher_server(
-      "apps",
-      parent = session,
-      load_example = load_example,
-      app_launchers = list(
-        "qsee" = launch_qsee,
-        "across" = launch_across
-      )
+  launch_qsee <- function() {
+    launchModule("qsee",
+      ui = omicspanel(qsee_ui("qsee")),
+      server = function() qsee_server("qsee", pgx = PGX, parent = session)
     )
-
-#    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
-#      current_page = shiny::reactive(input[["app-sidebar"]]))
-
-    RunMonitorServer("runmonitor")
-    idconvert_server("idconvert")
-    prism_server("prism")
   }
+  
+  launch_across <- function() {
+    launchModule("across",
+      ui = omicspanel(AcrossUI("across")),
+      server = function() {
+        AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+          current_page = shiny::reactive(input[["app-sidebar"]]))
+      }
+    )
+  }
+
+  ## THESE STILL NEED TO BE WRAPPED in a launchModule()
+  ## RunMonitorServer("runmonitor")
+  ## idconvert_server("idconvert")
+  ## prism_server("prism")
+
+  launcher_server(
+    "apps",
+    parent = session,
+    load_example = load_example,
+    app_launchers = list(
+      "qsee" = launch_qsee,
+      "across" = launch_across
+    )
+  )
   
   ## -------------------------------------------------------------
   ## report server times
