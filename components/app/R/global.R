@@ -416,7 +416,7 @@ if (requireNamespace("omicsagentovi", quietly = TRUE)) {
 }
 
 ## Setup reticulate
-## reticulate::use_virtualenv("reticulate")
+## reticulate::use_virtualenv()
 
 ## ------------------------------------------------------------------
 ## bigdash hooks
