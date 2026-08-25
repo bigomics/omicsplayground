@@ -16,8 +16,9 @@ CopilotBoardUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 5, 4),
-    style = "height: calc(100vh - 80px);",
-
+    #style = "height: calc(100vh - 80px);",
+    height = "100%",
+    
     # ---- Left column: new-chat button, on top of docs / reports ----
     # "New chat" lives here (own row) rather than inside the
     # Dataset/Settings/History card on the right, which already has little
@@ -76,8 +77,8 @@ CopilotBoardUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       row_heights = c(4, 7),
+      height = "100%",
       bslib::card(
-        height = "100%",
         bslib::as.card_item(shiny::fillRow(
           flex = 1,
           class = "plotmodule-header",
@@ -93,7 +94,6 @@ CopilotBoardUI <- function(id) {
       CopilotEvidenceUI(ns("evidence"))
     )
   )
-
 
   board <- OmicsBoardUI(
     ns = ns,

@@ -58,10 +58,6 @@ DeepNetInputs <- function(id) {
 DeepNetUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
   OmicsBoardUI(
     ns = ns,
     title = "Multi-Omics Supervised Auto-Encoder",
@@ -73,7 +69,8 @@ DeepNetUI <- function(id) {
         "Model training",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Multi-Omics integration by deep learning</b>. Here we integrate multi-omics data using a multi-view supervised auto-encoder. This architecture is a combination of (multiple) auto-encoders and a multilayer perceptron (MLP) classifier that uses a merge of the bottleneck layers for prediction.")),
           bslib::layout_columns(
             col_widths = bslib::breakpoints(
@@ -81,7 +78,7 @@ DeepNetUI <- function(id) {
               xl = c(12, 12),
               sm = c(12, 12)
             ),
-            height = "calc(100vh - 180px)",
+            height = "100%",
             bslib::layout_columns(
               col_widths = bslib::breakpoints(
                 xxxl = c(12, 6, 6),
@@ -172,17 +169,17 @@ DeepNetUI <- function(id) {
         )
       ), ## end of tabPanel
 
-
       ## ----------------------------------------------------------------
       shiny::tabPanel(
         "Biomarker heatmap",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Biomarker heatmap.</b>.")),
           bslib::layout_columns(
             col_widths = c(12),
-            height = "calc(100vh - 180px)",
+            height = "100%",
             plot_deepnet_biomarkerheatmap_ui(
               ns("deepnet_bigheatmap"),
               title = "Biomarker heatmap",
@@ -204,11 +201,12 @@ DeepNetUI <- function(id) {
         "Gradient vs. foldchange",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Gradient vs foldchange. </b>. This board compares input gradients of the network (i.e. change of prediction with respect to inputs) with the log-foldchange. Good biomarkers should have high foldchange and large input gradient.")),
           bslib::layout_columns(
             col_widths = c(6, 6, 12),
-            height = "calc(100vh - 180px)",
+            height = "100%",
             plot_deepnet_gradients_ui(
               ns("deepnet_gradients"),
               title = "Network gradients",

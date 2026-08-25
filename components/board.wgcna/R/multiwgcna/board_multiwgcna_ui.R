@@ -66,15 +66,10 @@ MultiWGCNA_Inputs <- function(id) {
   )
 }
 
-
 MULTIWGCNA_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
 MultiWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
 
   OmicsBoardUI(
     ns = ns,
@@ -87,12 +82,12 @@ MultiWGCNA_UI <- function(id) {
         "Dendrograms",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Multiomics WGCNA</b> is a generalization of WGCNA for integratiing multi-omics where WGCNA is performed for each layer separately. Integration is performed by computing the module correlation across layers using LASAGNA.")),
           bslib::layout_columns(
             col_widths = c(12),
-            # height = "calc(100vh - 180px)",
+            # height = "100%",
             height = "100vh",
             multiwgcna_plot_dendrograms_ui(
               ns("multiwgcnaDendro"),
@@ -105,7 +100,7 @@ MultiWGCNA_UI <- function(id) {
           ),
           bslib::layout_columns(
             col_widths = c(12),
-            # height = "calc(100vh - 180px)",
+            # height = "100%",
             height = "100vh",
             multiwgcna_plot_power_ui(
               ns("multiwgcnaPower"),
@@ -125,8 +120,8 @@ MultiWGCNA_UI <- function(id) {
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Module-trait heatmaps</b> show the correlation between eigengenes and traits (i.e. phenotype conditions). Heatmaps can be created for each datatype or merged. We look for modules that are highly correlated with traits.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -149,8 +144,8 @@ MultiWGCNA_UI <- function(id) {
         "Module correlation",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Module correlation heatmaps</b> show the pairwise correlation of module eigengenes across layers. Heatmaps can be shown per layer or merged for all layers.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -173,8 +168,8 @@ MultiWGCNA_UI <- function(id) {
         "WGCNA-Lasagna",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>WGCNA-LASAGNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately and then integrated using LASAGNA (Layered Approach to Simultaneous Analysis of Genomic and Network Association).")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -196,8 +191,8 @@ MultiWGCNA_UI <- function(id) {
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
             col_widths = c(3, 4, 5),

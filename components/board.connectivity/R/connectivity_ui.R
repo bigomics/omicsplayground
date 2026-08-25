@@ -64,11 +64,12 @@ ConnectivityUI <- function(id) {
       "FC correlation",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 181px)",
+        height = "100%",
+        row_heights = list("auto", 1),
         bs_alert("Compare different experiments by correlating their fold-change signatures. Highly correlated logFC signatures suggest similar experiments."),
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 181px)",
+          height = "100%",
           bslib::layout_columns(
             col_widths = 12,
             connectivity_plot_FCFCplots_ui(
@@ -109,11 +110,12 @@ ConnectivityUI <- function(id) {
       "FC Heatmap",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 181px)",
+        height = "100%",
+        row_heights = list("auto", 1, 1),
         bs_alert("Compare the fold-change of similar signatures across different experiments."),
         bslib::layout_columns(
           col_widths = c(3, 9),
-          height = "calc(100vh - 180px)",
+          height = "100%",
           connectivity_plot_connectivityMap_ui(
             ns("connectivityMap"),
             title = "Connectivity map",
@@ -151,7 +153,7 @@ ConnectivityUI <- function(id) {
       "Meta-network",
       bslib::layout_columns(
         col_widths = 12,
-        height = "calc(100vh - 181px)",
+        height = "100%",
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = "35%",

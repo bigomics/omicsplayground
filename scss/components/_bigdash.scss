@@ -10,6 +10,12 @@ html {
         padding: 0px;
     }
 
+    // bigdash's settings shell has no horizontal padding of its own
+    // (padding: 0), so its inputs/labels sit flush against the right edge.
+    .bigdash-settings-shell {
+        padding-right: 10px;
+    }
+
     //hover on bigomics logo
     #logo-bigomics:hover {
         cursor: pointer;

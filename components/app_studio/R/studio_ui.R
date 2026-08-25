@@ -72,7 +72,7 @@ StudioUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 9),
-    height = "calc(100vh - 76px)",    
+    height = "100%",    
     fill = TRUE,
     ## left sidebar
     bslib::layout_columns(
