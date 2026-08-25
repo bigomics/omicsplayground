@@ -1,4 +1,10 @@
+#------------- server options ----------------
+
 TITLE                = 'Omics Playground'
+HOSTNAME             = server.local
+
+#------------- authentication ----------------
+
 AUTHENTICATION       = none
 #AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
@@ -8,6 +14,8 @@ ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
 #DOMAIN              = bigomics.ch|demo.com
 BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
+
+#------------- app options -------------------
 ENABLE_CHIRP         = TRUE
 ENABLE_DELETE        = TRUE
 ENABLE_PGX_DOWNLOAD  = TRUE
@@ -33,23 +41,25 @@ APACHE_COOKIE_PATH   = /app/omicsplayground/
 HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
+PUBLIC_DATASETS_LABEL = Team Datasets
+
+#------------- AI options -----------------------
 
 LLM_MAXTURNS         = 100
 ENABLE_AI            = TRUE
 AI_PROVIDERS_ENABLED = bigomics;openai;anthropic;google;github;mistral;custom
 AI_PROVIDER_LOCKED   = FALSE
-PUBLIC_DATASETS_LABEL = Team Datasets
 COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 
-##-------------------- board options ---------------
+#------------- board options --------------------
+
 #BOARDS_ENABLED = load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
-#BOARDS_ENABLED = load;upload;cmap
-# NOTE: Copilot intentionally not in MODULES_* — it is registered at the app
-# level (components/app_copilot/) post edgy_merge_copilot, not as a board.
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
 
-##-------------------- developer options ---------------
+#------------- developer options ---------------
+
 DEVMODE              = TRUE
 DEV_AUTOLOAD         = TRUE
 ENABLE_PLOTLY_PURGE  = TRUE
+ENABLE_ADMIN         = TRUE
