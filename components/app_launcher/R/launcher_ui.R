@@ -40,6 +40,15 @@ launcher_ui <- function(id) {
       group = "Dashboards",
       badge = "beta"
     ),
+    list(
+      input = "launch_methryl",
+      icon = "gem",
+      label = "Methryl",
+      description = "Methylation explorer",
+      rgb = c(155,155,165),
+      group = "Dashboards",
+      badge = "alpha"
+    ),
     ## ----------------- apps ---------------
     list(
       input = "launch_idconvert",
