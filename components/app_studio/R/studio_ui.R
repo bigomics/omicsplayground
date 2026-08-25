@@ -92,7 +92,8 @@ StudioUI <- function(id) {
 
   board <- OmicsBoardUI(
     ns = ns,
-    title = "AI Studio",
+    #title = HTML("AI Studio <small><small>&mdash; your creative space</small></small>"),
+    title = HTML("AI Studio <span style='font-size: 0.7em;'>&mdash; your creative space</span>"),
     info = FALSE,
     ui
   )

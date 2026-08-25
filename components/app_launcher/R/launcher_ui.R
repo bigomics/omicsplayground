@@ -111,8 +111,8 @@ launcher_ui <- function(id) {
     )
   }
 
-  group_section <- function(title, items, render_item, body_class = NULL, body_style = NULL,
-                             margin_bottom = "40px") {
+  group_section <- function(title, items, render_item, body_class = NULL,
+                            body_style = NULL, margin_bottom = "40px") {
     shiny::div(
       class = "app-launcher-group",
       style = paste0("margin-bottom: ", margin_bottom, ";"),
@@ -183,16 +183,17 @@ launcher_ui <- function(id) {
     shiny::div(
       style = "padding: 30px 12% 0 12%;",
       
-      group_section(
-        "Dashboards", Filter(function(a) a$group == "Dashboards", apps), app_tile,
-        body_class = "app-launcher-grid app-launcher-grid-dashboards"
-      ),
-
       ## Quick actions section (using same group header style)
       group_section(
         "Quick actions", quick_actions, quick_action_button,
         body_style = "display: flex; gap: 8px; flex-wrap: wrap; padding-left: 4px;",
-        margin_bottom = "30px"
+        margin_bottom = "40px"
+      ),
+
+      group_section(
+        "Dashboards", Filter(function(a) a$group == "Dashboards", apps), app_tile,
+        body_class = "app-launcher-grid app-launcher-grid-dashboards",
+        margin_bottom = "40px"
       ),
 
       ##group_section("Apps", Filter(function(a) a$group == "Apps", apps), app_tile,

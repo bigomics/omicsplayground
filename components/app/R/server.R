@@ -932,12 +932,12 @@ output$current_user <- shiny::renderText({
     new_upload = new_upload
   )
    
-  WelcomeBoard2("welcome2",
-    auth = auth,
-    load_example = load_example,
-    new_upload = new_upload,
-    parent = session
-  )
+  ## WelcomeBoard2("welcome2",
+  ##   auth = auth,
+  ##   load_example = load_example,
+  ##   new_upload = new_upload,
+  ##   parent = session
+  ## )
 
   ## -------------------------------------------------------------
   ## Other servers and modules

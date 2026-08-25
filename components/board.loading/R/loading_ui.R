@@ -224,6 +224,20 @@ LoadingUI <- function(id) {
       sharing_tabpanel      
     )
   )
+
+  div(
+    class = "p-0",
+    board_header,
+    shiny::tabsetPanel(
+      id = ns("tabs"),
+      user_tabpanel,
+      public_tabpanel,
+      archive_tabpanel,
+      sharing_tabpanel      
+    )
+  )
+  
+  
 }
 
 ## ====================================================================

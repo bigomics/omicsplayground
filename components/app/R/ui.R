@@ -124,18 +124,17 @@ app_ui <- function(x) {
             widths = c(1,11),
             selected = "Home",
             well = TRUE,
+            ## bslib::nav_panel(
+            ##   title = "Home",
+            ##   icon = icon("home"),
+            ##   omicspanel(WelcomeBoardUI("welcome2"))
+            ## ),
             bslib::nav_panel(
               title = "Home",
               icon = icon("home"),
-              omicspanel(WelcomeBoardUI("welcome2"))
+              #icon = icon("app-store-ios", style="font-size: 38px;"),
+              launcher_ui("apps")
             ),
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel(
-                title = "Apps",
-                icon = icon("app-store-ios", style="font-size: 38px;"),
-                launcher_ui("apps")
-              )
-            },
             bslib::nav_panel(
               title = "Library",
               icon=icon("book"),
@@ -151,7 +150,7 @@ app_ui <- function(x) {
             ## via bigdash.toggleTab in appsettings_server.R.
             if (isTRUE(opt$ENABLE_AI)) {
               bslib::nav_panel(
-                title = HTML("Studio"),
+                title = HTML("AI&nbsp;Studio"),
                 value = "Studio",
                 icon = icon("clapperboard"),
                 omicspanel(StudioUI("studio"))
@@ -160,7 +159,7 @@ app_ui <- function(x) {
             if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
               bslib::nav_panel(
                 #title = HTML("AI&nbsp;Copilot"),
-                title = shiny::tagList(icon("robot"), tags$br(), "Obi AI"),
+                title = shiny::tagList(icon("robot"), tags$br(), HTML("Obi&nbsp;AI")),
                 value = "Copilot",
                 omicspanel(CopilotBoardUI("copilot2"))
               )

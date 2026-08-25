@@ -35,10 +35,10 @@ boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
   )
 }
 
-OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
-  div.link <- NULL
+OmicsBoardUI <- function(ns, title, ..., subtitle=NULL, info=TRUE) {
+  div.info <- NULL
   if(isTRUE(info)) {
-    div.link <- withTooltip(
+    div.info <- withTooltip(
       shiny::actionLink(
         inputId = ns("board_info"),
         label = "",
@@ -59,7 +59,7 @@ OmicsBoardUI <- function(ns, title, ..., info=TRUE) {
       shiny::div(
         id = "navheader-current-section",
         HTML(paste0(title, "&nbsp;")),
-        div.link
+        div.info
       ),
       shiny::uiOutput(ns("current_dataset")),
 #      div( tags$a(
