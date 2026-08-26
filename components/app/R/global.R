@@ -140,6 +140,10 @@ future::plan(future::multisession)
 
 ## Resource paths
 shiny::addResourcePath("custom", file.path(OPG, "components/assets"))
+## NB "assets" shadows bigdash's own resource path (registered in its
+## .onLoad), so /assets/lato.woff would 404 and big_theme()'s Lato
+## @font-face silently fall back. components/assets/lato.woff is a copy of
+## bigdash/assets/lato.woff kept for exactly that reason -- don't delete it.
 shiny::addResourcePath("assets", file.path(OPG, "components/assets"))
 shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
