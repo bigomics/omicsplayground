@@ -28,7 +28,7 @@ launcher_ui <- function(id) {
       description = "Visual QC & BC analyzer",
       rgb = c(36,176,148),
       group = "Dashboards",
-      badge = "pro"
+      badge = "soon"
     ),
     list(
       input = "launch_across",

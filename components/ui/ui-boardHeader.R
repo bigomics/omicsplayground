@@ -7,7 +7,7 @@
 ## panel fills to the window bottom instead of sizing to content -- pass
 ## class = NULL to opt out.
 omicspanel <- function(p, class = "fullheight-page") {
-  div(p, style="margin: 0 8px 0 8px;", class = trimws(paste("omicspanel", class)))
+  div(p, style="margin: 0 12px 0 12px;", class = trimws(paste("omicspanel", class)))
 }
 
 header_infotext <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
@@ -74,7 +74,7 @@ OmicsBoardUI <- function(ns, title, ..., subtitle=NULL, info=TRUE, header_margin
       div(shiny::actionButton(ns("logo_click"),
         shiny::tags$img(src = "static/bigomics-logo-small.png", height = "28px"),
         class = "quick-button", style="border: 0px; background-color: transparent;"),
-        style="margin: 11px 5px -20px 0; padding: 0 0 0 80px;")
+        style="margin: 6px 5px -20px 0; padding: 0 0 0 80px;")
     ),
     div(bigdash::bd_visibility_probe(ns), height="0px", style='width: 100%;'),
     div(...)
