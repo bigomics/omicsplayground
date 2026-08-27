@@ -10,33 +10,6 @@ omicspanel <- function(p, class = "fullheight-page") {
   div(p, style="margin: 0 12px 0 12px;", class = trimws(paste("omicspanel", class)))
 }
 
-header_infotext <- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-
-boardHeader <- function(title, info_link, mid=NULL, right=NULL) {
-  if(is.null(mid)) mid <- div()
-  if(is.null(right)) right <- div()  
-  div(
-    fillRow(
-      flex = c(NA, 1, NA),
-      shiny::div(
-        id = "navheader-current-section",
-        HTML(paste0(title, "&nbsp;")),
-        withTooltip(
-          shiny::actionLink(
-            inputId = info_link,
-            label = "",
-            icon = shiny::icon("youtube"),
-            style = "color: #ccc;"
-          ),
-          "Video tutorial about this board"
-        )
-      ),
-      mid,
-      right
-    )
-  )
-}
-
 ## header_margin: margin-top of the title row. Boards that need extra
 ## breathing room at the top of the window (AI Studio, Obi AI) pass a
 ## positive value; everything else keeps the -12px that tucks the title
