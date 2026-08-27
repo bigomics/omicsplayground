@@ -38,7 +38,7 @@ launcher_ui <- function(id) {
       description = "Query across all your datasets",
       rgb = c(180,70,70),
       group = "Dashboards",
-      badge = "beta"
+      badge = "soon"
     ),
     list(
       input = "launch_mythril",
@@ -47,7 +47,7 @@ launcher_ui <- function(id) {
       description = "Methylation explorer",
       rgb = c(155,155,165),
       group = "Dashboards",
-      badge = "alpha"
+      badge = "soon"
     ),
     ## ----------------- apps ---------------
     list(
@@ -56,7 +56,8 @@ launcher_ui <- function(id) {
       label = "ID Converter",
       description = "Annotate features",
       rgb = c(140,35,175),
-      group = "Apps"
+      group = "Apps",
+      badge = "dev"
     ),
     list(
       input = "launch_prism",
@@ -64,7 +65,8 @@ launcher_ui <- function(id) {
       label = "SmartPrism",
       description = "AI-generated figures",
       rgb = c(190,120,50),
-      group = "Apps"
+      group = "Apps",
+      badge = "dev"
     )
   )
 

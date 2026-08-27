@@ -14,34 +14,80 @@ launcher_server <- function(id, parent, load_example = NULL,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    coming_soon_alert <- function() {      
+      shinyalert::shinyalert("Coming soon!",
+        text = "Sorry. This feature is not available yet",
+        type = "info")
+    }
+
+    dev_alert <- function() {      
+      shinyalert::shinyalert("Developers only!",
+        text = "Warning. Early development. Only use for testing.",
+        type = "warning")
+    }
+
+
     shiny::observeEvent(input$logo_click, {
       ui.showAboutModal()
     })
 
+    ## ---------------- dashboards ------------------
     observeEvent(input$launch_playground, {
+      ## playground is not yet fully a shiny module and is "preloaded"
+      ## for now. Just select navtab
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
     
     observeEvent(input$launch_qsee, {
-      run_qsee <- app_launchers[["qsee"]]
-      if (!is.null(run_qsee) && is.function(run_qsee)) {
-        run_qsee()
+      if(!isTRUE(opt$DEVMODE)) {
+        coming_soon_alert()
+        return(NULL)
+      }
+      dev_alert()
+      run_app <- app_launchers[["qsee"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
       } 
     })
-
+    
     observeEvent(input$launch_across, {
-      run_across <- app_launchers[["across"]]
-      if (!is.null(run_across) && is.function(run_across)) {
-        run_across()
+      if(!isTRUE(opt$DEVMODE)) {
+        coming_soon_alert()
+        return(NULL)
+      }
+      dev_alert()
+      run_app <- app_launchers[["across"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
       } 
-      ##bslib::nav_select("app-sidebar", "AcrossDatasets", session=parent)
     })
 
+    observeEvent( input$launch_mythril, {
+      if(!isTRUE(opt$DEVMODE)) {
+        coming_soon_alert()
+        return(NULL)
+      }      
+      shinyalert::shinyalert("Empty!", "Please fill this stub.")
+      ## run_app <- app_launchers[["mythril"]]
+      ## if (!is.null(run_app) && is.function(run_app)) {
+      ##   run_app()
+      ## } 
+    })
+
+    ## ---------------- mini apps ------------------
     observeEvent(input$launch_prism, {
+      dev_alert()
+      if(!isTRUE(opt$DEVMODE)) {
+        return(NULL)
+      }
       bslib::nav_select("app-sidebar", "Prism", session=parent)
     })
 
     observeEvent(input$launch_idconvert, {
+      dev_alert() 
+      if(!isTRUE(opt$DEVMODE)) {
+        return(NULL)
+      }
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
     })
 
