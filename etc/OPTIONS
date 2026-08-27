@@ -58,6 +58,8 @@ COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
 
+ENABLE_ACROSS        = TRUE
+
 #------------- developer options ---------------
 
 DEVMODE              = FALSE

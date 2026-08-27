@@ -89,6 +89,12 @@ launcher_ui <- function(id) {
       label = "Chat with Obi",
       icon = "robot",
       class = "btn-outline-primary"
+    ),
+    list(
+      input = "launch_studio",
+      label = "Create in Studio",
+      icon = "icons",
+      class = "btn-outline-primary"
     )
     # Add more quick actions here following the same structure
   )

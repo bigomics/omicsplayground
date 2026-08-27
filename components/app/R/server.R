@@ -1081,7 +1081,8 @@ output$current_user <- shiny::renderText({
     app_launchers = list(
       "qsee" = launch_qsee,
       "across" = launch_across
-    )
+    ),
+    pgx = PGX
   )
   
   ## -------------------------------------------------------------

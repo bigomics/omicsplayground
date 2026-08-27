@@ -10,7 +10,7 @@
 #'     DO NOT REMOVE.
 #' @export
 launcher_server <- function(id, parent, load_example = NULL,
-                            app_launchers = NULL) {
+                            app_launchers = NULL, pgx=NULL ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -26,11 +26,31 @@ launcher_server <- function(id, parent, load_example = NULL,
         type = "warning")
     }
 
-
     shiny::observeEvent(input$logo_click, {
       ui.showAboutModal()
     })
 
+    ## If no dataset is loaded (X is NULL/empty), show a helpful popup only
+    ## after the Qsee module itself is visible.  In the main application Qsee
+    ## is a hidden parent nav panel during startup.
+    ##
+    ## Depend on is_visible() alone, not on input$nav: nav only changes once
+    ## bigdash.selectTab() above completes its own client round trip, and
+    ## chaining the popup off *that* instead of the visibility probe just
+    ## adds a redundant extra hop before the popup can appear.
+    check_pgx_loaded <- function() {
+      X <- pgx$X
+      has.pgx <- !(is.null(X) || length(X) == 0 || nrow(X) == 0 || ncol(X) == 0)
+      if(has.pgx) {
+        message("[launcher_server] PGX is loaded")
+        return(TRUE)
+      }
+      shinyalert::shinyalert("No dataset",
+        text = "You need first load a dataset to use this module.",
+        type = "warning")
+      return(FALSE)
+    }
+    
     ## ---------------- dashboards ------------------
     observeEvent(input$launch_playground, {
       ## playground is not yet fully a shiny module and is "preloaded"
@@ -92,7 +112,9 @@ launcher_server <- function(id, parent, load_example = NULL,
     })
 
     ## Quick action: load the example dataset and jump to the Dashboard
-    observeEvent(input$load_example, {
+    observeEvent(
+      list(input$load_example),
+    {
       if (is.null(load_example)) {
         warning("[launcher_server] !!! no load_example trigger available")
         return()
@@ -102,7 +124,7 @@ launcher_server <- function(id, parent, load_example = NULL,
       } else {
         load_example(load_example() + 1)
       }
-      bslib::nav_select("app-sidebar", "Dashboard", session = parent)
+      ##bslib::nav_select("app-sidebar", "Dashboard", session = parent)
     })
 
     ## Quick action: go to the Upload panel
@@ -110,10 +132,19 @@ launcher_server <- function(id, parent, load_example = NULL,
       bslib::nav_select("app-sidebar", "Upload", session = parent)
     })
 
-    ## Quick action: go to the Obi AI Copilot panel
+    ## Quick action: go to the Obi panel
     observeEvent(input$chat_with_obi, {
-      bslib::nav_select("app-sidebar", "Copilot", session = parent)
+      if(check_pgx_loaded()) {
+        bslib::nav_select("app-sidebar", "Copilot", session = parent)
+      }
     })
 
+    ## Quick action: go to AI Studio
+    observeEvent(input$launch_studio, {
+      if(check_pgx_loaded()) {
+        bslib::nav_select("app-sidebar", "Studio", session = parent)
+      }
+    })
+    
   })
 }
