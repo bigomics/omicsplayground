@@ -124,10 +124,12 @@ AppSettingsUI <- function(id) {
             bslib::card_header("AI Models"),
             bslib::card_body(
               gap = "0.3em",
-              ## Hide the model menus for the BigOmics-managed backend — users
-              ## don't choose (or need to see) which models BigOmics runs.
+              ## Always show the model menus, even for the BigOmics-managed
+              ## backend — but they're disabled (shinyjs, see the lock
+              ## observer in appsettings_server.R) for bigomics, since users
+              ## don't choose which models BigOmics runs, only see them.
               shiny::conditionalPanel(
-                "input.enable_ai && input.ai_provider != 'bigomics'",
+                "input.enable_ai",
                 ns = ns,
                 shiny::selectInput(
                   inputId = ns("llm_reports"),
