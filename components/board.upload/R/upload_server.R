@@ -37,16 +37,27 @@ UploadBoard <- function(id,
     compute_settings <- shiny::reactiveValues()
 
     # add task to detect probetype using annothub
+    USE.MIRAI=FALSE
     checkprobes_task <- ExtendedTask$new(function(organism, datatype, probes, annot.cols) {
-      future_promise({
-        detected <- playbase::check_species_probetype(
-          probes = probes,
-          datatype = datatype,
-          test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
-          annot.cols = annot.cols
-        )
-        detected
-      })
+      if(USE.MIRAI) {
+        mirai::mirai({
+          playbase::check_species_probetype(          
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols)
+        }, organism=organism, datatype=datatype, probes=probes,
+        annot.cols=annot.cols )
+      } else {
+        promises::future_promise({
+          playbase::check_species_probetype(
+            probes = probes,
+            datatype = datatype,
+            test_species = unique(c(organism, c("Human", "Mouse", "Rat"))),
+            annot.cols = annot.cols
+          )
+        })
+      }
     })
 
     output$navheader <- shiny::renderUI({
@@ -1017,6 +1028,23 @@ UploadBoard <- function(id,
       }
     )
 
+    .clear_upload <- function() {
+      message("[ComputePgxServer:input$compute] clearing files")
+      isolate({
+        lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
+        lapply(names(checklist), function(i) checklist[[i]] <- NULL)
+        upload_organism(input$selected_organism)
+        upload_name(NULL)
+        upload_description(NULL)
+        show_comparison_builder(TRUE)
+        selected_contrast_input(FALSE)
+        loaded_samples(FALSE)
+        sum_techreps(FALSE) ## new az
+        orig_sample_matrix(NULL)
+        orig_counts_matrix(NULL) ## new az
+        vars_selected(NULL)
+      })
+    }
 
     # observe show_modal and start modal
     shiny::observeEvent(
@@ -1038,21 +1066,9 @@ UploadBoard <- function(id,
           )
           return(NULL)
         }
-        
-        isolate({
-          lapply(names(uploaded), function(i) uploaded[[i]] <- NULL)
-          lapply(names(checklist), function(i) checklist[[i]] <- NULL)
-          upload_organism(input$selected_organism)
-          upload_name(NULL)
-          upload_description(NULL)
-          show_comparison_builder(TRUE)
-          selected_contrast_input(FALSE)
-          loaded_samples(FALSE)
-          sum_techreps(FALSE) ## new az
-          orig_sample_matrix(NULL)
-          orig_counts_matrix(NULL) ## new az
-          vars_selected(NULL)
-        })
+
+        ## clear previous files
+        .clear_upload()         
         
         reset_upload_text_input(reset_upload_text_input() + 1)
         wizardR::reset("upload_wizard")
@@ -1373,7 +1389,8 @@ UploadBoard <- function(id,
       process_counter = process_counter,
       reset_upload_text_input = reset_upload_text_input,
       probetype = probetype,
-      recompute_pgx = recompute_pgx
+      recompute_pgx = recompute_pgx,
+      .clear_upload = .clear_upload
     )
 
     ## ------------------------------------------------

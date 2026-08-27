@@ -35,9 +35,10 @@ UploadUI <- function(id) {
                     "mRNA microarray",
                     "proteomics",
                     "scRNA-seq",
-                    "methylomics (beta)" = "methylomics",
                     "metabolomics",
-                    "multi-omics (beta)" = "multi-omics"
+                    "lipidomics",
+                    "multi-omics (beta)" = "multi-omics",
+                    "methylomics (beta)" = "methylomics"
                   ),
                   selected = DEFAULTS$datatype,
                   width = "400px"
@@ -129,7 +130,7 @@ UploadUI <- function(id) {
     style="position:absolute; top:10px; right:20px;")
 
   ui <- div(
-    shinybusy::use_busy_bar(color="#AA0101", height="4px"),
+    shinybusy::use_busy_bar(color="#aa1a1a", height="2px"),
     OmicsBoardUI(
       ns = ns,
       title = "Upload New",

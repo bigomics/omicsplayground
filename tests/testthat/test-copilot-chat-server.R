@@ -282,6 +282,10 @@ test_that("on_tool_request appends a collapsible <details> marker", {
       expect_match(captured_content, "<details>")
       expect_match(captured_content, "show_plot")
       expect_match(captured_content, "pca")
+      # Must end in a blank line: `<details>` is a CommonMark type-6 HTML
+      # block that runs until one, so without it an answer opening with
+      # "### Main findings" renders as literal text instead of a heading.
+      expect_match(captured_content, "</details>\n\n$")
     }
   )
 })

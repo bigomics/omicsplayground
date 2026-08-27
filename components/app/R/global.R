@@ -136,7 +136,7 @@ library(grid)
 library(magrittr)
 library(future)
 library(promises)
-future::plan(future::multisession)
+future::plan(future::multicore)
 
 ## Resource paths
 shiny::addResourcePath("custom", file.path(OPG, "components/assets"))
