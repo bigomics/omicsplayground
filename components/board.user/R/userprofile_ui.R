@@ -6,15 +6,16 @@
 UserProfileUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  div(
-    class = "row",
-    boardHeader(title = "User Profile", info_link = ns("board_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "User Profile",
+    header_margin = "0px",
     shiny::tabsetPanel(
       id = ns("tabs1"),
       shiny::tabPanel(
         "User profile",
         bslib::layout_columns(
-          height = "calc(100vh - 183px)",
+          height = "100%",
           col_widths = c(4, 8),
           wellPanel(
             shiny::h4("Subscription"),
@@ -36,4 +37,5 @@ UserProfileUI <- function(id) {
       )
     )
   )
+
 }

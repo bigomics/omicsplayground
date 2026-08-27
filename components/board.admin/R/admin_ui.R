@@ -29,7 +29,7 @@ AdminPanelInputs <- function(id) {
 AdminPanelUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 85px)"
+  fullH <- "100%"
 
   ## Both choosers list every board of the full sidebar menu, labelled with its
   ## group so "Samples" and "Features" are not ambiguous.
@@ -130,8 +130,9 @@ AdminPanelUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Admin Panel", info_link = ns("board_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Admin Panel",
     tabs
   )
 }

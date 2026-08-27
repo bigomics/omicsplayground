@@ -16,8 +16,9 @@ CopilotBoardUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 5, 4),
-    style = "height: calc(100vh - 80px);",
-
+    #style = "height: calc(100vh - 80px);",
+    height = "100%",
+    
     # ---- Left column: new-chat button, on top of docs / reports ----
     # "New chat" lives here (own row) rather than inside the
     # Dataset/Settings/History card on the right, which already has little
@@ -26,6 +27,7 @@ CopilotBoardUI <- function(id) {
     # stretched to fill a grid row.
     shiny::div(
       style = "height: 100%; display: flex; flex-direction: column; gap: 8px;",
+      shiny::div(id = "obi-hello", class='p-4', style='height: 240px;', ""),
       shiny::actionButton(
         ns("new_chat"),
         label = "New chat",
@@ -55,9 +57,13 @@ CopilotBoardUI <- function(id) {
               "Workspace"
             )
           )),
+          # Dev-only panel. Hidden, its controls fall back to defaults in
+          # CopilotReportsServer: Summary staged, tools connected.
           bslib::navset_underline(
             bslib::nav_panel("Documents", CopilotDocsUI(ns("docs"))),
-            bslib::nav_panel("Reports", CopilotReportsUI(ns("reports"))),
+            if (isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel("Reports", CopilotReportsUI(ns("reports")))
+            },
             bslib::nav_panel("Settings", CopilotChatSettings(ns("chat"))),
             bslib::nav_panel("History", CopilotHistoryUI(ns("history")))
           )
@@ -76,8 +82,8 @@ CopilotBoardUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       row_heights = c(4, 7),
+      height = "100%",
       bslib::card(
-        height = "100%",
         bslib::as.card_item(shiny::fillRow(
           flex = 1,
           class = "plotmodule-header",
@@ -94,12 +100,12 @@ CopilotBoardUI <- function(id) {
     )
   )
 
-
   board <- OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     #title = "AI Copilot",
-    title = "Obi",
+    title = "Obi AI <span style='font-size: 0.7em;'>&mdash; chat with your data</span>",
     info = FALSE,
+    header_margin = "0px",
     ui
   )
   return(board)

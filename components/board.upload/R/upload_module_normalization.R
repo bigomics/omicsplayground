@@ -249,7 +249,11 @@ upload_module_normalization_server <- function(
         ntop_features <- if (isTRUE(input$bec_full_features)) Inf else 1000
 
         methods <- c("ComBat", "limma", "RUV", "SVA", "NPM")
-        if (ncol(X0) > 100) methods <- methods[methods != "NPM"]
+        ## NPM does not scale: drop it for many samples or for the very large
+        ## feature space of methylation arrays.
+        if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
+          methods <- methods[methods != "NPM"]
+        }
         shiny::updateSelectInput(
           session,
           "bec_method",
@@ -1015,8 +1019,10 @@ upload_module_normalization_server <- function(
             return(NULL)
           }
           pars <- playbase::get_model_parameters(X, samples, pheno = NULL, contrasts = contrasts)
-          all.pars <- setdiff(colnames(samples), pars$pheno.pars)
-          all.pars <- union(all.pars, pars$batch.pars)
+          safe.pars <- setdiff(colnames(samples), pars$pheno.pars)
+          safe.pars <- union(safe.pars, pars$batch.pars)
+          confounded.pars <- setdiff(intersect(colnames(samples), pars$pheno.pars), safe.pars)
+          all.pars <- c(safe.pars, confounded.pars)
           names(all.pars) <- ifelse(all.pars %in% pars$batch.pars,
             paste(all.pars, "*"), all.pars
           )
@@ -1048,6 +1054,7 @@ upload_module_normalization_server <- function(
 
         ## Imputation defaults
         default_zero_as_na <- FALSE
+        if (grepl("proteomics|metabolomics", upload_datatype())) default_zero_as_na <- TRUE
         default_impute <- DEFAULTS$qc$impute
         default_impute_method <- "SVD2"
         if (!is.null(pgx_settings$imputation_method) && is.list(pgx_settings$imputation_method)) {
@@ -1202,7 +1209,7 @@ upload_module_normalization_server <- function(
                       shiny::selectInput(ns("filterthreshold"), NULL,
                         choices = c(
                           ">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
-                          "<=3 valid in any group" = 3, "<=50% valid in any group" = -0.5
+                          "<3 valid in any group" = 3, "<50% valid in any group" = -0.5
                         ),
                         selected = 0.2
                       )

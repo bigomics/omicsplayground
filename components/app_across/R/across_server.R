@@ -5,11 +5,18 @@
 
 AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
                         labeltype = shiny::reactive("feature"),
-                        tiledb_refresh = shiny::reactive(NULL)) {
+                        current_page = shiny::reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     fullH <- 770
     tabH <- "70vh"
+
+    ## Bumped when the background TileDB (re)build finishes, so tiledb_path()
+    ## re-checks the filesystem instead of caching its first (empty) result.
+    tiledb_ready <- shiny::reactiveVal(0)
+    ## TRUE while a background TileDB build is running, so re-opening the
+    ## Across tab does not prompt for (or launch) a second build.
+    tiledb_building <- shiny::reactiveVal(FALSE)
 
     infotext <- tspan(
       "The <strong>Across Datasets</strong> module lets you compare feature values
@@ -35,7 +42,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
       ## Re-check the filesystem when the background TileDB build completes:
       ## without this dependency the first (empty) result is cached and the
       ## board stays blank until the user logs out and back in.
-      tiledb_refresh()
+      tiledb_ready()
       req(pgx_dir())
       path <- file.path(pgx_dir(), "counts_tiledb")
       if (dir.exists(path)) return(path)
@@ -45,7 +52,7 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
     })
 
     datasets_info_file <- reactive({
-      tiledb_refresh()
+      tiledb_ready()
       req(pgx_dir())
       path <- file.path(pgx_dir(), "datasets-info.csv")
       if (file.exists(path)) return(path)
@@ -125,17 +132,11 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
 
     query_result <- reactiveVal(NULL)
 
+    OmicsBoard(session, pgx, title = "Across Datasets", infotext = infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Across Datasets</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     shiny::observeEvent(input$zscore_info, {
       shiny::showModal(shiny::modalDialog(
@@ -161,6 +162,88 @@ AcrossBoard <- function(id, pgx, pgx_dir = reactive(NULL),
         ),
         easyClose = TRUE, size = "l"
       ))
+    })
+
+    ## ================================================================================
+    ## ======================= TILEDB BUILD ON DEMAND =================================
+    ## ================================================================================
+
+    ## Build the per-user TileDB on demand the first time the Across tab is
+    ## opened. The build can take a few minutes, so ask before running it
+    ## (opt-in) rather than blocking login for everyone.
+    runAcrossTileDBBuild <- function(udir) {
+      tiledb_building(TRUE)
+      tiledb_notif_id <- "tiledb_backfill"
+      shiny::showNotification(
+        ui = shiny::tagList(
+          shiny::icon("database"),
+          " Updating your datasets database for Across-datasets analysis…"
+        ),
+        duration = NULL, closeButton = FALSE, type = "message",
+        id = tiledb_notif_id, session = session
+      )
+      promises::future_promise(
+        {
+          playbase::tiledb.updateDatasetFolder(udir, verbose = TRUE)
+          TRUE
+        },
+        seed = TRUE
+      ) %...>% (function(ok) {
+        shiny::removeNotification(tiledb_notif_id, session = session)
+        shiny::showNotification(
+          "Datasets database is ready for Across-datasets analysis.",
+          duration = 5, type = "message", session = session
+        )
+        ## Refresh the board now that the database exists on disk.
+        tiledb_ready(shiny::isolate(tiledb_ready()) + 1)
+        tiledb_building(FALSE)
+        info("[AcrossBoard] TileDB backfill complete for ", udir)
+      }) %...!% (function(err) {
+        shiny::removeNotification(tiledb_notif_id, session = session)
+        shiny::showNotification(
+          "Could not update the datasets database for Across-datasets analysis.",
+          duration = 8, type = "warning", session = session
+        )
+        tiledb_building(FALSE)
+        warning("[AcrossBoard] TileDB backfill failed: ", conditionMessage(err))
+      })
+    }
+
+    ## Detect the user navigating to the Across tab. `current_page` is the
+    ## root-session "app-sidebar" navset value, passed in from app/R/server.R
+    ## since the top-level navset lives outside this module's namespace.
+    shiny::observeEvent(current_page(), {
+      if (!identical(current_page(), "AcrossDatasets")) return()
+      if (isTRUE(tiledb_building())) return()
+      udir <- pgx_dir()
+      need_build <- !is.null(udir) && dir.exists(udir) &&
+        isTRUE(tryCatch(playbase::tiledb.needUpdate(udir), error = function(e) FALSE))
+      if (!need_build) return()
+      shiny::showModal(shiny::modalDialog(
+        title = "Update datasets database?",
+        shiny::p(
+          "The datasets database used by Across-datasets analysis needs to be ",
+          "built or updated. This can take a few minutes. Proceed?"
+        ),
+        footer = shiny::tagList(
+          shiny::actionButton(ns("build_no"), "No"),
+          shiny::actionButton(ns("build_yes"), "Yes", class = "btn-primary")
+        ),
+        easyClose = FALSE
+      ))
+    })
+
+    shiny::observeEvent(input$build_yes, {
+      shiny::removeModal()
+      udir <- pgx_dir()
+      if (!is.null(udir) && dir.exists(udir) && !isTRUE(tiledb_building())) {
+        info("[AcrossBoard] ENABLE_ACROSS: user confirmed TileDB build for ", udir)
+        runAcrossTileDBBuild(udir)
+      }
+    })
+
+    shiny::observeEvent(input$build_no, {
+      shiny::removeModal()
     })
 
     ## ================================================================================

@@ -11,16 +11,11 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## module for system resources
     user_table_resources_server("resources", pgx = pgx)
 
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>User Profile</strong>"),
-        shiny::HTML(
-          "The User Settings page allows you to change overall settings
+    OmicsBoard(
+      session, pgx, title = "Settings",
+      infotext = "The User Settings page allows you to change overall settings
                 that will alter how the app looks and functions."
-        ),
-        easyClose = TRUE, size = "l"
-      ))
-    })
+    )
 
     ## ----------------------------------------------------------------
     ## AI Features — provider, credentials and model selection
@@ -59,12 +54,32 @@ AppSettingsBoard <- function(id, auth, pgx) {
       choices
     }
 
+    ## BigOmics' pinned models route through a backend (OpenRouter) to a
+    ## specific lab (DeepSeek, OpenAI, Google) that users aren't meant to see
+    ## in a locked, non-BYOK menu -- show a friendly product name instead of
+    ## the raw id. Other providers' ids (e.g. "gpt-5.4-nano") are already
+    ## user-facing, so this only rewrites the bigomics catalog.
+    bigomics_model_labels <- c(
+      "openrouter:deepseek/deepseek-v4-flash" = "Deepseek V4",
+      "openrouter:openai/gpt-5.6-terra"       = "GPT-5.6",
+      "gemini-3.1-flash-image-preview"        = "Gemini 3.1 Nano Banana"
+    )
+
+    display_menu_choices <- function(provider, choices) {
+      if (!identical(provider, "bigomics") || !length(choices)) {
+        return(choices)
+      }
+      labels <- ifelse(choices %in% names(bigomics_model_labels),
+                       bigomics_model_labels[choices], choices)
+      stats::setNames(choices, labels)
+    }
+
     update_ai_model_menus <- function(provider, live_models = NULL) {
       for (input_id in names(ai_menu_choices)) {
         choices <- provider_menu_choices(provider, input_id, live_models)
         shiny::updateSelectInput(
           session, input_id,
-          choices = choices,
+          choices = display_menu_choices(provider, choices),
           selected = if (length(choices)) choices[[1]] else character(0)
         )
       }
@@ -97,7 +112,11 @@ AppSettingsBoard <- function(id, auth, pgx) {
       )
     })
 
-    ## Warn the user when they switch AI on.
+
+    ## Warn the user when they switch AI on. ignoreInit avoids firing this
+    ## on session start, since "Enable AI" defaults to on -- the equivalent
+    ## warning is instead shown once on first visit to the Obi AI tab (see
+    ## app/R/server.R).
     shiny::observeEvent(input$enable_ai, {
       model <- input$llm_reports
       if (isTRUE(input$enable_ai)) {
@@ -114,7 +133,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
           # showCancelButton = TRUE
         )
       }
-    })
+    }, ignoreInit = TRUE)
     
     shiny::observeEvent(
       {
@@ -297,6 +316,16 @@ AppSettingsBoard <- function(id, auth, pgx) {
 
       if (base_locked) shinyjs::disable("enable_ai") else shinyjs::enable("enable_ai")
       if (provider_locked) shinyjs::disable("ai_provider") else shinyjs::enable("ai_provider")
+
+      ## BigOmics runs a fixed model per menu -- show the resolved model but
+      ## block editing (disabled select, no live "Test & load"), instead of
+      ## hiding the panel. Non-BYOK users are pinned to bigomics above, so
+      ## fall back to it here too rather than trusting a forged provider.
+      provider <- if (byok) input$ai_provider else "bigomics"
+      models_locked <- base_locked || identical(provider, "bigomics")
+      for (input_id in names(ai_menu_choices)) {
+        if (models_locked) shinyjs::disable(input_id) else shinyjs::enable(input_id)
+      }
     })
 
     ## Effective AI-enabled state = deployment licence (opt$ENABLE_AI) AND the

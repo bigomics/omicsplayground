@@ -127,6 +127,7 @@ CopilotReportsServer <- function(id, pgx) {
         if (slot %in% used) return(FALSE)
         val <- input[[.input_id(i)]]
         if (is.null(val)) {
+          # NULL outside DEVMODE: no checkboxes rendered, use defaults.
           return(slot %in% .copilot_report_default_selection(available))
         }
         isTRUE(val)
@@ -147,6 +148,7 @@ CopilotReportsServer <- function(id, pgx) {
       invisible(NULL)
     }
 
+    # NULL is the non-DEVMODE path (panel not rendered) — keep tools on.
     tools_enabled <- shiny::reactive({
       is.null(input$tools_enabled) || isTRUE(input$tools_enabled)
     })

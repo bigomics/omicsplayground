@@ -127,17 +127,29 @@ ClusteringInputs <- function(id) {
             choices = c("tsne", "pca", "umap", "pacmap")
           ),
           "Choose the layout method for clustering plots."
+        ),
+        shiny::conditionalPanel(
+          "input.hm_clustmethod == 'pca'",
+          ns = ns,
+          withTooltip(
+            shiny::selectInput(ns("pca_dimx"), "X axis:", choices = NULL),
+            "Principal component shown on the horizontal axis.",
+            placement = "right", options = list(container = "body")
+          ),
+          withTooltip(
+            shiny::selectInput(ns("pca_dimy"), "Y axis:", choices = NULL),
+            "Principal component shown on the vertical axis.",
+            placement = "right", options = list(container = "body")
+          )
         )
       )
     )
   )
 
-
   bigdash::tabSettings(
     settings_items1
   )
 }
-
 
 ClusteringUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
@@ -150,16 +162,14 @@ ClusteringUI <- function(id) {
 
   parallel_info <- HTML("The <b>Parallel Coordinates</b> plot is great for visualizing time series or ordered experiments. By grouping samples by time points and showing them sequentially, we can see trends in the expression of groups of genes, or so-called gene modules. The figure is interactive so you can manually order the time points.")
 
-  rowH <- 350
-  rowH <- "40vh"
-  fullH <- "calc(100vh - 181px)"
-
+  fullH <- "100%"
 
   heatmap_panel <- shiny::tabPanel(
     "Heatmap",
     bslib::layout_columns(
       height = fullH,
       col_widths = 12,
+      row_heights = list("auto", 1),
       bs_alert(heatmap_info),
       bslib::layout_columns(
         col_widths = c(7, 5),
@@ -186,7 +196,7 @@ ClusteringUI <- function(id) {
             )
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
-          height = c("calc(100vh - 310px)", TABLE_HEIGHT_MODAL),
+          height = c("100%", TABLE_HEIGHT_MODAL),
           width = c("auto", "100%")
         ),
         bslib::layout_columns(
@@ -239,6 +249,7 @@ ClusteringUI <- function(id) {
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,
+      row_heights = list("auto", 1),
       bs_alert(HTML(pca_info)),
       bslib::layout_columns(
         col_widths = c(6, 6),
@@ -246,8 +257,8 @@ ClusteringUI <- function(id) {
         clustering_plot_clustpca_ui(
           ns("PCAplot"),
           title = "Dimensionality reduction",
-          info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the percentage of variance explained by the first two principal components is reported in the x- and y-axis.",
-          info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other.",
+          info.text = "Using the {Color/label}, {Shape} and {Label} options it is possible to control how the points are colored and shaped (acording to which available phenotypes) and it is possible to control where are the labels located respectively. There is also the option to visualize the three dimensionality reduction techniques at the same time, and the option to visualize the plot in three dimensions. For 2-dimensional principal component analysis, the {X axis} and {Y axis} options in the settings panel select which of the first five principal components are plotted against each other, and the percentage of variance explained by each of them is reported on the corresponding axis.",
+          info.methods = "Relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Three clustering methods are available, t-SNE (using the Rtsne R package [1]), UMAP (using the uwot R package [2]) and PCA (using the irlba R package [3]). Samples that are ‘similar’ will be placed close to each other. For PCA, the first five principal components are computed on the 1000 most variable features after row centering, and the reported percentage is the share of the total variance of that matrix explained by the component.",
           info.references = list(
             list(
               "Krijthe J (2023) Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation.",
@@ -285,7 +296,7 @@ ClusteringUI <- function(id) {
   )
   
   OmicsBoardUI(
-    id = ns("board"),
+    ns = ns,
     title = "Cluster Samples",
     shiny::tabsetPanel(
       id = ns("tabs1"),

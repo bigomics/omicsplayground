@@ -4,7 +4,6 @@
 ##
 
 AcrossInputs <- function(id) {
-
   ns <- shiny::NS(id) ## namespace
   ## NOTE: rendered inside the top-level "Across datasets" panel (no Dashboard
   ## settings sidebar), so we use a plain container instead of bigdash::tabSettings().
@@ -140,7 +139,6 @@ AcrossUI <- function(id) {
   ## scss/components/_across.scss) so the plot card's bottom lines up with the
   ## inputs card on the left, independent of header/tab-strip pixel heights.
   fullH <- "100%"
-  tabH <- "70vh"
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -149,6 +147,7 @@ AcrossUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("View feature values for selected features across all samples from your datasets."),
         bslib::layout_columns(
           col_widths = 12,
@@ -170,6 +169,7 @@ AcrossUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("Compare feature value distributions across your datasets using boxplots."),
         bslib::layout_columns(
           col_widths = 12,
@@ -191,6 +191,7 @@ AcrossUI <- function(id) {
       bslib::layout_columns(
         col_widths = 12,
         height = fullH,
+        row_heights = list("auto", 1),
         bs_alert("View and download the raw data for selected features."),
         bslib::layout_columns(
           col_widths = 12,
@@ -265,15 +266,15 @@ AcrossUI <- function(id) {
   )
 
   ## Board header spans the full width; the inputs (left) and content (right)
-  ## align on the same baseline below it.
-  bslib::layout_columns(
-    col_widths = 12,
-    gap = 0,
-    height = "calc(100vh - 60px)",
-    row_heights = list("auto", 1),
-    boardHeader(title = "Across Datasets", info_link = ns("info")),
+  ## align on the same baseline below it. OmicsBoardUI() already splits
+  ## header (auto) / content (1fr) internally and lives directly inside
+  ## .fullheight-page so the existing CSS fill chain applies.
+  OmicsBoardUI(
+    ns = ns,
+    title = "Across Datasets",
     bslib::layout_columns(
       col_widths = c(3, 9),
+      height = "100%",
       fill = TRUE,
       bslib::card(
         bslib::card_body(

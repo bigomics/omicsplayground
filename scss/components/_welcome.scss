@@ -17,9 +17,9 @@ html {
 	font-size: 50px;
 	font-weight: 600;
 	color: #2484bb;
-	padding-top: 300px;
+	padding-top: 260px;
 	background: url("monster-hi.png") no-repeat;
-	background-size: 300px 300px;
+	background-size: 260px 260px;
 	background-position: 53% 0px;
     }
     
@@ -32,7 +32,17 @@ html {
 	color: black;
 	border-width: 2.5px;
     }
-    
+
+    .welcome-btn-sm {
+	padding: 6px 14px;
+	margin-top: 10px;
+	margin-left: 4px;
+	font-size: 14px;
+	width: 200px;
+	color: black;
+	border-width: 1.5px;
+    }
+
     #welcome-subtext {
 	padding: 0 25%;
 	text-align: center;

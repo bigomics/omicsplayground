@@ -1,4 +1,35 @@
 html {
+  // Also needed on html, not just body: a couple of px of stray horizontal
+  // overflow (Bootstrap's row gutter bleed, third-party widget overlays)
+  // otherwise still inflate documentElement's scrollWidth and force a
+  // page-level horizontal scrollbar even with overflow-x:hidden on body
+  // alone, since body isn't always the element the browser treats as the
+  // page's actual scrolling root.
+  overflow-x: hidden;
+
+  // HubSpot's interactive-content embed (hubspot-embed.html) leaves behind
+  // #hs-interactives-modal-overlay: position:absolute, z-index:-1 (so
+  // invisible), but sized to its modal content rather than the viewport.
+  // That box is taller than 100vh, and being absolutely positioned with no
+  // positioned ancestor it still inflates body's scrollable height, forcing
+  // a page-wide vertical scrollbar on every page even though there is
+  // nothing visible to scroll to.
+  #hs-interactives-modal-overlay {
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  // Same script also plants #hs-web-interactives-floating-container in
+  // normal flow at the end of body. It's empty and its own children (the
+  // corner "anchor" divs used to position popups) are already
+  // position:fixed, but the static container itself still occupies a slot
+  // in the flow -- landing a couple dozen px below the last real content
+  // and, being a box with no height, still inflating body's scrollHeight by
+  // its own offsetTop. display:contents removes its box entirely without
+  // touching the fixed-positioned anchor children.
+  #hs-web-interactives-floating-container {
+    display: contents;
+  }
 
   body {
       a {
@@ -7,6 +38,12 @@ html {
       }
       font-size: 14px;
 /*    font-family: "Cubano"; */
+
+      // bslib::navset_pill_list()'s Bootstrap .row carries the default
+      // negative gutter margins with no .container to absorb them, bleeding
+      // a few px past the viewport edge and forcing a phantom horizontal
+      // scrollbar. Nothing real lives in that gutter, so clipping it is safe.
+      overflow-x: hidden;
   }
 
   .alert {
@@ -312,10 +349,12 @@ html {
   }
 
   div#navheader-current-section {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 600;
-    margin: 15px 0 5px 0px;
-    padding-top: 10px;
+    // 17px tighter than it used to be (was margin-top 15 + padding-top 10):
+    // this puts the title's baseline on the same line as the sidebar's "Menu"
+    // heading instead of floating well below it.
+    margin: 8px 0 5px 0px;
   }
 
   div#navheader-dataset-stats {
@@ -391,10 +430,53 @@ html {
       margin-bottom: 0.3rem; 
   }
 
-  .form-check-input:checked, .shiny-input-container .checkbox input:checked {
-      background-color: aliceblue;
+  // Checkboxes.
+  //
+  // shiny::checkboxInput() emits Bootstrap 3 markup (div.checkbox > label >
+  // input), while form-generating widgets emit BS5's .form-check-input, so
+  // both shapes have to be styled or half the app's checkboxes are missed.
+  //
+  // The checked state used to be `background-color: aliceblue`, which is so
+  // close to white that Bootstrap's white checkmark vanished: a ticked box
+  // was indistinguishable from an empty one, and the blue focus ring read as
+  // "checked" instead. Keep the box white and draw the tick in ink.
+  // NB: `.form-check:not(.form-switch)` is load-bearing -- bslib's
+  // input_switch() is also a .form-check-input, and giving it a checkmark
+  // background-image would replace the switch knob.
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"],
+  .shiny-input-container .checkbox input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.05em;
+      height: 1.05em;
+      vertical-align: -0.15em;
+      border: 1px solid #adb5bd;
+      border-radius: 0.25em;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 100%;
   }
-  
+
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:checked,
+  .shiny-input-container .checkbox input[type="checkbox"]:checked {
+      background-color: #fff;
+      border-color: #212529;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='M5 10.5l3.5 3.5l7-7'/%3e%3c/svg%3e");
+  }
+
+  // the default focus ring is easy to misread as a checked state
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:focus,
+  .shiny-input-container .checkbox input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: none;
+  }
+
+  .shiny-input-container .checkbox label {
+      cursor: pointer;
+      font-weight: 400;
+  }
+
 }
 
 // to work with mouse listeners, we need to remove pointer events from tooltips

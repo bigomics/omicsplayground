@@ -63,8 +63,8 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 125px)" ## full height of page (minus header)
-  halfH <- "calc(50vh - 125px)" ## half height of page
+  fullH <- "100%" ## full height of page (minus header)
+  halfH <- "50%" ## half height of page
 
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
@@ -370,8 +370,9 @@ EnrichmentUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Geneset enrichment", info_link = ns("gs_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Geneset enrichment",
     bslib::layout_columns(
       col_widths = 12,
       height = fullH,

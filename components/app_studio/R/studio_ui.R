@@ -11,7 +11,7 @@ StudioUI <- function(id) {
 
   studio_card <- bslib::navset_underline(
     bslib::nav_panel(
-      "AI Studio",
+      "Studio",
       shiny::br(),
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
@@ -91,9 +91,11 @@ StudioUI <- function(id) {
   )
 
   board <- OmicsBoardUI(
-    id = ns("board"),
-    title = "AI Studio",
+    ns = ns,
+    #title = HTML("AI Studio <small><small>&mdash; your creative space</small></small>"),
+    title = HTML("AI Studio <span style='font-size: 0.7em;'>&mdash; your creative space</span>"),
     info = FALSE,
+    header_margin = "0px",
     ui
   )
   

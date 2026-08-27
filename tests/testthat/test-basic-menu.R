@@ -1,6 +1,6 @@
 ## test-basic-menu.R
 
-.app_dir <- if (dir.exists("components/app/R")) "components/app/R" else "../../components/app/R"
+.app_dir <- if (dir.exists("components/app_opg/R")) "components/app_opg/R" else "../../components/app_opg/R"
 source(file.path(.app_dir, "opg_ui.R"), local = TRUE)
 
 BASIC_MENU_DEFAULT <- c("dataview", "clustersamples", "diffexpr")
@@ -159,7 +159,7 @@ test_that("the deployment-wide default applies when the user sets nothing", {
 ## etc/ is an S3 bucket shared by every deploy, so two servers must never write
 ## the same file.
 
-.utils_dir <- if (dir.exists("components/app/R/utils")) "components/app/R/utils" else "../../components/app/R/utils"
+.utils_dir <- if (dir.exists("components/utils")) "components/utils" else "../../components/utils"
 source(file.path(.utils_dir, "utils.R"), local = TRUE)
 
 test_that("each deploy writes its own file, named from opt$HOSTNAME", {

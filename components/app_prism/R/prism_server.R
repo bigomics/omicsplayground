@@ -59,7 +59,8 @@ build_prism_prompt <- function(msg, vars, rows, last_plotcode, dataset,
     "\nSet default title as dataset name: ", dataset,
     "\nDefault point size unless asked by user: ", pointsize,
     "\nDefault font size unless asked by user: ", fontsize,
-    "\nDefault theme unless asked by user: ", theme
+    "\nDefault theme unless asked by user: ", theme,
+    "\nUse ggplot2::stat_ellipse() if user asks for ellipses"
   )
 }
 

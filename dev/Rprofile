@@ -7,5 +7,5 @@ options(BioC_mirror = "https://packagemanager.posit.co/bioconductor")
 options(BIOCONDUCTOR_CONFIG_FILE = "https://packagemanager.posit.co/bioconductor/config.yaml")
 
 # Configure a CRAN snapshot compatible with Bioconductor 3.18:
-options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest"))
+options(repos = c(CRAN = sprintf("https://packagemanager.posit.co/cran/latest/bin/linux/trixie-%s/%s", R.version["arch"], substr(getRversion(), 1, 3))))
 

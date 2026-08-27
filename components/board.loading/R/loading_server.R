@@ -38,13 +38,22 @@ LoadingBoard <- function(id,
     ## Received/shared UI
     ## -------------------------------------------------------------------
 
+    ## Navigate to the "Shared datasets" inner tab of the Library board. The old
+    ## bigdash "sharing-tab" board was folded into this tabset during the UI
+    ## reshuffle, so bigdash.selectTab() no longer reaches it.
+    goto_sharing_tab <- function() {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
+      shiny::updateTabsetPanel(session, "tabs", selected = "sharing_tab")
+    }
+
     pgxreceived <- upload_module_received_server(
       id = "received",
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
       ##      max_datasets = auth$options$MAX_DATASETS,  ## wrong and not needed...
       reload_pgxdir = reload_pgxdir,
-      current_page = current_page
+      current_page = current_page,
+      goto_sharing_tab = goto_sharing_tab
     )
 
     pgxshared <- upload_module_shared_server(
@@ -90,34 +99,28 @@ LoadingBoard <- function(id,
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
-    observeEvent(load_example(),
-      {
-        # get the row which corresponds to "example-data"
-        data_names <- as.character(pgxtable$data()$dataset)
-        example_row <- which(data_names == "example-data")[1]
-        has.exampledata <- ("example-data" %in% data_names)
+    observeEvent(load_example(), {
 
-        # if not found, throw error modal that example-data doesnt exist
-        ## if (is.na(example_row)) {
-        if (!has.exampledata) {
-          shinyalert::shinyalert(
-            title = "No example data",
-            text = "Sorry, the example dataset could not be found.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        } else {
-          loadAndActivatePGX("example-data")
-
-          ## # open the left & right sidebar
-          ## bigdash.openSettings(lock = TRUE)
-          ## bigdash.openSidebar()
-          ## bigdash.selectTab(session, selected = "dataview-tab")
-          ## ## shiny::removeModal()
-        }
-      },
-      ignoreInit = TRUE
+      # get the row which corresponds to "example-data"
+      data_names <- as.character(pgxtable$data()$dataset)
+      example_row <- which(data_names == "example-data")[1]
+      has.exampledata <- ("example-data" %in% data_names)
+      
+      # if not found, throw error modal that example-data doesnt exist
+      ## if (is.na(example_row)) {
+      if (!has.exampledata) {
+        shinyalert::shinyalert(
+          title = "No example data",
+          text = "Sorry, the example dataset could not be found.",
+          type = "warning",
+          closeOnClickOutside = FALSE
+        )
+        return(NULL)
+      } else {
+        loadAndActivatePGX("example-data")
+      }
+    },
+    ignoreInit = TRUE
     )
 
     ## ================================================================================

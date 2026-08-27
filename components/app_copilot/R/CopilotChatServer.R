@@ -350,10 +350,15 @@ CopilotChatServer <- function(
         )
       })
 
+      # The trailing blank line is load-bearing. A `<details>` block is a
+      # CommonMark type-6 HTML block, which runs until a blank line — without
+      # one, everything the model streams next is passed through as raw HTML,
+      # so an answer opening with "### Main findings" renders as literal text
+      # rather than a heading. A single "\n" is not enough; it takes two.
       marker <- paste0(
         '<details><summary>\U0001F527 ', req$name %||% "tool", '</summary>',
         '<pre>', args_text, '</pre>',
-        '</details>'
+        '</details>\n\n'
       )
       tryCatch(
         shinychat::chat_append_message(

@@ -28,6 +28,7 @@ ai_byok_allowed <- function(level) {
 
 ## Init-time collaborators the module touches but that are irrelevant here.
 dbg                         <- function(...) invisible(NULL)
+OmicsBoard                  <- function(...) invisible(NULL)
 user_table_resources_server <- function(...) invisible(NULL)
 get_color_theme             <- function() shiny::reactiveValues()
 load_color_theme            <- function(...) NULL
@@ -53,7 +54,7 @@ testthat::skip_if_not(
   all(.required_omicsai_exports %in% getNamespaceExports("omicsai")),
   "omicsai provider catalog API exports are required"
 )
-source(file.path(.repo_dir, "components/app/R/ai_model_policy.R"), local = TRUE)
+source(file.path(.repo_dir, "components/utils/ai_model_policy.R"), local = TRUE)
 
 make_opt <- function(locked = FALSE,
                      enable_ai = TRUE,
@@ -181,7 +182,7 @@ test_that("OPG policy can disable a provider and reorder menu defaults", {
   expect_null(make_opt(providers = "openai")$AI_MODELS$mistral)
 })
 
-test_that("BigOmics defaults point at the OpenRouter models and menus remain hidden", {
+test_that("BigOmics defaults point at the OpenRouter models and menus stay visible but locked", {
   expect_equal(opt$AI_MODELS$bigomics$reports[[1]],
                "openrouter:deepseek/deepseek-v4-flash")
   expect_equal(opt$AI_MODELS$bigomics$images[[1]],
@@ -193,9 +194,19 @@ test_that("BigOmics defaults point at the OpenRouter models and menus remain hid
 
   ui_source <- readLines(file.path(.repo_dir,
                                    "components/board.user/R/appsettings_ui.R"))
-  expect_true(any(grepl("input.ai_provider != 'bigomics'", ui_source,
-                        fixed = TRUE)))
+  ## Scope the assertion to the "AI Models" card: the "AI Provider" card
+  ## legitimately still hides the API-key/base-URL inputs and the "Test &
+  ## load models" button for bigomics via != 'bigomics' conditionalPanels.
+  models_card_start <- grep('card_header("AI Models")', ui_source, fixed = TRUE)
+  models_card <- ui_source[models_card_start:length(ui_source)]
+  expect_true(any(grepl('"input.enable_ai"', models_card, fixed = TRUE)))
+  expect_false(any(grepl("input.ai_provider != 'bigomics'", models_card,
+                         fixed = TRUE)))
   expect_true(any(grepl("ai_test_status", ui_source, fixed = TRUE)))
+
+  server_source <- readLines(file.path(.repo_dir,
+                                       "components/board.user/R/appsettings_server.R"))
+  expect_true(any(grepl("models_locked", server_source, fixed = TRUE)))
 })
 
 test_that("changing provider repopulates the four menus from that provider's catalog", {

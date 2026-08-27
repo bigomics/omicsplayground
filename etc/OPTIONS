@@ -1,6 +1,12 @@
+#------------- server options ----------------
+
 TITLE                = 'Omics Playground'
-AUTHENTICATION       = none
-#AUTHENTICATION      = password
+HOSTNAME             = server.local
+
+#------------- authentication ----------------
+
+#AUTHENTICATION       = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
@@ -8,6 +14,9 @@ ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
 #DOMAIN              = bigomics.ch|demo.com
 BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
+ENABLE_COOKIE_LOGIN  = FALSE
+
+#------------- app options -------------------
 ENABLE_CHIRP         = TRUE
 ENABLE_DELETE        = TRUE
 ENABLE_PGX_DOWNLOAD  = TRUE
@@ -30,11 +39,12 @@ MAX_SESSIONS         = 2
 TIMEOUT              = 0
 WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
-DEVMODE              = FALSE
 HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
-# --- BASIC menu ------------------------------------------------------------
+PUBLIC_DATASETS_LABEL = Team Datasets
+
+# ------------- menu options ---------------------
 # Both lists below are the deployment default. Admin panel > Basic Menu
 # overrides them per deploy by writing etc/BASIC_MENU-<HOSTNAME> and
 # etc/BASIC_LOCKED-<HOSTNAME>; a hostname-less etc/BASIC_MENU / etc/BASIC_LOCKED
@@ -51,16 +61,27 @@ USER_LEVEL	     = PRO
 # user in <user_dir>/OPTIONS or the user DB row.
 #FORCE_BASIC         = TRUE
 
+#------------- AI options -----------------------
+
 LLM_MAXTURNS         = 100
 ENABLE_AI            = TRUE
 AI_PROVIDERS_ENABLED = bigomics;openai;anthropic;google;github;mistral;custom
 AI_PROVIDER_LOCKED   = FALSE
-PUBLIC_DATASETS_LABEL = Team Datasets
 COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 
+#------------- board options --------------------
+
 #BOARDS_ENABLED = load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
-#BOARDS_ENABLED = load;upload;cmap
-# NOTE: Copilot intentionally not in MODULES_* — it is registered at the app
-# level (components/app_copilot/) post edgy_merge_copilot, not as a board.
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
+
+ENABLE_ACROSS        = TRUE
+
+#------------- developer options ---------------
+
+DEVMODE              = FALSE
+DEV_AUTOLOAD         = FALSE
+ENABLE_PLOTLY_PURGE  = TRUE
+ENABLE_ADMIN         = TRUE
+
+
