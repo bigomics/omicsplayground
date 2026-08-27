@@ -48,9 +48,7 @@ IntersectionInputs <- function(id) {
 IntersectionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 200px)" ## full height of page (minus header)
-  fullH.css <- "height: calc(100vh - 130px);" ## full height of page (minus header)
-  halfH.css <- "height: calc(50vh - 130px);" ## half height of page
+  fullH <- "100%" ## full height of page (minus header)
 
   tabs <- shiny::tabsetPanel(
     id = ns("tabs1"),

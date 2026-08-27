@@ -83,7 +83,9 @@ doc: FORCE
 	Rscript dev/02_doc.R
 
 install: FORCE
+	bash dev/install_os.sh
 	Rscript dev/requirements.R
+	Rscript dev/install_extra.R
 
 renv: FORCE
 	R -e "renv::activate();renv::restore()"

@@ -20,8 +20,12 @@ h1, .h1, h2, .h2, h3, .h3 {
 }
 
 .content {
-    min-height: 800px;
+    min-height: 0;
     /* background: var(--canvas-color); */
+}
+
+#app {
+    min-height: 0;
 }
 
 [class*="col-lg-"],[class*="col-md-"],
@@ -56,6 +60,19 @@ a {
     padding: 10px 10px;
 }
 */
+
+/* fill viewport height chain */
+.big-tabs { display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
+.big-tab { flex: 1; min-height: 0; }
+.big-tab .tabbable { height: 100%; display: flex; flex-direction: column; }
+.big-tab .tabbable .tab-content { flex: 1; height: auto; padding: 15px 20px; }
+.big-tab .tabbable .tab-content .tab-pane.active { height: 100%; }
+
+/* navset_pill_list height chain */
+.bigdash-app .flex-grow-1.p-0 > .row { height: 100%; }
+.bigdash-app .flex-grow-1.p-0 > .row > .col-sm-11 { height: 100%; display: flex; flex-direction: column; }
+.bigdash-app .flex-grow-1.p-0 > .row > .col-sm-11 .tab-content { flex: 1; min-height: 0; }
+.bigdash-app .flex-grow-1.p-0 > .row > .col-sm-11 .tab-content .tab-pane.active { height: 100%; }
 
 /* space in innner tabpanes */
 .tabbable .tab-content {

@@ -37,3 +37,110 @@
     background-size: 50% 100% !important;
     animation: nanobar-sweep 2s ease-in-out infinite normal;
 }
+  }
+
+// --- board-skeleton: full-canvas wireframe shown while a board's real UI loads ---
+
+// .big-tab (and everything above it up to <body>) is position:static, so
+// board-skeleton's position:absolute would otherwise escape past the two
+// bigdash sidebars to the viewport instead of confining to the middle canvas.
+.big-tab {
+  position: relative;
+}
+
+.board-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  padding: 42px 46px;
+  background-color: #F7FAFD;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  .sk-title {
+    flex: 0 0 auto;
+    height: 26px;
+    width: 240px;
+    border-radius: 4px;
+    margin-bottom: 22px;
+  }
+
+  .sk-tabs {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 24px;
+    margin-bottom: 26px;
+
+    .sk-tab {
+      height: 13px;
+      width: 74px;
+      border-radius: 3px;
+    }
+  }
+
+  .sk-banner {
+    flex: 0 0 auto;
+    height: 38px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+  }
+
+  .sk-row {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    gap: 26px;
+    margin-bottom: 26px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .sk-card {
+      flex: 1 1 0;
+    }
+  }
+
+  .sk-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+    .sk-card-header {
+      height: 13px;
+      border-radius: 3px;
+      margin-bottom: 26px;
+    }
+
+    .sk-card-body {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+
+      .sk-bar {
+        flex: 1;
+        border-radius: 2px 2px 0 0;
+      }
+    }
+  }
+
+  .sk-title,
+  .sk-tab,
+  .sk-banner,
+  .sk-card-header,
+  .sk-bar {
+    background: linear-gradient(90deg, #e7ebf0 25%, #f2f4f7 37%, #e7ebf0 63%);
+    background-size: 400% 100%;
+    animation: sk-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sk-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

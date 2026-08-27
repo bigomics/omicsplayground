@@ -62,7 +62,6 @@ TimeSeriesInputs <- function(id) {
   )
 }
 
-
 TimeSeriesUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
@@ -79,11 +78,11 @@ TimeSeriesUI <- function(id) {
         "Statistics",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(parallel_info),
           bslib::layout_columns(
-            height = "calc(100vh - 181px)",
+            height = "100%",
             col_widths = c(6, 6),
             TimeSeriesBoard.features_table(
               id = ns("features"),
@@ -101,10 +100,11 @@ TimeSeriesUI <- function(id) {
         "Clustering",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(parallel_info),
           bslib::layout_columns(
-            height = "calc(100vh - 181px)",
+            height = "100%",
             col_widths = c(6, 6),
             bslib::layout_columns(
               col_widths = 12,

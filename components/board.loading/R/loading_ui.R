@@ -20,8 +20,13 @@ LoadingInputs <- function(id) {
 LoadingUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  board_header <- fillRow(
-    flex = c(NA, 1, NA),
+  ## A plain flex row rather than fillRow(): fillRow() hardcodes height:100% on
+  ## its container and positions its inner items absolutely, so it has no
+  ## content height of its own. That is fine inside an auto-sized grid row (how
+  ## the boards use it) but not as a flex child of the full-height page here --
+  ## it resolved its 100% against the window and took half of it.
+  board_header <- shiny::div(
+    class = "d-flex align-items-center justify-content-between",
     shiny::div(
       id = "navheader-current-section",
       HTML("Data Library &nbsp;"),
@@ -31,7 +36,6 @@ LoadingUI <- function(id) {
         style = "color: #ccc;"
       )
     ),
-    div(),
     shiny::div(shiny::uiOutput(ns("pgx_stats_ui")), id = "navheader-dataset-stats")
   )
 
@@ -39,7 +43,8 @@ LoadingUI <- function(id) {
     "My Datasets",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 141px)",
+      height = "100%",
+      row_heights = list("auto", "auto", 1),
       uiOutput(ns("sharing_alert")),
       div(
         shiny::actionButton(
@@ -57,12 +62,13 @@ LoadingUI <- function(id) {
       ),
       bslib::layout_columns(
         col_widths = c(8, 4),
+        height = "100%",
         loading_table_datasets_ui(
           ns("pgxtable"),
           title = "Available datasets",
           info.text = "This table contains information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, genesets, corresponding phenotypes and the creation date.",
           caption = "Table of datasets available in the platform.",
-          height = c("100vh", 700),
+          height = c("100%", 700),
           width = c("100%", "100%")
         ),
         loading_tsne_ui(
@@ -78,7 +84,7 @@ LoadingUI <- function(id) {
           ),
           info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/methods/#clustering",
           caption = "Similarity clustering of fold-change signatures colored by data sets using t-SNE.",
-          height = c("100vh", "70vh"),
+          height = c("100%", "70vh"),
           width = c("auto", "100%")
         )
       ) ## end of 7fr-5fr
@@ -89,7 +95,8 @@ LoadingUI <- function(id) {
     opt$PUBLIC_DATASETS_LABEL,
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 181px)",
+      height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(
         if (opt$ENABLE_PUBLIC_LOAD) {
           paste0("This panel shows all <b>", tolower(opt$PUBLIC_DATASETS_LABEL), "</b>. You can select a public dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE.")
@@ -100,7 +107,7 @@ LoadingUI <- function(id) {
       ),
       bslib::layout_columns(
         col_widths = c(8, 4),
-        height = "calc(100vh - 181px)",
+        height = "100%",
         loading_table_datasets_public_ui(
           ns("pgxtable_public"),
           title = opt$PUBLIC_DATASETS_LABEL,
@@ -138,7 +145,8 @@ LoadingUI <- function(id) {
     value = "archive_tab",
     bslib::layout_columns(
       col_widths = 12,
-      height = "calc(100vh - 181px)",
+      height = "100%",
+      row_heights = list("auto", 1),
       bs_alert(
         if (opt$ENABLE_PUBLIC_LOAD) {
           "This panel shows all <b>Archived datasets</b>. You can select an archived dataset and click <b>Load selected</b> to load it directly for analysis (without importing), or click <b>Import Dataset</b> to copy it to your library. The <b>Signature t-SNE</b> shows similarity clustering of fold-change signatures using t-SNE."
@@ -149,7 +157,7 @@ LoadingUI <- function(id) {
       ),
       bslib::layout_columns(
         col_widths = c(8, 4),
-        height = "calc(100vh - 181px)",
+        height = "100%",
         loading_table_datasets_public_ui(
           ns("pgxtable_archive"),
           title = "Archived datasets",
@@ -182,7 +190,7 @@ LoadingUI <- function(id) {
     ),
     info.extra_link = "https://omicsplayground.readthedocs.io/en/latest/data/#archived-datasets",
     caption = "Table with archived datasets available in the platform.",
-    height = "calc(100vh - 181px)",
+    height = "100%",
     width = "100%"
   )
 
@@ -191,9 +199,9 @@ LoadingUI <- function(id) {
     value = "sharing_tab",
     bslib::layout_columns(
       col_widths = 12,
-      #height = "calc(100vh - 181px)",
+      #height = "100%",
       height = "100%",
-      row_heights = c("auto",1),
+      row_heights = list("auto",1),
       bs_alert("This Sharing panel shows <strong>received datasets</strong> that are not yet imported to your library, and your <strong>shared datasets</strong> that are still waiting to be accepted by the receiver. Please accept or refuse each received file, and/or resend a message or cancel your shared datasets using the action buttons on the right of the tables."),
       bslib::layout_columns(
         col_widths = c(6,6),

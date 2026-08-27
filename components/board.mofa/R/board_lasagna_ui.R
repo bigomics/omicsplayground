@@ -58,10 +58,6 @@ MPARTITE_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure
 LasagnaUI <- function(id) {
   ns <- shiny::NS(id)
 
-  fullH <- 700
-  rowH1 <- 250
-  rowH2 <- 440
-
   OmicsBoardUI(
     ns = ns,
     title = "LASAGNA",
@@ -71,12 +67,12 @@ LasagnaUI <- function(id) {
         "Multi-layer model",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>LASAGNA</b> is a stacked layer model for multi-omics where each layer corresponds to a data type. The acronym stands for a <u>L</u>ayered <u>A</u>pproach to <u>S</u>imultaneous <u>A</u>nalysis of <u>G</u>enomic and <u>N</u>etwork <u>A</u>ssociations'.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 180px)",
+            height = "100%",
             mofa_plot_lasagna3D_ui(
               ns("lasagna"),
               title = "Multi-layer model",
@@ -105,11 +101,12 @@ LasagnaUI <- function(id) {
         "Multi-partite graph",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML(MPARTITE_INFO)),
           bslib::layout_columns(
             col_widths = 12,
-            # height = "calc(100vh - 180px)",
+            # height = "100%",
             row_heights = c(3, 2),
             mofa_plot_lasagna_partite_ui(
               ns("lasagnaPartite"),

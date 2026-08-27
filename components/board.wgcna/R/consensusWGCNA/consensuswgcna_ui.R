@@ -37,15 +37,10 @@ ConsensusWGCNA_Inputs <- function(id) {
   )
 }
 
-
 CONSENSUSWGCNA_INFO <- "The <b>Multi-partite graph</b> shows the correlation structure between multiple sets of features. The color of the edges correspond to positive (purple) and negative (yellow) correlation. Thicker edges mean higher correlation. The sizes of the circles represent the page-rank centrality of the feature. The log2FC is indicated for the chosen comparison. The node color corresponds to up (red) and down (blue) regulation."
 
 ConsensusWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
-
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
 
   OmicsBoardUI(
     ns = ns,
@@ -58,12 +53,12 @@ ConsensusWGCNA_UI <- function(id) {
         "Dendrograms",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1, 0.7),
+          height = "100%",
+          row_heights = list("auto", 10, 7),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets by computing overlapping modules.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            # height = "calc(100vh - 180px)",
+            # height = "100%",
             height = "100vh",
             consensusWGCNA_plot_dendrograms_ui(
               ns("consensusWGCNADendro"),
@@ -91,8 +86,8 @@ ConsensusWGCNA_UI <- function(id) {
         "Sample Clustering",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
             col_widths = c(12),
@@ -114,8 +109,8 @@ ConsensusWGCNA_UI <- function(id) {
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Consensus Module-Trait</b> analysis identifies modules that have high correlation with your phenotypes. Modules are concordant if the trait correlation have same sign in the consensus groups, i.e. always up (or down) regulated in all groups.")),
           bslib::layout_columns(
             col_widths = c(7, 5),
@@ -140,7 +135,7 @@ ConsensusWGCNA_UI <- function(id) {
         ),
         bslib::layout_columns(
           col_widths = c(12),
-          height = "calc(100vh - 180px)",
+          height = "100%",
           consensusWGCNA_plot_moduletrait_scatter_ui(
             ns("consensusWGCNATrait"),
             title = "Module-Trait Scatterplots",
@@ -157,8 +152,8 @@ ConsensusWGCNA_UI <- function(id) {
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>Consensus WGCNA</b> is an application of WGCNA to identify modules that are conserved across two or more datasets (or datatypes, phenotypes) by clustering each dataset (or datatype, phenotype) and computing overlapping modules.")),
           bslib::layout_columns(
             col_widths = c(3, 4, 5),

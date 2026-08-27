@@ -76,7 +76,7 @@ TcgaUI <- function(id) {
         "TCGA survival",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           tcga_plot_survival_ui(
             ns("tcga_tcgasurv"),
             caption = paste(
