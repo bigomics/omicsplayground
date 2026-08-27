@@ -12,7 +12,7 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     commonmark,
-    omicsagentovi,
+    omicsagentovi (>= 0.5.90),
     omicsai (>= 0.3.8),
     omicspgx,
     omicspgxmcp,
