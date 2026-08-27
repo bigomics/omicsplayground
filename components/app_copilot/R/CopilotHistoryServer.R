@@ -31,7 +31,7 @@ copilot_format_relative_time <- function(iso) {
 CopilotHistoryUI <- function(id) {
   ns <- shiny::NS(id)
   shiny::div(
-    style = "padding: 8px;",
+    class = "copilot-history-panel",
     DT::dataTableOutput(ns("history_table"), height = "auto"),
     shiny::uiOutput(ns("delete_ui"))
   )
@@ -170,7 +170,11 @@ CopilotHistoryServer <- function(id, session_dir,
         options   = list(
           pageLength     = 20,
           dom            = "ft",
-          scrollY        = "calc(100vh - 320px)",
+          # Placeholder height -- just tells DT to build the internal
+          # `.dataTables_scrollBody` element; `.copilot-history-panel` CSS
+          # (scss/components/_obi.scss) overrides it to fill the actual
+          # flex-shrunk container instead of a hardcoded viewport height.
+          scrollY        = "200px",
           scrollCollapse = TRUE
         )
       )
