@@ -44,7 +44,7 @@ launcher_ui <- function(id) {
       input = "launch_mythril",
       icon = "gem",
       label = "Mythril",
-      description = "Methylation explorer",
+      description = "Methylome explorer",
       rgb = c(155,155,165),
       group = "Dashboards",
       badge = "soon"
