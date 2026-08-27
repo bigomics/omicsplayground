@@ -207,7 +207,9 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
         message = "Preparing your dashboard...",
         value = 0,
         {
-          loaded_tabs <<- bigdash::bigTabsLazy(lazy_tabs)
+          loaded_tabs <<- bigdash::bigTabsLazy(
+            lazy_tabs
+          )
 
           shinyjs::enable(selector = "a[data-value='Dashboard']")
           shinyjs::enable(selector = "a[data-value='Studio']")
