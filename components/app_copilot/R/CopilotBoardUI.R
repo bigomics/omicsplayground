@@ -101,8 +101,10 @@ CopilotBoardUI <- function(id) {
 
   board <- OmicsBoardUI(
     ns = ns,
-    title = "Chat with Obi",
+    #title = "AI Copilot",
+    title = "Obi AI <span style='font-size: 0.7em;'>&mdash; chat with your data</span>",
     info = FALSE,
+    header_margin = "0px",
     ui
   )
   return(board)

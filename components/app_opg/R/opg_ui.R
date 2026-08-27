@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-opg_ui <- function() {
+opg_ui <- function(id) {
 
   message("\n======================================================")
   message("======================= UI ===========================")
@@ -12,12 +12,12 @@ opg_ui <- function() {
   #-------------------------------------------------------
   ## Build USERMENU
   #-------------------------------------------------------
-  VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
   createUI <- function(menu_tree) {
     
     version <- scan(file.path(OPG, "VERSION"), character())[1]
-    id <- "maintabs"
+    ##id <- "maintabs"
     
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
@@ -52,15 +52,13 @@ opg_ui <- function() {
     #ENABLED["welcome"] <<- TRUE
     #ENABLED["load"] <<- TRUE
 
-    dbg("names(menu_tree) = ", names(menu_tree))
-    dbg("names.ENABLED = ", names(ENABLED))
     menu_tree <- menu_tree[MODULES_ENABLED]
-    ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
     createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
-        div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        #div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        bigdash::sidebarItem(title, paste0(name, "-tab"))      
       }
       sidebar_menu_item <- function(title, name) {
         bigdash::sidebarMenuItem(title, paste0(name, "-tab"))
@@ -92,9 +90,9 @@ opg_ui <- function() {
     basic_menu_tree <- list(
       "DataView"                = c(dataview       = "DataView"),
       "Cluster Samples"         = c(clustersamples = "Cluster Samples"),
-      "Differential expression" = c(diffexpr       = "Differential expression"),
+      "Differential Expression" = c(diffexpr       = "Differential Expression"),
       "Geneset Enrichment"      = c(enrich         = "Geneset Enrichment"),
-      "Pathway analysis"        = c(pathway        = "Pathway analysis")
+      "Pathway Analysis"        = c(pathway        = "Pathway Analysis")
     )
 
     initial_is_full <- (opt$USER_LEVEL != "BASIC")
@@ -136,6 +134,7 @@ opg_ui <- function() {
     )
     
     bigdash::bigPage(
+      id = id,  ## default was 'app'
       shiny.i18n::usei18n(i18n),
       ## shiny.i18n's subscribe() hands jQuery's Event object straight to Shiny's
       ## callback, which expects a boolean, so every update_lang() logs
@@ -146,14 +145,13 @@ opg_ui <- function() {
            function (el, callback) { $(el).on('change.shinyi18n', function () { callback(false); }); };"
       )),
       # header,
-      title = "Omics Playground 4",
+      title = "Omics Playground",
       theme = big_theme2,
       navbar = navbar,
       sidebar = sidebar,
       settings = bigdash::settings(
         "Settings"
       ),
-      ## bigdash::sidebarHelp(
       make_sidebarHelp(
         bigdash::sidebarTabHelp(
           "upload-tab",
@@ -323,8 +321,7 @@ opg_ui <- function() {
         MODULE.multiomics$module_ui(),
         MODULE.wgcna$module_ui(),
         MODULE.epigenomics$module_ui()
-      )
-      ## UploadUI("upload")
+      ) 
     ) ## end of bigPage
   }
 

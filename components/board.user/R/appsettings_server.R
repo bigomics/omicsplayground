@@ -92,13 +92,11 @@ AppSettingsBoard <- function(id, auth, pgx) {
       )
     })
 
-    ## Warn the user when they switch AI on.
-    ##
-    ## ignoreInit = TRUE, or this fires when input$enable_ai receives its
-    ## initial value -- i.e. at session start, popping the LLM data-exposure
-    ## warning (or the "No LLM server available" error) over the app before
-    ## the user has been near the settings panel. The warning is about the act
-    ## of switching AI on, so only a real change should raise it.
+
+    ## Warn the user when they switch AI on. ignoreInit avoids firing this
+    ## on session start, since "Enable AI" defaults to on -- the equivalent
+    ## warning is instead shown once on first visit to the Obi AI tab (see
+    ## app/R/server.R).
     shiny::observeEvent(input$enable_ai, {
       model <- input$llm_reports
       if (isTRUE(input$enable_ai)) {

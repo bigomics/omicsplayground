@@ -4,13 +4,13 @@ TAG=$(BRANCH)
 ARG=
 
 run: sass version rm.locks
-	Rscript dev/run_app.R
+	Rscript dev/run_app.R $(if $(PORT),$(PORT),3838)
 
 run.headless:
 	Rscript dev/run_app_headless.R
 
 run.tee: 
-	Rscript dev/run_app.R 2>&1 | tee -a run.log
+	Rscript dev/run_app.R $(if $(PORT),$(PORT),3838) 2>&1 | tee -a run.log
 
 run.profvis:
 	Rscript dev/run_app_profvis.R

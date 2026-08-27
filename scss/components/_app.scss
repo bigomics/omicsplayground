@@ -1,5 +1,5 @@
 
-#app .col-sm-1.well {
+#app-shell .col-sm-1.well {
     width: 75px;
     background-color: #2c3e50;
     display: flex;
@@ -9,7 +9,7 @@
     height: 100vh;
 }
 
-#app .col-sm-11 {
+#app-shell .col-sm-11 {
     width: calc(100% - 75px);
     height: 100vh;
     padding: 0px;
@@ -32,6 +32,7 @@
     font-size: 0.8em;
     padding: 15px 0 4px 0;
     white-space: normal;
+    line-height: 1;
 }
 
 #app-sidebar .nav-link.active {
@@ -58,14 +59,15 @@
 }
 
 #app-sidebar i {
-    font-size: 28px;
+    font-size: 30px;
+    padding-bottom: 3px;
 }
 
-#app .col-sm-11>.tab-content {
+#app-shell .col-sm-11>.tab-content {
     height: 100%;
 }
 
-#app .col-sm-11>.tab-content>.tab-pane {
+#app-shell .col-sm-11>.tab-content>.tab-pane {
     background-color: #F7FAFD;
     height: 100%;
 }
@@ -321,4 +323,46 @@
 // navsets show or hide their panels.
 .fullheight-page .bslib-mb-spacing {
     margin-bottom: 0;
+}
+
+// Settings cards (bslib::card, and the bslib::card-based PlotModuleUI /
+// TableModuleUI panels on "New features" / "Package versions") size to
+// content by default and left most of the now-full-height page blank.
+// navset_pill_list has no .tabbable wrapper -- its nav (#app_settings-tabs1)
+// and each panel's content are sibling columns in the same .row, so scope
+// there instead; that keeps this off cards elsewhere in the app.
+.row:has(> .col-sm-2.well > #app_settings-tabs1) .card {
+    min-height: 50vh;
+}
+
+// Package versions and Resource info are TableModuleUI cards (class
+// "tablemodule") holding a data table -- more row height is directly
+// useful there, so let them fill the row instead of stopping at the 50vh
+// minimum every other settings card gets.
+//
+// Two things fight this: (1) TableModuleUI hardcodes an inline
+// style="height:400px" on the card, which beats a plain CSS height and
+// needs !important to override; (2) none of the ancestors between the
+// navset's own .row and the card (.col-sm-10, .tab-content, .tab-pane) had
+// a definite height of their own -- percentage heights need one, so the
+// whole chain has to carry height:100% down to the card, same pattern as
+// #app-shell's outer nav.
+.row:has(> .col-sm-2.well > #app_settings-tabs1) {
+    height: 100%;
+
+    > .col-sm-10 {
+        height: 100%;
+
+        > .tab-content {
+            height: 100%;
+
+            > .tab-pane.active {
+                height: 100%;
+            }
+        }
+    }
+}
+
+.row:has(> .col-sm-2.well > #app_settings-tabs1) .card.tablemodule {
+    height: 100% !important;
 }

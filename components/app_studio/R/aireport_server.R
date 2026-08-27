@@ -20,7 +20,7 @@ if(0) {
 AiReportSettings <- function(id) {
   ns <- shiny::NS(id)
 
-  info ="AI reports for the current dataset. These reports are AI-generated and can be inaccurate; please always double-check its responses."
+  info ="Reports for the current dataset. These reports are AI-generated and can be inaccurate; please always double-check its responses."
   
   shiny::div(
     style = "padding: 10px 15px;",
@@ -117,7 +117,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
     ns <- session$ns ## NAMESPACE
     
     pdf_tempdir <- tempdir()
-    opg.logo = file.path(OPG,"components/app/R/www/bigomics-logo-small.png")
+    opg.logo = file.path(OPG,"components/assets/bigomics-logo-small.png")
     logopath = file.path(pdf_tempdir,"logo.png")
     file.copy(opg.logo, logopath)
     

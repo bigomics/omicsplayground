@@ -7,6 +7,30 @@ html {
   // page's actual scrolling root.
   overflow-x: hidden;
 
+  // HubSpot's interactive-content embed (hubspot-embed.html) leaves behind
+  // #hs-interactives-modal-overlay: position:absolute, z-index:-1 (so
+  // invisible), but sized to its modal content rather than the viewport.
+  // That box is taller than 100vh, and being absolutely positioned with no
+  // positioned ancestor it still inflates body's scrollable height, forcing
+  // a page-wide vertical scrollbar on every page even though there is
+  // nothing visible to scroll to.
+  #hs-interactives-modal-overlay {
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  // Same script also plants #hs-web-interactives-floating-container in
+  // normal flow at the end of body. It's empty and its own children (the
+  // corner "anchor" divs used to position popups) are already
+  // position:fixed, but the static container itself still occupies a slot
+  // in the flow -- landing a couple dozen px below the last real content
+  // and, being a box with no height, still inflating body's scrollHeight by
+  // its own offsetTop. display:contents removes its box entirely without
+  // touching the fixed-positioned anchor children.
+  #hs-web-interactives-floating-container {
+    display: contents;
+  }
+
   body {
       a {
 	  color: $main;
@@ -325,7 +349,7 @@ html {
   }
 
   div#navheader-current-section {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 600;
     // 17px tighter than it used to be (was margin-top 15 + padding-top 10):
     // this puts the title's baseline on the same line as the sidebar's "Menu"

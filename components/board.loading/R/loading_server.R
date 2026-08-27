@@ -99,34 +99,28 @@ LoadingBoard <- function(id,
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
-    observeEvent(load_example(),
-      {
-        # get the row which corresponds to "example-data"
-        data_names <- as.character(pgxtable$data()$dataset)
-        example_row <- which(data_names == "example-data")[1]
-        has.exampledata <- ("example-data" %in% data_names)
+    observeEvent(load_example(), {
 
-        # if not found, throw error modal that example-data doesnt exist
-        ## if (is.na(example_row)) {
-        if (!has.exampledata) {
-          shinyalert::shinyalert(
-            title = "No example data",
-            text = "Sorry, the example dataset could not be found.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        } else {
-          loadAndActivatePGX("example-data")
-
-          ## # open the left & right sidebar
-          ## bigdash.openSettings(lock = TRUE)
-          ## bigdash.openSidebar()
-          ## bigdash.selectTab(session, selected = "dataview-tab")
-          ## ## shiny::removeModal()
-        }
-      },
-      ignoreInit = TRUE
+      # get the row which corresponds to "example-data"
+      data_names <- as.character(pgxtable$data()$dataset)
+      example_row <- which(data_names == "example-data")[1]
+      has.exampledata <- ("example-data" %in% data_names)
+      
+      # if not found, throw error modal that example-data doesnt exist
+      ## if (is.na(example_row)) {
+      if (!has.exampledata) {
+        shinyalert::shinyalert(
+          title = "No example data",
+          text = "Sorry, the example dataset could not be found.",
+          type = "warning",
+          closeOnClickOutside = FALSE
+        )
+        return(NULL)
+      } else {
+        loadAndActivatePGX("example-data")
+      }
+    },
+    ignoreInit = TRUE
     )
 
     ## ================================================================================

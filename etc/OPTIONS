@@ -2,9 +2,11 @@
 
 TITLE                = 'Omics Playground'
 HOSTNAME             = server.local
-APACHE_COOKIE_PATH   = /app/omicsplayground/
-#AUTHENTICATION       = none
-AUTHENTICATION      = password
+
+#------------- authentication ----------------
+
+AUTHENTICATION       = none
+#AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
@@ -36,6 +38,7 @@ MAX_SHARED_QUEUE     = 3
 MAX_SESSIONS         = 2
 TIMEOUT              = 0
 WATERMARK            = TRUE
+APACHE_COOKIE_PATH   = /app/omicsplayground/
 HUBSPOT_CHECK        = TRUE
 USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
@@ -55,9 +58,11 @@ COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
 
+ENABLE_ACROSS        = TRUE
+
 #------------- developer options ---------------
 
 DEVMODE              = FALSE
 DEV_AUTOLOAD         = FALSE
 ENABLE_PLOTLY_PURGE  = TRUE
-ENABLE_ADMIN         = TRUE
+ENABLE_ADMIN         = FALSE

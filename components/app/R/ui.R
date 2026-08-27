@@ -46,7 +46,7 @@ app_ui <- function(x) {
     )
 
     header <- shiny::tagList(
-      shiny::tags$head(htmltools::includeHTML("www/hubspot-embed.html")),
+      shiny::tags$head(htmltools::includeHTML(file.path(APPDIR,"assets/hubspot-embed.html"))),
       ##    gtag2, ## Google Tag Manager???
       shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
       shiny::tags$script(src = "custom/close-message.js"),
@@ -103,143 +103,133 @@ app_ui <- function(x) {
       signout_link <- nav_signout("Sign out", onClick = NULL,
         href = paste0(opt$APACHE_COOKIE_PATH, "mellon/logout?ReturnTo=#"))
     }
-    
-    ## new multi-app UI
-    nav_page <- function(...) {
-      bslib::page_fluid(
-        theme = bigdash::big_theme(),
-        title = NULL,
-        style = "padding: 0px;",
-        bigdash::navbar(
-          title = tags$img(
-            src = "assets/img/bigomics.png",
-            width = "110"
-          ),
-          center = tags$div(
-              "title in navbar",
-              style = 'text-align:center;width: 100%;'
-          ),
-          left = NULL,
-          NULL
-        ),
-        ... 
-      )
-    }
-    
-    nav_page <- function(p) {p}  ## dummy
-    
-    ui <- bigdash::bigPage(
-      header,
-      navbar = NULL,
-      bslib::navset_pill_list(
-        id = "app-sidebar",
-        ##widths = c("50px","calc(100% - 50px)"),
-        widths = c(1,11),
-        selected = "Home",
-        well = TRUE,
-        bslib::nav_panel(
-          title = "Home",
-          icon=icon("home"),
-          nav_page(WelcomeBoardUI("welcome2"))
-        ),
-        bslib::nav_panel(
-          title = "Library",
-          icon=icon("book"),
-          nav_page(
-            div(LoadingUI("load"), class = "px-4 py-0 fullheight-page")
+
+    ## Plain bslib page rather than an outer bigdash::bigPage(): the
+    ## "Dashboard" and "Qsee" nav_panels below embed opg_ui()/qsee_ui(),
+    ## each their own bigdash::bigPage(). 
+    ui <- shiny::bootstrapPage(
+      title = "BigOmics",
+      theme = bigdash::big_theme(),
+      bigdash::dependencies(),
+      div(
+        id = "app-shell",
+        class = "d-flex",
+        style = "min-height:100vh;",
+        div(
+          class = "flex-grow-1 p-0 w-100",
+          header,
+          bslib::navset_pill_list(
+            id = "app-sidebar",
+            ##widths = c("50px","calc(100% - 50px)"),
+            widths = c(1,11),
+            selected = "Home",
+            well = TRUE,
+            ## bslib::nav_panel(
+            ##   title = "Home",
+            ##   icon = icon("home"),
+            ##   omicspanel(WelcomeBoardUI("welcome2"))
+            ## ),
+            bslib::nav_panel(
+              title = "Home",
+              icon = icon("home"),
+              #icon = icon("app-store-ios", style="font-size: 38px;"),
+              launcher_ui("apps")
+            ),
+            bslib::nav_panel(
+              title = "Library",
+              icon=icon("book"),
+              omicspanel(LoadingUI("load"))
+            ),
+            bslib::nav_panel(
+              title = "Dashboard",
+              icon = icon("chart-line"),
+              opg_ui("app")
+            ),
+            ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
+            ## The runtime "Enable AI" switch further shows/hides them per session
+            ## via bigdash.toggleTab in appsettings_server.R.
+            if (isTRUE(opt$ENABLE_AI)) {
+              bslib::nav_panel(
+                title = HTML("AI&nbsp;Studio"),
+                value = "Studio",
+                icon = icon("clapperboard"),
+                omicspanel(StudioUI("studio"))
+              )
+            },
+            if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
+              bslib::nav_panel(
+                #title = HTML("AI&nbsp;Copilot"),
+                title = shiny::tagList(icon("robot"), tags$br(), HTML("Obi&nbsp;AI")),
+                value = "Copilot",
+                omicspanel(CopilotBoardUI("copilot2"))
+              )
+            },
+            if(isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel(
+                title = "Runs", icon = icon("person-running"),
+                omicspanel(RunMonitorUI("runmonitor"))
+              )
+            },
+            ## Hidden panels
+            bslib::nav_panel_hidden("Upload",
+              omicspanel(UploadUI("upload"))
+            ),
+            bslib::nav_panel_hidden("UserProfile",
+              omicspanel(UserProfileUI("user_profile"))
+            ),
+            if (isTRUE(opt$ENABLE_ADMIN)) {
+              bslib::nav_panel_hidden("AdminPanel",
+                omicspanel(AdminPanelUI("admin_panel"))
+              )
+            },
+            ## Tools
+            if(isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel_hidden("Prism",
+                omicspanel(prism_ui("prism"))
+              )
+            },
+            if(isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel_hidden("IDconvert",
+                omicspanel(idconvert_ui("idconvert"))
+              )
+            },
+            ## if(isTRUE(opt$DEVMODE)) {
+            ##   bslib::nav_panel_hidden(
+            ##     value = "AcrossDatasets",
+            ##     omicspanel(AcrossUI("across"))
+            ##   )
+            ## },
+            ## lower settings buttons
+            bslib::nav_spacer(),
+            bslib::nav_panel("Settings", icon=icon("cog"),
+              omicspanel(AppSettingsUI("app_settings"))
+            ),
+            bslib::nav_menu(
+              title = "Help",
+              icon = icon("circle-question"),
+              bslib::nav_item(NULL, actionLink("navbar_about", "About")),
+              nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
+              nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
+              nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
+              nav_weblink("Reddit r/omicsplayground", href="https://www.reddit.com/r/omicsplayground"),
+              nav_weblink("Submit a support ticket", href="https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t"),
+              nav_weblink("Github issues", href="https://github.com/bigomics/omicsplayground/issues/"),
+              nav_weblink("Case studies", href="https://bigomics.ch/case-studies/")
+            ),
+            bslib::nav_menu(
+              title = "",
+              icon = icon("user"),
+              bslib::nav_item(NULL, actionLink("my_profile", "My profile")),
+              if (isTRUE(opt$ENABLE_ADMIN)) {
+                bslib::nav_item(NULL, actionLink("show_admin", "Admin panel"))
+              },
+              bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),
+              nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
+              nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),
+              signout_link
+              )
           )
-        ),
-        bslib::nav_panel(
-          title = "Dashboard",
-          icon = icon("chart-line"),
-          opg_ui()
-        ),
-        if (isTRUE(opt$ENABLE_ACROSS)) {
-          bslib::nav_panel(
-            title = HTML("Across&nbsp;datasets"),
-            value = "AcrossDatasets",
-            icon = icon("layer-group"),
-            div(AcrossUI("across"), class = "px-4 py-0")
-          )
-        },
-        ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
-        ## The runtime "Enable AI" switch further shows/hides them per session
-        ## via bigdash.toggleTab in appsettings_server.R.
-        if (isTRUE(opt$ENABLE_AI)) {
-          bslib::nav_panel(
-            title = HTML("AI&nbsp;Studio"),
-            value="Studio",
-            icon = icon("clapperboard"),
-            div(StudioUI("studio"), class = "px-4 py-0 fullheight-page")
-          )
-        },
-        if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
-          bslib::nav_panel(
-            title = tagList(icon("robot"), tags$br(), "Obi"),
-            value = "Copilot",
-            div(CopilotBoardUI("copilot2"), class = "px-4 py-0 fullheight-page")
-          )
-        },
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(
-            title = "Runs", icon=icon("person-running"),
-            div( class = "px-4 py-0",
-              RunMonitorUI("runmonitor")
-            )
-          )
-        },
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel(title = "Tools", icon = icon("tools"),
-            tools_ui("tools")
-          )
-        },
-        ## Hidden panels (e.g. tools)
-        if(isTRUE(opt$DEVMODE)) {
-          bslib::nav_panel_hidden("Prism",
-            div(prism_ui("prism"), class='px-4 py-0')
-          )
-        },
-        bslib::nav_panel_hidden("Upload",
-          div(UploadUI("upload"), class='px-4 py-0')           
-        ),
-        bslib::nav_panel_hidden("UserProfile",
-          div(UserProfileUI("user_profile"), class='px-4 py-0')
-        ),
-        if (isTRUE(opt$ENABLE_ADMIN)) {
-          bslib::nav_panel_hidden("AdminPanel",
-            div(AdminPanelUI("admin_panel"), class='px-4 py-0')
-          )
-        },
-        
-        ## lower settings buttons
-        bslib::nav_spacer(),
-        bslib::nav_panel("Settings", icon=icon("cog"),
-          div(AppSettingsUI("app_settings"), class='px-4 py-0') 
-        ),          
-        bslib::nav_menu(
-          title = "Help",
-          icon = icon("circle-question"),
-          bslib::nav_item(NULL, actionLink("navbar_about", "About")),
-          nav_weblink("Documentation", href="https://omicsplayground.readthedocs.io/"),
-          nav_weblink("Video tutorials", href="https://bigomics.ch/tutorials/"),
-          nav_weblink("Google forum", href="https://groups.google.com/d/forum/omicsplayground/"),
-          nav_weblink("Reddit r/omicsplayground", href="https://www.reddit.com/r/omicsplayground"),
-          nav_weblink("Submit a support ticket", href="https://share-eu1.hsforms.com/1glP7Cm6GQrWIGXgZrC0qrweva7t"),
-          nav_weblink("Github issues", href="https://github.com/bigomics/omicsplayground/issues/"),
-          nav_weblink("Case studies", href="https://bigomics.ch/case-studies/")
-        ),
-        bslib::nav_menu(
-          title = "",
-          icon = icon("user"),
-          bslib::nav_item(NULL, actionLink("my_profile", "My profile")),
-          if (isTRUE(opt$ENABLE_ADMIN)) {
-            bslib::nav_item(NULL, actionLink("show_admin", "Admin panel"))
-          },
-          bslib::nav_item(NULL, InviteFriendUI("invite", type="link")),            
-          nav_weblink("Pricing &amp; Features", href="https://bigomics.ch/pricing/"),
-          nav_weblink("Buy us coffee", href="https://buymeacoffee.com/bigomics"),            
-          signout_link
-          )
+        )
       )
     )
 

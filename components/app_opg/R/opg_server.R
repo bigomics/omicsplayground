@@ -2,9 +2,86 @@
 ## NOTE: This is not a real shiny module (yet...). We should move as
 ## much as possible OPG server related code here.
 
-opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
+opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir,
+                       load_example = NULL) {
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
+  
+  if(id != "app") {
+    stop("FATAL: opg_server is not a proper ShinyModule yet")
+  }
+  
+  ## -------------------------------------------------------------
+  ## No dataset loaded: offer the example dataset (like Qsee)
+  ## -------------------------------------------------------------
+
+  ## The Dashboard can be entered without any dataset (e.g. from the app
+  ## launcher, which selects the nav panel programmatically and so bypasses
+  ## the disabled nav link). Then all boards are empty, so ask the user
+  ## whether to load the example dataset instead.
+  shiny::observeEvent(input[["app-sidebar"]], {
+    shiny::req(input[["app-sidebar"]] == "Dashboard")
+    shiny::req(isTRUE(auth$logged))
+    noX <- is.null(PGX$X) || length(PGX$X) == 0
+    if (!noX) return(NULL)
+    info("[SERVER] no dataset loaded: asking for example data")
+    shiny::showModal(
+      shiny::modalDialog(
+        title = "No dataset loaded",
+        shiny::p(
+          "No dataset has been loaded yet. What would you like to do?"
+        ),
+        div(
+          style = "text-align:center;",
+          shiny::actionButton(
+            "opg_load_example_from_popup",
+            "Load example dataset",
+            class = "btn btn-outline-info welcome-btn-sm"
+          ),
+          shiny::actionButton(
+            "opg_upload_new_from_popup",
+            "Upload new data",
+            class = "btn btn-outline-info welcome-btn-sm"
+          ),
+          shiny::actionButton(
+            "opg_load_library_from_popup",
+            "Load from library",
+            class = "btn btn-outline-primary welcome-btn-sm"
+          )
+        ),
+        ##footer = shiny::modalButton("Cancel"),
+        footer = NULL,
+        size = "s",
+        easyClose = FALSE
+      )
+    )
+  })
+
+  shiny::observeEvent(input$opg_load_example_from_popup, {
+    shiny::removeModal()
+    if (is.null(load_example)) {
+      warning("[SERVER] !!! no load_example trigger available")
+      return(NULL)
+    }
+    if (is.null(load_example())) {
+      load_example(1)
+    } else {
+      load_example(load_example() + 1)
+    }
+    info("[SERVER] loading example data from popup")
+  })
+
+  shiny::observeEvent(input$opg_upload_new_from_popup, {
+    shiny::removeModal()
+    info("[SERVER] opening upload panel from popup")
+    bslib::nav_select("app-sidebar", selected = "Upload", session = session)
+  })
+
+  shiny::observeEvent(input$opg_load_library_from_popup, {
+    shiny::removeModal()
+    info("[SERVER] opening library panel from popup")
+    bslib::nav_select("app-sidebar", selected = "Library", session = session)
+  })
 
   ## Hide/show tabs. Open sidebar and settings
   shiny::observeEvent(
@@ -130,7 +207,9 @@ opg_server <- function(input, output, session, PGX, env, auth, reload_pgxdir) {
         message = "Preparing your dashboard...",
         value = 0,
         {
-          loaded_tabs <<- bigdash::bigTabsLazy(lazy_tabs)
+          loaded_tabs <<- bigdash::bigTabsLazy(
+            lazy_tabs
+          )
 
           shinyjs::enable(selector = "a[data-value='Dashboard']")
           shinyjs::enable(selector = "a[data-value='Studio']")

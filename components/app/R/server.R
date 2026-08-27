@@ -54,16 +54,6 @@ app_server <- function(input, output, session) {
     }
   })
 
-  if (!copilot_packages_ok()) {
-    shinyalert::shinyalert(
-      title = "Missing packages",
-      text = "Copilot will be disabled",
-      immediate = TRUE,
-      showCancelButton = FALSE,
-      showConfirmButton = TRUE
-    )      
-  }
-
   ## -------------------------------------------------------------
   ## Authentication
   ## -------------------------------------------------------------
@@ -173,12 +163,6 @@ app_server <- function(input, output, session) {
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
   new_upload <- reactiveVal(0)
-  ## Bumped when the background TileDB (re)build finishes, so AcrossBoard
-  ## re-checks the filesystem instead of caching its first (empty) result.
-  tiledb_ready <- reactiveVal(0)
-  ## TRUE while a background TileDB build is running, so re-opening the Across
-  ## tab does not prompt for (or launch) a second build.
-  tiledb_building <- reactiveVal(FALSE)
 
   ## ---------------------------------------------------------------
   ## DEV_AUTOLOAD: come up straight on the Dashboard
@@ -282,7 +266,7 @@ app_server <- function(input, output, session) {
     }
   })
 
-  output$current_user <- shiny::renderText({
+output$current_user <- shiny::renderText({
     ## trigger on change of user
     shiny::req(auth$logged)
     if (is.null(auth$logged) || !auth$logged) {
@@ -365,15 +349,6 @@ app_server <- function(input, output, session) {
       ## trigger on change dataset
       shiny::req(PGX$X)
       info("[SERVER] trigger on change dataset")
-
-      ## Set navbar color based on datatype
-      ## if (PGX$datatype == "multi-omics") {
-      ##   js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #00923b'")
-      ##   shinyjs::runjs(js_code)
-      ## } else {
-      ##   js_code <- sprintf("document.querySelector('.navbar').style.borderBottom = '2px solid #004ca7'")
-      ##   shinyjs::runjs(js_code)
-      ## }
 
       ## write GLOBAL variables
       LOADEDPGX <<- PGX$name
@@ -621,10 +596,6 @@ app_server <- function(input, output, session) {
         dbg("[SERVER] ADMIN status for user = ", is_admin)
       }
 
-      ## Across-datasets: the per-user TileDB counts database is no longer built
-      ## at login. It is built on demand (opt-in) the first time the user opens
-      ## the Across tab, so it never runs for users who don't use the feature.
-      ## See the "app-sidebar" observer near the AcrossBoard module call.
     } else {
       ## clear PGX data as soon as the user logs out
       clearPGX()
@@ -961,20 +932,30 @@ app_server <- function(input, output, session) {
     new_upload = new_upload
   )
    
-  WelcomeBoard2("welcome2",
-    auth = auth,
-    load_example = load_example,
-    new_upload = new_upload,
-    parent = session
-  )
+  ## WelcomeBoard2("welcome2",
+  ##   auth = auth,
+  ##   load_example = load_example,
+  ##   new_upload = new_upload,
+  ##   parent = session
+  ## )
 
   ## -------------------------------------------------------------
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server(input, output, session, PGX, env, auth, reload_pgxdir = reload_pgxdir)
+  opg_server( id = "app",
+    input, output, session, PGX, env, auth,
+    reload_pgxdir = reload_pgxdir,
+    load_example = load_example)
   
-  if (copilot_packages_ok()) {
+  app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
+
+  ## Show/hide the AI Studio + Copilot tabs from the runtime "Enable AI" switch,
+  ## gated by the deployment AI licence (opt$ENABLE_AI). Runs in the root
+  ## session so hideTab targets the un-namespaced "app-sidebar" navset. The
+  ## build-time gate in ui.R already drops the tabs entirely when unlicensed.
+  if (isTRUE(opt$ENABLE_AI) && copilot_packages_ok()) {
+    
     # Defer wiring until login completes: CopilotBoardServer snapshots
     # auth$user_dir once at init to derive its chats/ and docs_sources/
     # folders. Pre-login auth$user_dir is the bare PGX.DIR, so wiring at
@@ -988,104 +969,16 @@ app_server <- function(input, output, session) {
       copilot_wired <<- TRUE
       CopilotBoardServer("copilot2", pgx = PGX, pgx_dir = PGX.DIR,
         auth = auth,
-        maxturns = opt$LLM_MAXTURNS,
+          maxturns = opt$LLM_MAXTURNS,
         tiers = opt$COPILOT_MODEL,
         is_data_loaded = NULL)
+      
+      StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
+        can_save_pgx = can_save_current_pgx,
+        user_email = function() shiny::isolate(auth$email))
+      
     })
-  }
-
-  StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
-    can_save_pgx = can_save_current_pgx,
-    user_email = function() shiny::isolate(auth$email))
-
-  if (isTRUE(opt$ENABLE_ACROSS)) {
-    AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
-                tiledb_refresh = tiledb_ready)
-
-    ## Build the per-user TileDB on demand the first time the Across tab is
-    ## opened. The build can take a few minutes, so ask before running it
-    ## (opt-in) rather than blocking login for everyone.
-    runAcrossTileDBBuild <- function(udir) {
-      tiledb_building(TRUE)
-      tiledb_notif_id <- "tiledb_backfill"
-      shiny::showNotification(
-        ui = shiny::tagList(
-          shiny::icon("database"),
-          " Updating your datasets database for Across-datasets analysis…"
-        ),
-        duration = NULL, closeButton = FALSE, type = "message",
-        id = tiledb_notif_id, session = session
-      )
-      promises::future_promise(
-        {
-          playbase::tiledb.updateDatasetFolder(udir, verbose = TRUE)
-          TRUE
-        },
-        seed = TRUE
-      ) %...>% (function(ok) {
-        shiny::removeNotification(tiledb_notif_id, session = session)
-        shiny::showNotification(
-          "Datasets database is ready for Across-datasets analysis.",
-          duration = 5, type = "message", session = session
-        )
-        ## Refresh AcrossBoard now that the database exists on disk.
-        tiledb_ready(shiny::isolate(tiledb_ready()) + 1)
-        tiledb_building(FALSE)
-        info("[SERVER] TileDB backfill complete for ", udir)
-      }) %...!% (function(err) {
-        shiny::removeNotification(tiledb_notif_id, session = session)
-        shiny::showNotification(
-          "Could not update the datasets database for Across-datasets analysis.",
-          duration = 8, type = "warning", session = session
-        )
-        tiledb_building(FALSE)
-        warning("[SERVER] TileDB backfill failed: ", conditionMessage(err))
-      })
-    }
-
-    ## Detect the user navigating to the Across tab (bslib navset value).
-    shiny::observeEvent(input[["app-sidebar"]], {
-      if (!identical(input[["app-sidebar"]], "AcrossDatasets")) return()
-      if (isTRUE(tiledb_building())) return()
-      udir <- auth$user_dir
-      need_build <- !is.null(udir) && dir.exists(udir) &&
-        isTRUE(tryCatch(playbase::tiledb.needUpdate(udir), error = function(e) FALSE))
-      if (!need_build) return()
-      shiny::showModal(shiny::modalDialog(
-        title = "Update datasets database?",
-        shiny::p(
-          "The datasets database used by Across-datasets analysis needs to be ",
-          "built or updated. This can take a few minutes. Proceed?"
-        ),
-        footer = shiny::tagList(
-          shiny::actionButton("across_build_no", "No"),
-          shiny::actionButton("across_build_yes", "Yes", class = "btn-primary")
-        ),
-        easyClose = FALSE
-      ))
-    })
-
-    shiny::observeEvent(input$across_build_yes, {
-      shiny::removeModal()
-      udir <- auth$user_dir
-      if (!is.null(udir) && dir.exists(udir) && !isTRUE(tiledb_building())) {
-        info("[SERVER] ENABLE_ACROSS: user confirmed TileDB build for ", udir)
-        runAcrossTileDBBuild(udir)
-      }
-    })
-
-    shiny::observeEvent(input$across_build_no, {
-      shiny::removeModal()
-    })
-  }
-  
-  app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
-
-  ## Show/hide the AI Studio + Copilot tabs from the runtime "Enable AI" switch,
-  ## gated by the deployment AI licence (opt$ENABLE_AI). Runs in the root
-  ## session so hideTab targets the un-namespaced "app-sidebar" navset. The
-  ## build-time gate in ui.R already drops the tabs entirely when unlicensed.
-  if (isTRUE(opt$ENABLE_AI)) {
+    
     shiny::observe({
       ## Treat the pre-init NULL as on (default enabled); hide only on an
       ## explicit FALSE from the switch.
@@ -1095,14 +988,102 @@ app_server <- function(input, output, session) {
         else bslib::nav_hide("app-sidebar", tab)
       }
     })
+
+    ## Warn about LLM usage the first time the user opens the Obi AI
+    ## (Copilot) tab in this session, instead of at app startup.
+    copilot_warning_shown <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(input[["app-sidebar"]], {
+      if (!identical(input[["app-sidebar"]], "Copilot")) return()
+      if (isTRUE(copilot_warning_shown())) return()
+      copilot_warning_shown(TRUE)
+      shinyalert::shinyalert(
+        "WARNING",
+        "Using LLM might expose some of your data to external LLM servers.",
+        closeOnClickOutside = TRUE
+      )
+    })
   }
 
-  if(isTRUE(opt$DEVMODE)) {
-    dbg("[SERVER] WARNING: DEVMODE modules enabled!")
-    prism_server("prism")
-    tools_server("tools", parent = session)
-    RunMonitorServer("runmonitor")
+  ## -------------------------------------------------------------
+  ## Modules
+  ## -------------------------------------------------------------
+
+  LAUNCHED <- list()
+  id="Qsee"
+
+  ## Dynamic insertion of App modules (tryout). The UI is inserted via
+  ## nav_insert() and module is lazy initialized. Other apps should
+  ## follow this pattern if succesful.
+  launchModule <- function( id, ui, server) {
+    is.launched <- id %in% names(LAUNCHED)
+
+    dbg("names(LAUNCHED) = ", names(LAUNCHED))
+
+    if (!is.launched) {
+      LAUNCHED[[id]] <<- TRUE
+
+      progress <- shiny::Progress$new(session)
+      on.exit(progress$close())
+      progress$set(message = paste("Launching",id), value = 0.33)
+      
+      bslib::nav_insert(
+        "app-sidebar",
+        bslib::nav_panel_hidden(id, ui),
+        target = "Settings",
+        position = "before",
+        select = TRUE,
+        session = session
+      )
+      bigdash::bigdash.initRoot(session, id)
+      shiny::withReactiveDomain(session, {
+        server()
+      })
+
+      progress$close()
+      
+    } else {
+      bslib::nav_select("app-sidebar", id, session = session)
+    }
   }
+    
+  ## The launcher (home page) server must be attached in every deployment --
+  ## gating it on DEVMODE left all home-page buttons without handlers. The
+  ## qsee/across launchers only exist in DEVMODE, where their panels are
+  ## injected dynamically; launcher_server() no-ops on missing launchers.
+  app_launchers <- list()
+
+  launch_qsee <- function() {
+    launchModule("qsee",
+      ui = omicspanel(qsee_ui("qsee")),
+      server = function() qsee_server("qsee", pgx = PGX, parent = session)
+    )
+  }
+  
+  launch_across <- function() {
+    launchModule("across",
+      ui = omicspanel(AcrossUI("across")),
+      server = function() {
+        AcrossBoard("across", pgx = PGX, pgx_dir = shiny::reactive(auth$user_dir),
+          current_page = shiny::reactive(input[["app-sidebar"]]))
+      }
+    )
+  }
+
+  ## THESE STILL NEED TO BE WRAPPED in a launchModule()
+  ## RunMonitorServer("runmonitor")
+  ## idconvert_server("idconvert")
+  ## prism_server("prism")
+
+  launcher_server(
+    "apps",
+    parent = session,
+    load_example = load_example,
+    app_launchers = list(
+      "qsee" = launch_qsee,
+      "across" = launch_across
+    ),
+    pgx = PGX
+  )
   
   ## -------------------------------------------------------------
   ## report server times

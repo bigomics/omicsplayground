@@ -56,7 +56,7 @@ StudioServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    OmicsBoard(session, pgx, title="AI Studio", infotext = NULL, purge = FALSE)
+OmicsBoard(session, pgx, title="AI Studio", infotext = NULL, purge = FALSE)
     
     ## ------------------- subpanels UI ------------------------
     output$dataset_info <- renderUI({

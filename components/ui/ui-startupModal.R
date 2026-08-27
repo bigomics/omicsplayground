@@ -63,7 +63,7 @@ ui.showStartupModal <- function(title = "BigOmics Highlights", ...) {
   )
 }
 
-ui.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoons") {
+ui.showCartoonModal <- function(msg = "Loading data...", img.path = "assets/cartoons") {
   cartoon_list <- list(
     list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
     list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),

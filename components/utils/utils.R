@@ -380,7 +380,7 @@ sever_crash <- function(error = NULL) {
         shiny::p("You have been disconnected", style = "font-size:15px;"),
         shiny::br(),
         shiny::div(shiny::img(
-          src = base64enc::dataURI(file = "www/disconnected.png"),
+          src = base64enc::dataURI(file = file.path(APPDIR,"assets/disconnected.png")),
           width = 540, height = 300
         )),
         shiny::br(),
@@ -460,7 +460,7 @@ sever_ciao <- function(title = "We hope you enjoyed your stay!",
         shiny::br(),
         shiny::div(
           shiny::img(
-            src = base64enc::dataURI(file = "www/monster-ciao.png"),
+            src = base64enc::dataURI(file = file.path(APPDIR,"assets/monster-ciao.png")),
             ## width = 362,
             height = 350
           ),
