@@ -27,6 +27,7 @@ CopilotBoardUI <- function(id) {
     # stretched to fill a grid row.
     shiny::div(
       style = "height: 100%; display: flex; flex-direction: column; gap: 8px;",
+      shiny::div(id = "obi-hello", class='p-4', style='height: 240px;', ""),
       shiny::actionButton(
         ns("new_chat"),
         label = "New chat",
