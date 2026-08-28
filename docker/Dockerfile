@@ -65,16 +65,29 @@ COPY dev/*.R dev/description* dev/
 RUN Rscript dev/requirements.R
 
 #------------------------------------------------------------
-# Install fresh playbase (from same BRANCH)
+# Install fresh playbase.
+# If PLAYBASE_BRANCH is set, install exactly that branch and FAIL if it does
+# not exist (no silent fallback). Otherwise check playbase@{BRANCH} and fall
+# back to main when the sibling branch is missing.
 #------------------------------------------------------------
-# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
-RUN echo "Checking playbase branch ${BRANCH}"
-RUN BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
+ARG PLAYBASE_BRANCH=
+RUN if [ -n "$PLAYBASE_BRANCH" ]; then \
+    echo "Installing playbase@${PLAYBASE_BRANCH} (explicit)"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${PLAYBASE_BRANCH} | wc -l); \
+    if [ $BRANCH_EXISTS -ne 1 ]; then \
+        echo "ERROR: playbase branch '${PLAYBASE_BRANCH}' does not exist" >&2; exit 1; \
+    fi; \
+    R -e "remotes::install_github('bigomics/playbase@${PLAYBASE_BRANCH}',dependencies=FALSE)"; \
+else \
+    echo "Checking playbase branch ${BRANCH}"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l) && \
     if [ $BRANCH_EXISTS -eq 1 ]; then \
         R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
     else \
+        echo "WARNING: no playbase@${BRANCH}, falling back to playbase@main"; \
         R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
-    fi
+    fi; \
+fi
 
 # after install non-detected missing packages
 #RUN R -e "remotes::install_version('Matrix', version = '1.6.1.1')"
