@@ -27,7 +27,7 @@ CopilotBoardUI <- function(id) {
     # stretched to fill a grid row.
     shiny::div(
       style = "height: 100%; display: flex; flex-direction: column; gap: 8px;",
-      shiny::div(id = "obi-hello", class='p-4', style='height: 240px;', ""),
+      shiny::div(id = "obi-hello", class='p-4', style='height: 140px; flex: 0 0 auto;', ""),
       shiny::actionButton(
         ns("new_chat"),
         label = "New chat",
@@ -47,6 +47,7 @@ CopilotBoardUI <- function(id) {
         # padded card_body, which insets the header and its border-bottom.
         bslib::card(
           height = "100%",
+          class = "obi-workspace-card",
           bslib::as.card_item(shiny::fillRow(
             flex = 1,
             class = "plotmodule-header",
