@@ -112,6 +112,13 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
           writeLines(locked, etc_host_file("BASIC_LOCKED"))
           opt$BASIC_MENU <<- boards
           opt$BASIC_LOCKED <<- locked
+          ## Live-refilter the admin's own sidebar now, without a reload --
+          ## other sessions still pick this up on their next page load, since
+          ## opt is per-process (see note above).
+          boards_rv <- getUserOption(session, "basic_menu_boards")
+          if (!is.null(boards_rv)) {
+            boards_rv(opg_basic_menu_boards(boards = boards))
+          }
           log_admin_action(
             admin_email = auth$email,
             action = "basic_menu",
@@ -122,7 +129,7 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
           )
           basic_menu_status(paste0(
             "Saved at ", format(Sys.time(), "%H:%M:%S"),
-            " - users see it after a page reload."
+            " - your own menu updates now; other users see it after a page reload."
           ))
         },
         error = function(e) basic_menu_status(paste("Save failed:", e$message))

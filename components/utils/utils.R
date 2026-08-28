@@ -206,38 +206,6 @@ tipifyB <- function(...) {
 ##   return(Sys.getenv("SHINYPROXY_USERNAME") != "")
 ## }
 
-tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
-  has.slot <- rv_has_value(pgx, slot)
-  if (has.slot && enable) {
-    bigdash.showTab(session, tabname)
-  } else {
-    bigdash.hideTab(session, tabname)
-  }
-}
-
-tabRequireTS <- function(pgx, session, tabname, enable = TRUE) {
-  time.vars <- playbase::get_timevars()
-  found.time.var <- grep(time.vars, colnames(pgx$samples), ignore.case = TRUE)
-  valid.contrasts <- any(grepl("IA:*", colnames(pgx$contrasts)))
-  if (length(found.time.var) > 0 && enable && valid.contrasts) {
-    bigdash.showTab(session, tabname)
-  } else {
-    bigdash.hideTab(session, tabname)
-  }
-}
-
-fileRequire <- function(file, tabname, subtab) {
-  file1 <- playbase::search_path(c(FILES, FILESX), file)
-  has.file <- !is.null(file1) && file.exists(file1)
-  if (!has.file) {
-    message(paste("[MAIN] file ", file, " not found. Hiding", subtab, "\n"))
-    hideTab(tabname, subtab)
-  } else {
-    message(paste("[MAIN] file ", file, " available. Showing", subtab, "\n"))
-    showTab(tabname, subtab)
-  }
-}
-
 # theming for the loading spinner
 waiter::waiter_set_theme(html = waiter::spin_3(), color = waiter::transparent(.5))
 

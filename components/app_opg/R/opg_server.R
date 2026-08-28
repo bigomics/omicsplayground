@@ -6,7 +6,18 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
                        load_example = NULL) {
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
-  
+
+  ## Admin-picked boards for 'Basic menu' mode (opg_ui.R:opg_basic_menu_boards).
+  ## A reactiveVal, not a plain vector: Admin Panel > Basic Menu
+  ## (admin_server.R) updates it live via getUserOption() so the admin's own
+  ## session re-filters immediately after Save, without needing a reload.
+  ## Published through session$userData -- this app's existing cross-module
+  ## channel (see setUserOption()/getUserOption() in utils.R, used the same
+  ## way by AppSettingsBoard/copilot for AI settings) -- because
+  ## AdminPanelBoard runs in its own module-scoped session, not this one.
+  basic_mode_boards <- shiny::reactiveVal(opg_basic_menu_boards())
+  setUserOption(session, "basic_menu_boards", basic_mode_boards) ## stores the reactiveVal itself, not its value
+
   if(id != "app") {
     stop("FATAL: opg_server is not a proper ShinyModule yet")
   }
@@ -89,7 +100,9 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
       list(
         auth$logged,
         env$user_settings$enable_beta(),
-        env$trigger_on_change_dataset()
+        env$trigger_on_change_dataset(),
+        input$menu_basic,
+        basic_mode_boards()
       )
     },
     {
@@ -115,24 +128,25 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
     }
   )
 
-  ## Hide/show basic or full menu. The body class drives the board-level
-  ## simplifications (greyed .advanced-option blocks, hidden extra tabs) in
-  ## scss/components/_app.scss -- CSS so it also applies to boards that are
-  ## inserted lazily, after this observer has already run.
+  ## Toggle the basic-mode body class. The sidebar's own menu items are
+  ## handled by tab_control() -> bigdash.filterTabs() (see the "Hide/show
+  ## tabs" observer above, which lists input$menu_basic as a dependency). The
+  ## body class drives the board-level simplifications (greyed
+  ## .advanced-option blocks, hidden extra tabs) in scss/components/_app.scss
+  ## -- CSS so it also applies to boards that are inserted lazily, after this
+  ## observer has already run.
   observeEvent(input$menu_basic, {
     if (isTRUE(input$menu_basic)) {
-      shinyjs::runjs("$('#menu-basic').removeClass('nodisp').show(); $('#menu-full').addClass('nodisp').hide();")
       shinyjs::addClass(selector = "body", class = "basic-mode")
-      ## The active tab may be one we are about to hide. Only once the boards
-      ## exist -- they are inserted when a dataset loads, and addressing a
-      ## tabsetPanel that is not in the DOM yet just logs "there is no
-      ## tabsetPanel with id ..." in the browser console.
-      if (env$load$is_data_loaded() > 0) {
+      ## The active subtab may be one we are about to hide. Only once the
+      ## boards exist -- they are inserted when a dataset loads, and
+      ## addressing a tabsetPanel that is not in the DOM yet just logs "there
+      ## is no tabsetPanel with id ..." in the browser console.
+      if (isTRUE(env$load$is_data_loaded() > 0)) {
         shiny::updateTabsetPanel(session, "dataview-tabs", selected = "Overview")
         shiny::updateTabsetPanel(session, "diffexpr-tabs1", selected = "Overview")
       }
     } else {
-      shinyjs::runjs("$('#menu-full').removeClass('nodisp').show(); $('#menu-basic').addClass('nodisp').hide();")
       shinyjs::removeClass(selector = "body", class = "basic-mode")
     }
   }, ignoreInit = FALSE)
@@ -342,6 +356,12 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
       tabs <- setdiff(tabs, module_map[["Epigenomics"]] )
     }
     
+    ## Basic mode: further restrict to what the admin picked in
+    ## Admin panel > Basic menu (opg_ui.R:opg_basic_menu_boards).
+    if (isTRUE(input$menu_basic)) {
+      tabs <- intersect(tabs, basic_mode_boards())
+    }
+
     ## Apply filtering — hides tabs + sidebar items not in the allowed set
     bigdash.filterTabs(session, tabs)
 

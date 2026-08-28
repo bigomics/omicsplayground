@@ -11,24 +11,15 @@ BASIC_MENU_DEFAULT <- c("dataview", "clustersamples", "diffexpr")
   "Expression" = c(diffexpr = "Differential expression", corr = "Correlation analysis")
 )
 
-test_that("basic menu keeps the admin selection, in full-menu order", {
-  m <- opg_basic_menu_tree(.tree, c("corr", "dataview"))
-
-  expect_equal(names(m), c("dataview", "corr"))
-  ## key must equal the tab name, else createMenu renders a nested group
-  expect_equal(names(m[["corr"]]), "corr")
-  expect_equal(unname(m[["corr"]]), "Correlation analysis")
-})
-
-test_that("flattened clustering entries get a standalone title", {
-  m <- opg_basic_menu_tree(.tree, "clustersamples")
-  expect_equal(unname(m[["clustersamples"]]), "Cluster Samples")
+test_that("basic menu keeps the admin selection, as -tab ids in full-menu order", {
+  b <- opg_basic_menu_boards(.tree, c("corr", "dataview"))
+  expect_equal(b, c("dataview-tab", "corr-tab"))
 })
 
 test_that("unknown boards are dropped and an empty result falls back to the default", {
-  expect_equal(names(opg_basic_menu_tree(.tree, c("dataview", "nosuchboard"))), "dataview")
-  expect_equal(names(opg_basic_menu_tree(.tree, "nosuchboard")), BASIC_MENU_DEFAULT)
-  expect_equal(names(opg_basic_menu_tree(.tree, character(0))), BASIC_MENU_DEFAULT)
+  expect_equal(opg_basic_menu_boards(.tree, c("dataview", "nosuchboard")), "dataview-tab")
+  expect_equal(opg_basic_menu_boards(.tree, "nosuchboard"), paste0(BASIC_MENU_DEFAULT, "-tab"))
+  expect_equal(opg_basic_menu_boards(.tree, character(0)), paste0(BASIC_MENU_DEFAULT, "-tab"))
 })
 
 ## --- advanced_option(): which boards get their settings greyed out ---------
@@ -101,10 +92,10 @@ test_that("real bslib accordions: keep-live and action buttons stay usable", {
 })
 
 test_that("an empty basic menu is survivable, not a crash", {
-  ## createMenu() does `for (i in 1:length(tree))`, so an empty tree used to
-  ## take down the whole UI build
+  ## bigdash.filterTabs() no-ops on an empty vector rather than hiding
+  ## everything (see bigdash's own filterTabs() early-return)
   tree <- list("GeneSets" = c(enrich = "Geneset Enrichment"))
-  expect_length(opg_basic_menu_tree(tree, "nosuchboard"), 0)
+  expect_length(opg_basic_menu_boards(tree, "nosuchboard"), 0)
 })
 
 test_that("lock_advanced passes through anything that is not a tab tag", {
