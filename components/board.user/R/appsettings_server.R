@@ -60,9 +60,9 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## the raw id. Other providers' ids (e.g. "gpt-5.4-nano") are already
     ## user-facing, so this only rewrites the bigomics catalog.
     bigomics_model_labels <- c(
-      "openrouter:deepseek/deepseek-v4-flash" = "Deepseek V4",
-      "openrouter:openai/gpt-5.6-terra"       = "GPT-5.6",
-      "gemini-3.1-flash-image-preview"        = "Gemini 3.1 Nano Banana"
+      "openrouter:deepseek/deepseek-v4-flash" = "Deepseek V4 Flash",
+      "openrouter:openai/gpt-5.6-terra"       = "GPT-5.6 Terra",
+      "gemini-3.1-flash-image-preview"        = "Gemini 3.1 (Nano Banana 2)"
     )
 
     display_menu_choices <- function(provider, choices) {
