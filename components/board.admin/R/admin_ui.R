@@ -85,7 +85,7 @@ AdminPanelUI <- function(id) {
         bslib::card(
           bslib::card_header("Basic menu items"),
           bslib::card_body(
-            bs_alert("Choose which menu items are kept when a user switches on 'Basic menu' in Settings. The choice applies to the whole deployment; users see it after a page reload."),
+            bs_alert("Choose which menu items are kept when a user switches on 'Basic menu' in Settings. Changes preview in your own session immediately (with Basic menu switched on for yourself); Save applies the choice to the whole deployment, and other users see it after a page reload."),
             shiny::checkboxGroupInput(
               ns("basic_menu"),
               label = NULL,
@@ -97,7 +97,7 @@ AdminPanelUI <- function(id) {
         bslib::card(
           bslib::card_header("Locked settings"),
           bslib::card_body(
-            bs_alert("Choose which boards have their advanced settings greyed out in the settings sidebar. Unticked boards keep their options fully usable in basic mode. Boards with no advanced settings are unaffected either way."),
+            bs_alert("Choose which boards have their advanced settings greyed out in the settings sidebar. Unticked boards keep their options fully usable in basic mode. Boards with no advanced settings are unaffected either way. Changes preview in your own session immediately (with Basic menu on); Save applies them to the whole deployment."),
             shiny::checkboxGroupInput(
               ns("basic_locked"),
               label = NULL,

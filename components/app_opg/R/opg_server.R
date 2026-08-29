@@ -18,6 +18,26 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
   basic_mode_boards <- shiny::reactiveVal(opg_basic_menu_boards())
   setUserOption(session, "basic_menu_boards", basic_mode_boards) ## stores the reactiveVal itself, not its value
 
+  ## Boards whose advanced settings are greyed out in basic mode (Admin panel
+  ## > Basic menu > Locked settings). Same live pattern as basic_mode_boards
+  ## above: admin_server.R pushes the admin's Save into this reactiveVal and
+  ## the observer below re-toggles the CSS class on the already-built blocks
+  ## (marked "advanced-option-candidate" by lock_advanced() at build time),
+  ## so the admin's own sidebar reacts without a reload. Other sessions pick
+  ## the change up on their next load, like the menu boards.
+  locked_boards <- shiny::reactiveVal(opt$BASIC_LOCKED)
+  setUserOption(session, "locked_boards", locked_boards)
+
+  shiny::observe({
+    ids <- locked_boards()
+    ## Clear everywhere first: a board can be *un*-locked as well.
+    shinyjs::removeClass(selector = ".advanced-option-candidate", class = "advanced-option")
+    for (b in ids) {
+      shinyjs::addClass(selector = paste0(".advanced-option-candidate[data-board='", b, "']"),
+                        class = "advanced-option")
+    }
+  })
+
   if(id != "app") {
     stop("FATAL: opg_server is not a proper ShinyModule yet")
   }

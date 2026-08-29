@@ -42,16 +42,19 @@ test_that("lock_advanced greys every accordion of a locked board's settings", {
       )
     )
   }
+  ## Count blocks carrying the *lock* class. "advanced-option-candidate"
+  ## (the build-time marker for the live toggle) is a distinct token, so
+  ## match the class attribute rather than grep the HTML by substring.
   marked <- function(x) {
-    html <- as.character(x)
-    lengths(regmatches(html, gregexpr("advanced-option", html)))
+    length(htmltools::tagQuery(x)$find(".advanced-option")$selectedTags())
   }
 
   expect_equal(marked(lock_advanced(tab("dataview-tab"))), 1) ## keep-live opted out
   expect_equal(marked(lock_advanced(tab("corr-tab"))), 0)     ## board not locked
 
   html <- paste(as.character(lock_advanced(tab("dataview-tab"))), collapse = "")
-  expect_true(grepl('class="accordion advanced-option"', html, fixed = TRUE))
+  expect_true(grepl("advanced-option-candidate advanced-option", html, fixed = TRUE))
+  expect_true(grepl('data-board="dataview"', html, fixed = TRUE))
   expect_true(grepl('class="accordion keep-live"', html, fixed = TRUE))
 })
 
@@ -68,8 +71,7 @@ test_that("real bslib accordions: keep-live and action buttons stay usable", {
     )
   }
   marked <- function(x) {
-    html <- paste(as.character(x), collapse = "")
-    lengths(regmatches(html, gregexpr("advanced-option", html)))
+    length(htmltools::tagQuery(x)$find(".advanced-option")$selectedTags())
   }
 
   plain <- bslib::accordion(id = "a", bslib::accordion_panel("Options", "fdr"))
@@ -104,16 +106,17 @@ test_that("lock_advanced passes through anything that is not a tab tag", {
   expect_equal(lock_advanced("not a tag"), "not a tag")
 })
 
-test_that("advanced_option marks a block only for boards the admin locked", {
+test_that("advanced_option marks every block as a candidate and locks the admin's boards", {
   opt <<- list(BASIC_LOCKED = c("dataview", "diffexpr"))
   on.exit(rm(opt, envir = globalenv()), add = TRUE)
 
-  expect_equal(advanced_option("dataview"), "advanced-option")
-  expect_null(advanced_option("enrich"))
+  expect_equal(advanced_option("dataview"), c("advanced-option-candidate", "advanced-option"))
+  expect_equal(advanced_option("enrich"), "advanced-option-candidate")
 
-  ## unticking every board leaves all settings usable
+  ## unticking every board leaves all settings usable (candidate marker stays,
+  ## the lock class goes)
   opt <<- list(BASIC_LOCKED = character(0))
-  expect_null(advanced_option("dataview"))
+  expect_equal(advanced_option("dataview"), "advanced-option-candidate")
 })
 
 ## --- FORCE_BASIC: pinning one user to the basic menu -----------------------

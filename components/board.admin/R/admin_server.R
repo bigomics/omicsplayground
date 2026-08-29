@@ -98,6 +98,27 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
     basic_menu_status <- shiny::reactiveVal("")
     output$basic_menu_status <- shiny::renderText(basic_menu_status())
 
+    ## Live preview before Save: as soon as a checkbox changes, apply the
+    ## selection to the admin's own session (via the same reactiveVals the
+    ## Save handler pushes into), so the admin can check how the basic-mode
+    ## UI looks before persisting anything. Session-local only: it vanishes
+    ## on reload, and only Save writes etc/ and opt for other sessions.
+    ## Both effects are visible while the admin's own session has Basic menu
+    ## on (menu filtering and the body.basic-mode greying both key off it).
+    shiny::observe({
+      if (is.null(input$basic_menu)) return() ## panel not rendered yet
+      ## Unticking *all* menu items previews the runtime default fallback
+      ## (opg_basic_menu_boards() does); Save itself still rejects it.
+      boards_rv <- getUserOption(session, "basic_menu_boards")
+      if (!is.null(boards_rv)) {
+        boards_rv(opg_basic_menu_boards(boards = input$basic_menu))
+      }
+      locked_rv <- getUserOption(session, "locked_boards")
+      if (!is.null(locked_rv)) {
+        locked_rv(input$basic_locked %||% character(0))
+      }
+    })
+
     shiny::observeEvent(input$save_basic_menu, {
       shiny::req(isTRUE(auth$ADMIN))
       boards <- input$basic_menu
@@ -119,6 +140,11 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
           if (!is.null(boards_rv)) {
             boards_rv(opg_basic_menu_boards(boards = boards))
           }
+          ## Same live treatment for the locked-settings selection: the
+          ## locked_boards observer in opg_server.R re-toggles the class in
+          ## the admin's own settings sidebar.
+          locked_rv <- getUserOption(session, "locked_boards")
+          if (!is.null(locked_rv)) locked_rv(locked)
           log_admin_action(
             admin_email = auth$email,
             action = "basic_menu",
@@ -129,7 +155,7 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
           )
           basic_menu_status(paste0(
             "Saved at ", format(Sys.time(), "%H:%M:%S"),
-            " - your own menu updates now; other users see it after a page reload."
+            " - your menu and locked settings update now; other users see it after a page reload."
           ))
         },
         error = function(e) basic_menu_status(paste("Save failed:", e$message))

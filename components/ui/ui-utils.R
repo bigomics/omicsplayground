@@ -467,8 +467,11 @@ clean_custom_features <- function(features) {
 ## the admin's choice (Admin panel > Basic menu); a board the admin left out
 ## keeps its advanced settings live. Only needed for blocks that are NOT an
 ## accordion -- lock_advanced() below catches those on every board by itself.
+## Both blocks also carry "advanced-option-candidate" (unstyled) so the
+## admin's live selection can re-toggle the lock class without rebuilding
+## the UI (locked_boards observer in opg_server.R).
 advanced_option <- function(board) {
-  if (board %in% opt$BASIC_LOCKED) "advanced-option" else NULL
+  c("advanced-option-candidate", if (board %in% opt$BASIC_LOCKED) "advanced-option")
 }
 
 
@@ -493,8 +496,16 @@ is_locked_block <- function(x) {
 }
 
 
-## Grey out the advanced settings of one board tab for BASIC users. Which
-## boards are affected is the admin's choice (Admin panel > Basic menu).
+## Mark one board tab's advanced settings for BASIC users. Which boards are
+## affected is the admin's choice (Admin panel > Basic menu). Every
+## lock-eligible accordion (is_locked_block()) gets the unstyled
+## "advanced-option-candidate" class and a data-board attribute at build
+## time; boards locked *now* additionally get the greying
+## "advanced-option" class. The admin can later re-toggle the lock class
+## live from the Admin panel without rebuilding the UI (locked_boards
+## observer in opg_server.R) -- lazy boards materialised after the change
+## pick up the new selection through opt$BASIC_LOCKED here, since the save
+## handler updates that global in-process.
 ## A group's module_ui() returns a plain list of several bigTabItem()s
 ## rather than one tag (e.g. Clustering has "Samples" and "Features") --
 ## recurse into it so callers can pass either shape.
@@ -507,12 +518,13 @@ lock_advanced <- function(tab) {
   }
   ## no data-name -> NA -> matches nothing, so the tab is left alone
   board <- sub("-tab$", "", as.character(tab$attribs[["data-name"]])[1])
-  if (!board %in% opt$BASIC_LOCKED) {
-    return(tab)
-  }
-  htmltools::tagQuery(tab)$
+  query <- htmltools::tagQuery(tab)$
     find(".tab-settings .accordion")$
-    filter(function(x, i) is_locked_block(x))$
-    addClass("advanced-option")$
-    allTags()
+    filter(function(x, i) is_locked_block(x))
+  query$addClass("advanced-option-candidate")$
+    addAttrs(`data-board` = board)
+  if (board %in% opt$BASIC_LOCKED) {
+    query$addClass("advanced-option")
+  }
+  query$allTags()
 }
