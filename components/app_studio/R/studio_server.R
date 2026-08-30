@@ -80,7 +80,7 @@ OmicsBoard(session, pgx, title="AI Studio", infotext = NULL, purge = FALSE)
       bslib::nav_select("settings","Reports")      
     })
 
-    observeEvent(input$show_infographic, {
+    observeEvent(input$show_infographics, {
       bslib::nav_select("studiopanel","Infographics")
       bslib::nav_select("settings","Infographics")      
     })

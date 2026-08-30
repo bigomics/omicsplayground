@@ -18,7 +18,7 @@ StudioUI <- function(id) {
         row_heights = "26px",
         shiny::actionButton(ns("show_reports"), "Reports", width = "100%",
           class = "xbtn", icon = icon("file-lines")),
-        shiny::actionButton(ns("show_infographic"), "Infographics", width = "100%",
+        shiny::actionButton(ns("show_infographics"), "Infographics", width = "100%",
           class = "xbtn", icon = icon("image")),
         shiny::actionButton(ns("show_poster"), "Poster", width = "100%",
           class = "xbtn", icon = icon("note-sticky")),
@@ -57,7 +57,7 @@ StudioUI <- function(id) {
       AiReportUI(ns("aireport"))
     ),
     bslib::nav_panel(
-      "Infographic",
+      "Infographics",
       InfographicUI(ns("infographic"))
     ),
     bslib::nav_panel(
