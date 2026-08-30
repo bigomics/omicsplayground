@@ -18,7 +18,7 @@ StudioUI <- function(id) {
         row_heights = "26px",
         shiny::actionButton(ns("show_reports"), "Reports", width = "100%",
           class = "xbtn", icon = icon("file-lines")),
-        shiny::actionButton(ns("show_infographic"), "Infographic", width = "100%",
+        shiny::actionButton(ns("show_infographic"), "Infographics", width = "100%",
           class = "xbtn", icon = icon("image")),
         shiny::actionButton(ns("show_poster"), "Poster", width = "100%",
           class = "xbtn", icon = icon("note-sticky")),
@@ -36,7 +36,7 @@ StudioUI <- function(id) {
       AiReportSettings(ns("aireport"))
     ),
     bslib::nav_panel(
-      "Infographic",
+      "Infographics",
       InfographicSettings(ns("infographic"))
     ),
     bslib::nav_panel(
@@ -93,7 +93,7 @@ StudioUI <- function(id) {
   board <- OmicsBoardUI(
     ns = ns,
     #title = HTML("AI Studio <small><small>&mdash; your creative space</small></small>"),
-    title = HTML("AI Studio <span style='font-size: 0.7em;'>&mdash; your creative space</span>"),
+    title = HTML("Studio <span style='font-size: 0.7em;'>&mdash; your creative space</span>"),
     info = FALSE,
     header_margin = "0px",
     ui

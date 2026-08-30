@@ -134,6 +134,7 @@ UploadUI <- function(id) {
     OmicsBoardUI(
       ns = ns,
       title = "Upload New",
+      header_margin = "0px",
       div(style = "position: relative;", shinyjs::hidden(spinner)),
       uiOutput(ns("upload_wizard")),
       body

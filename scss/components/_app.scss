@@ -63,6 +63,7 @@
     padding-bottom: 3px;
 }
 
+
 #app-shell .col-sm-11>.tab-content {
     height: 100%;
 }
@@ -323,6 +324,23 @@
 // navsets show or hide their panels.
 .fullheight-page .bslib-mb-spacing {
     margin-bottom: 0;
+}
+
+// Settings page's left-hand pill list. Bigger than the 1rem every other
+// nav gets, since it is the page's primary navigation rather than a
+// within-card tab strip.
+//
+// Note the child selector rather than .nav-link: with bslib 0.12 /
+// shiny 1.14 navset_pill_list still emits Bootstrap-3 tab markup --
+// <li class="active"><a href="#tab-..."> -- with no .nav-link class on the
+// anchor, so the generic `html .nav-link` and `.nav-pills .nav-link` rules
+// never reach these. The .nav-link half is kept for the day that markup
+// switches; either way the id outranks the 1rem global.
+#app_settings-tabs1 {
+    > li > a,
+    .nav-link {
+        font-size: 1.05rem;
+    }
 }
 
 // Settings cards (bslib::card, and the bslib::card-based PlotModuleUI /

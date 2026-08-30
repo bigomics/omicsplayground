@@ -61,7 +61,7 @@ CopilotBoardUI <- function(id) {
           # Dev-only panel. Hidden, its controls fall back to defaults in
           # CopilotReportsServer: Summary staged, tools connected.
           bslib::navset_underline(
-            bslib::nav_panel("Documents", CopilotDocsUI(ns("docs"))),
+            bslib::nav_panel("Sources", CopilotDocsUI(ns("docs"))),
             if (isTRUE(opt$DEVMODE)) {
               bslib::nav_panel("Reports", CopilotReportsUI(ns("reports")))
             },

@@ -104,7 +104,7 @@ upload_table_preview_contrasts_server <- function(
       # only display buttons if goOnlineComparison is false
 
       action_buttons1 <- div(
-        style = "display: flex; justify-content: left; margin-bottom: 20px;",
+        style = "display: flex; justify-content: left; margin: -7px 0 0 100px;",
         actionButton(
           ns("goUploadComparison"),
           label = "Upload comparisons file",
