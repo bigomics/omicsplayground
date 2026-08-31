@@ -141,7 +141,7 @@ Also unavailable: GrimAge, whose coefficients are not public.
 | `R/methylome_model.R` | Array inference, probe masking, the limma fit |
 | `R/methylome_ewas.R`, `R/methylome_ewas_inputs.R` | EWAS panels and settings |
 | `R/methylome_regions.R` | DMRs and gene-set testing |
-| `inst/masking/cross_reactive_probes.csv` | Chen 2013, McCartney 2016, Zhou non-SNP mask |
+| cross-reactive probe list | Chen 2013, McCartney 2016, Zhou non-SNP mask - bundled in playdata |
 | `test/build-test-pgx.Rscript` | Builds the demo dataset from GSE43976 |
 | `test/test-arrays.Rscript` | 450K and EPIC verification |
 | `test/test-model.Rscript` | Contrast and continuous fits, EPICv2 refusal, region helper |

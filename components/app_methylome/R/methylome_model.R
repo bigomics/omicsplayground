@@ -36,42 +36,28 @@ mp_snp_probes <- function(pgx, maf = 0.05) {
   out
 }
 
-## Cross-reactive / multi-mapping probes, from the bundled published lists.
-##
-## Anchored on OPG rather than on the working directory: the app runs with its
-## cwd in components/app/R, and a candidate list of relative paths alone once
-## resolved to nothing there, leaving this mask a silent no-op - 53,498 probes
-## the checkbox claimed to exclude were being tested, while the summary line
-## still reported the SNP mask's count and so looked like both had applied.
-## pgx.system.file() is not usable here: it only ever resolves
-## components/board.<name>, and this is an app, not a board.
-##
-## The relative fallbacks are for the headless test harness, which runs from
-## the test/ directory without the app's globals.
+## Cross-reactive / multi-mapping probes, from the published lists bundled in
+## playdata alongside the EWAS catalog. get_file() is system.file(mustWork =
+## TRUE), so a playdata built before the list landed throws here rather than
+## returning "" - which is the point: this used to try a list of candidate
+## paths because the app's working directory varies, resolved to nothing once,
+## and left 53,498 probes tested while the summary reported a mask applied.
 MP_XREACTIVE_CACHE <- new.env(parent = emptyenv())
 
 mp_xreactive_probes <- function() {
   if (!is.null(MP_XREACTIVE_CACHE$p)) return(MP_XREACTIVE_CACHE$p)
-  rel <- file.path("masking", "cross_reactive_probes.csv")
-  cand <- character(0)
-  if (exists("OPG")) cand <- file.path(OPG, "components", "app_methylome", "inst", rel)
-  cand <- c(cand, file.path("../inst", rel),
-            file.path("components/app_methylome/inst", rel))
-  f <- cand[nzchar(cand) & file.exists(cand)][1]
-  if (is.na(f)) {
+  f <- tryCatch(playdata::get_file("cross-reactive-probes.rds"),
+                error = function(e) NULL)
+  if (is.null(f)) {
     ## Refuse rather than warn. A warning goes to a log nobody reads while the
-    ## checkbox stays ticked and excludes nothing - which is exactly how 53,498
-    ## cross-reactive probes were silently tested once already. The file is
-    ## 2.8 MB of published blacklist and .gitignore's blanket *.csv rule kept
-    ## it out of the repo for a while; if it is missing again, say so loudly.
+    ## checkbox stays ticked and excludes nothing.
     MP_XREACTIVE_CACHE$p <- character(0)
     shiny::validate(shiny::need(FALSE, paste(
       "The cross-reactive probe list is missing from this installation, so that",
-      "mask cannot be applied. Untick 'Cross-reactive' to run without it -",
-      "leaving it ticked would report a mask that did not happen.")))
+      "mask cannot be applied. Update playdata, or untick 'Cross-reactive' to",
+      "run without it - leaving it ticked would report a mask that did not happen.")))
   }
-  d <- utils::read.csv(f, stringsAsFactors = FALSE)
-  MP_XREACTIVE_CACHE$p <- unique(as.character(d$probe))
+  MP_XREACTIVE_CACHE$p <- unique(as.character(readRDS(f)$probe))
   MP_XREACTIVE_CACHE$p
 }
 
