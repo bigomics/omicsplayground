@@ -30,7 +30,8 @@ AdminPanelUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- "100%"
-
+  fullH <- "calc(100vh - 60px)"
+  
   ## Both choosers list every board of the full sidebar menu, labelled with its
   ## group so "Samples" and "Features" are not ambiguous.
   menu_tree <- opg_menu_tree()
@@ -45,7 +46,7 @@ AdminPanelUI <- function(id) {
     bslib::nav_panel(
       "Overview",
       bslib::layout_columns(
-        col_widths = 12,
+        col_widths = c(6,6),
         height = fullH,
         row_heights = list(1),
         admin_table_users_ui(
@@ -61,16 +62,19 @@ AdminPanelUI <- function(id) {
     bslib::nav_panel(
       "User Management",
       bslib::layout_columns(
-        col_widths = 12,
+        col_widths = c(6,6),
         height = fullH,
-        row_heights = list("auto", 1),
-        bs_alert("Manage user credentials. Click on a cell to edit it. Use the buttons below to add or remove users, and save changes when done."),
-        admin_table_credentials_ui(
-          id = ns("credentials"),
-          title = "User Credentials",
-          info.text = "Editable table of user credentials from the CREDENTIALS file.",
-          caption = "Edit user credentials and save changes.",
-          height = c("100%", TABLE_HEIGHT_MODAL)
+        row_heights = list(1),
+        shiny::div(
+          bs_alert("Manage user credentials. Click on a cell to edit it. Use the buttons below to add or remove users, and save changes when done."),
+          br(),
+          admin_table_credentials_ui(
+            id = ns("credentials"),
+            title = "User Credentials",
+            info.text = "Editable table of user credentials from the CREDENTIALS file.",
+            caption = "Edit user credentials and save changes.",
+            height = c("100%", TABLE_HEIGHT_MODAL)
+          )
         )
       )
     ),
