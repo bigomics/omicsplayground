@@ -3,6 +3,62 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
+#' Full sidebar menu: module group -> named vector of boards (id = title).
+#' Shared with the admin panel, which offers these as the basic-menu choices.
+opg_menu_tree <- function() {
+  list(
+    "DataView" = c(
+      dataview = "DataView"
+    ),
+    "Clustering" = c(
+      clustersamples = "Samples",
+      clusterfeatures = "Features"
+    ),
+    "Expression" = c(
+      diffexpr = "Differential expression",
+      timeseries = "TimeSeries", ## here???
+      corr = "Correlation analysis",
+      bio = "Find biomarkers"
+    ),
+    "GeneSets" = c(
+      enrich = "Geneset Enrichment",
+      sig = "Test geneset",
+      pathway = "Pathway analysis",
+      wordcloud = "Word cloud"
+    ),
+    "Compare" = c(
+      isect = "Compare signatures",
+      comp = "Compare datasets",
+      cmap = "Similar experiments"
+    ),
+    "SystemsBio" = c(
+      drug = "Drug connectivity",
+      cell = "Cell profiling",
+      pcsf = "PCSF",
+      tcga = "TCGA survival (beta)"
+    ),
+    "MultiOmics" = MODULE.multiomics$module_menu(),
+    "WGCNA" = MODULE.wgcna$module_menu()
+  )
+}
+
+
+#' Board ids kept in BASIC mode, in full-menu order. The selection is chosen
+#' in Admin panel > Basic menu and persisted per deploy in
+#' etc/BASIC_MENU-<HOSTNAME> (read in global.R). There is only one sidebar
+#' menu tree now -- opg_server.R's tab_control() intersects this with the set
+#' it already computes from dataset/content availability and hands the result
+#' to bigdash::bigdash.filterTabs(), so this only needs to express the admin's
+#' picks, not what is actually available right now.
+opg_basic_menu_boards <- function(menu_tree = opg_menu_tree(), boards = opt$BASIC_MENU) {
+  all_boards <- names(unlist(unname(menu_tree)))
+  boards <- intersect(all_boards, boards) ## drops unknown/disabled boards, keeps full-menu order
+  if (!length(boards)) boards <- intersect(all_boards, BASIC_MENU_DEFAULT)
+  if (!length(boards)) return(character(0)) ## paste0(character(0), "-tab") == "-tab", not character(0)
+  paste0(boards, "-tab")
+}
+
+
 opg_ui <- function(id) {
 
   message("\n======================================================")
@@ -70,7 +126,18 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
           tab.title <- tabs[i]
           ee[[i]] <- sidebar_menu_item(tab.title, tab.name)
         }
-        bigdash::sidebarMenu(title, !!!ee)
+        ## promote_single: with one shared tree now driving both full and
+        ## basic mode via bigdash.filterTabs(), a group filtered down to one
+        ## visible board (e.g. Basic menu keeping only "Samples" out of
+        ## Clustering) renders as a flat top-level item instead of a
+        ## one-item group -- matching the old, separately-built flat basic
+        ## menu's look without needing a second tree.
+        bigdash::sidebarMenu(title, !!!ee, promote_single = TRUE)
+      }
+      ## a config can filter every board out (see MODULES_ENABLED below); an
+      ## empty menu is survivable, `for (i in 1:0)` is not
+      if (!length(tree)) {
+        return(HTML(""))
       }
       menu <- list()
       for (i in 1:length(tree)) {
@@ -87,30 +154,16 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
       HTML(unlist(menu))
     }
 
-    basic_menu_tree <- list(
-      "DataView"                = c(dataview       = "DataView"),
-      "Cluster Samples"         = c(clustersamples = "Cluster Samples"),
-      "Differential Expression" = c(diffexpr       = "Differential Expression"),
-      "Geneset Enrichment"      = c(enrich         = "Geneset Enrichment"),
-      "Pathway Analysis"        = c(pathway        = "Pathway Analysis")
-    )
-
-    initial_is_full <- (opt$USER_LEVEL != "BASIC")
     info("[opg_ui] creating sidebar menu")
-    info("[opg_ui] initial_is_full = ", initial_is_full)
-    
+
+    ## One tree now for both full and basic mode -- opg_server.R's
+    ## tab_control() drives which items are visible via
+    ## bigdash::bigdash.filterTabs(), which hides/shows the matching
+    ## sidebar-item/sidebarMenuItem elements (and auto-promotes a group left
+    ## with a single visible item, see bigdash's refreshMenuPromotion()).
     sidebar <- bigdash::sidebar(
       "Menu",
-      div(
-        id = "menu-full",
-        class = "nodisp", style = "diplay: none;",
-        createMenu(menu_tree)
-      ),
-      div(
-        id = "menu-basic",
-        class = "nodisp", style = "diplay: none;",        
-        createMenu(basic_menu_tree)
-      )
+      createMenu(menu_tree)
     )
     
     big_theme2 <- bigdash::big_theme()
@@ -307,53 +360,25 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         ## a tab's shell and the module_lazy() entry that fills it stay in one
         ## file and cannot drift apart. DataView is the one tab with no group
         ## registry of its own.
-        bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader")),
-        MODULE.clustering$module_ui(),
-        MODULE.expression$module_ui(),
-        MODULE.enrichment$module_ui(),
-        MODULE.compare$module_ui(),
-        MODULE.systems$module_ui(),
-        MODULE.multiomics$module_ui(),
-        MODULE.wgcna$module_ui()
-      ) 
+        ##
+        ## lock_advanced() greys a locked board's settings accordions for BASIC
+        ## users. The accordions live in this shell (each board's *Inputs()),
+        ## not in the lazily-loaded body, so it belongs here, at boot, rather
+        ## than wherever bigTabsLazy() later fills the tab in.
+        lock_advanced(bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader"))),
+        lock_advanced(MODULE.clustering$module_ui()),
+        lock_advanced(MODULE.expression$module_ui()),
+        lock_advanced(MODULE.enrichment$module_ui()),
+        lock_advanced(MODULE.compare$module_ui()),
+        lock_advanced(MODULE.systems$module_ui()),
+        lock_advanced(MODULE.multiomics$module_ui()),
+        lock_advanced(MODULE.wgcna$module_ui())
+      )
     ) ## end of bigPage
   }
 
 
-  full_menu_tree <- list(
-    "DataView" = c(
-      dataview = "DataView"
-    ),
-    "Clustering" = c(
-      clustersamples = "Samples",
-      clusterfeatures = "Features"
-    ),
-    "Expression" = c(
-      diffexpr = "Differential expression",
-      timeseries = "TimeSeries", ## here???
-      corr = "Correlation analysis",
-      bio = "Find biomarkers"
-    ),
-    "GeneSets" = c(
-      enrich = "Geneset Enrichment",
-      sig = "Test geneset",
-      pathway = "Pathway analysis",
-      wordcloud = "Word cloud"
-    ),
-    "Compare" = c(
-      isect = "Compare signatures",
-      comp = "Compare datasets",
-      cmap = "Similar experiments"
-    ),
-    "SystemsBio" = c(
-      drug = "Drug connectivity",
-      cell = "Cell profiling",
-      pcsf = "PCSF",
-      tcga = "TCGA survival (beta)"
-    ),
-    "MultiOmics" = MODULE.multiomics$module_menu(),
-    "WGCNA" = MODULE.wgcna$module_menu()
-  )
+  full_menu_tree <- opg_menu_tree()
 
   info("[opg_ui] >>> creating UI")
   ui <- createUI(full_menu_tree)

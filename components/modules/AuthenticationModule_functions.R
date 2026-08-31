@@ -38,7 +38,8 @@ read_user_options <- function(user_dir) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN",
+      "FORCE_BASIC"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -64,14 +65,15 @@ read_user_options_db <- function(email, user_database = NULL) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN",
+      "FORCE_BASIC"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
     logical_cols <- c(
       "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
-      "WATERMARK", "ENABLE_MULTIOMICS", "ADMIN"
+      "WATERMARK", "ENABLE_MULTIOMICS", "ADMIN", "FORCE_BASIC"
     )
     logical_cols <- intersect(logical_cols, names(user_opt))
     user_opt <- user_opt %>%

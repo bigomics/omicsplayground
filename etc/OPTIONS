@@ -5,8 +5,8 @@ HOSTNAME             = server.local
 
 #------------- authentication ----------------
 
-AUTHENTICATION       = none
-#AUTHENTICATION      = password
+#AUTHENTICATION       = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
@@ -44,6 +44,23 @@ USER_LEVEL	     = PRO
 #USER_LEVEL	     = BASIC
 PUBLIC_DATASETS_LABEL = Team Datasets
 
+# ------------- menu options ---------------------
+# Both lists below are the deployment default. Admin panel > Basic Menu
+# overrides them per deploy by writing etc/BASIC_MENU-<HOSTNAME> and
+# etc/BASIC_LOCKED-<HOSTNAME>; a hostname-less etc/BASIC_MENU / etc/BASIC_LOCKED
+# sits in between, as a shared default for every server on the mounted etc/
+# folder. So: host file > shared file > these lines > built-in default.
+#
+# Boards the flat BASIC menu keeps.
+#BASIC_MENU          = dataview;clustersamples;diffexpr
+# Boards whose advanced settings are greyed out in BASIC mode. Defaults to
+# every board; list a subset to leave the others fully usable. An empty admin
+# selection means "grey out nothing" and is not the same as leaving this unset.
+#BASIC_LOCKED        = dataview;clustersamples;diffexpr;enrich;pathway
+# Pin users to the basic menu (they cannot switch back). Also settable per
+# user in <user_dir>/OPTIONS or the user DB row.
+#FORCE_BASIC         = TRUE
+
 #------------- AI options -----------------------
 
 LLM_MAXTURNS         = 100
@@ -68,4 +85,6 @@ ENABLE_ACROSS        = TRUE
 DEVMODE              = FALSE
 DEV_AUTOLOAD         = FALSE
 ENABLE_PLOTLY_PURGE  = TRUE
-ENABLE_ADMIN         = FALSE
+ENABLE_ADMIN         = TRUE
+
+

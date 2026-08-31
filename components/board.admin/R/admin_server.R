@@ -13,13 +13,7 @@ log_admin_action <- function(admin_email, action, subjects,
   if (length(subjects) == 0) {
     return(invisible())
   }
-  host <- NULL
-  if (exists("opt", inherits = TRUE)) host <- opt$HOSTNAME
-  if (is.null(host) || !nzchar(host)) {
-    host <- toupper(Sys.info()[["nodename"]])
-  }
-  host <- gsub("[^A-Za-z0-9._-]", "_", host)
-  log.file <- file.path(ETC, paste0("PGXADMIN-", host, ".log"))
+  log.file <- file.path(ETC, paste0("PGXADMIN-", opg_hostname(), ".log"))
   log.entry <- data.frame(
     date = format(Sys.time(), tz = "CET"),
     admin = admin_email,
@@ -94,6 +88,79 @@ AdminPanelBoard <- function(id, auth, credentials_file = NULL) {
       "datamanager",
       auth = auth
     )
+
+    ## ----------------------------------------------------------------------
+    ## Basic menu chooser. Persisted per deploy in etc/BASIC_MENU-<HOSTNAME>
+    ## and read back by global.R at startup. `opt` is per R process (ShinyProxy
+    ## gives each user their own), so other sessions pick this up on reload.
+    ## ----------------------------------------------------------------------
+
+    basic_menu_status <- shiny::reactiveVal("")
+    output$basic_menu_status <- shiny::renderText(basic_menu_status())
+
+    ## Live preview before Save: as soon as a checkbox changes, apply the
+    ## selection to the admin's own session (via the same reactiveVals the
+    ## Save handler pushes into), so the admin can check how the basic-mode
+    ## UI looks before persisting anything. Session-local only: it vanishes
+    ## on reload, and only Save writes etc/ and opt for other sessions.
+    ## Both effects are visible while the admin's own session has Basic menu
+    ## on (menu filtering and the body.basic-mode greying both key off it).
+    shiny::observe({
+      if (is.null(input$basic_menu)) return() ## panel not rendered yet
+      ## Unticking *all* menu items previews the runtime default fallback
+      ## (opg_basic_menu_boards() does); Save itself still rejects it.
+      boards_rv <- getUserOption(session, "basic_menu_boards")
+      if (!is.null(boards_rv)) {
+        boards_rv(opg_basic_menu_boards(boards = input$basic_menu))
+      }
+      locked_rv <- getUserOption(session, "locked_boards")
+      if (!is.null(locked_rv)) {
+        locked_rv(input$basic_locked %||% character(0))
+      }
+    })
+
+    shiny::observeEvent(input$save_basic_menu, {
+      shiny::req(isTRUE(auth$ADMIN))
+      boards <- input$basic_menu
+      locked <- input$basic_locked %||% character(0) ## unticking all is allowed
+      if (!length(boards)) {
+        basic_menu_status("Select at least one menu item.")
+        return()
+      }
+      tryCatch(
+        {
+          writeLines(boards, etc_host_file("BASIC_MENU"))
+          writeLines(locked, etc_host_file("BASIC_LOCKED"))
+          opt$BASIC_MENU <<- boards
+          opt$BASIC_LOCKED <<- locked
+          ## Live-refilter the admin's own sidebar now, without a reload --
+          ## other sessions still pick this up on their next page load, since
+          ## opt is per-process (see note above).
+          boards_rv <- getUserOption(session, "basic_menu_boards")
+          if (!is.null(boards_rv)) {
+            boards_rv(opg_basic_menu_boards(boards = boards))
+          }
+          ## Same live treatment for the locked-settings selection: the
+          ## locked_boards observer in opg_server.R re-toggles the class in
+          ## the admin's own settings sidebar.
+          locked_rv <- getUserOption(session, "locked_boards")
+          if (!is.null(locked_rv)) locked_rv(locked)
+          log_admin_action(
+            admin_email = auth$email,
+            action = "basic_menu",
+            subjects = paste(
+              c(boards, if (length(locked)) paste0("locked:", locked) else "locked:none"),
+              collapse = ";"
+            )
+          )
+          basic_menu_status(paste0(
+            "Saved at ", format(Sys.time(), "%H:%M:%S"),
+            " - your menu and locked settings update now; other users see it after a page reload."
+          ))
+        },
+        error = function(e) basic_menu_status(paste("Save failed:", e$message))
+      )
+    })
 
     ## ================================================================================
     ## =================================== END ========================================

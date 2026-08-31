@@ -30,13 +30,23 @@ AdminPanelUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   fullH <- "100%"
+  fullH <- "calc(100vh - 60px)"
+  
+  ## Both choosers list every board of the full sidebar menu, labelled with its
+  ## group so "Samples" and "Features" are not ambiguous.
+  menu_tree <- opg_menu_tree()
+  basic_choices <- unlist(lapply(names(menu_tree), function(g) {
+    stats::setNames(names(menu_tree[[g]]), paste0(g, " - ", menu_tree[[g]]))
+  }))
 
-  tabs <- shiny::tabsetPanel(
+  ## same shell as the Settings board (appsettings_ui.R): nav list on the left
+  tabs <- bslib::navset_pill_list(
     id = ns("tabs1"),
-    shiny::tabPanel(
+    widths = c(2, 10),
+    bslib::nav_panel(
       "Overview",
       bslib::layout_columns(
-        col_widths = 12,
+        col_widths = c(6,6),
         height = fullH,
         row_heights = list(1),
         admin_table_users_ui(
@@ -49,23 +59,66 @@ AdminPanelUI <- function(id) {
         )
       )
     ),
-    shiny::tabPanel(
+    bslib::nav_panel(
       "User Management",
       bslib::layout_columns(
-        col_widths = 12,
+        col_widths = c(6,6),
         height = fullH,
-        row_heights = list("auto", 1),
-        bs_alert("Manage user credentials. Click on a cell to edit it. Use the buttons below to add or remove users, and save changes when done."),
-        admin_table_credentials_ui(
-          id = ns("credentials"),
-          title = "User Credentials",
-          info.text = "Editable table of user credentials from the CREDENTIALS file.",
-          caption = "Edit user credentials and save changes.",
-          height = c("100%", TABLE_HEIGHT_MODAL)
+        row_heights = list(1),
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "100%",
+          row_heights = list("auto",1),
+          bs_alert("Manage user credentials. Click on a cell to edit it. Use the buttons below to add or remove users, and save changes when done."),
+          admin_table_credentials_ui(
+            id = ns("credentials"),
+            title = "User Credentials",
+            info.text = "Editable table of user credentials from the CREDENTIALS file.",
+            caption = "Edit user credentials and save changes.",
+            height = c("100%", TABLE_HEIGHT_MODAL)
+          )
         )
       )
     ),
-    shiny::tabPanel(
+    bslib::nav_panel(
+      "Basic Menu",
+      bslib::layout_columns(
+        col_widths = c(6, 6, 12),
+        ## bound the height so the two lists scroll inside their cards and the
+        ## Save row stays on screen instead of running off the bottom
+        height = fullH,
+        row_heights = list(1, "auto"),
+        bslib::card(
+          bslib::card_header("Basic menu items"),
+          bslib::card_body(
+            bs_alert("Choose which menu items are kept when a user switches on 'Basic menu' in Settings. Changes preview in your own session immediately (with Basic menu switched on for yourself); Save applies the choice to the whole deployment, and other users see it after a page reload."),
+            shiny::checkboxGroupInput(
+              ns("basic_menu"),
+              label = NULL,
+              choices = basic_choices,
+              selected = opt$BASIC_MENU
+            )
+          )
+        ),
+        bslib::card(
+          bslib::card_header("Locked settings"),
+          bslib::card_body(
+            bs_alert("Choose which boards have their advanced settings greyed out in the settings sidebar. Unticked boards keep their options fully usable in basic mode. Boards with no advanced settings are unaffected either way. Changes preview in your own session immediately (with Basic menu on); Save applies them to the whole deployment."),
+            shiny::checkboxGroupInput(
+              ns("basic_locked"),
+              label = NULL,
+              choices = basic_choices,
+              selected = opt$BASIC_LOCKED
+            )
+          )
+        ),
+        div(
+          shiny::textOutput(ns("basic_menu_status")),
+          shiny::actionButton(ns("save_basic_menu"), "Save", class = "btn-primary")
+        )
+      )
+    ),
+    bslib::nav_panel(
       "Data Management",
       bslib::layout_columns(
         col_widths = 12,

@@ -307,10 +307,13 @@ admin_table_datamanager_server <- function(id, auth) {
           class = "compact hover",
           rownames = FALSE,
           selection = list(mode = "multiple", target = "row"),
+          extensions = c("Scroller"),
+          plugins = "scrollResize",
           options = list(
             dom = "tip",
             scrollX = TRUE,
             scrollY = "45vh",
+            scrollResize = TRUE,
             deferRender = TRUE,
             pageLength = 50,
             order = list(list(0, "asc"), list(1, "asc"))

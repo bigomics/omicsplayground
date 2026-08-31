@@ -206,38 +206,6 @@ tipifyB <- function(...) {
 ##   return(Sys.getenv("SHINYPROXY_USERNAME") != "")
 ## }
 
-tabRequire <- function(pgx, session, tabname, slot, enable = TRUE) {
-  has.slot <- rv_has_value(pgx, slot)
-  if (has.slot && enable) {
-    bigdash.showTab(session, tabname)
-  } else {
-    bigdash.hideTab(session, tabname)
-  }
-}
-
-tabRequireTS <- function(pgx, session, tabname, enable = TRUE) {
-  time.vars <- playbase::get_timevars()
-  found.time.var <- grep(time.vars, colnames(pgx$samples), ignore.case = TRUE)
-  valid.contrasts <- any(grepl("IA:*", colnames(pgx$contrasts)))
-  if (length(found.time.var) > 0 && enable && valid.contrasts) {
-    bigdash.showTab(session, tabname)
-  } else {
-    bigdash.hideTab(session, tabname)
-  }
-}
-
-fileRequire <- function(file, tabname, subtab) {
-  file1 <- playbase::search_path(c(FILES, FILESX), file)
-  has.file <- !is.null(file1) && file.exists(file1)
-  if (!has.file) {
-    message(paste("[MAIN] file ", file, " not found. Hiding", subtab, "\n"))
-    hideTab(tabname, subtab)
-  } else {
-    message(paste("[MAIN] file ", file, " available. Showing", subtab, "\n"))
-    showTab(tabname, subtab)
-  }
-}
-
 # theming for the loading spinner
 waiter::waiter_set_theme(html = waiter::spin_3(), color = waiter::transparent(.5))
 
@@ -511,3 +479,41 @@ all.plotly.buttons <- c(
   "resetViews", "toggleSpikelines",
   "resetViewMapbox", "zoomInMapbox", "zoomOutMapbox"
 )
+
+
+#' Hostname used to namespace per-deploy files in etc/
+#'
+#' Deploys mount a shared S3 bucket at etc/, so anything the app writes there
+#' must carry the server's name or two deploys silently overwrite each other.
+#' opt$HOSTNAME comes from the OPTIONS file mounted into each deploy.
+#' @return Hostname, sanitised for use in a filename.
+opg_hostname <- function() {
+  host <- opt$HOSTNAME
+  if (is.null(host) || !nzchar(host)) host <- toupper(Sys.info()[["nodename"]])
+  gsub("[^A-Za-z0-9._-]", "_", host)
+}
+
+#' Path this deploy writes a shared etc/ settings file to
+#' @param name Base file name, e.g. "BASIC_MENU".
+#' @return Absolute path, hostname appended.
+etc_host_file <- function(name) {
+  file.path(ETC, paste0(name, "-", opg_hostname()))
+}
+
+#' Read a list of board ids written by the admin panel
+#'
+#' Prefers this deploy's own file; a plain, hostname-less file is honoured as a
+#' fleet-wide default for everyone sharing the bucket. An existing but empty
+#' file is a real choice ("none"), not a missing one.
+#' @param name Base file name, e.g. "BASIC_MENU".
+#' @param fallback Value to use when neither file exists.
+#' @return Character vector of board ids.
+read_board_list <- function(name, fallback) {
+  for (f in c(etc_host_file(name), file.path(ETC, name))) {
+    if (file.exists(f)) {
+      boards <- trimws(readLines(f, warn = FALSE))
+      return(boards[nzchar(boards)])
+    }
+  }
+  fallback
+}
