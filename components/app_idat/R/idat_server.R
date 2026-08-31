@@ -334,7 +334,10 @@ idat_inventory <- function(dir) {
   if (!length(paths)) {
     return(idat_no_samples())
   }
-  base <- sub("_(Grn|Red)\\.idat(\\.gz)?$", "", basename(paths), ignore.case = TRUE)
+  ## Key on the full path, not the basename: per-plate subdirectories routinely
+  ## repeat a position (plate1/A01, plate2/A01), and keying on the basename
+  ## folds them into one row that keeps plate1's files and loses plate2's.
+  base <- sub("_(Grn|Red)\\.idat(\\.gz)?$", "", paths, ignore.case = TRUE)
   chan <- ifelse(grepl("_Grn\\.idat(\\.gz)?$", paths, ignore.case = TRUE), "grn", "red")
   samples <- sort(unique(base))
   pick <- function(s, ch) {
@@ -342,9 +345,12 @@ idat_inventory <- function(dir) {
     if (length(hit)) hit[1] else NA_character_
   }
   out <- data.frame(
-    sample = samples,
-    grn = vapply(samples, pick, character(1), "grn"),
-    red = vapply(samples, pick, character(1), "red"),
+    ## A label, not the key. It becomes Sample_Name in a synthesized sheet, so
+    ## it stays the readable file prefix; make.unique separates the collisions
+    ## the key already keeps apart.
+    sample = make.unique(basename(samples)),
+    grn = vapply(samples, pick, character(1), "grn", USE.NAMES = FALSE),
+    red = vapply(samples, pick, character(1), "red", USE.NAMES = FALSE),
     stringsAsFactors = FALSE
   )
   out$complete <- !is.na(out$grn) & !is.na(out$red)
@@ -363,18 +369,33 @@ idat_inventory <- function(dir) {
 #' @param files What \code{input$idat} gives, or NULL.
 #' @param exdir Directory to stage into; created if absent.
 #'
-#' @return \code{list(dir, inventory, sheet)}. \code{sheet} is the user's own
-#'   sample sheet if the upload carried one (a name matching sheet|sample wins
-#'   over any other CSV), else NA.
+#' @return \code{list(dir, inventory, sheet, rejected)}. \code{sheet} is the
+#'   user's own sample sheet if the upload carried one (a name matching
+#'   sheet|sample wins over any other CSV), else NA. \code{rejected} names the
+#'   ZIP entries refused for pointing outside the staging directory.
 idat_stage_upload <- function(files, exdir = tempfile("idat")) {
   if (is.null(files) || nrow(files) == 0) {
-    return(list(dir = exdir, inventory = idat_no_samples(), sheet = NA_character_))
+    return(list(
+      dir = exdir, inventory = idat_no_samples(), sheet = NA_character_,
+      rejected = character(0)
+    ))
   }
   dir.create(exdir, recursive = TRUE, showWarnings = FALSE)
+  rejected <- character(0)
 
   for (i in seq_len(nrow(files))) {
     if (grepl("\\.zip$", files$name[i], ignore.case = TRUE)) {
-      utils::unzip(files$datapath[i], exdir = exdir)
+      ## unzip() honours "../" in an entry name and overwrites whatever it
+      ## lands on, so entries are filtered before anything is written. The
+      ## check is lexical, not normalizePath(): realpath() leaves ".." in place
+      ## for a path that does not exist yet, which is every path here.
+      ## (Absolute entry names are safe - unzip re-roots them under exdir.)
+      nms <- utils::unzip(files$datapath[i], list = TRUE)$Name
+      inside <- !grepl("(^|[/\\\\])\\.\\.([/\\\\]|$)", nms)
+      rejected <- c(rejected, nms[!inside])
+      if (any(inside)) {
+        utils::unzip(files$datapath[i], files = nms[inside], exdir = exdir)
+      }
     } else {
       ## basename(): a browser can send a relative path, and a crafted one
       ## ("../../x") must not escape the staging directory.
@@ -394,7 +415,10 @@ idat_stage_upload <- function(files, exdir = tempfile("idat")) {
   hit <- grep("sheet|sample", basename(csv), ignore.case = TRUE)
   sheet <- if (length(hit)) csv[hit[1]] else if (length(csv)) csv[1] else NA_character_
 
-  list(dir = exdir, inventory = idat_inventory(exdir), sheet = sheet)
+  list(
+    dir = exdir, inventory = idat_inventory(exdir), sheet = sheet,
+    rejected = rejected
+  )
 }
 
 #' Write a minimal sample sheet for an upload that carried none.
@@ -601,18 +625,19 @@ idat_samples <- function(res, sheet = NA_character_) {
   if (is.na(sheet) || !file.exists(sheet)) {
     return(bare)
   }
-  ## Illumina sheets open with a [Header] block and put the real column names
-  ## after a [Data] marker - minfi::read.metharray.sheet() skips to it, and so
-  ## must this, or read.csv takes "[Header]" as the header row, finds no
-  ## Sample_Name, and silently drops every phenotype the sheet carried.
+  ## The sheet as read_idats() resolved it, not as the CSV was written: rows
+  ## whose IDATs were absent are already gone, in the order the beta columns
+  ## came back. Re-parsing the CSV instead runs make.unique() over rows that
+  ## were never read, so with a duplicated Sample_Name (an ordinary technical
+  ## replicate) the dropped row takes the survivor's name and every phenotype
+  ## lands on the wrong sample. read_idat_targets() carries @noRd but no export
+  ## - same reach as plotIntensityQC below, for the same reason.
+  ## Suppressed because this is a second parse of a sheet already read: its
+  ## phase line and its two expected warnings are in the log once already.
   df <- tryCatch(
-    {
-      marker <- grep("^\\[DATA\\]", readLines(sheet, warn = FALSE), ignore.case = TRUE)
-      utils::read.csv(sheet,
-        skip = if (length(marker)) marker[1] else 0,
-        stringsAsFactors = FALSE
-      )
-    },
+    suppressWarnings(suppressMessages(
+      get("read_idat_targets", envir = asNamespace("playbase.epigenetics"))(sheet)$targets
+    )),
     error = function(e) NULL
   )
   if (is.null(df) || !nrow(df)) {
@@ -626,7 +651,9 @@ idat_samples <- function(res, sheet = NA_character_) {
     return(bare)
   }
   rownames(df) <- make.unique(as.character(df[[key[1]]]))
-  if (!any(ids %in% rownames(df))) {
+  ## All, not any: one matching id was enough to accept a whole sheet, and
+  ## every other sample came back silently all-NA.
+  if (!all(ids %in% rownames(df))) {
     return(bare)
   }
 
@@ -643,6 +670,41 @@ idat_samples <- function(res, sheet = NA_character_) {
   out <- df[ids, , drop = FALSE]
   rownames(out) <- ids
   out
+}
+
+#' Account for every staged pair, so none can go missing unreported.
+#'
+#' read_idat_targets() only ever sees the rows the sheet lists, so its
+#' \code{failed} frame is silent about a complete pair the sheet never mentions
+#' - and about a second batch under its own sheet, since staging picks one
+#' sheet. Four staged pairs plus a sheet naming two therefore convert two and
+#' report nothing, which is exactly what the Log & failures tab promises cannot
+#' happen. This is the check that keeps that promise.
+#'
+#' @param res The \code{res} of a successful conversion.
+#' @param inventory The \code{inventory} from \code{idat_stage_upload()}.
+#' @return The failures frame, plus a row for any shortfall.
+idat_reconcile <- function(res, inventory) {
+  failed <- res$failed
+  if (is.null(failed) || !nrow(failed)) {
+    failed <- data.frame(
+      sample = character(0), reason = character(0), stringsAsFactors = FALSE
+    )
+  }
+  gap <- sum(inventory$complete) - (ncol(res$beta) + nrow(failed))
+  if (gap <= 0) {
+    return(res$failed)
+  }
+  ## Inventory names are file prefixes, beta columns are the sheet's
+  ## Sample_Name - the same thing only when the sheet names samples after their
+  ## files (always so for a synthesized one). Name them when the two line up,
+  ## say how many when they do not; a wrong name is worse than a count.
+  lost <- setdiff(inventory$sample[inventory$complete], c(colnames(res$beta), failed$sample))
+  rbind(failed, data.frame(
+    sample = if (length(lost) == gap) lost else sprintf("%d sample(s)", gap),
+    reason = "staged as a complete Grn/Red pair but never read - not listed in the sample sheet used",
+    stringsAsFactors = FALSE
+  ))
 }
 
 #' Bundle a conversion into the three CSVs the upload board wants, zipped.
@@ -777,6 +839,13 @@ idat_server <- function(id, recompute_pgx = NULL) {
             "Over the %d-sample limit; split the cohort.", IDAT_MAX_SAMPLES
           ))
         },
+        if (length(st$rejected)) {
+          shiny::div(style = "color: #c66;", sprintf(
+            "%d ZIP entr%s refused for pointing outside the upload: %s",
+            length(st$rejected), ifelse(length(st$rejected) == 1, "y was", "ies were"),
+            paste(st$rejected, collapse = ", ")
+          ))
+        },
         shiny::div(if (is.na(st$sheet)) {
           "No sample sheet - one will be generated."
         } else {
@@ -789,13 +858,27 @@ idat_server <- function(id, recompute_pgx = NULL) {
       st <- staged()
       inv <- st$inventory
       n.ok <- sum(inv$complete)
-      shiny::validate(
-        shiny::need(n.ok > 0, "Please upload at least one complete pair of IDAT files."),
-        shiny::need(n.ok <= IDAT_MAX_SAMPLES, sprintf(
+      ## showNotification, not validate(): need() raises shiny.silent.error,
+      ## which an observer swallows - the button would just do nothing.
+      stop.msg <- if (n.ok == 0) {
+        "Please upload at least one complete pair of IDAT files."
+      } else if (n.ok > IDAT_MAX_SAMPLES) {
+        sprintf(
           "%d samples exceeds the %d-sample limit for one conversion.",
           n.ok, IDAT_MAX_SAMPLES
-        ))
-      )
+        )
+      } else if (!isTRUE(is.finite(input$detect_p)) || !isTRUE(is.finite(input$max_fail))) {
+        ## A cleared numeric field is NA: detect_p = NA silently masks nothing
+        ## (the QC column then reads 0 fails) and max_fail = NA dies deep in
+        ## the reader, minutes in.
+        "Detection p-value and drop threshold must both be numbers."
+      } else {
+        NULL
+      }
+      if (!is.null(stop.msg)) {
+        shiny::showNotification(stop.msg, type = "error")
+        return()
+      }
       ## Always hand read_idats() a CSV path, never the directory: it then
       ## narrows to that one file instead of rbinding every CSV in the upload.
       sheet <- if (is.na(st$sheet)) idat_write_sheet(inv, st$dir) else st$sheet
@@ -804,8 +887,8 @@ idat_server <- function(id, recompute_pgx = NULL) {
       progress_file(tempfile("idat_progress"))
       started_at(Sys.time())
       convert_task$invoke(
-        sheet, input$method, input$detect_p, input$max_fail, input$platform,
-        progress_file()
+        sheet, input$method, min(max(input$detect_p, 0), 1), input$max_fail,
+        input$platform, progress_file()
       )
     })
 
@@ -816,6 +899,8 @@ idat_server <- function(id, recompute_pgx = NULL) {
           if (is.na(out$msg)) "IDAT conversion failed." else out$msg,
           type = "error", duration = NULL
         )
+      } else {
+        out$res$failed <- idat_reconcile(out$res, staged()$inventory)
       }
       result(out)
     })

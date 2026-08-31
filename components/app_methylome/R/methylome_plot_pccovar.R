@@ -36,11 +36,9 @@ mp_pc_covar <- function(pgx, pc) {
   for (v in vars) {
     x <- pgx$samples[smp, v]
     num <- suppressWarnings(as.numeric(as.character(x)))
-    ## A numeric column with few distinct values is a label wearing numbers -
-    ## a slide id, a plate, a batch. Correlating a PC against it would report a
-    ## trend through arbitrary codes; ten distinct values is where we stop
-    ## believing the numbers mean magnitude.
-    is_cont <- sum(!is.na(num)) >= 6 && length(unique(num[!is.na(num)])) > 10
+    ## Correlating a PC against a slide id or a plate would report a trend
+    ## through arbitrary codes, so the same rule the model uses decides here.
+    is_cont <- mp_is_continuous_var(x)
     if (is_cont) {
       types[v] <- "continuous"
       ok <- !is.na(num)

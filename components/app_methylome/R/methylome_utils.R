@@ -89,6 +89,16 @@ mp_beta <- function(pgx) {
   X
 }
 
+## Is a sample column a genuine continuous variable? A numeric column with few
+## distinct values is a label wearing numbers - a slide id, a plate, a batch.
+## Treating one as continuous puts eight chip barcodes into a design as a
+## single linear term and offers them as an EWAS outcome; ten distinct values
+## is where we stop believing the numbers mean magnitude.
+mp_is_continuous_var <- function(x, min_n = 6) {
+  num <- suppressWarnings(as.numeric(as.character(x)))
+  sum(!is.na(num)) >= min_n && length(unique(num[!is.na(num)])) > 10
+}
+
 ## The per-sample QC computation moved to playbase.epigenetics::sample_qc(),
 ## which takes a matrix, a probe annotation and a sample sheet rather than a
 ## pgx - the upload step must show the same table before any pgx exists. What

@@ -228,16 +228,13 @@ mp_model_vars <- function(pgx) {
 ## of published EWAS regress on an exposure rather than compare two groups -
 ## age, BMI, gestational age, pack-years, dose - and limma fits those with the
 ## same machinery, so refusing them would be an arbitrary restriction.
-## Two-valued numerics are excluded: those are a two-group contrast wearing
-## numbers, and belong on the contrast path where delta-beta is meaningful.
+## Few-valued numerics are excluded by mp_is_continuous_var(): a slide id or a
+## two-level dose is a label wearing numbers, and belongs on the group path
+## where delta-beta is meaningful.
 mp_continuous_vars <- function(pgx) {
   s <- pgx$samples
   if (is.null(s)) return(character(0))
-  keep <- vapply(colnames(s), function(k) {
-    v <- suppressWarnings(as.numeric(as.character(s[[k]])))
-    sum(!is.na(v)) >= 6 && stats::sd(v, na.rm = TRUE) > 0 &&
-      length(unique(v[!is.na(v)])) > 2
-  }, logical(1))
+  keep <- vapply(colnames(s), function(k) mp_is_continuous_var(s[[k]]), logical(1))
   sort(colnames(s)[keep])
 }
 
@@ -580,6 +577,19 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
     shiny::validate(shiny::need(!is.null(grp), "This contrast has no group labels."))
     ss <- intersect(names(grp), colnames(beta))
     grp <- droplevels(factor(grp[ss]))
+    ## factor() orders levels alphabetically, which has nothing to do with the
+    ## contrast's direction: monocytes_vs_whole_blood would otherwise be fitted
+    ## as whole_blood - monocytes, inverting every hyper/hypo label and every
+    ## volcano colour. exp.matrix carries the real direction - the negatively
+    ## weighted group is the reference, so it has to be the first level.
+    em <- pgx$model.parameters$exp.matrix
+    if (nlevels(grp) == 2 && !is.null(em) && contrast %in% colnames(em) &&
+        all(ss %in% rownames(em))) {
+      w <- tapply(em[ss, contrast], grp, mean, na.rm = TRUE)
+      if (all(is.finite(w)) && w[[1]] > w[[2]]) {
+        grp <- stats::relevel(grp, levels(grp)[2])
+      }
+    }
     shiny::validate(shiny::need(nlevels(grp) >= 2,
       "This outcome has only one group. Pick a contrast or a variable that varies."))
     dat <- data.frame(.group = grp, row.names = ss, stringsAsFactors = FALSE)
@@ -590,9 +600,10 @@ mp_fit_ewas <- function(pgx, contrast, covars = character(0),
   used <- character(0); dropped <- character(0)
   for (k in setdiff(covars, contrast)) {
     v <- pgx$samples[ss, k]
-    if (is.numeric(v)) {
-      if (stats::sd(v, na.rm = TRUE) > 0) { dat[[k]] <- v; used <- c(used, k) }
-      else dropped <- c(dropped, paste0(k, " (constant)"))
+    ## Same rule as the outcome picker: an integer-coded batch enters the
+    ## design as a factor, not as one linear term through its barcodes.
+    if (mp_is_continuous_var(v)) {
+      dat[[k]] <- as.numeric(as.character(v)); used <- c(used, k)
     } else {
       f <- droplevels(factor(as.character(v)))
       if (nlevels(f) >= 2) { dat[[k]] <- f; used <- c(used, k) }

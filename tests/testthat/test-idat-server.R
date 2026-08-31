@@ -16,6 +16,47 @@ source(file.path(.board_dir, "idat_server.R"), local = TRUE)
   data.frame(name = names, datapath = paths, stringsAsFactors = FALSE)
 }
 
+## IDAT pairs on disk. idat_samples() reads a sheet the way read_idats() did -
+## resolved against the files that actually exist - so a sheet fixture only
+## means anything when its files are there.
+.idats <- function(prefixes, dir = tempfile("stage")) {
+  dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  for (p in prefixes) {
+    for (ch in c("Grn", "Red")) {
+      writeLines("x", file.path(dir, paste0(p, "_", ch, ".idat")))
+    }
+  }
+  dir
+}
+
+## A ZIP holding entry names verbatim. utils::zip() shells out to the zip
+## binary, which strips "../" on the way in, so a traversing archive cannot be
+## built with it - and that is the archive the staging code has to survive.
+## Stored, zero-length members: CRC and both sizes are then 0.
+.raw_zip <- function(names, file = tempfile(fileext = ".zip")) {
+  u16 <- function(x) writeBin(as.integer(x), raw(), size = 2, endian = "little")
+  u32 <- function(x) writeBin(as.integer(x), raw(), size = 4, endian = "little")
+  local <- central <- raw(0)
+  for (nm in names) {
+    n <- charToRaw(nm)
+    central <- c(
+      central, charToRaw("PK\001\002"), u16(20), u16(10), u16(0), u16(0),
+      u16(0), u16(0), u32(0), u32(0), u32(0), u16(length(n)), u16(0),
+      u16(0), u16(0), u16(0), u32(0), u32(length(local)), n
+    )
+    local <- c(
+      local, charToRaw("PK\003\004"), u16(10), u16(0), u16(0), u16(0),
+      u16(0), u32(0), u32(0), u32(0), u16(length(n)), u16(0), n
+    )
+  }
+  writeBin(c(
+    local, central, charToRaw("PK\005\006"), u16(0), u16(0),
+    u16(length(names)), u16(length(names)), u32(length(central)),
+    u32(length(local)), u16(0)
+  ), file)
+  file
+}
+
 ## ---- staging ---------------------------------------------------------------
 
 test_that("no upload yields an empty inventory with the right columns", {
@@ -77,6 +118,43 @@ test_that("a path-traversing upload name cannot escape the staging directory", {
   files <- .upload(c("../../evil_Grn.idat", "../../evil_Red.idat"))
   st <- idat_stage_upload(files, exdir = exdir)
   expect_true(all(startsWith(normalizePath(st$inventory$grn), normalizePath(exdir))))
+})
+
+test_that("a traversing ZIP entry is refused and named, not written above exdir", {
+  ## unzip() honours "../" in an entry name and overwrites what it lands on, so
+  ## a crafted archive could write anywhere the app user can. The good entries
+  ## in the same archive must still stage.
+  root <- tempfile("root")
+  exdir <- file.path(root, "a", "b", "exdir")
+  zip.file <- .raw_zip(c(
+    "../../ESCAPED_Grn.idat", "../../ESCAPED_Red.idat",
+    "ok_Grn.idat", "ok_Red.idat"
+  ))
+  files <- data.frame(name = "idats.zip", datapath = zip.file, stringsAsFactors = FALSE)
+
+  st <- idat_stage_upload(files, exdir = exdir)
+  expect_equal(basename(list.files(root, recursive = TRUE)), c("ok_Grn.idat", "ok_Red.idat"))
+  expect_equal(st$inventory$sample, "ok")
+  ## Refused, not silently dropped: the summary says which entries went.
+  expect_equal(st$rejected, c("../../ESCAPED_Grn.idat", "../../ESCAPED_Red.idat"))
+})
+
+test_that("the same pair name in two subdirectories stays two samples", {
+  ## Per-plate subdirectories routinely repeat a position. Keying on the
+  ## basename folded them into one row that kept plate1 and lost plate2 -
+  ## half the cohort gone, reported as "1 sample ready".
+  src <- tempfile("src")
+  for (p in c("plate1", "plate2")) {
+    dir.create(file.path(src, p), recursive = TRUE)
+    for (ch in c("Grn", "Red")) {
+      writeLines("x", file.path(src, p, sprintf("A01_%s.idat", ch)))
+    }
+  }
+  inv <- idat_inventory(src)
+  expect_equal(nrow(inv), 2)
+  expect_true(all(inv$complete))
+  expect_equal(inv$sample, c("A01", "A01.1"))
+  expect_true(grepl("plate1/", inv$grn[1]) && grepl("plate2/", inv$grn[2]))
 })
 
 ## ---- sheet detection and synthesis -----------------------------------------
@@ -242,10 +320,11 @@ test_that("with no sheet the sample table is the ids, named by themselves", {
 
 test_that("a sheet's phenotype columns are carried over, aligned to the betas", {
   ## Note the sheet's row order differs from the beta columns on purpose.
-  f <- tempfile(fileext = ".csv")
+  d <- .idats(c("a", "b"))
+  f <- file.path(d, "SampleSheet.csv")
   write.csv(data.frame(
     Sample_Name = c("S2", "S1"), Slide = c("x", "y"),
-    Basename = c("/tmp/a", "/tmp/b"), group = c("case", "ctrl"),
+    Basename = c("a", "b"), group = c("case", "ctrl"),
     age = c(61, 44), stringsAsFactors = FALSE
   ), f, row.names = FALSE)
 
@@ -261,18 +340,19 @@ test_that("a sheet's phenotype columns are carried over, aligned to the betas", 
 })
 
 test_that("an Illumina [Header]/[Data] sheet is read from the right row", {
-  ## Real Illumina sheets open with a [Header] block. read.csv without the
-  ## skip takes "[Header]" as the column names, finds no Sample_Name, and
-  ## drops every phenotype the sheet carried - silently.
-  f <- tempfile(fileext = ".csv")
+  ## Real Illumina sheets open with a [Header] block, and a reader that takes
+  ## "[Header]" as the column names finds no Sample_Name and drops every
+  ## phenotype the sheet carried - silently.
+  d <- .idats(c("5723646052_R01C01", "5723646052_R02C01"))
+  f <- file.path(d, "SampleSheet.csv")
   writeLines(c(
-    "[Header],,,",
-    "Investigator Name,MrNoName,,",
-    ",,,",
-    "[Data],,,",
-    "Sample_Name,Sentrix_ID,age,status",
-    "S1,5723646052,58,normal",
-    "S2,5723646052,75,cancer"
+    "[Header],,,,",
+    "Investigator Name,MrNoName,,,",
+    ",,,,",
+    "[Data],,,,",
+    "Sample_Name,Sentrix_ID,Sentrix_Position,age,status",
+    "S1,5723646052,R01C01,58,normal",
+    "S2,5723646052,R02C01,75,cancer"
   ), f)
 
   res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
@@ -280,7 +360,46 @@ test_that("an Illumina [Header]/[Data] sheet is read from the right row", {
   expect_equal(rownames(s), c("S1", "S2"))
   expect_equal(s$age, c(58, 75))
   expect_equal(s$status, c("normal", "cancer"))
-  expect_true("Sentrix_ID" %in% colnames(s))
+  ## Sentrix_ID/Sentrix_Position come back as Slide/Array: the reader
+  ## normalises the naming variants, and the chip stays as a batch covariate.
+  expect_true(all(c("Slide", "Array") %in% colnames(s)))
+})
+
+test_that("a duplicated Sample_Name attaches to the row that was actually read", {
+  ## Technical replicates share a Sample_Name. Uniquifying over every CSV row -
+  ## including the one whose IDATs were never staged - names the dropped row
+  ## "S1" and the survivor "S1.1", so the survivor's phenotypes come back as
+  ## the dropped row's. Silently wrong ages, and a wrong Slide batch covariate.
+  d <- .idats(c("S1b", "S2")) ## note: no S1a on disk
+  f <- file.path(d, "SampleSheet.csv")
+  write.csv(data.frame(
+    Sample_Name = c("S1", "S1", "S2"),
+    Basename = c("S1a", "S1b", "S2"),
+    Slide = c("plate1", "plate2", "plate2"),
+    group = c("never_read", "survivor", "ctrl"),
+    age = c(99, 44, 61), stringsAsFactors = FALSE
+  ), f, row.names = FALSE)
+
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  s <- idat_samples(res, f)
+  expect_equal(rownames(s), c("S1", "S2"))
+  expect_equal(s$group, c("survivor", "ctrl"))
+  expect_equal(s$age, c(44, 61))
+  expect_equal(s$Slide, c("plate2", "plate2"))
+})
+
+test_that("a sheet naming only some of the samples is refused, not half-joined", {
+  ## One match used to accept the whole sheet, and every other sample came
+  ## back all-NA - phenotypes that look filled in and are not.
+  d <- .idats(c("S1", "S2"))
+  f <- file.path(d, "SampleSheet.csv")
+  write.csv(data.frame(
+    Sample_Name = "S1", Basename = "S1", group = "case",
+    stringsAsFactors = FALSE
+  ), f, row.names = FALSE)
+
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  expect_equal(colnames(idat_samples(res, f)), "sample")
 })
 
 test_that("a sheet that cannot be joined falls back rather than misaligning", {
@@ -297,6 +416,56 @@ test_that("a sheet that cannot be joined falls back rather than misaligning", {
   write.csv(data.frame(Sample_Name = c("X9", "X8"), group = c("case", "ctrl")),
     f2, row.names = FALSE)
   expect_equal(colnames(idat_samples(res, f2)), "sample")
+})
+
+## ---- reconciling the inventory against the conversion ----------------------
+
+test_that("staged pairs the sheet never listed are reported, not lost", {
+  ## Four complete pairs plus a sheet naming two: the reader returns two
+  ## samples and an empty failures frame, so the Log tab used to say "All
+  ## samples read successfully" with half the cohort gone.
+  inv <- data.frame(
+    sample = c("S1", "S2", "S3", "S4"), complete = TRUE,
+    stringsAsFactors = FALSE
+  )
+  res <- list(
+    beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))),
+    failed = data.frame(sample = character(0), reason = character(0))
+  )
+  out <- idat_reconcile(res, inv)
+  expect_equal(out$sample, c("S3", "S4"))
+  expect_match(out$reason[1], "never read")
+})
+
+test_that("a shortfall whose names cannot be matched is still reported by count", {
+  ## A user sheet names samples whatever it likes, so the inventory's file
+  ## prefixes need not be the beta column names. Better a count than a guess.
+  inv <- data.frame(
+    sample = c("GSM1_R01C01", "GSM2_R01C02"), complete = TRUE,
+    stringsAsFactors = FALSE
+  )
+  res <- list(
+    beta = matrix(0, 2, 1, dimnames = list(NULL, "Control_1")),
+    failed = NULL
+  )
+  out <- idat_reconcile(res, inv)
+  expect_equal(nrow(out), 1)
+  expect_equal(out$sample, "1 sample(s)")
+})
+
+test_that("a fully accounted-for conversion adds nothing", {
+  ## Incomplete pairs are already reported by the summary, and a sample the
+  ## reader named as failed must not be counted twice.
+  inv <- data.frame(
+    sample = c("S1", "S2", "S3"), complete = c(TRUE, TRUE, FALSE),
+    stringsAsFactors = FALSE
+  )
+  res <- list(
+    beta = matrix(0, 2, 1, dimnames = list(NULL, "S1")),
+    failed = data.frame(sample = "S2", reason = "unreadable IDAT",
+      stringsAsFactors = FALSE)
+  )
+  expect_equal(idat_reconcile(res, inv), res$failed)
 })
 
 ## ---- download bundle -------------------------------------------------------

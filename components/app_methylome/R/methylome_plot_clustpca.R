@@ -136,6 +136,12 @@ mp_pca_components <- function(pgx, npc = 8L, reduce.sd = 1000L, max_probes = 1e5
       pos[, i] <- -pos[, i]
     }
   }
+  ## Scores, not directions. The eigenvectors are unit-norm, so returning them
+  ## unscaled draws every component at the same spread whatever its variance -
+  ## PC8 as wide as PC1, under axis labels stating otherwise. X V = U D, and
+  ## G's eigenvalues are D^2, so d is the scale. This happens after the
+  ## loadings pass because that one needs the unscaled V.
+  pos <- sweep(pos, 2, d, "*")
   dimnames(pos) <- list(colnames(beta), paste0("PC", seq_len(npc)))
   dimnames(loadings) <- list(rn, paste0("PC", seq_len(npc)))
 
