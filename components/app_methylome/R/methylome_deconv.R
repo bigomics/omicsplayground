@@ -101,7 +101,7 @@ methylome_plot_composition_server <- function(id, pgx, r.cells,
     plot.RENDER <- function() {
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "Cell composition is not available. Press Estimate composition in the settings panel."))
+        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
       p <- pgx()
       ## Ordered by the phenotype the user picked, not by whichever sample
       ## column happened to come first - on a sheet led by slide or plate that
@@ -155,7 +155,7 @@ methylome_plot_compgroup_server <- function(id, pgx, r.cells, r.pheno,
     plot.RENDER <- function() {
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "Cell composition is not available. Press Estimate composition in the settings panel."))
+        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
       p <- pgx(); ph <- r.pheno()
       shiny::validate(shiny::need(!is.null(ph) && ph %in% colnames(p$samples),
         "No phenotype selected to compare composition against."))
@@ -225,7 +225,7 @@ methylome_table_composition_server <- function(id, r.cells, scrollY = "22vh") {
     table_data <- shiny::reactive({
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "Cell composition is not available. Press Estimate composition in the settings panel."))
+        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
       d <- as.data.frame(round(cc, 4))
       cbind(Sample = rownames(cc), d)
     })
