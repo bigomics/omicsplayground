@@ -19,12 +19,15 @@ library(shiny)
 library(bslib)
 library(dplyr)
 #library(playbase)
+library(bigdash)
 
 ## Make the shared styles and JS assets from the main app available.
 ## (matches components/app/R/global.R and ui.R)
-www_path <- normalizePath("../../app/R/www", mustWork = FALSE)
+www_path <- normalizePath("../../assets", mustWork = FALSE)
 if (dir.exists(www_path)) {
   shiny::addResourcePath("custom", www_path)
+  shiny::addResourcePath("assets", www_path)
+  shiny::addResourcePath("static", www_path)
 } else {
   message("[test/app.R] WARNING: www dir not found at ", www_path)
 }
@@ -40,14 +43,15 @@ assign(
   envir = globalenv()
 )
 
-## shared UI helpers used by qsee_ui.R / qsee_server.R (same set sourced by
-## the full app in components/00SourceAll.R)
+## shared UI helpers used by qsee_ui.R / qsee_server.R (same set
+## sourced by the full app in components/00SourceAll.R). Would be good
+## to be independent from this.
 ui_files <- list.files("../../ui", pattern = "\\.R$", full.names = TRUE)
 for (f in ui_files) source(f, encoding = "UTF-8")
 
+## Local R/Shiny files of this 'package'
 r_files <- list.files("../R", pattern = "\\.R$", full.names = TRUE)
 for (f in r_files) source(f, encoding = "UTF-8")
-
 app_files <- list.files("../shiny", pattern = "\\.R$", full.names = TRUE)
 for (f in app_files) source(f, encoding = "UTF-8")
 
@@ -57,22 +61,18 @@ pgx <- playbase::pgx.load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.p
 if (!exists("pgx")) pgx <- playdata::GEIGER_PGX
 pgx <- NULL
 
-ui <- bslib::page_fillable(
-  ## Include the main app's styles (fonts, layout, buttons, cards, etc.)
-  padding = 0, gap = 0,
-  shiny::tags$head(
-    shiny::tags$link(
-      rel = "stylesheet",
-      href = "custom/styles.min.css"
-    )
-  ),
-  shinyjs::useShinyjs(),
-  qsee_ui("qsee")
+QSEE_LAZY=FALSE
+QSEE_PURGE=FALSE
+QSEE_LAZY=TRUE
+QSEE_PURGE=TRUE
+
+ui <- qsee_app_shell(
+  qsee_ui("qsee", lazy = QSEE_LAZY)
 )
 
 server <- function(input, output, session) {
   ## The qsee_server module now registers its own outputs and PlotModuleServers
-  qsee_server("qsee", pgx = pgx)
+  qsee_server("qsee", pgx = pgx, purge = QSEE_PURGE, lazy = QSEE_LAZY)
 }
 
 shinyApp(ui, server)

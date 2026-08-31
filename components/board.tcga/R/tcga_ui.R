@@ -67,18 +67,16 @@ tcga_info <- "This analysis module computes the survival probability in (more th
 TcgaUI <- function(id) {
   ns <- NS(id)
 
-  div(
-    boardHeader(
-      title = "TCGA",
-      info_link = ns("tcga_info")
-    ),
+  OmicsBoardUI(
+    ns = ns,
+    title = "TCGA",
     tabsetPanel(
       id = ns("tabs1"),
       tabPanel(
         "TCGA survival",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           tcga_plot_survival_ui(
             ns("tcga_tcgasurv"),
             caption = paste(

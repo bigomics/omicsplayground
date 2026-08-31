@@ -99,6 +99,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(bigdash)
 library(grid)
 library(magrittr)
 library(future)
@@ -317,7 +318,7 @@ main.init_time <- round(Sys.time() - main.start_time, digits = 4)
 main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
-shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
+shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
@@ -338,3 +339,19 @@ i18n$set_translation_language("RNA-seq")
 
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
+
+## bigdash hooks, mirroring components/app/R/global.R
+options(
+  bigdash.tspan = tspan,
+  bigdash.editor_content = getEditorContent,
+  bigdash.editor_theme_observer = plotmodule_theme_observer,
+  bigdash.record_download = record_plot_download,
+  bigdash.watermark = isTRUE(opt$WATERMARK),
+  bigdash.watermark_png = function(file, position) {
+    addWatermark.PNG2(file, mark = file.path(FILES, "watermark-logo.png"), position = position)
+  },
+  bigdash.watermark_pdf = function(file, w, h) {
+    addWatermark.PDF2(file, w = w, h = h, mark = file.path(FILES, "watermark-logo.pdf"))
+  },
+  bigdash.pdf_settings = addSettings
+)

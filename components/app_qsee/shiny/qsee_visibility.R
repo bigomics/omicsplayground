@@ -2,150 +2,70 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
-## Shared tab-visibility helpers for QSEE boards. Each board UI embeds
-## qsee_visibility_probe(); the matching server reads input$is_visible
-## (via qsee_is_visible) and gates expensive precomputation on it.
+## Tab-visibility gating and Plotly purging for QSEE boards is provided by
+## bigdash's visibility toolbox (bigdash::bd_visibility_probe(),
+## bigdash::bd_is_visible(), bigdash::bd_redraw_tick(),
+## bigdash::bd_with_redraw()) -- see R/visibility.R in the bigdash package.
+##
+## What is left here is the one bit that is app-specific: whether purging is
+## enabled at all, driven by ENABLE_PLOTLY_PURGE in etc/OPTIONS.
 ##
 
-#' Invisible IntersectionObserver probe for board tab visibility.
-#'
-#' Reports whether this board's UI is actually shown on screen (e.g. its
-#' sidebar tab is selected) via `input$is_visible`, so the server can
-#' pause/resume expensive reactives. Works generically via
-#' IntersectionObserver instead of depending on any particular
-#' tab-container implementation (bigdash, bslib navset, etc.).
-#'
-#' NOTE: the probe must stay in normal layout flow (no display:none) or
-#' it can never register as visible. It is transparent rather than hidden so
-#' both IntersectionObserver and the fallback layout check can see it.
-#'
-#' @param ns module namespace function (`shiny::NS(id)`)
-#' @return a `shiny.tag.list` to prepend to the board UI
-qsee_visibility_probe <- function(ns) {
-  shiny::tagList(
-    shiny::tags$div(
-      id = ns("visible_probe"),
-      style = "width:1px; height:1px; opacity:0; pointer-events:none;"
-    ),
-    shiny::tags$script(shiny::HTML(sprintf(
-      "(function() {
-        var el = document.getElementById('%s');
-        if (!el) return;
-        var inputId = '%s';
-        var lastState = null;
-        function report(state) {
-          // Shiny.setInputValue is not attached until shiny.js finishes
-          // initializing, which can be after this script runs (it executes
-          // as soon as its containing markup is parsed/inserted). Retrying
-          // is safe: on failure we leave lastState untouched so the very
-          // same state is reported again on the next check() -- including
-          // the guaranteed one on 'shiny:connected' below -- instead of
-          // being silently dropped forever.
-          if (!(window.Shiny && typeof Shiny.setInputValue === 'function'))
-            return;
-          if (state !== lastState) {
-            lastState = state;
-            Shiny.setInputValue(inputId, state, {priority: 'event'});
-          }
-        }
-        function check() {
-          // offsetParent is null while a parent nav panel is display:none.
-          report(el.offsetParent !== null && el.getClientRects().length > 0);
-        }
-        if (window.IntersectionObserver) {
-          var io = new IntersectionObserver(function() { check(); });
-          io.observe(el);
-        }
-        // bslib changes classes/attributes on its parent nav panel. An
-        // initially hidden child does not reliably receive an intersection
-        // callback when that panel is activated, so observe those changes too.
-        var mo = new MutationObserver(function() {
-          window.requestAnimationFrame(check);
-        });
-        mo.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['class', 'style', 'hidden', 'aria-hidden'],
-          childList: true,
-          subtree: true
-        });
-        check();
-        document.addEventListener('shiny:connected', check);
-      })();",
-      ns("visible_probe"), ns("is_visible")
-    )))
-  )
-}
-
-#' Reactive that is TRUE only while this board's tab is on screen.
-#'
-#' @param input module `input`
-#' @param label optional label for debug messages (e.g. module name)
-#' @return a `reactive` logical
-qsee_is_visible <- function(input, label = NULL) {
-  shiny::reactive({
-    if (!is.null(label)) {
-      message("[", label, "] visible = ", input$is_visible)
+#' Read a boolean from the global `opt` list (etc/OPTIONS) or `getOption()`.
+qsee_opt_enabled <- function(name, default = TRUE) {
+  if (exists("opt", envir = .GlobalEnv, inherits = FALSE)) {
+    opt_list <- get("opt", envir = .GlobalEnv, inherits = FALSE)
+    if (is.list(opt_list) && !is.null(opt_list[[name]])) {
+      return(isTRUE(opt_list[[name]]))
     }
-    isTRUE(input$is_visible)
-  })
-}
-
-#' Visibility-gated board cache: recompute only when inputs change.
-#'
-#' Visibility controls *when* work is allowed to run, but does **not**
-#' invalidate the cache. Returning to a nav tab reuses the last result
-#' unless `deps` changed (including changes that happened while hidden —
-#' those are applied on the next visit).
-#'
-#' @param is_visible reactive logical from [qsee_is_visible()]
-#' @param deps zero-arg function or reactive that returns a value whose
-#'   change marks the cache stale (e.g. `function() list(rX(), rY())`)
-#' @param compute zero-arg function that performs the heavy work and
-#'   returns the result object. Evaluated under `isolate()` so it does
-#'   not create extra reactive dependencies.
-#' @param label optional debug label
-#' @return a `reactive` yielding the latest computed result
-qsee_board_cache <- function(is_visible, deps, compute, label = NULL) {
-  force(compute)
-  if (!is.function(deps)) {
-    stop("qsee_board_cache: `deps` must be a zero-arg function or reactive")
   }
-
-  result <- shiny::reactiveVal(NULL)
-  stale <- shiny::reactiveVal(TRUE)
-  ## A data set can arrive while the cache is already stale (for example,
-  ## when the app starts without a PGX).  Toggling `stale` to TRUE again
-  ## would not invalidate a reactive observer, so retain a monotonically
-  ## changing generation as an explicit invalidation signal.
-  generation <- shiny::reactiveVal(0L)
-
-  shiny::observeEvent(
-    deps(),
-    {
-      stale(TRUE)
-      generation(shiny::isolate(generation()) + 1L)
-      if (!is.null(label)) {
-        message("[", label, "] inputs changed — cache marked stale")
-      }
-    },
-    ignoreNULL = TRUE
-  )
-
-  shiny::observe({
-    generation()
-    shiny::req(is_visible())
-    shiny::req(isTRUE(stale()))
-    if (!is.null(label)) {
-      message("[", label, "] computing...")
-    }
-    ## isolate so input reads inside compute don't re-trigger this observe
-    res <- shiny::isolate(compute())
-    result(res)
-    stale(FALSE)
-  })
-
-  shiny::reactive({
-    shiny::req(!is.null(result()))
-    result()
-  })
+  isTRUE(getOption(name, default))
 }
+
+#' Whether Plotly purge-while-hidden is enabled (`ENABLE_PLOTLY_PURGE`).
+#'
+#' Pass straight through as `bigdash::bd_is_visible(input, purge = ...)`'s
+#' `purge` argument.
+qsee_purge_enabled <- function() {
+  qsee_opt_enabled("ENABLE_PLOTLY_PURGE", TRUE)
+}
+
+#' Resolve a board's `purge` setting: an explicit override, or the option.
+#'
+#' `qsee_server(purge = ...)` threads a single value down through every
+#' board so it can be flipped for the whole app at launch (e.g. for an
+#' on/off A-B comparison from the test harness) without touching
+#' etc/OPTIONS. `NULL` (the default all the way down) keeps the existing
+#' per-install [qsee_purge_enabled()] behaviour; `TRUE`/`FALSE` overrides it.
+#'
+#' @param purge `NULL`, or an explicit `TRUE`/`FALSE` override.
+qsee_resolve_purge <- function(purge = NULL) {
+  if (is.null(purge)) qsee_purge_enabled() else isTRUE(purge)
+}
+
+## NOTE: boards deliberately have no lazy-mount helper. Each board UI puts
+## its body behind `shiny::uiOutput(ns("lazy_body"))` and the server fills it
+## with a plain `renderUI()`. Shiny suspends hidden outputs by default
+## (`suspendWhenHidden = TRUE`), and a board sitting in an inactive bigdash
+## `.big-tab` is `display:none`, so that renderUI does not run until the tab
+## is first shown -- and the built body then stays in the DOM. Pair with
+## `bigdash::bd_is_visible(input, purge = qsee_resolve_purge(purge))` to drop
+## the drawn Plotly trees while hidden.
+
+## NOTE: boards also have no precomputation-cache helper. A board's heavy
+## work is a plain `shiny::reactive()`, which already caches (returning to a
+## tab reuses the last result), invalidates when its inputs change, and does
+## nothing while the board is hidden -- its only consumers are plot/table
+## outputs, which Shiny suspends. An input change that happens while hidden
+## invalidates it but is only computed on the next visit.
+##
+## Where the body must read a reactive *without* depending on it (e.g. the
+## batch-effects board reads input$main_param but only recomputes on the
+## Recompute button), use `shiny::eventReactive()` -- that is exactly a
+## dependency expression plus an isolated body.
+##
+## This all holds only as long as every consumer is lazy. Reading such a
+## reactive from an `observe()`/`observeEvent()`, or from an output with
+## `suspendWhenHidden = FALSE`, pulls it eagerly and the board computes while
+## hidden. Where that is unavoidable, guard the observer with
+## `shiny::req(is_visible())` -- see qsee_batchcorrect_server.R.

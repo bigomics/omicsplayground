@@ -1,24 +1,43 @@
 ## This file is part of the Omics Playground project.
 
-qsee_imputation_server <- function(id, rX, rY) {
+qsee_imputation_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    OmicsBoard("board", pgx = NULL, title = "Missing value analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_imputation_server")
+    OmicsBoard(session, pgx = NULL, title = "Missing value analysis", infotext = NULL)
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_resolve_purge(purge), label = "qsee_imputation_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
+
+    output$ui_output <- shiny::renderUI({
+      qsee_imputation_ui_output(session$ns)
+    })
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
     })
+    no_missing_warned <- shiny::reactiveVal(FALSE)
+    shiny::observeEvent(is_visible(), {
+      shiny::req(isTRUE(is_visible()))
+      shiny::req(!no_missing_warned())
+      rawX <- rX()
+      shiny::req(rawX)
+      if (!anyNA(rawX)) {
+        shinyalert::shinyalert(
+          text = "note, data has no missing values",
+          type = "warning"
+        )
+        no_missing_warned(TRUE)
+      }
+    })
     tr_marlevel <- shiny::reactive(input$marlevel) %>% shiny::debounce(1000)
     tr_mnarlevel <- shiny::reactive(input$mnarlevel) %>% shiny::debounce(1000)
-    get_result <- qsee_board_cache(
-      is_visible,
-      deps = function() list(rX(), tr_marlevel(), tr_mnarlevel()),
-      label = "qsee_imputation_server",
-      compute = function() {
-        rawX <- rX(); shiny::req(rawX)
-        progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
-        qsee_imputation_compute(rawX, tr_marlevel(), tr_mnarlevel(), progress)
-      }
-    )
+    ## Lazy: only the board's plot outputs read this, and Shiny suspends
+    ## those while the tab is hidden. See qsee_visibility.R.
+    get_result <- shiny::reactive({
+      rawX <- rX(); shiny::req(rawX)
+      message("[qsee_imputation_server] computing...")
+      progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
+      qsee_imputation_compute(rawX, tr_marlevel(), tr_mnarlevel(), progress)
+    })
 
     render.pca_plots <- function() {
       res <- get_result(); Y <- rY(); ph <- input$colorby
@@ -37,6 +56,7 @@ qsee_imputation_server <- function(id, rX, rY) {
     }
 
     heatmap_panels <- shiny::reactive({
+      redraw_tick()
       qsee_imputation_plot_heatmaps_plotly(get_result())
     })
     qsee_plotly_hm_grid_server(output, "heatmap", heatmap_panels, n = 6L)

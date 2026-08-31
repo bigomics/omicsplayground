@@ -8,10 +8,18 @@
 ## app_qsee/R/pcaexplorer-plots.R.
 ##
 
-qsee_pcaexplorer_server <- function(id, rX, rY) {
+qsee_pcaexplorer_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    OmicsBoard("board", pgx = NULL, title = "PCA explorer", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_pcaexplorer_server")
+
+    OmicsBoard(session, pgx = NULL, title = "PCA explorer", infotext = NULL)
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_resolve_purge(purge), label = "qsee_pcaexplorer_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
+
+    output$ui_output <- shiny::renderUI({
+      qsee_pcaexplorer_ui_output(session$ns)
+    })
 
     ## Qsee's own rY() does not drop degenerate phenotype columns
     ## (constant, or all-unique like a sample-id column); without that,
@@ -28,15 +36,16 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
       shiny::updateSelectInput(session, "colorby", choices = cols, selected = cols[1])
     }, ignoreNULL = TRUE)
 
-    get_pcaX <- qsee_board_cache(
-      is_visible, deps = function() list(rX(), rYf()), label = "qsee_pcaexplorer_server",
-      compute = function() {
-        rawX <- rX()
-        Y <- rYf()
-        shiny::req(rawX, Y)
-        qsee_pcaexplorer_compute(rawX, Y)
-      }
-    )
+    ## Lazy: the plot/table outputs that read this are suspended while the
+    ## tab is hidden. The one non-output consumer is the min_fc observer
+    ## below, which is guarded on is_visible(). See qsee_visibility.R.
+    get_pcaX <- shiny::reactive({
+      rawX <- rX()
+      Y <- rYf()
+      shiny::req(rawX, Y)
+      message("[qsee_pcaexplorer_server] computing...")
+      qsee_pcaexplorer_compute(rawX, Y)
+    })
 
     ## ------------------------------------------------------------------
     ## Sidebar visibility -- CSS class only, toggled on internal-tab change.
@@ -71,15 +80,28 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
       }
     }, ignoreNULL = TRUE)
 
-    ## Stretch min_fc slider once when PCA is first ready
-    shiny::observeEvent(get_pcaX(), {
+    ## Stretch min_fc slider once when PCA is first ready.
+    ##
+    ## This is the only eager consumer of get_pcaX(), so it must not pull
+    ## before the board is visible -- without req(is_visible()) the PCA would
+    ## be computed at startup even if this tab is never opened.
+    ##
+    ## Not observeEvent(..., once = TRUE): bindEvent() destroys the observer
+    ## via on.exit(), so it self-destructs even when the handler req()s out,
+    ## and the slider would never get stretched. Latch on a plain flag
+    ## instead -- it is only read after an invalidation, so it needs no
+    ## reactivity of its own.
+    minfc_stretched <- FALSE
+    shiny::observe({
+      shiny::req(!minfc_stretched, is_visible())
       rng <- qsee_pcaexplorer_minfc_range(get_pcaX())
       shiny::req(rng)
+      minfc_stretched <<- TRUE
       shiny::updateSliderInput(
         session, "min_fc",
         min = rng$min, max = rng$max, step = rng$step, value = rng$value
       )
-    }, ignoreNULL = TRUE, once = TRUE)
+    })
 
     ## shared sidebar reactives
     colorby <- shiny::reactive(input$colorby)
@@ -106,6 +128,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
     ## Biplot panel
     ## ------------------------------------------------------------------
     output$biplot_2d <- plotly::renderPlotly({
+      redraw_tick()
       res <- get_pcaX()
       ph <- colorby()
       shiny::req(res, ph)
@@ -121,6 +144,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
     })
 
     output$biplot_3d <- plotly::renderPlotly({
+      redraw_tick()
       res <- get_pcaX()
       ph <- colorby()
       shiny::req(res, ph)
@@ -292,6 +316,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
     ## Feature PCA panel
     ## ------------------------------------------------------------------
     output$feature_pca <- plotly::renderPlotly({
+      redraw_tick()
       res <- get_pcaX()
       normX <- res$X
       shiny::req(res, normX)
@@ -304,6 +329,7 @@ qsee_pcaexplorer_server <- function(id, rX, rY) {
     })
 
     output$feature_pca_3d <- plotly::renderPlotly({
+      redraw_tick()
       res <- get_pcaX()
       normX <- res$X
       shiny::req(res, normX)

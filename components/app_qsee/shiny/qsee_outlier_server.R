@@ -1,20 +1,29 @@
 ## This file is part of the Omics Playground project.
 
-qsee_outlier_server <- function(id, rX, rY) {
+qsee_outlier_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
-    OmicsBoard("board", pgx = NULL, title = "Outlier analysis", infotext = NULL)
-    is_visible <- qsee_is_visible(input, label = "qsee_outlier_server")
+    OmicsBoard(session, pgx = NULL, title = "Outlier analysis", infotext = NULL)
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_resolve_purge(purge), label = "qsee_outlier_server"
+    )
+    redraw_tick <- bigdash::bd_redraw_tick(session = session)
+
+    output$ui_output <- shiny::renderUI({
+      qsee_outlier_ui_output(session$ns)
+    })
+
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
     })
-    get_result <- qsee_board_cache(
-      is_visible, deps = function() list(rX(), rY()), label = "qsee_outlier_server",
-      compute = function() {
-        X <- rX(); Y <- rY(); shiny::req(X, Y)
-        progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
-        qsee_outlier_compute(X, Y, progress)
-      }
-    )
+
+    ## Lazy: only the board's plot outputs read this, and Shiny suspends
+    ## those while the tab is hidden. See qsee_visibility.R.
+    get_result <- shiny::reactive({
+      X <- rX(); Y <- rY(); shiny::req(X, Y)
+      message("[qsee_outlier_server] computing...")
+      progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
+      qsee_outlier_compute(X, Y, progress)
+    })
 
     render.outlier_zscores <- function() {
       res <- get_result(); ph <- input$colorby; shiny::req(ph); qsee_outlier_plot_zscores_plotly(res, ph)
@@ -34,6 +43,7 @@ qsee_outlier_server <- function(id, rX, rY) {
     ## Heatmap uses custom renderer (iheatmapr objects from omicsplots::pgx.plot_heatmap
     ## do not play nicely with PlotModuleServer + iheatmapr::renderIheatmap which forces to_widget())
     qsee_plotly_hm_server(output, "outlier_heatmap", function() {
+      redraw_tick()
       res <- get_result(); shiny::req(res$heatX); qsee_outlier_plot_heatmap_plotly(res)
     })
 

@@ -15,12 +15,12 @@
 
 .app-launcher-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 20px;
 }
 
 .app-launcher-grid-dashboards {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
 .app-launcher-grid-apps {
@@ -46,8 +46,8 @@
 
 .app-tile-wide {
     height: auto;
-    max-height: 150px;
-    aspect-ratio: 2.2 / 1;
+    max-height: 140px;
+//    aspect-ratio: 2 / 1;
     padding: 16px 14px;
 }
 
@@ -120,3 +120,8 @@
     box-shadow: 0 1px 3px rgba(0,0,0,.2);
 }
 
+.launcher-quick-action {
+    font-size: 1rem;
+    padding: 8px 18px;
+    margin: 0 10px 0 0;    
+}

@@ -78,18 +78,13 @@ ExpressionInputs <- function(id) {
 ExpressionUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- "calc(100vh - 125px)" ## full height of page (minus header)
-  halfH <- "calc(50vh - 125px)" ## half height of page
-  fullH <- "calc(100vh - 100px)" ## full height of page (minus header)
-  halfH <- "calc(50vh - 100px)" ## half height of page
-
   tabs1 <- shiny::tabsetPanel(
     id = ns("tabs1"),
     shiny::tabPanel(
       "Overview",
       bslib::layout_columns(
         col_widths = c(3, 3, 3, 3),
-        height = halfH,
+        height = "100%",
         expression_plot_volcano_ui(ns("plots_volcano"),
           label = "a",
           title = "Volcano plot",
@@ -149,7 +144,7 @@ ExpressionUI <- function(id) {
       "Top features",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_plot_topgenes_ui(
           id = ns("topgenes"),
           title = "Expression of top differentially expressed features",
@@ -165,7 +160,7 @@ ExpressionUI <- function(id) {
       "Volcano by comparison",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_plot_volcanoAll_ui(
           id = ns("volcanoAll"),
           title = "Volcano plots for all contrasts",
@@ -197,7 +192,7 @@ ExpressionUI <- function(id) {
       "Volcano by method",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_plot_volcanoMethods_ui(
           id = ns("volcanoMethods"),
           title = "Volcano plots for all methods",
@@ -224,12 +219,12 @@ ExpressionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
-    ), ## end upper tabPanel
+    ),
     shiny::tabPanel(
       "FC-FC comparison",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_plot_fc_fc_ui(
           id = ns("fc_fc"),
           title = "FC-FC comparison",
@@ -239,8 +234,8 @@ ExpressionUI <- function(id) {
           width = c("auto", "100%")
         )
       )
-    ) ## end upper tabPanel
-  ) ## end of tabs1
+    )
+  ) ## end upper tabPanel (tabs1)
 
   tabs2 <- shiny::tabsetPanel(
     id = ns("tabs2"),
@@ -248,7 +243,7 @@ ExpressionUI <- function(id) {
       "Table",
       bslib::layout_columns(
         col_widths = c(7, 5),
-        height = halfH,
+        height = "100%",
         expression_table_genetable_ui(
           ns("genetable"),
           title = "Differential expression analysis",
@@ -271,7 +266,7 @@ ExpressionUI <- function(id) {
       "Foldchange (all)",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_table_fctable_ui(
           ns("fctable"),
           title = "Gene fold changes for all contrasts",
@@ -286,7 +281,7 @@ ExpressionUI <- function(id) {
       "FDR table",
       bslib::layout_columns(
         col_widths = 12,
-        height = halfH,
+        height = "100%",
         expression_table_FDRtable_ui(
           ns("FDRtable"),
           title = "Number of significant genes",
@@ -299,24 +294,13 @@ ExpressionUI <- function(id) {
     )
   ) ## end tabs2 = bottom tabsetPanel
 
-  ## div(
-  ##   boardHeader(title = "Differential expression", info_link = ns("gx_info")),
-  ##   bslib::layout_columns(
-  ##     col_widths = 12,
-  ##     height = fullH,
-  ##     gap = "0px",
-  ##     tabs1,
-  ##     tabs2
-  ##   )
-  ## )
-
   OmicsBoardUI(
     title = "Differential expression",
-    id = ns("board"),
+    ns = ns,
     bslib::layout_columns(
       col_widths = 12,
-      height = fullH,
-      gap = "0px",
+      height = "100%",
+      row_heights = c(1,1),
       tabs1,
       tabs2
     )

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-opg_ui <- function() {
+opg_ui <- function(id) {
 
   message("\n======================================================")
   message("======================= UI ===========================")
@@ -12,20 +12,12 @@ opg_ui <- function() {
   #-------------------------------------------------------
   ## Build USERMENU
   #-------------------------------------------------------
-  VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
-  ## upgrade.tab <- NULL
-  ## if (opt$AUTHENTICATION == "firebase") {
-  ##   upgrade.tab <- bigdash::navbarDropdownItem(
-  ##     "Upgrade",
-  ##     onClick = "show_plans()"
-  ##   )
-  ## }
-    
   createUI <- function(menu_tree) {
     
     version <- scan(file.path(OPG, "VERSION"), character())[1]
-    id <- "maintabs"
+    ##id <- "maintabs"
     
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
@@ -61,12 +53,12 @@ opg_ui <- function() {
     #ENABLED["load"] <<- TRUE
 
     menu_tree <- menu_tree[MODULES_ENABLED]
-    ## menu_tree <- lapply(menu_tree, function(m) m[which(ENABLED[names(m)])])
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
     createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
-        div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        #div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
+        bigdash::sidebarItem(title, paste0(name, "-tab"))      
       }
       sidebar_menu_item <- function(title, name) {
         bigdash::sidebarMenuItem(title, paste0(name, "-tab"))
@@ -108,7 +100,7 @@ opg_ui <- function() {
     info("[opg_ui] initial_is_full = ", initial_is_full)
     
     sidebar <- bigdash::sidebar(
-      "Playground",
+      "Menu",
       div(
         id = "menu-full",
         class = "nodisp", style = "diplay: none;",
@@ -142,9 +134,18 @@ opg_ui <- function() {
     )
     
     bigdash::bigPage(
+      id = id,  ## default was 'app'
       shiny.i18n::usei18n(i18n),
+      ## shiny.i18n's subscribe() hands jQuery's Event object straight to Shiny's
+      ## callback, which expects a boolean, so every update_lang() logs
+      ## "Unexpected input value mode: '[object Object]'". Must come after
+      ## usei18n() so the binding is already registered.
+      shiny::tags$script(shiny::HTML(
+        "Shiny.inputBindings.bindingNames['shiny.shinyi18n'].binding.subscribe =
+           function (el, callback) { $(el).on('change.shinyi18n', function () { callback(false); }); };"
+      )),
       # header,
-      title = "Omics Playground 4",
+      title = "Omics Playground",
       theme = big_theme2,
       navbar = navbar,
       sidebar = sidebar,
@@ -298,40 +299,23 @@ opg_ui <- function() {
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
-        ## bigdash::bigTabItem(
-        ##   "welcome-tab",
-        ##   WelcomeBoardInputs("welcome"),
-        ##   WelcomeBoardUI("welcome")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "load-tab",
-        ##   # LoadingInputs("load")
-        ##   LoadingUI("load")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "upload-tab",
-        ##   UploadUI("upload")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "userprofile-tab",
-        ##   UserProfileUI("user_profile")
-        ## ),
-        ## bigdash::bigTabItem(
-        ##   "usersettings-tab",
-        ##   AppSettingsUI("app_settings")
-        ## ),
-        ## if (isTRUE(opt$ENABLE_ADMIN)) {
-        ##   bigdash::bigTabItem(
-        ##     "admin-tab",
-        ##     AdminPanelUI("admin_panel")
-        ##   )
-        ## }
-        ## bigdash::bigTabItem(
-        ##   "sharing-tab",
-        ##   SharedDatasetsUI("load")
-        ## )
-      )
-      ## UploadUI("upload")
+        ## One shell per tab: that tab's own inputs -- which settings.js moves
+        ## into the settings drawer at boot -- plus a spinner. bigTabsLazy() in
+        ## the server fills in the board itself on first visit.
+        ##
+        ## Taken from each group's module_ui() rather than spelled out here, so
+        ## a tab's shell and the module_lazy() entry that fills it stay in one
+        ## file and cannot drift apart. DataView is the one tab with no group
+        ## registry of its own.
+        bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader")),
+        MODULE.clustering$module_ui(),
+        MODULE.expression$module_ui(),
+        MODULE.enrichment$module_ui(),
+        MODULE.compare$module_ui(),
+        MODULE.systems$module_ui(),
+        MODULE.multiomics$module_ui(),
+        MODULE.wgcna$module_ui()
+      ) 
     ) ## end of bigPage
   }
 

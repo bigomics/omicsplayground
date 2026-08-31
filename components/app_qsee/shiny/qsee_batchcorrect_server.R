@@ -3,14 +3,22 @@
 ## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
 ##
 
-qsee_bsee_server <- function(id, rX, rY) {
+qsee_bsee_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
 
-      OmicsBoard("board", pgx = NULL, title = "Batch-effects", infotext = NULL)
-      ## `input$is_visible` is reported by qsee_visibility_probe() in the UI.
-      is_visible <- qsee_is_visible(input, label = "qsee_bsee_server")
+      OmicsBoard(session, pgx = NULL, title = "Batch-effects", infotext = NULL)
+      ## Visibility is reported by bigdash::bd_visibility_probe() in the UI.
+      is_visible <- bigdash::bd_is_visible(
+        input, purge = qsee_resolve_purge(purge), label = "qsee_bsee_server"
+      )
+      redraw_tick <- bigdash::bd_redraw_tick(session = session)
+      ## Shiny suspends this output while the board's tab is hidden, so the
+      ## body is only built on the first visit and then kept in the DOM.
+      output$ui_output <- shiny::renderUI({
+        qsee_bsee_ui_output(session$ns)
+      })
 
       observeEvent( list(rY()), {
         Y <- rY()
@@ -23,37 +31,55 @@ qsee_bsee_server <- function(id, rX, rY) {
         )
       })
       
-      ## Main precomputation. Visibility gates *when* work may run; cache
-      ## invalidates only when inputs / Recompute change — not on tab
-      ## leave/return.
-      get_results <- qsee_board_cache(
-        is_visible,
-        deps = function() list(rX(), rY(), input$recompute_button),
-        label = "qsee_bsee_server",
-        compute = function() {
+      ## Main precomputation. eventReactive, not reactive: the body reads
+      ## input$main_param without depending on it, so changing the main
+      ## parameter does not kick off a batch correction -- only the inputs
+      ## listed below do, i.e. new data or the Recompute button.
+      ##
+      ## Lazy, like any reactive: the plot outputs that read it are suspended
+      ## while the board is hidden, so nothing runs until the tab is opened
+      ## (but see the observe() below).
+      get_results <- shiny::eventReactive(
+        list(rX(), rY(), input$recompute_button),
+        {
           X <- rX()
           samples <- rY()
           shiny::req(X, samples)
 
+          message("[qsee_bsee_server] computing...")
           progress <- shiny::Progress$new(session, min = 0, max = 1)
           on.exit(progress$close())
-          progress$set(message = paste("Normalizing..."), value = 0.1)
+          progress$set(message = paste("Computing batchcorrection..."), value = 0.1)
 
           pheno <- colnames(samples)[1]  ## NEED UPDATE!!!
           pheno <- input$main_param
           shiny::req(pheno)
-          
-          res <- bsee_compute_batchcorrect(X, samples, pheno, progress = progress) 
+
+          res <- bsee_compute_batchcorrect(X, samples, pheno, progress = progress)
           return(res)
         }
       )
 
       ## Update selectInputs when results are available and the tab is visible.
-      ## Because get_results() now gates on is_visible() internally, we no
-      ## longer need the req() here for performance reasons (but we keep
-      ## it for clarity).
+      ##
+      ## DO NOT REMOVE the req(is_visible()) below. This is the only eager
+      ## consumer of get_results() -- every other reader is a plot output,
+      ## which Shiny suspends while the board is hidden. Without the guard
+      ## this observer pulls the cache as soon as rX()/rY() arrive and the
+      ## whole batch correction runs even if the tab is never opened.
+      ##
+      ## req(nzchar(input$main_param)) too: get_results() reads input$main_param
+      ## without depending on it (see above), so its *first* read is what
+      ## freezes the phenotype it computes against until the next real trigger
+      ## (new data or Recompute). With a lazily-loaded board, this observer's
+      ## own is_visible() and main_param's updateSelectInput() round trip (in
+      ## the observeEvent(rY()) above) both start at the same moment a tab is
+      ## first opened -- without waiting here too, is_visible() can win that
+      ## race and force the first read while main_param is still "", wedging
+      ## get_results() on an empty phenotype for the rest of the session.
       observe({
         req(is_visible())
+        req(nzchar(input$main_param))
         res <- get_results()
 
         bparams <- c()
@@ -145,6 +171,7 @@ qsee_bsee_server <- function(id, rX, rY) {
       )
 
       heatmap_panels <- shiny::reactive({
+        redraw_tick()
         res <- get_results()
         shiny::req(res)
         bsee.plot_heatmap_vs_methods_plotly(res)

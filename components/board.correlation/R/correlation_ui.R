@@ -51,16 +51,13 @@ CorrelationInputs <- function(id) {
 CorrelationUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 800 ## full height of page
-  rowH <- 340 ## full height of page
-
   tabs <- shiny::tabsetPanel(
     id = ns("tabs"),
     shiny::tabPanel(
       "Correlation",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 181px)",
+        height = "100%",
         bslib::layout_columns(
           col_widths = 12,
           correlation_plot_barplot_ui(
@@ -106,7 +103,7 @@ CorrelationUI <- function(id) {
       "Graph",
       bslib::layout_columns(
         col_widths = c(6, 6),
-        height = "calc(100vh - 181px)",
+        height = "100%",
         correlation_plot_cor_graph_ui(
           ns("cor_graph"),
           title = "Partial correlation network",
@@ -144,8 +141,9 @@ CorrelationUI <- function(id) {
   )
 
   ## full page
-  div(
-    boardHeader(title = "Correlation analysis", info_link = ns("data_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Correlation analysis",
     tabs
   )
 }

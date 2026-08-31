@@ -60,9 +60,18 @@ qsee_pcaexplorer_inputs <- function(id) {
 
 qsee_pcaexplorer_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    ns,
+    title = "PCA explorer",
+    bigdash::bd_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_pcaexplorer_ui_output <- function(ns) {
   biplot_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Biplot",
@@ -91,11 +100,12 @@ qsee_pcaexplorer_ui <- function(id) {
 
   pairs_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     PlotModuleUI(
       ns("scatterpairs"),
       title = "PC scatterpair matrix",
       plotlib = "base",
-      height = c("800px", "80vh")
+      height = c("100%", "80vh")
     ),
     bslib::layout_columns(
       col_widths = 12,
@@ -117,6 +127,7 @@ qsee_pcaexplorer_ui <- function(id) {
 
   loadings_panel <- bslib::layout_columns(
     col_widths = c(6, 6),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Loadings",
@@ -140,6 +151,7 @@ qsee_pcaexplorer_ui <- function(id) {
 
   feature_panel <- bslib::layout_columns(
     col_widths = c(7, 5),
+    height = "calc(100vh - 140px)",
     bslib::navset_card_tab(
       full_screen = TRUE,
       title = "Feature PCA",
@@ -166,7 +178,7 @@ qsee_pcaexplorer_ui <- function(id) {
     )
   )
 
-  pcaexplorer_panel <- bslib::navset_tab(
+  bslib::navset_tab(
     id = ns("board_tab"),
     bslib::nav_panel(title = "Biplot", value = "Biplot", biplot_panel),
     bslib::nav_panel(title = "PCA pairs", value = "PCA pairs", pairs_panel),
@@ -174,10 +186,4 @@ qsee_pcaexplorer_ui <- function(id) {
     bslib::nav_panel(title = "Feature PCA", value = "Feature PCA", feature_panel)
   )
 
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "PCA explorer",
-    qsee_visibility_probe(ns),
-    pcaexplorer_panel
-  )
 }

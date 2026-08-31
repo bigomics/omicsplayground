@@ -31,9 +31,10 @@ source("./launcher_ui_classic.R", encoding = "UTF-8")
 source("./launcher_ui_ds.R", encoding = "UTF-8")
 source("../R/launcher_server.R", encoding = "UTF-8")
 
-css_path <- "../../app/R/www/styles.min.css"
+css_path <- "../../assets/styles.min.css"
 OPG = "~/Playground/omicsplayground/"
-shiny::addResourcePath("www", file.path(OPG, "components/app/R/www"))
+shiny::addResourcePath("assets", file.path(OPG, "components/assets"))
+shiny::addResourcePath("www", file.path(OPG, "components/assets"))
 
 ui <- bslib::page_fluid(
   tags$head(tags$style(HTML(paste(readLines(css_path, warn = FALSE), collapse = "\n")))),

@@ -9,7 +9,7 @@ do
 if [ "$previous_tag" != 0 ];then
     tag_date=$(git log -1 --pretty=format:'%ad' --date=short ${previous_tag})
     printf "### ${previous_tag} (${tag_date})\n\n"
-    git log ${current_tag}...${previous_tag} --pretty=format:'-  %s [view](https://github.com/bigomics/omicsplayground/commit/%H)' --reverse | grep -E -v "(Merge|Style)" | grep -i -E "$FILTER"
+    git log ${current_tag}...${previous_tag} --pretty=format:'-  %s [<i class="fa-solid fa-arrow-up-right-from-square weblink"></i>](https://github.com/bigomics/omicsplayground/commit/%H)' --reverse | grep -E -v "(Merge|Style)" | grep -i -E "$FILTER"
     printf "\n\n"
 fi
 previous_tag=${current_tag}

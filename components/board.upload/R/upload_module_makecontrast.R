@@ -18,15 +18,8 @@ upload_module_makecontrast_ui <- function(id) {
           shiny::div(
             shiny::HTML("<b>1. Choose phenotype:</b>"),
             withTooltip(
-              shiny::selectizeInput(
-                inputId = ns("param"),
-                NULL,
-                width = "100%",
-                choices = "<samples>",
-                selected = "<samples>",
-                multiple = TRUE,
-                options = list(maxItems = 3)
-              ),
+              uiOutput(ns("param_select"))
+             ,
               "Select phenotype(s) to create conditions for your groups. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations.",
               placement = "left", options = list(container = "body")
             ),
@@ -133,11 +126,11 @@ upload_module_makecontrast_server <- function(
         rv_contr(contrRT())
       })
 
-      reset_bucket <- function() {
+      reset_bucket <- function(keep.control=FALSE) {
         # update the rv values when the param changes
         rv$condition_start <- NULL
         rv$condition_group1 <- NULL
-        rv$condition_group2 <- NULL
+        if(!keep.control) rv$condition_group2 <- NULL
         shiny::updateTextInput(session, "newname", value = "")
 
         cond <- sel.conditions()
@@ -146,6 +139,7 @@ upload_module_makecontrast_server <- function(
         }
         ## items <- c("others"="<others>", sort(unique(cond)))
         items <- sort(unique(cond))
+        items <- setdiff(items, c(rv$condition_group1,rv$condition_group2))
         rv$condition_start <- items
       }
 
@@ -158,25 +152,33 @@ upload_module_makecontrast_server <- function(
         }
       )
 
+      output$param_select <- renderUI({
 
-      observeEvent(
-        {
-          list(phenoRT(), upload_wizard(), show_comparison_builder())
-        },
-        {
-          req(
-            upload_wizard() == "step_comparisons",
-            show_comparison_builder() == TRUE
-          )
-          phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
-          phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
-          psel <- c(grep("sample|patient|name|id|^[.]",
-            phenotypes,
-            value = TRUE, invert = TRUE
-          ), phenotypes)[1]
-          updateSelectInput(session, "param", choices = phenotypes, selected = psel)
-        }
-      )
+        shiny::req(phenoRT())
+        shiny::req(upload_wizard())
+        shiny::req(show_comparison_builder())
+
+        shiny::req(
+          upload_wizard() == "step_comparisons",
+          show_comparison_builder() == TRUE
+        )
+
+        phenotypes <- c(sort(unique(colnames(phenoRT()))), "<samples>")
+        phenotypes <- grep("_vs_", phenotypes, value = TRUE, invert = TRUE) ## no comparisons...
+        psel <- c(grep("sample|patient|name|id|^[.]",
+          phenotypes,
+          value = TRUE, invert = TRUE
+        ), phenotypes)[1]
+        shiny::selectizeInput(
+          inputId = ns("param"),
+          NULL,
+          width = "100%",
+          choices = phenotypes,
+          selected = psel,
+          multiple = TRUE,
+          options = list(maxItems = 3)
+        )
+      })
 
       sel.conditions <- shiny::reactive({
         ## shiny::req( phenoRT(), countsRT())  ## shiny BUG if has NA!!!!
@@ -399,7 +401,7 @@ upload_module_makecontrast_server <- function(
         }
 
         # reset text input
-        reset_bucket()
+        reset_bucket(keep.control=TRUE)
       })
 
       shiny::observeEvent(autocontrast(), {

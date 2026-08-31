@@ -1,0 +1,78 @@
+
+#obi-hello {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2484bb;
+    background: url("monster-hi.png") no-repeat;
+    background-size: 110px 110px;
+    background-position: 53% 15px;
+}
+
+// The app's global fill-chain CSS (`.fullheight-page > div > .tabbable ...`,
+// see scss for the board-level "big tab") only reaches the *board's own*
+// top-level tabset. The Workspace navset_underline here is nested several
+// levels deeper (card > card-body > navset), so it never inherits a bounded
+// height and its .tab-pane falls back to `display: block`, growing to fit
+// content instead of clipping to the card. Re-declare the same fill chain,
+// scoped to this card, so nav_panel content (History's table, in
+// particular) is bounded like the rest of the app instead of pushing the
+// whole board into an outer scroll.
+.obi-workspace-card .card-body > .tabbable {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+
+    > .tab-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+
+        > .tab-pane.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+    }
+}
+
+// History tab: let the DT table fill whatever height the flex-shrunk
+// Workspace card actually has, instead of hardcoding a `100vh` scrollY in R
+// (components/app_copilot/R/CopilotHistoryServer.R). A viewport-relative
+// height goes stale every time a sibling (e.g. #obi-hello above) changes
+// size, since it has no idea how much room is actually left -- the DT
+// `scrollY` option here is just a placeholder to make DT build the
+// `.dataTables_scrollBody` element; these rules override its inline height.
+.copilot-history-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 8px;
+    gap: 8px;
+
+    > div:first-child {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dataTables_wrapper,
+    .dataTables_scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dataTables_scrollBody {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto !important;
+        max-height: none !important;
+    }
+}

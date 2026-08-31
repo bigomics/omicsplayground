@@ -30,8 +30,8 @@ DrugConnectivityInputs <- function(id) {
 DrugConnectivityUI <- function(id) {
   ns <- shiny::NS(id)
 
-  fullH <- "calc(100vh - 181px)"
-  halfH <- "calc(50vh  - 98px)"
+  fullH <- "100%"
+  halfH <- "50%"
 
   panel1 <- shiny::tabPanel(
     "Drug enrichment",
@@ -130,8 +130,9 @@ DrugConnectivityUI <- function(id) {
     )
   )
 
-  div(
-    boardHeader(title = "Drug Connectivity", info_link = ns("dsea_info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Drug Connectivity",
     shiny::tabsetPanel(
       id = ns("tabs"),
       panel1,

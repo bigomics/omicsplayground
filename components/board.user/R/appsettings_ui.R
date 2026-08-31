@@ -11,17 +11,17 @@ AppSettingsUI <- function(id) {
 
   initial_is_basic <- (opt$USER_LEVEL == "BASIC")
 
-  div(
-    boardHeader(title = "Settings", info_link = ns("board_info")),
-
+  OmicsBoardUI(
+    ns = ns,
+    title = "Settings",
     bslib::navset_pill_list(
       id = ns("tabs1"),
       widths = c(2,10),
       bslib::nav_panel(
         "App settings",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
-          row_heights = "50%",
+          height = "100%",
+          row_heights = 1,
           ## AI card moved to "AI Features" tab; 1 content card + spacer = c(5,7)
           col_widths = c(5, 7),
           bslib::card(
@@ -69,7 +69,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "AI Features",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           col_widths = c(4, 8),
           bslib::card(
             bslib::card_header("AI Provider"),
@@ -124,10 +124,12 @@ AppSettingsUI <- function(id) {
             bslib::card_header("AI Models"),
             bslib::card_body(
               gap = "0.3em",
-              ## Hide the model menus for the BigOmics-managed backend — users
-              ## don't choose (or need to see) which models BigOmics runs.
+              ## Always show the model menus, even for the BigOmics-managed
+              ## backend — but they're disabled (shinyjs, see the lock
+              ## observer in appsettings_server.R) for bigomics, since users
+              ## don't choose which models BigOmics runs, only see them.
               shiny::conditionalPanel(
-                "input.enable_ai && input.ai_provider != 'bigomics'",
+                "input.enable_ai",
                 ns = ns,
                 shiny::selectInput(
                   inputId = ns("llm_reports"),
@@ -166,7 +168,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "New features",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           PlotModuleUI(
             ns("newfeatures"),
             outputFunc = htmlOutput,
@@ -179,7 +181,7 @@ AppSettingsUI <- function(id) {
       bslib::nav_panel(
         "Package versions",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
+          height = "100%",
           TableModuleUI(
             ns("packages"),
             info.text = "Packages and versions used in Omics Playground.",
@@ -189,11 +191,14 @@ AppSettingsUI <- function(id) {
       ),
 
       # Plot Colors #####
-      bslib::nav_panel(
+      ## DEVMODE-only: with the plot editor's body built lazily, theme changes
+      ## reach plot modules only through DOM-bound inputs, so a palette change
+      ## does not apply until that plot's editor has been opened (PR #1846).
+      if (isTRUE(opt$DEVMODE)) bslib::nav_panel(
         "Plot Colors",
         bslib::layout_columns(
-          height = "calc(100vh - 85px)",
-          row_heights = "50%",
+          height = "100%",
+          row_heights = 1,
           col_widths = c(3,3,3,3),
           bslib::card(
             bslib::card_header("Directional Colors"),
@@ -247,7 +252,7 @@ AppSettingsUI <- function(id) {
         "Resource info",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 85px)",
+          height = "100%",
           user_table_resources_ui(ns("resources"))
         )
       )

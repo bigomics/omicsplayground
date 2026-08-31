@@ -27,7 +27,15 @@ qsee_bsee_inputs <- function(id) {
 
 qsee_bsee_ui <- function(id) {
   ns <- shiny::NS(id)
+  OmicsBoardUI(
+    ns,
+    title = "Batch-effects",
+    bigdash::bd_visibility_probe(ns),
+    shiny::uiOutput(ns("ui_output"), class = "html-fill-item html-fill-container")
+  )
+}
 
+qsee_bsee_ui_output <- function(ns) {
   clust.infotext <-
     "Clustering of samples before ('uncorrected') and after the different batch-effect correction methods. After batch-effect correction clustering should improve. The silhouette score gives an indication of the clustering performance of the method."
 
@@ -41,14 +49,13 @@ qsee_bsee_ui <- function(id) {
     shiny::checkboxInput(ns("show_labels"), "Show sample labels", value = FALSE)
   )
 
-  batchcorrect_panel <-
-    bslib::navset_tab(
+  bslib::navset_tab(
       bslib::nav_panel(
         title = "Analysis",
         height = "100%",
         bslib::layout_columns(
-          col_widths = 6,
-          row_heights = c(1,1),
+          col_widths = c(6, 6, 6, 6),
+          row_heights = c(1, 1),
           height = "calc(100vh - 140px)",
           heights_equal = "row",
           PlotModuleUI(
@@ -60,22 +67,28 @@ qsee_bsee_ui <- function(id) {
             options = clust.options,
             height = c("100%", "70vh")
           ),
-          bslib::card(
-            full_screen = TRUE,
-            bslib::card_header("Heatmap"),
-            qsee_plotly_hm_grid_ui(ns, "bsee", n = 6L, ncol = 3L)
-          ),
           PlotModuleUI(
             ns("plot3"),
             title = "Statistics and score",
-            plotlib = "plotly"
+            plotlib = "plotly",
+            height = c("100%", "70vh")
+          ),
+          bslib::card(
+            full_screen = TRUE,
+            class = "html-fill-item html-fill-container",
+            bslib::card_header("Heatmap"),
+            qsee_plotly_hm_grid_ui(
+              ns, "bsee", n = 6L, ncol = 3L,
+              height = "calc(25vh - 65px)"
+            )
           ),
           PlotModuleUI(
             ns("plot4"),
             title = "Covariate correlation",
             info.text = covariate.info,
             caption = covariate.info,
-            plotlib = "plotly"
+            plotlib = "plotly",
+            height = c("100%", "70vh")
           )
         )
       ),  ## end of Analysis panel (was Panel2)
@@ -115,11 +128,4 @@ qsee_bsee_ui <- function(id) {
         )
       )  ## end of Before vs After panel (was Panel1)
     )
-
-  OmicsBoardUI(
-    id = ns("board"),
-    title = "Batch-effects",
-    qsee_visibility_probe(ns),
-    batchcorrect_panel
-  )
 }

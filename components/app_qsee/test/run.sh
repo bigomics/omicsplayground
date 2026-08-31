@@ -2,6 +2,7 @@
 ## Launch the standalone QSEE (batch-effects/QC) test app.
 ##
 ## Usage: ./run.sh [port]
+## A/B comparison toggles (see test/app.R): QSEE_LAZY=false QSEE_PURGE=false ./run.sh
 
 set -euo pipefail
 

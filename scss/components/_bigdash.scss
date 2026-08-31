@@ -1,172 +1,24 @@
 //
-// THESE CHANGES SHOULD EVENTUALLY BE MOVED TO BIGDASH
+// The generic dashboard theming that used to live here now ships in bigdash
+// (scss/modules/_navbar.scss, _sidebar.scss, _settings.scss, _tabs.scss).
+// What is left keys off Omics Playground's own markup.
 //
 
 html {
-
-    .big-tab {
-	padding: 0px 15px;
-    }
 
     .big-tab[data-name="welcome-tab"] {
         padding: 0px;
     }
 
-    //---------------- navbar ---------------------
-    .navbar {
-	padding-top: 2px;
-	border-bottom: 2px solid $primary;
-	height: 36px;
+    // bigdash's settings shell has no horizontal padding of its own
+    // (padding: 0), so its inputs/labels sit flush against the right edge.
+    .bigdash-settings-shell {
+        padding-right: 10px;
     }
 
-    // bit darker (see Matt)
-    .nav-tabs .nav-link {
-	color: #b8b8b8;
-	border-bottom: solid 0px;
-	background-color: transparent;
-    }
-
-    .nav-tabs .nav-link.active {
-	color: black;
-	border-bottom: solid 1px;
-	background-color: transparent;	
-    }
-
-    // only on navbars
-    .nav-link.dropdown-toggle::after {
-	font-family: "Font Awesome 5 Free";
-	font-weight: 900;
-	content: "\f078";
-	border-top: none;
-	vertical-align: 0;
-    }    
-    
-    //hover on bigomics logo 
-    #logo-bigomics:hover  {
+    //hover on bigomics logo
+    #logo-bigomics:hover {
         cursor: pointer;
-      }
-
-    // disable on button dropdown elements
-    .btn.dropdown-toggle::after {
-	content: none;	
-    }
-    
-    ul.nav.navbar-nav>li>a {
-        padding: 0px 6px 1px 6px;
-        color: grey;
-	background-color: #e7eaed;
-	border-radius: 5px;
-        font-size: calc(100% - 12%);
     }
 
-    ul.nav.navbar-nav>li>a:hover ul.nav.navbar-nav>li>a:active {
-        color: black;
-        font-size: calc(100% - 20%);
-    }
-
-    ul.nav.navbar-nav>li {
-        display: inline-block;
-    }
-
-    ul.nav.navbar-nav {
-        display: inline-block !important;
-    }
-
-    //---------------- sidebar ---------------------
-    #sidebar-container {
-	height: 100vh;
-	padding-top: 10px;	
-	background-color: aliceblue;	
-    }
-    
-    .sidebar-expanded>.sidebar {
-        width: 12rem;
-        min-width: 12rem;
-	max-height: calc(100vh - 300px);
-	overflow-y: auto;
-    }
-
-    #sidebar-help-title {
-        padding-top: 4.8rem;
-    }
-
-    #sidebar-help-container {
-        width: 11.5rem;
-        font-size: 12px;
-        line-height: 1.2em;
-        background: url("mascotte-sc.png") no-repeat;
-        background-size: 5rem 5rem;
-        background-position: 3.5rem 0rem;
-	position: absolute;
-	bottom: 10px;
-    }
-
-    .sidebar-menu {
-//	padding: .7rem 0rem .7rem 1rem;
-	font-size: 17px;
-	font-weight: bold;
-//	line-height: 1.4rem;
-	color: #333 !important;
-    }
-
-    .sidebar-item {
-	font-size: 17px;
-	font-weight: bold;
-	color: #333 !important;
-    }
-
-    .sidebar-menu-item {
-	font-size: 15px;
-	line-height: 1.1rem;
-	font-weight: 400;
-	letter-spacing: -0.8px;
-	color: #333 !important;	
-	padding: 0 0.4rem 0 0.4rem;
-    }
-    
-/*    .sidebar-menu-item:has(> a[data-target='welcome-tab']) {
-	margin-top: -1rem;
-    }
-*/
-    
-    .sidebar-label {
-	font-size: 20px;
-    }
-
-    // 'disable' text-muted
-    .text-muted {
-	color: #333 !important;
-    }
-
-    .active-sidebar {
-	background-color: #EFEFEF;
-    }
-
-    .tab-sidebar {
-	font-size: 17px;
-	line-height: 1.1rem;
-	padding: 0.65rem 0rem 0.65rem 0.4rem;	
-    }
-
-    //---------------- settings ---------------------
-    #settings-container {
-	padding-top: 10px;
-	height: 100vh;
-	background-color: aliceblue;	
-    }
-
-    .settings-expanded {
-        width: 12rem;
-        min-width: 12rem;	
-    }
-
-    .settings-label {
-	font-size: 20px;
-    }
-
-    .btn {
-	--bs-btn-border-radius: 6px;
-    }
-
-    
 }

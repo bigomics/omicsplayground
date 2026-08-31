@@ -13,9 +13,6 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
-shiny::addResourcePath("custom", "www")
-
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {
@@ -134,11 +131,21 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(bigdash)
 library(grid)
 library(magrittr)
 library(future)
 library(promises)
-future::plan(future::multisession)
+future::plan(future::multicore)
+
+## Resource paths
+shiny::addResourcePath("custom", file.path(OPG, "components/assets"))
+## NB "assets" shadows bigdash's own resource path (registered in its
+## .onLoad), so /assets/lato.woff would 404 and big_theme()'s Lato
+## @font-face silently fall back. components/assets/lato.woff is a copy of
+## bigdash/assets/lato.woff kept for exactly that reason -- don't delete it.
+shiny::addResourcePath("assets", file.path(OPG, "components/assets"))
+shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
 .opg_require_omicsai_catalog_api()
@@ -206,6 +213,8 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  DEV_AUTOLOAD = FALSE, ## dev/testing: skip sign-in, load example, open Dashboard
+  ENABLE_PLOTLY_PURGE = TRUE, ## drop hidden boards' drawn Plotly/iheatmapr traces, redraw on return
   ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
@@ -367,8 +376,6 @@ main.init_time <- round(Sys.time() - main.start_time, digits = 4)
 main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
-shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
-
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
 
@@ -413,4 +420,27 @@ if (requireNamespace("omicsagentovi", quietly = TRUE)) {
 }
 
 ## Setup reticulate
-## reticulate::use_virtualenv("reticulate")
+## reticulate::use_virtualenv()
+
+## ------------------------------------------------------------------
+## bigdash hooks
+## ------------------------------------------------------------------
+## PlotModule/TableModule live in bigdash and know nothing about Omics
+## Playground. Everything OPG-specific they used to reach for directly is
+## registered here as an option; see bigdash::bd_hook. Registered last so
+## that both the ui-*.R functions and the globals below are in place.
+
+options(
+  bigdash.tspan = tspan,
+  bigdash.editor_content = getEditorContent,
+  bigdash.editor_theme_observer = plotmodule_theme_observer,
+  bigdash.record_download = record_plot_download,
+  bigdash.watermark = isTRUE(opt$WATERMARK),
+  bigdash.watermark_png = function(file, position) {
+    addWatermark.PNG2(file, mark = file.path(FILES, "watermark-logo.png"), position = position)
+  },
+  bigdash.watermark_pdf = function(file, w, h) {
+    addWatermark.PDF2(file, w = w, h = h, mark = file.path(FILES, "watermark-logo.pdf"))
+  },
+  bigdash.pdf_settings = addSettings
+)

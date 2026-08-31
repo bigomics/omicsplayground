@@ -1,11 +1,18 @@
 ## This file is part of the Omics Playground project.
 
-qsee_normalization_server <- function(id, rX, rY) {
+qsee_normalization_server <- function(id, rX, rY, purge = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    OmicsBoard("board", pgx=NULL, title="Normalization", infotext = NULL) 
+    OmicsBoard(session, pgx=NULL, title="Normalization", infotext = NULL) 
 
-    is_visible <- qsee_is_visible(input, label = "qsee_normalization_server")
+    is_visible <- bigdash::bd_is_visible(
+      input, purge = qsee_resolve_purge(purge), label = "qsee_normalization_server"
+    )
+    ## Shiny suspends this output while the board's tab is hidden, so the
+    ## body is only built on the first visit and then kept in the DOM.
+    output$ui_output <- shiny::renderUI({
+      qsee_normalization_ui_output(session$ns)
+    })
     shiny::observeEvent(rY(), {
       shiny::updateSelectInput(session, "colorby", choices = colnames(rY()))
     })
@@ -17,17 +24,15 @@ qsee_normalization_server <- function(id, rX, rY) {
       qsee_normalization_add_noise(rawX, amount)
     })
 
-    get_result <- qsee_board_cache(
-      is_visible,
-      deps = function() get_rawX(),
-      label = "qsee_normalization_server",
-      compute = function() {
-        rawX <- get_rawX(); shiny::req(rawX)
-        progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
-        progress$set(message = "Compute normalization...", value = 0.33)
-        qsee_normalization_compute(rawX, progress)
-      }
-    )
+    ## Lazy: only the board's plot outputs read this, and Shiny suspends
+    ## those while the tab is hidden. See qsee_visibility.R.
+    get_result <- shiny::reactive({
+      rawX <- get_rawX(); shiny::req(rawX)
+      message("[qsee_normalization_server] computing...")
+      progress <- shiny::Progress$new(session, min = 0, max = 1); on.exit(progress$close())
+      progress$set(message = "Compute normalization...", value = 0.33)
+      qsee_normalization_compute(rawX, progress)
+    })
 
     render.box_plots <- function() {
       res <- get_result(); Y <- rY(); ph <- input$colorby

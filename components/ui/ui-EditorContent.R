@@ -53,7 +53,7 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
   bar_color_init <- if (plot_type %in% c("correlation", "expression_barplot", "expression_boxplot")) ct$secondary else ct$bar_color
 
   # Default editor content
-  volcano_content <- shiny::div(
+  delayedAssign("volcano_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -124,38 +124,6 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
                   numericInput(ns_parent("ylim_max"), "Y max", value = NA, min = 0, step = 1)
                 ),
                 shiny::helpText("X axis spans ± the value. Leave a field blank to auto-scale that axis.")
-              )
-            ),
-
-            # Axis Options
-            bslib::accordion_panel(
-              "Text sizes",
-              bslib::layout_column_wrap(
-                width = 1 / 2,
-                numericInput(ns_parent("label_size"), "Labels", value = 4),
-                numericInput(ns_parent("marker_size"), "Points", value = 1),
-                numericInput(ns_parent("axis_text_size"), "Axis text", value = 14)
-              )
-            ),
-            bslib::accordion_panel(
-              "Margins",
-              checkboxInput(ns_parent("margin_checkbox"), "Custom margins", value = FALSE),
-              conditionalPanel(
-                condition = "input.margin_checkbox",
-                ns = ns_parent,
-                numericInput(ns_parent("margin_left"), "Left", value = 10),
-                numericInput(ns_parent("margin_right"), "Right", value = 10),
-                numericInput(ns_parent("margin_top"), "Top", value = 10),
-                numericInput(ns_parent("margin_bottom"), "Bottom", value = 10)
-              )
-            ),
-            bslib::accordion_panel(
-              "Aspect Ratio",
-              checkboxInput(ns_parent("aspect_ratio_checkbox"), "Custom aspect ratio", value = FALSE),
-              conditionalPanel(
-                condition = "input.aspect_ratio_checkbox",
-                numericInput(ns_parent("aspect_ratio"), NULL, value = 0.5, min = 0.1, max = 10),
-                ns = ns_parent
               )
             ),
 
@@ -251,10 +219,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Heatmap specific content
-  heatmap_content <- shiny::div(
+  delayedAssign("heatmap_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -338,10 +306,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Barplot specific content
-  barplot_content <- shiny::div(
+  delayedAssign("barplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -447,10 +415,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatterplot specific content
-  scatterplot_content <- shiny::div(
+  delayedAssign("scatterplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -488,10 +456,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Feature map specific content
-  featuremap_content <- shiny::div(
+  delayedAssign("featuremap_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -558,10 +526,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Enrichment plot specific content
-  enrichment_content <- shiny::div(
+  delayedAssign("enrichment_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -606,10 +574,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Clustering scatterplot (categorical palette) specific content
-  clustering_content <- shiny::div(
+  delayedAssign("clustering_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -650,10 +618,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Clustering scatterplot + Prism Theme panel (for PCA and phenoplot only)
-  clustering_prism_content <- shiny::div(
+  delayedAssign("clustering_prism_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -738,10 +706,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Grouped barplot: palette selector + bar ordering
-  grouped_barplot_content <- shiny::div(
+  delayedAssign("grouped_barplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -802,10 +770,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Gradient scatterplot: low/high color pickers only (no labels)
-  gradient_content <- shiny::div(
+  delayedAssign("gradient_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -846,10 +814,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Significance scatter: colors for significance categories
-  significance_content <- shiny::div(
+  delayedAssign("significance_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -897,10 +865,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatter with highlight: point color, highlight color, and labels
-  scatter_highlight_content <- shiny::div(
+  delayedAssign("scatter_highlight_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -943,10 +911,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Rank/density plot: fill, outline, and highlight colors
-  rank_plot_content <- shiny::div(
+  delayedAssign("rank_plot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -988,10 +956,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Scatter up/down: up/down colors + label control (MA plot, etc.)
-  scatter_updown_content <- shiny::div(
+  delayedAssign("scatter_updown_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1032,11 +1000,11 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Boxplot (methylation): single box color when ungrouped, palette when grouped.
   # The two divs are toggled by the server based on grouping state via shinyjs.
-  boxplot_methyl_content <- shiny::div(
+  delayedAssign("boxplot_methyl_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1084,10 +1052,10 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Correlation matrix: up/down colors only
-  correlation_matrix_content <- shiny::div(
+  delayedAssign("correlation_matrix_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1122,14 +1090,14 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Boxplot with optional grouping: single bar color (ungrouped) + palette (grouped)
   group_by_input_js <- paste0("input['", ns_parent("group_by_feature_class"), "']")
   ungrouped_cond <- paste0("!", group_by_input_js, " || ", group_by_input_js, " == '<ungrouped>'")
   grouped_cond <- paste0(group_by_input_js, " && ", group_by_input_js, " != '<ungrouped>'")
 
-  expression_boxplot_content <- shiny::div(
+  delayedAssign("expression_boxplot_content", shiny::div(
     class = "popup-modal",
     modalUI(
       id = ns("plotPopup2"),
@@ -1246,10 +1214,12 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
         )
       )
     )
-  )
+  ))
 
   # Return content based on plot type
-  switch(plot_type,
+  ## Only the selected variant is forced -- the others stay unevaluated
+  ## delayedAssign() promises.
+  build_variant <- function() switch(plot_type,
     "volcano" = volcano_content,
     "heatmap" = heatmap_content,
     "barplot" = barplot_content,
@@ -1269,5 +1239,52 @@ getEditorContent <- function(plot_type = "volcano", ns, ns_parent, title, cards 
     "correlation_matrix" = correlation_matrix_content,
     "scatter_updown" = scatter_updown_content,
     "boxplot_methyl" = boxplot_methyl_content
+  )
+
+  ## ----------------------------------------------------------------
+  ## Lazy body
+  ## ----------------------------------------------------------------
+  ##
+  ## Emit the modal shell now but defer its body. The edit button is a plain
+  ## Bootstrap trigger (bigdash::modalTrigger) pointing at #<ns>plotPopup2, so
+  ## the modal element itself has to exist up front -- but a Bootstrap modal is
+  ## display:none until opened, so Shiny suspends any output inside it. The
+  ## body is therefore not built until the editor is actually opened.
+  ##
+  ## That matters because this runs once per plot module with an editor (66 of
+  ## them) at board materialisation: ~80ms of tag building each, plus ~300 DOM
+  ## nodes and ~24 bound inputs per module parked in a modal nobody opened.
+  ##
+  ## Registering the renderer needs an output object, which we do not have
+  ## here -- this is UI-construction code. session$defineOutput() is the
+  ## equivalent; the current domain during insertUI()-driven board
+  ## construction is the app session, and ns() already yields a fully
+  ## qualified id. With no session at all (UI built outside a reactive
+  ## domain) there is nothing to defer to, so fall back to building inline.
+  session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session) || !is.function(session$defineOutput)) {
+    return(build_variant())
+  }
+
+  body_id <- ns("editor_body")
+  session$defineOutput(
+    body_id,
+    shiny::renderUI({
+      ## The variant is a complete modal; take just what modalUI() put in its
+      ## .modal-body, since the shell below supplies the rest.
+      htmltools::tagQuery(build_variant())$find(".modal-body")$children()$selectedTags()
+    }),
+    body_id
+  )
+
+  shiny::div(
+    class = "popup-modal",
+    modalUI(
+      id = ns("plotPopup2"),
+      title = title,
+      size = "fullscreen",
+      footer = NULL,
+      shiny::uiOutput(body_id)
+    )
   )
 }

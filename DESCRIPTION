@@ -12,7 +12,7 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     commonmark,
-    omicsagentovi,
+    omicsagentovi (>= 0.5.90),
     omicsai (>= 0.3.8),
     omicspgx,
     omicspgxmcp,
@@ -36,6 +36,7 @@ Imports:
     forcats,
     future,
     ggforce,
+    ggrepel,
     ggVennDiagram,
     heatmaply,
     htmltools,
@@ -92,4 +93,3 @@ Remotes:
     url::https://github.com/bigomics/wizardR/archive/HEAD.zip,
     url::https://github.com/Ironholds/rgeolocate/archive/HEAD.zip,
     url::https://github.com/JohnCoene/bsutils/archive/HEAD.zip,
-    url::https://github.com/JohnCoene/firebase/archive/refs/heads/omics.zip,

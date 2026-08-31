@@ -1,5 +1,5 @@
 
-#app .col-sm-1.well {
+#app-shell .col-sm-1.well {
     width: 75px;
     background-color: #2c3e50;
     display: flex;
@@ -9,7 +9,7 @@
     height: 100vh;
 }
 
-#app .col-sm-11 {
+#app-shell .col-sm-11 {
     width: calc(100% - 75px);
     height: 100vh;
     padding: 0px;
@@ -32,6 +32,7 @@
     font-size: 0.8em;
     padding: 15px 0 4px 0;
     white-space: normal;
+    line-height: 1;
 }
 
 #app-sidebar .nav-link.active {
@@ -59,14 +60,309 @@
 
 #app-sidebar i {
     font-size: 30px;
+    padding-bottom: 3px;
 }
 
-#app .col-sm-11>.tab-content {
-    margin-top: -15px;
+#app-shell .col-sm-11>.tab-content {
     height: 100%;
 }
 
-#app .col-sm-11>.tab-content>.tab-pane {
+#app-shell .col-sm-11>.tab-content>.tab-pane {
     background-color: #F7FAFD;
-    height: calc(100vh + 15px);
+    height: 100%;
+}
+
+// bigTabs()'s tab container has no explicit height, so it (and each .big-tab
+// pane inside it) sizes itself to its content instead of its properly-sized
+// flex ancestors -- a board taller than the viewport pushes the *whole page*
+// taller (page-level scrollbar + a few px of vertical wiggle) instead of
+// scrolling its own content. Constrain it and let it scroll internally.
+#big-tabs {
+    height: 100%;
+}
+
+// Each board's own OmicsBoardUI() is a bslib fillable layout_columns() (class
+// html-fill-item) whose row_heights = list("auto", 1) row can only actually
+// shrink to fit -- rather than overflowing by however much its content needs
+// -- if its parent is a proper bslib fill container (display:flex;
+// flex-direction:column; min-height:0), which is what html-fill-container
+// itself resolves to. .big-tab wasn't one, so the fill math never applied and
+// the board just overflowed. overflow-y:auto stays as a safety net for a
+// board whose content still can't shrink enough (e.g. a tall data table).
+.big-tab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+// bslib's own CSS already zeroes this exact margin -- `.html-fill-container >
+// .html-fill-item.bslib-mb-spacing { margin-bottom: 0; }` -- but only fires
+// when the parent literally carries the class "html-fill-container", which
+// .big-tab doesn't (we replicated its behaviour above rather than the class
+// itself). Left unset, that spacing (meant for a board dropped in normal
+// document flow) still pushes the grid past .big-tab's own fitted height.
+// Scoped to every nested bslib-grid inside a board, not just the outermost
+// one -- individual boards nest layout_columns() several levels deep for
+// their own sub-layouts, and each one carries this same stray margin.
+.big-tab .bslib-mb-spacing {
+    margin-bottom: 0;
+}
+
+// layout_columns()'s height only ever comes from the R `height=` argument --
+// bslib has no ResizeObserver/JS recalculating it at runtime, it's a static
+// value baked in at render time via --bslib-grid-height. Boards' own internal
+// layout_columns() calls (nested arbitrarily deep inside dataview_ui.R and
+// friends) don't pass one, so every single one falls back to height:auto and
+// renders at whatever its content needs -- overflowing its properly-sized
+// ancestor by that much. Rather than adding height="100%" to every one of
+// those R call sites individually, supply it here once for any such grid
+// anywhere inside a board.
+//
+// !important so it also beats any inline height a board sets on this element
+// itself. (An earlier version of this comment claimed ~30 boards hardcode
+// height:calc(100vh - <N>px) here and named clustering_ui.R, dataview_ui.R and
+// correlation_ui.R -- none of those three contain calc(100vh at all. The 24
+// real uses in the tree are DataTable scrollY values, card heights and
+// non-board containers, none of which this selector matches, so there is no
+// pile of stale magic numbers waiting to be deleted.)
+.big-tab .bslib-grid.html-fill-item {
+    height: 100% !important;
+}
+
+// OmicsBoardUI()'s 3rd row (bslib::layout_columns(..., div(...))) is a plain,
+// unclassed div holding the board's actual content -- it never got tagged as
+// an html-fill-item, so it doesn't shrink to fit; it just renders at whatever
+// height its content needs and bleeds past its (overflow:visible) fill-item
+// parent by however much that is. Every OmicsBoardUI() board has exactly this
+// shape (fillRow, bd_visibility_probe, div(...)), so :nth-child(3) reliably
+// targets it without reaching into unrelated bslib-grids elsewhere. Let it
+// scroll internally instead of overflowing .big-tab.
+.big-tab > .bslib-grid > .bslib-grid-item:nth-child(3) {
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Now that the board fits its container exactly, the bottom-most card ends
+    // flush against this element's padding box -- the edge overflow clips at.
+    // The browser snaps that clip rect to whole device pixels, and on a
+    // fractional-DPR display (1.35 here) the card's 1px bottom border lands
+    // across the snap boundary: most of it is cut and what survives is drawn at
+    // partial coverage, so a border already only rgba(0,0,0,.175) disappears
+    // entirely. Only the last row of cards on a board is affected, which is
+    // exactly what it looks like -- every board losing its bottom border.
+    // A few pixels of breathing room inside the clip keeps the border whole.
+    padding-bottom: 4px;
+}
+
+// Boards usually wrap shiny::tabsetPanel() -- which renders
+// <div class="tabbable"> around the nav strip + .tab-content -- in a plain,
+// unclassed div. None of the three is a bslib fill element: they render
+// display:block, sized to their content, and the wrapper even carries
+// flex:0 0 auto / min-height:auto as a flex child of the board's content
+// row, so it can never shrink to fit. The fill chain breaks right there and
+// every nested layout_columns() below it falls back to content height --
+// exactly as tall as its plots/tables need -- pushing an inner scrollbar
+// into the canvas instead of fitting it to the window.
+//
+// Chain the fill through the wrapper, the tabset and the active pane so the
+// nested fill grids (constrained by the height:100% rule above) resolve
+// against a definite height all the way down to the leaves.
+
+// The unclassed wrapper div adopts the fill-item treatment: its height is the
+// row's fitted height, not its content's.
+.big-tab div:has(> .tabbable) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.big-tab .tabbable {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+// .tab-content is a plain div inside the tabset; make it the flexible middle
+// of the chain (the nav strip above it keeps its natural height).
+.big-tab .tabbable > .tab-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+// Only the active pane: Bootstrap keeps the others at display:none, and
+// overriding display on every .tab-pane would unhide them.
+.big-tab .tabbable > .tab-content > .tab-pane.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+// ...and the same break one level up, between that content row and the grid
+// that actually holds the board's tabsets. OmicsBoardUI() wraps its `...`
+// content in a plain div (the :nth-child(3) row above), and each board's own
+// outermost layout_columns() renders inside it. bslib's fill CSS gives every
+// non-fill child of an html-fill-container `flex: 0 0 auto`, so that plain
+// div sizes to its content and stays there; the grid's height:100% (from the
+// rule above) then resolves against an auto-height parent, which CSS treats
+// as auto -- i.e. content height again. In board.expression that made the
+// tabs1/tabs2 grid render at its content's 1079px inside a 901px row, so the
+// board overflowed by ~180px and the content row grew its own scrollbar
+// instead of the page fitting the window.
+//
+// Making the wrapper a flexible fill item gives the grid a definite height to
+// resolve 100% against, so the fr rows divide the window's remaining space
+// and the board ends exactly at the viewport bottom.
+.big-tab > .bslib-grid > .bslib-grid-item:nth-child(3) > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+
+
+// ---------------------------------------------------------------------------
+// Pages mounted as bslib::nav_panel() rather than as a board -- Data Library
+// and AI Studio, wrapped in ui.R as div(class = "px-4 py-0 fullheight-page").
+// They sit outside .big-tab, so none of the rules above reach them and they
+// rendered at content height inside a 100%-height .tab-pane, spilling past the
+// window.
+//
+// These deliberately mirror the .big-tab rules but are anchored with child
+// combinators instead of descendant ones. That difference matters: bslib's
+// navset_hidden()/navset_underline() render the *same* .tabbable >
+// .tab-content > .tab-pane markup as a page-level tabsetPanel, and AI Studio
+// nests seven of them inside its cards. Descendant selectors caught every one,
+// forcing display:flex and height:100% onto components that manage their own
+// visibility -- panels stacked on top of each other with their own scrollbars.
+// Anchoring to > div > .tabbable reaches only the page's own tabset.
+.fullheight-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    // The .tab-pane above is already height:100%; take all of it.
+    flex: 1 1 auto;
+}
+
+// AI Studio's OmicsBoardUI() grid is a direct child, so its content row gets
+// the same treatment a board's does.
+.fullheight-page > .bslib-grid.html-fill-item {
+    height: 100% !important;
+}
+
+.fullheight-page > .bslib-grid > .bslib-grid-item:nth-child(3) {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 4px;
+}
+
+.fullheight-page > .bslib-grid > .bslib-grid-item:nth-child(3) > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+// Data Library: a plain div wrapping a tabsetPanel.
+.fullheight-page > div:has(> .tabbable) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.fullheight-page > div > .tabbable {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    // flex-shrink lets the tabset share the column with the header above it
+    // rather than claiming the full 100% and overflowing.
+    flex: 1 1 auto;
+}
+
+.fullheight-page > div > .tabbable > .tab-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+// padding-bottom keeps the last card clear of the window edge (it measured
+// 0.1px away, where a board sits 10.1px clear) and of the overflow clip above.
+.fullheight-page > div > .tabbable > .tab-content > .tab-pane.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding-bottom: 10px;
+}
+
+// Inside the page's own tab panes it is safe to reach nested grids again --
+// Data Library's panes hold grids and cards, no navsets. Needed because not
+// every layout_columns() in there passes height (the My Datasets 8/4 grid).
+.fullheight-page > div > .tabbable > .tab-content > .tab-pane.active {
+    .bslib-grid.html-fill-item {
+        height: 100% !important;
+    }
+}
+
+// bslib puts a 24px margin-bottom on every .bslib-mb-spacing grid. On a grid
+// already sized to the full height that margin is pure overflow -- AI Studio's
+// OmicsBoardUI() grid measured 757px tall in a 757px box, plus 24px of margin,
+// so the page scrolled by exactly that and the columns came up short. Same
+// rule the boards carry; margins only, so it cannot affect how the nested
+// navsets show or hide their panels.
+.fullheight-page .bslib-mb-spacing {
+    margin-bottom: 0;
+}
+
+// Settings cards (bslib::card, and the bslib::card-based PlotModuleUI /
+// TableModuleUI panels on "New features" / "Package versions") size to
+// content by default and left most of the now-full-height page blank.
+// navset_pill_list has no .tabbable wrapper -- its nav (#app_settings-tabs1)
+// and each panel's content are sibling columns in the same .row, so scope
+// there instead; that keeps this off cards elsewhere in the app.
+.row:has(> .col-sm-2.well > #app_settings-tabs1) .card {
+    min-height: 50vh;
+}
+
+// Package versions and Resource info are TableModuleUI cards (class
+// "tablemodule") holding a data table -- more row height is directly
+// useful there, so let them fill the row instead of stopping at the 50vh
+// minimum every other settings card gets.
+//
+// Two things fight this: (1) TableModuleUI hardcodes an inline
+// style="height:400px" on the card, which beats a plain CSS height and
+// needs !important to override; (2) none of the ancestors between the
+// navset's own .row and the card (.col-sm-10, .tab-content, .tab-pane) had
+// a definite height of their own -- percentage heights need one, so the
+// whole chain has to carry height:100% down to the card, same pattern as
+// #app-shell's outer nav.
+.row:has(> .col-sm-2.well > #app_settings-tabs1) {
+    height: 100%;
+
+    > .col-sm-10 {
+        height: 100%;
+
+        > .tab-content {
+            height: 100%;
+
+            > .tab-pane.active {
+                height: 100%;
+            }
+        }
+    }
+}
+
+.row:has(> .col-sm-2.well > #app_settings-tabs1) .card.tablemodule {
+    height: 100% !important;
 }

@@ -270,7 +270,13 @@ dataview_plot_expression_server <- function(id,
           df$samples <- factor(df$samples, levels = df$samples)
         }
 
-        points.color[which(points.color == "black")] <- input$scatter_color
+        ## Via get_editor_color(), as dataview_plot_boxplot.R and
+        ## dataview_plot_tsneplot.R do: `scatter_color` is a plot-editor input,
+        ## so reading it raw yields NULL whenever the editor is absent or has
+        ## not been seeded yet, and `x[i] <- NULL` fails with "replacement has
+        ## length zero". The helper falls back to the theme's `secondary`.
+        points.color[which(points.color == "black")] <-
+          get_editor_color(input, "scatter_color", "secondary")
 
         if (gp$use_ggprism) {
           ## --- ggplot2 + ggprism path (ungrouped) ---

@@ -4,41 +4,6 @@
 ##
 
 
-visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom = 1) {
-  is.pdf <- grepl("pdf$", file)
-  if (is.pdf) {
-    width <- width * 600
-    height <- height * 600
-  }
-  vis2 <- htmlwidgets::createWidget(
-    name = "visNetwork",
-    x = visnet$x,
-    width = width, height = height,
-    package = "visNetwork"
-  )
-  tmp.html <- paste0(tempfile(), "-visnet.html")
-  tmp.png <- paste0(tempfile(), "-webshot.png")
-  visNetwork::visSave(vis2, file = tmp.html)
-  webshot2::webshot(
-    url = tmp.html,
-    file = tmp.png,
-    selector = "#htmlwidget_container",
-    delay = delay,
-    zoom = zoom,
-    cliprect = "viewport",
-    vwidth = width,
-    vheight = height
-  )
-  if (is.pdf) {
-    cmd <- paste("convert", tmp.png, "-density 600", file)
-    system(cmd)
-  } else {
-    file.copy(tmp.png, file, overwrite = TRUE)
-  }
-  unlink(tmp.html)
-}
-
-
 addWatermark.PDF <- function(file) {
   if (system("which pdftk", ignore.stdout = TRUE) == 1) {
     return
@@ -435,17 +400,47 @@ tspan <- function(text, js = TRUE) {
 jspan <- function(text) tspan(text, js = TRUE)
 
 
-#' Create a loading spinner element
+#' Create a full-canvas board wireframe shown while a board's real UI loads
 #'
-#' @param id The ID for the loader container
-#' @return A shiny div element containing the loader
+#' A greyed-out mockup of a generic board layout (title, sub-tabs, info
+#' banner, a row of chart cards) rather than a small spinner, so the tab
+#' doesn't look blank while its real content is being built. Tagged
+#' `bigtabslazy-placeholder` so [bigdash::bigTabsLazy()] removes it as soon
+#' as the real UI is inserted.
+#'
+#' @param id The ID for the wireframe container
+#' @return A shiny div element containing the wireframe
 #' @export
 create_loader <- function(id) {
-  div(
-    class = "loader-container",
-    id = id,
+  skeleton_card <- function(header_width = "50%", n_bars = 8) {
+    bar_heights <- ((seq_len(n_bars) * 37L) %% 60L) + 30L
     div(
-      class = "spinner"
+      class = "sk-card",
+      div(class = "sk-card-header", style = paste0("width:", header_width, ";")),
+      div(
+        class = "sk-card-body",
+        lapply(bar_heights, function(h) div(class = "sk-bar", style = paste0("height:", h, "%;")))
+      )
+    )
+  }
+
+  div(
+    class = "board-skeleton bigtabslazy-placeholder",
+    id = id,
+    div(class = "sk-title"),
+    div(
+      class = "sk-tabs",
+      div(class = "sk-tab"), div(class = "sk-tab"), div(class = "sk-tab")
+    ),
+    div(class = "sk-banner"),
+    div(
+      class = "sk-row",
+      skeleton_card("40%", 6), skeleton_card("30%", 6),
+      skeleton_card("50%", 6), skeleton_card("35%", 6)
+    ),
+    div(
+      class = "sk-row sk-row-wide",
+      skeleton_card("45%", 14), skeleton_card("30%", 14)
     )
   )
 }
