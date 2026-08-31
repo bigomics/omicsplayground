@@ -271,11 +271,6 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
     ## greys out". shinyjs::runjs works fine in this same scope (the sidebar
     ## opens through it above), so the delay is the broken part - drop it and
     ## remove the modal directly.
-    ##
-    ## The navigation above has been issued, so the "Loading dataset..."
-    ## notification opened by loadAndActivatePGX has done its job and comes
-    ## down at the same moment.
-    shiny::removeNotification("opg_loading")
     shiny::removeModal()
     ## stop-scrolling comes from shinyalert/sweetalert and nothing takes it back
     ## off, so it outlives whatever put it there and leaves overflow:hidden on
