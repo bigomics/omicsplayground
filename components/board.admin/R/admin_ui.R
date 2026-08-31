@@ -65,9 +65,11 @@ AdminPanelUI <- function(id) {
         col_widths = c(6,6),
         height = fullH,
         row_heights = list(1),
-        shiny::div(
+        bslib::layout_columns(
+          col_widths = 12,
+          height = "100%",
+          row_heights = list("auto",1),
           bs_alert("Manage user credentials. Click on a cell to edit it. Use the buttons below to add or remove users, and save changes when done."),
-          br(),
           admin_table_credentials_ui(
             id = ns("credentials"),
             title = "User Credentials",
