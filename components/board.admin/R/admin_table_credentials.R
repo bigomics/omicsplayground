@@ -133,6 +133,8 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
           escape = 1,
           editable = FALSE,
           selection = list(mode = "single", target = "row"),
+          extensions = c("Scroller"),
+          plugins = "scrollResize",
           callback = DT::JS(sprintf(
             "table.on('change', 'select.admin-select', function() {
                var row = parseInt($(this).data('row'));
@@ -145,6 +147,7 @@ admin_table_credentials_server <- function(id, auth, credentials_file = NULL) {
             dom = "lfrtip",
             scrollX = TRUE,
             scrollY = "45vh",
+            scrollResize = TRUE,
             deferRender = TRUE,
             pageLength = 20
           )
