@@ -9,33 +9,46 @@
 ## read on its own. The estimator ships inside methylclock, which the clocks
 ## screen already depends on, so this costs no new dependency.
 
-MP_DECONV_REFS <- c(
-  "blood gse35069 complete", "blood gse35069", "blood gse35069 chen",
-  "combined cord blood", "andrews and bakulski cord blood",
-  "cord blood gse68456", "gervin and lyle cord blood",
-  "guintivano dlpfc", "saliva gse48472"
-)
+## One list, owned by the library that fits them, so the panel the pipeline
+## precomputed and the panel the picker offers cannot drift apart.
+MP_DECONV_REFS <- playbase.epigenetics::DECONV_REFERENCES
 
 mp_can_deconv <- function() {
   requireNamespace("methylclock", quietly = TRUE) &&
     "meffilEstimateCellCountsFromBetas" %in% getNamespaceExports("methylclock")
 }
 
+## The stored fit, when we are willing to trust it. Same narrow test as
+## mp_stored_clocks(): the proportions must line up with the samples actually
+## loaded, and the package that produced them must still be the one installed
+## - a methylclock upgrade can move a reference set, and a silently stale
+## proportion is worse than a slow one.
+mp_stored_cells <- function(pgx, reference) {
+  cs <- pgx$meth$cells
+  if (is.null(cs) || is.null(cs$counts) || is.null(cs$source)) return(NULL)
+  cc <- cs$counts[[reference]]
+  if (is.null(cc)) return(NULL)
+  if (!identical(rownames(cc), colnames(pgx$X))) return(NULL)
+  have <- tryCatch(as.character(utils::packageVersion(cs$source)),
+                   error = function(e) NA_character_)
+  if (!is.na(have) && !identical(have, cs$version)) return(NULL)
+  cc
+}
+
 #' Estimate cell proportions. Returns a samples x celltype matrix, or NULL.
+#'
+#' Prefers the fit stored at dataset creation - every panel is precomputed
+#' there, so a panel switch costs nothing. Falls back to fitting live for a
+#' pgx that predates the slot, using the same library function the pipeline
+#' calls so the two paths cannot drift apart.
 mp_cell_counts <- function(pgx, reference = MP_DECONV_REFS[1]) {
+  stored <- mp_stored_cells(pgx, reference)
+  if (!is.null(stored)) return(stored)
   if (!mp_can_deconv()) return(NULL)
   X <- mp_beta(pgx)
-  cc <- tryCatch(
-    methylclock::meffilEstimateCellCountsFromBetas(X, reference),
-    error = function(e) {
-      warning("[methylome] deconvolution failed: ", conditionMessage(e))
-      NULL
-    }
-  )
-  if (is.null(cc)) return(NULL)
-  cc <- as.matrix(cc)
-  rownames(cc) <- colnames(X)
-  cc
+  cs <- playbase.epigenetics::compute_cell_counts(X, references = reference)
+  if (is.null(cs)) return(NULL)
+  cs$counts[[reference]]
 }
 
 ## ---------------------------------------------------------------- settings --

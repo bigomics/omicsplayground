@@ -75,15 +75,28 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
     })
 
     ## ----------------------------------------------------- cell fractions --
-    ## Deconvolution is a projection over ~500 CpGs but still not instant, and
-    ## it is a prerequisite for the adjusted model, so it is explicit.
-    ## Button-driven, not dataset-driven. Deconvolution quantile-normalises the
-    ## whole matrix and runs a QP per sample - tens of seconds and gigabytes on
-    ## a real cohort. With r_dataset() in the trigger it ran on every load,
-    ## which as a standalone app means every load, because the UI is in the DOM
-    ## from page load and nothing suspends it.
+    ## Every reference panel is fitted at dataset creation and stored in the
+    ## pgx, so the usual path is a lookup: the screen is populated on load and
+    ## a panel switch is instant. The button stays for the one case that still
+    ## costs something - a pgx built before that slot existed, where
+    ## mp_cell_counts() falls back to fitting live. That fit still
+    ## quantile-normalises the whole matrix and runs a QP per sample, tens of
+    ## seconds on a real cohort, which is why it is never dataset-triggered:
+    ## as a standalone app the UI is in the DOM from page load and nothing
+    ## suspends it, so a dataset-driven fit would run on every load.
     applied_ref <- shiny::reactiveVal(NULL)
     cells_val <- shiny::reactiveVal(NULL)
+    ## Free when the pgx carries the fit, NULL when it does not - so this is
+    ## safe to run on every dataset change and on the panel picker.
+    take_stored <- function(ref) {
+      pgx <- PGX()
+      if (is.null(pgx)) return(FALSE)
+      cc <- mp_stored_cells(pgx, if (is.null(ref)) MP_DECONV_REFS[1] else ref)
+      if (is.null(cc)) return(FALSE)
+      cells_val(cc)
+      applied_ref(if (is.null(ref)) MP_DECONV_REFS[1] else ref)
+      TRUE
+    }
     shiny::observeEvent(input$run_deconv, {
       shiny::req(PGX())
       applied_ref(input$deconv_ref)
@@ -93,10 +106,21 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
           PGX(), if (is.null(input$deconv_ref)) MP_DECONV_REFS[1] else input$deconv_ref))
       )
     })
+    ## Switching panel costs nothing when it was precomputed; when it was not,
+    ## leave what is showing and let deconv_stale tell the user to press the
+    ## button, which is the pre-existing behaviour.
+    shiny::observeEvent(input$deconv_ref, {
+      take_stored(input$deconv_ref)
+    }, ignoreInit = TRUE)
     shiny::observeEvent(r_dataset(), {
       cells_val(NULL)
       applied_ref(NULL)
+      take_stored(input$deconv_ref)
     }, ignoreInit = TRUE)
+    ## The first dataset arrives before any observer above has fired.
+    shiny::observeEvent(PGX(), {
+      if (is.null(cells_val())) take_stored(input$deconv_ref)
+    }, once = FALSE)
     r_cells <- shiny::reactive(cells_val())
     output$deconv_stale <- shiny::renderUI({
       a <- applied_ref()
