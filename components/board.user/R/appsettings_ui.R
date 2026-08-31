@@ -9,7 +9,10 @@ AppSettingsUI <- function(id) {
   ## IMPORANT: most id's do not use ns() to be accessible at top level
   ## app_server and opg_server.
 
-  initial_is_basic <- (opt$USER_LEVEL == "BASIC")
+  ## FORCE_BASIC deploys start basic too, otherwise the full menu renders and
+  ## then flips once the login observer runs (server.R). A per-user FORCE_BASIC
+  ## is only known after login, so that case still flips.
+  initial_is_basic <- (opt$USER_LEVEL == "BASIC" || isTRUE(as.logical(opt$FORCE_BASIC)))
 
   OmicsBoardUI(
     ns = ns,
