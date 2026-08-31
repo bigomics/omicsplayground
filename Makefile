@@ -127,16 +127,6 @@ board.launch:
 board.example:
 	R -e "options(board = '$(board)', use_example_data = TRUE, authentication = '$(auth)'); shiny::runApp('dev/board.launch')"
 
-port=3838
-
-## Run the full app with the Apps launcher enabled, to test the Methylome
-## Profiler mini app. Optionally stage a dataset and pick a port:
-##   make methylome
-##   make methylome pgx=~/Downloads/GSE43976-methyl-mini.pgx
-##   make methylome port=3939
-methylome: rm.locks
-	METHYLOME_PGX="$(if $(pgx),$(realpath $(pgx)),)" METHYLOME_PORT="$(port)" Rscript dev/run_methylome.R
-
 pgx.check.error: sass
 	Rscript dev/board_check_across_pgx.R $(if $(d),-d $(d),)
 
