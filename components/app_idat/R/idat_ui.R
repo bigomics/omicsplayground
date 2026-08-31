@@ -16,7 +16,12 @@ idat_ui <- function(id) {
       col_widths = c(2, 10),
       class = "p-3",
       gap = "3.5rem",
-      height = "calc(100vh - 72px)",
+      ## "100%", not calc(100vh - 72px): omicspanel() wraps this page in
+      ## .fullheight-page, whose `> .bslib-grid.html-fill-item { height: 100%
+      ## !important }` overrode the arithmetic anyway. The 10px keeps the last
+      ## card off the window edge, as the boards do.
+      height = "100%",
+      style = "padding-bottom: 10px;",
       bslib::layout_columns(
         col_widths = 12,
         fill = FALSE,

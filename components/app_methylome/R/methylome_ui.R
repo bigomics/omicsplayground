@@ -10,23 +10,46 @@
 ## maximize, and the png/pdf/svg/csv downloads come from the platform rather
 ## than being reimplemented here.
 
-## bigdash pulls its app container 15px above the viewport - it assumes a
-## navbar occupies that strip, and this app hides its navbar - so without a
-## correction the first element on every tab is clipped by the app top bar.
-## Push the content back down, then size the tab to the space that is really
-## left. Rows are "auto" for the alert and 1 for the content, otherwise
+## Screens size themselves off the flex chain below, not off the viewport.
+## Rows stay "auto" for the alert and 1 for the content, otherwise
 ## layout_columns splits the height evenly and the alert eats a whole share.
-MP_TAB_PAD <- "padding-top: 28px;"
-MP_TAB_HEIGHT <- "calc(100vh - 40px)"
-## Sub-tabbed screens lose another strip of height to the nav_tab chrome.
-MP_SUBTAB_HEIGHT <- "calc(100vh - 96px)"
+##
+## This used to be calc(100vh - 96px) per screen plus a 28px top pad, tuned by
+## hand against the old shell. Both are gone: the platform now sets
+## `.big-tab .bslib-grid.html-fill-item { height: 100% !important }`, which
+## overrode the calc anyway (it measured 557px in a 900px window, not the 804px
+## the arithmetic promised), and the app container no longer sits above the
+## viewport, so the pad was reclaiming nothing.
+MP_SUBTAB_HEIGHT <- "100%"
 
-## Every tab is the same shape: a nudged wrapper around one layout_columns.
-mp_tab <- function(...) shiny::div(style = MP_TAB_PAD, ...)
+## Every tab is the same shape: one flex wrapper around one layout_columns.
+## The wrapper is what mp_fill_css() below hangs the fill chain on.
+mp_tab <- function(...) shiny::div(...)
+
+## bigTabs renders as a plain block that sizes to its content, so without this
+## the whole app stopped at its natural height and left the bottom of the
+## window empty - 661px of a 900px viewport. Same fill chain qsee_ui() carries
+## for the same shell, extended one level to the per-screen navset_tab, which
+## sits deeper than the platform's `.fullheight-page > div > .tabbable` rules
+## reach. Written against the id so it cannot leak into the Dashboard's tabs.
+mp_fill_css <- function(id) {
+  shiny::tags$style(shiny::HTML(sprintf("
+    #%1$s-big-tabs { height: 100%%; display: flex; flex-direction: column; }
+    #%1$s-big-tabs > .big-tab:not(.d-none) {
+      flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+    }
+    #%1$s-big-tabs > .big-tab > div {
+      flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+    }
+    #%1$s-big-tabs .tabbable { flex: 1 1 auto; min-height: 0; }
+  ", id)))
+}
 
 methylome_ui <- function(id = "methylome") {
   ns <- shiny::NS(id)
 
+  shiny::tagList(
+  mp_fill_css(id),
   bigdash::bigPage(
     id = id,
     navbar = shiny::div(style = "visibility: hidden; display: none;"),
@@ -53,7 +76,7 @@ methylome_ui <- function(id = "methylome") {
       bigdash::bigTabItem(ns("ewas-tab"),
         methylome_ewas_inputs(id), methylome_ui_ewas(id))
     )
-  )
+  ))
 }
 
 mp_panel_qc <- function(ns) {
