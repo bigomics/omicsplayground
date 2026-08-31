@@ -66,17 +66,19 @@ methylome_deconv_inputs <- function(id, wrap = TRUE) {
       shiny::selectInput(ns("deconv_ref"), "Reference panel:",
                          choices = MP_DECONV_REFS, selected = MP_DECONV_REFS[1]),
       "Which reference methylome panel to project onto. Pick one matching the tissue: the blood panels are for whole blood, the cord panels for neonatal samples, and there are saliva and brain (DLPFC) panels.",
-      placement = "top"
+      placement = "left"
     ),
     withTooltip(
       shiny::selectInput(ns("comp_pheno"), "Compare across:", choices = NULL),
       "Which sample column to compare the estimated proportions against.",
-      placement = "top"
+      placement = "left"
     ),
+    ## Rendered server-side: the button is only for a panel the pgx did not
+    ## come with, so it is absent for the panels that were precomputed - which
+    ## is nearly all of them, and a button that does nothing invites a click.
     shiny::div(
       style = "margin-top:6px;",
-      shiny::actionButton(ns("run_deconv"), "Estimate composition",
-                          class = "btn btn-primary btn-sm", width = "100%"),
+      shiny::uiOutput(ns("deconv_run")),
       shiny::uiOutput(ns("deconv_stale"))
     )
   )

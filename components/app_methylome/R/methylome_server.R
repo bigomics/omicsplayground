@@ -122,6 +122,23 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
       if (is.null(cells_val())) take_stored(input$deconv_ref)
     }, once = FALSE)
     r_cells <- shiny::reactive(cells_val())
+    ## The button only appears for a panel this pgx did not come with - a
+    ## dataset built before the slot existed, or a panel whose reference
+    ## probes the dataset does not carry (GSE87571 is missing one of the
+    ## nine). For everything else the proportions are already on screen and
+    ## there is nothing to press.
+    output$deconv_run <- shiny::renderUI({
+      pgx <- PGX()
+      shiny::req(!is.null(pgx))
+      ref <- if (is.null(input$deconv_ref)) MP_DECONV_REFS[1] else input$deconv_ref
+      if (!is.null(mp_stored_cells(pgx, ref))) return(NULL)
+      shiny::actionButton(session$ns("run_deconv"), "Estimate composition",
+                          class = "btn btn-primary btn-sm", width = "100%")
+    })
+    ## The settings drawer is closed until the user opens it, and Shiny
+    ## suspends an output that is not visible - so without this the button is
+    ## never rendered at all, not even for the panel that needs it.
+    shiny::outputOptions(output, "deconv_run", suspendWhenHidden = FALSE)
     output$deconv_stale <- shiny::renderUI({
       a <- applied_ref()
       if (is.null(a) || identical(a, input$deconv_ref)) return(NULL)
