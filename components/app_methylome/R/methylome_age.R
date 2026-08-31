@@ -279,7 +279,12 @@ methylome_plot_clocks_server <- function(id, r.clockset, watermark = FALSE) {
       op <- graphics::par(mar = c(4, 4, 1, 1), las = 1); on.exit(graphics::par(op))
       graphics::pairs(a, pch = 19, cex = 0.55,
                       col = grDevices::adjustcolor(MP_PAL$hypo, 0.6),
-                      gap = 0.25, oma = c(2.5, 2.5, 1.5, 1.5),
+                      ## pairs() draws its axis labels in the OUTER margin and
+                      ## ignores mar, so oma is the only thing reserving room for
+                      ## them. 1.5 lines clipped the top row's labels through the
+                      ## middle and sliced "8.0" to "8." on the right, where
+                      ## las = 1 makes them horizontal and widest.
+                      gap = 0.25, oma = c(3, 3, 3, 3.5),
                       lower.panel = function(x, y, ...) {
                         graphics::points(x, y, pch = 19, cex = 0.55,
                                          col = grDevices::adjustcolor(MP_PAL$hypo, 0.6))

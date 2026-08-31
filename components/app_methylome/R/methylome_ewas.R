@@ -205,7 +205,19 @@ methylome_plot_qq_server <- function(id, r.ewas, watermark = FALSE) {
                  sprintf("bacon inflation = %.3f", res$bacon$inflation),
                  sprintf("bacon bias = %+.3f", res$bacon$bias))
       }
-      graphics::legend("topleft", bty = "n", legend = lab)
+      ## Not legend(): it spaces lines off par("cin"), a fixed device constant
+      ## derived from the pointsize rather than from the face actually being
+      ## drawn, so the three lines landed on top of one another - and a
+      ## y.intersp big enough to separate them at one card shape was wrong
+      ## again as soon as the panel was captured at another. strheight() asks
+      ## the device for the real height of the string in the real font, so this
+      ## holds at any size the panel is rendered at.
+      usr <- graphics::par("usr")
+      lh <- graphics::strheight("Ag") * 1.45
+      x0 <- usr[1] + 0.03 * (usr[2] - usr[1])
+      for (i in seq_along(lab)) {
+        graphics::text(x0, usr[4] - lh * i, lab[i], adj = c(0, 0.5), xpd = NA)
+      }
     }
     PlotModuleServer("pltmod", plotlib = "base", func = plot.RENDER,
       csvFunc = shiny::reactive(r.ewas()$data), renderFunc = shiny::renderPlot,

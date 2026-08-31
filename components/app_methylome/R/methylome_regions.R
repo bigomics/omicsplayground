@@ -125,7 +125,12 @@ methylome_table_dmr_server <- function(id, pgx, r.regions, scrollY = "26vh") {
         options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
                        scrollY = sy, scrollResize = TRUE, deferRender = TRUE,
                        order = list(list(5, "asc")))) |>
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
+        ## Display-only, as methylome_ewas.R already does: signif() above keeps
+        ## the CSV at three figures and the column numeric so it still sorts,
+        ## but DT serialises the double at full precision - so a p of 1.59e-247
+        ## renders as 1.589999999999999e-247. Format in the browser instead.
+        DT::formatSignif(c("Effect (M)", "P value", "Adjusted p"), digits = 3)
     }
     ## Returned so the caller can drive the region plot from the clicked row -
     ## rows_selected indexes the data as passed to DT, which is the same order
@@ -309,7 +314,8 @@ methylome_table_enrich_server <- function(id, r.enrich, scrollY = "26vh") {
         extensions = c("Buttons", "Scroller"), plugins = "scrollResize",
         options = list(dom = "lfrtip", scroller = TRUE, scrollX = TRUE,
                        scrollY = sy, scrollResize = TRUE, deferRender = TRUE)) |>
-        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
+        DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%") |>
+        DT::formatSignif(c("P value", "FDR"), digits = 3)
     }
     TableModuleServer("tblmod", func = function() render(scrollY),
                       func2 = function() render("60vh"),

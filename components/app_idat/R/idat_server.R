@@ -589,8 +589,9 @@ idat_array_type <- function(log) {
 #'
 #' Rows are aligned to the beta columns and named by them, which is the shape
 #' both the upload board (\code{intersect(colnames(X), rownames(Y))}) and the
-#' downloaded samples.csv need. Columns that only locate files on disk are
-#' dropped - they are not phenotypes and mean nothing on another machine.
+#' downloaded samples.csv need. Only columns that locate a file on one machine
+#' are dropped; chip and position are kept, being batch covariates rather than
+#' bookkeeping.
 #'
 #' @return data.frame with \code{rownames == colnames(beta)}; a single
 #'   \code{sample} column when the upload carried no usable sheet.
@@ -600,7 +601,18 @@ idat_samples <- function(res, sheet = NA_character_) {
   if (is.na(sheet) || !file.exists(sheet)) {
     return(bare)
   }
-  df <- tryCatch(utils::read.csv(sheet, stringsAsFactors = FALSE),
+  ## Illumina sheets open with a [Header] block and put the real column names
+  ## after a [Data] marker - minfi::read.metharray.sheet() skips to it, and so
+  ## must this, or read.csv takes "[Header]" as the header row, finds no
+  ## Sample_Name, and silently drops every phenotype the sheet carried.
+  df <- tryCatch(
+    {
+      marker <- grep("^\\[DATA\\]", readLines(sheet, warn = FALSE), ignore.case = TRUE)
+      utils::read.csv(sheet,
+        skip = if (length(marker)) marker[1] else 0,
+        stringsAsFactors = FALSE
+      )
+    },
     error = function(e) NULL
   )
   if (is.null(df) || !nrow(df)) {
@@ -618,7 +630,11 @@ idat_samples <- function(res, sheet = NA_character_) {
     return(bare)
   }
 
-  drop <- grepl("^(basename|slide|array|sentrix|sample_name|sample_well|pool_id|filenames?|path)$",
+  ## Drop only what locates a file on one machine, plus Sample_Name (which is
+  ## already the row names). Slide/Sentrix_ID and Array/Sentrix_Position stay:
+  ## chip and position are the classic methylation batch covariates, and the
+  ## platform's PC-vs-covariate panel exists to test exactly those.
+  drop <- grepl("^(basename|filenames?|path|sample_name)$",
     colnames(df), ignore.case = TRUE)
   df <- df[, !drop, drop = FALSE]
   if (!ncol(df)) {

@@ -113,7 +113,8 @@ methylome_plot_betadist_server <- function(id, pgx, watermark = FALSE) {
                         col = grDevices::adjustcolor(MP_PAL$grey, 0.55), lwd = 1)
       }
       graphics::abline(v = c(0.2, 0.8), lty = 2, col = c(MP_PAL$hypo, MP_PAL$hyper))
-      graphics::legend("topright", bty = "n", lty = 2,
+      ## y.intersp as in the QQ panel: without it the two labels overlap.
+      graphics::legend("topright", bty = "n", lty = 2, y.intersp = 1.4,
                        col = c(MP_PAL$hypo, MP_PAL$hyper),
                        legend = c("hypo 0.2", "hyper 0.8"))
     }

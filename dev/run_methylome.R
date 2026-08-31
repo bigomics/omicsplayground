@@ -16,7 +16,9 @@
 port <- as.integer(Sys.getenv("METHYLOME_PORT", "3838"))
 pgx_file <- Sys.getenv("METHYLOME_PGX", "")
 
-DEMO <- "GSE43976-methyl-demo.pgx"
+## The dataset the panel guide and the capability deck are both built from.
+## GSE87571: 149 whole-blood donors aged 15-83, real continuous age, both sexes.
+DEMO <- "GSE87571-methyl-sub150.pgx"
 
 ## Where the demo dataset might already be sitting. Checked in order, first
 ## hit wins; data/ first so a dataset already in the library is left alone.

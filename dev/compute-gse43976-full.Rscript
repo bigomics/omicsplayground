@@ -1,0 +1,151 @@
+## Compute the COMPLETE GSE43976 methylation dataset into a pgx.
+##
+## Input : data/GSE43976/GSE43976_matrix_raw.txt.gz  (U/M/DetP signals, 286 cols)
+##         data/GSE43976/GSE43976_samples.rds        (parsed GEO series-matrix sheet)
+## Norm  : BMIQ (mirrors playbase.epigenetics::normalizeMethylation, method="BMIQ")
+## Batch : none
+## Output: data/GSE43976-methyl-full.pgx   (the shipped -mini-.pgx is untouched)
+##
+## Run:   Rscript dev/compute-gse43976-full.Rscript
+
+suppressMessages({
+  library(playbase)
+  library(data.table)
+})
+setwd("/home/massagno/bigomics/GitHub/omicsplayground-methylome-app")
+t.start <- Sys.time()
+msg <- function(...) cat(format(Sys.time(), "%H:%M:%S"), "|", ..., "\n")
+
+## Local env has playdata 0.1.0 which predates playdata::PHOSPHOSITE that
+## playbase dereferences during probe-type detection (same stub as the demo build).
+try(assignInNamespace(
+  "annotate_phospho_residue",
+  function(features, detect.only = FALSE) if (detect.only) FALSE else NULL,
+  ns = "playbase"
+), silent = TRUE)
+
+## ---------------------------------------------------------------- 1. raw matrix
+msg("[1/6] reading raw signal matrix ...")
+raw <- fread("data/GSE43976/GSE43976_matrix_raw.txt.gz")
+hdr <- colnames(raw)[-1]
+stopifnot(length(hdr) == 3 * 95)
+
+array.names <- unique(sub("\\.(Unmethylated|Methylated|Detection_Pval)$", "", hdr))
+array.names <- sub("^X", "", array.names)
+stopifnot(length(array.names) == 95)
+
+smp <- readRDS("data/GSE43976/GSE43976_samples.rds")
+ii <- match(array.names, smp$array_name)
+if (anyNA(ii)) stop("unmapped arrays: ", paste(array.names[is.na(ii)], collapse = ","))
+titles <- smp$sample[ii]
+stopifnot(!anyDuplicated(titles))
+msg("      all 95 arrays mapped to sample titles")
+
+get.chan <- function(sfx) {
+  m <- as.matrix(raw[, grep(paste0(".", sfx, "$"), hdr) + 1, with = FALSE])
+  storage.mode(m) <- "double"
+  colnames(m) <- titles
+  rownames(m) <- as.character(raw$ID_REF)
+  m
+}
+U <- get.chan("Unmethylated")
+M <- get.chan("Methylated")
+P <- get.chan("Detection_Pval")
+rm(raw); invisible(gc())
+
+tot <- U + M
+n.zeros <- sum(tot == 0, na.rm = TRUE)
+beta <- M / tot
+beta[tot == 0] <- NA
+rm(U, M, tot); invisible(gc())
+msg("[2/6] betas: ", paste(dim(beta), collapse = " x "),
+    " | NAs: ", sum(is.na(beta)),
+    " | zero-signal cells: ", n.zeros,
+    " | det-P>0.01: ", round(mean(P > 0.01, na.rm = TRUE) * 100, 2), "%")
+
+## ---------------------------------------------------------------- 3. BMIQ
+msg("[3/6] BMIQ normalization (playbase.epigenetics recipe, nfit=2000) ...")
+require("IlluminaHumanMethylation450kanno.ilmn12.hg19", character.only = TRUE)
+stopifnot(requireNamespace("minfi", quietly = TRUE))
+annot <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+kk <- intersect(rownames(annot), rownames(beta))
+beta <- beta[kk, , drop = FALSE]
+probe.types <- ifelse(as.character(annot[kk, "Type"]) == "I", 1, 2)
+msg("      probes on manifest: ", length(kk))
+
+X <- beta
+for (j in seq_len(ncol(X))) {
+  x <- X[, j]
+  x[x <= 0] <- 1e-4
+  x[x >= 1] <- 0.9999
+  bmiq <- wateRmelon::BMIQ(x, design.v = probe.types, nfit = 2000,
+                           plots = FALSE, pri = FALSE)
+  X[, j] <- bmiq$nbeta
+  msg("      BMIQ [", sprintf("%02d", j), "/95] ", titles[j],
+      " | elapsed ", round(difftime(Sys.time(), t.start, units = "mins"), 1), "m")
+}
+stopifnot(all(X >= 0 & X <= 1, na.rm = TRUE))
+saveRDS(X, "data/GSE43976/betas_bmiq.rds")   # cache: skip BMIQ on re-runs
+rm(beta); invisible(gc())
+msg("      done -> cached data/GSE43976/betas_bmiq.rds")
+
+## ---------------------------------------------------------------- 4. samples
+samples <- as.data.frame(smp, stringsAsFactors = FALSE)
+rownames(samples) <- samples$sample
+for (cc in c("age_sampling", "py", "smoke_free_years")) {
+  samples[[cc]] <- suppressWarnings(as.numeric(samples[[cc]]))
+}
+samples <- samples[colnames(X), , drop = FALSE]
+
+contrasts <- data.frame(
+  PB_vs_Monocytes       = ifelse(samples$cell_type == "Peripheral blood", "PB", "MONO"),
+  ever_vs_never_smoking = ifelse(is.na(samples$smoking_evernever), NA,
+                            ifelse(samples$smoking_evernever == "E", "ever", "never")),
+  female_vs_male        = ifelse(samples$gender == "female", "female", "male"),
+  row.names = rownames(samples),
+  stringsAsFactors = FALSE
+)
+msg("[4/6] samples: ", paste(dim(samples), collapse = " x "),
+    " | contrasts: ", paste(colnames(contrasts), collapse = ", "))
+
+## ---------------------------------------------------------------- 5. createPGX
+msg("[5/6] pgx.createPGX (no batch correction, norm_method=none) ...")
+pgx <- playbase::pgx.createPGX(
+  counts              = X,
+  samples             = samples,
+  contrasts           = contrasts,
+  organism            = "Human",
+  datatype            = "methylomics",
+  meth_type           = "450K array",
+  dma                 = "Differentially methylated positions",
+  name                = "GSE43976-methylation-full",
+  creator             = "omicsplayground-methylome-app/dev",
+  description         = paste0(
+    "GSE43976 complete Illumina HumanMethylation450k dataset: ",
+    "52 peripheral blood (MS cases) + 43 CD14+ monocytes, incl. 10 technical replicates. ",
+    "Betas from GEO raw U/M signals, BMIQ-normalized, no batch correction."),
+  X                   = X,
+  is.logx             = FALSE,
+  norm_method         = "none",
+  batch.correct.method = "no_batch_correct",
+  max.genesets        = 200,
+  filter.genes        = FALSE,
+  only.known          = FALSE,
+  only.proteincoding  = FALSE
+)
+
+## ---------------------------------------------------------------- 6. computePGX
+msg("[6/6] pgx.computePGX (trend.limma + fisher, clustering on) ...")
+pgx <- playbase::pgx.computePGX(
+  pgx,
+  max.genes    = 25000,
+  gx.methods   = c("trend.limma"),
+  gset.methods = c("fisher"),
+  do.cluster   = TRUE
+)
+
+outfile <- "data/GSE43976-methyl-full.pgx"
+save(pgx, file = outfile, compress = TRUE)
+msg("SAVED ", outfile, " (", round(file.info(outfile)$size / 1e6), " MB)")
+msg("total runtime: ",
+    round(difftime(Sys.time(), t.start, units = "mins"), 1), " min")

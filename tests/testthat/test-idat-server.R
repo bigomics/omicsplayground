@@ -254,8 +254,33 @@ test_that("a sheet's phenotype columns are carried over, aligned to the betas", 
   expect_equal(rownames(s), c("S1", "S2"))
   expect_equal(s$group, c("ctrl", "case"))
   expect_equal(s$age, c(44, 61))
-  ## Slide/Basename locate files on one machine; they are not phenotypes.
-  expect_false(any(c("Slide", "Basename", "Sample_Name") %in% colnames(s)))
+  ## Basename locates a file on one machine; Sample_Name is already the row
+  ## names. Slide stays - chip is a batch covariate, not bookkeeping.
+  expect_false(any(c("Basename", "Sample_Name") %in% colnames(s)))
+  expect_true("Slide" %in% colnames(s))
+})
+
+test_that("an Illumina [Header]/[Data] sheet is read from the right row", {
+  ## Real Illumina sheets open with a [Header] block. read.csv without the
+  ## skip takes "[Header]" as the column names, finds no Sample_Name, and
+  ## drops every phenotype the sheet carried - silently.
+  f <- tempfile(fileext = ".csv")
+  writeLines(c(
+    "[Header],,,",
+    "Investigator Name,MrNoName,,",
+    ",,,",
+    "[Data],,,",
+    "Sample_Name,Sentrix_ID,age,status",
+    "S1,5723646052,58,normal",
+    "S2,5723646052,75,cancer"
+  ), f)
+
+  res <- list(beta = matrix(0, 2, 2, dimnames = list(NULL, c("S1", "S2"))))
+  s <- idat_samples(res, f)
+  expect_equal(rownames(s), c("S1", "S2"))
+  expect_equal(s$age, c(58, 75))
+  expect_equal(s$status, c("normal", "cancer"))
+  expect_true("Sentrix_ID" %in% colnames(s))
 })
 
 test_that("a sheet that cannot be joined falls back rather than misaligning", {
