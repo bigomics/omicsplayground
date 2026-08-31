@@ -41,12 +41,14 @@ launcher_ui <- function(id) {
       badge = "soon"
     ),
     list(
-      input = "launch_methylome",
-      icon = "dna",
-      label = "Methylome Profiler",
-      description = "Per-sample methylation profiling",
-      rgb = c(200,90,140),
+      input = "launch_mythril",
+      icon = "gem",
+      label = "Mythril",
+      description = "Methylome explorer",
+      rgb = c(155,155,165),
       group = "Dashboards",
+      ## Ivo's naming and styling from edgy, kept as-is. Only the badge moves:
+      ## his tile was a "soon" stub, and this one opens a working app.
       badge = "beta"
     ),
     ## ----------------- apps ---------------

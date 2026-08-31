@@ -91,7 +91,9 @@ launcher_server <- function(id, parent, load_example = NULL,
       bslib::nav_select("app-sidebar", "Prism", session=parent)
     })
 
-    observeEvent(input$launch_methylome, {
+    ## Tile is "Mythril" (edgy's name); the nav panel and module id stay
+    ## "Methylome"/"methylome", which is what opg_server navigates to.
+    observeEvent(input$launch_mythril, {
       bslib::nav_select("app-sidebar", "Methylome", session=parent)
     })
 
