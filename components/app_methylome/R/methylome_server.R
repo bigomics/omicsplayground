@@ -158,7 +158,7 @@ methylome_server <- function(id = "methylome", pgx, watermark = FALSE) {
         if (isTRUE(input$ewas_adjust_cells)) {
           cf <- r_cells()
           shiny::validate(shiny::need(!is.null(cf) && nrow(cf) > 0,
-            "Cell-composition adjustment was requested but no proportions are available. This dataset predates the stored fit: press Estimate composition on the Cell composition screen, or untick the adjustment."))
+            "Cell-composition adjustment was requested but no proportions are available. Press Estimate composition on the Cell composition screen, or untick the adjustment."))
         }
         ## sva is an SVD plus IRW iterations over the whole probe matrix -
         ## seconds on a subset, minutes on a full array - so the fit gets a

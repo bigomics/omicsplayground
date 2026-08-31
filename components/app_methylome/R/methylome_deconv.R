@@ -38,9 +38,11 @@ mp_stored_cells <- function(pgx, reference) {
 #' Estimate cell proportions. Returns a samples x celltype matrix, or NULL.
 #'
 #' Prefers the fit stored at dataset creation - every panel is precomputed
-#' there, so a panel switch costs nothing. Falls back to fitting live for a
-#' pgx that predates the slot, using the same library function the pipeline
-#' calls so the two paths cannot drift apart.
+#' there, so a panel switch costs nothing. The live fit is the fallback, and
+#' it is not only for a pgx that predates the slot: a reference panel needs
+#' probes the dataset may not carry, so a perfectly current pgx can be missing
+#' one. GSE87571 stores eight of the nine - "blood gse35069 chen" fails on it.
+#' Same library function the pipeline calls, so the two paths cannot drift.
 mp_cell_counts <- function(pgx, reference = MP_DECONV_REFS[1]) {
   stored <- mp_stored_cells(pgx, reference)
   if (!is.null(stored)) return(stored)
@@ -101,7 +103,7 @@ methylome_plot_composition_server <- function(id, pgx, r.cells,
     plot.RENDER <- function() {
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
+        "No proportions for this reference panel yet. Press Estimate composition in the settings panel."))
       p <- pgx()
       ## Ordered by the phenotype the user picked, not by whichever sample
       ## column happened to come first - on a sheet led by slide or plate that
@@ -155,7 +157,7 @@ methylome_plot_compgroup_server <- function(id, pgx, r.cells, r.pheno,
     plot.RENDER <- function() {
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
+        "No proportions for this reference panel yet. Press Estimate composition in the settings panel."))
       p <- pgx(); ph <- r.pheno()
       shiny::validate(shiny::need(!is.null(ph) && ph %in% colnames(p$samples),
         "No phenotype selected to compare composition against."))
@@ -225,7 +227,7 @@ methylome_table_composition_server <- function(id, r.cells, scrollY = "22vh") {
     table_data <- shiny::reactive({
       cc <- r.cells()
       shiny::validate(shiny::need(!is.null(cc),
-        "This dataset was built before cell composition was stored with it, so the proportions have not been computed yet. Press Estimate composition in the settings panel - it takes a few seconds and only has to be done once per session."))
+        "No proportions for this reference panel yet. Press Estimate composition in the settings panel."))
       d <- as.data.frame(round(cc, 4))
       cbind(Sample = rownames(cc), d)
     })
