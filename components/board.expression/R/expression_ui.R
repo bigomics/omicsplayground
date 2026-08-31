@@ -19,6 +19,8 @@ ExpressionInputs <- function(id) {
     ),
     bslib::layout_column_wrap(
       width = 1 / 2,
+      class = advanced_option(id),
+      `data-board` = id, ## lets the live lock toggle (opg_server.R) target this block
       withTooltip(
         selectInput(ns("gx_fdr"),
           "FDR",

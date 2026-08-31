@@ -191,6 +191,20 @@ message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
+## Boards shown in the flat BASIC menu when the admin has not chosen any.
+BASIC_MENU_DEFAULT <- c("dataview", "clustersamples", "diffexpr")
+
+## Every board of the full menu can have its advanced settings greyed out for
+## BASIC users -- lock_advanced() finds the blocks without being told where they
+## are. Read off opg_menu_tree() rather than hand-listed here, so it tracks the
+## menu (which is itself partly hardcoded -- a new board still has to be added
+## there). Guarded because components/00SourceAll.R is sourced conditionally.
+BASIC_LOCKABLE <- if (exists("opg_menu_tree")) {
+  unlist(lapply(opg_menu_tree(), names), use.names = FALSE)
+} else {
+  BASIC_MENU_DEFAULT
+}
+
 opt.default <- list(
   TITLE = "Omics Playground",
   AUTHENTICATION = "none", ## none, password, login-code, login-code-redirect
@@ -241,12 +255,16 @@ opt.default <- list(
   ENABLE_AI = FALSE,
   AI_PROVIDERS_ENABLED = c("bigomics", "openai", "anthropic", "google",
                            "github", "mistral", "custom"),
-  AI_PROVIDER_LOCKED   = FALSE
+  AI_PROVIDER_LOCKED   = FALSE,
+  BASIC_MENU = BASIC_MENU_DEFAULT,
+  BASIC_LOCKED = BASIC_LOCKABLE,
+  FORCE_BASIC = FALSE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file, default = opt.default) ## global!
+
 
 message("\n************************************************")
 message("************* SETTING DEFAULTS ***************")
@@ -363,6 +381,13 @@ MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
   opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
+
+## Both basic-mode lists are chosen from Admin panel > Basic menu, which writes
+## one board id per line to etc/BASIC_MENU-<HOSTNAME> (what the flat menu keeps)
+## and etc/BASIC_LOCKED-<HOSTNAME> (whose advanced settings are greyed out).
+## Read here, after HOSTNAME is resolved. These files win over OPTIONS.
+opt$BASIC_MENU <- read_board_list("BASIC_MENU", opt$BASIC_MENU)
+opt$BASIC_LOCKED <- read_board_list("BASIC_LOCKED", opt$BASIC_LOCKED)
 ACTIVE_SESSIONS <- c()
 MAX_SESSIONS <- 3
 if (!is.null(opt$MAX_SESSIONS)) MAX_SESSIONS <- opt$MAX_SESSIONS
