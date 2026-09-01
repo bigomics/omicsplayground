@@ -10,7 +10,9 @@
 # Start from playbase image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:beta
+# Overridable so a trixie base can be used without retagging :beta.
+ARG BASE_IMAGE=bigomics/omicsplayground:beta
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Set the locale (uncomment UTF8)
@@ -24,7 +26,10 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 RUN apt update && apt install -y libpoppler-cpp-dev
 
 #------------------------------------------------------------
-# Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
+# Update quarto. A base built from docker/Dockerfile already ships this exact
+# version, so this is then a no-op reinstall; it stays because :beta is a
+# hand-blessed tag that may be an older image with typst 0.11. Once :beta is
+# always built from docker/Dockerfile this block can go. See playbase dev/PINS.md.
 #------------------------------------------------------------
 RUN ARCH=$(dpkg --print-architecture) && \
     wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-${ARCH}.deb && \
@@ -123,21 +128,34 @@ RUN --mount=type=secret,id=GITHUB_PAT \
     fi
 
 #------------------------------------------------------------
-# Install fresh playbase (from same BRANCH)
+# Install fresh playbase.
+# If PLAYBASE_BRANCH is set, install exactly that branch and FAIL if it does
+# not exist (no silent fallback). Otherwise check playbase@{BRANCH} and fall
+# back to main when the sibling branch is missing.
 #------------------------------------------------------------
-# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
 # TODO: temporary solution, this should go out once we rebuild base image
 RUN R -e "install.packages('ggiraph')"
 RUN R -e "BiocManager::install('TileDBArray')"
 
 ARG update_playbase=true
+ARG PLAYBASE_BRANCH=
 RUN if [ $update_playbase = true ]; then \
-    echo "Checking playbase branch ${BRANCH}"; \
-    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
-    if [ $BRANCH_EXISTS -eq 1 ]; then \
-       R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+    if [ -n "$PLAYBASE_BRANCH" ]; then \
+        echo "Installing playbase@${PLAYBASE_BRANCH} (explicit)"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${PLAYBASE_BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -ne 1 ]; then \
+            echo "ERROR: playbase branch '${PLAYBASE_BRANCH}' does not exist" >&2; exit 1; \
+        fi; \
+        R -e "remotes::install_github('bigomics/playbase@${PLAYBASE_BRANCH}',dependencies=FALSE)"; \
     else \
-       R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+        echo "Checking playbase branch ${BRANCH}"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -eq 1 ]; then \
+           R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+        else \
+           echo "WARNING: no playbase@${BRANCH}, falling back to playbase@main"; \
+           R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+        fi \
     fi \
 fi
 
@@ -153,32 +171,52 @@ RUN R -e "if (!require('playbase')) { quit(status=1) }"
 #RUN R -e "remotes::install_github('the-y-company/bsutils',dependencies=FALSE)"
 
 #------------------------------------------------------------
-# Install fresh playdata (from same BRANCH)
+# Install fresh playdata (PLAYDATA_BRANCH, or same BRANCH with main fallback)
 #------------------------------------------------------------
-# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
 ARG update_playdata=false
+ARG PLAYDATA_BRANCH=
 RUN if [ $update_playdata = true ]; then \
-    echo "Checking playdata branch ${BRANCH}"; \
-    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
-    if [ $BRANCH_EXISTS -eq 1 ]; then \
-        R -e "remotes::install_github('bigomics/playdata@${BRANCH}',dependencies=FALSE)"; \
+    if [ -n "$PLAYDATA_BRANCH" ]; then \
+        echo "Installing playdata@${PLAYDATA_BRANCH} (explicit)"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${PLAYDATA_BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -ne 1 ]; then \
+            echo "ERROR: playdata branch '${PLAYDATA_BRANCH}' does not exist" >&2; exit 1; \
+        fi; \
+        R -e "remotes::install_github('bigomics/playdata@${PLAYDATA_BRANCH}',dependencies=FALSE)"; \
     else \
-        R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
+        echo "Checking playdata branch ${BRANCH}"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -eq 1 ]; then \
+            R -e "remotes::install_github('bigomics/playdata@${BRANCH}',dependencies=FALSE)"; \
+        else \
+            echo "WARNING: no playdata@${BRANCH}, falling back to playdata@main"; \
+            R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
+        fi \
     fi \
 fi
 
 #------------------------------------------------------------
-# Install fresh bigdash (from same BRANCH)
+# Install fresh bigdash (BIGDASH_BRANCH, or same BRANCH with master fallback)
 #------------------------------------------------------------
-# check if bigdash@{$BRANCH} exists, if it does, install.. otherwise install main
 ARG update_bigdash=false
+ARG BIGDASH_BRANCH=
 RUN if [ $update_bigdash = true ]; then \
-    echo "Checking bigdash branch ${BRANCH}"; \
-    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BRANCH} | wc -l); \
-    if [ $BRANCH_EXISTS -eq 1 ]; then \
-       R -e "remotes::install_github('bigomics/bigdash@${BRANCH}',dependencies=FALSE)"; \
+    if [ -n "$BIGDASH_BRANCH" ]; then \
+        echo "Installing bigdash@${BIGDASH_BRANCH} (explicit)"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BIGDASH_BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -ne 1 ]; then \
+            echo "ERROR: bigdash branch '${BIGDASH_BRANCH}' does not exist" >&2; exit 1; \
+        fi; \
+        R -e "remotes::install_github('bigomics/bigdash@${BIGDASH_BRANCH}',dependencies=FALSE)"; \
     else \
-       R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
+        echo "Checking bigdash branch ${BRANCH}"; \
+        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/bigdash.git ${BRANCH} | wc -l); \
+        if [ $BRANCH_EXISTS -eq 1 ]; then \
+           R -e "remotes::install_github('bigomics/bigdash@${BRANCH}',dependencies=FALSE)"; \
+        else \
+           echo "WARNING: no bigdash@${BRANCH}, falling back to bigdash@master"; \
+           R -e "remotes::install_github('bigomics/bigdash@master',dependencies=FALSE)"; \
+        fi \
     fi \
 fi
 
