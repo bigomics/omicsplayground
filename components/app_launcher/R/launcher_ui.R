@@ -22,6 +22,15 @@ launcher_ui <- function(id) {
       badge = NULL      
     ),
     list(
+      input = "launch_multiomics",
+      icon = "dna",
+      label = "MultiOmics",
+      description = "Multiomics done easy",
+      rgb = c(120,90,190),
+      group = "Dashboards",
+      badge = NULL
+    ),
+    list(
       input = "launch_qsee",
       icon = "circle-check",
       label = "Qsee/Bsee",
@@ -34,7 +43,7 @@ launcher_ui <- function(id) {
       input = "launch_across",
       icon = "shuffle",
       ##icon = "layer-group",
-      label = "Across Explorer",
+      label = "Across",
       description = "Query across all your datasets",
       rgb = c(180,70,70),
       group = "Dashboards",
@@ -48,15 +57,6 @@ launcher_ui <- function(id) {
       rgb = c(155,155,165),
       group = "Dashboards",
       badge = "soon"
-    ),
-    list(
-      input = "launch_multiomics",
-      icon = "dna",
-      label = "MultiOmics",
-      description = "Play, see & discover -- multiomics only",
-      rgb = c(120,90,190),
-      group = "Dashboards",
-      badge = "dev"
     ),
     ## ----------------- apps ---------------
     list(
@@ -94,6 +94,12 @@ launcher_ui <- function(id) {
       class = "btn-outline-primary"
     ),
     list(
+      input = "show_library",
+      label = "Show my library",
+      icon = "folder-open",
+      class = "btn-outline-primary"
+    ),
+    list(
       input = "chat_with_obi",
       label = "Chat with Obi",
       icon = "robot",
@@ -102,7 +108,7 @@ launcher_ui <- function(id) {
     list(
       input = "launch_studio",
       label = "Create in Studio",
-      icon = "icons",
+      icon = "lightbulb",
       class = "btn-outline-primary"
     )
     # Add more quick actions here following the same structure
@@ -115,7 +121,7 @@ launcher_ui <- function(id) {
   ## Copilot panel's own ENABLE_AI / packages gate.
   if (!isTRUE(opt$DEVMODE)) {
     apps <- Filter(
-      function(a) !a$input %in% c("launch_idconvert", "launch_prism", "launch_multiomics"),
+      function(a) !a$input %in% c("launch_idconvert", "launch_prism"),
       apps
     )
   }
