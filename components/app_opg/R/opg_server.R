@@ -133,7 +133,7 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
         ##footer = shiny::modalButton("Cancel"),
         footer = NULL,
         size = "s",
-        easyClose = FALSE
+        easyClose = TRUE ## lets Escape (and click-outside) dismiss it
       )
     )
   })
