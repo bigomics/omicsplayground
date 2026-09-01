@@ -44,17 +44,25 @@
 opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
                         load_example_dataset = NULL,
                         example_dataset = "example-data",
-                        menu_tree = opg_menu_tree(),
+                        menu_tree = shiny::reactive(opg_menu_tree()),
                         parent_session = shiny::getDefaultReactiveDomain(),
                         dashboard_nav_value = "Dashboard") {
 
-  allowed_groups <- names(menu_tree)
-  ## Bare board ids (e.g. "pcsf") menu_tree lists, regardless of group --
-  ## narrows a partly-included group (e.g. only "pcsf" of SystemsBio) down
-  ## to just those boards. See opg_ui.R's opg_menu_boards()/filter_boards().
-  allowed_boards <- opg_menu_boards(menu_tree)
+  if (!shiny::is.reactive(menu_tree)) {
+    tmp <- menu_tree
+    menu_tree <- shiny::reactive(tmp)
+  }
 
   body <- function(input, output, session) {
+
+  ## Derive allowed groups/boards reactively from the (possibly dynamic) menu_tree.
+  allowed_groups <- shiny::reactive(names(menu_tree()))
+  allowed_boards <- shiny::reactive(opg_menu_boards(menu_tree()))
+
+  ## Static "all boards" for registration — boards are registered once with
+  ## bigTabsLazy regardless of the current menu_tree; tab_control()'s
+  ## runtime allowed_boards() gates visibility thereafter.
+  all_boards <- opg_menu_boards(opg_menu_tree())
 
   labeltype <- reactiveVal("feature") # can be feature (rownames counts), symbol or name
 
@@ -92,13 +100,19 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
   })
 
   ## -------------------------------------------------------------
-  ## No dataset loaded: offer the example dataset (like Qsee)
+  ## No / incompatible dataset: offer the example dataset (like Qsee)
   ## -------------------------------------------------------------
 
   ## The Dashboard can be entered without any dataset (e.g. from the app
   ## launcher, which selects the nav panel programmatically and so bypasses
   ## the disabled nav link). Then all boards are empty, so ask the user
   ## whether to load the example dataset instead.
+  ##
+  ## Also, the launcher can switch between single-omics (full Playground)
+  ## and multi-omics views while a dataset is loaded. If the dataset's
+  ## datatype doesn't match the current view, show an incompatibility
+  ## popup offering to load the right example, upload, or browse the
+  ## library.
   ##
   ## "app-sidebar" is the *outer* app's own top-level navset (Dashboard /
   ## Upload / Library / ...), not part of this OPG instance's own bigPage()
@@ -107,20 +121,74 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
   shiny::observeEvent(parent_session$input[["app-sidebar"]], {
     shiny::req(parent_session$input[["app-sidebar"]] == dashboard_nav_value)
     shiny::req(isTRUE(auth$logged))
+
     noX <- is.null(PGX$X) || length(PGX$X) == 0
-    if (!noX) return(NULL)
-    info("[SERVER] no dataset loaded: asking for example data")
+
+    ## Detect whether the current menu_tree targets multi-omics or the
+    ## full single-omics Playground.  "Clustering" is present in the
+    ## full opg_menu_tree() but absent from multiomics_menu_tree().
+    is_multi_view <- !("Clustering" %in% allowed_groups())
+    is_multi_data <- !is.null(PGX$datatype) &&
+      tolower(PGX$datatype) %in% c("multi-omics", "multiomics")
+
+    ## Decide which example dataset name matches the current view.
+    view_example <- if (is_multi_view) "mox-brca" else "example-data"
+
+    incompat <- FALSE
+    popup_title <- "No dataset loaded"
+    popup_body  <- "No dataset has been loaded yet. What would you like to do?"
+
+    if (!noX) {
+      ## Dataset is loaded -- check for view/data mismitch.
+      if (is_multi_view && !is_multi_data) {
+        incompat <- TRUE
+        popup_title <- "Incompatible dataset"
+        popup_body <- paste0(
+          "Your currently loaded dataset is <b>single-omics</b>, ",
+          "but the MultiOmics view expects a multi-omics dataset. ",
+          "What would you like to do?"
+        )
+      } else if (!is_multi_view && is_multi_data) {
+        incompat <- TRUE
+        popup_title <- "Incompatible dataset"
+        popup_body <- paste0(
+          "Your currently loaded dataset is <b>multi-omics</b>, ",
+          "but Omics Playground expects a single-omics dataset. ",
+          "What would you like to do?"
+        )
+      } else {
+        return(NULL)
+      }
+    }
+
+    info("[SERVER] ", tolower(popup_title), ": asking for action")
+
+    ## Pre-set load_example_dataset to the example that suits the
+    ## current view.  For the "no dataset" case, only override the
+    ## default "example-data" so a launcher that already set a specific
+    ## dataset (e.g. launch_multiomics -> "mox-brca") isn't clobbered.
+    ## For the incompatibility case, always override so the button loads
+    ## the correct example for the view.
+    if (!is.null(load_example_dataset)) {
+      if (incompat) {
+        load_example_dataset(view_example)
+      } else {
+        current <- load_example_dataset()
+        if (is.null(current) || current == "example-data") {
+          load_example_dataset(view_example)
+        }
+      }
+    }
+
     shiny::showModal(
       shiny::modalDialog(
-        title = "No dataset loaded",
-        shiny::p(
-          "No dataset has been loaded yet. What would you like to do?"
-        ),
+        title = popup_title,
+        shiny::p(shiny::HTML(popup_body)),
         div(
           style = "text-align:center;",
           shiny::actionButton(
             session$ns("opg_load_example_from_popup"),
-            "Load example dataset",
+            if (incompat) paste0("Load ", view_example) else "Load example dataset",
             class = "btn btn-outline-info welcome-btn-sm"
           ),
           shiny::actionButton(
@@ -149,7 +217,13 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
       return(NULL)
     }
     if (!is.null(load_example_dataset)) {
-      load_example_dataset(example_dataset)
+      ## Only override the default "example-data" so that a launcher
+      ## (e.g. launch_multiomics()) that already set a specific dataset
+      ## like "mox-brca" is not overwritten.
+      current <- load_example_dataset()
+      if (is.null(current) || current == "example-data") {
+        load_example_dataset(example_dataset)
+      }
     }
     if (is.null(load_example())) {
       load_example(1)
@@ -241,12 +315,12 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
   ## get its other boards mounted as Shiny modules at all, not just hidden.
   ## Matches opg_ui.R's filter_boards() for the UI-shell half.
   filter_lazy <- function(lazy_list) {
-    lazy_list[sub("-tab$", "", names(lazy_list)) %in% allowed_boards]
+    lazy_list[sub("-tab$", "", names(lazy_list)) %in% all_boards]
   }
 
   lazy_tabs <- list()
 
-  if ("dataview" %in% allowed_boards) {
+  if ("dataview" %in% all_boards) {
     lazy_tabs[["dataview-tab"]] <- list(
       ui      = function() DataViewUI(session$ns("dataview")),
       server  = function() DataViewBoard("dataview", pgx = PGX, labeltype = labeltype),
@@ -254,7 +328,7 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     )
   }
 
-  if ("diffexpr" %in% allowed_boards) {
+  if ("diffexpr" %in% all_boards) {
     lazy_tabs[["diffexpr-tab"]] <- list(
       ui      = function() ExpressionUI(session$ns("diffexpr")),
       server  = function() ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) ->>
@@ -263,7 +337,7 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     )
   }
 
-  if ("enrich" %in% allowed_boards) {
+  if ("enrich" %in% all_boards) {
     lazy_tabs[["enrich-tab"]] = list(
       ui     = function() EnrichmentUI(session$ns("enrich")),
       server = function() EnrichmentBoard("enrich", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods) ->>
@@ -371,6 +445,13 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
 
   ## tab_control is defined below; called on data load and after each tab
   ## navigation via bigdash::bigTabsLazy's internal observer.
+  ## Also re-runs when the menu_tree changes at runtime (e.g. launcher switches
+  ## to the multiomics view), so filterTabs reacts immediately.
+  shiny::observe({
+    menu_tree()
+    shiny::req(PGX$X)
+    try(tab_control(), silent = TRUE)
+  })
 
   tab_control <- function() {
 
@@ -391,11 +472,9 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
       active_mods <- names(MODULES_TRANSCRIPTOMICS)[MODULES_TRANSCRIPTOMICS]
     }
 
-    ## Restrict to whatever menu_tree/allowed_groups this OPG instance was
-    ## built with (opg_server(..., menu_tree = )) -- e.g. a second instance
-    ## mounted with only the "MultiOmics" group never shows (or loads) any
-    ## other board, regardless of dataset type.
-    active_mods <- intersect(active_mods, allowed_groups)
+    ## Restrict to whatever menu_tree/allowed_groups this OPG instance currently
+    ## has active -- can change at runtime (e.g. launcher switches to multiomics view).
+    active_mods <- intersect(active_mods, allowed_groups())
 
     module_map <- list(
       DataView      = session$ns("dataview-tab"),
@@ -417,12 +496,11 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     }
     tabs <- unique(tabs)
 
-    ## Restrict to exactly the boards this instance's menu_tree lists --
+    ## Restrict to exactly the boards the current menu_tree lists --
     ## module_map above is built per whole group, so this is what narrows
     ## e.g. an "active" SystemsBio group down to just "pcsf" when that's
-    ## all menu_tree included for it. See allowed_boards/filter_lazy() for
-    ## the matching server-side board registration restriction.
-    tabs <- intersect(tabs, session$ns(paste0(allowed_boards, "-tab")))
+    ## all menu_tree included for it.
+    tabs <- intersect(tabs, session$ns(paste0(allowed_boards(), "-tab")))
 
     ## Beta visibility rules
     if (!(show.beta && has.libx))             tabs <- setdiff(tabs, session$ns("tcga-tab"))
