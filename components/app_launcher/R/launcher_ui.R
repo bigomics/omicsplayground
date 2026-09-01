@@ -188,7 +188,8 @@ launcher_ui <- function(id) {
   }
 
   ui <- page_fluid(
-    style = "background-color: #f0f9fd; height: 100vh;",
+    style = paste("background-color: #f0f9fd; min-height: 100vh;",
+                  "display: flex; flex-direction: column;"),
 
     div(shiny::actionButton(
       ns("logo_click"),
@@ -206,7 +207,7 @@ launcher_ui <- function(id) {
     
     ## app launcher grid, grouped by section
     shiny::div(
-      style = "padding: 30px 12% 0 12%;",
+      style = "padding: 30px 4% 0 4%;",
       
       ## Quick actions section (using same group header style)
       group_section(
@@ -230,7 +231,7 @@ launcher_ui <- function(id) {
 
     ## credits
     shiny::div(
-      style = "margin-top: 70px; width: 100%;",
+      style = "margin-top: auto; padding: 24px 0 36px; width: 100%;",
       creditsCarousel() 
     )
     
