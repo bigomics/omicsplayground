@@ -30,15 +30,24 @@ UploadUI <- function(id) {
                 p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
                 shiny::selectInput(
                   ns("selected_datatype"), NULL,
+                  ## Methylomics is DEVMODE-only for now: the Methylome
+                  ## Profiler ships behind a "soon" badge until colleagues have
+                  ## tested it, so users must not be able to create a dataset
+                  ## whose only home is an app they cannot open yet. Gated here
+                  ## rather than removed so those testers still have the path -
+                  ## same gate the IDAT converter uses. Drop the condition to
+                  ## release it.
                   choices = c(
-                    "RNA-seq",
-                    "mRNA microarray",
-                    "proteomics",
-                    "scRNA-seq",
-                    "metabolomics",
-                    "lipidomics",
-                    "multi-omics (beta)" = "multi-omics",
-                    "methylomics (beta)" = "methylomics"
+                    c(
+                      "RNA-seq",
+                      "mRNA microarray",
+                      "proteomics",
+                      "scRNA-seq",
+                      "metabolomics",
+                      "lipidomics",
+                      "multi-omics (beta)" = "multi-omics"
+                    ),
+                    if (isTRUE(opt$DEVMODE)) c("methylomics (beta)" = "methylomics")
                   ),
                   selected = DEFAULTS$datatype,
                   width = "400px"
