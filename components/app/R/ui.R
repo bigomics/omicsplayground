@@ -145,22 +145,6 @@ app_ui <- function(x) {
               icon = icon("chart-line"),
               opg_ui("app")
             ),
-            ## Structural test of the OPG module conversion
-            ## (feat/opg-module-conversion): a second, independently
-            ## namespaced OPG dashboard restricted to the MultiOmics group
-            ## only. Proves opg_ui()/opg_server() can run as a real nested
-            ## bigdash::bigPage() module alongside the primary "app"
-            ## instance without id collisions. See opg_server() in
-            ## components/app_opg/R/opg_server.R for the matching server
-            ## wiring.
-            if (isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel(
-                title = "OPG2 (test)",
-                value = "OPG2",
-                icon = icon("flask"),
-                opg_ui("opg2", menu_tree = opg_menu_tree()["MultiOmics"])
-              )
-            },
             ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
             ## The runtime "Enable AI" switch further shows/hides them per session
             ## via bigdash.toggleTab in appsettings_server.R.
@@ -207,6 +191,17 @@ app_ui <- function(x) {
             if(isTRUE(opt$DEVMODE)) {
               bslib::nav_panel_hidden("IDconvert",
                 omicspanel(idconvert_ui("idconvert"))
+              )
+            },
+            ## MultiOmics dashboard: a second, independently namespaced OPG
+            ## instance (feat/opg-module-conversion) restricted to the
+            ## MultiOmics board group, reached from the launcher like
+            ## Prism/IDconvert rather than shown as its own rail icon. See
+            ## opg_server(id = "app_multiomics", ...) below for the matching
+            ## server wiring.
+            if(isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel_hidden("MultiOmics",
+                opg_ui("app_multiomics", menu_tree = opg_menu_tree()["MultiOmics"])
               )
             },
             ## if(isTRUE(opt$DEVMODE)) {

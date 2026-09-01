@@ -104,11 +104,19 @@ launcher_server <- function(id, parent, load_example = NULL,
     })
 
     observeEvent(input$launch_idconvert, {
-      dev_alert() 
+      dev_alert()
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+    })
+
+    observeEvent(input$launch_multiomics, {
+      dev_alert()
+      if(!isTRUE(opt$DEVMODE)) {
+        return(NULL)
+      }
+      bslib::nav_select("app-sidebar", "MultiOmics", session=parent)
     })
 
     ## Quick action: load the example dataset and jump to the Dashboard

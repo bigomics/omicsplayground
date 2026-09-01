@@ -963,20 +963,22 @@ output$current_user <- shiny::renderText({
   )
 
   if (isTRUE(opt$DEVMODE)) {
-    ## Structural test of the OPG module conversion (feat/opg-module-conversion):
-    ## a second, independently-namespaced OPG dashboard restricted to the
-    ## MultiOmics group only, sharing the same PGX/env as the primary
-    ## "Dashboard" instance -- it has no dataset pipeline of its own, it is
-    ## just a second view onto the one already loaded. Matches the
-    ## "OPG2 (test)" nav_panel in ui.R.
+    ## MultiOmics dashboard (feat/opg-module-conversion): a second,
+    ## independently-namespaced OPG dashboard restricted to the MultiOmics
+    ## group only, sharing the same PGX/env as the primary "Dashboard"
+    ## instance -- it has no dataset pipeline of its own, it is just a
+    ## second view onto the one already loaded. Reached from the launcher
+    ## (launch_multiomics in launcher_server.R), matching the hidden
+    ## "MultiOmics" nav_panel in ui.R -- like Prism/IDconvert, not its own
+    ## rail icon.
     opg_server(
-      id = "opg2",
+      id = "app_multiomics",
       PGX = PGX, env = env, auth = auth,
       reload_pgxdir = reload_pgxdir,
       load_example = load_example,
       menu_tree = opg_menu_tree()["MultiOmics"],
       parent_session = session,
-      dashboard_nav_value = "OPG2"
+      dashboard_nav_value = "MultiOmics"
     )
   }
   

@@ -49,6 +49,15 @@ launcher_ui <- function(id) {
       group = "Dashboards",
       badge = "soon"
     ),
+    list(
+      input = "launch_multiomics",
+      icon = "dna",
+      label = "MultiOmics",
+      description = "Play, see & discover -- multiomics only",
+      rgb = c(120,90,190),
+      group = "Dashboards",
+      badge = "dev"
+    ),
     ## ----------------- apps ---------------
     list(
       input = "launch_idconvert",
@@ -99,13 +108,14 @@ launcher_ui <- function(id) {
     # Add more quick actions here following the same structure
   )
 
-  ## The Qsee / Across / ID Converter / SmartPrism panels only exist in
-  ## DEVMODE (ui.R renders them conditionally), so in other deployments their
-  ## tiles would be dead buttons -- hide them. "Chat with Obi" mirrors the
+  ## The MultiOmics / ID Converter / SmartPrism panels only exist in
+  ## DEVMODE (ui.R renders them conditionally, hidden like Prism/IDconvert
+  ## rather than their own rail icon), so in other deployments their tiles
+  ## would be dead buttons -- hide them. "Chat with Obi" mirrors the
   ## Copilot panel's own ENABLE_AI / packages gate.
   if (!isTRUE(opt$DEVMODE)) {
     apps <- Filter(
-      function(a) !a$input %in% c("launch_idconvert", "launch_prism"),
+      function(a) !a$input %in% c("launch_idconvert", "launch_prism", "launch_multiomics"),
       apps
     )
   }
