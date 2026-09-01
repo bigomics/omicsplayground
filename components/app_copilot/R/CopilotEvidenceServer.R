@@ -155,16 +155,41 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
     # ---- Download handler ----
     # Format choice depends on artifact kind:
     #   ggplot    -> PNG (only; ggsave at width x height inches, 288 dpi = 4x)
-    #   plotly    -> HTML (saveWidget) or PNG (plotlyExport: kaleido -> webshot2)
-    #   iheatmapr -> HTML (saveWidget) or PNG (iheatmapr::save_iheatmap, webshot)
-    # plotlyExport is defined in bigdash R/plot-module.R and is reused
-    # here so we don't fork the kaleido/webshot fallback chain.
+    #   plotly    -> HTML (saveWidget) or PNG (plotlyExport, else .widget_png)
+    #   iheatmapr -> HTML (saveWidget) or PNG (.widget_png)
+    # bigdash::plotlyExport (R/plot-module.R) is tried first because kaleido
+    # renders faster and sharper than a browser screenshot when it is there.
     .default_fmt <- function(kind) {
       switch(kind, ggplot = "png", plotly = "html", iheatmapr = "html", "html")
     }
     .clamp_dim <- function(x, default) {
       x <- suppressWarnings(as.numeric(x))
       if (length(x) != 1L || is.na(x) || x <= 0) default else x
+    }
+
+    # Screenshot an htmlwidget to PNG via headless Chrome. Needed because
+    #   - bigdash::plotlyExport() only tries kaleido (its webshot2 branch is
+    #     dead code behind `export.ok <- TRUE`), so PNG silently writes no file
+    #     when the Python plotly/kaleido venv from dev/install_extra.R is absent;
+    #   - iheatmapr::save_iheatmap() is S4-dispatched on "Iheatmap", but
+    #     omicsplots::pgx.plot_heatmap already hands us the converted
+    #     "iheatmapr" htmlwidget, so it never matches.
+    # selfcontained = FALSE avoids the pandoc dependency; webshot2 reads the
+    # temp file over file:// so the sibling libdir resolves fine.
+    # `zoom` multiplies the output pixels, matching the 4x upscale the ggplot
+    # and kaleido branches apply — without it an 8x6in request lands at 640x480.
+    .widget_png <- function(widget, file, width, height, zoom = 1) {
+      # plotly.js renders the modebar into the page, so a screenshot picks it
+      # up; hide it for the export only. Class covers iheatmapr too (also
+      # plotly.js under the hood) and leaves no gap — the bar is an overlay.
+      widget <- htmlwidgets::prependContent(
+        widget,
+        htmltools::tags$style(".modebar, .modebar-container { display: none !important; }")
+      )
+      tmp <- tempfile(fileext = ".html")
+      on.exit(unlink(c(tmp, sub("\\.html$", "_files", tmp)), recursive = TRUE), add = TRUE)
+      htmlwidgets::saveWidget(widget, tmp, selfcontained = FALSE)
+      webshot2::webshot(tmp, file, vwidth = width, vheight = height, zoom = zoom, delay = 1)
     }
 
     output$dl_format_ui <- shiny::renderUI({
@@ -226,7 +251,15 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
               p <- rec$plot
               p$width  <- png_w
               p$height <- png_h
-              plotlyExport(p, file, width = p$width, height = p$height, scale = resx)
+              ok <- isTRUE(tryCatch(
+                plotlyExport(p, file, width = p$width, height = p$height, scale = resx),
+                error = function(e) FALSE
+              ))
+              # plotlyExport's success flag is just file.exists(), so a kaleido
+              # crash mid-write would pass it with a truncated file.
+              if (!ok || !isTRUE(file.size(file) > 0)) {
+                .widget_png(p, file, png_w, png_h, resx)
+              }
             } else {
               # Mirror PlotModule's HTML path (bigdash R/plot-module.R):
               # plain saveWidget, no dimension manipulation.
@@ -236,8 +269,7 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
             p <- rec$plot
             if (methods::is(p, "Iheatmap")) p <- iheatmapr::to_widget(p)
             if (identical(fmt, "png")) {
-              # Mirror PlotModule's iheatmapr PNG path (bigdash R/plot-module.R).
-              iheatmapr::save_iheatmap(p, vwidth = png_w, vheight = png_h, file)
+              .widget_png(p, file, png_w, png_h, resx)
             } else {
               htmlwidgets::saveWidget(p, file, selfcontained = TRUE)
             }
