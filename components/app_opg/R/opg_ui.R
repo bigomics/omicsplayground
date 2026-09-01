@@ -44,6 +44,29 @@ opg_menu_tree <- function() {
 }
 
 
+#' Bare board ids (e.g. "pcsf", "dataview") a menu_tree allows, flattened
+#' across all its groups regardless of group membership. Used to filter UI
+#' shells/server registrations down to exactly the boards a menu_tree lists,
+#' even when only some boards of an otherwise-included group are wanted
+#' (see opg_multiomics_menu_tree()).
+opg_menu_boards <- function(menu_tree) {
+  unique(unlist(lapply(menu_tree, names)))
+}
+
+#' MultiOmics-only menu tree for the "app_multiomics" OPG instance
+#' (ui.R/server.R): the full MultiOmics group, plus DataView and all
+#' Expression tabs, plus single-board additions from groups that otherwise
+#' don't belong here (PCSF from SystemsBio, multiWGCNA from WGCNA).
+opg_multiomics_menu_tree <- function(menu_tree = opg_menu_tree()) {
+  list(
+    DataView   = menu_tree[["DataView"]],
+    Expression = menu_tree[["Expression"]],
+    SystemsBio = menu_tree[["SystemsBio"]]["pcsf"],
+    MultiOmics = menu_tree[["MultiOmics"]],
+    WGCNA      = menu_tree[["WGCNA"]]["mwgcna"]
+  )
+}
+
 #' Board ids kept in BASIC mode, in full-menu order. The selection is chosen
 #' in Admin panel > Basic menu and persisted per deploy in
 #' etc/BASIC_MENU-<HOSTNAME> (read in global.R). There is only one sidebar
@@ -129,6 +152,20 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
     menu_tree <- menu_tree[MODULES_ENABLED]
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
+    ## Fully-namespaced tab ids this instance's menu_tree allows -- narrows
+    ## a group's module_ui() shells down to just the boards menu_tree lists
+    ## for that group (e.g. only "pcsf-tab" out of all of SystemsBio's),
+    ## not just whole groups. See filter_boards() below and opg_server.R's
+    ## matching filter_lazy() for the server-side half.
+    allowed_tab_ids <- ns(paste0(opg_menu_boards(menu_tree), "-tab"))
+    filter_boards <- function(tabs) {
+      if (inherits(tabs, "shiny.tag")) tabs <- list(tabs)
+      Filter(function(tag) {
+        nm <- tag$attribs[["data-name"]]
+        is.null(nm) || nm %in% allowed_tab_ids
+      }, tabs)
+    }
+
     createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
         #div(class = "sidebar-item", bigdash::sidebarItem(title, ns(paste0(name, "-tab"))))
@@ -162,7 +199,16 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         tab.names <- names(tree[[i]])
         tab.titles <- tree[[i]]
         menu.id <- names(tree)[i]
-        if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
+        if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+          ## A group with exactly one board renders as a flat top-level
+          ## item, not a one-item collapsible group -- matching what
+          ## bigdash's client-side promote_single gives a group *runtime*
+          ## filtered down to one, but built in from the start server-side
+          ## here, since promote_single only reacts to a change and leaves
+          ## an empty "<group> >" header behind for a group that's single-
+          ## item from the very first render (e.g. Epigenomics, or a
+          ## menu_tree -- opg_multiomics_menu_tree() -- that only wants one
+          ## board out of an otherwise multi-board group like SystemsBio).
           menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
         } else {
           menu[[menu.id]] <- sidebar_menu_with_items(tree[[i]], menu.id)
@@ -406,15 +452,15 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         ## users. The accordions live in this shell (each board's *Inputs()),
         ## not in the lazily-loaded body, so it belongs here, at boot, rather
         ## than wherever bigTabsLazy() later fills the tab in.
-        lock_advanced(bigdash::bigTabItem(ns("dataview-tab"), DataViewInputs(ns("dataview")), create_loader(ns("dataview-loader")))),
-        lock_advanced(MODULE.clustering$module_ui(ns)),
-        lock_advanced(MODULE.expression$module_ui(ns)),
-        lock_advanced(MODULE.enrichment$module_ui(ns)),
-        lock_advanced(MODULE.compare$module_ui(ns)),
-        lock_advanced(MODULE.systems$module_ui(ns)),
-        lock_advanced(MODULE.multiomics$module_ui(ns)),
-        lock_advanced(MODULE.wgcna$module_ui(ns)),
-        lock_advanced(MODULE.epigenomics$module_ui(ns))
+        lock_advanced(filter_boards(bigdash::bigTabItem(ns("dataview-tab"), DataViewInputs(ns("dataview")), create_loader(ns("dataview-loader"))))),
+        lock_advanced(filter_boards(MODULE.clustering$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.expression$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.enrichment$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.compare$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.systems$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.multiomics$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.wgcna$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.epigenomics$module_ui(ns)))
       )
     ) ## end of bigPage
   }

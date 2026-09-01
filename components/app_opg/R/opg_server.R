@@ -49,6 +49,10 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
                         dashboard_nav_value = "Dashboard") {
 
   allowed_groups <- names(menu_tree)
+  ## Bare board ids (e.g. "pcsf") menu_tree lists, regardless of group --
+  ## narrows a partly-included group (e.g. only "pcsf" of SystemsBio) down
+  ## to just those boards. See opg_ui.R's opg_menu_boards()/filter_boards().
+  allowed_boards <- opg_menu_boards(menu_tree)
 
   body <- function(input, output, session) {
 
@@ -231,9 +235,18 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
   ## materialise each tab's heavy UI (via module_lazy closures)
   ## the first time the user clicks on it.
   ## ------------------------------------------------------------
+  ## Keep only entries (bare-named, e.g. "clustersamples-tab") whose board
+  ## is one this instance's menu_tree actually lists -- so a group that's
+  ## only partly wanted (e.g. just "pcsf" out of all of SystemsBio) doesn't
+  ## get its other boards mounted as Shiny modules at all, not just hidden.
+  ## Matches opg_ui.R's filter_boards() for the UI-shell half.
+  filter_lazy <- function(lazy_list) {
+    lazy_list[sub("-tab$", "", names(lazy_list)) %in% allowed_boards]
+  }
+
   lazy_tabs <- list()
 
-  if ("DataView" %in% allowed_groups) {
+  if ("dataview" %in% allowed_boards) {
     lazy_tabs[["dataview-tab"]] <- list(
       ui      = function() DataViewUI(session$ns("dataview")),
       server  = function() DataViewBoard("dataview", pgx = PGX, labeltype = labeltype),
@@ -241,7 +254,7 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     )
   }
 
-  if ("Expression" %in% allowed_groups) {
+  if ("diffexpr" %in% allowed_boards) {
     lazy_tabs[["diffexpr-tab"]] <- list(
       ui      = function() ExpressionUI(session$ns("diffexpr")),
       server  = function() ExpressionBoard("diffexpr", pgx = PGX, labeltype = labeltype) ->>
@@ -250,7 +263,7 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     )
   }
 
-  if ("GeneSets" %in% allowed_groups) {
+  if ("enrich" %in% allowed_boards) {
     lazy_tabs[["enrich-tab"]] = list(
       ui     = function() EnrichmentUI(session$ns("enrich")),
       server = function() EnrichmentBoard("enrich", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods) ->>
@@ -259,31 +272,21 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     )
   }
 
-  if ("Clustering" %in% allowed_groups) {
-    lazy_tabs <- c(lazy_tabs, MODULE.clustering$module_lazy(PGX = PGX, labeltype = labeltype, ns = session$ns))
-  }
-  if ("Expression" %in% allowed_groups) {
-    lazy_tabs <- c(lazy_tabs, MODULE.expression$module_lazy(PGX = PGX, labeltype = labeltype, ns = session$ns))
-  }
-  if ("GeneSets" %in% allowed_groups) {
-    lazy_tabs <- c(lazy_tabs, MODULE.enrichment$module_lazy(PGX = PGX, labeltype = labeltype, env = env, ns = session$ns))
-  }
-  if ("Compare" %in% allowed_groups) {
-    lazy_tabs <- c(lazy_tabs, MODULE.compare$module_lazy(PGX = PGX, labeltype = labeltype, auth = auth,
-      env = env, reload_pgxdir = reload_pgxdir, ns = session$ns))
-  }
-  if ("SystemsBio" %in% allowed_groups) {
-    lazy_tabs <- c(lazy_tabs, MODULE.systems$module_lazy(PGX = PGX, ns = session$ns))
-  }
+  lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.clustering$module_lazy(PGX = PGX, labeltype = labeltype, ns = session$ns)))
+  lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.expression$module_lazy(PGX = PGX, labeltype = labeltype, ns = session$ns)))
+  lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.enrichment$module_lazy(PGX = PGX, labeltype = labeltype, env = env, ns = session$ns)))
+  lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.compare$module_lazy(PGX = PGX, labeltype = labeltype, auth = auth,
+    env = env, reload_pgxdir = reload_pgxdir, ns = session$ns)))
+  lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.systems$module_lazy(PGX = PGX, ns = session$ns)))
 
-  if ("MultiOmics" %in% allowed_groups && exists("MODULE.multiomics")) {
-    lazy_tabs <- c(lazy_tabs, MODULE.multiomics$module_lazy(PGX = PGX, ns = session$ns))
+  if (exists("MODULE.multiomics")) {
+    lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.multiomics$module_lazy(PGX = PGX, ns = session$ns)))
   }
-  if ("WGCNA" %in% allowed_groups && exists("MODULE.wgcna")) {
-    lazy_tabs <- c(lazy_tabs, MODULE.wgcna$module_lazy(PGX = PGX, save_pgx = env$save_pgx, ns = session$ns))
+  if (exists("MODULE.wgcna")) {
+    lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.wgcna$module_lazy(PGX = PGX, save_pgx = env$save_pgx, ns = session$ns)))
   }
-  if ("Epigenomics" %in% allowed_groups && exists("MODULE.epigenomics")) {
-    lazy_tabs <- c(lazy_tabs, MODULE.epigenomics$module_lazy(PGX = PGX, ns = session$ns))
+  if (exists("MODULE.epigenomics")) {
+    lazy_tabs <- c(lazy_tabs, filter_lazy(MODULE.epigenomics$module_lazy(PGX = PGX, ns = session$ns)))
   }
 
   ## Every group above returns its lazy_tabs entries bare-named (e.g.
@@ -413,6 +416,13 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
       }
     }
     tabs <- unique(tabs)
+
+    ## Restrict to exactly the boards this instance's menu_tree lists --
+    ## module_map above is built per whole group, so this is what narrows
+    ## e.g. an "active" SystemsBio group down to just "pcsf" when that's
+    ## all menu_tree included for it. See allowed_boards/filter_lazy() for
+    ## the matching server-side board registration restriction.
+    tabs <- intersect(tabs, session$ns(paste0(allowed_boards, "-tab")))
 
     ## Beta visibility rules
     if (!(show.beta && has.libx))             tabs <- setdiff(tabs, session$ns("tcga-tab"))

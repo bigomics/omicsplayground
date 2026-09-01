@@ -984,7 +984,7 @@ output$current_user <- shiny::renderText({
       load_example = load_example,
       load_example_dataset = load_example_dataset,
       example_dataset = "mox-brca",
-      menu_tree = opg_menu_tree()["MultiOmics"],
+      menu_tree = opg_multiomics_menu_tree(),
       parent_session = session,
       dashboard_nav_value = "MultiOmics"
     )

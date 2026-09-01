@@ -201,7 +201,7 @@ app_ui <- function(x) {
             ## server wiring.
             if(isTRUE(opt$DEVMODE)) {
               bslib::nav_panel_hidden("MultiOmics",
-                opg_ui("app_multiomics", menu_tree = opg_menu_tree()["MultiOmics"])
+                opg_ui("app_multiomics", menu_tree = opg_multiomics_menu_tree())
               )
             },
             ## if(isTRUE(opt$DEVMODE)) {
