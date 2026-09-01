@@ -13,7 +13,7 @@ launcher_ui <- function(id) {
     ## -------------- dashboards -------------
     list(
       input = "launch_playground",
-      icon = "chart-column",
+      icon = "dna",
       ##icon = "tachograph-digital",      
       label = "Omics Playground",
       description = "Play, see & discover",
@@ -23,7 +23,7 @@ launcher_ui <- function(id) {
     ),
     list(
       input = "launch_multiomics",
-      icon = "dna",
+      icon = "layer-group",
       label = "MultiOmics",
       description = "Multiomics done easy",
       rgb = c(120,90,190),
