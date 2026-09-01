@@ -954,10 +954,31 @@ output$current_user <- shiny::renderText({
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server( id = "app",
-    input, output, session, PGX, env, auth,
+  opg_server(
+    id = "app",
+    PGX = PGX, env = env, auth = auth,
     reload_pgxdir = reload_pgxdir,
-    load_example = load_example)
+    load_example = load_example,
+    parent_session = session
+  )
+
+  if (isTRUE(opt$DEVMODE)) {
+    ## Structural test of the OPG module conversion (feat/opg-module-conversion):
+    ## a second, independently-namespaced OPG dashboard restricted to the
+    ## MultiOmics group only, sharing the same PGX/env as the primary
+    ## "Dashboard" instance -- it has no dataset pipeline of its own, it is
+    ## just a second view onto the one already loaded. Matches the
+    ## "OPG2 (test)" nav_panel in ui.R.
+    opg_server(
+      id = "opg2",
+      PGX = PGX, env = env, auth = auth,
+      reload_pgxdir = reload_pgxdir,
+      load_example = load_example,
+      menu_tree = opg_menu_tree()["MultiOmics"],
+      parent_session = session,
+      dashboard_nav_value = "OPG2"
+    )
+  }
   
   app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
 
