@@ -58,7 +58,7 @@ OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
-APPDIR <- file.path(OPG, "components/app/R")
+APPDIR <- file.path(OPG, "components")
 PGX.DIR <- file.path(OPG, "data")
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
