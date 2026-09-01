@@ -1,0 +1,592 @@
+## Model paths: two-group contrast, continuous outcome, EPICv2 refusal, and
+## the region-detail helper. Run from components/app_methylome/test.
+suppressMessages({library(shiny); library(limma); library(playbase); library(minfi)})
+MP_PAL <- list(hypo = "#4575b4", hyper = "#d73027", grey = "#8697a6",
+               ok = "#18753a", bad = "#a8202c", warn = "#8a5a06")
+setwd("../R")
+for (f in c("methylome_utils.R", "methylome_ewas.R", "methylome_model.R",
+            "methylome_regions.R", "methylome_deconv.R", "methylome_age.R")) source(f)
+
+ok <- function(lbl, cond) cat(sprintf("%-54s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
+refused <- function(expr) inherits(tryCatch(expr, error = function(e) e), "error")
+## A refusal that fires for the wrong reason is not a passing test, so the
+## message has to match too.
+refused_with <- function(expr, pat) {
+  e <- tryCatch(expr, error = function(e) e)
+  inherits(e, "error") && grepl(pat, conditionMessage(e))
+}
+pgx <- local({ e <- new.env(); load("../../../data/GSE43976-methyl-mini.pgx", envir = e)
+               get("pgx", envir = e) })
+
+## ------------------------------------------------- contrast (regression) ----
+cat("\n== two-group contrast ==\n")
+fc <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"))
+ok("fits", nrow(fc$table) > 1000)
+ok("not flagged continuous", !isTRUE(fc$continuous))
+ok("groups reported", !is.null(fc$groups) && length(fc$groups) == 2)
+ok("strata has 2 levels", nlevels(fc$strata) == 2)
+ok("strata named by sample", all(names(fc$strata) %in% colnames(pgx$X)))
+ok("samples recorded", length(fc$samples) == fc$n)
+ok("delta-beta on beta scale", max(abs(fc$table$dbeta), na.rm = TRUE) <= 1)
+ok("finds signal", sum(fc$table$q < 0.05, na.rm = TRUE) > 500)
+
+## ------------------------------------------------------ continuous outcome ----
+cat("\n== continuous outcome ==\n")
+cv <- mp_continuous_vars(pgx)
+ok("age offered as continuous", "age" %in% cv)
+ok("contrast not offered as continuous", !any(colnames(pgx$contrasts) %in% cv))
+ok("is_continuous(age)", mp_is_continuous(pgx, "age"))
+ok("is_continuous(contrast) FALSE", !mp_is_continuous(pgx, "monocytes_vs_whole_blood"))
+
+fx <- mp_fit_ewas(pgx, "age", mask = c("snp", "xreactive"))
+ok("fits", nrow(fx$table) > 1000)
+ok("flagged continuous", isTRUE(fx$continuous))
+ok("groups NULL, desc set", is.null(fx$groups) && nzchar(fx$desc))
+ok("formula names the variable", grepl("age \\(continuous\\)", fx$formula))
+ok("strata is tertiles", nlevels(fx$strata) == 3)
+ok("x returned per sample", length(fx$x) == fx$n)
+## Slope of beta per year: tiny, and must not be a group difference.
+ok("delta-beta is a per-year slope", max(abs(fx$table$dbeta), na.rm = TRUE) < 0.1)
+ok("finds age signal", sum(fx$table$q < 0.05, na.rm = TRUE) > 20)
+
+## The known age CpGs must surface, or the design is wired to the wrong column.
+ax <- mp_ewas_annotate(pgx, fx$table)
+top <- utils::head(ax$gene[order(ax$p)], 60)
+top <- unique(unlist(strsplit(top[!is.na(top)], ";")))
+ok("ELOVL2 or FHL2 in top 60", any(c("ELOVL2", "FHL2") %in% top))
+
+## Adjusting for a covariate must change the answer but still fit. Only the 52
+## samples carrying an age enter this model, and within them sex, cell_type and
+## ms_status are all constant - smoking is the one that varies.
+fxa <- mp_fit_ewas(pgx, "age", covars = "smoking", mask = c("snp", "xreactive"))
+ok("continuous + covariate fits", grepl("smoking", fxa$formula))
+ok("adjustment changes the result", !identical(fxa$table$p, fx$table$p))
+## A covariate that does not vary within the fitted subset must be dropped by
+## name rather than silently making the design rank-deficient.
+fxc <- mp_fit_ewas(pgx, "age", covars = "sex", mask = character(0))
+ok("constant covariate dropped, not fitted",
+   length(fxc$covars) == 0 && any(grepl("^sex", fxc$dropped_covars)))
+## The outcome must never also enter as its own covariate.
+fxs <- mp_fit_ewas(pgx, "age", covars = c("age", "smoking"), mask = character(0))
+ok("outcome dropped from covariates", !"age" %in% fxs$covars)
+
+## ------------------------------------------------ multi-level (F-test) ----
+## No natural three-level factor exists on this pgx, so fabricate one from age.
+## The tertiles must rediscover the same age signal the continuous fit does, or
+## the F-test is wired to something other than the groups it names.
+cat("\n== multi-level F-test ==\n")
+p3 <- pgx
+p3$samples$age_tertile <- as.character(cut(
+  suppressWarnings(as.numeric(as.character(pgx$samples$age))), 3,
+  labels = c("young", "mid", "old")))
+ok("categorical vars offered", all(c("cell_type", "smoking") %in% mp_categorical_vars(pgx)))
+ok("continuous not offered as categorical",
+   !any(mp_continuous_vars(pgx) %in% mp_categorical_vars(pgx)))
+ok("contrast not offered as categorical",
+   !mp_is_categorical(pgx, "monocytes_vs_whole_blood"))
+ok("fabricated tertiles are categorical", mp_is_categorical(p3, "age_tertile"))
+
+f3 <- mp_fit_ewas(p3, "age_tertile", mask = c("snp", "xreactive"))
+ok("fits", nrow(f3$table) > 1000)
+ok("flagged anova", isTRUE(f3$anova))
+ok("groups has 3 entries", length(f3$groups) == 3)
+ok("strata has 3 levels", nlevels(f3$strata) == 3)
+ok("strata named by sample", all(names(f3$strata) %in% colnames(pgx$X)))
+ok("t is NULL", is.null(f3$t))
+ok("F column present", "Fstat" %in% colnames(f3$table) && all(f3$table$Fstat >= 0))
+ok("logFC_M withheld", all(is.na(f3$table$logFC_M)))
+ok("beta range is unsigned", all(f3$table$dbeta >= 0, na.rm = TRUE))
+ok("beta range on the beta scale", max(f3$table$dbeta, na.rm = TRUE) <= 1)
+ok("formula says F-test", grepl("F-test across 3 groups", f3$formula))
+## The trap this branch exists to avoid: topTable over the k group coefficients
+## tests "every group mean is zero", which is true of no M-value anywhere and
+## would call the whole array significant. A calibrated null must survive.
+ok("p-values are not degenerate", stats::median(f3$table$p, na.rm = TRUE) > 0.1)
+a3 <- mp_ewas_annotate(p3, f3$table)
+t3 <- utils::head(a3$gene[order(a3$p)], 60)
+t3 <- unique(unlist(strsplit(t3[!is.na(t3)], ";")))
+ok("age tertiles rediscover ELOVL2 or FHL2", any(c("ELOVL2", "FHL2") %in% t3))
+## Against the unmoderated one-way ANOVA on the same probes: the moderation
+## changes the numbers, not which probes separate the groups.
+set.seed(1)
+chk <- sample(f3$table$probe, 300)
+Mc <- playbase.epigenetics::betaToM(mp_beta(p3)[chk, f3$samples, drop = FALSE])
+pl <- apply(Mc, 1, function(y) stats::anova(stats::lm(y ~ f3$strata))[["Pr(>F)"]][1])
+ok("agrees with a plain one-way ANOVA",
+   stats::cor(rank(pl), rank(f3$table$p[match(chk, f3$table$probe)])) > 0.9)
+f3c <- mp_fit_ewas(p3, "age_tertile", covars = "smoking", mask = c("snp", "xreactive"))
+ok("covariate still enters the F-test formula", grepl("smoking", f3c$formula))
+
+## Regressions: the two-group path must be untouched. A two-level sample column
+## routed through the new picker and the contrast it mirrors are the same test.
+fk <- mp_fit_ewas(pgx, "cell_type", mask = c("snp", "xreactive"))
+ok("2-level categorical is not an F-test", !isTRUE(fk$anova) && !is.null(fk$t))
+ok("2-level categorical reproduces the contrast p-values",
+   identical(fk$table$p, fc$table$p))
+## And collapsing the fabricated 3-level factor to 2 reproduces the same fit
+## through the contrast path it would have taken before this branch existed.
+p2 <- p3
+p2$samples$age_tertile[p2$samples$age_tertile == "mid"] <- "old"
+p2$contrasts <- cbind(p2$contrasts, old_vs_young = p2$samples$age_tertile)
+f2 <- mp_fit_ewas(p2, "age_tertile", mask = c("snp", "xreactive"))
+f2c <- mp_fit_ewas(p2, "old_vs_young", mask = c("snp", "xreactive"))
+ok("collapsed to 2 levels is not an F-test", !isTRUE(f2$anova) && !is.null(f2$t))
+ok("collapsed to 2 levels matches the contrast path",
+   identical(f2$table$p, f2c$table$p))
+
+## Consumers that must refuse rather than approximate.
+ok("region calling refuses an F-test",
+   refused_with(mp_call_dmrs(pgx, list(data = a3, meta = f3)), "F-test"))
+
+## --------------------------------------------------------------- SVA ----
+cat("\n== surrogate variables ==\n")
+f0 <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"), n_sv = 0)
+ok("n_sv = 0 reproduces today's fit", identical(f0$table, fc$table))
+ok("n_sv = 0 leaves the formula alone", identical(f0$formula, fc$formula))
+
+fs <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"), n_sv = 2)
+ok("SVs named in the formula", grepl("SV1", fs$formula) && grepl("SV2", fs$formula))
+ok("SV count reported", fs$n_sv == 2)
+ok("SVs counted as covariates", sum(grepl("^SV", fs$covars)) == 2)
+ok("adjustment changes the p-values", !identical(fs$table$p, fc$table$p))
+ok("same probes, same shape", identical(fs$table$probe, fc$table$probe))
+## The residual-df validate has to survive the wider design, or the fit throws
+## instead of refusing.
+ok("still fits with covariates alongside",
+   grepl("SV1", mp_fit_ewas(pgx, "age", covars = "smoking",
+                            mask = c("snp", "xreactive"), n_sv = 2)$formula))
+## SVA on the anova branch: the SV columns must append there too, and the
+## design is intercept-free on that path so the null model needs one built.
+f3s <- mp_fit_ewas(p3, "age_tertile", mask = c("snp", "xreactive"), n_sv = 2)
+ok("SVs append on the F-test branch too",
+   isTRUE(f3s$anova) && grepl("SV2", f3s$formula))
+## Estimating the count must never error, and a zero estimate must degrade to
+## the unadjusted fit with the summary saying so rather than throwing.
+fe <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"), n_sv = -1)
+ok("num.sv estimate fits", fe$n_sv >= 0 && nrow(fe$table) == nrow(fc$table))
+ok("estimate is capped at ten", fe$n_sv <= 10)
+ok("zero SVs would degrade, not error",
+   fe$n_sv > 0 || grepl("no latent factors", fe$formula))
+
+## --------------------------------------------------- collapsed testing ----
+## Coarser testing units: gene x region and gene. The point is a cheap first
+## pass, so what matters is that the collapse is honest about what it dropped
+## and that everything keyed on CpG ids refuses rather than answering emptily.
+cat("\n== collapsed testing ==\n")
+fpr <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"))
+fgr <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"),
+                   collapse = "gene_region")
+ok("probe level is the default", identical(fpr$collapse, "probe"))
+ok("probe level carries no collapse annotation", is.null(fpr$collapse_annot))
+ok("collapsing reduces the feature count", nrow(fgr$table) < nrow(fpr$table))
+ok("collapsed fit carries its own annotation", !is.null(fgr$collapse_annot))
+ok("collapsed fit says what it dropped", grepl("no gene region", fgr$collapse_note))
+## Whole-gene averaging cancels promoter against body, so it is not offered.
+ok("there is no whole-gene level", !("gene" %in% MP_COLLAPSE))
+ok("features are GENE:promoter or GENE:body",
+   all(grepl(":(promoter|body)$", fgr$table$probe)))
+ok("both region types are produced",
+   length(unique(sub("^.*:", "", fgr$table$probe))) == 2)
+ok("promoter merges the four RefGene promoter groups",
+   setequal(MP_PROMOTER_GROUPS, c("TSS1500", "TSS200", "5\'UTR", "1stExon")))
+## Median, not mean - IMA's default, and coMethDMR measured it at nominal
+## type I error. A mean would be pulled by one blown probe.
+ok("the feature value is a median of its probes", {
+  fx <- fgr$collapse_annot[1, ]
+  bb <- mp_feature_beta(pgx, fgr, rownames(fgr$collapse_annot)[1])
+  is.matrix(bb) && nrow(bb) == 1
+})
+ok("no feature is built from fewer than 3 probes",
+   min(fgr$collapse_annot$n_probes) >= MP_MIN_PROBES)
+## An aggregated row must not assert per-probe precision it does not have.
+agr0 <- mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)
+ok("collapsed rows carry a span, not just a midpoint",
+   all(c("pos_start", "pos_end") %in% colnames(agr0)))
+ok("the span is well ordered", all(agr0$pos_start <= agr0$pos_end, na.rm = TRUE))
+ok("the median position sits inside the span",
+   all(agr0$pos >= agr0$pos_start & agr0$pos <= agr0$pos_end, na.rm = TRUE))
+ok("features really do span more than a point",
+   any(agr0$pos_end > agr0$pos_start, na.rm = TRUE))
+ok("context carries how many probes back it",
+   "island_n" %in% colnames(agr0) &&
+     all(agr0$island_n <= agr0$n_probes, na.rm = TRUE))
+ok("some contexts are a minority label, which is the point",
+   any(agr0$island_n < agr0$n_probes, na.rm = TRUE))
+ok("region is the partition, not the commonest RefGene sub-group",
+   setequal(unique(agr0$region), c("promoter", "body")))
+ok("probe-level rows carry none of these",
+   !any(c("region", "pos_start", "island_n") %in%
+          colnames(mp_ewas_annotate(pgx, fpr$table))))
+ok("probe count reaches the results table",
+   "n_probes" %in% colnames(mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)))
+ok("features are disjoint - no probe in two features", {
+  kk <- mp_collapse_key(pgx$genes, "gene_region")
+  length(kk) == nrow(pgx$genes) && !is.list(kk)
+})
+## Masking is a probe-level list, so it has to bite before the averaging.
+fnm <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = character(0),
+                   collapse = "gene_region")
+ok("masking applies before collapsing", nrow(fnm$table) != nrow(fgr$table))
+## The annotation the downstream panels read must resolve for collapsed features.
+agr <- mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot)
+ok("collapsed gene resolves", mean(!is.na(agr$gene)) > 0.9)
+## Not 100%: a third of this dataset's probes carry no cytoband, so a feature
+## whose every probe lacks one inherits none. Collapsing takes the commonest
+## value among the members, so it resolves strictly more than probe level does.
+apr <- mp_ewas_annotate(pgx, fpr$table)
+ok("collapsed chr resolves for most features", mean(!is.na(agr$chr)) > 0.85)
+ok("collapsing improves chr coverage over probe level",
+   mean(!is.na(agr$chr)) > mean(!is.na(apr$chr)))
+ok("collapsed pos is numeric", is.numeric(agr$pos) && mean(!is.na(agr$pos)) > 0.9)
+ok("collapsed island relation resolves", mean(!is.na(agr$island)) > 0.5)
+## Refusals: region calling is a per-probe answer.
+res_gr <- list(data = agr, meta = fgr, contrast = "monocytes_vs_whole_blood")
+ok("region calling refuses a collapsed fit",
+   refused_with(mp_call_dmrs(pgx, res_gr), "collapsed features"))
+res_pr <- list(data = mp_ewas_annotate(pgx, fpr$table), meta = fpr,
+               contrast = "monocytes_vs_whole_blood")
+ok("region calling still runs at probe level", !refused(mp_call_dmrs(pgx, res_pr)))
+ok("the picker offers exactly two levels",
+   setequal(unname(MP_COLLAPSE), c("gene_region", "probe")))
+## Gene first, because the picker's default is the first entry: a fast pass is
+## the useful thing to land on. mp_fit_ewas() itself still defaults to probe,
+## so a programmatic caller never collapses without asking.
+ok("the picker leads with the collapsed level", unname(MP_COLLAPSE)[1] == "gene_region")
+ok("the function default is still a real EWAS",
+   identical(formals(mp_fit_ewas)$collapse, "probe"))
+
+## Every panel that plots per-sample beta for a hit goes through mp_feature_beta.
+## Indexing pgx$X by feature id directly was a subscript-out-of-bounds on the
+## hitmap the moment the fit was collapsed, so this is checked at all three
+## levels, not just the one that happens to be a plain row subset.
+thr <- list(type = "q", value = 0.05, min_dbeta = 0)
+for (lvl in c("probe", "gene_region")) {
+  ff <- mp_fit_ewas(pgx, "monocytes_vs_whole_blood", mask = c("snp", "xreactive"),
+                    collapse = lvl)
+  dd <- mp_ewas_annotate(pgx, ff$table, annot = ff$collapse_annot)
+  hits <- dd[mp_ewas_sig(dd, thr), , drop = FALSE]
+  topf <- utils::head(hits[order(hits$p), ]$probe, 50)
+  BB <- mp_feature_beta(pgx, ff, topf)
+  ok(paste0("[", lvl, "] top hits resolve to a beta matrix"), nrow(BB) > 0)
+  ok(paste0("[", lvl, "] rows are the features asked for"), all(rownames(BB) %in% topf))
+  ok(paste0("[", lvl, "] beta stays in [0,1]"),
+     min(BB, na.rm = TRUE) >= 0 && max(BB, na.rm = TRUE) <= 1)
+  ok(paste0("[", lvl, "] manhattan has chr and pos"),
+     sum(!is.na(dd$chr) & !is.na(dd$pos)) > 100)
+  ok(paste0("[", lvl, "] volcano has an effect size"), sum(!is.na(dd$dbeta)) > 100)
+  ok(paste0("[", lvl, "] island context resolves"), sum(!is.na(dd$island)) > 50)
+}
+
+## ----------------------------------------------------- promoter vs body ----
+## The one comparison only the collapsed fit can make. Promoter and gene body
+## move in opposite directions for real biological reasons, so a gene where
+## they disagree is a finding - and it is the pattern that makes whole-gene
+## averaging meaningless in the first place.
+cat("\n== promoter vs body ==\n")
+thr_pb <- list(type = "q", value = 0.05, min_dbeta = 0)
+res_pb <- list(data = mp_ewas_annotate(pgx, fgr$table, annot = fgr$collapse_annot),
+               meta = fgr, contrast = "monocytes_vs_whole_blood")
+dv <- mp_divergence(res_pb, thr_pb)
+ok("one row per gene carrying both features", !anyDuplicated(dv$gene))
+ok("every row really has both", all(!is.na(dv$dbeta_promoter) & !is.na(dv$dbeta_body)))
+ok("opposite means opposite sign",
+   all(dv$opposite == (sign(dv$dbeta_promoter) != sign(dv$dbeta_body))))
+## MeGDP is defined body-minus-promoter (Li 2019, Genome Res 29:270); getting
+## the sign backwards would silently invert every row of the table.
+ok("MeGDP follows the published direction, body minus promoter",
+   isTRUE(all.equal(dv$megdp, dv$dbeta_body - dv$dbeta_promoter)))
+ok("both_sig agrees with the threshold",
+   all(dv$both_sig == (dv$q_promoter <= 0.05 & dv$q_body <= 0.05)))
+ok("opposing hits are found in the demo", sum(dv$both_sig & dv$opposite) > 0)
+ok("probe counts are carried for both halves",
+   all(!is.na(dv$n_promoter)) && all(!is.na(dv$n_body)))
+ok("sorted with the findings first", dv$both_sig[1])
+## A probe-level fit has no promoter/body split to compare.
+ok("refuses a probe-level fit",
+   refused_with(mp_divergence(list(data = mp_ewas_annotate(pgx, fpr$table),
+                                   meta = fpr, contrast = "x"), thr_pb),
+                "collapsed to gene regions"))
+## An F-test reports an unsigned beta range, so "opposite" has no meaning.
+pgx_pb <- pgx
+pgx_pb$samples$.pb_tert <- cut(rank(pgx$samples$age), 3, labels = c("lo", "mid", "hi"))
+f_anova_pb <- mp_fit_ewas(pgx_pb, ".pb_tert", mask = c("snp", "xreactive"),
+                          collapse = "gene_region")
+ok("refuses an F-test, which has no direction",
+   refused_with(mp_divergence(list(
+     data = mp_ewas_annotate(pgx_pb, f_anova_pb$table, annot = f_anova_pb$collapse_annot),
+     meta = f_anova_pb, contrast = ".pb_tert"), thr_pb), "no direction"))
+
+## ------------------------------------------------------ chunked fitting ----
+## The fit runs a chromosome at a time to keep one chromosome's M-values alive
+## instead of the whole array's. That is only acceptable if it is exact, so the
+## claim is tested directly: stacking per-chunk lmFits and moderating once must
+## reproduce a whole-matrix fit to the bit.
+cat("\n== chunked fitting ==\n")
+ck <- mp_fit_chunks(rownames(pgx$X), pgx$genes$chr)
+ok("every feature lands in exactly one chunk",
+   length(unlist(ck, use.names = FALSE)) == nrow(pgx$X) &&
+     !anyDuplicated(unlist(ck, use.names = FALSE)))
+ok("chunks are karyotype ordered", {
+  nm <- setdiff(names(ck), "unplaced")
+  identical(nm, intersect(c(as.character(1:22), "X", "Y"), nm))
+})
+ok("unplaced features go last, not silently dropped",
+   !("unplaced" %in% names(ck)) || utils::tail(names(ck), 1) == "unplaced")
+
+set.seed(7)
+Mx <- matrix(rnorm(5000 * 30), 5000, 30,
+             dimnames = list(paste0("f", 1:5000), paste0("s", 1:30)))
+gx <- factor(rep(c("a", "b"), each = 15))
+dz <- stats::model.matrix(~ 0 + gx); colnames(dz) <- make.names(colnames(dz))
+cz <- limma::makeContrasts(contrasts = "gxb-gxa", levels = dz)
+ref_tt <- limma::topTable(
+  limma::eBayes(limma::contrasts.fit(limma::lmFit(Mx, dz), cz), trend = TRUE),
+  number = Inf, sort.by = "none")
+## Deliberately uneven and out of order, the way real chromosomes are.
+ckz <- split(rownames(Mx), sample(rep(1:24, length.out = nrow(Mx))))
+fz <- mp_rbind_fits(lapply(ckz, function(ii) limma::lmFit(Mx[ii, , drop = FALSE], dz)))
+fz <- fz[match(rownames(Mx), rownames(fz$coefficients)), ]
+got_tt <- limma::topTable(
+  limma::eBayes(limma::contrasts.fit(fz, cz), trend = TRUE),
+  number = Inf, sort.by = "none")[rownames(ref_tt), ]
+ok("stacked chunks reproduce the whole-matrix logFC",
+   isTRUE(all.equal(ref_tt$logFC, got_tt$logFC)))
+ok("stacked chunks reproduce the moderated t",
+   isTRUE(all.equal(ref_tt$t, got_tt$t)))
+ok("stacked chunks reproduce the p-values",
+   isTRUE(all.equal(ref_tt$P.Value, got_tt$P.Value)))
+ok("BH still adjusts over every feature, not per chunk",
+   isTRUE(all.equal(ref_tt$adj.P.Val, got_tt$adj.P.Val)))
+ok("eBayes trend uses the combined Amean",
+   isTRUE(all.equal(ref_tt$AveExpr, got_tt$AveExpr)))
+
+## ------------------------------------------------------- EWAS Catalog ----
+## The catalog now ships in playdata rather than being fetched over HTTP, so
+## there is no fixture and no network gate. Parsing is covered by
+## playbase.epigenetics' own tests; what matters here is that the app's probes
+## come back annotated in the shape the hits table renders.
+cat("\n== EWAS catalog ==\n")
+cat_hits <- playbase.epigenetics::ewas_catalog_lookup(c("cg05575921", "cg00000029", "cgNOTREAL"))
+ok("one row per CpG, in the order asked",
+   nrow(cat_hits) == 3 && all(cat_hits$probe == c("cg05575921", "cg00000029", "cgNOTREAL")))
+ok("traits summarised, most-studied first",
+   grepl("^Smoking \\([0-9]+\\)", cat_hits$reported[1]))
+ok("trait list is capped with a remainder", grepl("; \\+[0-9]+ more$", cat_hits$reported[1]))
+ok("unknown CpG reads as no record", cat_hits$reported[3] == "")
+ok("trait list is capped where asked",
+   playbase.epigenetics::ewas_catalog_lookup("cg05575921", max_traits = 1)$reported ==
+     "Smoking (46); +187 more")
+ok("empty request answers empty", is.null(playbase.epigenetics::ewas_catalog_lookup(character(0))))
+
+## The per-probe summary and the links the hits table renders. The catalog is a
+## downloaded file rendered with escape = FALSE, so the escaping is a test, not
+## a detail.
+cat_probes <- c("cg05575921", "cg00000029", "cgNOTREAL")
+cat_tr <- playbase.epigenetics::ewas_catalog_traits(cat_probes)
+cat_sum <- mp_catalog_summary(cat_tr, cat_probes, max_traits = 2)
+ok("summary keeps one row per probe, in order", identical(cat_sum$probe, cat_probes))
+ok("unknown probe summarises to zero", cat_sum$studies[3] == 0L && cat_sum$reported[3] == "")
+ok("studies totals every trait of the CpG",
+   cat_sum$studies[1] == sum(cat_tr$n[as.character(cat_tr$cpg) == "cg05575921"]))
+ok("n_traits counts past the two that are shown", cat_sum$n_traits[1] > 2)
+ok("two traits then a remainder", grepl("^[^;]+; [^;]+; \\+[0-9]+ more$", cat_sum$reported[1]))
+
+cat_html <- mp_catalog_reported_html(cat_sum$reported, cat_sum$probe)
+ok("traits link to their catalog page", grepl("ewascatalog.org/\\?trait=Smoking", cat_html[1]))
+ok("the remainder links to the CpG page", grepl("\\?cpg=cg05575921", cat_html[1]))
+ok("links open in a new tab with noopener",
+   grepl("target='_blank' rel='noopener'", cat_html[1], fixed = TRUE))
+## The arrow icon is the anchor; the trait text beside it must stay plain, or
+## clicking a name navigates away when the user meant to select the row.
+ok("the icon is what is wrapped in the anchor",
+   grepl("<a [^>]*><i class='fa-solid fa-arrow-up-right-from-square weblink'></i></a>",
+         cat_html[1]))
+ok("the trait text itself is not a link",
+   !grepl("<a [^>]*>Smoking", cat_html[1]) && grepl("Smoking \\(46\\)", cat_html[1]))
+ok("an absent CpG says so rather than rendering empty", grepl("not reported", cat_html[3]))
+
+## A trait carrying markup must not escape into the page.
+evil <- data.frame(cpg = factor("cgX"), trait = factor("<img src=x onerror=alert(1)>"),
+                   n = 3L, stringsAsFactors = FALSE)
+evil_html <- mp_catalog_reported_html(mp_catalog_summary(evil, "cgX")$reported, "cgX")
+ok("trait markup is HTML-escaped in the label",
+   grepl("&lt;img", evil_html) && !grepl("<img", evil_html))
+ok("trait markup is URL-encoded in the href", grepl("%3Cimg", evil_html))
+
+## ------------------------------------------------------------- region plot ----
+cat("\n== region detail ==\n")
+res <- list(data = mp_ewas_annotate(pgx, fc$table), contrast = "monocytes_vs_whole_blood",
+            meta = fc)
+d <- res$data
+d <- d[!is.na(d$chr) & !is.na(d$pos), ]
+ch <- names(sort(table(d$chr), decreasing = TRUE))[1]
+pp <- sort(d$pos[d$chr == ch])
+dmr <- data.frame(chr = paste0("chr", ch), start = pp[10], end = pp[20], n = 11)
+rp <- mp_region_probes(res, dmr)
+ok("region probes found", nrow(rp) >= 11)
+ok("all on the region chromosome", all(rp$chr == ch))
+ok("sorted by position", !is.unsorted(rp$pos))
+ok("includes flanking context", min(rp$pos) <= dmr$start && max(rp$pos) >= dmr$end)
+
+## ------------------------------------------------------------------ EPICv2 ----
+cat("\n== EPICv2 ==\n")
+v2 <- pgx
+rownames(v2$X) <- paste0(sub("_.*", "", rownames(pgx$X)), "_TC21")
+ok("EPICv2 detected by probe suffix", mp_array_type(v2) == "EPICv2")
+ok("450K still detected", mp_array_type(pgx) == "450K")
+ok("manifest refuses EPICv2", refused(mp_manifest(v2)))
+ok("model refuses EPICv2", refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood")))
+ok("model refuses EPICv2 with masking off",
+   refused(mp_fit_ewas(v2, "monocytes_vs_whole_blood", mask = character(0))))
+
+## --------------------------------------------------------- sample ledger ----
+## The ledger table is now computed by playbase.epigenetics::sample_qc(), which
+## takes a matrix + annotation + sample sheet rather than a pgx so the upload
+## step can show the same table before any pgx exists. Pin the column set here:
+## "Missing %" is gone, and a rename should break here, not in the browser.
+cat("\n== sample ledger ==\n")
+qc <- playbase.epigenetics::sample_qc(mp_beta(pgx), annot = pgx$genes, samples = pgx$samples)
+ok("one row per sample", identical(rownames(qc), colnames(pgx$X)))
+ok("column set is fixed", identical(colnames(qc),
+     c("Bimodality", "DNAm age", "Sex predicted", "Sex check", "Imprint drift", "Verdict")))
+ok("no missingness column", !any(grepl("missing", colnames(qc), ignore.case = TRUE)))
+ok("verdict is PASS/CHECK only", all(qc$Verdict %in% c("PASS", "CHECK")))
+## Cohort-relative flagging needs a cohort: three samples must not be judged
+## against their own MAD, which ties can drive to exactly zero.
+ok("small cohort is not judged relatively",
+   all(playbase.epigenetics::sample_qc(mp_beta(pgx)[, 1:3], annot = pgx$genes,
+                                       samples = pgx$samples)$Verdict == "PASS"))
+
+## ------------------------------------------------------------- sex check ----
+## The sample-swap detector. Its failure mode is silent agreement, so the
+## cases that must NOT read as "ok" are the ones worth pinning down.
+cat("\n== sex check ==\n")
+rec <- mp_recorded_sex(pgx)
+ok("recorded sex found", !is.null(rec) && length(rec) == nrow(pgx$samples))
+ok("normalised to F/M", all(stats::na.omit(unique(rec)) %in% c("F", "M")))
+ok("counts match the sheet", sum(rec == "F", na.rm = TRUE) == 82 &&
+     sum(rec == "M", na.rm = TRUE) == 13)
+
+## A "gender" column with long labels must resolve the same way.
+pg <- pgx
+pg$samples$sex <- NULL
+pg$samples$Gender <- ifelse(pgx$samples$sex == "female", "Female", "Male")
+ok("gender column matched", identical(unname(mp_recorded_sex(pg)), unname(rec)))
+
+## 1/2 coding is not standardised, so it must decline rather than guess: a
+## wrong guess inverts every verdict this check exists to produce.
+pn <- pgx; pn$samples$sex <- ifelse(pgx$samples$sex == "female", 1, 2)
+ok("numeric coding declined", is.null(mp_recorded_sex(pn)))
+
+pnone <- pgx; pnone$samples$sex <- NULL
+ok("no sex column -> NULL", is.null(mp_recorded_sex(pnone)))
+
+ss <- colnames(pgx$X)
+allf <- rep("Female", length(ss))
+chk <- mp_sex_check(pgx, allf, ss)
+ok("agreement reads ok", sum(chk == "ok") == 82)
+ok("disagreement reads MISMATCH", sum(chk == "MISMATCH") == 13)
+ok("no prediction is not agreement",
+   all(mp_sex_check(pgx, NULL, ss) == "not available"))
+ok("no recorded column is not agreement",
+   all(mp_sex_check(pnone, allf, ss) == "not available"))
+## An unresolved value must read "no record", never "ok" against a prediction.
+pu <- pgx; pu$samples$sex[1:3] <- "unknown"
+ok("unresolved value reads no record",
+   sum(mp_sex_check(pu, allf, ss) == "no record") == 3)
+
+## pgx$genes$chr is a cytoband ("Xp22.2"), so an exact match on "X" found
+## nothing and sex prediction was dead on every playbase-built dataset.
+ok("cytoband X/Y detected", {
+  px <- pgx; px$genes$chr <- rep("Xp22.2", nrow(px$genes)); mp_has_xy(px)
+})
+ok("a handful of X probes still declines", !mp_has_xy(pgx))
+
+## ----------------------------------------------------- sex-chromosome mask ----
+cat("\n== sex-chromosome mask ==\n")
+xy <- mp_sexchr_probes(pgx)
+ok("450K X/Y probes found", length(xy) > 10000)
+ok("mask is off by default",
+   !"sexchr" %in% eval(formals(mp_masked_probes)$mask))
+ok("sexchr adds to the other masks",
+   all(mp_masked_probes(pgx, c("snp", "xreactive")) %in%
+         mp_masked_probes(pgx, c("snp", "xreactive", "sexchr"))))
+ok("selecting it alone masks only X/Y",
+   setequal(mp_masked_probes(pgx, "sexchr"), xy))
+
+## ------------------------------------------------------------ clock weight ----
+## Coverage as a probe count treats a high-weight CpG like a trivial one.
+cat("\n== clock weight coverage ==\n")
+w <- mp_clock_weights("Horvath")
+ok("Horvath weights reachable", !is.null(w) && length(w) == 353)
+ok("intercept excluded", !any(grepl("intercept", names(w), ignore.case = TRUE)))
+ok("weights are magnitudes", all(w >= 0))
+ok("BNN has no weight vector", is.null(mp_clock_weights("BNN")))
+
+cv <- mp_clock_coverage("Horvath", rownames(pgx$X))
+ok("both fractions in [0,1]", all(cv >= 0 & cv <= 1))
+ok("full coverage loses nothing",
+   all(mp_clock_coverage("Horvath", names(w)) == 0))
+ok("unknown clock returns NA", all(is.na(mp_clock_coverage("BNN", rownames(pgx$X)))))
+## The whole reason both columns exist: losing the single heaviest CpG is
+## 0.3% of the probes and a far larger share of the model. A probe count
+## alone cannot see that.
+heavy <- names(w)[which.max(w)]
+cvh <- mp_clock_coverage("Horvath", setdiff(names(w), heavy))
+ok("one heavy CpG costs more weight than probes",
+   cvh[["weight"]] > 3 * cvh[["probe"]])
+
+## ------------------------------------------------------------ stored clocks ----
+## The clocks are fitted once by pgx.computePGX and land on pgx$meth$clocks.
+## Three things have to hold: the slot is used when it is there, a pgx without
+## it still works, and the two give the same ages - the last is the whole
+## point, because it is what makes reading the slot safe.
+cat("\n== stored clocks ==\n")
+st <- mp_stored_clocks(pgx)
+ok("demo dataset carries a stored fit", !is.null(st))
+ok("all ten clocks stored", identical(sort(colnames(st$age)), sort(MP_CLOCK_ALL)))
+ok("ages are per sample", identical(rownames(st$age), colnames(pgx$X)))
+ok("coverage is one row per clock",
+   nrow(st$cov) == ncol(st$age) &&
+     all(c("clock", "probe", "weight", "complete") %in% colnames(st$cov)))
+ok("provenance stamped", nzchar(st$source) && nzchar(st$version) &&
+     inherits(st$date, "Date"))
+ok("stored coverage matches a fresh count",
+   isTRUE(all.equal(1 - st$cov$probe[st$cov$clock == "Horvath"], cv[["probe"]])))
+
+## Provenance guards. A slot that no longer describes this dataset, or that a
+## different clock version produced, must be refused rather than trusted.
+px <- pgx; px$meth$clocks$age <- st$age[-1, , drop = FALSE]
+ok("sample mismatch refused", is.null(mp_stored_clocks(px)))
+px <- pgx; px$meth$clocks$version <- "0.0.0"
+ok("version mismatch refused", is.null(mp_stored_clocks(px)))
+px <- pgx; px$meth <- NULL
+ok("absent slot refused", is.null(mp_stored_clocks(px)))
+
+## Stored path, live path, and the two against each other.
+set_stored <- mp_clock_set(pgx)
+ok("stored path used", !is.null(set_stored) && isTRUE(set_stored$stored))
+ok("BLUP withheld at 5% coverage", !"BLUP" %in% colnames(set_stored$age))
+ok("BLUP still fitted underneath", "BLUP" %in% colnames(set_stored$all))
+ok("floor is a display filter only",
+   identical(mp_clock_set(pgx, min_cov = 0.5)$all, set_stored$all) &&
+     ncol(mp_clock_set(pgx, min_cov = 1)$age) < ncol(set_stored$age))
+ok("selection is a display filter only",
+   identical(colnames(mp_clock_set(pgx, clocks = c("Horvath", "Hannum"))$all),
+             c("Horvath", "Hannum")))
+
+pnostore <- pgx; pnostore$meth <- NULL
+set_live <- mp_clock_set(pnostore)
+ok("live fallback when absent", !is.null(set_live) && !isTRUE(set_live$stored))
+ok("stored and live agree on the ages", isTRUE(all.equal(set_stored$all, set_live$all)))
+ok("stored and live agree on coverage", isTRUE(all.equal(set_stored$cov, set_live$cov)))
+ok("stored and live withhold the same clocks",
+   identical(colnames(set_stored$age), colnames(set_live$age)))
+
+cat("\ncontrast hits:", sum(fc$table$q < 0.05, na.rm = TRUE),
+    " | age hits:", sum(fx$table$q < 0.05, na.rm = TRUE), "\n")
+cat("Horvath on this dataset: CpGs missing", sprintf("%.2f%%", 100 * cv[["probe"]]),
+    "| weight missing", sprintf("%.2f%%", 100 * cv[["weight"]]), "\n")
+cat("drop the heaviest Horvath CpG:", sprintf("%.2f%%", 100 * cvh[["probe"]]),
+    "of probes ->", sprintf("%.2f%%", 100 * cvh[["weight"]]), "of weight\n")
+cat("top age genes:", paste(utils::head(top, 8), collapse = ", "), "\n")

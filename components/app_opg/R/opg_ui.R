@@ -38,8 +38,7 @@ opg_menu_tree <- function() {
       tcga = "TCGA survival (beta)"
     ),
     "MultiOmics" = MODULE.multiomics$module_menu(),
-    "WGCNA" = MODULE.wgcna$module_menu(),
-    "Epigenomics" = MODULE.epigenomics$module_menu()
+    "WGCNA" = MODULE.wgcna$module_menu()
   )
 }
 
@@ -350,11 +349,6 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
           "Preservation WGCNA",
           tspan("Preservation analysis using the WGCNA framework")
         ),
-        bigdash::sidebarTabHelp(
-          "ideograms-tab",
-          "Beta Ideograms",
-          tspan("Epigenomics visualizations and analyses for methylomics data.")
-        ),
         !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
@@ -378,8 +372,7 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         lock_advanced(MODULE.compare$module_ui()),
         lock_advanced(MODULE.systems$module_ui()),
         lock_advanced(MODULE.multiomics$module_ui()),
-        lock_advanced(MODULE.wgcna$module_ui()),
-        lock_advanced(MODULE.epigenomics$module_ui())
+        lock_advanced(MODULE.wgcna$module_ui())
       )
     ) ## end of bigPage
   }

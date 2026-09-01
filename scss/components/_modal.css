@@ -59,15 +59,13 @@ html {
 	border: 0;
     }
 
-    .modal-backdrop {
-	background-color: #000;
-	background-color: #FFF;
-    }
-
-    .modal-backdrop.show,
-    .modal-backdrop.in {
-	opacity: 0.85;
-    }
+    /* No .modal-backdrop override. This forced the backdrop white at 0.85
+       opacity, which reads as a fog over the whole app rather than as an open
+       dialog - on a fullscreen plot popup especially, where the dialog does
+       not fill the viewport and the veil shows all around it. Bootstrap's own
+       backdrop (#464646 at 0.5) is what a modal is supposed to look like.
+       The same rule also existed in playground.css (dead, not served) and in
+       bigdash, which inherited it from here; both are cleared. */
 
     .modal-header
     

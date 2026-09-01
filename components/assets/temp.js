@@ -69,8 +69,22 @@ $(function(){
 	        //$('.settings-label').click()
 	}, 250);
 
+	// Two non-defaults, both so a data-bs-placement="left" tooltip in the 12rem
+	// settings panel actually opens on the left. container: 'body' keeps the
+	// panel from being the clipping boundary, and flip's altAxis check goes off
+	// because these tooltips are long paragraphs: at the 200px the stylesheet
+	// allows them they run several hundred pixels tall, so one centred on an
+	// input near the top of the panel pokes out above the viewport. flip counts
+	// that overflow - perpendicular to the side asked for, with 1300px of room
+	// still free on the left - as "left does not fit", walks the fallbacks and
+	// lands on bottom. With the check off the placement survives and
+	// preventOverflow just slides the tooltip down into view.
+	const popperConfig = (defaults) => ({
+		...defaults,
+		modifiers: [...defaults.modifiers, { name: 'flip', options: { altAxis: false } }]
+	});
 	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { container: 'body', popperConfig }));
 })
 
 

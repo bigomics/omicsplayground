@@ -55,6 +55,9 @@ pgx <- playbase::pgx.createPGX(
   custom.geneset = params$custom.geneset,
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
+  ## identical(): a params.RData written before this field existed carries no
+  ## add.gmt, and NULL would error on `!add.gmt` inside createPGX.
+  add.gmt = !identical(params$add.gmt, FALSE),
   settings = params$settings,
   sc_compute_settings = params$sc_compute_settings
 )
@@ -72,6 +75,7 @@ pgx <- playbase::pgx.computePGX(
   extra.methods = params$extra.methods,
   use.design = params$use.design,
   prune.samples = params$prune.samples,
+  do.cluster = !identical(params$do.cluster, FALSE),
   do.clustergenes = params$do.cluster,
   do.clustergenesets = params$do.cluster,
   cluster.contrasts = params$cluster.contrasts,

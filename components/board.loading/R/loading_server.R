@@ -291,6 +291,15 @@ LoadingBoard <- function(id,
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
       if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
 
+      ## Not for methylation. The reports are built from the gene-level model
+      ## this datatype does not produce - the same reason opg_server disables
+      ## the Studio and Copilot nav items for it - so the offer is one nobody
+      ## can accept: answering Yes spends a paid generation on modules that
+      ## have nothing to read.
+      if (!is.null(pgx$datatype) && tolower(pgx$datatype) == "methylomics") {
+        return(invisible(NULL))
+      }
+
       ## Only offer generation to users who can persist the result: dataset
       ## owners (loaded from their own dir) or, when the admin feature is
       ## enabled, admins (curators, who write back to the source dir via

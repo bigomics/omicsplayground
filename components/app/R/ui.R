@@ -45,13 +45,26 @@ app_ui <- function(x) {
       .where = "declarations"
     )
 
+    ## Cache-bust on mtime. These responses carry no Cache-Control and no ETag,
+    ## so browsers fall back to heuristic caching and keep a stylesheet or a
+    ## script from an earlier deploy - which shows up as the app rendering with
+    ## half its CSS, or a JS fix that appears not to have landed. "custom",
+    ## "static" and "assets" all point at components/assets, so one mtime
+    ## lookup serves.
+    bust <- function(path) {
+      f <- file.path(OPG, "components/assets", basename(path))
+      if (!file.exists(f)) return(path)
+      paste0(path, "?v=", as.integer(file.mtime(f)))
+    }
+
     header <- shiny::tagList(
       shiny::tags$head(htmltools::includeHTML(file.path(APPDIR,"assets/hubspot-embed.html"))),
       ##    gtag2, ## Google Tag Manager???
-      shiny::tags$head(shiny::tags$script(src = "custom/temp.js")),
-      shiny::tags$script(src = "custom/close-message.js"),
-      shiny::tags$head(shiny::tags$script(src = "static/shared-badges.js")),
-      shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "custom/styles.min.css")),
+      shiny::tags$head(shiny::tags$script(src = bust("custom/temp.js"))),
+      shiny::tags$script(src = bust("custom/close-message.js")),
+      shiny::tags$head(shiny::tags$script(src = bust("static/shared-badges.js"))),
+      shiny::tags$head(shiny::tags$link(rel = "stylesheet",
+                                        href = bust("custom/styles.min.css"))),
       shiny::tags$head(shiny::tags$link(rel = "shortcut icon", href = "custom/favicon.ico")),
       ## visnetwork must be inside a proper tagList, NOT named, otherwise
       ## all subsequent items (shinyalert, shinyjs, waiter, etc.) are
@@ -199,6 +212,17 @@ app_ui <- function(x) {
             ##     omicspanel(AcrossUI("across"))
             ##   )
             ## },
+            if(isTRUE(opt$DEVMODE)) {
+              bslib::nav_panel_hidden("IDAT",
+                omicspanel(idat_ui("idat"))
+              )
+            },
+            ## Not DEVMODE-gated: a methylation dataset bypasses the Dashboard
+            ## and lands here (see opg_server.R), so this panel has to exist on
+            ## every build, not only the ones that show the Apps launcher.
+            bslib::nav_panel_hidden("Methylome",
+              omicspanel(methylome_ui("methylome"))
+            ),
             ## lower settings buttons
             bslib::nav_spacer(),
             bslib::nav_panel("Settings", icon=icon("cog"),

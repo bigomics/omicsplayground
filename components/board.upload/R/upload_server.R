@@ -121,11 +121,20 @@ UploadBoard <- function(id,
 
     output$methylomics_subtype_ui <- shiny::renderUI({
       if (upload_datatype() == "methylomics") {
+        ## A caller that already knows the array says so through recompute_pgx
+        ## (the IDAT converter reads it out of the files). Defaulting to 450K
+        ## over EPIC data annotates against the wrong manifest, which is
+        ## silently wrong rather than visibly wrong.
+        want <- recompute_pgx()$meth_type
         shiny::selectInput(
           ns("methylomics_type"),
           label = "Methylomics platform:",
           choices = c("450K array", "EPIC array"),
-          selected = "450K array",
+          selected = if (isTRUE(want %in% c("450K array", "EPIC array"))) {
+            want
+          } else {
+            "450K array"
+          },
           width = "150px"
         )
       } else {
@@ -364,9 +373,20 @@ UploadBoard <- function(id,
         if (is.null(isConfirmed)) isConfirmed <- FALSE
 
         is.meth.beta <- FALSE
-        if (upload_datatype() == "methylomics" && "e29" %in% names(res$checks)) {
-          vv <- range(res$df, na.rm = TRUE)
+        if (upload_datatype() == "methylomics") {
+          ## min/max, not range(na.rm = TRUE): range implements na.rm by
+          ## subsetting, which copies the whole matrix before anything is done
+          ## with it. Same two numbers, no allocation.
+          vv <- c(min(res$df, na.rm = TRUE), max(res$df, na.rm = TRUE))
           is.meth.beta <- all(vv >= 0 & vv <= 1)
+        }
+        if (is.meth.beta) {
+          ## e9 flags rows that are zero across every sample. On the beta scale
+          ## that is a probe unmethylated in every sample - real data, not a
+          ## missing count - and the check is counts-shaped. Left in, it raises
+          ## a modal whose full-screen overlay makes the whole app unclickable
+          ## until dismissed, which reads as a freeze.
+          res$checks[["e9"]] <- NULL
         }
         if (olink || nulisa || is.meth.beta) {
           res$checks[["e29"]] <- NULL
@@ -793,6 +813,13 @@ UploadBoard <- function(id,
         req(!is.null(recompute_pgx()))
         if (!is.null(recompute_pgx()$datatype) && recompute_pgx()$datatype != "") {
           upload_datatype(recompute_pgx()$datatype)
+          ## Sync the visible control too, not just the reactiveVal behind it.
+          ## Left alone it keeps showing the previous datatype, and its own
+          ## observer resets upload_datatype() the moment anything touches it -
+          ## so a caller-set datatype silently reverts.
+          shiny::updateSelectInput(session, "selected_datatype",
+            selected = recompute_pgx()$datatype
+          )
         }
         numpgx <- length(dir(auth$user_dir, pattern = "*.pgx$"))
         if (!auth$options$ENABLE_DELETE) {
@@ -804,7 +831,14 @@ UploadBoard <- function(id,
           shinyalert_storage_full(numpgx, max.datasets, auth$level) ## from ui-alerts.R
           return(NULL)
         }
-        bigdash.selectTab(session, selected = "upload-tab")
+        ## Navigate first, THEN bump new_upload on a delay - that ordering is
+        ## the whole point of the delay below, and it is what lets the wizard
+        ## open into a panel that is already painted. bigdash.selectTab() used
+        ## to do this but has been a no-op since the nav reshuffle (see
+        ## loading_server.R:43); without a working call here the panel switch
+        ## lands in the same flush as wizard_show() and the wizard never
+        ## appears. Verified both ways: removing this line breaks it again.
+        bslib::nav_select("app-sidebar", "Upload", session = session$rootScope())
         shinyjs::delay(250, {
           new_upload(new_upload() + 1)
         })
@@ -1129,6 +1163,17 @@ UploadBoard <- function(id,
       },
       {
         shiny::req(uploaded$counts.csv, upload_organism())
+
+        ## Methylomics probes are CpG ids, not gene identifiers, so this can
+        ## only come back empty - and the success handler below discards the
+        ## result for methylomics anyway, setting probetype("CpG probes").
+        ## Measured 28.6 s on a 467k-probe array for an answer nothing reads,
+        ## with the session blocked around it. Set the same value directly.
+        if (isTRUE(upload_datatype() == "methylomics")) {
+          probetype("CpG probes")
+          return(NULL)
+        }
+
         probes <- rownames(uploaded$counts.csv)
         annot <- uploaded$annot.csv
         annot.cols <- colnames(uploaded$annot.csv)
@@ -1359,13 +1404,17 @@ UploadBoard <- function(id,
       countsRT = shiny::reactive(compute_input$counts),
       countsX = shiny::reactive(compute_input$X),
       preprocess = shiny::reactive(compute_input$preprocess),
+      ## The QC removal travels inside `preprocess` (drop_samples), so
+      ## pgx.preprocess() drops those columns from the raw counts before
+      ## normalizing and createPGX's align step follows with samples and
+      ## contrasts. A script passing the same settings gets the same matrix.
       rawCountsRT = shiny::reactive(checked_samples_counts()$COUNTS),
       rawAnnotRT = shiny::reactive(checked_annot()$matrix),
       norm_method = shiny::reactive(compute_input$norm_method),
       samplesRT = shiny::reactive(compute_input$samples),
       azimuth_ref = shiny::reactive(compute_input$azimuth_ref),
       sc_compute_settings = shiny::reactive(sc_compute_settings),
-      contrastsRT = modified_ct,
+      contrastsRT = shiny::reactive(modified_ct()),
       annotRT = normalized$annot,
       raw_dir = raw_dir,
       metaRT = shiny::reactive(uploaded$meta),

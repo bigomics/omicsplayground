@@ -171,6 +171,18 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
     }
   }, ignoreInit = FALSE)
 
+  ## Methylation data does not use the Dashboard at all - it opens the
+  ## standalone Methylome app, whose UI and server are wired in components/app
+  ## (nav panel "Methylome").
+  ##
+  ## Decided here, in the one place that already navigates after a load, rather
+  ## than in a second observer racing this one: whichever ran last would win,
+  ## which made the destination depend on the order the servers happen to be
+  ## constructed in.
+  is_methylomics <- function() {
+    !is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics"
+  }
+
   ## Register all lazy tabs at startup.  bigTabsLazy() will
   ## materialise each tab's heavy UI (via module_lazy closures)
   ## the first time the user clicks on it.
@@ -209,9 +221,6 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
   }
   if (exists("MODULE.wgcna")) {
     lazy_tabs <- c(lazy_tabs, MODULE.wgcna$module_lazy(PGX = PGX, save_pgx = env$save_pgx))
-  }
-  if (exists("MODULE.epigenomics")) {
-    lazy_tabs <- c(lazy_tabs, MODULE.epigenomics$module_lazy(PGX = PGX))
   }
 
   ## Set by bigTabsLazy() below; reports which tabs have been materialised so
@@ -257,10 +266,6 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
           loaded_tabs <<- bigdash::bigTabsLazy(
             lazy_tabs
           )
-
-          shinyjs::enable(selector = "a[data-value='Dashboard']")
-          shinyjs::enable(selector = "a[data-value='Studio']")
-          shinyjs::enable(selector = "a[data-value='Copilot']")
         })
     }
 
@@ -272,17 +277,60 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
       env$trigger_on_change_dataset(runif(1))
     }
     
-    ## Goto dataview
-    bslib::nav_select("app-sidebar", selected = "Dashboard")
-    bigdash.openSettings(lock = TRUE)
-    bigdash.openSidebar()
-    bigdash.showTabs(session)
-    bigdash.selectTab(session, "dataview-tab")
+    ## Show or hide the dashboard item in the app sidebar.
+    ##
+    ## Not for methylation: no tab is materialised for it, so an enabled nav
+    ## item just leads to an empty shell, and Studio/Copilot are built around
+    ## the gene-level model this datatype does not produce. Both directions
+    ## matter - a user who loads transcriptomics and then methylation must have
+    ## these switched back off - so this is if/else rather than a skip, and it
+    ## sits outside the is_data_loaded() == 1 block so it re-runs on every load.
+    for (nav in c("Dashboard", "Studio", "Copilot")) {
+      sel <- paste0("a[data-value='", nav, "']")
+      if (is_methylomics()) shinyjs::disable(selector = sel) else shinyjs::enable(selector = sel)
+    }
 
-    ## remove loading modal from LoadingBoard
-    shinyjs::delay(2000, {
-      shiny::removeModal()
-    })
+    ## Goto dataview, or straight into the Methylome app for methylation data.
+    ## Nothing is materialised in the Dashboard for methylomics, so there is no
+    ## dashboard shell to open and no tab to select - only the navigation.
+    ##
+    ## This is a branch, never an early return: the modal cleanup below has to
+    ## run on every path. Returning from here once left the startup modal up
+    ## with its backdrop and the body unscrollable, and the app looked hung.
+    if (is_methylomics()) {
+      bslib::nav_select("app-sidebar", selected = "Methylome")
+    } else {
+      bslib::nav_select("app-sidebar", selected = "Dashboard")
+      bigdash.openSettings(lock = TRUE)
+      bigdash.openSidebar()
+      bigdash.showTabs(session)
+      bigdash.selectTab(session, "dataview-tab")
+    }
+
+    ## Remove the loading/startup modal from LoadingBoard.
+    ##
+    ## This was a shinyjs::delay(2000, ...) whose expression never ran - the
+    ## scheduling line is reached but the callback never fires, so the startup
+    ## modal stayed open behind the whole app with its backdrop up and the body
+    ## unscrollable. Maximising a plot then swapped that modal for the plot
+    ## popup, and closing the popup cleared Bootstrap's backdrop but not the
+    ## rest, which is how it surfaced: "fullscreen a plot and the platform
+    ## greys out". shinyjs::runjs works fine in this same scope (the sidebar
+    ## opens through it above), so the delay is the broken part - drop it and
+    ## remove the modal directly.
+    shiny::removeModal()
+    ## stop-scrolling comes from shinyalert/sweetalert and nothing takes it back
+    ## off, so it outlives whatever put it there and leaves overflow:hidden on
+    ## the body for the rest of the session.
+    shinyjs::runjs(paste(
+      "$('body').removeClass('stop-scrolling').css('overflow','');",
+      ## Belt and braces: any sweetalert overlay still in the DOM with no alert
+      ## attached is an invisible click-blocker at z-index 10000. The root fix
+      ## is not raising the alert spuriously (appsettings_server.R), but a
+      ## stray one left by any other alert would do the same damage.
+      "$('.sweet-overlay').filter(function(){",
+      "  return $('.sweet-alert:visible').length === 0; }).remove();"
+    ))
 
   })
 
@@ -291,6 +339,11 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
 
   tab_control <- function() {
 
+    ## Methylation never reaches the Dashboard - the nav item is disabled above
+    ## and the user is sent to the standalone Methylome app - so there is no tab
+    ## to show or hide here, and no MODULES_METHYLOMICS to read.
+    if (is_methylomics()) return(invisible(NULL))
+
     show.beta <- env$user_settings$enable_beta()
     if (is.null(show.beta) || length(show.beta) == 0) show.beta <- FALSE
 
@@ -298,12 +351,10 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
     is.multiomics <- tolower(PGX$datatype) == "multi-omics"
 
     ## Collect all tab names from the currently active module set
-    ## MODULES_MULTIOMICS/TRANSCRIPTOMICS/METHYLOMICS are logical arrays
-    ## named by module name (e.g. "DataView", "Clustering", ...).
+    ## MODULES_MULTIOMICS/TRANSCRIPTOMICS are logical arrays named by module
+    ## name (e.g. "DataView", "Clustering", ...).
     if (is.multiomics) {
       active_mods <- names(MODULES_MULTIOMICS)[MODULES_MULTIOMICS]
-    } else if (tolower(PGX$datatype) == "methylomics") {
-      active_mods <- names(MODULES_METHYLOMICS)[MODULES_METHYLOMICS]
     } else {
       active_mods <- names(MODULES_TRANSCRIPTOMICS)[MODULES_TRANSCRIPTOMICS]
     }
@@ -316,8 +367,7 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
       Compare       = paste0(names(MODULE.compare$module_menu()), "-tab"),
       SystemsBio    = paste0(names(MODULE.systems$module_menu()), "-tab"),
       MultiOmics    = if (exists("MODULE.multiomics")) paste0(names(MODULE.multiomics$module_menu()), "-tab"),
-      WGCNA         = if (exists("MODULE.wgcna")) paste0(names(MODULE.wgcna$module_menu()), "-tab"),
-      Epigenomics   = if (exists("MODULE.epigenomics")) paste0(names(MODULE.epigenomics$module_menu()), "-tab")
+      WGCNA         = if (exists("MODULE.wgcna")) paste0(names(MODULE.wgcna$module_menu()), "-tab")
     )
 
     tabs <- character(0)
@@ -356,26 +406,6 @@ opg_server <- function(id, input, output, session, PGX, env, auth, reload_pgxdir
     if (PGX$datatype == "multi-omics") {
       tabs <- setdiff(tabs, c("drug-tab", "cell-tab", "wordcloud-tab", "cmap-tab"))
     }
-    if (!is.null(PGX$datatype) && tolower(PGX$datatype) != "methylomics") {
-      tabs <- setdiff(tabs, "ideograms-tab")
-    }
-
-    ## Hide PCSF for methylomics DMP (CpG probe level — no meaningful PPI matching)
-    if (!is.null(PGX$datatype) && tolower(PGX$datatype) == "methylomics") {
-      is_dmp <- if (!is.null(PGX$dma)) {
-        isTRUE(PGX$dma == "Differentially methylated positions")
-      } else {
-        mean(grepl("^cg[0-9]+", rownames(PGX$X))) > 0.5
-      }
-      if (is_dmp) {
-        tabs <- setdiff(tabs, "pcsf-tab")
-      }
-    }
-
-    if (is.null(PGX$datatype) || tolower(PGX$datatype) != "methylomics") {
-      tabs <- setdiff(tabs, module_map[["Epigenomics"]] )
-    }
-    
     ## Basic mode: further restrict to what the admin picked in
     ## Admin panel > Basic menu (opg_ui.R:opg_basic_menu_boards).
     if (isTRUE(input$menu_basic)) {

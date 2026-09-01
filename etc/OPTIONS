@@ -74,6 +74,9 @@ COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
 #BOARDS_ENABLED = load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
 MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
 MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
+# No MODULES_METHYLOMICS: methylation datasets do not use the Dashboard at all.
+# opg_server.R activates no board for them and navigates straight to the
+# standalone Methylome app, so there is no module list left to configure.
 
 ENABLE_ACROSS        = TRUE
 

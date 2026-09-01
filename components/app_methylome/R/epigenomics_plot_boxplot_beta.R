@@ -26,6 +26,7 @@ epigenomics_plot_boxplot_beta_ui <- function(id,
   )
 
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"),
     plotlib = "ggplot",
     info.text = info.text,
@@ -96,7 +97,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- mp_beta(pgx)
       Y <- pgx$samples
       annot <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
@@ -162,8 +163,14 @@ epigenomics_plot_boxplot_beta_server <- function(id,
         NULL
       }
 
-      playbase::plotMethylOverview(
+      ## r.chromosome was in the signature but never read, so the selector in
+      ## the settings panel did nothing here and every chromosome was always
+      ## drawn. playbase normalises these to "chrN" itself, so X and Y are fine.
+      chroms <- r.chromosome()
+      if (is.null(chroms) || !length(chroms) || identical(chroms, "")) chroms <- NULL
+      playbase.epigenetics::plotMethylOverview(
         X, annot, pheno,
+        chromosomes = chroms,
         plot.beta.dist = FALSE, plot.beta.boxplots = TRUE,
         box_color = box_color,
         group_colors = group_clrs

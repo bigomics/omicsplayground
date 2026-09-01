@@ -1,0 +1,151 @@
+## Sample structure: the stored embedding contract the scatter reads, and the
+## PC-vs-covariate decomposition the heatmap computes. Run from
+## components/app_methylome/test.
+suppressMessages({library(shiny); library(playbase)})
+MP_PAL <- list(hypo="#4575b4", hyper="#d73027", grey="#8697a6",
+               ok="#18753a", bad="#a8202c", warn="#8a5a06")
+setwd("../R")
+for (f in c("methylome_utils.R", "methylome_model.R", "methylome_plot_pccovar.R")) source(f)
+
+ok <- function(lbl, cond) cat(sprintf("%-56s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
+refused_with <- function(expr, pat) {
+  e <- tryCatch(expr, error = function(e) e)
+  inherits(e, "error") && grepl(pat, conditionMessage(e))
+}
+pgx <- local({ e <- new.env(); load("../../../data/GSE43976-methyl-mini.pgx", envir = e)
+               get("pgx", envir = e) })
+
+## ------------------------------------------------------- embeddings ----
+## t-SNE and UMAP are computed in the panel from the shared components, not
+## read from pgx$cluster$pos, so they follow the feature setting like the PCA.
+## the helper lives in the module file; the rest of it is Shiny
+src <- readLines("methylome_plot_clustpca.R")
+eval(parse(text = paste(src[grep("^mp_pca_components <- function", src):
+                            (grep("^methylome_plot_clustpca_ui", src)[1] - 1)], collapse = "\n")))
+cat("\n== embeddings ==\n")
+emb <- function(X, kind, dims) {
+  n <- nrow(X)
+  set.seed(42)
+  if (kind == "tsne") {
+    Rtsne::Rtsne(X, dims = dims, perplexity = max(2, min(30, floor((n - 1) / 4))),
+                 pca = FALSE, check_duplicates = FALSE)$Y
+  } else {
+    uwot::umap(X, n_components = dims, n_neighbors = max(2, min(15, n - 1)))
+  }
+}
+pc0 <- mp_pca_components(pgx)
+t2 <- emb(pc0$pos, "tsne", 2); u2 <- emb(pc0$pos, "umap", 2)
+ok("t-SNE is one row per sample", nrow(t2) == ncol(pgx$X) && ncol(t2) == 2)
+ok("UMAP is one row per sample", nrow(u2) == ncol(pgx$X) && ncol(u2) == 2)
+ok("t-SNE is seeded", isTRUE(all.equal(t2, emb(pc0$pos, "tsne", 2))))
+ok("UMAP is seeded", isTRUE(all.equal(u2, emb(pc0$pos, "umap", 2))))
+## The whole point of moving them in-panel: they follow the feature setting.
+u2all <- emb(mp_pca_components(pgx, reduce.sd = 0L)$pos, "umap", 2)
+ok("embeddings follow the feature setting", !isTRUE(all.equal(u2, u2all)))
+g <- factor(as.character(pgx$samples[colnames(pgx$X), "cell_type"]))
+ok("UMAP separates cell_type",
+   min(stats::kruskal.test(u2[, 1] ~ g)$p.value,
+       stats::kruskal.test(u2[, 2] ~ g)$p.value) < 1e-10)
+
+## ------------------------------------------------ PC vs covariate ----
+cat("\n== PC-vs-covariate decomposition ==\n")
+## the helper lives in the module file; the rest of it is Shiny
+src <- readLines("methylome_plot_clustpca.R")
+eval(parse(text = paste(src[grep("^mp_pca_components <- function", src):
+                            (grep("^methylome_plot_clustpca_ui", src)[1] - 1)], collapse = "\n")))
+r <- mp_pc_covar(pgx, mp_pca_components(pgx))
+ok("8 components", ncol(r$pc) == 8 && nrow(r$p) == 8)
+ok("one row per sample", nrow(r$pc) == ncol(pgx$X))
+ok("varexp non-increasing", all(diff(r$varexp) <= 1e-9))
+ok("varexp is a percentage", all(r$varexp > 0 & r$varexp <= 100))
+ok("p-values in range", all(r$p >= 0 & r$p <= 1, na.rm = TRUE))
+ok("r-squared in range", all(r$r2 >= 0 & r$r2 <= 1, na.rm = TRUE))
+ok("q >= p everywhere", all(r$q >= r$p - 1e-12, na.rm = TRUE))
+## Identifier columns must not be tested: 95 distinct strings is not a variable.
+ok("geo_title excluded", !"geo_title" %in% colnames(r$p))
+## The demo's dominant split is monocytes vs whole blood, and it must own PC1
+## or the decomposition is wired to the wrong matrix.
+ok("cell_type tested", "cell_type" %in% colnames(r$p))
+ok("cell_type dominates PC1", r$p["PC1", "cell_type"] < 1e-6 &&
+     r$r2["PC1", "cell_type"] > 0.5)
+ok("age typed continuous", identical(unname(r$types["age"]), "continuous"))
+
+## A few-valued numeric is a label wearing numbers - Pearson on it would report
+## a trend through arbitrary codes.
+nlev <- vapply(colnames(r$p), function(v)
+  length(unique(pgx$samples[[v]][!is.na(pgx$samples[[v]])])), integer(1))
+few <- names(nlev)[nlev <= 10 & vapply(colnames(r$p),
+  function(v) is.numeric(pgx$samples[[v]]), logical(1))]
+ok("few-valued numerics tested as groups",
+   length(few) == 0 || all(r$types[few] == "categorical"))
+
+## The refusal path: strip the sample sheet to an identifier and nothing else.
+pbad <- pgx
+pbad$samples <- pgx$samples[, "geo_title", drop = FALSE]
+ok("refuses with no usable column",
+   ncol(mp_pc_covar(pbad, mp_pca_components(pbad))$p) == 0)
+
+## ------------------------------------------------ PCA components ----
+## What the scatter and its biplot arrows read. Sourced by evaluating just the
+## helper out of the module file - the rest of it is Shiny.
+cat("\n== PCA components and arrows ==\n")
+pc <- mp_pca_components(pgx)
+ok("8 components", ncol(pc$pos) == 8 && nrow(pc$pos) == ncol(pgx$X))
+ok("scores named by sample", identical(rownames(pc$pos), colnames(pgx$X)))
+ok("defaults to the top 1,000 by SD",
+   pc$n_probes == 1000 && nrow(pc$loadings) == 1000)
+ok("loadings named by probe", all(rownames(pc$loadings) %in% rownames(pgx$X)))
+ok("varexp non-increasing", all(diff(pc$varexp) <= 0))
+ok("varexp sums under 100", sum(pc$varexp) < 100)
+## An SVD's sign is arbitrary; without pinning, the plot mirrors between
+## sessions and the arrows point the wrong way.
+pc2 <- mp_pca_components(pgx)
+ok("deterministic across runs",
+   isTRUE(all.equal(pc$pos, pc2$pos)) && isTRUE(all.equal(pc$loadings, pc2$loadings)))
+ok("sign pinned to the largest loading",
+   all(vapply(seq_len(ncol(pc$loadings)),
+              function(k) pc$loadings[which.max(abs(pc$loadings[, k])), k] > 0, logical(1))))
+## The scatter and the heatmap decompose different probe sets, so they must
+## agree on the leading axis without being identical.
+## One decomposition, two panels: identical, not merely correlated.
+ok("heatmap tests the scatter's own components",
+   isTRUE(all.equal(unname(pc$pos[, 1]), unname(r$pc[, 1]))) &&
+     isTRUE(all.equal(pc$varexp, r$varexp)))
+
+## What the "Use all features" setting buys, and why it is worth a control:
+## the default cut hides the batch variable, dropping it from p 8e-09 to not
+## significant. Both panels move together because they share the decomposition.
+all_pc <- mp_pca_components(pgx, reduce.sd = 0L)
+all_r <- mp_pc_covar(pgx, all_pc)
+ok("all-features decomposes everything",
+   all_pc$n_probes == nrow(pgx$X) && !isTRUE(all_pc$thinned))
+ok("all-features detects the batch variable",
+   min(all_r$p[, "slide"], na.rm = TRUE) < 1e-5)
+ok("the 1,000-probe default does not",
+   min(r$p[, "slide"], na.rm = TRUE) > min(all_r$p[, "slide"], na.rm = TRUE) * 100)
+ok("neither setting changes the dominant phenotype",
+   r$p["PC1", "cell_type"] < 1e-10 && all_r$p["PC1", "cell_type"] < 1e-10)
+
+## Loadings are what the biplot arrows are made of.
+ok("loading columns are unit norm", all(abs(sqrt(colSums(pc$loadings^2)) - 1) < 1e-8))
+ok("stride cap applies when the SD cut is off",
+   isTRUE(mp_pca_components(pgx, reduce.sd = 0L, max_probes = 5000)$thinned))
+
+## Phenotype arrows: one row per level, and the variables are the ones the
+## heatmap tests, so the two panels cannot disagree about what a variable is.
+ok("pheno.cor returned", !is.null(pc$pheno.cor) && ncol(pc$pheno.cor) == ncol(pc$pos))
+ok("pheno rows are levels of the tested variables",
+   all(sub("=.*", "", rownames(pc$pheno.cor)) %in% colnames(r$p)))
+ok("cell_type points along PC1",
+   max(abs(pc$pheno.cor[grep("^cell_type=", rownames(pc$pheno.cor)), 1])) > 0.9)
+## Feature arrows are ranked on length; the top CpG must resolve to a symbol
+## or the labels read as bare probe ids.
+## Not every CpG sits in a gene, so the label falls back to the bare probe id -
+## what matters is that the mapping works for the ones that do.
+top <- rownames(pc$loadings)[utils::head(order(-(pc$loadings[, 1]^2 + pc$loadings[, 2]^2)), 10)]
+sym <- playbase::probe2symbol(top, pgx$genes, "symbol", fill_na = TRUE)
+ok("top loading probes label with a gene where one exists",
+   length(sym) == length(top) && any(!is.na(sym) & nzchar(sym) & sym != top))
+
+cat("\nPC1 explains", sprintf("%.1f%%", r$varexp[1]),
+    "| variables tested:", ncol(r$p), "| probes:", r$n_probes, "\n")

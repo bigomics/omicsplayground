@@ -47,7 +47,9 @@ launcher_ui <- function(id) {
       description = "Methylome explorer",
       rgb = c(155,155,165),
       group = "Dashboards",
-      badge = "soon"
+      ## Ivo's naming and styling from edgy, kept as-is. Only the badge moves:
+      ## his tile was a "soon" stub, and this one opens a working app.
+      badge = "beta"
     ),
     ## ----------------- apps ---------------
     list(
@@ -58,6 +60,14 @@ launcher_ui <- function(id) {
       rgb = c(140,35,175),
       group = "Apps",
       badge = "dev"
+    ),
+    list(
+      input = "launch_idat",
+      icon = "file-import",
+      label = "IDAT Converter",
+      description = "IDAT files to beta table",
+      rgb = c(70,150,120),
+      group = "Apps"
     ),
     list(
       input = "launch_prism",

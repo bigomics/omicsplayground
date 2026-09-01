@@ -187,7 +187,14 @@ upload_module_computepgx_server <- function(
         if (grepl("multi-omics", upload_datatype(), ignore.case = TRUE)) {
           mm <- c("wgcna", "mofa")
         } else if (grepl("methylomics", upload_datatype(), ignore.case = TRUE)) {
-          mm <- c("drugs", "connectivity", "wgcna")
+          ## Not drugs/connectivity by default. Both correlate the dataset's
+          ## fold-change against L1000 gene-EXPRESSION signatures after
+          ## collapsing CpGs to gene symbols. A methylation change is not an
+          ## expression change - promoter methylation lowers expression, gene-body
+          ## methylation often raises it - so the correlation compares two
+          ## different quantities that merely share a symbol index. Still
+          ## selectable for anyone who wants it; just not on by default.
+          mm <- c("wgcna")
         } else if (is.olink() || is.nulisa()) {
           mm <- c("drugs", "wordcloud", "connectivity", "wgcna")
         } else {
@@ -508,17 +515,15 @@ upload_module_computepgx_server <- function(
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
-                if (upload_datatype() == "methylomics") {
-                  shiny::radioButtons(
-                    inputId = ns("diff_meth"),
-                    label = shiny::HTML("<h4>Methylomics analysis:</h4>"),
-                    choices = c(
-                      "Differentially methylated positions",
-                      "Differentially methylated regions"
-                    ),
-                    selected = "Differentially methylated positions",
-                  )
-                },
+                ## No "positions vs regions" choice for methylomics. Picking
+                ## regions here made compute_testGenes collapse every probe to
+                ## its gene with mergeCpG() and overwrite pgx$counts, pgx$X and
+                ## pgx$genes with the gene-level matrix - which destroys the CpG
+                ## ids the Methylome app keys everything on: the epigenetic
+                ## clocks, the EWAS, the sex check and region calling all break.
+                ## Region calling belongs on the EWAS screen, where dmrff runs
+                ## on the summary statistics of the model the user chose, and
+                ## the probe matrix survives.
                 conditionalPanel(
                   "input.gene_methods.includes('custom')",
                   ns = ns,
@@ -533,38 +538,47 @@ upload_module_computepgx_server <- function(
                   )
                 )
               ),
-              bslib::card(
-                shiny::checkboxGroupInput(
-                  ns("gset_methods"),
-                  htmltag_with_info_url(
-                    "<h4>Enrichment methods:</h4>",
-                    "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
+              ## Methylomics never displays gene sets - the Methylome app runs
+              ## missMethyl::gometh with its own collection - and compute drops
+              ## whatever is ticked here. Hide it rather than discard silently.
+              if (upload_datatype() != "methylomics") {
+                bslib::card(
+                  shiny::checkboxGroupInput(
+                    ns("gset_methods"),
+                    htmltag_with_info_url(
+                      "<h4>Enrichment methods:</h4>",
+                      "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
+                    ),
+                    GENESET.METHODS(),
+                    selected = GENESET.SELECTED()
                   ),
-                  GENESET.METHODS(),
-                  selected = GENESET.SELECTED()
-                ),
-              ),
+                )
+              },
               bslib::card(
                 shiny::HTML("<h4>Extra analysis:</h4>"),
-                div(
-                  style = "margin-top:-18px;",
-                  shiny::checkboxInput(
-                    ns("do_extra"), "Compute extra methods", TRUE
-                  )
-                ),
-                conditionalPanel(
-                  "input.do_extra == true",
-                  ns = ns,
+                if (upload_datatype() != "methylomics") {
                   div(
-                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
-                    shiny::checkboxGroupInput(
-                      ns("extra_methods"),
-                      NULL,
-                      choices = EXTRA.METHODS(),
-                      selected = EXTRA.SELECTED()
+                    style = "margin-top:-18px;",
+                    shiny::checkboxInput(
+                      ns("do_extra"), "Compute extra methods", TRUE
                     )
                   )
-                ),
+                },
+                if (upload_datatype() != "methylomics") {
+                  conditionalPanel(
+                    "input.do_extra == true",
+                    ns = ns,
+                    div(
+                      style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                      shiny::checkboxGroupInput(
+                        ns("extra_methods"),
+                        NULL,
+                        choices = EXTRA.METHODS(),
+                        selected = EXTRA.SELECTED()
+                      )
+                    )
+                  )
+                },
                 div(
                   style = "margin-top:12px;",
                   shiny::checkboxInput(
@@ -1106,15 +1120,43 @@ upload_module_computepgx_server <- function(
         if (isTRUE(input$dotimeseries)) dotimeseries <- TRUE
         gset.methods <- input$gset_methods
         extra.methods <- input$extra_methods
-        if (input$do_extra == FALSE) extra.methods <- c()
+        ## NULL, not FALSE, when the checkbox was never rendered - it is hidden
+        ## for methylomics - and `if (NULL == FALSE)` is an error, not FALSE.
+        if (!isTRUE(input$do_extra)) extra.methods <- c()
         ## at least do meta.go, infer
         extra.methods <- unique(c("meta.go", "infer", extra.methods))
+
+        ## Methylomics opens the standalone Methylome app and never builds the
+        ## Dashboard (app_opg/R/opg_server.R), so nothing displays gene sets,
+        ## meta.go, WGCNA or any embedding: the app refits limma itself and
+        ## calls missMethyl::gometh with its own collection.
+        ##
+        ## The gene-level fit still has to run. pgx.checkObject() requires
+        ## gx.meta, and a pgx that fails it is skipped by
+        ## pgxinfo.updateDatasetFolder() - the dataset would never reach the
+        ## Library. opg_server.R also reads gx.meta$meta[[1]]$fc unguarded.
+        ##
+        ## Gene sets go off via add.gmt, NOT via gset.methods: the geneset
+        ## branch is gated on nrow(pgx$GMT), so an empty method vector still
+        ## reaches compute_testGenesets and errors there.
+        add.gmt <- TRUE
+        do.cluster <- TRUE
+        if (upload_datatype() == "methylomics") {
+          gx.methods <- "trend.limma"
+          extra.methods <- c()
+          add.gmt <- FALSE
+          do.cluster <- FALSE
+        }
 
         ## ----------------------------------------------------------------------
         ## Start computation
         ## ----------------------------------------------------------------------
         flt <- input$filter_methods
-        append.symbol <- ("append.symbol" %in% flt)
+        ## Never for methylation: appending the symbol rewrites cg00000029 ->
+        ## cg00000029_RBL2, and every probe lookup downstream keys on the bare
+        ## ID - the epigenetic clocks end up with zero coverage and no ages.
+        append.symbol <- ("append.symbol" %in% flt) &&
+          upload_datatype() != "methylomics"
         do.protein <- ("proteingenes" %in% flt)
         remove.unknown <- ("remove.unknown" %in% flt)
         average.duplicated <- ("average.duplicated" %in% flt)
@@ -1178,8 +1220,13 @@ upload_module_computepgx_server <- function(
         if (!any(hb_threshold)) hb_threshold <- FALSE
         covariates <- input$regress_covariates
         if (!is.null(covariates)) covariates <- as.character(covariates)
-        dma <- input$diff_meth # dma = differential meth. analysis
-        if (!is.null(dma)) dma <- as.character(dma)
+        ## Always positions. Regions are called on the EWAS screen from model
+        ## summary statistics; see the note beside the removed selector above.
+        dma <- if (upload_datatype() == "methylomics") {
+          "Differentially methylated positions"
+        } else {
+          NULL
+        }
         sc_compute_settings.PARS <- list(
           ## azimuth_ref <- to add
           ## nfeature_threshold = sc_compute_settings()$nfeature_threshold,
@@ -1277,7 +1324,8 @@ upload_module_computepgx_server <- function(
           covariates = covariates,
           dma = dma, ## NEW
           ## ---------
-          do.cluster = TRUE,
+          do.cluster = do.cluster,
+          add.gmt = add.gmt,
           cluster.contrasts = FALSE,
           max.genes = max.genes,
           max.genesets = max.genesets,
@@ -1287,7 +1335,6 @@ upload_module_computepgx_server <- function(
           extra.methods = extra.methods,
           use.design = use.design,
           prune.samples = prune.samples,
-          do.cluster = TRUE,
           libx.dir = libx.dir,
           name = dataset_name,
           datatype = upload_datatype(),

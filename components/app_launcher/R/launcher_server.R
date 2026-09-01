@@ -82,18 +82,6 @@ launcher_server <- function(id, parent, load_example = NULL,
       } 
     })
 
-    observeEvent( input$launch_mythril, {
-      if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
-        return(NULL)
-      }      
-      shinyalert::shinyalert("Empty!", "Please fill this stub.")
-      ## run_app <- app_launchers[["mythril"]]
-      ## if (!is.null(run_app) && is.function(run_app)) {
-      ##   run_app()
-      ## } 
-    })
-
     ## ---------------- mini apps ------------------
     observeEvent(input$launch_prism, {
       dev_alert()
@@ -103,12 +91,22 @@ launcher_server <- function(id, parent, load_example = NULL,
       bslib::nav_select("app-sidebar", "Prism", session=parent)
     })
 
+    ## Tile is "Mythril" (edgy's name); the nav panel and module id stay
+    ## "Methylome"/"methylome", which is what opg_server navigates to.
+    observeEvent(input$launch_mythril, {
+      bslib::nav_select("app-sidebar", "Methylome", session=parent)
+    })
+
     observeEvent(input$launch_idconvert, {
       dev_alert() 
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
       bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+    })
+
+    observeEvent(input$launch_idat, {
+      bslib::nav_select("app-sidebar", "IDAT", session=parent)
     })
 
     ## Quick action: load the example dataset and jump to the Dashboard

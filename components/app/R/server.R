@@ -1070,6 +1070,17 @@ output$current_user <- shiny::renderText({
     )
   }
   
+  ## Methylome is a standalone app, and deliberately not launchModule'd like
+  ## qsee/across: methylation datasets skip the Dashboard entirely and are
+  ## navigated straight to the "Methylome" panel from opg_server.R, which only
+  ## works if both the panel (ui.R) and this server are always wired.
+  methylome_server("methylome", pgx = PGX)
+
+  ## IDAT follows its panel: DEVMODE-gated in ui.R, so gated here too.
+  if (isTRUE(opt$DEVMODE)) {
+    idat_server("idat", recompute_pgx = recompute_pgx)
+  }
+
   launch_across <- function() {
     launchModule("across",
       ui = omicspanel(AcrossUI("across")),

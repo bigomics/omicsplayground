@@ -1,0 +1,90 @@
+## Verify the whole methylome chain on both array types.
+suppressMessages({library(shiny); library(limma); library(playbase); library(minfi)})
+MP_PAL <- list(hypo="#4575b4", hyper="#d73027", grey="#8697a6",
+               ok="#18753a", bad="#a8202c", warn="#8a5a06")
+## Relative, so a rename of the component directory cannot strand this again -
+## an absolute path here once survived such a rename and left the whole suite
+## dying on this line.
+setwd("../R")
+for (f in c("methylome_utils.R","methylome_ewas.R","methylome_model.R",
+            "methylome_regions.R","methylome_deconv.R")) source(f)
+
+ok <- function(lbl, cond) cat(sprintf("%-52s %s\n", lbl, if (isTRUE(cond)) "PASS" else "FAIL"))
+
+## ---------------------------------------------------------------- 450K ----
+p450 <- local({e<-new.env();load("../../../data/GSE43976-methyl-mini.pgx",envir=e);get("pgx",envir=e)})
+t450 <- mp_array_type(p450)
+cat("\n== 450K dataset (real, GSE43976) ==\n")
+ok("inferred array is 450K", t450 == "450K")
+m450 <- mp_manifest(p450)
+ok("manifest loads", !is.null(m450))
+ok("manifest is the 450K one (~485k probes)", nrow(m450) > 450000 && nrow(m450) < 500000)
+s450 <- mp_snp_probes(p450)
+ok("SNP mask non-empty", length(s450) > 10000)
+mask450 <- intersect(mp_masked_probes(p450, c("snp","xreactive")), rownames(p450$X))
+ok("masked probes present in dataset", length(mask450) > 100)
+f450 <- mp_fit_ewas(p450, "monocytes_vs_whole_blood", mask = c("snp","xreactive"))
+ok("model fits", nrow(f450$table) > 1000)
+ok("delta-beta on beta scale", max(abs(f450$table$dbeta), na.rm=TRUE) <= 1)
+a450 <- mp_ewas_annotate(p450, f450$table)
+ok("annotation attached", all(c("gene","chr","pos","island") %in% colnames(a450)))
+ok("island context populated", mean(!is.na(a450$island)) > 0.5)
+
+## ---------------------------------------------------------------- EPIC ----
+## Synthesise an EPIC dataset: probes drawn from the EPIC manifest, half of
+## them EPIC-only, so the inference has to use probe identity rather than any
+## metadata (there is none) or probe count (only 8,000).
+cat("\n== EPIC dataset (synthetic, from the EPIC manifest) ==\n")
+epic <- mp_read_manifest(MP_ANNO_PKG[["EPIC"]])
+k450 <- mp_read_manifest(MP_ANNO_PKG[["450K"]])
+stopifnot(!is.null(epic), !is.null(k450))
+set.seed(42)
+epic_only <- setdiff(rownames(epic), rownames(k450))
+shared    <- intersect(rownames(epic), rownames(k450))
+ids <- c(sample(epic_only, 4000), sample(shared, 4000))
+n <- 20
+X <- matrix(stats::runif(length(ids) * n, 0.02, 0.98), nrow = length(ids),
+            dimnames = list(ids, paste0("S", seq_len(n))))
+## Put unambiguous signal into 300 probes. The background is uniform noise
+## with sd ~0.28, so a modest shift at n=10 per group cannot clear FDR across
+## 8,000 tests - the planted probes are given a clean separation instead, or
+## the test would be measuring the fixture rather than the code.
+hit <- sample(length(ids), 300)
+X[hit, 1:10]  <- stats::rnorm(300 * 10, 0.80, 0.03)
+X[hit, 11:20] <- stats::rnorm(300 * 10, 0.20, 0.03)
+X <- pmin(pmax(X, 0.01), 0.99)
+ann <- epic[ids, ]
+genes <- data.frame(
+  feature = ids, symbol = ann$UCSC_RefGene_Name,
+  chr = sub("^chr", "", ann$chr), pos = ann$pos,
+  genomic_location = ann$UCSC_RefGene_Group,
+  Relation_to_Island = ann$Relation_to_Island,
+  row.names = ids, stringsAsFactors = FALSE
+)
+grp <- rep(c("case","ctrl"), each = 10)
+pepic <- list(
+  datatype = "methylomics", X = X, genes = genes,
+  samples = data.frame(group = grp, batch = rep(c("a","b"), 10),
+                       row.names = colnames(X), stringsAsFactors = FALSE),
+  contrasts = matrix(grp, ncol = 1, dimnames = list(colnames(X), "case_vs_ctrl"))
+)
+
+tepic <- mp_array_type(pepic)
+ok("inferred array is EPIC", tepic == "EPIC")
+mepic <- mp_manifest(pepic)
+ok("manifest is the EPIC one (~866k probes)", nrow(mepic) > 800000)
+sepic <- mp_snp_probes(pepic)
+ok("SNP mask non-empty on EPIC", length(sepic) > 10000)
+ok("EPIC SNP mask differs from 450K", !identical(sort(sepic), sort(s450)))
+maskepic <- intersect(mp_masked_probes(pepic, c("snp","xreactive")), ids)
+ok("EPIC masking hits this dataset", length(maskepic) > 50)
+fepic <- mp_fit_ewas(pepic, "case_vs_ctrl", mask = c("snp","xreactive"))
+ok("model fits on EPIC", nrow(fepic$table) > 1000)
+ok("EPIC model recovers planted signal", sum(fepic$table$q < 0.05, na.rm=TRUE) > 50)
+aepic <- mp_ewas_annotate(pepic, fepic$table)
+ok("EPIC annotation attached", mean(!is.na(aepic$island)) > 0.5)
+fcov <- mp_fit_ewas(pepic, "case_vs_ctrl", covars = "batch", mask = c("snp","xreactive"))
+ok("EPIC model with covariate", grepl("batch", fcov$formula))
+
+cat("\n450K probes masked:", length(mask450), " | EPIC probes masked:", length(maskepic), "\n")
+cat("450K SNP set:", length(s450), " | EPIC SNP set:", length(sepic), "\n")

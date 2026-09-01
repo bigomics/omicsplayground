@@ -329,7 +329,7 @@ upload_table_preview_samples_server <- function(
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
       if (upload_datatype() == "methylomics") {
-        X <- playbase::mToBeta(counts)
+        X <- playbase.epigenetics::mToBeta(counts)
       } else if (inherits(counts, "sparseMatrix")) {
         ## pgx.countNormalization uses apply() which densifies sparse matrices.
         ## log1p(x)/log(2) == log2(1+x) but sparse-preserving since log1p(0)=0.

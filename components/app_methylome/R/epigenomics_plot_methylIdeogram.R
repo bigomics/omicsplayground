@@ -41,6 +41,7 @@ epigenomics_plot_methylIdeogram_ui <- function(id,
   )
 
   PlotModuleUI(
+    translate = FALSE,
     ns("pltmod"),
     plotlib = "base",
     info.text = info.text,
@@ -80,7 +81,7 @@ epigenomics_plot_methylIdeogram_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- mp_beta(pgx)
       genes <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(genes) <- sub("_.*", "", rownames(genes))
@@ -138,16 +139,16 @@ epigenomics_plot_methylIdeogram_server <- function(id,
         pheno <- NULL
       }
 
-      if (!is.null(dma)) {
-        loess_bins <- 5L
-        bin_size <- 1e6
-        if (dma == "Differentially methylated regions") {
-          loess_bins <- 20L
-          bin_size <- 2e6
-        }
+      ## Defaults outside the branch: a pgx written before dma was recorded
+      ## reaches plotMethylIdeogram() with neither bin argument bound.
+      loess_bins <- 5L
+      bin_size <- 1e6
+      if (!is.null(dma) && dma == "Differentially methylated regions") {
+        loess_bins <- 20L
+        bin_size <- 2e6
       }
 
-      playbase::plotMethylIdeogram(X, annot, pheno, chromosomes,
+      playbase.epigenetics::plotMethylIdeogram(X, annot, pheno, chromosomes,
         bin_size = bin_size,
         probe_count_bars = !input$remove_probecounts_bar,
         pheno_lines = input$show_pheno_lines,
