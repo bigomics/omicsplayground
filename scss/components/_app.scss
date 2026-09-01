@@ -132,6 +132,24 @@
     height: 100% !important;
 }
 
+// row_heights= is emitted as the custom property --bslib-grid--row-heights,
+// read back by bslib as `grid-auto-rows: var(--bslib-grid--row-heights)`.
+// Custom properties inherit, so every nested layout_columns() that does NOT
+// set row_heights of its own silently adopts its ancestor's -- and the
+// ancestor is nearly always the board's outer grid with list("auto", 1) for
+// the bs_alert. A 2x2 card grid then got `auto 1fr`: the first row sized to
+// its cards' content (a 400px plotOutput + header + caption ~ 450px) and the
+// second row was left the scraps (~155px of a 635px board). That is the
+// squashed bottom row seen on WGCNA (Modules/Enrichment/Eigengenes),
+// Compare (Gene Correlation, Foldchange) and Similar Experiments.
+// bslib writes row_heights inline, so an explicit one still wins over this;
+// this only supplies the default for grids that never asked for one, which
+// is equal rows (the alternative, bslib's own `auto`, sizes both rows to
+// content and overflows the fitted board).
+.big-tab .bslib-grid {
+    --bslib-grid--row-heights: 1fr;
+}
+
 // OmicsBoardUI()'s 3rd row (bslib::layout_columns(..., div(...))) is a plain,
 // unclassed div holding the board's actual content -- it never got tagged as
 // an html-fill-item, so it doesn't shrink to fit; it just renders at whatever
