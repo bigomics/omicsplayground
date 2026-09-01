@@ -99,7 +99,8 @@ BiomarkerBoard <- function(id, pgx) {
         return(NULL)
       }
       shiny::div(
-        class = "small text-danger mt-2",
+        class = "small mt-2",
+        style = "color: #555;",
         paste0(
           "The sample filter leaves only one level of '", input$pdx_target,
           "'. Biomarker selection needs at least two groups: relax the ",
