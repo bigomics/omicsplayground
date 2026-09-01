@@ -10,6 +10,7 @@
 #'     DO NOT REMOVE.
 #' @export
 launcher_server <- function(id, parent, load_example = NULL,
+                            load_example_dataset = NULL,
                             app_launchers = NULL, pgx=NULL ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -126,6 +127,12 @@ launcher_server <- function(id, parent, load_example = NULL,
       if (is.null(load_example)) {
         warning("[launcher_server] !!! no load_example trigger available")
         return()
+      }
+      ## This is the generic Home quick action, always the main Playground
+      ## example -- reset explicitly in case a MultiOmics-dashboard popup
+      ## (opg_server()) last pointed load_example_dataset at "mox-brca".
+      if (!is.null(load_example_dataset)) {
+        load_example_dataset("example-data")
       }
       if (is.null(load_example())) {
         load_example(1)

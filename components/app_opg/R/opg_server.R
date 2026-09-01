@@ -31,7 +31,19 @@
 #'   instance. Used both to detect when this instance becomes visible (to
 #'   offer the "no dataset loaded" popup) and to jump back to it once a
 #'   dataset finishes loading.
+#' @param load_example_dataset Companion reactiveVal to `load_example`
+#'   (`LoadingBoard`'s own `load_example_dataset` param) -- set to
+#'   `example_dataset` right before bumping `load_example()`, so
+#'   `LoadingBoard` knows *which* dataset this instance's "Load example
+#'   dataset" popup button means. `NULL` (the default) just bumps
+#'   `load_example()` as before, and `LoadingBoard` falls back to
+#'   "example-data".
+#' @param example_dataset Dataset name (no `.pgx`) this instance's popup
+#'   loads, e.g. `"mox-brca"` for a multiomics-only instance. Only takes
+#'   effect when `load_example_dataset` is also given.
 opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
+                        load_example_dataset = NULL,
+                        example_dataset = "example-data",
                         menu_tree = opg_menu_tree(),
                         parent_session = shiny::getDefaultReactiveDomain(),
                         dashboard_nav_value = "Dashboard") {
@@ -131,6 +143,9 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     if (is.null(load_example)) {
       warning("[SERVER] !!! no load_example trigger available")
       return(NULL)
+    }
+    if (!is.null(load_example_dataset)) {
+      load_example_dataset(example_dataset)
     }
     if (is.null(load_example())) {
       load_example(1)

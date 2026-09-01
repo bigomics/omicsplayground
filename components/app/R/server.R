@@ -159,6 +159,10 @@ app_server <- function(input, output, session) {
 
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
+  ## Which dataset "Load example dataset" means, set by whichever caller
+  ## (opg_server()'s popup, launcher_server()'s Home quick action) bumps
+  ## load_example() -- see LoadingBoard's own load_example_dataset param.
+  load_example_dataset <- reactiveVal("example-data")
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
@@ -918,6 +922,7 @@ output$current_user <- shiny::renderText({
     auth = auth,
     pgx_topdir = PGX.DIR,
     load_example = load_example,
+    load_example_dataset = load_example_dataset,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
     load_uploaded_data = load_uploaded_data,
@@ -959,6 +964,7 @@ output$current_user <- shiny::renderText({
     PGX = PGX, env = env, auth = auth,
     reload_pgxdir = reload_pgxdir,
     load_example = load_example,
+    load_example_dataset = load_example_dataset,
     parent_session = session
   )
 
@@ -976,6 +982,8 @@ output$current_user <- shiny::renderText({
       PGX = PGX, env = env, auth = auth,
       reload_pgxdir = reload_pgxdir,
       load_example = load_example,
+      load_example_dataset = load_example_dataset,
+      example_dataset = "mox-brca",
       menu_tree = opg_menu_tree()["MultiOmics"],
       parent_session = session,
       dashboard_nav_value = "MultiOmics"
@@ -1112,6 +1120,7 @@ output$current_user <- shiny::renderText({
     "apps",
     parent = session,
     load_example = load_example,
+    load_example_dataset = load_example_dataset,
     app_launchers = list(
       "qsee" = launch_qsee,
       "across" = launch_across
