@@ -132,6 +132,12 @@ run_request_abort <- function(reason = "User stopped the run") {
 #' @param pgx_loaded_event reactiveVal — for bindings construction.
 #' @param maxturns integer or Inf — refuse asks beyond this count.
 #' @param session Shiny session.
+#' @param show_thinking reactiveVal(logical) or NULL — when TRUE the model's
+#'   reasoning trace is streamed into the answer bubble. Read per dispatch, so
+#'   toggling it never disturbs a run already in flight. NULL means "off".
+#' @param show_tools reactiveVal(logical) or NULL — when FALSE the inline tool
+#'   markers are suppressed by withholding `on_tool_request`. Display only:
+#'   tools still run. NULL means "on".
 #'
 #' @return list(dispatch, apply_dataset)
 #' @export
@@ -153,6 +159,8 @@ copilot_run_controller <- function(
   session,
   style            = NULL,
   custom           = NULL,
+  show_thinking    = NULL,
+  show_tools       = NULL,
   report_context   = NULL,
   doc_context      = NULL,
   tools_enabled    = NULL
@@ -194,6 +202,36 @@ copilot_run_controller <- function(
       data_dir         = pgx_dir,
       pgx_loaded_event = pgx_loaded_event
     )
+  }
+
+  # ---- Reasoning-trace visibility --------------------------------------
+  # These arguments reached agent_prompt_stream() in omicsagentovi 0.5.92.
+  # Against an older install they would fall into `...` and be forwarded to
+  # ellmer's `stream_async()`, which errors on unknown names — so probe the
+  # formals once and drop them when absent. Old installs simply keep their
+  # current (trace-visible, unseparated) behaviour.
+  .stream_supports_show_thinking <- tryCatch(
+    all(c("show_thinking", "thinking_prefix", "thinking_suffix") %in%
+          names(formals(omicsagentovi::agent_prompt_stream))),
+    error = function(e) FALSE
+  )
+
+  .show_thinking_now <- function() {
+    if (is.null(show_thinking)) return(FALSE)
+    isTRUE(tryCatch(shiny::isolate(show_thinking()), error = function(e) FALSE))
+  }
+
+  # ---- Tool-marker visibility -------------------------------------------
+  # `on_tool_request` is a pure notification: .ovi_notify_tool_request()
+  # returns early when it is absent, and nothing else depends on it — tool
+  # dispatch, argument normalization, run-state tracking and the markup
+  # filter's per-block reset (wired separately via env$.markup_reset) all
+  # run regardless. So withholding it hides the markers without touching
+  # tool calling. Unlike show_thinking this needs no version probe:
+  # agent_prompt_stream() has always accepted a NULL callback.
+  .show_tools_now <- function() {
+    if (is.null(show_tools)) return(TRUE)
+    isTRUE(tryCatch(shiny::isolate(show_tools()), error = function(e) TRUE))
   }
 
   .tools_are_enabled <- function() {
@@ -406,81 +444,88 @@ copilot_run_controller <- function(
       chat_event(list(type = "post", role = "user", text = request$text))
     }
 
-    gen <- tryCatch(
-      omicsagentovi::agent_prompt_stream(
-        current,
-        request$text,
-        on_tool_request = chat_on_tool_request,
-        on_done = function(result) {
-          if (!is.null(result$agent)) agent(result$agent)
-          run_status(result$status %||% "completed")
-          updated <- shiny::isolate(agent())
-          if (!is.null(updated) &&
-              omicsagentovi::session_is_dirty(updated@session)) {
-            save_ctrl$on_run_settled()
-          }
-
-          # ---- Follow-up suggestion bubble ---------------------------------
-          # Gates: completed status, non-empty text, generator available.
-          # On any failure, silently skip — never block the chat.
-          status_ok <- identical(result$status %||% "completed", "completed") &&
-                       !is.null(result$text) && nzchar(result$text)
-          if (!status_ok) {
-            log_trace("copilot.followup.skipped", reason = "non_completed_or_empty")
-            return(invisible())
-          }
-          if (is.null(followup_gen)) {
-            log_trace("copilot.followup.skipped", reason = "no_generator")
-            return(invisible())
-          }
-          # Snapshot what reports will be attached on the user's NEXT click.
-          # `.selected_report_slots()` reads the report panel's
-          # ticked-minus-consumed set; by on_done time the slots used in
-          # THIS turn have already been moved into `consumed` (see
-          # .mark_reports_consumed call earlier in .run_ask), so this returns
-          # the post-turn attached set — exactly what the helper should
-          # ground report-related suggestions on.
-          attached_slots <- tryCatch(.selected_report_slots(),
-                                     error = function(e) character(0))
-          followup_payload <- tryCatch(
-            build_followup_payload(
-              agent                 = result$agent,
-              last_text             = result$text,
-              attached_report_slots = attached_slots
-            ),
-            error = function(e) {
-              log_info("copilot.followup.failed",
-                       phase = "payload_build",
-                       msg = conditionMessage(e))
-              list(last_text = result$text)
-            }
-          )
-          p <- tryCatch(followup_gen$generate(followup_payload),
-                        error = function(e) NULL)
-          if (is.null(p)) {
-            log_info("copilot.followup.failed", phase = "generate_call")
-            return(invisible())
-          }
-          promises::then(p,
-            onFulfilled = function(qs) {
-              if (length(qs) == 0L) {
-                log_trace("copilot.followup.skipped", reason = "empty_result")
-                return(invisible())
-              }
-              chat_event(list(
-                type = "post",
-                role = "assistant",
-                text = format_followup_bubble(qs)
-              ))
-            },
-            onRejected = function(e) {
-              log_info("copilot.followup.failed",
-                       phase = "promise_reject",
-                       msg = conditionMessage(e))
-            }
-          )
+    stream_args <- list(
+      current,
+      request$text,
+      on_tool_request = if (.show_tools_now()) chat_on_tool_request else NULL,
+      on_done = function(result) {
+        if (!is.null(result$agent)) agent(result$agent)
+        run_status(result$status %||% "completed")
+        updated <- shiny::isolate(agent())
+        if (!is.null(updated) &&
+            omicsagentovi::session_is_dirty(updated@session)) {
+          save_ctrl$on_run_settled()
         }
-      ),
+
+        # ---- Follow-up suggestion bubble ---------------------------------
+        # Gates: completed status, non-empty text, generator available.
+        # On any failure, silently skip — never block the chat.
+        status_ok <- identical(result$status %||% "completed", "completed") &&
+                     !is.null(result$text) && nzchar(result$text)
+        if (!status_ok) {
+          log_trace("copilot.followup.skipped", reason = "non_completed_or_empty")
+          return(invisible())
+        }
+        if (is.null(followup_gen)) {
+          log_trace("copilot.followup.skipped", reason = "no_generator")
+          return(invisible())
+        }
+        # Snapshot what reports will be attached on the user's NEXT click.
+        # `.selected_report_slots()` reads the report panel's
+        # ticked-minus-consumed set; by on_done time the slots used in
+        # THIS turn have already been moved into `consumed` (see
+        # .mark_reports_consumed call earlier in .run_ask), so this returns
+        # the post-turn attached set — exactly what the helper should
+        # ground report-related suggestions on.
+        attached_slots <- tryCatch(.selected_report_slots(),
+                                   error = function(e) character(0))
+        followup_payload <- tryCatch(
+          build_followup_payload(
+            agent                 = result$agent,
+            last_text             = result$text,
+            attached_report_slots = attached_slots
+          ),
+          error = function(e) {
+            log_info("copilot.followup.failed",
+                     phase = "payload_build",
+                     msg = conditionMessage(e))
+            list(last_text = result$text)
+          }
+        )
+        p <- tryCatch(followup_gen$generate(followup_payload),
+                      error = function(e) NULL)
+        if (is.null(p)) {
+          log_info("copilot.followup.failed", phase = "generate_call")
+          return(invisible())
+        }
+        promises::then(p,
+          onFulfilled = function(qs) {
+            if (length(qs) == 0L) {
+              log_trace("copilot.followup.skipped", reason = "empty_result")
+              return(invisible())
+            }
+            chat_event(list(
+              type = "post",
+              role = "assistant",
+              text = format_followup_bubble(qs)
+            ))
+          },
+          onRejected = function(e) {
+            log_info("copilot.followup.failed",
+                     phase = "promise_reject",
+                     msg = conditionMessage(e))
+          }
+        )
+      }
+    )
+    if (.stream_supports_show_thinking) {
+      stream_args$show_thinking   <- .show_thinking_now()
+      stream_args$thinking_prefix <- .COPILOT_THINKING_PREFIX
+      stream_args$thinking_suffix <- .COPILOT_THINKING_SUFFIX
+    }
+
+    gen <- tryCatch(
+      do.call(omicsagentovi::agent_prompt_stream, stream_args),
       error = function(e) {
         log_info("copilot.run.stream_invoke_failed", msg = conditionMessage(e))
         run_status("failed")

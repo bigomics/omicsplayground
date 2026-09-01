@@ -13,12 +13,12 @@
 InfographicSettings <- function(id) {
   ns <- shiny::NS(id)
   info <- paste(
-    "AI infographics for the current dataset. These images are AI-generated",
+    "Infographics for the current dataset. These images are AI-generated",
     "and can be inaccurate; please always double-check their content."
   )
   shiny::div(
     style = "padding: 10px 15px;",
-    h3("Infographics"),
+    h3("AI Infographics"),
     shiny::br(),
     div(info),
     shiny::br(),
