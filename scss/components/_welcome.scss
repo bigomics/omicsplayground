@@ -14,12 +14,15 @@ html {
     }
 
     #welcome-text {
+	/* mascot is a background image; on short laptop screens its 260px
+	   padding alone ate a quarter of the viewport height. */
+	--mascot-size: min(260px, 20vh);
 	font-size: 50px;
 	font-weight: 600;
 	color: #2484bb;
-	padding-top: 260px;
+	padding-top: var(--mascot-size);
 	background: url("monster-hi.png") no-repeat;
-	background-size: 260px 260px;
+	background-size: var(--mascot-size) var(--mascot-size);
 	background-position: 53% 0px;
     }
     

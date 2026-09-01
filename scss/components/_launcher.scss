@@ -15,21 +15,20 @@
 
 .app-launcher-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
 }
 
 .app-launcher-grid-dashboards {
-    grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
+    /* 240 not 260: at 1280px wide the 4 dashboards missed one row by 7px.
+       auto-fit, so wide screens don't reserve an empty 5th column. */
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .app-launcher-grid-apps {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 }
 
-// Tile sizing is ~20% smaller across the board (grid min-widths, gap,
-// padding, heights and font sizes) than the original values -- to fit
-// more tiles/leave more room on the launcher page.
 .app-tile {
     position: relative;
     display: flex;
@@ -37,8 +36,8 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    height: 96px;
-    padding: 13px 10px;
+    height: 120px;
+    padding: 16px 12px;
     border: 0;
     border-radius: 18px;
     color: #fff;
@@ -49,39 +48,39 @@
 
 .app-tile-wide {
     height: auto;
-    max-height: 112px;
+    max-height: 140px;
 //    aspect-ratio: 2 / 1;
-    padding: 13px 11px;
+    padding: 16px 14px;
 }
 
 .app-tile-wide .app-tile-icon {
-    font-size: 32px;
+    font-size: 40px;
 }
 
 .app-tile-wide .app-tile-label {
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .app-tile-wide .app-tile-description {
-    font-size: 11px;
+    font-size: 14px;
 }
 
 .app-tile-square {
     height: auto;
     aspect-ratio: 1.03 / 1;
-    padding: 8px 6px;
+    padding: 10px 8px;
 }
 
 .app-tile-square .app-tile-icon {
-    font-size: 24px;
+    font-size: 30px;
 }
 
 .app-tile-square .app-tile-label {
-    font-size: 13px;
+    font-size: 16px;
 }
 
 .app-tile-square .app-tile-description {
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .app-tile:hover,
@@ -92,30 +91,30 @@
 }
 
 .app-tile-icon {
-    font-size: 32px;
+    font-size: 40px;
 }
 
 .app-tile-label {
     font-weight: 700;
-    font-size: 16px;
-    margin-top: 6px;
+    font-size: 20px;
+    margin-top: 8px;
 }
 
 .app-tile-description {
-    font-size: 11px;
+    font-size: 14px;
     opacity: .85;
-    margin-top: 3px;
+    margin-top: 4px;
 }
 
 .app-tile-badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 2px 7px;
+    top: 10px;
+    right: 10px;
+    padding: 2px 9px;
     border-radius: 10px;
     background: #ffd43b;
     color: #333;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: .5px;
     text-transform: uppercase;
@@ -124,7 +123,7 @@
 }
 
 .launcher-quick-action {
-    font-size: .8rem;
-    padding: 6px 14px;
-    margin: 0 8px 0 0;
+    font-size: 1rem;
+    padding: 8px 18px;
+    margin: 0 10px 0 0;    
 }
