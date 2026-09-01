@@ -21,6 +21,7 @@ prism_ui <- function(id) {
   title <- div("SmartPrism", style="font-size: 18px;")
   
   ui <- bslib::page_fillable(
+    padding = 0,
     tags$head(
       tags$script(type = "module", src = "static/prism-webr.js"),
       tags$style(HTML("
