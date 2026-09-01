@@ -47,17 +47,30 @@ convert_datatype_choices <- function() {
 idconvert_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
 
+
+    known.organisms <- convert_organism_choices()
+    BRIDGE_SPECIES = c("dmelanogaster","drerio","celegans","scerevisiae","athaliana")
+    
     shiny::updateSelectizeInput(session, "organism",
-      choices = convert_organism_choices(), selected = "Human", server = TRUE
+      choices = known.organisms,
+      selected = "Human",
+      server = TRUE
     )
 
+    shiny::updateSelectizeInput(session, "bridge_organism",
+      choices = setdiff(known.organisms, "Human"),
+      selected = 1,
+      server = TRUE
+    )
+    
     # Holds the current annotation result (NULL when cleared or not yet converted)
     result <- shiny::reactiveVal(NULL)
 
     shiny::observeEvent(input$example, {
+      n <- 100
       features <- shiny::withProgress(
         message = "Loading example features...",
-        playbase::getExampleFeatures( organism=input$organism, n=25)
+        playbase::getExampleFeatures( organism=input$organism, n=n)
       )
       if (length(features) == 0) {
         shiny::showNotification(
@@ -90,11 +103,20 @@ idconvert_server <- function(id) {
         "Please paste at least one gene/feature ID."
       ))
 
+      bridge <- FALSE
+      bridge_species <- NULL
+      if( input$use_bridge ) {
+        bridge <- TRUE
+        bridge_species <- input$bridge_species
+      }
+      
       annot <- shiny::withProgress(
         message = "Converting gene/feature IDs...",
         playbase::getProbeAnnotation(
           organism = input$organism,
           probes = probes,
+          bridge = bridge,
+          bridge_species = bridge_species,
           datatype = input$datatype
         )
       )
@@ -104,6 +126,9 @@ idconvert_server <- function(id) {
         "Could not annotate these IDs for the selected organism."
       ))
 
+      
+
+      
       result(annot)  # store successful result
     })
 
