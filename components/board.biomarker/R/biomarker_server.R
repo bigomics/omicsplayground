@@ -90,6 +90,24 @@ BiomarkerBoard <- function(id, pgx) {
       }
     )
 
+    ## explain why the run button above is greyed out
+    output$pdx_runbutton_msg <- shiny::renderUI({
+      shiny::req(pgx$Y, input$pdx_target)
+      shiny::req(input$pdx_target %in% colnames(pgx$Y))
+      nlevels <- length(unique(pgx$Y[selected_samples(), input$pdx_target]))
+      if (nlevels > 1) {
+        return(NULL)
+      }
+      shiny::div(
+        class = "small text-danger mt-2",
+        paste0(
+          "The sample filter leaves only one level of '", input$pdx_target,
+          "'. Biomarker selection needs at least two groups: relax the ",
+          "filter or pick another prediction target."
+        )
+      )
+    })
+
     is_computed <- reactiveVal(FALSE)
     observeEvent(
       {
