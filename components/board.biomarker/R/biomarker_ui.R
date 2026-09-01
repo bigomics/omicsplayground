@@ -53,7 +53,8 @@ BiomarkerInputs <- function(id) {
         ),
         "Click to start biomarker computation.",
         placement = "right"
-      )
+      ),
+      shiny::uiOutput(ns("pdx_runbutton_msg"))
     )
   )
 }
