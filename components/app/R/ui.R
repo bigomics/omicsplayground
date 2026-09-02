@@ -143,7 +143,11 @@ app_ui <- function(x) {
             bslib::nav_panel(
               title = "Dashboard",
               icon = icon("chart-line"),
-              opg_ui("app")
+              ## The sidebar DOM is built once per session; the MultiOmics
+              ## view's flat-boards layout (opg_promote_multiomics()) has to
+              ## be baked in here, not left to runtime show/hide -- see
+              ## opg_promote_multiomics()'s docstring.
+              opg_ui("app", menu_tree = opg_promote_multiomics(opg_menu_tree()))
             ),
             ## AI tabs render only when the deployment licenses AI (opt$ENABLE_AI).
             ## The runtime "Enable AI" switch further shows/hides them per session

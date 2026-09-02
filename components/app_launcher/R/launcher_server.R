@@ -115,10 +115,6 @@ launcher_server <- function(id, parent, load_example = NULL,
     })
 
     observeEvent(input$launch_multiomics, {
-      dev_alert()
-      if(!isTRUE(opt$DEVMODE)) {
-        return(NULL)
-      }
       ## Same "Dashboard" panel/opg_server() instance as Playground -- just
       ## switches its menu_tree to the MultiOmics-restricted one.
       if (!is.null(opg_view)) opg_view("multiomics")

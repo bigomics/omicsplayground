@@ -53,35 +53,52 @@ opg_menu_boards <- function(menu_tree) {
   unique(unlist(lapply(menu_tree, names)))
 }
 
+#' Split a menu_tree's "MultiOmics" group into flat, single-board top-level
+#' entries, leaving every other group untouched.
+#'
+#' The single "app" OPG instance's sidebar DOM is built once per session by
+#' opg_ui()'s createMenu() -- opg_server.R's tab_control() only shows/hides
+#' those existing nodes at runtime (bigdash.filterTabs()), it cannot turn a
+#' collapsible group into flat items or back. So "flat vs grouped" has to be
+#' decided here, before the tree ever reaches opg_ui() -- not left to
+#' whichever menu_tree opg_server.R happens to be reactively filtering with.
+#' createMenu() renders any tree entry with exactly one board as a flat
+#' top-level sidebar item (like DataView), so splitting MultiOmics's boards
+#' (MOFA, multiGSEA, SNF, ...) into one-board entries promotes them out of
+#' the collapsible "MultiOmics" submenu. One split entry keeps the
+#' "MultiOmics" key (whichever board holds it doesn't matter -- the key is
+#' never shown) purely so tab_control()'s "MultiOmics" %in% allowed_groups()
+#' gate still recognizes the group as present.
+opg_promote_multiomics <- function(menu_tree) {
+  mo_boards <- menu_tree[["MultiOmics"]]
+  if (is.null(mo_boards) || length(mo_boards) <= 1) {
+    return(menu_tree)
+  }
+  mo_entries <- lapply(seq_along(mo_boards), function(i) mo_boards[i])
+  names(mo_entries) <- c("MultiOmics", names(mo_boards)[-1])
+
+  i <- match("MultiOmics", names(menu_tree))
+  c(
+    menu_tree[seq_len(i - 1)],
+    mo_entries,
+    menu_tree[seq_len(length(menu_tree) - i) + i]
+  )
+}
+
 #' MultiOmics-only menu tree for the single "app" OPG instance's MultiOmics
 #' view (server.R's opg_view()): the full MultiOmics group, plus DataView and
 #' all Expression tabs, plus single-board additions from groups that
 #' otherwise don't belong here (PCSF from SystemsBio, multiWGCNA from WGCNA).
-#'
-#' The MultiOmics group's own boards (MOFA, multiGSEA, SNF, ...) are split
-#' into one-board entries rather than kept as a single multi-board entry --
-#' opg_ui.R's createMenu() renders any tree entry with exactly one board as
-#' a flat top-level sidebar item (like DataView here) instead of a
-#' collapsible group, so this promotes them out of the "MultiOmics" submenu
-#' to sit directly in the sidebar. One split entry keeps the "MultiOmics"
-#' key (which of the boards holds it doesn't matter -- the key is never
-#' shown) purely so opg_server.R's tab_control(), which only mounts the
-#' whole MultiOmics board set when "MultiOmics" %in% allowed_groups(),
-#' still sees the group as present.
+#' MultiOmics's own boards are promoted flat, same as the main sidebar --
+#' see opg_promote_multiomics().
 opg_multiomics_menu_tree <- function(menu_tree = opg_menu_tree()) {
-  mo_boards <- menu_tree[["MultiOmics"]]
-  mo_entries <- lapply(seq_along(mo_boards), function(i) mo_boards[i])
-  names(mo_entries) <- c("MultiOmics", names(mo_boards)[-1])
-
-  c(
-    list(
-      DataView   = menu_tree[["DataView"]],
-      Expression = menu_tree[["Expression"]],
-      SystemsBio = menu_tree[["SystemsBio"]]["pcsf"]
-    ),
-    mo_entries,
-    list(WGCNA = menu_tree[["WGCNA"]]["mwgcna"])
-  )
+  opg_promote_multiomics(list(
+    DataView   = menu_tree[["DataView"]],
+    Expression = menu_tree[["Expression"]],
+    SystemsBio = menu_tree[["SystemsBio"]]["pcsf"],
+    MultiOmics = menu_tree[["MultiOmics"]],
+    WGCNA      = menu_tree[["WGCNA"]]["mwgcna"]
+  ))
 }
 
 #' Board ids kept in BASIC mode, in full-menu order. The selection is chosen
