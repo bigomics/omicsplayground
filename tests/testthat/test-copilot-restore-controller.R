@@ -46,6 +46,14 @@ if (!exists("get_ai_credentials")) {
   get_ai_credentials <- function(session) session$userData[["ai_credentials"]]
 }
 if (!exists("copilot_system_prompt")) copilot_system_prompt <- function() ""
+# Mirrors components/modules/AiConsent.R, which is not on the search path when
+# the copilot sources are loaded standalone. Reads the same session copy the
+# real one does, so the consent tests below can steer it via session$userData.
+if (!exists("get_ai_data_consent")) {
+  get_ai_data_consent <- function(session) {
+    isTRUE(getUserOption(session, "ai_share_data"))
+  }
+}
 
 source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
 source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
@@ -553,9 +561,10 @@ test_that("non-NULL local_pgx triggers the sync fast path: restore completes ins
 
   local_mocked_bindings(
     ovi_restore = function(session_id, session_dir, bindings, restore_pgx,
-                           db_name, provider, credentials) {
-      captured$provider    <- provider
-      captured$credentials <- credentials
+                           db_name, provider, credentials, data_consent) {
+      captured$provider     <- provider
+      captured$credentials  <- credentials
+      captured$data_consent <- data_consent
       restored_agent
     },
     agent_set_pgx = function(agent, pgx, ...) agent,
@@ -613,6 +622,34 @@ test_that("BYOK restore passes the user's real provider + credential closure", {
   expect_equal(captured$provider, "anthropic")
   expect_identical(captured$credentials, key_fn)
   expect_equal(captured$credentials(), "USER-KEY")
+})
+
+# ===========================================================================
+# Data-sharing consent — restore must carry the user's *live* setting, not
+# whatever the snapshot was saved under. A consent that a restore reinstates
+# is a consent the user cannot withdraw.
+# ===========================================================================
+
+test_that("restore passes the live consent, not the snapshot's", {
+  captured <- .run_restore_capturing_provider(list(ai_share_data = TRUE))
+  expect_true(captured$data_consent)
+})
+
+test_that("restore defaults to no consent when the user has not opted in", {
+  captured <- .run_restore_capturing_provider(list())
+  expect_false(captured$data_consent)
+})
+
+test_that("a BYOK restore never claims consent", {
+  ## The switch only governs the BigOmics-managed backend; on a user's own
+  ## key their provider account decides, and we have no standing to route on
+  ## their behalf. Even a stored TRUE must not travel with a BYOK restore.
+  captured <- .run_restore_capturing_provider(list(
+    ai_provider    = "anthropic",
+    ai_credentials = function() "USER-KEY",
+    ai_share_data  = TRUE
+  ))
+  expect_false(captured$data_consent)
 })
 
 # ===========================================================================

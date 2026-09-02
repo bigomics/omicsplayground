@@ -129,18 +129,21 @@ AppSettingsUI <- function(id) {
               shiny::tags$hr(class = "my-2"),
               bslib::input_switch(
                 ns("ai_share_data"),
-                "Use my conversation data to improve OmicsPlayground's AI",
+                ## Names the party that actually does the training. BigOmics
+                ## trains no models; what the switch changes is which upstream
+                ## providers the prompt may be routed to.
+                "Allow model providers to train on my Copilot conversations",
                 value = FALSE
               ),
               shiny::tags$small(
                 class = "text-muted",
                 paste(
-                  "When off, your Copilot prompts are sent to the model",
-                  "provider under a no-training, zero-retention policy.",
-                  "Turning this on allows the model provider to retain and",
-                  "train on those conversations. Your chat history is stored",
-                  "in your own workspace either way, and usage accounting",
-                  "records token counts only — never message content."
+                  "Off by default: prompts go to providers under a",
+                  "no-training, zero-retention policy. Turning this on lets",
+                  "them keep and train on your conversations. Your chat",
+                  "history is stored in your own workspace either way, and",
+                  "usage accounting records token counts only — never",
+                  "message content."
                 )
               )
             )

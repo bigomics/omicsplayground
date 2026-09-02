@@ -222,7 +222,26 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## set routing preferences on their behalf. Coerce accordingly rather than
     ## trusting the client, matching how the provider write-observer above
     ## treats forged input.
+    ##
+    ## The base lock is read in three places (here, the greying observer, and
+    ## the login seed), so it lives in one reactive rather than being
+    ## recomputed per site and drifting.
+    ai_base_locked <- shiny::reactive({
+      (isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)) ||
+        !isTRUE(opt$ENABLE_AI)
+    })
+
     shiny::observeEvent(input$ai_share_data, {
+      ## A locked deployment never records consent. Note the early return
+      ## *before* save_ai_consent(): the user's stored preference is left on
+      ## disk untouched. A deployment-level lock is not the user withdrawing
+      ## their consent, and it should not erase an answer they gave before the
+      ## lock was applied or would give again after it lifts. The in-session
+      ## option is what governs routing, and that is forced off.
+      if (isTRUE(ai_base_locked())) {
+        setUserOption(session, "ai_share_data", FALSE)
+        return()
+      }
       provider <- if (ai_byok_allowed(auth$level)) input$ai_provider else "bigomics"
       consent <- isTRUE(input$ai_share_data) && identical(provider, "bigomics")
       setUserOption(session, "ai_share_data", consent)
@@ -319,8 +338,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
     shiny::observe({
       ## Base lock: deployment pins AI config for non-admins, or the deployment
       ## is unlicensed. Governs the "Enable AI" switch.
-      base_locked <- (isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)) ||
-        !isTRUE(opt$ENABLE_AI)
+      base_locked <- ai_base_locked()
 
       ## Non-enterprise (non-BYOK) users may not change the provider: pin it to
       ## bigomics and grey it too. This mirrors the authoritative write-observer
@@ -338,9 +356,20 @@ AppSettingsBoard <- function(id, auth, pgx) {
 
       ## The consent switch follows the base lock, not the provider lock: on a
       ## deployment that pins AI config (or is unlicensed) nobody but an admin
-      ## changes AI behaviour, and a greyed switch that still reads FALSE is
-      ## the safe resting state.
-      if (base_locked) shinyjs::disable("ai_share_data") else shinyjs::enable("ai_share_data")
+      ## changes AI behaviour.
+      ##
+      ## Greying it is not enough, and that distinction matters here more than
+      ## for the other controls: a disabled switch keeps whatever value it
+      ## already had, so a user who had opted in would stay opted in behind a
+      ## control they can no longer reach. Force the value off as well, so the
+      ## visibly-off switch and the routing decision agree.
+      if (base_locked) {
+        shinyjs::disable("ai_share_data")
+        setUserOption(session, "ai_share_data", FALSE)
+        bslib::update_switch("ai_share_data", value = FALSE, session = session)
+      } else {
+        shinyjs::enable("ai_share_data")
+      }
 
       ## BigOmics runs a fixed model per menu -- show the resolved model but
       ## block editing (disabled select, no live "Test & load"), instead of
@@ -373,7 +402,7 @@ AppSettingsBoard <- function(id, auth, pgx) {
       if (!isTRUE(auth$logged)) {
         return()
       }
-      consent <- load_ai_consent(auth$user_dir)
+      consent <- load_ai_consent(auth$user_dir) && !isTRUE(ai_base_locked())
       setUserOption(session, "ai_share_data", consent)
       bslib::update_switch("ai_share_data", value = consent, session = session)
     })

@@ -666,3 +666,72 @@ test_that("an unlicensed deployment greys the consent switch", {
     }
   )
 })
+
+# ===========================================================================
+# Deployment lock vs consent. Greying the switch is not enough: a disabled
+# control keeps whatever value it had, so a user who opted in before the lock
+# would stay opted in behind a switch they can no longer reach.
+# ===========================================================================
+
+test_that("a locked deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an admin is unaffected by AI_PROVIDER_LOCKED", {
+  ## The lock exists to stop non-admins changing AI behaviour on a pinned
+  ## deployment; the admin who set it keeps their own switch.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(admin = TRUE, dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an unlicensed deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("a lock does not erase the user's stored consent", {
+  ## A deployment-level lock is not the user withdrawing. When it lifts, the
+  ## answer they gave must still be there.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+  expect_true(load_ai_consent(dir))
+})
