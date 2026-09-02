@@ -96,17 +96,33 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
   shiny::observeEvent(input$logo_click, {
     ui.showAboutModal()
   })
-
+  
   ## Show experiment info if dataset name is clicked.
+  ##
+  ## The infographic now lives under the v1 AI-report schema at
+  ## pgx$ai$<slot>$infographic (playbase::pgx.update_infographics(),
+  ## ai-infographics.R) -- "combined" is the dataset-wide report, labelled
+  ## "Summary" in AI Studio's own infographic tab (.AI_INFOGRAPHIC_LABELS).
+  ## $infographic holds raw PNG bytes + a status, not the decoded raster
+  ## array ui.showImageModal() expects, so decode via png::readPNG() first.
+  ## The old schema's short "bullets" field (a few summary lines meant for
+  ## the modal footer) has no equivalent here -- pgx$ai$combined$report is a
+  ## full multi-section markdown write-up, not caption-sized -- so the
+  ## footer is just a static label now.
   observeEvent(input$dataset_click, {
     shiny::req(pgx$name)
-    has.infographic <- !is.null(pgx$wgcna$report$infographic)
     pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
-    if(has.infographic) {
-      img <- pgx$wgcna$report$infographic
-      footer <- gsub("- |\n"," ",pgx$wgcna$report$bullets)
-      footer <- paste("<b>WGCNA graphical abstract</b>. ",footer)
-      ui.showImageModal(img, title=NULL, footer, width=1088)
+    infographic <- pgx$ai$combined$infographic
+    has.infographic <- !is.null(infographic) &&
+      identical(infographic$status, "done") &&
+      length(infographic$bytes) > 0
+    img <- if (has.infographic) {
+      tryCatch(png::readPNG(infographic$bytes), error = function(e) NULL)
+    } else {
+      NULL
+    }
+    if(!is.null(img)) {
+      ui.showImageModal(img, title=NULL, "<b>Summary infographic</b>", width=1088)
     } else {
       fields <- c("name", "description", "datatype", "date", "settings",
         "omicsplayground_version")
