@@ -223,6 +223,37 @@ CopilotChatSettings <- function(id) {
     shiny::tags$small(
       class = "text-muted",
       "Style changes apply to the next message."
+    ),
+    shiny::br(),
+    # Display-only switch: the model is always asked to reason (both tiers
+    # set reasoning_effort = "medium"); this decides whether that trace is
+    # streamed into the answer bubble or dropped. Saved transcripts never
+    # carry it either way -- .project_content() classifies thinking blocks
+    # as hidden -- so leaving this off also keeps a live run and its
+    # restored replay identical.
+    shiny::checkboxInput(
+      ns("show_thinking"),
+      label = "Show reasoning trace",
+      value = copilot_show_thinking_default()
+    ),
+    shiny::tags$small(
+      class = "text-muted",
+      "Shows the model's reasoning in grey brackets ahead of the answer. ",
+      "Applies to the next message; reasoning is never saved to history."
+    ),
+    shiny::br(),
+    # Also display-only. Tools keep running with this off -- the switch just
+    # withholds the on_tool_request callback, which only draws the marker.
+    # Disconnecting tools is the Reports panel's job, not this one.
+    shiny::checkboxInput(
+      ns("show_tools"),
+      label = "Show tool calls",
+      value = copilot_show_tools_default()
+    ),
+    shiny::tags$small(
+      class = "text-muted",
+      "Shows a collapsible marker for each tool the assistant runs. ",
+      "Turning this off does not stop it from using tools."
     )
   )
 }

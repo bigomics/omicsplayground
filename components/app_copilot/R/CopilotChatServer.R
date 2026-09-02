@@ -31,6 +31,12 @@
 #' @param current_tier Optional reactive()/reactiveVal() returning the active
 #'   tier id -- used to keep the radio selection and the trigger label in sync
 #'   with the orchestrator's state.
+#' @param show_thinking Optional reactive()/reactiveVal() returning the active
+#'   "show reasoning trace" flag -- used to keep the checkbox in sync when the
+#'   orchestrator changes it (e.g. on session restore).
+#' @param show_tools Optional reactive()/reactiveVal() returning the active
+#'   "show tool calls" flag -- used to keep the checkbox in sync when the
+#'   orchestrator changes it.
 #' @param starters Optional reactive() returning a character vector of starter
 #'   questions to render as a one-shot button strip above the chat input.
 #'   The strip is dismissed via `shinyjs::hide` on the first user message
@@ -38,8 +44,10 @@
 #'   empty, no strip is rendered.
 #'
 #' @return list(user_input, stream_done, last_error, on_tool_request,
-#'   push_event=NULL, tier_clicked) where `tier_clicked` is a reactiveVal
-#'   that updates whenever the user picks a new tier in the popover.
+#'   push_event=NULL, tier_clicked, style_clicked, custom_text,
+#'   show_thinking_clicked, show_tools_clicked) where `tier_clicked` is a
+#'   reactiveVal that updates whenever the user picks a new tier in the
+#'   popover.
 #'   chat_event shapes handled: post / clear / reset / stream / replay.
 #' @export
 CopilotChatServer <- function(
@@ -52,6 +60,8 @@ CopilotChatServer <- function(
   current_tier  = NULL,
   style_choices   = NULL,
   current_style   = NULL,
+  show_thinking   = NULL,
+  show_tools      = NULL,
   starters        = NULL,
   on_stream_error = NULL
 ) {
@@ -64,6 +74,8 @@ CopilotChatServer <- function(
     tier_clicked   <- shiny::reactiveVal(NULL)
     style_clicked  <- shiny::reactiveVal(NULL)
     custom_text_rv <- shiny::reactiveVal("")
+    thinking_rv    <- shiny::reactiveVal(NULL)
+    tools_rv       <- shiny::reactiveVal(NULL)
 
     # ---- tier choices update ----
     if (!is.null(tier_choices)) {
@@ -130,6 +142,39 @@ CopilotChatServer <- function(
     shiny::observeEvent(input$custom_text, {
       custom_text_rv(input$custom_text %||% "")
     }, ignoreInit = TRUE, ignoreNULL = FALSE)
+
+    # ---- show_thinking checkbox ----
+    # Display-only: reasoning is always requested from the model. The run
+    # controller reads the orchestrator's reactive at dispatch time, so a
+    # toggle takes effect on the next message and never interrupts a run
+    # already in flight.
+    shiny::observeEvent(input$show_thinking, {
+      thinking_rv(isTRUE(input$show_thinking))
+    }, ignoreInit = FALSE, ignoreNULL = FALSE)
+
+    # Push orchestrator-side changes back into the checkbox (session restore).
+    if (!is.null(show_thinking)) {
+      shiny::observe({
+        val <- isTRUE(show_thinking())
+        if (identical(val, isTRUE(shiny::isolate(input$show_thinking)))) return()
+        shiny::updateCheckboxInput(session, "show_thinking", value = val)
+      })
+    }
+
+    # ---- show_tools checkbox ----
+    # Hides the inline tool markers only. The run controller withholds
+    # `on_tool_request` when this is off; tool calling itself is untouched.
+    shiny::observeEvent(input$show_tools, {
+      tools_rv(isTRUE(input$show_tools))
+    }, ignoreInit = FALSE, ignoreNULL = FALSE)
+
+    if (!is.null(show_tools)) {
+      shiny::observe({
+        val <- isTRUE(show_tools())
+        if (identical(val, isTRUE(shiny::isolate(input$show_tools)))) return()
+        shiny::updateCheckboxInput(session, "show_tools", value = val)
+      })
+    }
 
     # ---- run_status: morph send button into stop button while streaming ----
     # When run_status() == "streaming" we add the .copilot-streaming class on
@@ -381,7 +426,9 @@ CopilotChatServer <- function(
       push_event      = NULL,
       tier_clicked    = tier_clicked,
       style_clicked   = style_clicked,
-      custom_text     = shiny::reactive(custom_text_rv())
+      custom_text     = shiny::reactive(custom_text_rv()),
+      show_thinking_clicked = thinking_rv,
+      show_tools_clicked    = tools_rv
     )
   })
 }

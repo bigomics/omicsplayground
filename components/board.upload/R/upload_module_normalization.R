@@ -1344,7 +1344,7 @@ upload_module_normalization_server <- function(
           style = "width: 100%; display: flex; ",
           bslib::layout_columns(
             col_widths = c(2, 10),
-            style = "margin-bottom: 20px;",
+            style = "margin-bottom: 0px;",
             heights_equal = "row",
             ## ----------- menu ------------
             navmenu,

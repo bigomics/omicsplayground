@@ -4,7 +4,7 @@
     font-weight: 600;
     color: #2484bb;
     background: url("monster-hi.png") no-repeat;
-    background-size: 110px 110px;
+    background-size: 120px 120px;
     background-position: 53% 15px;
 }
 
@@ -74,5 +74,13 @@
         min-height: 0;
         height: auto !important;
         max-height: none !important;
+    }
+
+    // Delete all / Delete selected row under the table. Pinned, because a
+    // flex item defaults to flex-shrink:1 and the table above claims every
+    // spare pixel -- unset, the buttons get silently squashed to nothing
+    // (the same failure the Workspace mascot hit).
+    .copilot-history-actions {
+        flex: 0 0 auto;
     }
 }

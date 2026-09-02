@@ -24,7 +24,7 @@ AiReportSettings <- function(id) {
   
   shiny::div(
     style = "padding: 10px 15px;",
-    h3("AI reports"),
+    h3("AI Reports"),
     shiny::br(),
     shiny::div(info),
     shiny::br(),

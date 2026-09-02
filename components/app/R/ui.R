@@ -150,7 +150,7 @@ app_ui <- function(x) {
             ## via bigdash.toggleTab in appsettings_server.R.
             if (isTRUE(opt$ENABLE_AI)) {
               bslib::nav_panel(
-                title = HTML("AI&nbsp;Studio"),
+                title = HTML("Studio"),
                 value = "Studio",
                 icon = icon("clapperboard"),
                 omicspanel(StudioUI("studio"))
