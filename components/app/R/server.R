@@ -279,47 +279,6 @@ output$current_user <- shiny::renderText({
     user
   })
 
-  output$current_dataset <- shiny::renderUI({
-    has.pgx <- !is.null(PGX$name) && length(PGX$name) > 0
-    if (isTRUE(auth$logged) && has.pgx) {
-      ## trigger on change of dataset
-      pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)
-      tag <- shiny::actionButton(
-        "dataset_click", pgx.name,
-        class = "quick-button",
-        style = "border: none; color: black; font-size: 0.9em;"
-      )
-    } else {
-      tag <- HTML(paste("Omics Playground", VERSION))
-    }
-    tag
-  })
-
-  ## Show experiment info if dataset name is clicked.
-  observeEvent(input$dataset_click, {
-    shiny::req(PGX$name)
-    has.infographic <- !is.null(PGX$wgcna$report$infographic)
-    pgx.name <- gsub(".*\\/|[.]pgx$", "", PGX$name)    
-    if(has.infographic) {
-      img <- PGX$wgcna$report$infographic
-      footer <- gsub("- |\n"," ",PGX$wgcna$report$bullets)
-      footer <- paste("<b>WGCNA graphical abstract</b>. ",footer)
-      ui.showImageModal(img, title=NULL, footer, width=1088)         
-    } else {
-      fields <- c("name", "description", "datatype", "date", "settings",
-        "omicsplayground_version")
-      body <- playbase::pgx.info(PGX, fields=fields, format="html")
-      shiny::showModal(shiny::modalDialog(
-        header = pgx.name,
-        div(HTML(body), style = "font-size: 1.1em;"),
-        footer = NULL,
-        size = "l",
-        easyClose = TRUE,
-        fade = FALSE
-      ))
-    }
-  })
-
   ## count the number of times a navtab is clicked during the session
   nav <- reactiveValues(count = c())
   observeEvent(input$nav, {
@@ -840,9 +799,6 @@ output$current_user <- shiny::renderText({
       )
     }
   })
-
-  ## clean up any remanining UI from previous aborted processx
-  shiny::removeUI(selector = "#current_dataset > #spinner-container")
 
   if (isTRUE(opt$ENABLE_INACTIVITY)) {
     # Reset inactivity counter when there is user activity (a click on the UI)
