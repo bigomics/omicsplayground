@@ -37,8 +37,26 @@ COPILOT_STARTERS <- c(
 )
 
 # ---- Option name constants --------------------------------------------------
-.OPT_COPILOT_TRACE       <- "copilot.trace"
-.OPT_COPILOT_REPLAY_MODE <- "copilot.restore_replay_mode"
+.OPT_COPILOT_TRACE          <- "copilot.trace"
+.OPT_COPILOT_REPLAY_MODE    <- "copilot.restore_replay_mode"
+.OPT_COPILOT_SHOW_THINKING  <- "copilot.show_thinking"
+.OPT_COPILOT_SHOW_TOOLS     <- "copilot.show_tools"
+
+# ---- Reasoning-trace markers ------------------------------------------------
+# Wrapped around each reasoning run by `agent_prompt_stream()` when the
+# "Show reasoning trace" switch is on, so the trace reads as an aside rather
+# than as the opening of the answer. The closing "\n\n" is what puts the
+# answer in its own paragraph.
+#
+# Styling is inline rather than a class in `.COPILOT_CHAT_CSS`: shinychat
+# renders message bodies inside its own web component, so a module stylesheet
+# is not guaranteed to reach them. The colour falls back to Bootstrap's muted
+# grey when the CSS variable is unavailable.
+.COPILOT_THINKING_PREFIX <- paste0(
+  "<span style=\"color: var(--bs-secondary-color, #6c757d); ",
+  "font-style: italic;\">["
+)
+.COPILOT_THINKING_SUFFIX <- "]</span>\n\n"
 
 # ---- Numeric limits ---------------------------------------------------------
 .COPILOT_MAX_HISTORY <- 100L
@@ -103,6 +121,41 @@ copilot_style_label <- function(style) {
 #' @export
 copilot_trace_enabled <- function() {
   isTRUE(getOption(.OPT_COPILOT_TRACE, FALSE))
+}
+
+#' Default for the "Show reasoning" switch.
+#'
+#' The switch itself is per-session and user-visible (chat settings panel);
+#' this only seeds its initial value, so a deployment can turn the reasoning
+#' trace on by default with
+#' `options(copilot.show_thinking = TRUE)` in `global.R`.
+#'
+#' Reasoning is always requested from the model (both Copilot tiers set
+#' `reasoning_effort = "medium"`); this governs display only.
+#'
+#' @return Logical scalar.
+#' @export
+copilot_show_thinking_default <- function() {
+  isTRUE(getOption(.OPT_COPILOT_SHOW_THINKING, FALSE))
+}
+
+#' Default for the "Show tool calls" switch.
+#'
+#' Defaults to TRUE -- the markers have always been shown, and they are the
+#' only signal that a long pause is a tool running rather than a stall.
+#'
+#' Display only: the switch decides whether the `on_tool_request` callback is
+#' handed to `agent_prompt_stream()`, and that callback is a pure
+#' notification. Tools still run either way -- what actually disconnects them
+#' is the Reports panel's `tools_enabled` flag, which is a different control.
+#'
+#' Turn the markers off by default with
+#' `options(copilot.show_tools = FALSE)` in `global.R`.
+#'
+#' @return Logical scalar.
+#' @export
+copilot_show_tools_default <- function() {
+  isTRUE(getOption(.OPT_COPILOT_SHOW_TOOLS, FALSE))
 }
 
 #' System prompt for Agent construction

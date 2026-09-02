@@ -221,20 +221,10 @@ LoadingUI <- function(id) {
   }
 
   ## ============================ Board object ===========================
-  div(
-    class = "p-0",
-    board_header,
-    shiny::tabsetPanel(
-      id = ns("tabs"),
-      user_tabpanel,
-      public_tabpanel,
-      archive_tabpanel,
-      sharing_tabpanel      
-    )
-  )
 
   div(
     class = "p-0",
+    style = "margin-top: -5px;",
     board_header,
     shiny::tabsetPanel(
       id = ns("tabs"),
@@ -244,7 +234,6 @@ LoadingUI <- function(id) {
       sharing_tabpanel      
     )
   )
-  
   
 }
 

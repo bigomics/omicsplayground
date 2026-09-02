@@ -134,8 +134,6 @@ UploadUI <- function(id) {
     OmicsBoardUI(
       ns = ns,
       title = "Upload New",
-      ## nav_panel page, not a dashboard board: no negative offset, same as
-      ## AI Studio / Obi AI / User Profile and the Data Library header.
       header_margin = "0px",
       div(style = "position: relative;", shinyjs::hidden(spinner)),
       uiOutput(ns("upload_wizard")),

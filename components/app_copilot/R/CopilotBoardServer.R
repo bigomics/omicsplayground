@@ -108,6 +108,8 @@ CopilotBoardServer <- function(
     tier                      <- shiny::reactiveVal(tiers[[1]])
     style                     <- shiny::reactiveVal(COPILOT_STYLES[[1]])
     custom                    <- shiny::reactiveVal("")
+    show_thinking             <- shiny::reactiveVal(copilot_show_thinking_default())
+    show_tools                <- shiny::reactiveVal(copilot_show_tools_default())
     run_status                <- shiny::reactiveVal("idle")
     history_invalidation_tick <- shiny::reactiveVal(0L)
     restore_inflight          <- shiny::reactiveVal(NULL)
@@ -214,6 +216,8 @@ CopilotBoardServer <- function(
       current_tier  = tier,
       style_choices = style_choices_rx,
       current_style = style,
+      show_thinking = shiny::reactive(show_thinking()),
+      show_tools    = shiny::reactive(show_tools()),
       starters      = shiny::reactive(COPILOT_STARTERS)
     )
 
@@ -236,6 +240,8 @@ CopilotBoardServer <- function(
       session              = session,
       style                = style,
       custom               = custom,
+      show_thinking        = show_thinking,
+      show_tools           = show_tools,
       report_context       = reports,
       doc_context          = docs,
       tools_enabled        = reports$tools_enabled
@@ -345,6 +351,24 @@ CopilotBoardServer <- function(
       }
     }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
+    # Show-reasoning switch. Unlike style, this touches neither the system
+    # prompt nor the Agent — the run controller reads it per dispatch and
+    # passes it to agent_prompt_stream(), which picks the ellmer stream mode.
+    # So there is nothing to live-swap onto the agent and nothing to persist.
+    shiny::observeEvent(chat_mod$show_thinking_clicked(), {
+      val <- isTRUE(chat_mod$show_thinking_clicked())
+      if (identical(val, isTRUE(shiny::isolate(show_thinking())))) return()
+      show_thinking(val)
+    }, ignoreInit = TRUE, ignoreNULL = FALSE)
+
+    # Show-tool-calls switch. Same shape: read per dispatch by the run
+    # controller, nothing to persist and nothing to swap onto the agent.
+    shiny::observeEvent(chat_mod$show_tools_clicked(), {
+      val <- isTRUE(chat_mod$show_tools_clicked())
+      if (identical(val, isTRUE(shiny::isolate(show_tools())))) return()
+      show_tools(val)
+    }, ignoreInit = TRUE, ignoreNULL = FALSE)
+
     # ---- Dataset-change observers (route through run_ctrl$apply_dataset) ----
     # Source 1: pgx_loaded_event trampoline (manage_pgx tool via notification_sink)
     shiny::observeEvent(pgx_loaded_event(), {
@@ -411,19 +435,35 @@ CopilotBoardServer <- function(
     }, ignoreNULL = TRUE)
 
     # ---- History panel: delete trigger ----
+    # `on_delete` carries one id from "Delete selected" and every listed id
+    # from "Delete all". ovi_session_delete() is per-session (one transaction
+    # each), so a bulk delete is a loop; failures are collected into a single
+    # notification rather than one per session, and the refresh tick fires
+    # either way so the table reflects whatever did get removed.
     shiny::observeEvent(history$on_delete(), {
-      sid <- history$on_delete()
-      shiny::req(sid)
-      tryCatch(
-        omicsagentovi::ovi_session_delete(session_id = sid, session_dir = chat_dir,
-                                          db_name = chat_db_name),
-        error = function(e) {
-          shiny::showNotification(
-            paste("Delete failed:", conditionMessage(e)),
-            type = "error", session = session
-          )
-        }
-      )
+      sids <- history$on_delete()
+      shiny::req(sids)
+      failed <- character(0)
+      for (sid in sids) {
+        ok <- tryCatch({
+          omicsagentovi::ovi_session_delete(session_id = sid, session_dir = chat_dir,
+                                            db_name = chat_db_name)
+          TRUE
+        }, error = function(e) {
+          log_info("copilot.history.delete_failed",
+                   session_id = sid, msg = conditionMessage(e))
+          FALSE
+        })
+        if (!isTRUE(ok)) failed <- c(failed, sid)
+      }
+      if (length(failed)) {
+        shiny::showNotification(
+          sprintf("Delete failed for %d of %d conversation%s.",
+                  length(failed), length(sids),
+                  if (length(sids) == 1L) "" else "s"),
+          type = "error", session = session
+        )
+      }
       history_invalidation_tick(shiny::isolate(history_invalidation_tick()) + 1L)
       history$on_delete(NULL)
     }, ignoreNULL = TRUE)
