@@ -51,13 +51,18 @@ pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
 #' @param footer Modal footer. `NULL` for none.
 #' @param size One of modalDialog2()'s sizes ("s", "m", "l", "xl",
 #'   "fullscreen", "midscreen").
-#' @param body_height CSS height (e.g. "65vh") applied to the tab area so
-#'   the modal's own size stays put as the user switches tabs -- each tab's
-#'   content scrolls (or, for an image built with `ui.imageTag(fit=TRUE)`,
-#'   scales to fit) inside this same fixed box instead of growing/shrinking
-#'   the dialog. Only applied with more than one tab -- a single tab has
-#'   nothing to switch between, so there's nothing to keep steady against.
-#'   `NULL` to size to content as before.
+#' @param body_height CSS height (e.g. "65vh"), applied to *each tab's own
+#'   content* (not the tab-header row above it) so every tab occupies
+#'   exactly the same box and the modal's own size stays put as the user
+#'   switches between them -- content scrolls (or, for an image built with
+#'   `ui.imageTag(fit=TRUE, max_height=body_height)`, scales to fit) inside
+#'   that box instead of growing/shrinking the dialog. Sized per tab content
+#'   rather than around the whole navset so the tab-header row's own height
+#'   doesn't eat into the budget an image is fit against -- pass the same
+#'   value to both, or the image's cap and its actual box disagree and it
+#'   scrolls instead of fitting. Only applied with more than one tab -- a
+#'   single tab has nothing to switch between, so there's nothing to keep
+#'   steady against. `NULL` to size each tab to its own content instead.
 ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
                                size = "l", body_height = "65vh",
                                easyClose = TRUE, fade = TRUE) {
@@ -67,16 +72,18 @@ ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
   }
 
   multi <- length(tabs) > 1
+  if (multi && !is.null(body_height)) {
+    tabs <- lapply(tabs, function(content) {
+      div(style = paste0("height:", body_height, "; width:100%; overflow-y:auto;"), content)
+    })
+  }
+
   body <- if (!multi) {
     tabs[[1]]
   } else {
     do.call(bslib::navset_tab, lapply(names(tabs), function(nm) {
       bslib::nav_panel(title = nm, tabs[[nm]])
     }))
-  }
-
-  if (multi && !is.null(body_height)) {
-    body <- div(style = paste0("height:", body_height, "; overflow-y:auto;"), body)
   }
 
   shiny::showModal(
