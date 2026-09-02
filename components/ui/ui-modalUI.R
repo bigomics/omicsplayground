@@ -51,19 +51,32 @@ pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
 #' @param footer Modal footer. `NULL` for none.
 #' @param size One of modalDialog2()'s sizes ("s", "m", "l", "xl",
 #'   "fullscreen", "midscreen").
+#' @param body_height CSS height (e.g. "65vh") applied to the tab area so
+#'   the modal's own size stays put as the user switches tabs -- each tab's
+#'   content scrolls (or, for an image built with `ui.imageTag(fit=TRUE)`,
+#'   scales to fit) inside this same fixed box instead of growing/shrinking
+#'   the dialog. Only applied with more than one tab -- a single tab has
+#'   nothing to switch between, so there's nothing to keep steady against.
+#'   `NULL` to size to content as before.
 ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
-                               size = "l", easyClose = TRUE, fade = TRUE) {
+                               size = "l", body_height = "65vh",
+                               easyClose = TRUE, fade = TRUE) {
   stopifnot(is.list(tabs), length(tabs) > 0)
   if (is.null(names(tabs)) || any(!nzchar(names(tabs)))) {
     stop("ui.showTabsetModal(): `tabs` must be a fully named list")
   }
 
-  body <- if (length(tabs) == 1) {
+  multi <- length(tabs) > 1
+  body <- if (!multi) {
     tabs[[1]]
   } else {
     do.call(bslib::navset_tab, lapply(names(tabs), function(nm) {
       bslib::nav_panel(title = nm, tabs[[nm]])
     }))
+  }
+
+  if (multi && !is.null(body_height)) {
+    body <- div(style = paste0("height:", body_height, "; overflow-y:auto;"), body)
   }
 
   shiny::showModal(

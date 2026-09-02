@@ -127,9 +127,13 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     info_body <- playbase::pgx.info(pgx, fields=fields, format="html")
     info_tab <- div(HTML(info_body), style = "font-size: 1.1em;")
 
+    body_height <- "65vh"
     tabs <- if (!is.null(img)) {
       list(
-        "Infographic" = div(ui.imageTag(img, width = 1000), style = "text-align:center;"),
+        "Infographic" = div(
+          style = "text-align:center;",
+          ui.imageTag(img, fit = TRUE, max_height = body_height)
+        ),
         "Info" = info_tab
       )
     } else {
@@ -139,7 +143,8 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     ui.showTabsetModal(
       tabs,
       header = pgx.name,
-      size = if (!is.null(img)) "xl" else "l"
+      size = "xl",
+      body_height = body_height
     )
   })
 }

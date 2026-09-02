@@ -98,11 +98,34 @@ ui.showCartoonModal <- function(msg = "Loading data...", img.path = "assets/cart
 #' `img` as a Shiny <img> tag, embedded as a base64 data URI. Shared by
 #' ui.showImageModal() and any other modal that needs to drop a raster
 #' image (an R array, e.g. from png::readPNG()) straight into UI.
-ui.imageTag <- function(img, width = 1088) {
+#'
+#' @param width Pixel width the image is rendered at when `fit = FALSE`
+#'   (its height then follows from `img`'s own aspect ratio). Ignored when
+#'   `fit = TRUE`.
+#' @param fit Scale the image to fit its container (CSS `max-width:100%`,
+#'   `object-fit:contain`) instead of a fixed pixel width -- for dropping
+#'   into a space whose own size is already fixed by the caller (e.g. a
+#'   `ui.showTabsetModal()` tab), rather than sizing the space to the image.
+#' @param max_height CSS max-height (e.g. "65vh") applied when `fit = TRUE`,
+#'   so the image is also capped vertically, not just horizontally -- match
+#'   this to the container's own height (e.g. `ui.showTabsetModal()`'s
+#'   `body_height`) rather than relying on a percentage, since the
+#'   percentage-height chain from that container down to this <img> isn't
+#'   guaranteed (depends on unrelated intermediate markup, e.g. bslib's own
+#'   tab-panel wrapper divs).
+ui.imageTag <- function(img, width = 1088, fit = FALSE, max_height = NULL) {
   imgfile <- tempfile(fileext = ".png")
   png::writePNG(img, target = imgfile)
+  src <- base64enc::dataURI(file = imgfile)
+  if (isTRUE(fit)) {
+    style <- paste0(
+      "max-width:100%; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;",
+      if (!is.null(max_height)) paste0(" max-height:", max_height, ";") else ""
+    )
+    return(shiny::img(src = src, style = style))
+  }
   hratio <- dim(img)[1] / dim(img)[2]
-  shiny::img(src = base64enc::dataURI(file = imgfile), width = width, height = hratio * width)
+  shiny::img(src = src, width = width, height = hratio * width)
 }
 
 ui.showImageModal <- function(img, title, footer='', width=1088) {
