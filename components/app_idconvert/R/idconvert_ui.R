@@ -57,7 +57,7 @@ idconvert_ui <- function(id) {
         shiny::conditionalPanel(
           condition = "input.use_bridge",
           ns = ns,
-          shiny::selectizeInput(ns("bridge_organism(s)"), "Bridge organism:",
+          shiny::selectizeInput(ns("bridge_organism"), "Bridge organism(s):",
             choices = NULL, multiple = TRUE
           )
         )
