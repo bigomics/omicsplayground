@@ -436,6 +436,22 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
     bigdash.showTabs(session)
     bigdash.selectTab(session, session$ns("dataview-tab"))
 
+    ## bigdash.showTabs()'s client-side handler (bigdash's 'show-tabs'
+    ## message) blanket-shows every direct child of .sidebar-content
+    ## (anything not .collapse/.nodisp) after its own 1s delay -- including
+    ## a flat, individually-filtered sidebarItem()'s own <hr> divider (a
+    ## direct child), even though its nested <p class="tab-trigger"> (one
+    ## level deeper, untouched by that blanket pass) correctly stays
+    ## whatever tab_control() set it to. That silently re-shows the divider
+    ## for an item tab_control() just hid (e.g. a MultiOmics board while
+    ## viewing a single-omics dataset), leaving a stray extra line in the
+    ## sidebar until the next unrelated tab_control() run happens to fix it.
+    ## Re-running tab_control() just after that delay elapses re-applies the
+    ## correct filtering so the two never end up out of sync.
+    shinyjs::delay(1100, {
+      try(tab_control(), silent = TRUE)
+    })
+
     ## remove loading modal from LoadingBoard
     shinyjs::delay(2000, {
       shiny::removeModal()
@@ -450,6 +466,24 @@ opg_server <- function(id, PGX, env, auth, reload_pgxdir, load_example = NULL,
   shiny::observe({
     menu_tree()
     shiny::req(PGX$X)
+
+    ## Skip while the loaded dataset's type doesn't match the just-switched
+    ## view (same predicate as the incompatibility-popup observer above).
+    ## opg_view() -- and so menu_tree() -- flips the instant a launcher tile
+    ## is clicked, well before PGX$X/PGX$datatype catch up to the dataset
+    ## that eventually loads to match it. Without this guard, tab_control()
+    ## would run once right on that flip using the new view against the
+    ## still-old dataset, briefly computing the wrong "keep" set (e.g. every
+    ## SystemsBio/WGCNA board at once) and flashing extra sidebar
+    ## items/dividers until the "Hide/show tabs" observer's own
+    ## env$trigger_on_change_dataset() corrects it a moment later. Skipping
+    ## here is safe either way: once a matching dataset loads, that other
+    ## observer re-runs tab_control() with the correct, settled state.
+    is_multi_view <- !("Clustering" %in% allowed_groups())
+    is_multi_data <- !is.null(PGX$datatype) &&
+      tolower(PGX$datatype) %in% c("multi-omics", "multiomics")
+    shiny::req(is_multi_view == is_multi_data)
+
     try(tab_control(), silent = TRUE)
   })
 
