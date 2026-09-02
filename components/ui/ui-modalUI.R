@@ -93,14 +93,27 @@ ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
       footer = footer,
       size = size,
       easyClose = easyClose,
-      fade = fade
+      fade = fade,
+      ## Pin the dialog to its size class's max-width instead of letting it
+      ## size to whichever tab's content happens to be showing (see
+      ## modalDialog2()'s dialog_style docs).
+      dialog_style = if (multi) "width:100%;" else NULL
     )
   )
 }
 
+#' @param dialog_style Extra CSS applied directly to the `.modal-dialog`
+#'   element (in addition to the `size` class). The size classes only set a
+#'   `max-width` -- `.modal-dialog` otherwise sizes to its content, which
+#'   for a tabset can differ tab to tab (e.g. a narrower image vs. a
+#'   full-width text panel) and visibly changes the dialog's width when
+#'   switching. `dialog_style = "width:100%;"` (what `ui.showTabsetModal()`
+#'   passes for a multi-tab modal) pins it to that max-width consistently,
+#'   regardless of which tab is showing.
 modalDialog2 <- function(
   ..., header = NULL, footer = modalButton("Dismiss"),
-  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE
+  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE,
+  dialog_style = NULL
 ) {
   size <- match.arg(size)
   backdrop <- if (!easyClose) {
@@ -124,6 +137,7 @@ modalDialog2 <- function(
         fullscreen = "modal-fullscreen",
         midscreen = "modal-midscreen"
       ),
+      style = dialog_style,
       div(
         class = "modal-content",
         if (!is.null(header)) {
