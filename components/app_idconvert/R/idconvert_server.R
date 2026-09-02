@@ -109,6 +109,9 @@ idconvert_server <- function(id) {
         bridge <- TRUE
         bridge_species <- input$bridge_species
       }
+
+      probes <- probes[!probes %in% c("",NA)]
+      probes <- unique(probes)
       
       annot <- shiny::withProgress(
         message = "Converting gene/feature IDs...",
@@ -125,9 +128,6 @@ idconvert_server <- function(id) {
         !is.null(annot),
         "Could not annotate these IDs for the selected organism."
       ))
-
-      
-
       
       result(annot)  # store successful result
     })
