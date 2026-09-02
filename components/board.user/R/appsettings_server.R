@@ -210,6 +210,25 @@ AppSettingsBoard <- function(id, auth, pgx) {
       }
     )
 
+    ## AI data-sharing consent. Unlike every other AI setting here this one is
+    ## written to disk (user_dir/ai_consent.json), because a consent that
+    ## silently reverts to its default on the next login is not a consent.
+    ## The session copy is what the Copilot reads at Agent-build time; the file
+    ## is what seeds it on login.
+    ##
+    ## The switch only exists for the BigOmics-managed backend (see the
+    ## conditionalPanel in appsettings_ui.R): on a BYOK key the user's own
+    ## provider account governs their data policy and we have no standing to
+    ## set routing preferences on their behalf. Coerce accordingly rather than
+    ## trusting the client, matching how the provider write-observer above
+    ## treats forged input.
+    shiny::observeEvent(input$ai_share_data, {
+      provider <- if (ai_byok_allowed(auth$level)) input$ai_provider else "bigomics"
+      consent <- isTRUE(input$ai_share_data) && identical(provider, "bigomics")
+      setUserOption(session, "ai_share_data", consent)
+      save_ai_consent(auth$user_dir, consent)
+    }, ignoreInit = TRUE)
+
     ## Repopulate the four model menus with the selected provider's catalog.
     shiny::observeEvent(input$ai_provider, {
       provider <- input$ai_provider
@@ -317,6 +336,12 @@ AppSettingsBoard <- function(id, auth, pgx) {
       if (base_locked) shinyjs::disable("enable_ai") else shinyjs::enable("enable_ai")
       if (provider_locked) shinyjs::disable("ai_provider") else shinyjs::enable("ai_provider")
 
+      ## The consent switch follows the base lock, not the provider lock: on a
+      ## deployment that pins AI config (or is unlicensed) nobody but an admin
+      ## changes AI behaviour, and a greyed switch that still reads FALSE is
+      ## the safe resting state.
+      if (base_locked) shinyjs::disable("ai_share_data") else shinyjs::enable("ai_share_data")
+
       ## BigOmics runs a fixed model per menu -- show the resolved model but
       ## block editing (disabled select, no live "Test & load"), instead of
       ## hiding the panel. Non-BYOK users are pinned to bigomics above, so
@@ -339,6 +364,19 @@ AppSettingsBoard <- function(id, auth, pgx) {
       setUserOption(session, "ai_enabled", ai_on)
     })
 
+
+    ## Seed the consent switch from the user's persisted record on login.
+    ## Fails closed: load_ai_consent() returns FALSE for a missing, corrupt or
+    ## stale-version file, so the user is asked again rather than silently
+    ## treated as having opted in.
+    shiny::observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged)) {
+        return()
+      }
+      consent <- load_ai_consent(auth$user_dir)
+      setUserOption(session, "ai_share_data", consent)
+      bslib::update_switch("ai_share_data", value = consent, session = session)
+    })
 
     ## ----------------------------------------------------------------
     ## Plot Colors theme handling
@@ -382,6 +420,12 @@ AppSettingsBoard <- function(id, auth, pgx) {
       setUserOption(session, "ai_credentials", NULL)
       setUserOption(session, "ai_provider", "bigomics")
       shiny::updateSelectInput(session, "ai_provider", selected = "bigomics")
+      ## Consent is per user, so drop the session copy too — otherwise the next
+      ## login in this Shiny process would inherit the previous user's opt-in
+      ## before their own record loads. The file is untouched: this is a
+      ## session reset, not a withdrawal.
+      setUserOption(session, "ai_share_data", FALSE)
+      bslib::update_switch("ai_share_data", value = FALSE, session = session)
     }, ignoreInit = TRUE)
 
     ## Map UI input IDs to theme keys

@@ -116,6 +116,33 @@ AppSettingsUI <- function(id) {
                 ),
                 shiny::uiOutput(ns("ai_test_status"))
               )
+            ),
+
+            ## Data-sharing consent. BigOmics-managed backend only: on a BYOK
+            ## key the user's own provider account governs their data policy,
+            ## and it would be misleading to imply we control it. Off by
+            ## default; persisted per user (see components/modules/AiConsent.R)
+            ## because a consent that resets every login is not a consent.
+            shiny::conditionalPanel(
+              condition = "input.ai_provider == 'bigomics'",
+              ns = ns,
+              shiny::tags$hr(class = "my-2"),
+              bslib::input_switch(
+                ns("ai_share_data"),
+                "Use my conversation data to improve OmicsPlayground's AI",
+                value = FALSE
+              ),
+              shiny::tags$small(
+                class = "text-muted",
+                paste(
+                  "When off, your Copilot prompts are sent to the model",
+                  "provider under a no-training, zero-retention policy.",
+                  "Turning this on allows the model provider to retain and",
+                  "train on those conversations. Your chat history is stored",
+                  "in your own workspace either way, and usage accounting",
+                  "records token counts only — never message content."
+                )
+              )
             )
           )
         ),

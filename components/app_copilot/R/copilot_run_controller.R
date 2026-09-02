@@ -67,7 +67,13 @@
 .copilot_agent_build_args <- function(session, tier) {
   sel <- .copilot_ai_provider(session)
   if (identical(sel$provider, "bigomics")) {
-    return(list(tier = tier))
+    ## Data-sharing consent travels with the managed backend only. omicsai
+    ## already defaults every OpenRouter call to no-training + zero-retention,
+    ## so passing FALSE is a restatement of the default and passing TRUE is the
+    ## user's recorded opt-in. On BYOK the user's own provider account governs,
+    ## so we deliberately send nothing and leave `data_consent` NULL there.
+    return(list(tier = tier,
+                data_consent = get_ai_data_consent(session)))
   }
   menu_key   <- if (identical(tier, "copilot-deep")) "llm_copilot_deep"
                 else "llm_copilot_balanced"
