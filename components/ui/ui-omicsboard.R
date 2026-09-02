@@ -97,21 +97,21 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     ui.showAboutModal()
   })
   
-  ## Show experiment info if dataset name is clicked.
+  ## Show experiment info if dataset name is clicked: an "Infographic" tab
+  ## plus an "Info" tab (playbase::pgx.info()), or just the latter alone
+  ## when there's no infographic.
   ##
-  ## The infographic now lives under the v1 AI-report schema at
+  ## The infographic lives under the v1 AI-report schema at
   ## pgx$ai$<slot>$infographic (playbase::pgx.update_infographics(),
   ## ai-infographics.R) -- "combined" is the dataset-wide report, labelled
   ## "Summary" in AI Studio's own infographic tab (.AI_INFOGRAPHIC_LABELS).
   ## $infographic holds raw PNG bytes + a status, not the decoded raster
-  ## array ui.showImageModal() expects, so decode via png::readPNG() first.
-  ## The old schema's short "bullets" field (a few summary lines meant for
-  ## the modal footer) has no equivalent here -- pgx$ai$combined$report is a
-  ## full multi-section markdown write-up, not caption-sized -- so the
-  ## footer is just a static label now.
+  ## array ui.imageTag()/ui.showImageModal() expect, so decode via
+  ## png::readPNG() (accepts a raw vector directly) first.
   observeEvent(input$dataset_click, {
     shiny::req(pgx$name)
     pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+
     infographic <- pgx$ai$combined$infographic
     has.infographic <- !is.null(infographic) &&
       identical(infographic$status, "done") &&
@@ -121,21 +121,26 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     } else {
       NULL
     }
-    if(!is.null(img)) {
-      ui.showImageModal(img, title=NULL, "<b>Summary infographic</b>", width=1088)
+
+    fields <- c("name", "description", "datatype", "date", "settings",
+      "omicsplayground_version")
+    info_body <- playbase::pgx.info(pgx, fields=fields, format="html")
+    info_tab <- div(HTML(info_body), style = "font-size: 1.1em;")
+
+    tabs <- if (!is.null(img)) {
+      list(
+        "Infographic" = div(ui.imageTag(img, width = 1000), style = "text-align:center;"),
+        "Info" = info_tab
+      )
     } else {
-      fields <- c("name", "description", "datatype", "date", "settings",
-        "omicsplayground_version")
-      body <- playbase::pgx.info(pgx, fields=fields, format="html")
-      shiny::showModal(shiny::modalDialog(
-        header = pgx.name,
-        div(HTML(body), style = "font-size: 1.1em;"),
-        footer = NULL,
-        size = "l",
-        easyClose = TRUE,
-        fade = FALSE
-      ))
+      list("Info" = info_tab)
     }
+
+    ui.showTabsetModal(
+      tabs,
+      header = pgx.name,
+      size = if (!is.null(img)) "xl" else "l"
+    )
   })
 }
 

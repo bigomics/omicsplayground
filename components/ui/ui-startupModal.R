@@ -95,16 +95,22 @@ ui.showCartoonModal <- function(msg = "Loading data...", img.path = "assets/cart
   ))
 }
 
-ui.showImageModal <- function(img, title, footer='', width=1088) {
-  imgfile = tempfile(fileext=".png")
+#' `img` as a Shiny <img> tag, embedded as a base64 data URI. Shared by
+#' ui.showImageModal() and any other modal that needs to drop a raster
+#' image (an R array, e.g. from png::readPNG()) straight into UI.
+ui.imageTag <- function(img, width = 1088) {
+  imgfile <- tempfile(fileext = ".png")
   png::writePNG(img, target = imgfile)
   hratio <- dim(img)[1] / dim(img)[2]
+  shiny::img(src = base64enc::dataURI(file = imgfile), width = width, height = hratio * width)
+}
+
+ui.showImageModal <- function(img, title, footer='', width=1088) {
   header <- NULL
   if(!is.null(title) && title != "") header <- shiny::h3(HTML(title))
   shiny::showModal(
     modalDialog2(
-      shiny::div(shiny::img(src = base64enc::dataURI(file=imgfile),
-        width = width, height = hratio*width)),
+      shiny::div(ui.imageTag(img, width)),
       header = header,
       footer = div(HTML(footer),
         style='display:inline; font-size:1.2em; line-height:1.1em'),

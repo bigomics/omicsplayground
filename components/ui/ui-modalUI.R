@@ -39,6 +39,45 @@ pgx.showSmallModal2 <- function(msg = "Please wait...", easyClose = TRUE,
   ))
 }
 
+#' Modal with a tabset (navset) body.
+#'
+#' `tabs` is a named list, one element per tab: name = tab title, value =
+#' the tab's UI content. A single-tab list skips the tab switcher entirely
+#' and shows that one tab's content directly -- there's nothing to switch
+#' between, and a lone tab header would just be visual noise.
+#'
+#' @param tabs Named list of tab title -> UI content.
+#' @param header Modal header, e.g. a dataset name. `NULL` for none.
+#' @param footer Modal footer. `NULL` for none.
+#' @param size One of modalDialog2()'s sizes ("s", "m", "l", "xl",
+#'   "fullscreen", "midscreen").
+ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
+                               size = "l", easyClose = TRUE, fade = TRUE) {
+  stopifnot(is.list(tabs), length(tabs) > 0)
+  if (is.null(names(tabs)) || any(!nzchar(names(tabs)))) {
+    stop("ui.showTabsetModal(): `tabs` must be a fully named list")
+  }
+
+  body <- if (length(tabs) == 1) {
+    tabs[[1]]
+  } else {
+    do.call(bslib::navset_tab, lapply(names(tabs), function(nm) {
+      bslib::nav_panel(title = nm, tabs[[nm]])
+    }))
+  }
+
+  shiny::showModal(
+    modalDialog2(
+      body,
+      header = header,
+      footer = footer,
+      size = size,
+      easyClose = easyClose,
+      fade = fade
+    )
+  )
+}
+
 modalDialog2 <- function(
   ..., header = NULL, footer = modalButton("Dismiss"),
   size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE
