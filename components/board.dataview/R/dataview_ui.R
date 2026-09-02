@@ -354,8 +354,10 @@ DataViewUI <- function(id) {
     )
   )
 
-  # contrasts tab #####
-  settings_panel <- shiny::tabPanel(
+  # settings tab #####
+  ## DEVMODE-only: the panel is half-finished -- the second card ("settings2")
+  ## has no server binding at all, so it renders empty for everyone.
+  settings_panel <- if (isTRUE(opt$DEVMODE)) shiny::tabPanel(
     "Settings",
     bslib::layout_columns(
       height = fullH,
