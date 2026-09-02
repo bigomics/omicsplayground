@@ -149,7 +149,6 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
   ## png::readPNG() (accepts a raw vector directly) first.
   observeEvent(input$dataset_click, {
     shiny::req(pgx$name)
-    pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
 
     infographic <- pgx$ai$combined$infographic
     has.infographic <- !is.null(infographic) &&
@@ -179,10 +178,13 @@ OmicsBoard <- function(session, pgx, title, infotext=NULL, purge=NULL) {
     if (!is.null(ai_summary)) {
       tabs[["AI summary"]] <- ai_summary
     }
-    tabs[["Info"]] <- info_tab
+    tabs[["Compute info"]] <- info_tab
 
-    header <- pgx.name
-
+    pgx.name <- gsub(".*\\/|[.]pgx$", "", pgx$name)
+    pgx.description <- pgx$description
+    header <- HTML(paste0("<h2><b>",toupper(pgx.name),"</b>: ", pgx.description,"</h2>"))
+    header <- NULL
+    
     ui.showTabsetModal(
       tabs,
       header = header,

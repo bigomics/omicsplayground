@@ -112,8 +112,8 @@ ui.showTabsetModal <- function(tabs, header = NULL, footer = NULL,
 #'   regardless of which tab is showing.
 modalDialog2 <- function(
   ..., header = NULL, footer = modalButton("Dismiss"),
-  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE, fade = TRUE,
-  dialog_style = NULL
+  size = c("m", "s", "l", "xl", "fullscreen", "midscreen"), easyClose = FALSE,
+  fade = TRUE, dialog_style = NULL
 ) {
   size <- match.arg(size)
   backdrop <- if (!easyClose) {
