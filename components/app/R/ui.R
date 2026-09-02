@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 app_ui <- function(x) {
@@ -150,7 +150,7 @@ app_ui <- function(x) {
             ## via bigdash.toggleTab in appsettings_server.R.
             if (isTRUE(opt$ENABLE_AI)) {
               bslib::nav_panel(
-                title = HTML("AI&nbsp;Studio"),
+                title = HTML("Studio"),
                 value = "Studio",
                 icon = icon("clapperboard"),
                 omicspanel(StudioUI("studio"))

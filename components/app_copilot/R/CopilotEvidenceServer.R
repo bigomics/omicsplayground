@@ -155,16 +155,29 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
     # ---- Download handler ----
     # Format choice depends on artifact kind:
     #   ggplot    -> PNG (only; ggsave at width x height inches, 288 dpi = 4x)
-    #   plotly    -> HTML (saveWidget) or PNG (plotlyExport: kaleido -> webshot2)
-    #   iheatmapr -> HTML (saveWidget) or PNG (iheatmapr::save_iheatmap, webshot)
-    # plotlyExport is defined in bigdash R/plot-module.R and is reused
-    # here so we don't fork the kaleido/webshot fallback chain.
+    #   plotly    -> HTML (saveWidget) or PNG (plotlyExport, else .widget_png)
+    #   iheatmapr -> HTML (saveWidget) or PNG (.widget_png)
     .default_fmt <- function(kind) {
       switch(kind, ggplot = "png", plotly = "html", iheatmapr = "html", "html")
     }
     .clamp_dim <- function(x, default) {
       x <- suppressWarnings(as.numeric(x))
       if (length(x) != 1L || is.na(x) || x <= 0) default else x
+    }
+
+    # PNG fallback for htmlwidgets: kaleido may be absent and
+    # save_iheatmap() never dispatches on the converted widget. `zoom` gives
+    # the same 4x upscale as the ggplot/kaleido branches.
+    .widget_png <- function(widget, file, width, height, zoom = 1) {
+      # hide the plotly.js modebar, it shows up in the screenshot
+      widget <- htmlwidgets::prependContent(
+        widget,
+        htmltools::tags$style(".modebar, .modebar-container { display: none !important; }")
+      )
+      tmp <- tempfile(fileext = ".html")
+      on.exit(unlink(c(tmp, sub("\\.html$", "_files", tmp)), recursive = TRUE), add = TRUE)
+      htmlwidgets::saveWidget(widget, tmp, selfcontained = FALSE)
+      webshot2::webshot(tmp, file, vwidth = width, vheight = height, zoom = zoom, delay = 1)
     }
 
     output$dl_format_ui <- shiny::renderUI({
@@ -226,7 +239,14 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
               p <- rec$plot
               p$width  <- png_w
               p$height <- png_h
-              plotlyExport(p, file, width = p$width, height = p$height, scale = resx)
+              ok <- isTRUE(tryCatch(
+                plotlyExport(p, file, width = p$width, height = p$height, scale = resx),
+                error = function(e) FALSE
+              ))
+              # plotlyExport returns file.exists(), so also check it is not empty
+              if (!ok || !isTRUE(file.size(file) > 0)) {
+                .widget_png(p, file, png_w, png_h, resx)
+              }
             } else {
               # Mirror PlotModule's HTML path (bigdash R/plot-module.R):
               # plain saveWidget, no dimension manipulation.
@@ -236,8 +256,7 @@ CopilotEvidenceServer <- function(id, local_pgx = NULL) {
             p <- rec$plot
             if (methods::is(p, "Iheatmap")) p <- iheatmapr::to_widget(p)
             if (identical(fmt, "png")) {
-              # Mirror PlotModule's iheatmapr PNG path (bigdash R/plot-module.R).
-              iheatmapr::save_iheatmap(p, vwidth = png_w, vheight = png_h, file)
+              .widget_png(p, file, png_w, png_h, resx)
             } else {
               htmlwidgets::saveWidget(p, file, selfcontained = TRUE)
             }

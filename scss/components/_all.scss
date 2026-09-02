@@ -36,8 +36,8 @@ html {
 	  color: $main;
 	  text-decoration: none;
       }
-      font-size: 14px;
-/*    font-family: "Cubano"; */
+      font-size: 15px;
+/*    font-family: "Lato"; */
 
       // bslib::navset_pill_list()'s Bootstrap .row carries the default
       // negative gutter margins with no .container to absorb them, bleeding
@@ -118,6 +118,10 @@ html {
   .nav-tabs > li.active {
     border-top: 3px solid $main;
     margin-top: -3px;
+  }
+
+  .nav-link {
+    font-size: 1rem;
   }
 
   /* ---------------------------- playground -------------------------- */

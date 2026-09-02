@@ -87,6 +87,9 @@ CopilotDocsUI <- function(id) {
   shiny::div(
     class = "copilot-context-panel",
     style = "padding: 12px 0px;",
+    div("Obi knows your current dataset but here you can upload additional documents as extra context. You can ask Obi to summarize or compare findings in the documents."),
+    br(),
+    br(),    
     shiny::fileInput(
       ns("upload"),
       label = NULL,

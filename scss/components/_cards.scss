@@ -37,6 +37,12 @@ html {
     }
 }
 
+.bslib-card .card-header {
+    border-bottom: 1px #CCC solid !important;
+    min-height: 0px;
+    height: 33px !important;    
+}
+
 .nav-pills {
     .nav-link {
 	color: #888888;

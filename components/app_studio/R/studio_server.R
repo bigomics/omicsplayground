@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -80,9 +80,9 @@ OmicsBoard(session, pgx, title="AI Studio", infotext = NULL, purge = FALSE)
       bslib::nav_select("settings","Reports")      
     })
 
-    observeEvent(input$show_infographic, {
-      bslib::nav_select("studiopanel","Infographic")
-      bslib::nav_select("settings","Infographic")      
+    observeEvent(input$show_infographics, {
+      bslib::nav_select("studiopanel","Infographics")
+      bslib::nav_select("settings","Infographics")      
     })
     
     observeEvent(input$show_custom, {

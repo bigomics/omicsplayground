@@ -33,7 +33,7 @@ CopilotHistoryUI <- function(id) {
   shiny::div(
     class = "copilot-history-panel",
     DT::dataTableOutput(ns("history_table"), height = "auto"),
-    shiny::uiOutput(ns("delete_ui"))
+    shiny::uiOutput(ns("delete_ui"), class = "copilot-history-actions")
   )
 }
 
@@ -51,6 +51,8 @@ CopilotHistoryUI <- function(id) {
 #'   - `selected` reactive() returning the currently highlighted session_id.
 #'   - `on_restore` / `on_delete` reactiveVals are edge-triggered;
 #'      the caller is expected to read them, act, then reset to NULL.
+#'   - `on_delete` carries a character vector: one id from "Delete selected",
+#'      every listed id from "Delete all". The caller deletes each in turn.
 #' @export
 CopilotHistoryServer <- function(id, session_dir,
                                  db_name = "sessions.sqlite",
@@ -180,13 +182,25 @@ CopilotHistoryServer <- function(id, session_dir,
       )
     })
 
+    # "Delete all" is always offered once there is anything to delete;
+    # "Delete selected" joins it on the right only while a row is highlighted.
     output$delete_ui <- shiny::renderUI({
-      if (is.null(input$history_table_rows_selected) ||
-          nrow(.sessions()) == 0L) return(NULL)
-      shiny::actionButton(
-        session$ns("delete_session"),
-        "Delete selected",
-        class = "btn-sm btn-outline-danger mt-2"
+      if (nrow(.sessions()) == 0L) return(NULL)
+      has_selection <- length(input$history_table_rows_selected) > 0L
+      shiny::div(
+        class = "d-flex gap-2",
+        shiny::actionButton(
+          session$ns("delete_all"),
+          "Delete all",
+          class = "btn-sm btn-outline-danger"
+        ),
+        if (has_selection) {
+          shiny::actionButton(
+            session$ns("delete_session"),
+            "Delete selected",
+            class = "btn-sm btn-outline-danger"
+          )
+        }
       )
     })
 
@@ -206,6 +220,39 @@ CopilotHistoryServer <- function(id, session_dir,
       if (!is.null(idx) && idx <= nrow(df)) {
         .on_delete(df$session_id[[idx]])
       }
+    })
+
+    shiny::observeEvent(input$delete_all, {
+      n <- nrow(.sessions())
+      if (n == 0L) return(invisible(NULL))
+      shiny::showModal(shiny::modalDialog(
+        title     = "Delete all conversations?",
+        size      = "s",
+        easyClose = FALSE,
+        shiny::p(sprintf(
+          "This permanently deletes %d saved %s. This cannot be undone.",
+          n, if (n == 1L) "conversation" else "conversations"
+        )),
+        footer = shiny::tagList(
+          shiny::modalButton("Cancel"),
+          shiny::actionButton(
+            session$ns("delete_all_confirm"),
+            "Delete all",
+            class = "btn-danger"
+          )
+        )
+      ))
+    })
+
+    # The ids are read here rather than in the orchestrator so the set that
+    # gets deleted is the one the confirmation dialog counted.
+    shiny::observeEvent(input$delete_all_confirm, {
+      shiny::removeModal()
+      ids <- .sessions()$session_id
+      ids <- ids[!is.na(ids) & nzchar(ids)]
+      if (length(ids) == 0L) return(invisible(NULL))
+      log_info("copilot.history.delete_all_confirmed", n = length(ids))
+      .on_delete(ids)
     })
 
     list(

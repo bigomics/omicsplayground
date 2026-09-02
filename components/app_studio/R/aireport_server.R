@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2024 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 if(0) {
@@ -24,7 +24,7 @@ AiReportSettings <- function(id) {
   
   shiny::div(
     style = "padding: 10px 15px;",
-    h3("AI reports"),
+    h3("AI Reports"),
     shiny::br(),
     shiny::div(info),
     shiny::br(),
