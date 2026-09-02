@@ -193,17 +193,6 @@ app_ui <- function(x) {
                 omicspanel(idconvert_ui("idconvert"))
               )
             },
-            ## MultiOmics dashboard: a second, independently namespaced OPG
-            ## instance (feat/opg-module-conversion) restricted to the
-            ## MultiOmics board group, reached from the launcher like
-            ## Prism/IDconvert rather than shown as its own rail icon. See
-            ## opg_server(id = "app_multiomics", ...) below for the matching
-            ## server wiring.
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("MultiOmics",
-                opg_ui("app_multiomics", menu_tree = opg_multiomics_menu_tree())
-              )
-            },
             ## if(isTRUE(opt$DEVMODE)) {
             ##   bslib::nav_panel_hidden(
             ##     value = "AcrossDatasets",

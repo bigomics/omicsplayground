@@ -53,17 +53,34 @@ opg_menu_boards <- function(menu_tree) {
   unique(unlist(lapply(menu_tree, names)))
 }
 
-#' MultiOmics-only menu tree for the "app_multiomics" OPG instance
-#' (ui.R/server.R): the full MultiOmics group, plus DataView and all
-#' Expression tabs, plus single-board additions from groups that otherwise
-#' don't belong here (PCSF from SystemsBio, multiWGCNA from WGCNA).
+#' MultiOmics-only menu tree for the single "app" OPG instance's MultiOmics
+#' view (server.R's opg_view()): the full MultiOmics group, plus DataView and
+#' all Expression tabs, plus single-board additions from groups that
+#' otherwise don't belong here (PCSF from SystemsBio, multiWGCNA from WGCNA).
+#'
+#' The MultiOmics group's own boards (MOFA, multiGSEA, SNF, ...) are split
+#' into one-board entries rather than kept as a single multi-board entry --
+#' opg_ui.R's createMenu() renders any tree entry with exactly one board as
+#' a flat top-level sidebar item (like DataView here) instead of a
+#' collapsible group, so this promotes them out of the "MultiOmics" submenu
+#' to sit directly in the sidebar. One split entry keeps the "MultiOmics"
+#' key (which of the boards holds it doesn't matter -- the key is never
+#' shown) purely so opg_server.R's tab_control(), which only mounts the
+#' whole MultiOmics board set when "MultiOmics" %in% allowed_groups(),
+#' still sees the group as present.
 opg_multiomics_menu_tree <- function(menu_tree = opg_menu_tree()) {
-  list(
-    DataView   = menu_tree[["DataView"]],
-    Expression = menu_tree[["Expression"]],
-    SystemsBio = menu_tree[["SystemsBio"]]["pcsf"],
-    MultiOmics = menu_tree[["MultiOmics"]],
-    WGCNA      = menu_tree[["WGCNA"]]["mwgcna"]
+  mo_boards <- menu_tree[["MultiOmics"]]
+  mo_entries <- lapply(seq_along(mo_boards), function(i) mo_boards[i])
+  names(mo_entries) <- c("MultiOmics", names(mo_boards)[-1])
+
+  c(
+    list(
+      DataView   = menu_tree[["DataView"]],
+      Expression = menu_tree[["Expression"]],
+      SystemsBio = menu_tree[["SystemsBio"]]["pcsf"]
+    ),
+    mo_entries,
+    list(WGCNA = menu_tree[["WGCNA"]]["mwgcna"])
   )
 }
 

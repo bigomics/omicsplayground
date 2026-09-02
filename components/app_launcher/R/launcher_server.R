@@ -11,6 +11,7 @@
 #' @export
 launcher_server <- function(id, parent, load_example = NULL,
                             load_example_dataset = NULL,
+                            opg_view = NULL,
                             app_launchers = NULL, pgx=NULL ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -56,6 +57,7 @@ launcher_server <- function(id, parent, load_example = NULL,
     observeEvent(input$launch_playground, {
       ## playground is not yet fully a shiny module and is "preloaded"
       ## for now. Just select navtab
+      if (!is.null(opg_view)) opg_view("playground")
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
     
@@ -117,7 +119,10 @@ launcher_server <- function(id, parent, load_example = NULL,
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
-      bslib::nav_select("app-sidebar", "MultiOmics", session=parent)
+      ## Same "Dashboard" panel/opg_server() instance as Playground -- just
+      ## switches its menu_tree to the MultiOmics-restricted one.
+      if (!is.null(opg_view)) opg_view("multiomics")
+      bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
 
     ## Quick action: load the example dataset and jump to the Dashboard
@@ -129,11 +134,12 @@ launcher_server <- function(id, parent, load_example = NULL,
         return()
       }
       ## This is the generic Home quick action, always the main Playground
-      ## example -- reset explicitly in case a MultiOmics-dashboard popup
+      ## example -- reset explicitly in case the MultiOmics view
       ## (opg_server()) last pointed load_example_dataset at "mox-brca".
       if (!is.null(load_example_dataset)) {
         load_example_dataset("example-data")
       }
+      if (!is.null(opg_view)) opg_view("playground")
       if (is.null(load_example())) {
         load_example(1)
       } else {
