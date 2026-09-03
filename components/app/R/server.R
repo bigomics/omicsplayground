@@ -1037,7 +1037,9 @@ output$current_user <- shiny::renderText({
   }
 
   ## THESE STILL NEED TO BE WRAPPED in a launchModule()
-  RunMonitorServer("runmonitor")
+  if(isTRUE(opt$DEVMODE)) {
+    RunMonitorServer("runmonitor")
+  }
   ## idconvert_server("idconvert")
   ## prism_server("prism")
 
