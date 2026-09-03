@@ -159,6 +159,10 @@ app_server <- function(input, output, session) {
 
   ## Global reactive values for app-wide triggering
   load_example <- reactiveVal(NULL)
+  ## Which dataset "Load example dataset" means, set by whichever caller
+  ## (opg_server()'s popup, launcher_server()'s Home quick action) bumps
+  ## load_example() -- see LoadingBoard's own load_example_dataset param.
+  load_example_dataset <- reactiveVal("example-data")
   load_uploaded_data <- reactiveVal(NULL)
   reload_pgxdir <- reactiveVal(0)
   inactivityCounter <- reactiveVal(0)
@@ -874,6 +878,7 @@ output$current_user <- shiny::renderText({
     auth = auth,
     pgx_topdir = PGX.DIR,
     load_example = load_example,
+    load_example_dataset = load_example_dataset,
     reload_pgxdir = reload_pgxdir,
     current_page = reactive(input$nav),
     load_uploaded_data = load_uploaded_data,
@@ -910,11 +915,27 @@ output$current_user <- shiny::renderText({
   ## Other servers and modules
   ## -------------------------------------------------------------
 
-  opg_server( id = "app",
-    input, output, session, PGX, env, auth,
+  ## Which menu the single "app" OPG instance shows: the full Playground
+  ## menu, or the MultiOmics-restricted one. Toggled by the launcher
+  ## (launch_playground / launch_multiomics in launcher_server.R) instead of
+  ## running a second, independently-namespaced opg_server() instance --
+  ## opg_server()'s menu_tree is already reactive and tab_control() already
+  ## re-filters on every change, so switching views just swaps the tree
+  ## rather than mounting a second dashboard.
+  opg_view <- reactiveVal("playground")
+
+  opg_server(
+    id = "app",
+    PGX = PGX, env = env, auth = auth,
     reload_pgxdir = reload_pgxdir,
-    load_example = load_example)
-  
+    load_example = load_example,
+    load_example_dataset = load_example_dataset,
+    menu_tree = shiny::reactive(
+      if (identical(opg_view(), "multiomics")) opg_multiomics_menu_tree() else opg_menu_tree()
+    ),
+    parent_session = session
+  )
+
   app_settings <- AppSettingsBoard("app_settings", auth=auth, pgx=PGX)
 
   ## Show/hide the AI Studio + Copilot tabs from the runtime "Enable AI" switch,
@@ -1047,6 +1068,8 @@ output$current_user <- shiny::renderText({
     "apps",
     parent = session,
     load_example = load_example,
+    load_example_dataset = load_example_dataset,
+    opg_view = opg_view,
     app_launchers = list(
       "qsee" = launch_qsee,
       "across" = launch_across

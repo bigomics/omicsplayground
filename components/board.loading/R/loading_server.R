@@ -13,6 +13,7 @@ LoadingBoard <- function(id,
                          ),
                          pgx_topdir,
                          load_example,
+                         load_example_dataset = NULL,
                          reload_pgxdir,
                          current_page,
                          load_uploaded_data,
@@ -101,23 +102,34 @@ LoadingBoard <- function(id,
     ## ======================================================================
     observeEvent(load_example(), {
 
-      # get the row which corresponds to "example-data"
+      ## Which dataset counts as "the example" is caller-chosen (e.g. the
+      ## MultiOmics dashboard's popup wants "mox-brca" instead of the
+      ## default "example-data") -- isolate() since this reactiveVal is only
+      ## meant to be read at the moment load_example() itself fires, not to
+      ## add its own dependency here.
+      example_name <- if (!is.null(load_example_dataset)) {
+        shiny::isolate(load_example_dataset())
+      } else {
+        "example-data"
+      }
+
+      # get the row which corresponds to the target example dataset
       data_names <- as.character(pgxtable$data()$dataset)
-      example_row <- which(data_names == "example-data")[1]
-      has.exampledata <- ("example-data" %in% data_names)
-      
-      # if not found, throw error modal that example-data doesnt exist
+      example_row <- which(data_names == example_name)[1]
+      has.exampledata <- (example_name %in% data_names)
+
+      # if not found, throw error modal that the example dataset doesnt exist
       ## if (is.na(example_row)) {
       if (!has.exampledata) {
         shinyalert::shinyalert(
           title = "No example data",
-          text = "Sorry, the example dataset could not be found.",
+          text = paste0("Sorry, the example dataset '", example_name, "' could not be found."),
           type = "warning",
           closeOnClickOutside = FALSE
         )
         return(NULL)
       } else {
-        loadAndActivatePGX("example-data")
+        loadAndActivatePGX(example_name)
       }
     },
     ignoreInit = TRUE

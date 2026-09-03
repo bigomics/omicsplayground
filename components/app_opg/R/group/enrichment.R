@@ -18,54 +18,54 @@ MODULE.enrichment <- list(
       wordcloud = "Word cloud"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "enrich-tab",
+        ns("enrich-tab"),
         tagList(
-          EnrichmentInputs("enrich"),
-          create_loader("enrich-loader")
+          EnrichmentInputs(ns("enrich")),
+          create_loader(ns("enrich-loader"))
         )
       ),
       bigdash::bigTabItem(
-        "sig-tab",
+        ns("sig-tab"),
         tagList(
-          SignatureInputs("sig"),
-          create_loader("sig-loader")
+          SignatureInputs(ns("sig")),
+          create_loader(ns("sig-loader"))
         )
       ),
       bigdash::bigTabItem(
-        "pathway-tab",
+        ns("pathway-tab"),
         tagList(
-          PathwayInputs("pathway"),
-          create_loader("pathway-loader")
+          PathwayInputs(ns("pathway")),
+          create_loader(ns("pathway-loader"))
         )
       ),
       bigdash::bigTabItem(
-        "wordcloud-tab",
+        ns("wordcloud-tab"),
         tagList(
-          WordCloudInputs("wordcloud"),
-          create_loader("wordcloud-loader")
+          WordCloudInputs(ns("wordcloud")),
+          create_loader(ns("wordcloud-loader"))
         )
       )
     )
   },
-  module_lazy = function(PGX, labeltype = NULL, env = NULL, ...) {
+  module_lazy = function(PGX, labeltype = NULL, env = NULL, ns = identity, ...) {
     list(
       ## "enrich-tab" = list(
-      ##   ui     = function() EnrichmentUI("enrich"),
+      ##   ui     = function() EnrichmentUI(ns("enrich")),
       ##   server = function() EnrichmentBoard("enrich", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods)
       ## ),
       "sig-tab" = list(
-        ui     = function() SignatureUI("sig"),
+        ui     = function() SignatureUI(ns("sig")),
         server = function() SignatureBoard("sig", pgx = PGX, selected_gxmethods = env$diffexpr$selected_gxmethods)
       ),
       "pathway-tab" = list(
-        ui     = function() PathwayUI("pathway"),
+        ui     = function() PathwayUI(ns("pathway")),
         server = function() PathwayBoard("pathway", pgx = PGX, selected_gsetmethods = env$enrich$selected_gsetmethods)
       ),
       "wordcloud-tab" = list(
-        ui     = function() WordCloudUI("wordcloud"),
+        ui     = function() WordCloudUI(ns("wordcloud")),
         server = function() WordCloudBoard("wordcloud", pgx = PGX)
       )
     )

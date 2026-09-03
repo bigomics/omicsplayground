@@ -239,7 +239,7 @@ qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, la
               #footer = shiny::modalButton("Cancel"),
               footer = NULL,
               size = "s",
-              easyClose = FALSE
+              easyClose = TRUE ## lets Escape (and click-outside) dismiss it
             )
           )
         }

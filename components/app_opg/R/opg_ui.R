@@ -44,6 +44,63 @@ opg_menu_tree <- function() {
 }
 
 
+#' Bare board ids (e.g. "pcsf", "dataview") a menu_tree allows, flattened
+#' across all its groups regardless of group membership. Used to filter UI
+#' shells/server registrations down to exactly the boards a menu_tree lists,
+#' even when only some boards of an otherwise-included group are wanted
+#' (see opg_multiomics_menu_tree()).
+opg_menu_boards <- function(menu_tree) {
+  unique(unlist(lapply(menu_tree, names)))
+}
+
+#' Split a menu_tree's "MultiOmics" group into flat, single-board top-level
+#' entries, leaving every other group untouched.
+#'
+#' The single "app" OPG instance's sidebar DOM is built once per session by
+#' opg_ui()'s createMenu() -- opg_server.R's tab_control() only shows/hides
+#' those existing nodes at runtime (bigdash.filterTabs()), it cannot turn a
+#' collapsible group into flat items or back. So "flat vs grouped" has to be
+#' decided here, before the tree ever reaches opg_ui() -- not left to
+#' whichever menu_tree opg_server.R happens to be reactively filtering with.
+#' createMenu() renders any tree entry with exactly one board as a flat
+#' top-level sidebar item (like DataView), so splitting MultiOmics's boards
+#' (MOFA, multiGSEA, SNF, ...) into one-board entries promotes them out of
+#' the collapsible "MultiOmics" submenu. One split entry keeps the
+#' "MultiOmics" key (whichever board holds it doesn't matter -- the key is
+#' never shown) purely so tab_control()'s "MultiOmics" %in% allowed_groups()
+#' gate still recognizes the group as present.
+opg_promote_multiomics <- function(menu_tree) {
+  mo_boards <- menu_tree[["MultiOmics"]]
+  if (is.null(mo_boards) || length(mo_boards) <= 1) {
+    return(menu_tree)
+  }
+  mo_entries <- lapply(seq_along(mo_boards), function(i) mo_boards[i])
+  names(mo_entries) <- c("MultiOmics", names(mo_boards)[-1])
+
+  i <- match("MultiOmics", names(menu_tree))
+  c(
+    menu_tree[seq_len(i - 1)],
+    mo_entries,
+    menu_tree[seq_len(length(menu_tree) - i) + i]
+  )
+}
+
+#' MultiOmics-only menu tree for the single "app" OPG instance's MultiOmics
+#' view (server.R's opg_view()): the full MultiOmics group, plus DataView and
+#' all Expression tabs, plus single-board additions from groups that
+#' otherwise don't belong here (PCSF from SystemsBio, multiWGCNA from WGCNA).
+#' MultiOmics's own boards are promoted flat, same as the main sidebar --
+#' see opg_promote_multiomics().
+opg_multiomics_menu_tree <- function(menu_tree = opg_menu_tree()) {
+  opg_promote_multiomics(list(
+    DataView   = menu_tree[["DataView"]],
+    Expression = menu_tree[["Expression"]],
+    SystemsBio = menu_tree[["SystemsBio"]]["pcsf"],
+    MultiOmics = menu_tree[["MultiOmics"]],
+    WGCNA      = menu_tree[["WGCNA"]]["mwgcna"]
+  ))
+}
+
 #' Board ids kept in BASIC mode, in full-menu order. The selection is chosen
 #' in Admin panel > Basic menu and persisted per deploy in
 #' etc/BASIC_MENU-<HOSTNAME> (read in global.R). There is only one sidebar
@@ -60,7 +117,23 @@ opg_basic_menu_boards <- function(menu_tree = opg_menu_tree(), boards = opt$BASI
 }
 
 
-opg_ui <- function(id) {
+#' Namespace helper matching bigdash's own `BIGDASH_DEFAULT_ID` ("app")
+#' convention: `id = "app"` -- the pre-existing, single-instance OPG -- stays
+#' completely unscoped (bare ids, byte-identical markup/inputs to before this
+#' module conversion); any other `id` is a real nested `bigdash::bigPage()`
+#' instance and gets every id `"<id>-"`-prefixed, matching what
+#' `bigdash:::scoped_id()` already does for the container ids it generates
+#' and what `shiny::moduleServer(id, ...)`'s own `session$ns()` produces for
+#' the boards nested inside. Kept local (rather than reaching into bigdash's
+#' unexported `scoped_id()`) so this file has no dependency on bigdash
+#' internals.
+opg_ns <- function(id) {
+  function(suffix) {
+    if (is.null(id) || identical(id, "app")) suffix else paste0(id, "-", suffix)
+  }
+}
+
+opg_ui <- function(id, menu_tree = opg_menu_tree()) {
 
   message("\n======================================================")
   message("======================= UI ===========================")
@@ -72,10 +145,11 @@ opg_ui <- function(id) {
 VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
   createUI <- function(menu_tree) {
-    
+
     version <- scan(file.path(OPG, "VERSION"), character())[1]
     ##id <- "maintabs"
-    
+    ns <- opg_ns(id)
+
     logout.tab <- bigdash::navbarDropdownItem(
       "Logout",
       onClick = "logoutInApp(); setTimeout(() => window.location.reload(), 200);"
@@ -112,13 +186,27 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
     menu_tree <- menu_tree[MODULES_ENABLED]
     ENABLED <<- array(BOARDS %in% sapply(menu_tree, function(m) names(m)), dimnames = list(BOARDS))
 
+    ## Fully-namespaced tab ids this instance's menu_tree allows -- narrows
+    ## a group's module_ui() shells down to just the boards menu_tree lists
+    ## for that group (e.g. only "pcsf-tab" out of all of SystemsBio's),
+    ## not just whole groups. See filter_boards() below and opg_server.R's
+    ## matching filter_lazy() for the server-side half.
+    allowed_tab_ids <- ns(paste0(opg_menu_boards(menu_tree), "-tab"))
+    filter_boards <- function(tabs) {
+      if (inherits(tabs, "shiny.tag")) tabs <- list(tabs)
+      Filter(function(tag) {
+        nm <- tag$attribs[["data-name"]]
+        is.null(nm) || nm %in% allowed_tab_ids
+      }, tabs)
+    }
+
     createMenu <- function(tree) {
       sidebar_item <- function(title, name) {
-        #div(class = "sidebar-item", bigdash::sidebarItem(title, paste0(name, "-tab")))
-        bigdash::sidebarItem(title, paste0(name, "-tab"))      
+        #div(class = "sidebar-item", bigdash::sidebarItem(title, ns(paste0(name, "-tab"))))
+        bigdash::sidebarItem(title, ns(paste0(name, "-tab")))
       }
       sidebar_menu_item <- function(title, name) {
-        bigdash::sidebarMenuItem(title, paste0(name, "-tab"))
+        bigdash::sidebarMenuItem(title, ns(paste0(name, "-tab")))
       }
       sidebar_menu_with_items <- function(tabs, title) {
         ee <- list()
@@ -145,7 +233,16 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         tab.names <- names(tree[[i]])
         tab.titles <- tree[[i]]
         menu.id <- names(tree)[i]
-        if (length(tab.names) == 0) {} else if (length(tab.names) == 1 && tolower(tab.names) == tolower(menu.id)) {
+        if (length(tab.names) == 0) {} else if (length(tab.names) == 1) {
+          ## A group with exactly one board renders as a flat top-level
+          ## item, not a one-item collapsible group -- matching what
+          ## bigdash's client-side promote_single gives a group *runtime*
+          ## filtered down to one, but built in from the start server-side
+          ## here, since promote_single only reacts to a change and leaves
+          ## an empty "<group> >" header behind for a group that's single-
+          ## item from the very first render (e.g. Epigenomics, or a
+          ## menu_tree -- opg_multiomics_menu_tree() -- that only wants one
+          ## board out of an otherwise multi-board group like SystemsBio).
           menu[[menu.id]] <- sidebar_item(tab.titles, tab.names)
         } else {
           menu[[menu.id]] <- sidebar_menu_with_items(tree[[i]], menu.id)
@@ -164,7 +261,8 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
     ## with a single visible item, see bigdash's refreshMenuPromotion()).
     sidebar <- bigdash::sidebar(
       "Menu",
-      createMenu(menu_tree)
+      createMenu(menu_tree),
+      id = id
     )
     
     big_theme2 <- bigdash::big_theme()
@@ -175,38 +273,54 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 
     ## ------------------------- bigPage ----------------------------------
     make_sidebarHelp <- function(...) {
-      do.call(bigdash::sidebarHelp, rlang::list2(...))
+      do.call(bigdash::sidebarHelp, rlang::list2(..., id = id))
     }
 
     ## empty navbar
     navbar <- div(
       ## THIS IS SO WEIRD. if we remove/comment out the
       ## prettySwitch, the header of all plotModules f*ck
-      ## up... (IK). HELP!!! we do not need this button...      
+      ## up... (IK). HELP!!! we do not need this button...
+      ## ns()-wrapped: navbar sits outside bigPage()'s own data-bigdash-id
+      ## wrapper, so a bare id here would collide with a second instance's.
       style = "visibility: hidden; display: none;",
-      shinyWidgets::prettySwitch("I_AM_WEIRD_BUTTON", "remove me")
+      shinyWidgets::prettySwitch(ns("I_AM_WEIRD_BUTTON"), "remove me")
     )
     
     bigdash::bigPage(
       id = id,  ## default was 'app'
-      shiny.i18n::usei18n(i18n),
-      ## shiny.i18n's subscribe() hands jQuery's Event object straight to Shiny's
-      ## callback, which expects a boolean, so every update_lang() logs
-      ## "Unexpected input value mode: '[object Object]'". Must come after
-      ## usei18n() so the binding is already registered.
-      shiny::tags$script(shiny::HTML(
-        "Shiny.inputBindings.bindingNames['shiny.shinyi18n'].binding.subscribe =
-           function (el, callback) { $(el).on('change.shinyi18n', function () { callback(false); }); };"
-      )),
+      ## shiny.i18n::usei18n() renders its own state div with a fixed id
+      ## ("i18n-state"), unaware of bigdash's per-instance namespacing --
+      ## calling it once per opg_ui() instance would duplicate that id (the
+      ## second instance's div becomes unreachable to shiny.i18n's own JS,
+      ## since getElementById()/jQuery only ever find the first match). Only
+      ## the primary instance sets it up; language is app-wide anyway, not
+      ## per-OPG-instance.
+      if (identical(id, "app")) {
+        list(
+          shiny.i18n::usei18n(i18n),
+          ## shiny.i18n's subscribe() hands jQuery's Event object straight to Shiny's
+          ## callback, which expects a boolean, so every update_lang() logs
+          ## "Unexpected input value mode: '[object Object]'". Must come after
+          ## usei18n() so the binding is already registered.
+          shiny::tags$script(shiny::HTML(
+            "Shiny.inputBindings.bindingNames['shiny.shinyi18n'].binding.subscribe =
+               function (el, callback) { $(el).on('change.shinyi18n', function () { callback(false); }); };"
+          ))
+        )
+      },
       # header,
       title = "Omics Playground",
       theme = big_theme2,
       navbar = navbar,
       sidebar = sidebar,
       settings = bigdash::settings(
-        "Settings"
+        "Settings",
+        id = id
       ),
       make_sidebarHelp(
+        ## "upload-tab" is the top-level Upload nav panel, outside this
+        ## bigPage()'s own bigTabs() -- left un-namespaced, same as before.
         bigdash::sidebarTabHelp(
           "upload-tab",
           "Upload new",
@@ -214,19 +328,19 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
                     the platform and perform computations for the Playground."
         ),
         bigdash::sidebarTabHelp(
-          "dataview-tab",
+          ns("dataview-tab"),
           "DataView",
           tspan("Information and descriptive statistics to quickly lookup a gene,
                     check your experiment QC, view the raw data, sample or contrast tables.")
         ),
         bigdash::sidebarTabHelp(
-          "clustersamples-tab",
+          ns("clustersamples-tab"),
           "Clustering Analysis",
           tspan("Discover clusters of similar genes or samples using unsupervised
                     machine learning.")
         ),
         bigdash::sidebarTabHelp(
-          "wgcna-tab",
+          ns("wgcna-tab"),
           "Weighted Correlation",
           tspan("Weighted correlation network analysis (WGCNA) is a gene-level cluster
                     analysis method based on pairwise correlations between genes. It
@@ -235,23 +349,23 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
                     relationships between co-expression modules.")
         ),
         bigdash::sidebarTabHelp(
-          "mofa-tab",
+          ns("mofa-tab"),
           "MOFA",
           tspan("Multi-omics Factor Analysis (MOFA) is a multi-omics
                   integration method based on multi-omcis factor analysis.")
         ),
         bigdash::sidebarTabHelp(
-          "mgsea-tab",
+          ns("mgsea-tab"),
           "multiGSEA",
           tspan("multiGSEA perform multi-omics integration on gene set level.")
         ),
         bigdash::sidebarTabHelp(
-          "snf-tab",
+          ns("snf-tab"),
           "SNF",
           tspan("SNF clustering")
         ),
         bigdash::sidebarTabHelp(
-          "pcsf-tab",
+          ns("pcsf-tab"),
           "PCSF Network Analysis",
           "PCSF performs fast and user-friendly network analysis using
                     interaction networks as a template, it determines high-confidence
@@ -259,36 +373,36 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
                     predictions of functional units."
         ),
         bigdash::sidebarTabHelp(
-          "diffexpr-tab",
+          ns("diffexpr-tab"),
           "Expression Analysis",
           tspan("Compare expression between two conditions. Determine which genes are
                     significantly downregulated or overexpressed in one of the groups.")
         ),
         bigdash::sidebarTabHelp(
-          "corr-tab",
+          ns("corr-tab"),
           "Correlation Analysis",
           tspan("Compute the correlation between genes and find coregulated modules.")
         ),
         bigdash::sidebarTabHelp(
-          "enrich-tab",
+          ns("enrich-tab"),
           "Geneset Enrichment",
           tspan("Perform differential expression analysis on a geneset level,
                     also called geneset enrichment analysis.")
         ),
         bigdash::sidebarTabHelp(
-          "pathway-tab",
+          ns("pathway-tab"),
           "Pathway Analysis",
           "Perform functional analysis to understand biological pathways using WikiPathways, Reactome and Gene Ontology."
         ),
         bigdash::sidebarTabHelp(
-          "wordcloud-tab",
+          ns("wordcloud-tab"),
           "Wordcloud",
           tspan("WordCloud analysis or 'keyword enrichment' analysis computes the
                     enrichment of keywords for the contrasts. The set of words frequently appearing in the top ranked
                     genesets form an unbiased description of the contrast.")
         ),
         bigdash::sidebarTabHelp(
-          "drug-tab",
+          ns("drug-tab"),
           "Drug Connectivity",
           "Perform drug connectivity analysis
                     to see if certain drug activity or drug sensitivity signatures matches your experimental signatures.
@@ -296,13 +410,13 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
                     mechanism-of-action (MOA) and known drug molecular targets."
         ),
         bigdash::sidebarTabHelp(
-          "isect-tab",
+          ns("isect-tab"),
           "Compare Signatures",
           tspan("Find genes that are commonly up/down regulated
                     between two or more signatures. Compute similarity between contrasts.")
         ),
         bigdash::sidebarTabHelp(
-          "sig-tab",
+          ns("sig-tab"),
           "Signature Analysis",
           tspan("Users can test their gene signature by
                     calculating an enrichment score. Upload your own gene list, or select
@@ -310,54 +424,55 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
                     signature.")
         ),
         bigdash::sidebarTabHelp(
-          "bio-tab",
+          ns("bio-tab"),
           "Biomarker Board",
           "Select biomarkers that can be used for
                     classification or prediction purposes. The phenotype of interest can
                     be multiple categories (classes) or patient survival data."
         ),
         bigdash::sidebarTabHelp(
-          "cmap-tab",
+          ns("cmap-tab"),
           "Similar Experiments",
           tspan("Find similar experiments by correlating their signatures.
-                 The main goal is to identify experiments showing similar signatures and find 
+                 The main goal is to identify experiments showing similar signatures and find
                  genes that are commonly up/down regulated between experiments.")
         ),
         bigdash::sidebarTabHelp(
-          "comp-tab",
+          ns("comp-tab"),
           "Compare Datasets",
           "Compare expression and signatures between two datasets,
                     from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
         ),
         bigdash::sidebarTabHelp(
-          "tcga-tab",
+          ns("tcga-tab"),
           "TCGA Analysis",
           "Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
         ),
         bigdash::sidebarTabHelp(
-          "cell-tab",
+          ns("cell-tab"),
           "Single-Cell Profiling",
           tspan("Visualize the distribution of (inferred)
                     immune cell types, expressed genes and pathway activation.")
         ),
         bigdash::sidebarTabHelp(
-          "consensus-tab",
+          ns("consensus-tab"),
           "Consensus WGCNA",
           tspan("Consensus analysis using the WGCNA framework")
         ),
         bigdash::sidebarTabHelp(
-          "preservation-tab",
+          ns("preservation-tab"),
           "Preservation WGCNA",
           tspan("Preservation analysis using the WGCNA framework")
         ),
         bigdash::sidebarTabHelp(
-          "ideograms-tab",
+          ns("ideograms-tab"),
           "Beta Ideograms",
           tspan("Epigenomics visualizations and analyses for methylomics data.")
         ),
-        !!!MODULE.multiomics$module_help() ### HELP!!! DOES NOT WORK!!!
+        !!!MODULE.multiomics$module_help(ns) ### HELP!!! DOES NOT WORK!!!
       ),
       bigdash::bigTabs(
+        id = id,
         ## One shell per tab: that tab's own inputs -- which settings.js moves
         ## into the settings drawer at boot -- plus a spinner. bigTabsLazy() in
         ## the server fills in the board itself on first visit.
@@ -371,24 +486,22 @@ VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
         ## users. The accordions live in this shell (each board's *Inputs()),
         ## not in the lazily-loaded body, so it belongs here, at boot, rather
         ## than wherever bigTabsLazy() later fills the tab in.
-        lock_advanced(bigdash::bigTabItem("dataview-tab", DataViewInputs("dataview"), create_loader("dataview-loader"))),
-        lock_advanced(MODULE.clustering$module_ui()),
-        lock_advanced(MODULE.expression$module_ui()),
-        lock_advanced(MODULE.enrichment$module_ui()),
-        lock_advanced(MODULE.compare$module_ui()),
-        lock_advanced(MODULE.systems$module_ui()),
-        lock_advanced(MODULE.multiomics$module_ui()),
-        lock_advanced(MODULE.wgcna$module_ui()),
-        lock_advanced(MODULE.epigenomics$module_ui())
+        lock_advanced(filter_boards(bigdash::bigTabItem(ns("dataview-tab"), DataViewInputs(ns("dataview")), create_loader(ns("dataview-loader"))))),
+        lock_advanced(filter_boards(MODULE.clustering$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.expression$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.enrichment$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.compare$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.systems$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.multiomics$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.wgcna$module_ui(ns))),
+        lock_advanced(filter_boards(MODULE.epigenomics$module_ui(ns)))
       )
     ) ## end of bigPage
   }
 
 
-  full_menu_tree <- opg_menu_tree()
-
   info("[opg_ui] >>> creating UI")
-  ui <- createUI(full_menu_tree)
+  ui <- createUI(menu_tree)
   info("[opg_ui] <<< finished UI!")
 
   return(ui)
