@@ -63,8 +63,15 @@ SummaryBoard <- function(id, pgx) {
     ## ========================================================================
     OmicsBoard(session, pgx, title = "Summary", infotext = "Summary")
 
+    ## pgx$wgcna$report$bullets/$infographic (the old ai-old-wgcnareport.R
+    ## schema) is never populated by the current pipeline. The v1 AI-report
+    ## schema's "combined" slot -- labelled "Summary" in AI Studio's own
+    ## infographic tab (.AI_INFOGRAPHIC_LABELS) -- is the dataset-wide
+    ## equivalent: pgx$ai$combined$report (a markdown write-up) and
+    ## pgx$ai$combined$infographic (raw PNG bytes + a status/error, from
+    ## playbase::pgx.update_infographics(), ai-infographics.R).
     output$bullet_points <- shiny::renderUI({
-      txt <- pgx$wgcna$report$bullets
+      txt <- pgx$ai$combined$report
       if(is.null(txt)) txt <- paste(c(paste("- Bullet", 1:5),""),collapse="\n")
       tagList(
         shiny::HTML(markdown::markdownToHTML(txt, fragment.only=TRUE))
@@ -73,12 +80,14 @@ SummaryBoard <- function(id, pgx) {
 
     image.RENDER <- function() {
       img.src <- NULL
-      ## shiny::validate(shiny::need(!is.null(img.src), "Infographic not available."))
-      img <- pgx$wgcna$report$infographic
-      dim(img)
-      if(!is.null(img)) {
+      infographic <- pgx$ai$combined$infographic
+      has.infographic <- !is.null(infographic) &&
+        identical(infographic$status, "done") &&
+        length(infographic$bytes) > 0
+      ## shiny::validate(shiny::need(has.infographic, "Infographic not available."))
+      if(has.infographic) {
         img.src <- tempfile(fileext=".png")
-        png::writePNG(img, target=img.src)
+        writeBin(infographic$bytes, img.src)
       }
       list(
         src = img.src,
