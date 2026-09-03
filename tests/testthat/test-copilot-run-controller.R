@@ -27,6 +27,7 @@ if (!exists("%||%")) `%||%` <- function(a, b) if (is.null(a)) b else a
 # components/app/ but not loaded during standalone test runs.
 if (!exists("getUserOption"))    getUserOption    <- function(session, var, ...) NULL
 if (!exists("get_ai_credentials")) get_ai_credentials <- function(session) NULL
+if (!exists("get_ai_data_consent")) get_ai_data_consent <- function(session) FALSE
 if (!exists("copilot_system_prompt")) copilot_system_prompt <- function() ""
 
 source(file.path(.board_dir, "copilot_options.R"),        local = TRUE)
