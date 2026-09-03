@@ -3,8 +3,11 @@
 # Pure-filesystem module: stores uploads in `docs_dir`. Each row carries a
 # tickbox that stages the document body into the next user turn (via the
 # run controller -> .copilot_stage_user_docs_context -> agent_inject_text_block
-# path). Consumed rows are greyed out and disabled until reset_consumed() is
-# called by the lifecycle controllers on new chat / tier change / restore.
+# path). Consumed rows stay visually normal (checked, not greyed out); an
+# attempt to untick one is intercepted client-side and shown a warning modal
+# instead, since the document is already part of this chat's history and
+# unticking it would not actually remove it. reset_consumed() re-arms the
+# rows on new chat / tier change / restore.
 #
 # Delete is a per-row trash icon that writes the file name into a single
 # shared input (input$delete_target) so we don't need one observer per row.
@@ -189,6 +192,22 @@ CopilotDocsServer <- function(id, docs_dir) {
       .refresh(shiny::isolate(.refresh()) + 1L)
     }, ignoreInit = TRUE)
 
+    shiny::observeEvent(input$locked_doc_click, {
+      nm <- input$locked_doc_click
+      shiny::req(nm)
+      shiny::showModal(shiny::modalDialog(
+        title     = "Document in use",
+        size      = "s",
+        easyClose = TRUE,
+        shiny::p(sprintf(
+          "\"%s\" is already part of this conversation and cannot be removed from it.",
+          nm
+        )),
+        shiny::p("Start a new chat if you want to leave this document out of the context."),
+        footer = shiny::modalButton("OK")
+      ))
+    }, ignoreInit = TRUE)
+
     selected_docs <- shiny::reactive({
       df <- .doc_files()
       if (!nrow(df)) return(character(0))
@@ -252,8 +271,7 @@ CopilotDocsServer <- function(id, docs_dir) {
             shiny::tags$li(
               style = paste(
                 "display: flex; align-items: center;",
-                "padding: 2px 0;",
-                if (already_used) "opacity: 0.55;" else ""
+                "padding: 2px 0;"
               ),
               shiny::tags$label(
                 class = "checkbox-inline",
@@ -265,7 +283,18 @@ CopilotDocsServer <- function(id, docs_dir) {
                   id = session$ns(id),
                   type = "checkbox",
                   checked = if (checked) "checked" else NULL,
-                  disabled = if (already_used) "disabled" else NULL
+                  onclick = if (already_used) {
+                    sprintf(
+                      paste(
+                        "event.preventDefault();",
+                        "Shiny.setInputValue('%s', '%s', {priority: 'event'});",
+                        "return false;"
+                      ),
+                      session$ns("locked_doc_click"), nm
+                    )
+                  } else {
+                    NULL
+                  }
                 ),
                 shiny::tags$span(
                   style = "margin-left: 6px; word-break: break-all;",
