@@ -100,15 +100,21 @@ launcher_server <- function(id, parent, load_example = NULL,
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
-      bslib::nav_select("app-sidebar", "Prism", session=parent)
+      run_app <- app_launchers[["prism"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
+      }
     })
 
     observeEvent(input$launch_idconvert, {
-      dev_alert() 
+      dev_alert()
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
-      bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+      run_app <- app_launchers[["idconvert"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
+      }
     })
 
     ## Quick action: load the example dataset and jump to the Dashboard

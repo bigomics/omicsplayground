@@ -751,7 +751,7 @@ output$current_user <- shiny::renderText({
     raw_dir <- shiny::isolate(raw_dir())
 
     if (!is.null(PGX) && !is.null(shiny::isolate(PGX$name))) {
-      pgx_name <- PGX$name
+      pgx_name <- shiny::isolate(PGX$name)
     } else {
       pgx_name <- "No PGX loaded when error occurred"
     }
@@ -1036,10 +1036,22 @@ output$current_user <- shiny::renderText({
     )
   }
 
-  ## THESE STILL NEED TO BE WRAPPED in a launchModule()
+  launch_idconvert <- function() {
+    launchModule("idconvert",
+      ui = omicspanel(idconvert_ui("idconvert")),
+      server = function() idconvert_server("idconvert")
+    )
+  }
+
+  launch_prism <- function() {
+    launchModule("prism",
+      ui = omicspanel(prism_ui("prism")),
+      server = function() prism_server("prism")
+    )
+  }
+
+  ## THIS STILL NEEDS TO BE WRAPPED in a launchModule()
   ## RunMonitorServer("runmonitor")
-  ## idconvert_server("idconvert")
-  ## prism_server("prism")
 
   launcher_server(
     "apps",
@@ -1047,7 +1059,9 @@ output$current_user <- shiny::renderText({
     load_example = load_example,
     app_launchers = list(
       "qsee" = launch_qsee,
-      "across" = launch_across
+      "across" = launch_across,
+      "idconvert" = launch_idconvert,
+      "prism" = launch_prism
     ),
     pgx = PGX
   )

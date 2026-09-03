@@ -182,23 +182,6 @@ app_ui <- function(x) {
                 omicspanel(AdminPanelUI("admin_panel"))
               )
             },
-            ## Tools
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("Prism",
-                omicspanel(prism_ui("prism"))
-              )
-            },
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("IDconvert",
-                omicspanel(idconvert_ui("idconvert"))
-              )
-            },
-            ## if(isTRUE(opt$DEVMODE)) {
-            ##   bslib::nav_panel_hidden(
-            ##     value = "AcrossDatasets",
-            ##     omicspanel(AcrossUI("across"))
-            ##   )
-            ## },
             ## lower settings buttons
             bslib::nav_spacer(),
             bslib::nav_panel("Settings", icon=icon("cog"),

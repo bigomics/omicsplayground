@@ -63,7 +63,7 @@ launcher_ui <- function(id) {
       input = "launch_prism",
       icon = "wand-magic-sparkles",
       label = "SmartPrism",
-      description = "AI-generated figures",
+      description = "AI-assisted plotting",
       rgb = c(190,120,50),
       group = "Apps",
       badge = "dev"

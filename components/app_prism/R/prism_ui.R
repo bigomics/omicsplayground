@@ -17,10 +17,9 @@ prism_ui <- function(id) {
       actionButton(ns("button4"), "button4", icon=icon("eye-dropper"))
     )
   )
-
-  title <- div("SmartPrism", style="font-size: 18px;")
   
   ui <- bslib::page_fillable(
+    padding = 0,
     tags$head(
       tags$script(type = "module", src = "static/prism-webr.js"),
       tags$style(HTML("
@@ -47,18 +46,18 @@ prism_ui <- function(id) {
         }
       "))
     ),
-    div(class = "navbar navbar-static-top", div(title, class = "container-fluid"),
-      style="margin-top: 24px;"),
+#    div(class = "navbar navbar-static-top", div(title, class = "container-fluid"),
+#      style="margin-top: 24px;"),
     bslib::layout_columns(
       col_widths = c(3,6,2),
       class = "p-3",
-
+      gap = "2rem",
       bslib::layout_columns(
         col_widths = 12,
         fill = TRUE,
         row_heights = list("auto","auto",1),
         shiny::selectInput(ns("dataset"), "Dataset:", c("mtcars","iris","geiger"),
-          selected="mtcars"),
+          selected="geiger"),
         buttons,
         div(
           style = "height: 100%;",
@@ -127,5 +126,16 @@ prism_ui <- function(id) {
     )
   )
   
-  return(ui)
+  title = HTML("SmartPrism <span style='font-size: 0.7em;'>&mdash; AI-assisted plotting</span>")
+  
+  board <- OmicsBoardUI(
+    ns = ns,
+    #title = "AI Copilot",
+    title = div(title, style="margin-left: 14px;"),
+    info = FALSE,
+    header_margin = "0px",
+    ui
+  )
+
+  return(board)
 }
