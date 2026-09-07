@@ -11,12 +11,14 @@
 #'
 #' @param id         Module namespace id.
 #' @param pgx        Global PGX reactiveValues shared across all boards.
-#' @param pgx_dir    Path to directory containing .pgx dataset files.
+#' @param pgx_dir    Root of the PGX data tree. Used only to derive the
+#'   per-user base directory; Copilot itself never reads datasets from this
+#'   level (see the path-resolution block below).
 #' @param auth       Auth module reactiveValues (must expose `$user_dir` and
-#'   `$email`). Copilot's `chat_dir` and `docs_dir` are always scoped to the
-#'   per-user folder `<pgx_dir>/<email>` when an email is known, independent
-#'   of ENABLE_USERDIR (see the path-resolution block below); with no email
-#'   it falls back to `auth$user_dir`.
+#'   `$email`). Copilot's `data_dir`, `chat_dir` and `docs_dir` are all scoped
+#'   to the per-user folder `<pgx_dir>/<email>` when an email is known,
+#'   independent of ENABLE_USERDIR (see the path-resolution block below);
+#'   with no email it falls back to `auth$user_dir`.
 #' @param maxturns   Maximum user turns per session.
 #' @param tiers      Character vector of tier identifiers (first = default).
 #'   Defaults to `COPILOT_TIERS` from `copilot_options.R`.
@@ -42,8 +44,10 @@ CopilotBoardServer <- function(
     # change, and the SessionStore + downstream controllers expect plain
     # character paths, not reactives.
     #
-    # Copilot chats and uploaded docs are personal, so they always live in
-    # the per-user folder <pgx_dir>/<email> when an email is known —
+    # `user_dir` is the single base for everything Copilot touches: the
+    # datasets it lists and loads, plus the chats and uploaded docs it writes
+    # alongside them. Datasets, chats and docs are all personal, so they live
+    # in the per-user folder <pgx_dir>/<email> when an email is known —
     # independent of ENABLE_USERDIR. That flag only governs *dataset*
     # storage; when it is off it collapses auth$user_dir to the shared
     # PGX.DIR, which would otherwise scatter every user's chats/docs into one
@@ -51,6 +55,14 @@ CopilotBoardServer <- function(
     # the user's own folder either way (when ENABLE_USERDIR is on this is the
     # same path auth$user_dir already points at). With no email (anonymous)
     # we fall back to auth$user_dir.
+    #
+    # Datasets must use this same base, not the bare pgx_dir: the app writes
+    # a user's .pgx files to auth$user_dir (see pgx_save_target() in
+    # components/app/R/server.R), so scanning the root finds only other
+    # users' folders and the deployment's shared files. Shared and public
+    # datasets are separate sibling trees (data_shared / data_public) surfaced
+    # on their own LoadingBoard tabs, so scoping here hides nothing that was
+    # previously reachable.
     user_dir <- shiny::isolate(auth$user_dir)
     email    <- shiny::isolate(auth$email)
     if (is.null(user_dir) || !nzchar(user_dir)) {
@@ -183,11 +195,11 @@ CopilotBoardServer <- function(
                            session          = session,
                            evidence_api     = list(append_artifact = evidence$append_artifact),
                            docs_dir         = docs_dir,
-                           data_dir         = pgx_dir,
+                           data_dir         = user_dir,
                            pgx_loaded_event = pgx_loaded_event
                          ),
       local_pgx        = shiny::reactive(pgx),
-      data_dir         = pgx_dir,
+      data_dir         = user_dir,
       evidence         = evidence,
       chat_event       = chat_event_rv,
       session          = session
@@ -233,7 +245,7 @@ CopilotBoardServer <- function(
       chat_event           = chat_event_rv,
       chat_on_tool_request = chat_mod$on_tool_request,
       pgx                  = pgx,
-      pgx_dir              = pgx_dir,
+      pgx_dir              = user_dir,
       docs_dir             = docs_dir,
       pgx_loaded_event     = pgx_loaded_event,
       maxturns             = maxturns,
@@ -249,7 +261,7 @@ CopilotBoardServer <- function(
 
     # ---- Panel modules (datasets / history) ----
     # docs is constructed above so doc_context can be passed into run_ctrl.
-    datasets <- CopilotDatasetsServer("datasets", pgx_dir = pgx_dir)
+    datasets <- CopilotDatasetsServer("datasets", pgx_dir = user_dir)
     history  <- CopilotHistoryServer(
       "history",
       session_dir               = chat_dir,
@@ -275,7 +287,7 @@ CopilotBoardServer <- function(
           pgx_val  = pgx,
           name     = as.character(shiny::isolate(pgx$name)[[1]]),
           path     = NULL,
-          data_dir = pgx_dir
+          data_dir = user_dir
         )
       }
     }, ignoreNULL = FALSE)
@@ -400,7 +412,7 @@ CopilotBoardServer <- function(
         pgx_val  = pgx,
         name     = as.character(shiny::isolate(pgx$name)[[1]]),
         path     = NULL,
-        data_dir = pgx_dir
+        data_dir = user_dir
       )
     }, ignoreNULL = TRUE)
 
