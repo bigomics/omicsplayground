@@ -91,7 +91,7 @@ functional_plot_reactome_graph_server <- function(id,
         pp <- rownames(pgx$gx.meta$meta[[comparison]])
 
         if (pgx$organism != "Human") {
-          names(fc) <- pgx$genes[pp, "human_ortholog"]
+          names(fc) <- pgx$genes[pp, "ortholog"]
         } else {
           names(fc) <- pgx$genes[pp, "symbol"]
         }

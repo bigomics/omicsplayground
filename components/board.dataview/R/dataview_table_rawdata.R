@@ -116,8 +116,8 @@ dataview_table_rawdata_server <- function(id,
       cl <- c("feature", "symbol", "gene_title")
       if (!input$show_full_table) annot <- annot[, cl]
 
-      if ("human_ortholog" %in% colnames(annot)) {
-        colnames(annot)[colnames(annot) == "human_ortholog"] <- "ortholog"
+      if ("ortholog" %in% colnames(annot)) {
+        colnames(annot)[colnames(annot) == "ortholog"] <- "ortholog"
       }
 
       # hide symbol column if symbol is feature

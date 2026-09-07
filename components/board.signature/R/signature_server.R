@@ -180,7 +180,7 @@ SignatureBoard <- function(id, pgx,
         ))
         ## map to probes
         features1 <- playbase::map_probes(pgx$genes, genes,
-          column = "human_ortholog", ignore.case = TRUE
+          column = "ortholog", ignore.case = TRUE
         )
         features2 <- playbase::map_probes(pgx$genes, genes,
           column = "symbol", ignore.case = TRUE

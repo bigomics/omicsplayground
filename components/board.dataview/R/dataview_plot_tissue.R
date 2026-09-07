@@ -59,14 +59,14 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       data_type <- r.data_type()
 
       # Find ortholog proportion
-      n <- length(pgx$genes$human_ortholog)
-      ortho <- sum(pgx$genes$human_ortholog != "")
+      n <- length(pgx$genes$ortholog)
+      ortho <- sum(pgx$genes$ortholog != "")
 
       homologue_ratio <- ortho / n
       if (pgx$organism %in% c("Human", "human")) {
         hgnc.gene <- pgx$genes[gene, "symbol"]
       } else if (homologue_ratio > .5) {
-        hgnc.gene <- pgx$genes[gene, "human_ortholog"]
+        hgnc.gene <- pgx$genes[gene, "ortholog"]
       } else {
         shiny::validate(shiny::need(FALSE, "No tissue data available for this organism."))
       }

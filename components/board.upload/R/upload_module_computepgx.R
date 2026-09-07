@@ -228,8 +228,17 @@ upload_module_computepgx_server <- function(
         return(DEFAULTS$computation_options$probe_filtering)
       }
 
-      readthedocs_url <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
+      READTHEDOCS_URL <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
+      ORTHOLOG_SPECIES <- c(
+        "Human",
+        "Drosphila melanogaster",
+        "Arabidopsis thaliana",
+        "Caenorhabditis elegans",
+        "Saccharomyces cerevisiae",
+        "Escherichia coli"
+      )
+      
       ## Helper function to generate UI input based on metadata field config
       ## Only supports select and multiselect types for easier filtering
       generate_metadata_input <- function(field, ns) {
@@ -304,16 +313,6 @@ upload_module_computepgx_server <- function(
       }
 
       output$UI <- shiny::renderUI({
-        upload_annot_table_ui <- NULL
-
-        if (auth$options$ENABLE_ANNOT) {
-          upload_annot_table_ui <- fileInput2(
-            ns("upload_annot_table"),
-            shiny::tags$h4("Probe annotation (alpha):"),
-            multiple = FALSE,
-            accept = c(".csv")
-          )
-        }
 
         ui <- div(
           style = "overflow: auto;",
@@ -405,6 +404,8 @@ upload_module_computepgx_server <- function(
             ns = ns,
             bslib::layout_columns(
               width = 12,
+              height = "100%",
+              class = "p-2",
               bslib::card(
                 shiny::checkboxGroupInput(
                   ns("filter_methods"),
@@ -580,40 +581,48 @@ upload_module_computepgx_server <- function(
                   "input.create_ai_reports == true",
                   ns = ns,
                   div(
-                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                    style = "margin-top:-25px;margin-left:12px;margin-bottom:-20px;",
                     shiny::checkboxInput(
                       ns("create_ai_infographics"),
                       label = withTooltip(
                         shiny::span("Create AI infographics"),
                         "Infographics can also be generated later from AI Studio. Image generation adds extra compute time and cost."
                       ),
-                      value = FALSE
+                      value = TRUE
                     )
                   )
                 )
               ),
               bslib::card(
-                fileInput2(
-                  ns("upload_gmt"),
-                  shiny::tagList(
-                    shiny::tags$h4("Custom genesets:"),
-                    shiny::p(
-                      "Upload a custom GMT file (.gmt) as described",
-                      tags$a(
+                shiny::tags$h4("Custom genesets:"),
+                shiny::span(
+                  style = "margin-top: -22px;",
+                  "Upload a custom GMT file (.gmt) as described",
+                  tags$a(
                         "here.",
-                        href = readthedocs_url,
+                        href = READTHEDOCS_URL,
                         target = "_blank",
                         style = "text-decoration: underline;"
-                      ),
-                      "or download an",
-                      downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
-                      " (gene targets of the EGFR transcription factor)."
-                    )
+                  )
+                  ## "or download an",
+                  ## downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
+                  ## " (gene targets of the EGFR transcription factor)."
+                ),                
+                div(
+                  style = "margin-top: -8px;",
+                  shiny::selectInput(ns("ortholog_species"), "Ortholog species:",
+                    choices = ORTHOLOG_SPECIES ),
+                  fileInput2(
+                    ns("upload_gmt"),
+                    label = NULL,
+                    multiple = FALSE,
+                    accept = c(".txt", ".gmt")
                   ),
-                  multiple = FALSE,
-                  accept = c(".txt", ".gmt")
-                ),
-                upload_annot_table_ui
+                  div( style = "margin-top: -3px;",
+                    shiny::checkboxInput(ns("include_default_gmt"),"Include default genesets",
+                      TRUE)
+                  )
+                )
               )
             ), ## end of fillRow
             tags$style(HTML("#upload-compute-gset_methods-label { width: -webkit-fill-available; }")),
@@ -1248,6 +1257,8 @@ upload_module_computepgx_server <- function(
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
+          ortholog_species = input$ortholog_species,
+          include_default_gmt = input$include_default_gmt,
           # ------- extra tables ---------
           annot_table = pgx_annot,
           custom.geneset = custom_geneset,
@@ -1616,17 +1627,17 @@ upload_module_computepgx_server <- function(
         )
       })
 
-      output$download_gmt <- downloadHandler(
-        filename = function() {
-          # Set the filename for the downloaded file
-          "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
-        },
-        content = function(file) {
-          gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
-          gmt <- readBin(gmt_path, what = raw(), n = file.info(gmt_path)$size)
-          writeBin(gmt, file)
-        }
-      )
+      ## output$download_gmt <- downloadHandler(
+      ##   filename = function() {
+      ##     # Set the filename for the downloaded file
+      ##     "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
+      ##   },
+      ##   content = function(file) {
+      ##     gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
+      ##     gmt <- readBin(gmt_path, what = raw(), n = file.info(gmt_path)$size)
+      ##     writeBin(gmt, file)
+      ##   }
+      ## )
 
       session$onSessionEnded(
         function() {

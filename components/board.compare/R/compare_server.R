@@ -219,9 +219,9 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         # For same org. we ensure compare on symbol
         target_col <- "symbol"
       } else if (org1 != org2) {
-        # For different org. we ensure compare on human_ortholog
+        # For different org. we ensure compare on ortholog
         # If it is not present, use gene_name
-        target_col <- "human_ortholog"
+        target_col <- "ortholog"
       }
       target_col
 

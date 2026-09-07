@@ -52,10 +52,10 @@ correlation_table_corr_server <- function(id,
       P <- getPartialCorrelation()
       pcor <- P[match(rownames(R), rownames(P)), "pcor"]
       gene_table <- pgx$genes
-      if (all(gene_table$human_ortholog == rownames(gene_table)) | all(is.na(gene_table$human_ortholog))) {
+      if (all(gene_table$ortholog == rownames(gene_table)) | all(is.na(gene_table$ortholog))) {
         gene_table_cols <- c("feature", "symbol", "gene_title")
       } else {
-        gene_table_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
+        gene_table_cols <- c("feature", "symbol", "ortholog", "gene_title")
       }
 
       tt <- gene_table[rownames(R), gene_table_cols]
@@ -70,15 +70,15 @@ correlation_table_corr_server <- function(id,
 
       df <- plot_data()
       # Table aesthetics
-      char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
+      char_cols <- c("feature", "gene", "symbol", "ortholog", "gene_title")
       if (pgx$organism %in% c("Human", "human")) {
-        char_cols <- c("feature", "gene", "symbol", "human_ortholog", "gene_title")
+        char_cols <- c("feature", "gene", "symbol", "ortholog", "gene_title")
       }
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) {
         df$feature <- NULL
       }
 
-      if ("human_ortholog" %in% colnames(df)) df$human_ortholog <- NULL
+      if ("ortholog" %in% colnames(df)) df$ortholog <- NULL
       numeric.cols <- which(!colnames(df) %in% char_cols)
 
       DT::datatable(
