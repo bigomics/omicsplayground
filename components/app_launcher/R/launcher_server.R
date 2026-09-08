@@ -16,9 +16,17 @@ launcher_server <- function(id, parent, load_example = NULL,
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    coming_soon_alert <- function() {      
+    coming_soon_alert <- function(signup_url) {
       shinyalert::shinyalert("Coming soon!",
-        text = "Sorry. This feature is not available yet",
+        text = shiny::tagList(
+          "Sorry. This feature is not available yet.",
+          shiny::br(), shiny::br(),
+          shiny::a(
+            "Sign up to be notified when we release it",
+            href = signup_url, target = "_blank"
+          )
+        ),
+        html = TRUE,
         type = "info")
     }
 
@@ -63,7 +71,7 @@ launcher_server <- function(id, parent, load_example = NULL,
     
     observeEvent(input$launch_qsee, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/2TU8pQmlWTTiGdzCxDBQ0Ig")
         return(NULL)
       }
       dev_alert()
@@ -75,7 +83,7 @@ launcher_server <- function(id, parent, load_example = NULL,
     
     observeEvent(input$launch_across, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/20hoGrKfLQX61tHyqT0ojnw")
         return(NULL)
       }
       dev_alert()
@@ -87,7 +95,7 @@ launcher_server <- function(id, parent, load_example = NULL,
 
     observeEvent( input$launch_mythril, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/29Qh2m0fRQmCfEzVMM9AxnQ")
         return(NULL)
       }      
       shinyalert::shinyalert("Empty!", "Please fill this stub.")
