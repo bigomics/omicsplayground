@@ -144,6 +144,108 @@ clustering_plot_splitmap_server <- function(id,
       rank_list_ui(grp_levels, ns, input_id = "hm_group_order")
     })
 
+    ## Editor: column clustering for the (non-split) heatmap. The same
+    ## hclust object seeds the sample-order list AND is handed to the static
+    ## plot via cluster_columns, so the list and the plot show the exact same
+    ## order while keeping the column dendrogram. NULL when the heatmap is
+    ## split (columns are then clustered within each group) or too small.
+    hm_col_hclust <- shiny::reactive({
+      filt <- getTopMatrix()
+      shiny::req(filt)
+      splitx <- filt$grp
+      if (!is.null(splitx) && length(unique(splitx)) > 1) {
+        return(NULL)
+      }
+      m <- filt$mat
+      if (is.null(m) || ncol(m) < 2) {
+        return(NULL)
+      }
+      ## scale rows the same way the plot does, so the dendrogram matches
+      scale.mode <- input$hm_scale
+      if (!is.null(scale.mode)) {
+        if (scale.mode == "row.center") m <- m - rowMeans(m, na.rm = TRUE)
+        if (scale.mode == "row") m <- t(scale(t(m)))
+      }
+      d <- stats::dist(t(m))
+      if (anyNA(d)) d[is.na(d)] <- max(d, na.rm = TRUE)
+      fastcluster::hclust(d, method = "ward.D2")
+    })
+
+    ## Editor: default (clustered) display order of the samples. Used both to
+    ## seed the drag-and-drop list and as the baseline for detecting whether
+    ## the user has actually rearranged it.
+    default_sample_order <- function() {
+      filt <- getTopMatrix()
+      if (is.null(filt) || is.null(filt$mat)) {
+        return(NULL)
+      }
+      cn <- colnames(filt$mat)
+      hc <- hm_col_hclust()
+      if (is.null(hc)) {
+        return(cn)
+      }
+      cn[hc$order]
+    }
+
+    ## Editor: get custom individual-sample order. Returns the reordered
+    ## sample vector only when the user has actually rearranged the list
+    ## (i.e. it differs from the default clustered order shown in the plot);
+    ## otherwise NULL so the default column clustering is preserved. Disabled
+    ## while the heatmap is split into groups (use Group Order instead).
+    get_sample_order <- function() {
+      custom_order <- input$hm_sample_order
+      if (is.null(custom_order) || length(custom_order) == 0) {
+        return(NULL)
+      }
+      filt <- getTopMatrix()
+      if (is.null(filt)) {
+        return(NULL)
+      }
+      splitx <- filt$grp
+      if (!is.null(splitx) && length(unique(splitx)) > 1) {
+        return(NULL)
+      }
+      custom_order <- as.character(custom_order)
+      if (identical(custom_order, default_sample_order())) {
+        return(NULL)
+      }
+      custom_order
+    }
+
+    ## Editor: reorder heatmap columns by the custom sample order. Permutes
+    ## the data matrix and the sample-split vector together so they stay
+    ## aligned. 'custom' flags whether a reorder was applied, so the caller
+    ## can switch off column clustering to honour the manual order.
+    apply_sample_order <- function(zx, splitx) {
+      ord <- get_sample_order()
+      if (is.null(ord)) {
+        return(list(zx = zx, splitx = splitx, custom = FALSE))
+      }
+      cn <- colnames(zx)
+      neworder <- c(intersect(ord, cn), setdiff(cn, ord))
+      perm <- match(neworder, cn)
+      zx <- zx[, perm, drop = FALSE]
+      if (!is.null(splitx)) splitx <- splitx[perm]
+      list(zx = zx, splitx = splitx, custom = TRUE)
+    }
+
+    ## Editor: drag-and-drop individual-sample ordering. Only offered when
+    ## the heatmap is not split; when split, columns are ordered via groups.
+    output$hm_sample_order_ui <- shiny::renderUI({
+      filt <- getTopMatrix()
+      shiny::req(filt)
+      splitx <- filt$grp
+      if (!is.null(splitx) && length(unique(splitx)) > 1) {
+        return(shiny::tags$em("Sample ordering is unavailable while the heatmap is split. Remove the split to reorder individual samples, or use Group Order."))
+      }
+      ## seed the list in the same (clustered) order the plot displays
+      samples <- default_sample_order()
+      if (is.null(samples) || length(samples) <= 1) {
+        return(shiny::tags$em("Not enough samples to reorder."))
+      }
+      rank_list_ui(samples, ns, input_id = "hm_sample_order")
+    })
+
     plot_data <- shiny::reactive({
       filt <- getTopMatrix()
       shiny::req(filt)
@@ -214,6 +316,16 @@ clustering_plot_splitmap_server <- function(id,
       ## split samples
       splitx <- filt$grp
 
+      ## Editor: apply custom individual-sample order (heatmap mode only;
+      ## skipped for sample-correlation where columns and rows are samples)
+      sample_order_custom <- FALSE
+      if (!sample_cor) {
+        sample_ord <- apply_sample_order(zx, splitx)
+        zx <- sample_ord$zx
+        splitx <- sample_ord$splitx
+        sample_order_custom <- sample_ord$custom
+      }
+
       # Calculate text sizes
       cex0 <- ifelse(!is.null(splitx) && length(splitx) <= 10, 1.05, 0.85) # fixed title size scaling
       cex1 <- label_cex * ifelse(ncol(zx) > 200, 0, ifelse(ncol(zx) > 100, 0.5, ifelse(ncol(zx) > 50, 0.75, 1)))
@@ -277,7 +389,16 @@ clustering_plot_splitmap_server <- function(id,
         zlim <- c(min(zx, na.rm = TRUE), max(zx, na.rm = TRUE))
       } else {
         cluster_rows <- TRUE
-        cluster_columns <- TRUE
+        if (sample_order_custom) {
+          ## manual order: columns already permuted, don't recluster
+          cluster_columns <- FALSE
+        } else {
+          ## force the same column clustering that seeds the editor list so
+          ## the plot and the list agree; falls back to default clustering
+          ## (TRUE) when split. A precomputed hclust keeps the dendrogram.
+          col_hc <- hm_col_hclust()
+          cluster_columns <- if (!is.null(col_hc)) col_hc else TRUE
+        }
         zlim <- NULL
       }
 
@@ -332,6 +453,16 @@ clustering_plot_splitmap_server <- function(id,
 
       ## sample clustering index
       splitx <- filt$grp
+
+      ## Editor: apply custom individual-sample order (heatmap mode only;
+      ## skipped for sample-correlation where columns and rows are samples)
+      sample_order_custom <- FALSE
+      if (!sample_cor) {
+        sample_ord <- apply_sample_order(X, splitx)
+        X <- sample_ord$zx
+        splitx <- sample_ord$splitx
+        sample_order_custom <- sample_ord$custom
+      }
 
       ## iheatmapr needs factors for sharing between groups
       annotF <- data.frame(as.list(annot), stringsAsFactors = TRUE, check.names = FALSE)
@@ -406,6 +537,7 @@ clustering_plot_splitmap_server <- function(id,
         idx = idx,
         splitx = splitx,
         splitx_order = get_splitx_order(),
+        col_clust = !sample_order_custom,
         scale = scale.mode,
         zlim = zlim,
         symm = symm,
