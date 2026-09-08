@@ -1,0 +1,737 @@
+## test-appsettings-ai.R
+##
+## Unit tests for the AI Features server logic in AppSettingsBoard
+## (Task 2.3 of the BYOK AI-providers feature). Exercises the provider /
+## credential store, provider-aware menu repopulation, the admin lock and
+## the logout clear via shiny::testServer + testthat mocked bindings.
+
+suppressMessages(library(shiny))
+
+## ---- test bootstrap: make the module's free variables resolvable ----------
+
+## Standard null-coalescing operator (test bootstrap only; never redefine in R/).
+if (!exists("%||%")) {
+  `%||%` <- function(a, b) if (is.null(a)) b else a
+}
+
+## session$userData-backed option store (mirrors app/R/utils/utils.R).
+setUserOption <- function(session, var, value) session$userData[[var]] <- value
+getUserOption <- function(session, var, value) session$userData[[var]]
+
+## BYOK entitlement gate (mirrors AuthenticationModule_functions.R, which the
+## standalone test env does not source). make_auth() leaves level unset -> ""
+## -> BYOK allowed, so the provider/menu observers run their real code paths.
+ai_byok_allowed <- function(level) {
+  lvl <- level %||% ""
+  identical(lvl, "enterprise") || !nzchar(lvl)
+}
+
+## Init-time collaborators the module touches but that are irrelevant here.
+dbg                         <- function(...) invisible(NULL)
+OmicsBoard                  <- function(...) invisible(NULL)
+user_table_resources_server <- function(...) invisible(NULL)
+get_color_theme             <- function() shiny::reactiveValues()
+load_color_theme            <- function(...) NULL
+save_color_theme            <- function(...) invisible(NULL)
+PlotModuleServer            <- function(...) invisible(NULL)
+TableModuleServer           <- function(...) invisible(NULL)
+COLOR_THEME_DEFAULTS        <- list()
+
+.repo_dir <- if (dir.exists("components/app/R")) {
+  normalizePath(".")
+} else {
+  normalizePath("../..")
+}
+.required_omicsai_exports <- c(
+  "ai_known_models",
+  "ai_provider_catalog",
+  "ai_select_model",
+  "ai_validate_model",
+  "ai.list_provider_models"
+)
+testthat::skip_if_not_installed("omicsai", minimum_version = "0.3.2")
+testthat::skip_if_not(
+  all(.required_omicsai_exports %in% getNamespaceExports("omicsai")),
+  "omicsai provider catalog API exports are required"
+)
+source(file.path(.repo_dir, "components/utils/ai_model_policy.R"), local = TRUE)
+## Sourced for real (not stubbed like the colour theme): the consent store is
+## the one AI setting that touches disk, and the settings observers are exactly
+## where that persistence is wired, so the tests below exercise it end to end.
+source(file.path(.repo_dir, "components/modules/AiConsent.R"), local = TRUE)
+
+make_opt <- function(locked = FALSE,
+                     enable_ai = TRUE,
+                     providers = c("bigomics", "openai", "anthropic", "google",
+                                   "github", "mistral", "custom"),
+                     policy = .opg_ai_read_policy(file.path(.repo_dir, "etc/ai_model_policy.json"))) {
+  models <- .opg_ai_build_models(policy, providers)
+  list(
+    ENABLE_AI                = enable_ai,
+    AI_PROVIDER_LOCKED       = locked,
+    AI_PROVIDERS             = providers,
+    AI_MENU_REPORTS          = .opg_ai_menu_allowlist(models, providers, "reports"),
+    AI_MENU_IMAGES           = .opg_ai_menu_allowlist(models, providers, "images"),
+    AI_MENU_COPILOT_DEEP     = .opg_ai_menu_allowlist(models, providers, "copilot_deep"),
+    AI_MENU_COPILOT_BALANCED = .opg_ai_menu_allowlist(models, providers, "copilot_balanced"),
+    AI_MODELS                = models
+  )
+}
+opt <- make_opt()
+
+.board_dir <- if (dir.exists("components/board.user/R")) {
+  "components/board.user/R"
+} else {
+  "../../components/board.user/R"
+}
+source(file.path(.board_dir, "appsettings_server.R"), local = TRUE)
+
+make_auth <- function(admin = FALSE) {
+  shiny::reactiveValues(logged = TRUE, ADMIN = admin, user_dir = tempdir())
+}
+
+# ===========================================================================
+# credential store
+# ===========================================================================
+
+test_that("a non-bigomics provider + key stores a nullary closure returning the key", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-secret-123")
+      cred <- session$userData[["ai_credentials"]]
+      expect_true(is.function(cred))
+      expect_equal(length(formals(cred)), 0L)
+      expect_equal(cred(), "sk-secret-123")
+      expect_equal(session$userData[["ai_provider"]], "openai")
+    }
+  )
+})
+
+test_that("a non-bigomics provider with an empty key stores no closure", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "")
+      expect_null(session$userData[["ai_credentials"]])
+    }
+  )
+})
+
+test_that("provider = bigomics stores NULL credentials (env-var path preserved)", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-x")
+      expect_true(is.function(session$userData[["ai_credentials"]]))
+      session$setInputs(ai_provider = "bigomics")
+      expect_null(session$userData[["ai_credentials"]])
+      expect_equal(session$userData[["ai_provider"]], "bigomics")
+    }
+  )
+})
+
+test_that("the custom provider stores its base_url alongside the credential", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(
+        ai_provider = "custom", ai_api_key = "ck", ai_base_url = "https://ep/v1"
+      )
+      expect_equal(session$userData[["ai_credentials"]](), "ck")
+      expect_equal(session$userData[["ai_base_url"]], "https://ep/v1")
+    }
+  )
+})
+
+# ===========================================================================
+# legacy option compatibility
+# ===========================================================================
+
+test_that("model selections still write the legacy llm_model / img_model options", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(
+        enable_ai = TRUE,
+        llm_reports = "gpt-5.4-nano", llm_images = "dall-e-3",
+        llm_copilot_deep = "gpt-5.4-mini",
+        llm_copilot_balanced = "gpt-5.4-nano"
+      )
+      expect_equal(session$userData[["llm_model"]], "gpt-5.4-nano")
+      expect_equal(session$userData[["img_model"]], "dall-e-3")
+      expect_equal(session$userData[["llm_copilot_deep"]], "gpt-5.4-mini")
+      expect_equal(session$userData[["llm_copilot_balanced"]], "gpt-5.4-nano")
+    }
+  )
+})
+
+# ===========================================================================
+# provider-aware menu repopulation
+# ===========================================================================
+
+test_that("OPG policy builds provider menus from the omicsai catalog APIs", {
+  expect_true("github" %in% opt$AI_PROVIDERS)
+  expect_true("mistral" %in% opt$AI_PROVIDERS)
+  expect_equal(opt$AI_MODELS$github$reports,
+               c("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini"))
+  expect_true("mistral-medium-latest" %in% opt$AI_MODELS$mistral$reports)
+  expect_equal(opt$AI_MODELS$mistral$copilot_balanced[[1]],
+               "mistral-medium-latest")
+})
+
+test_that("OPG policy can disable a provider and reorder menu defaults", {
+  policy <- .opg_ai_read_policy(file.path(.repo_dir, "etc/ai_model_policy.json"))
+  policy$providers$mistral$menus$reports$prefer <- "mistral-small-latest"
+  limited <- make_opt(providers = c("openai", "mistral"), policy = policy)
+
+  expect_equal(limited$AI_PROVIDERS, c("openai", "mistral"))
+  expect_equal(limited$AI_MODELS$mistral$reports[[1]],
+               "mistral-small-latest")
+  expect_null(make_opt(providers = "openai")$AI_MODELS$mistral)
+})
+
+test_that("BigOmics defaults point at the OpenRouter models and menus stay visible but locked", {
+  expect_equal(opt$AI_MODELS$bigomics$reports[[1]],
+               "openrouter:deepseek/deepseek-v4-flash")
+  expect_equal(opt$AI_MODELS$bigomics$images[[1]],
+               "gemini-3.1-flash-image-preview")
+  expect_equal(opt$AI_MODELS$bigomics$copilot_deep,
+               "openrouter:openai/gpt-5.6-terra")
+  expect_equal(opt$AI_MODELS$bigomics$copilot_balanced,
+               "openrouter:deepseek/deepseek-v4-flash")
+
+  ui_source <- readLines(file.path(.repo_dir,
+                                   "components/board.user/R/appsettings_ui.R"))
+  ## Scope the assertion to the "AI Models" card: the "AI Provider" card
+  ## legitimately still hides the API-key/base-URL inputs and the "Test &
+  ## load models" button for bigomics via != 'bigomics' conditionalPanels.
+  models_card_start <- grep('card_header("AI Models")', ui_source, fixed = TRUE)
+  models_card <- ui_source[models_card_start:length(ui_source)]
+  expect_true(any(grepl('"input.enable_ai"', models_card, fixed = TRUE)))
+  expect_false(any(grepl("input.ai_provider != 'bigomics'", models_card,
+                         fixed = TRUE)))
+  expect_true(any(grepl("ai_test_status", ui_source, fixed = TRUE)))
+
+  server_source <- readLines(file.path(.repo_dir,
+                                       "components/board.user/R/appsettings_server.R"))
+  expect_true(any(grepl("models_locked", server_source, fixed = TRUE)))
+})
+
+test_that("changing provider repopulates the four menus from that provider's catalog", {
+  captured <- list()
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(
+        choices = list(...)$choices,
+        selected = list(...)$selected
+      )
+    },
+    .package = "shiny"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai")
+      expect_equal(captured$llm_reports$choices,
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
+                     "gpt-4o", "gpt-4o-mini"))
+      expect_equal(captured$llm_reports$selected, "gpt-5.4-nano")
+      expect_equal(captured$llm_images$choices, c("dall-e-3", "dall-e-2"))
+      expect_equal(captured$llm_copilot_deep$selected, "gpt-5.4-mini")
+      expect_equal(captured$llm_copilot_balanced$selected, "gpt-5.4-nano")
+    }
+  )
+})
+
+test_that("Test & load narrows menus to live models allowed by OPG policy", {
+  captured <- list()
+  requested <- list()
+  alert <- NULL
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(
+        choices = list(...)$choices,
+        selected = list(...)$selected
+      )
+    },
+    .package = "shiny"
+  )
+  testthat::local_mocked_bindings(
+    shinyalert = function(...) {
+      alert <<- list(...)
+    },
+    .package = "shinyalert"
+  )
+  testthat::local_mocked_bindings(
+    ai.list_provider_models = function(provider, key, base_url = NULL) {
+      requested <<- list(provider = provider, key = key, base_url = base_url)
+      c("gpt-4o-mini", "not-in-opg-policy")
+    },
+    .package = "omicsai"
+  )
+
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-live")
+      session$setInputs(ai_test_load = 1)
+
+      expect_equal(requested$provider, "openai")
+      expect_equal(requested$key, "sk-live")
+      expect_equal(captured$llm_reports$choices, "gpt-4o-mini")
+      expect_equal(captured$llm_reports$selected, "gpt-4o-mini")
+      expect_equal(captured$llm_copilot_deep$choices, "gpt-4o-mini")
+      expect_equal(captured$llm_images$choices, c("dall-e-3", "dall-e-2"))
+      expect_equal(alert$title, "API key is correctly set")
+      expect_equal(alert$type, "success")
+      expect_equal(ai_test_status()$state, "ok")
+      expect_equal(ai_test_status()$label, "OK")
+    }
+  )
+})
+
+test_that("Test & load falls back to static catalog choices on empty live results", {
+  captured <- list()
+  alert <- NULL
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(...)$choices
+    },
+    .package = "shiny"
+  )
+  testthat::local_mocked_bindings(
+    shinyalert = function(...) {
+      alert <<- list(...)
+    },
+    .package = "shinyalert"
+  )
+  testthat::local_mocked_bindings(
+    ai.list_provider_models = function(...) character(0),
+    .package = "omicsai"
+  )
+
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-live")
+      session$setInputs(ai_test_load = 1)
+
+      expect_equal(captured$llm_reports,
+                   c("gpt-5.4-nano", "gpt-5.6-sol", "gpt-5.6-terra",
+                     "gpt-5.6-luna", "gpt-5.4-mini",
+                     "gpt-4o", "gpt-4o-mini"))
+      expect_equal(captured$llm_images, c("dall-e-3", "dall-e-2"))
+      expect_equal(alert$title, "Could not load provider models")
+      expect_equal(alert$type, "error")
+      expect_equal(ai_test_status()$state, "error")
+      expect_equal(ai_test_status()$label, "Error")
+    }
+  )
+})
+
+test_that("Test & load passes the custom provider base_url and loads live text menus", {
+  requested <- NULL
+  captured <- list()
+  alert <- NULL
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(...)$choices
+    },
+    .package = "shiny"
+  )
+  testthat::local_mocked_bindings(
+    shinyalert = function(...) {
+      alert <<- list(...)
+    },
+    .package = "shinyalert"
+  )
+  testthat::local_mocked_bindings(
+    ai.list_provider_models = function(provider, key, base_url = NULL) {
+      requested <<- list(provider = provider, key = key, base_url = base_url)
+      c("custom-live-model", "custom-large")
+    },
+    .package = "omicsai"
+  )
+
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(
+        ai_provider = "custom",
+        ai_api_key = "ck",
+        ai_base_url = "https://llm.example/v1"
+      )
+      session$setInputs(ai_test_load = 1)
+
+      expect_equal(requested$provider, "custom")
+      expect_equal(requested$key, "ck")
+      expect_equal(requested$base_url, "https://llm.example/v1")
+      expect_equal(captured$llm_reports,
+                   c("custom-live-model", "custom-large"))
+      expect_equal(captured$llm_copilot_deep,
+                   c("custom-live-model", "custom-large"))
+      expect_equal(captured$llm_copilot_balanced,
+                   c("custom-live-model", "custom-large"))
+      expect_equal(captured$llm_images, character(0))
+      expect_equal(alert$type, "success")
+      expect_equal(ai_test_status()$state, "ok")
+    }
+  )
+})
+
+test_that("a provider whose menu is empty repopulates with no choices", {
+  captured <- list()
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(...)$choices
+    },
+    .package = "shiny"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "anthropic")
+      expect_equal(captured$llm_images, character(0))
+      expect_equal(captured$llm_reports,
+                   c("claude-opus-4-8", "claude-sonnet-4-6",
+                     "claude-haiku-4-5"))
+    }
+  )
+})
+
+test_that("GitHub and Mistral providers repopulate from their catalogs", {
+  captured <- list()
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(...)$choices
+    },
+    .package = "shiny"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "github")
+      expect_equal(captured$llm_reports,
+                   c("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini"))
+      expect_equal(captured$llm_images, character(0))
+      expect_equal(captured$llm_copilot_deep,
+                   c("openai/gpt-4.1", "openai/gpt-4o", "openai/gpt-4o-mini"))
+      expect_equal(captured$llm_copilot_balanced,
+                   c("openai/gpt-4o-mini", "openai/gpt-4.1", "openai/gpt-4o"))
+
+      session$setInputs(ai_provider = "mistral")
+      expect_equal(captured$llm_reports,
+                   c("mistral-large-latest", "mistral-medium-latest",
+                     "mistral-small-latest", "ministral-8b-latest"))
+      expect_equal(captured$llm_images, character(0))
+      expect_equal(captured$llm_copilot_deep,
+                   c("mistral-large-latest", "mistral-medium-latest",
+                     "mistral-small-latest", "ministral-8b-latest"))
+      expect_equal(captured$llm_copilot_balanced,
+                   c("mistral-medium-latest", "mistral-large-latest",
+                     "mistral-small-latest", "ministral-8b-latest"))
+    }
+  )
+})
+
+test_that("a provider missing from the menu policy falls back to the union allowlist", {
+  captured <- list()
+  testthat::local_mocked_bindings(
+    updateSelectInput = function(session, inputId, ...) {
+      captured[[inputId]] <<- list(...)$choices
+    },
+    .package = "shiny"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "unknown")
+      expect_equal(captured$llm_reports, opt$AI_MENU_REPORTS)
+      expect_equal(captured$llm_images, opt$AI_MENU_IMAGES)
+    }
+  )
+})
+
+# ===========================================================================
+# admin lock
+# ===========================================================================
+
+test_that("a non-admin sees a disabled provider dropdown when AI_PROVIDER_LOCKED", {
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(admin = FALSE), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("ai_provider" %in% toggled$disabled)
+      expect_false("ai_provider" %in% toggled$enabled)
+    }
+  )
+})
+
+test_that("an admin keeps the provider dropdown enabled even when locked", {
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(admin = TRUE), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("ai_provider" %in% toggled$enabled)
+      expect_false("ai_provider" %in% toggled$disabled)
+    }
+  )
+})
+
+# ===========================================================================
+# enable-AI gate: publishes ai_enabled + toggles the AI tabs
+# ===========================================================================
+
+test_that("enabling AI publishes ai_enabled=TRUE and exposes enable_ai=TRUE", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(enable_ai = TRUE)
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_enabled"]]))
+      expect_true(isTRUE(session$returned$enable_ai()))
+    }
+  )
+})
+
+test_that("disabling the AI switch publishes ai_enabled=FALSE and exposes enable_ai=FALSE", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(enable_ai = FALSE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_enabled"]]))
+      expect_false(isTRUE(session$returned$enable_ai()))
+    }
+  )
+})
+
+test_that("an unlicensed deployment (ENABLE_AI=FALSE) forces ai_enabled off even when the switch is on", {
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(enable_ai = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_enabled"]]))
+    }
+  )
+})
+
+# ===========================================================================
+# logout clears the session credential
+# ===========================================================================
+
+test_that("logging out clears the stored credential and resets the provider", {
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(), pgx = shiny::reactiveValues()), {
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-leak")
+      expect_true(is.function(session$userData[["ai_credentials"]]))
+
+      auth$logged <- FALSE
+      session$flushReact()
+
+      expect_null(session$userData[["ai_credentials"]])
+      expect_equal(session$userData[["ai_provider"]], "bigomics")
+    }
+  )
+})
+
+# ===========================================================================
+# AI data-sharing consent
+#
+# The one AI setting that outlives the session. These cover the three things
+# that make it a consent rather than a preference: it defaults off, it is
+# written to and re-read from the user's dir, and it never survives into a
+# different user's session.
+# ===========================================================================
+
+## Per-test user dir so a consent file written by one test cannot be read by
+## the next (make_auth() shares tempdir()).
+make_consent_auth <- function(admin = FALSE, dir = withr::local_tempdir(.local_envir = parent.frame())) {
+  shiny::reactiveValues(logged = TRUE, ADMIN = admin, user_dir = dir)
+}
+
+test_that("consent defaults to off and is not written before the user touches it", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(file.exists(file.path(dir, AI_CONSENT_FILE)))
+    }
+  )
+})
+
+test_that("opting in stores the consent in the session and on disk", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      ## Let the login seed settle first: in the real lifecycle the user can
+      ## only reach the switch after the session has loaded their record.
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+      expect_true(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("withdrawing consent overwrites the stored record", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(load_ai_consent(dir))
+
+      session$setInputs(ai_share_data = FALSE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("a persisted consent is restored on login", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("consent is refused for a BYOK provider even if the client sends TRUE", {
+  ## On a user's own key their provider account governs; a forged input must
+  ## not record a consent we would then act on.
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-x",
+                        ai_share_data = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("logging out drops the session consent but leaves the record intact", {
+  ## The next login in this Shiny process must not inherit the previous user's
+  ## opt-in; logging out is not a withdrawal, so the file stays.
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+
+      auth$logged <- FALSE
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_true(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("an unlicensed deployment greys the consent switch", {
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("ai_share_data" %in% toggled$disabled)
+      expect_false("ai_share_data" %in% toggled$enabled)
+    }
+  )
+})
+
+# ===========================================================================
+# Deployment lock vs consent. Greying the switch is not enough: a disabled
+# control keeps whatever value it had, so a user who opted in before the lock
+# would stay opted in behind a switch they can no longer reach.
+# ===========================================================================
+
+test_that("a locked deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an admin is unaffected by AI_PROVIDER_LOCKED", {
+  ## The lock exists to stop non-admins changing AI behaviour on a pinned
+  ## deployment; the admin who set it keeps their own switch.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(admin = TRUE, dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an unlicensed deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("a lock does not erase the user's stored consent", {
+  ## A deployment-level lock is not the user withdrawing. When it lifts, the
+  ## answer they gave must still be there.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+  expect_true(load_ai_consent(dir))
+})

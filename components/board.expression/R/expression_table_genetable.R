@@ -79,12 +79,10 @@ expression_table_genetable_server <- function(id,
       na.fc <- which(is.na(res$logFC))
       if (any(na.fc)) res$logFC[na.fc] <- 999
 
-      if (!full_table) {
-        if (show_pv()) {
-          res <- res[, -grep(".q$", colnames(res)), drop = FALSE]
-        } else {
-          res <- res[, -grep("\\.p$", colnames(res)), drop = FALSE]
-        }
+      ## ponytail: show_pv is additive -- p-values are shown *next to* the
+      ## q-values, not instead of them.
+      if (!full_table && !show_pv()) {
+        res <- res[, -grep("\\.p$", colnames(res)), drop = FALSE]
       }
 
       if (input$gx_top10) {

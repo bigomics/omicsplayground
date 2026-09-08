@@ -13,9 +13,6 @@ message(" \\___/|_| |_| |_|_|\\___|___/_|   |_|\\__,_|\\__, |\\__, |_|  \\___/ \
 message("                                          |___/ |___/                              ")
 message("\n\n\n")
 
-shiny::addResourcePath("custom", "www")
-
-
 message("[GLOBAL] reading global.R ...")
 
 if (Sys.info()["sysname"] != "Windows") {
@@ -25,7 +22,7 @@ if (Sys.info()["sysname"] != "Windows") {
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 
-options(shiny.maxRequestSize = 2048 * 1024^2) ## max 2GB (previously 999Mb) upload
+options(shiny.maxRequestSize = 999 * 1024^2) ## max 999Mb upload
 options(shiny.fullstacktrace = TRUE)
 # The following DT global options ensure
 # 1. The header scrolls with the X scroll bar
@@ -60,14 +57,46 @@ OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
-APPDIR <- file.path(OPG, "components/app/R")
+#APPDIR <- file.path(OPG, "components/app/R")
+APPDIR <- file.path(OPG, "components")
 PGX.DIR <- file.path(OPG, "data")
+## Make the PGX directory visible to omicsagentovi's disk-scanning tools (list_pgx, load_pgx)
+options(omicspgxmcp.data_dir = PGX.DIR)
+## Persistent copilot chat sessions + uploaded docs are anchored on
+## auth$user_dir at session time (resolved inside CopilotBoardServer),
+## matching the convention used by board.loading / compare / connectivity.
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
 SIGDB.DIR <- file.path(OPG, "libx/sigdb")
 
 ## Set files
 ACCESS_LOGFILE <- file.path(ETC, "access.log")
+
+# Fail fast at startup if the installed omicsai lacks the provider-catalog API
+# the AI features depend on (model menus, live model discovery). A clear stop
+# here beats a confusing "could not find function" surfacing deep inside a
+# running Shiny session.
+.opg_require_omicsai_catalog_api <- function() {
+  required <- c(
+    "ai_known_models",
+    "ai_provider_catalog",
+    "ai_select_model",
+    "ai_validate_model",
+    "ai.list_provider_models"
+  )
+  exports <- tryCatch(getNamespaceExports("omicsai"), error = function(e) character(0))
+  missing <- setdiff(required, exports)
+  if (!length(missing)) {
+    return(invisible(TRUE))
+  }
+
+  stop(
+    "Installed omicsai is missing required provider catalog API exports: ",
+    paste(missing, collapse = ", "),
+    ". Install omicsai >= 0.3.2 or update omicsai in renv.",
+    call. = FALSE
+  )
+}
 
 ## like system.file()
 pgx.system.file <- function(file = ".", package) {
@@ -80,6 +109,7 @@ pgx.system.file <- function(file = ".", package) {
   file.path(dir, file)
 }
 
+VERSION <- scan(file.path(OPG, "VERSION"), character())[1]
 AUTHENTICATION <- "none"
 WATERMARK <- FALSE
 DEVMODE <- FALSE
@@ -101,13 +131,25 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(bigdash)
 library(grid)
 library(magrittr)
 library(future)
 library(promises)
-future::plan(future::multisession)
+future::plan(future::multicore)
+
+## Resource paths
+shiny::addResourcePath("custom", file.path(OPG, "components/assets"))
+## NB "assets" shadows bigdash's own resource path (registered in its
+## .onLoad), so /assets/lato.woff would 404 and big_theme()'s Lato
+## @font-face silently fall back. components/assets/lato.woff is a copy of
+## bigdash/assets/lato.woff kept for exactly that reason -- don't delete it.
+shiny::addResourcePath("assets", file.path(OPG, "components/assets"))
+shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
 source(file.path(APPDIR, "utils/utils.R"), local = TRUE)
+.opg_require_omicsai_catalog_api()
+source(file.path(APPDIR, "utils/ai_model_policy.R"), local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
@@ -149,6 +191,20 @@ message("\n************************************************")
 message("************* PARSING OPTIONS ******************")
 message("************************************************")
 
+## Boards shown in the flat BASIC menu when the admin has not chosen any.
+BASIC_MENU_DEFAULT <- c("dataview", "clustersamples", "diffexpr")
+
+## Every board of the full menu can have its advanced settings greyed out for
+## BASIC users -- lock_advanced() finds the blocks without being told where they
+## are. Read off opg_menu_tree() rather than hand-listed here, so it tracks the
+## menu (which is itself partly hardcoded -- a new board still has to be added
+## there). Guarded because components/00SourceAll.R is sourced conditionally.
+BASIC_LOCKABLE <- if (exists("opg_menu_tree")) {
+  unlist(lapply(opg_menu_tree(), names), use.names = FALSE)
+} else {
+  BASIC_MENU_DEFAULT
+}
+
 opt.default <- list(
   TITLE = "Omics Playground",
   AUTHENTICATION = "none", ## none, password, login-code, login-code-redirect
@@ -171,6 +227,8 @@ opt.default <- list(
   ENABLE_INACTIVITY = TRUE,
   INACTIVITY_TIMEOUT = 1800,
   ENABLE_ANNOT = FALSE,
+  DEV_AUTOLOAD = FALSE, ## dev/testing: skip sign-in, load example, open Dashboard
+  ENABLE_PLOTLY_PURGE = TRUE, ## drop hidden boards' drawn Plotly/iheatmapr traces, redraw on return
   ENABLE_METADATA = FALSE,
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
@@ -188,14 +246,25 @@ opt.default <- list(
   APACHE_COOKIE_PATH = OPG,
   ALLOW_CUSTOM_FC = FALSE,
   DEVMODE = FALSE,
+  USER_LEVEL = 'PRO',  
   ENABLE_MULTIOMICS = TRUE,
+  ENABLE_ACROSS = FALSE,
   ENABLE_COOKIE_LOGIN = TRUE,
-  PUBLIC_DATASETS_LABEL = "Public Datasets"
+  PUBLIC_DATASETS_LABEL = "Public Datasets",
+  LLM_MAXTURNS = 100,
+  ENABLE_AI = FALSE,
+  AI_PROVIDERS_ENABLED = c("bigomics", "openai", "anthropic", "google",
+                           "github", "mistral", "custom"),
+  AI_PROVIDER_LOCKED   = FALSE,
+  BASIC_MENU = BASIC_MENU_DEFAULT,
+  BASIC_LOCKED = BASIC_LOCKABLE,
+  FORCE_BASIC = FALSE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
 if (!file.exists(opt.file)) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- playbase::pgx.readOptions(file = opt.file, default = opt.default) ## global!
+
 
 message("\n************************************************")
 message("************* SETTING DEFAULTS ***************")
@@ -232,6 +301,13 @@ if (file.exists(metadata.file)) {
   message("[GLOBAL] metadata_options.yml not found, metadata feature disabled")
   METADATA_OPTIONS <<- list(fields = list())
 }
+
+## Load OPG AI model selection policy. Provider/model facts are owned by
+## omicsai::ai_provider_catalog()/ai_known_models(); this JSON file only
+## overlays enablement, filtering, ordering, and defaults for OPG menus.
+ai_model_policy.file <- file.path(ETC, "ai_model_policy.json")
+AI_MODEL_POLICY <<- .opg_ai_read_policy(ai_model_policy.file)
+message("[GLOBAL] Loaded AI model selection policy")
 
 ## Check and set authentication method
 if (Sys.getenv("PLAYGROUND_AUTHENTICATION") != "") {
@@ -276,7 +352,7 @@ if (opt$HUBSPOT_CHECK) {
 ## ------------------------------------------------
 
 BOARDS <- c(
-  "welcome", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
+  "welcome", "summary", "load", "upload", "dataview", "clustersamples", "clusterfeatures",
   "diffexpr", "enrich", "isect", "pathway", "wordcloud", "drug", "sig", "cell",
   "corr", "bio", "cmap", "wgcna", "tcga", "comp", "user", "pcsf",
   "multiomics", "ideograms"
@@ -286,7 +362,7 @@ opt$BOARDS_ENABLED <- BOARDS
 ENABLED <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames = list(BOARDS))
 
 MODULES <- c(
-  "Welcome", "Datasets", "DataView", "Clustering", "Expression",
+  "Welcome", "Summary", "Datasets", "DataView", "Clustering", "Expression",
   "GeneSets", "Compare", "SystemsBio", "MultiOmics", "WGCNA", "Epigenomics"
 )
 if (is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED <- MODULES
@@ -305,6 +381,13 @@ MODULES_LOADED <- array(rep(FALSE, length(MODULES)), dimnames = list(MODULES))
 if (is.null(opt$HOSTNAME) || opt$HOSTNAME == "") {
   opt$HOSTNAME <- toupper(system("hostname", intern = TRUE))
 }
+
+## Both basic-mode lists are chosen from Admin panel > Basic menu, which writes
+## one board id per line to etc/BASIC_MENU-<HOSTNAME> (what the flat menu keeps)
+## and etc/BASIC_LOCKED-<HOSTNAME> (whose advanced settings are greyed out).
+## Read here, after HOSTNAME is resolved. These files win over OPTIONS.
+opt$BASIC_MENU <- read_board_list("BASIC_MENU", opt$BASIC_MENU)
+opt$BASIC_LOCKED <- read_board_list("BASIC_LOCKED", opt$BASIC_LOCKED)
 ACTIVE_SESSIONS <- c()
 MAX_SESSIONS <- 3
 if (!is.null(opt$MAX_SESSIONS)) MAX_SESSIONS <- opt$MAX_SESSIONS
@@ -319,8 +402,6 @@ message("\n\n")
 main.init_time <- round(Sys.time() - main.start_time, digits = 4)
 main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
-
-shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
 
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
@@ -337,14 +418,56 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## Filter LLM models with available models, add all local models(?)
-opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-LOCAL_MODELS <- playbase::ai.get_ollama_models()
-opt$IMAGE_MODELS <- playbase::ai.get_image_models(opt$IMAGE_MODELS)
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
+## LLM model setup. Provider/model facts come from omicsai; OPG owns only the
+## menu policy overlay in etc/ai_model_policy.json.
+opt$AI_PROVIDERS <- unique(unlist(strsplit(as.character(opt$AI_PROVIDERS_ENABLED), ";")))
+opt$AI_MODELS    <- .opg_ai_build_models(AI_MODEL_POLICY, opt$AI_PROVIDERS)
+opt$AI_MENU_REPORTS          <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "reports")
+opt$AI_MENU_IMAGES           <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "images")
+opt$AI_MENU_COPILOT_DEEP     <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "copilot_deep")
+opt$AI_MENU_COPILOT_BALANCED <- .opg_ai_menu_allowlist(opt$AI_MODELS, opt$AI_PROVIDERS, "copilot_balanced")
+## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
+
+## Copilot tier selection — verify against the omicsagentovi registry
+if (is.null(opt$COPILOT_MODEL)) {
+  opt$COPILOT_MODEL <- "copilot-default"
+}
+if (requireNamespace("omicsagentovi", quietly = TRUE)) {
+  .valid_tiers <- omicsagentovi::ovi_copilot_tiers()
+  .bad_tiers <- setdiff(opt$COPILOT_MODEL, .valid_tiers)
+  if (length(.bad_tiers) > 0L) {
+    warning(sprintf(
+      "[global] COPILOT_MODEL has unknown tiers: %s. Valid: %s. Dropping unknown entries.",
+      paste(.bad_tiers, collapse = ", "), paste(.valid_tiers, collapse = ", ")
+    ))
+    opt$COPILOT_MODEL <- intersect(opt$COPILOT_MODEL, .valid_tiers)
+  }
+  if (length(opt$COPILOT_MODEL) == 0L) opt$COPILOT_MODEL <- "copilot-default"
+  rm(.valid_tiers, .bad_tiers)
+}
 
 ## Setup reticulate
-tryCatch(
-  reticulate::use_miniconda("r-reticulate"),
-  error = function(e) message("[GLOBAL] miniconda 'r-reticulate' not available: ", e$message)
+## reticulate::use_virtualenv()
+
+## ------------------------------------------------------------------
+## bigdash hooks
+## ------------------------------------------------------------------
+## PlotModule/TableModule live in bigdash and know nothing about Omics
+## Playground. Everything OPG-specific they used to reach for directly is
+## registered here as an option; see bigdash::bd_hook. Registered last so
+## that both the ui-*.R functions and the globals below are in place.
+
+options(
+  bigdash.tspan = tspan,
+  bigdash.editor_content = getEditorContent,
+  bigdash.editor_theme_observer = plotmodule_theme_observer,
+  bigdash.record_download = record_plot_download,
+  bigdash.watermark = isTRUE(opt$WATERMARK),
+  bigdash.watermark_png = function(file, position) {
+    addWatermark.PNG2(file, mark = file.path(FILES, "watermark-logo.png"), position = position)
+  },
+  bigdash.watermark_pdf = function(file, w, h) {
+    addWatermark.PDF2(file, w = w, h = h, mark = file.path(FILES, "watermark-logo.pdf"))
+  },
+  bigdash.pdf_settings = addSettings
 )

@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
-MultiWGCNA_Board <- function(id, pgx) {
+MultiWGCNA_Board <- function(id, pgx, save_pgx = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     fullH <- 700 ## full height of page
@@ -28,36 +28,24 @@ MultiWGCNA_Board <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Multi-Omics WGCNA Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
+    OmicsBoard(session, pgx, title = "Multiomics WGCNA", infotext = infotext)
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
       "Dendrograms" = list(disable = c(
-        "phenotype", "module", "condition", "lasagna_options",
-        "report_options"
+        "phenotype", "module", "condition", "lasagna_options"
       )),
       "Module-Trait" = list(disable = c(
         "phenotype", "module", "condition", "wgcna_options",
-        "lasagna_options", "report_options"
+        "lasagna_options"
       )),
       "Module correlation" = list(disable = c(
         "phenotype", "module", "wgcna_options",
-        "lasagna_options", "report_options"
+        "lasagna_options"
       )),
-      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options", "report_options")),
+      "WGCNA-Lasagna" = list(disable = c("module", "condition", "wgcna_options")),
       "Feature Table" = list(disable = c(
         "layers", "condition", "wgcna_options",
-        "lasagna_options", "report_options"
-      )),
-      "AI Report✨" = list(disable = c(
-        "phenotype", "module", "condition", "layers",
         "lasagna_options", "wgcna_options"
       ))
     )
@@ -70,6 +58,54 @@ MultiWGCNA_Board <- function(id, pgx) {
     ## ============================ REACTIVES =====================================
     ## ============================================================================
 
+    compute_moxwgcna <- function() {
+        
+      if (input$power == "<auto>") {
+        power <- "iqr"
+      } else {
+        power <- as.numeric(input$power)
+      }
+      
+      ## setup progress bars
+      progress <- shiny::Progress$new(session, min = 0, max = 1)
+      on.exit(progress$close())
+      progress$set(message = paste("computing multi-omics WGCNA..."), value = 0.33)
+      pgx.showSmallModal("computing multi-omics WGCNA...")
+      
+      dataX <- playbase::mofa.split_data(pgx$X)
+      samples <- pgx$samples
+      contrasts <- pgx$contrasts
+      
+      wgcna <- playbase::wgcna.compute_multiomics(
+        dataX = dataX,
+        samples = samples,
+        contrasts = contrasts,
+        do.consensus = input$consensus,
+        add.pheno = (ncol(samples) > 10),
+        add.gsets = input$addgsets,
+        cutMethod = "hybrid",
+        deepsplit = as.integer(input$deepsplit),
+        power = power,
+        ngenes = as.integer(input$ngenes),
+        minmodsize = as.integer(input$minmodsize),
+        minKME = 0.3,
+        compute.enrichment = TRUE,
+        gset.xtop = 100,
+        gset.ntop = 1000,
+        gset.methods = c("gsetcor", "xcor", "fisher"),
+        annot = pgx$genes,
+        GMT = pgx$GMT,
+        experiment = pgx$description,
+        progress = progress
+      )
+      shiny::removeModal()
+      
+      return(wgcna)
+    }
+
+
+    ncompute = 0
+
     r_multiwgcna <- shiny::eventReactive(
       {
         list(input$compute, pgx$X)
@@ -81,53 +117,18 @@ MultiWGCNA_Board <- function(id, pgx) {
           "ERROR: not multi-omics data"
         ))
 
-        if (input$power == "<auto>") {
-          power <- "iqr"
+        has_wgcna <- "wgcna_mox" %in% names(pgx)
+        compute_clicked <- (input$compute != ncompute) 
+
+        if (!compute_clicked && has_wgcna) {
+          dbg("[moxWgcnaBoard] >>> using pre-computed moxWGCNA results...")
+          wgcna <- pgx$wgcna_mox
         } else {
-          power <- as.numeric(input$power)
+          wgcna <- compute_moxwgcna() 
         }
 
-        ## setup progress bars
-        progress <- shiny::Progress$new(session, min = 0, max = 1)
-        on.exit(progress$close())
-        progress$set(message = paste("computing multi-omics WGCNA..."), value = 0.33)
-        pgx.showSmallModal("computing multi-omics WGCNA...")
-
-        dataX <- playbase::mofa.split_data(pgx$X)
-        samples <- pgx$samples
-        contrasts <- pgx$contrasts
-
-        llm_model <- getUserOption(session, "llm_model")
-
-        obj.wgcna <- playbase::wgcna.compute_multiomics(
-          dataX = dataX,
-          samples = samples,
-          contrasts = contrasts,
-          do.consensus = input$consensus,
-          add.pheno = (ncol(samples) > 10),
-          add.gsets = input$addgsets,
-          cutMethod = "hybrid",
-          deepsplit = as.integer(input$deepsplit),
-          power = power,
-          ngenes = as.integer(input$ngenes),
-          minmodsize = as.integer(input$minmodsize),
-          minKME = 0.3,
-          compute.enrichment = TRUE,
-          gset.xtop = 100,
-          gset.ntop = 1000,
-          gset.methods = c("gsetcor", "xcor", "fisher"),
-          annot = pgx$genes,
-          GMT = pgx$GMT,
-          report = TRUE,
-          # ai_model = NULL,
-          ai_model = llm_model,
-          experiment = pgx$description,
-          progress = progress
-        )
-        shiny::removeModal()
-
-        wgcna <- obj.wgcna$layers
-        phenotypes <- colnames(wgcna[[1]]$datTraits)
+        wlayers <- wgcna$layers
+        phenotypes <- colnames(wlayers[[1]]$datTraits)
 
         updateSelectInput(session, "phenotype",
           choices = phenotypes,
@@ -139,21 +140,22 @@ MultiWGCNA_Board <- function(id, pgx) {
           selected = "None"
         )
 
-        layers <- names(wgcna)
+        layers <- names(wlayers)
         sel.layers <- setdiff(layers, c("gset", "gs", "pheno", "ph"))
         updateSelectInput(session, "layers",
           choices = layers,
           selected = sel.layers
         )
 
-        all_modules <- lapply(wgcna, function(w) sort(names(w$me.genes)))
+        all_modules <- lapply(wlayers, function(w) sort(names(w$me.genes)))
         module1 <- all_modules[[1]][1]
         updateSelectInput(session, "module",
           choices = all_modules,
           selected = module1
         )
 
-        return(obj.wgcna)
+        ncompute <<- input$compute
+        return(wgcna)
       },
       ignoreNULL = FALSE
     )
@@ -216,22 +218,18 @@ MultiWGCNA_Board <- function(id, pgx) {
       r_module = reactive(input$module)
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # Module summary (durable: precomputed per layer x module, stored in
+    # pgx$ai$wgcna_mox$extras; Regenerate overrides the stored entry).
+    wgcna_module_ai_summary_server(
       "multiwgcnaSummary",
       wgcna = r_multiwgcna,
-      multi = TRUE,
-      r_annot = reactive(pgx$genes),
+      pgx = pgx,
       r_module = shiny::reactive(input$module),
-      watermark = WATERMARK
-    )
-
-    wgcna_html_report_server(
-      id = "multiwgcnaReport",
-      wgcna = r_multiwgcna,
-      multi = TRUE,
-      r_annot = reactive(pgx$genes),
-      watermark = WATERMARK
+      parent_session = session,
+      watermark = WATERMARK,
+      variant = "wgcna_mox",
+      board_type = "multiomics",
+      save_pgx = save_pgx
     )
 
     return(NULL)

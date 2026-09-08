@@ -28,14 +28,7 @@ ConsensusWGCNA_Board <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Multi-Omics WGCNA Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
+    OmicsBoard(session, pgx, title = "Consensus WGCNA", infotext = infotext)
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -184,9 +177,6 @@ ConsensusWGCNA_Board <- function(id, pgx) {
           addCombined = FALSE,
           compute.stats = TRUE,
           compute.enrichment = TRUE,
-          summary = TRUE,
-          ai_model = NULL,
-          experiment = pgx$description,
           gsea.mingenes = 5,
           gsea.ntop = 1000,
           progress = progress,
@@ -263,13 +253,17 @@ ConsensusWGCNA_Board <- function(id, pgx) {
       mwgcna = r_wgcna
     )
 
-    # Enrichment plot
-    wgcna_html_module_summary_server(
+    # Module summary (ephemeral: the consensus object is computed live from
+    # user input and never persisted, so summaries are generated on demand).
+    wgcna_module_ai_summary_server(
       "consensusWGCNAmoduleSummary",
       wgcna = r_wgcna,
-      multi = FALSE,
+      pgx = pgx,
       r_module = shiny::reactive(input$module),
-      watermark = WATERMARK
+      parent_session = session,
+      watermark = WATERMARK,
+      variant = NULL,
+      board_type = "consensus"
     )
 
     consensusWGCNA_plot_traitsignificance_server(

@@ -13,11 +13,15 @@ LoadingBoard <- function(id,
                          ),
                          pgx_topdir,
                          load_example,
+                         load_example_dataset = NULL,
                          reload_pgxdir,
                          current_page,
                          load_uploaded_data,
                          recompute_pgx,
-                         new_upload) {
+                         new_upload,
+                         save_pgx = NULL,
+                         pgx_source_dir = NULL,
+                         parent) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
 
@@ -35,13 +39,22 @@ LoadingBoard <- function(id,
     ## Received/shared UI
     ## -------------------------------------------------------------------
 
+    ## Navigate to the "Shared datasets" inner tab of the Library board. The old
+    ## bigdash "sharing-tab" board was folded into this tabset during the UI
+    ## reshuffle, so bigdash.selectTab() no longer reaches it.
+    goto_sharing_tab <- function() {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
+      shiny::updateTabsetPanel(session, "tabs", selected = "sharing_tab")
+    }
+
     pgxreceived <- upload_module_received_server(
       id = "received",
       auth = auth,
       pgx_shared_dir = pgx_shared_dir,
       ##      max_datasets = auth$options$MAX_DATASETS,  ## wrong and not needed...
       reload_pgxdir = reload_pgxdir,
-      current_page = current_page
+      current_page = current_page,
+      goto_sharing_tab = goto_sharing_tab
     )
 
     pgxshared <- upload_module_shared_server(
@@ -84,71 +97,42 @@ LoadingBoard <- function(id,
       )
     })
 
-    output$sharing_panel_ui <- renderUI({
-      if (!auth$options$ENABLE_USER_SHARE) {
-        return(
-          "Your version does not allow sharing of datasets."
-        )
-      }
-      received_files <- pgxreceived$getReceivedFiles()
-      shared_files <- pgxshared$getSharedFiles()
-      num_received <- length(received_files)
-      num_shared <- length(shared_files)
-
-      ## if (num_received == 0 && num_shared == 0) {
-      ##   dbg("[sharing_panel_ui] no shared datasets!")
-      ##   return(paste("No shared datasets in queue."))
-      ## }
-
-      out1 <- shiny::wellPanel(
-        shiny::HTML("<b>Received datasets.</b> Accept or refuse the received dataset using the action buttons on the right."),
-        br(), br(),
-        pgxreceived$receivedPGXtable(),
-        br()
-      )
-
-      out2 <- shiny::wellPanel(
-        shiny::HTML("<b>Shared datasets.</b> Resend a message to the receiver or cancel sharing using the action buttons on the right."),
-        br(), br(),
-        pgxshared$sharedPGXtable(),
-        br()
-      )
-
-      out <- shiny::tagList(out1, out2)
-      return(out)
-    })
-
     ## ======================================================================
     ## LOAD EXAMPLE TRIGGER
     ## ======================================================================
-    observeEvent(load_example(),
-      {
-        # get the row which corresponds to "example-data"
-        data_names <- as.character(pgxtable$data()$dataset)
-        example_row <- which(data_names == "example-data")[1]
-        has.exampledata <- ("example-data" %in% data_names)
+    observeEvent(load_example(), {
 
-        # if not found, throw error modal that example-data doesnt exist
-        ## if (is.na(example_row)) {
-        if (!has.exampledata) {
-          shinyalert::shinyalert(
-            title = "No example data",
-            text = "Sorry, the example dataset could not be found.",
-            type = "warning",
-            closeOnClickOutside = FALSE
-          )
-          return(NULL)
-        } else {
-          loadAndActivatePGX("example-data")
+      ## Which dataset counts as "the example" is caller-chosen (e.g. the
+      ## MultiOmics dashboard's popup wants "mox-brca" instead of the
+      ## default "example-data") -- isolate() since this reactiveVal is only
+      ## meant to be read at the moment load_example() itself fires, not to
+      ## add its own dependency here.
+      example_name <- if (!is.null(load_example_dataset)) {
+        shiny::isolate(load_example_dataset())
+      } else {
+        "example-data"
+      }
 
-          # open the left & right sidebar
-          bigdash.openSettings(lock = TRUE)
-          bigdash.openSidebar()
-          bigdash.selectTab(session, selected = "dataview-tab")
-          ## shiny::removeModal()
-        }
-      },
-      ignoreInit = TRUE
+      # get the row which corresponds to the target example dataset
+      data_names <- as.character(pgxtable$data()$dataset)
+      example_row <- which(data_names == example_name)[1]
+      has.exampledata <- (example_name %in% data_names)
+
+      # if not found, throw error modal that the example dataset doesnt exist
+      ## if (is.na(example_row)) {
+      if (!has.exampledata) {
+        shinyalert::shinyalert(
+          title = "No example data",
+          text = paste0("Sorry, the example dataset '", example_name, "' could not be found."),
+          type = "warning",
+          closeOnClickOutside = FALSE
+        )
+        return(NULL)
+      } else {
+        loadAndActivatePGX(example_name)
+      }
+    },
+    ignoreInit = TRUE
     )
 
     ## ================================================================================
@@ -316,42 +300,115 @@ LoadingBoard <- function(id,
       }
     }
 
-    savePGX <- function(pgx, file) {
-      req(auth$logged)
-      if (!auth$logged) {
-        warning("[LoadingBoard::savePGX] ***ERROR*** not logged in or authorized")
-        return(NULL)
+    maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
+      if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
+
+      ## Only offer generation to users who can persist the result: dataset
+      ## owners (loaded from their own dir) or, when the admin feature is
+      ## enabled, admins (curators, who write back to the source dir via
+      ## save_current_pgx). Otherwise the paid ai_report_generate() below runs
+      ## only to no-op on save. Same gate as AI Studio on-demand generation.
+      admin_ok <- isTRUE(auth$ADMIN) && isTRUE(opt$ENABLE_ADMIN)
+      if (!isTRUE(is_user_dir) && !admin_ok) return(invisible(NULL))
+
+      llm_model <- getUserOption(session, "llm_model")
+      if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
+      cred_fn <- get_ai_credentials(session)
+
+      pgx_list <- shiny::reactiveValuesToList(pgx)
+      report_modules <- ai_report_modules_for_pgx(pgx_list)
+      ## Do not require every possible module report. Some modules are optional
+      ## or can fail independently; any valid pgx$ai report is enough to avoid
+      ## prompting on every load.
+      if (!ai_report_needs_generation(pgx_list)) {
+        return(invisible(NULL))
       }
-      file <- paste0(sub("[.]pgx$", "", file), ".pgx") ## add/replace .pgx
-      pgxdir <- auth$user_dir
-      if (dir.exists(pgxdir)) {
-        file1 <- file.path(pgxdir, file)
-        playbase::pgx.save(pgx, file = file1)
-      } else {
-        warning("[LoadingBoard::savePGX] ***ERROR*** pgxdir not found : ", pgxdir)
-      }
-      return(NULL)
+
+      ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
+      shinyalert::shinyalert(
+        title = "Missing AI reports",
+        text = paste0("Dataset '", ds_name,
+          "' has missing AI reports. Would you like to compute them now (2-3 min)?"),
+        type = "info",
+        showCancelButton = TRUE,
+        confirmButtonText = "Yes",
+        cancelButtonText = "No",
+        callbackR = function(confirmed) {
+          if (!isTRUE(confirmed)) return(NULL)
+          shiny::withProgress(message = "Please wait. Generating AI reports...",
+            value = 0.33, {
+            pgx_list <- shiny::reactiveValuesToList(pgx)
+            pgx_list <- ai_report_generate(
+              pgx_list,
+              llm_model = llm_model,
+              img_model = NULL,
+              select = report_modules,
+              report_type = "normal",
+              on_error = "warn",
+              credentials = cred_fn
+            )
+            updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
+            if (isTRUE(updated)) {
+              tryCatch(
+                ai_telemetry_record_reports(
+                  shiny::isolate(shiny::reactiveValuesToList(pgx)),
+                  user_email = auth$email
+                ),
+                error = function(e) NULL
+              )
+            }
+            ## Persist through save_current_pgx, which resolves the correct
+            ## target (owner dir, or source dir for admins) and no-ops if not
+            ## permitted. Non-persisters were already turned away above.
+            if (isTRUE(updated) && !is.null(save_pgx)) {
+              save_pgx(pgx)
+            }
+            if (isTRUE(updated)) {
+              shinyalert::shinyalert(
+                title = "AI reports ready",
+                text = "Your AI reports are ready.",
+                type = "success",
+                confirmButtonText = "OK"
+              )
+            }
+          })
+        }
+      )
     }
 
     loadAndActivatePGX <- function(pgxfile, pgxdir = NULL) {
-      ## During loading show loading pop-up modal
-      pgx.showCartoonModal()
 
+      ## During loading show loading pop-up modal
+      firstpgx <- (length(names(pgx))==0)
+      if(firstpgx) {
+        ui.showStartupModal()
+      } else {
+        ui.showCartoonModal()
+      }
+      
       loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
-        warning("[LoadingBoard@load_react] ERROR loading PGX file ", pgxfile, "\n")
+        warning("[loadAndActivatePGX] ERROR loading PGX file ", pgxfile, "\n")
         beepr::beep(10)
         shiny::removeModal()
         return(NULL)
       }
 
+      ## Record the source directory of the dataset just loaded so downstream
+      ## save/authorization logic (e.g. admin write-back to public/shared
+      ## datasets) knows where it actually lives.
+      if (!is.null(pgx_source_dir)) {
+        pgx_source_dir(if (is.null(pgxdir)) auth$user_dir else pgxdir)
+      }
+
       ## ----------------- update PGX object ---------------------------------
-      slots0 <- names(loaded_pgx)
+      kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
+      size0 <- object.size(loaded_pgx[kk])
       shiny::withProgress(message = "Initializing. Please wait...", value = 0.33, {
         loaded_pgx <- playbase::pgx.initialize(loaded_pgx)
 
         if (is.null(loaded_pgx)) {
-          warning("[loading_server.R@load_react] ERROR in object initialization\n")
+          warning("[loadAndActivatePGX] ERROR in object initialization\n")
           beepr::beep(10)
           shiny::showNotification("ERROR in object initialization!\n")
           shiny::removeModal()
@@ -361,17 +418,17 @@ LoadingBoard <- function(id,
 
         ## if PGX object has been updated with pgx.initialize, we save
         ## the updated object (but only if loading from user directory)
-        slots1 <- names(loaded_pgx)
+        kk <- grep("name|date",names(loaded_pgx),invert=TRUE)
+        size1 <- object.size(loaded_pgx[kk])
         is_user_dir <- is.null(pgxdir) || (pgxdir == auth$user_dir)
-        if (length(slots1) != length(slots0) && is_user_dir) {
-          info("[loading_server.R] saving updated PGX")
-          new_slots <- setdiff(slots1, slots0)
-          savePGX(loaded_pgx, file = pgxfile)
+        if (size1 != size0 && is_user_dir && !is.null(save_pgx)) {
+          info("[loadAndActivatePGX] WARNING: initialized PGX changed! saving updated PGX")
+          save_pgx(loaded_pgx)
         }
 
         ## Copying to pgx list to reactiveValues in
         ## session environment.
-        info("[loading_server.R] copying pgx object to global environment")
+        info("[loadAndActivatePGX] copying pgx object to global environment")
         empty.slots <- setdiff(names(pgx), names(loaded_pgx))
         isolate({
           for (e in empty.slots) {
@@ -383,14 +440,12 @@ LoadingBoard <- function(id,
         })
       }) ## end of withProgress
 
-      info("[loading_server.R] copying pgx done!")
+      ## clean up
       gc()
       remove(loaded_pgx)
 
-      ## remove modal on exit??
-
-      ## shiny::removeModal()
-      bigdash.showTabsGoToDataView(session) ## in ui-bigdashplus.R
+      ## ----------------- AI reports: offer to compute if missing -----------
+      maybe_offer_ai_reports(pgxfile, is_user_dir)
 
       ## notify new data uploaded
       if (is.null(is_data_loaded())) {
@@ -398,9 +453,13 @@ LoadingBoard <- function(id,
       } else {
         is_data_loaded(is_data_loaded() + 1)
       }
+      
+      info("[loadAndActivatePGX] done!")
     }
+    
     observeEvent(input$newuploadbutton, {
-      new_upload(new_upload() + 1)
+      ##new_upload(new_upload() + 1)
+      bslib::nav_select("app-sidebar", "Upload", session=parent)      
     })
 
     observeEvent(load_uploaded_data(), {
@@ -408,10 +467,6 @@ LoadingBoard <- function(id,
       loadAndActivatePGX(upload_pgx)
       load_uploaded_data(NULL)
     })
-
-    # Generate report server module
-
-    DatasetReportServer(id = "generate_report", auth = auth, pgxtable = pgxtable)
 
     ## ================================================================================
     ## Header

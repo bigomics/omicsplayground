@@ -55,7 +55,6 @@ singlecell_plot_icpplot_ui <- function(
   PlotModuleUI(
     id = ns("plot"),
     plotlib = "plotly",
-    ## plotlib = "ggplot",
     label = label,
     info.text = info.text,
     title = title,
@@ -138,71 +137,6 @@ singlecell_plot_icpplot_server <- function(id,
       )
       return(pd)
     })
-
-    get_ggplots <- function(cex = 1) {
-      pd <- plot_data()
-      shiny::req(pd)
-
-      cex1 <- 1.2
-      cex.bin <- cut(nrow(pd[["pos"]]), breaks = c(-1, 40, 200, 1000, 1e10))
-      cex1 <- cex * c(2.2, 1.1, 0.6, 0.3)[cex.bin]
-      color_high <- get_editor_color(input, "color_high", "primary")
-      klrpal <- colorRampPalette(c("grey95", "grey65", color_high))(16)
-      klrpal <- paste0(gplots::col2hex(klrpal), "66") ## add opacity...
-
-      ntop <- 25
-      if (pd[["layout"]] == "4x4") ntop <- 16
-      if (pd[["layout"]] == "6x6") ntop <- 36
-
-      i <- 1
-      sel <- NULL
-      sel <- head(order(-colMeans(pd[["score"]]**2)), ntop)
-      if (pd[["sortby"]] == "name") {
-        sel <- sel[order(colnames(pd[["score"]])[sel])]
-      }
-
-      cmin <- min(pd[["score"]], na.rm = TRUE)
-      cmax <- max(pd[["score"]], na.rm = TRUE)
-
-      plt <- list()
-      for (i in 1:length(sel)) {
-        j <- sel[i]
-        gx <- pmax(pd[["score"]][, j], 0)
-        pos <- pd[["pos"]]
-        tt <- colnames(pd[["score"]])[j]
-
-        if (i == 1) {
-          legend <- TRUE
-        } else {
-          legend <- FALSE
-        }
-        ## ------- start plot ----------
-        p <- playbase::pgx.scatterPlotXY.GGPLOT(
-          pos,
-          var = gx,
-          col = klrpal,
-          cex = 0.6 * cex1,
-          xlab = "",
-          ylab = "",
-          zlim = c(cmin, cmax),
-          #          cmin = cmin,
-          #          cmax = cmax,
-          xlim = 1.2 * range(pd[["pos"]][, 1]),
-          ylim = 1.2 * range(pd[["pos"]][, 2]),
-          axis = FALSE,
-          title = tt,
-          cex.title = 0.55,
-          label.clusters = FALSE,
-          legend = legend,
-          gridcolor = "#ffffff",
-          bgcolor = "#f8f8f8",
-          box = TRUE,
-          guide = "legend"
-        )
-        plt[[i]] <- p
-      }
-      return(plt)
-    }
 
     get_plotly <- function() {
       pd <- plot_data()
@@ -300,29 +234,11 @@ singlecell_plot_icpplot_server <- function(id,
     }
 
 
-    ggplot.RENDER <- function() {
-      pd <- plot_data()
-      plt <- get_ggplots()
-      shiny::req(plt)
-      nr <- ceiling(sqrt(length(plt)))
-      title <- pd$refset
-      fig <- gridExtra::grid.arrange(
-        grobs = plt,
-        nrow = nr,
-        ncol = nr,
-        padding = unit(0.01, "line"),
-        top = textGrob(title, gp = gpar(fontsize = 15))
-      )
-      return(fig)
-    }
-
     PlotModuleServer(
       id = "plot",
       func = plotly.RENDER,
       func2 = plotly_modal.RENDER,
       plotlib = "plotly",
-      ##      func = ggplot.RENDER,
-      ##      plotlib = "ggplot",
       res = c(85, 95),
       pdf.width = 12, pdf.height = 6,
       add.watermark = watermark,

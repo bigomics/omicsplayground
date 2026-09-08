@@ -5,6 +5,24 @@
 
 upload_module_received_ui <- function(id, height = 720) {
   ns <- shiny::NS(id)
+
+  info.text = "Table with received datasets."
+  caption = "Table with received datasets."
+  height = c("100%", 700)
+  width = c("auto", "100%")
+  title = "Received datasets"
+  options = NULL
+
+  TableModuleUI(
+    ns("table"),
+    info.text = info.text,
+    caption = caption,
+    width = width,
+    height = height,
+    title = title,
+    options = options
+  )
+
 }
 
 
@@ -12,17 +30,21 @@ upload_module_received_server <- function(id,
                                           auth,
                                           pgx_shared_dir,
                                           reload_pgxdir,
-                                          current_page) {
+                                          current_page,
+                                          goto_sharing_tab = NULL) {
   shiny::moduleServer(
     id, function(input, output, session) {
       ns <- session$ns ## NAMESPACE
 
       nr_ds_received <- reactiveVal(0)
 
-      # callbackR for the "New dataset received" modal: jump to Shared datasets
+      # callbackR for the "New dataset received" modal: jump to Shared datasets.
+      # The old bigdash "sharing-tab" board was folded into the Library board's
+      # inner tabset during the UI reshuffle, so navigation is delegated to the
+      # LoadingBoard via goto_sharing_tab().
       show_shared_tab <- function(value) {
-        if (isTRUE(value)) {
-          bigdash.selectTab(session, "sharing-tab")
+        if (isTRUE(value) && !is.null(goto_sharing_tab)) {
+          goto_sharing_tab()
         }
       }
 
@@ -90,14 +112,12 @@ upload_module_received_server <- function(id,
         update_shared_badges(if (is.null(files)) 0L else length(files))
       })
 
-      receivedPGXtable <- shiny::eventReactive(
-        c(getReceivedFiles()),
-        {
+      get_received_table <- function() {
           received_files <- getReceivedFiles()
           if (is.null(received_files) || length(received_files) == 0) {
             df <- data.frame(
               Dataset = "-",
-              To = "-",
+              "Received from" = "-",
               Actions = "-"
             )
             ## return(NULL)
@@ -137,7 +157,7 @@ upload_module_received_server <- function(id,
 
             df <- data.frame(
               Dataset = received_pgx,
-              From = received_from,
+              "Received from" = received_from,
               Actions = paste(accept_btns, decline_btns)
             )
           }
@@ -154,6 +174,13 @@ upload_module_received_server <- function(id,
             )
           ) %>%
             DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "90%")
+      }
+      
+      
+      receivedPGXtable <- shiny::eventReactive(
+        c(getReceivedFiles()),
+        {
+          get_received_table() 
         }
       )
 
@@ -170,11 +197,17 @@ upload_module_received_server <- function(id,
           file_from <- file.path(pgx_shared_dir, pgx_name)
           file_to <- file.path(pgxdir, new_pgx_name)
 
+          ## Detect CRO sender: CRO-shared datasets bypass the dataset-count
+          ## quota and the plan size limits below.
+          sender_email <- gsub(".*__from__|__$", "", pgx_name)
+          cro_emails <- get_cro_emails()
+          sender_is_cro <- !is.null(cro_emails) && sender_email %in% cro_emails
+
           ## check number of datasets
           numpgx <- length(dir(pgxdir, pattern = "*.pgx$"))
           if (!auth$options$ENABLE_DELETE) numpgx <- length(dir(pgxdir, pattern = "*.pgx$|*.pgx_$"))
           maxpgx <- as.integer(auth$options$MAX_DATASETS)
-          if (numpgx >= maxpgx) {
+          if (numpgx >= maxpgx && !sender_is_cro) {
             shinyalert_storage_full(numpgx, maxpgx, auth$level) ## from ui-alerts.R
             return(NULL)
           }
@@ -195,10 +228,6 @@ upload_module_received_server <- function(id,
 
           ## Enforce plan size limits, but skip the check when the sender is a
           ## CRO so CRO-shared datasets always go through.
-          sender_email <- gsub(".*__from__|__$", "", pgx_name)
-          cro_emails <- get_cro_emails()
-          sender_is_cro <- !is.null(cro_emails) && sender_email %in% cro_emails
-
           if (!sender_is_cro) {
             ## Shared dir has no aggregated metadata CSV, so we load the file.
             pgx_dims <- tryCatch(
@@ -246,6 +275,11 @@ upload_module_received_server <- function(id,
         ignoreInit = TRUE
       )
 
+      table_module <- TableModuleServer(
+        "table",
+        func = get_received_table,
+        selector = "single"
+      )
 
       ## list of reactive objects acts like API or public function interface
       rlist <- list(

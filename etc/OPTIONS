@@ -1,6 +1,12 @@
+#------------- server options ----------------
+
 TITLE                = 'Omics Playground'
-AUTHENTICATION       = none
-#AUTHENTICATION      = password
+HOSTNAME             = server.local
+
+#------------- authentication ----------------
+
+#AUTHENTICATION       = none
+AUTHENTICATION      = password
 #AUTHENTICATION      = login-code-redirect
 #AUTHENTICATION       = login-code
 ALLOW_NEW_USERS      = TRUE
@@ -8,6 +14,9 @@ ALLOW_PERSONAL_EMAIL = FALSE
 USE_CREDENTIALS      = FALSE
 #DOMAIN              = bigomics.ch|demo.com
 BLOCKED_DOMAIN       = bigomics.com|massdynamics.com|pluto.bio|rosalind.bio
+ENABLE_COOKIE_LOGIN  = FALSE
+
+#------------- app options -------------------
 ENABLE_CHIRP         = TRUE
 ENABLE_DELETE        = TRUE
 ENABLE_PGX_DOWNLOAD  = TRUE
@@ -30,15 +39,49 @@ MAX_SESSIONS         = 2
 TIMEOUT              = 0
 WATERMARK            = TRUE
 APACHE_COOKIE_PATH   = /app/omicsplayground/
-DEVMODE              = TRUE
 HUBSPOT_CHECK        = TRUE
+USER_LEVEL	     = PRO
+#USER_LEVEL	     = BASIC
+PUBLIC_DATASETS_LABEL = Team Datasets
 
-#LLM_MODELS           = llama3.2:1b;granite4:micro;granite4:micro-h;groq:openai/gpt-oss-120b;groq:openai/gpt-oss-20b;xai:grok-4-1-fast-non-reasoning;openai:gpt-5.4-nano;openai:gpt-5.4-nano
-LLM_MODELS           = groq:openai/gpt-oss-120b;xai:grok-4-1-fast-non-reasoning;openai:gpt-5.4-nano;openai:gpt-5.4-mini;google:gemini-3-flash-preview;google:gemini-3.1-flash-lite-preview
-IMAGE_MODELS         = google:gemini-3.1-flash-image-preview;google:gemini-3-pro-image-preview
-LLM_MAXTURNS         = 10
+# ------------- menu options ---------------------
+# Both lists below are the deployment default. Admin panel > Basic Menu
+# overrides them per deploy by writing etc/BASIC_MENU-<HOSTNAME> and
+# etc/BASIC_LOCKED-<HOSTNAME>; a hostname-less etc/BASIC_MENU / etc/BASIC_LOCKED
+# sits in between, as a shared default for every server on the mounted etc/
+# folder. So: host file > shared file > these lines > built-in default.
+#
+# Boards the flat BASIC menu keeps.
+#BASIC_MENU          = dataview;clustersamples;diffexpr
+# Boards whose advanced settings are greyed out in BASIC mode. Defaults to
+# every board; list a subset to leave the others fully usable. An empty admin
+# selection means "grey out nothing" and is not the same as leaving this unset.
+#BASIC_LOCKED        = dataview;clustersamples;diffexpr;enrich;pathway
+# Pin users to the basic menu (they cannot switch back). Also settable per
+# user in <user_dir>/OPTIONS or the user DB row.
+#FORCE_BASIC         = TRUE
 
-#BOARDS_ENABLED = welcome;load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
-#BOARDS_ENABLED = welcome;load;upload;cmap
-MODULES_TRANSCRIPTOMICS = Welcome;Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
-MODULES_MULTIOMICS = Welcome;Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
+#------------- AI options -----------------------
+
+LLM_MAXTURNS         = 100
+ENABLE_AI            = TRUE
+AI_PROVIDERS_ENABLED = bigomics;openai;anthropic;google;github;mistral;custom
+AI_PROVIDER_LOCKED   = FALSE
+COPILOT_MODEL        = copilot-default;copilot-fast;copilot-deep
+
+#------------- board options --------------------
+
+#BOARDS_ENABLED = load;upload;dataview;diffexpr;clustersamples;clusterfeatures;corr;enrich;pathway;isect;sig;comp;wordcloud;wgcna;drug;bio;cmap;tcga;cell
+MODULES_TRANSCRIPTOMICS = Datasets;DataView;Clustering;Expression;GeneSets;Compare;SystemsBio;WGCNA
+MODULES_MULTIOMICS = Datasets;DataView;Expression;SystemsBio;MultiOmics;WGCNA
+
+ENABLE_ACROSS        = TRUE
+
+#------------- developer options ---------------
+
+DEVMODE              = FALSE
+DEV_AUTOLOAD         = FALSE
+ENABLE_PLOTLY_PURGE  = TRUE
+ENABLE_ADMIN         = TRUE
+
+

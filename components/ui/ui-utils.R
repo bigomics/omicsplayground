@@ -4,41 +4,6 @@
 ##
 
 
-visPrint <- function(visnet, file, width = 3000, height = 3000, delay = 0, zoom = 1) {
-  is.pdf <- grepl("pdf$", file)
-  if (is.pdf) {
-    width <- width * 600
-    height <- height * 600
-  }
-  vis2 <- htmlwidgets::createWidget(
-    name = "visNetwork",
-    x = visnet$x,
-    width = width, height = height,
-    package = "visNetwork"
-  )
-  tmp.html <- paste0(tempfile(), "-visnet.html")
-  tmp.png <- paste0(tempfile(), "-webshot.png")
-  visNetwork::visSave(vis2, file = tmp.html)
-  webshot2::webshot(
-    url = tmp.html,
-    file = tmp.png,
-    selector = "#htmlwidget_container",
-    delay = delay,
-    zoom = zoom,
-    cliprect = "viewport",
-    vwidth = width,
-    vheight = height
-  )
-  if (is.pdf) {
-    cmd <- paste("convert", tmp.png, "-density 600", file)
-    system(cmd)
-  } else {
-    file.copy(tmp.png, file, overwrite = TRUE)
-  }
-  unlink(tmp.html)
-}
-
-
 addWatermark.PDF <- function(file) {
   if (system("which pdftk", ignore.stdout = TRUE) == 1) {
     return
@@ -183,58 +148,6 @@ alertDataLoaded <- function(session, ngs) {
   message("[alertDataLoaded] WARNING:: no PGX object")
 }
 
-pgx.randomCartoon <- function() {
-  cartoon_list <- list(
-    list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
-    list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),
-    list(slogan = "Analytics anywhere. Anytime.", img = "cartoon-cloudservice.jpg"),
-    list(slogan = "Analyze with confidence. Be a rockstar", img = "bigomics-rockstar3.jpg"),
-    list(slogan = "Fast track your Bioinformatics", img = "selfservice-checkout2.png"),
-    list(slogan = "Integrate more. Dig deeper", img = "cartoon-integration.jpg"),
-    list(slogan = "Your analysis doesn't take coffee breaks", img = "gone-for-coffee.png"),
-    list(slogan = "Too much data? Help yourself", img = "cartoon-datahelp2.jpg"),
-    list(slogan = "Big Friendly Omics", img = "big-friendly-omics1.jpg"),
-    list(slogan = "Big Data meets Biology", img = "bigdata-meets.png")
-  )
-
-  cartoon <- sample(cartoon_list, 1)[[1]]
-  cartoon$img2 <- file.path("cartoons", cartoon$img)
-  cartoon$img <- file.path("www/cartoons", cartoon$img)
-  cartoon
-}
-
-pgx.showCartoonModal <- function(msg = "Loading data...", img.path = "www/cartoons") {
-  cartoon_list <- list(
-    list(slogan = "Visual analytics. See and understand", img = "data-graph-wisdom.jpg"),
-    list(slogan = "Fasten your seat belts. Accelerated discovery", img = "cartoon-speedup.jpg"),
-    list(slogan = "Analytics anywhere. Anytime.", img = "cartoon-cloudservice.jpg"),
-    list(slogan = "Analyze with confidence. Be a rockstar", img = "bigomics-rockstar3.jpg"),
-    list(slogan = "Fast track your Bioinformatics", img = "selfservice-checkout2.png"),
-    list(slogan = "Integrate more. Dig deeper", img = "cartoon-integration.jpg"),
-    list(slogan = "Your analysis doesn't take coffee breaks", img = "gone-for-coffee.png"),
-    list(slogan = "Too much data? Help yourself", img = "cartoon-datahelp2.jpg"),
-    list(slogan = "Big Friendly Omics", img = "big-friendly-omics1.jpg"),
-    list(slogan = "Big Data meets Biology", img = "bigdata-meets.png")
-  )
-
-  randomCartoon <- function() {
-    cartoon <- sample(cartoon_list, 1)[[1]]
-    cartoon$img2 <- paste0("static/cartoons/", cartoon$img)
-    cartoon$img <- file.path(img.path, cartoon$img)
-    cartoon
-  }
-
-  toon <- randomCartoon()
-  shiny::showModal(shiny::modalDialog(
-    title = shiny::div(shiny::h2(toon$slogan), shiny::p("with Omics Playground"), style = "text-align:center;"),
-    shiny::img(src = toon$img2, class = "img-fluid"),
-    footer = fillRow(flex = c(1, NA, 1), " ", msg, " "),
-    size = "l",
-    easyClose = FALSE,
-    fade = TRUE
-  ))
-}
-
 HandleNoLinkFound <- function(wrapHyperLinkOutput, NoLinkString, SubstituteString) {
   pattern <- paste0("^", NoLinkString, "$")
   special_cases <- grepl(pattern, wrapHyperLinkOutput, perl = TRUE)
@@ -346,7 +259,6 @@ addSettings <- function(ns, session, file) {
   # Execute the command
   system(pdftk_command)
   ## finally copy to final exported file
-  dbg("[downloadHandler.PDF] copy PDFFILE", final_pdf, "to download file", file)
   file.copy(final_pdf, file, overwrite = TRUE)
 }
 
@@ -382,7 +294,7 @@ inputLabelDictionary <- function(board_ns, inputId) {
       pca_label = "Label",
       all_clustmethods = "Show all methods",
       plot3d = "Plot 3D",
-      showlabels = "Shoe group labels",
+      showlabels = "Show group labels",
       hm_pcaverage = "Average by gene module",
       hm_pcscale = "Scale values",
       gx_grouped = "Group samples",
@@ -488,21 +400,47 @@ tspan <- function(text, js = TRUE) {
 jspan <- function(text) tspan(text, js = TRUE)
 
 
-tspan.SAVE <- function(label) {
-  shiny::span(class = "i18n", `data-key` = label, label)
-}
-
-#' Create a loading spinner element
+#' Create a full-canvas board wireframe shown while a board's real UI loads
 #'
-#' @param id The ID for the loader container
-#' @return A shiny div element containing the loader
+#' A greyed-out mockup of a generic board layout (title, sub-tabs, info
+#' banner, a row of chart cards) rather than a small spinner, so the tab
+#' doesn't look blank while its real content is being built. Tagged
+#' `bigtabslazy-placeholder` so [bigdash::bigTabsLazy()] removes it as soon
+#' as the real UI is inserted.
+#'
+#' @param id The ID for the wireframe container
+#' @return A shiny div element containing the wireframe
 #' @export
 create_loader <- function(id) {
-  div(
-    class = "loader-container",
-    id = id,
+  skeleton_card <- function(header_width = "50%", n_bars = 8) {
+    bar_heights <- ((seq_len(n_bars) * 37L) %% 60L) + 30L
     div(
-      class = "spinner"
+      class = "sk-card",
+      div(class = "sk-card-header", style = paste0("width:", header_width, ";")),
+      div(
+        class = "sk-card-body",
+        lapply(bar_heights, function(h) div(class = "sk-bar", style = paste0("height:", h, "%;")))
+      )
+    )
+  }
+
+  div(
+    class = "board-skeleton bigtabslazy-placeholder",
+    id = id,
+    div(class = "sk-title"),
+    div(
+      class = "sk-tabs",
+      div(class = "sk-tab"), div(class = "sk-tab"), div(class = "sk-tab")
+    ),
+    div(class = "sk-banner"),
+    div(
+      class = "sk-row",
+      skeleton_card("40%", 6), skeleton_card("30%", 6),
+      skeleton_card("50%", 6), skeleton_card("35%", 6)
+    ),
+    div(
+      class = "sk-row sk-row-wide",
+      skeleton_card("45%", 14), skeleton_card("30%", 14)
     )
   )
 }
@@ -521,4 +459,72 @@ clean_custom_features <- function(features) {
   # Rejoin with commas
   features <- paste(feature_list, collapse = ", ")
   return(features)
+}
+
+
+## Class for a settings block that BASIC users get greyed out (see
+## body.basic-mode in scss/components/_app.scss). Which boards are affected is
+## the admin's choice (Admin panel > Basic menu); a board the admin left out
+## keeps its advanced settings live. Only needed for blocks that are NOT an
+## accordion -- lock_advanced() below catches those on every board by itself.
+## Both blocks also carry "advanced-option-candidate" (unstyled) so the
+## admin's live selection can re-toggle the lock class without rebuilding
+## the UI (locked_boards observer in opg_server.R).
+advanced_option <- function(board) {
+  c("advanced-option-candidate", if (board %in% opt$BASIC_LOCKED) "advanced-option")
+}
+
+
+## Should this accordion in a settings sidebar be greyed out for BASIC users?
+##
+## Nearly every one holds advanced parameters (FDR and thresholds, layout and
+## network knobs), so they are marked wholesale rather than by hand on each
+## board -- that also covers boards nobody has marked yet. Two exceptions stay
+## live, because greying sets `pointer-events: none` and would make them
+## unusable rather than merely locked:
+##   - it contains an action button (WGCNA and Multiomics WGCNA put their
+##     "Recompute" button inside the accordion, next to its parameters)
+##   - it opts out explicitly with class "keep-live"
+## NOTE: read the class with tagGetAttribute() -- bslib::accordion() emits
+## several `class` attributes and x$attribs$class is only the first of them.
+is_locked_block <- function(x) {
+  classes <- htmltools::tagGetAttribute(x, "class")
+  if (isTRUE(grepl("keep-live", classes))) {
+    return(FALSE)
+  }
+  length(htmltools::tagQuery(x)$find(".action-button")$selectedTags()) == 0
+}
+
+
+## Mark one board tab's advanced settings for BASIC users. Which boards are
+## affected is the admin's choice (Admin panel > Basic menu). Every
+## lock-eligible accordion (is_locked_block()) gets the unstyled
+## "advanced-option-candidate" class and a data-board attribute at build
+## time; boards locked *now* additionally get the greying
+## "advanced-option" class. The admin can later re-toggle the lock class
+## live from the Admin panel without rebuilding the UI (locked_boards
+## observer in opg_server.R) -- lazy boards materialised after the change
+## pick up the new selection through opt$BASIC_LOCKED here, since the save
+## handler updates that global in-process.
+## A group's module_ui() returns a plain list of several bigTabItem()s
+## rather than one tag (e.g. Clustering has "Samples" and "Features") --
+## recurse into it so callers can pass either shape.
+lock_advanced <- function(tab) {
+  if (is.list(tab) && !inherits(tab, "shiny.tag")) {
+    return(lapply(tab, lock_advanced))
+  }
+  if (!inherits(tab, "shiny.tag")) {
+    return(tab)
+  }
+  ## no data-name -> NA -> matches nothing, so the tab is left alone
+  board <- sub("-tab$", "", as.character(tab$attribs[["data-name"]])[1])
+  query <- htmltools::tagQuery(tab)$
+    find(".tab-settings .accordion")$
+    filter(function(x, i) is_locked_block(x))
+  query$addClass("advanced-option-candidate")$
+    addAttrs(`data-board` = board)
+  if (board %in% opt$BASIC_LOCKED) {
+    query$addClass("advanced-option")
+  }
+  query$allTags()
 }

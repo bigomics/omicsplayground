@@ -35,9 +35,10 @@ UploadUI <- function(id) {
                     "mRNA microarray",
                     "proteomics",
                     "scRNA-seq",
-                    "methylomics",
-                    "metabolomics (beta)" = "metabolomics",
-                    "multi-omics (beta)" = "multi-omics"
+                    "metabolomics",
+                    "lipidomics",
+                    "multi-omics (beta)" = "multi-omics",
+                    "methylomics (beta)" = "methylomics"
                   ),
                   selected = DEFAULTS$datatype,
                   width = "400px"
@@ -125,10 +126,19 @@ UploadUI <- function(id) {
     )
   )
 
+  spinner <- div(computing_spinner_ui("Computation in progress..."),
+    style="position:absolute; top:10px; right:20px;")
+
   ui <- div(
-    boardHeader(title = "Upload New", info_link = ns("upload_info")),
-    uiOutput(ns("upload_wizard")),
-    body
+    shinybusy::use_busy_bar(color="#aa1a1a", height="2px"),
+    OmicsBoardUI(
+      ns = ns,
+      title = "Upload New",
+      header_margin = "0px",
+      div(style = "position: relative;", shinyjs::hidden(spinner)),
+      uiOutput(ns("upload_wizard")),
+      body
+    )
   )
   return(ui)
 }

@@ -269,7 +269,7 @@ ngs <- compute.extra(ngs, extra, lib.dir=FILES)
 ## save object
 ##-------------------------------------------------------------------
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)
 
 ##===================================================================
 ##========================= END OF FILE =============================

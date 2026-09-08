@@ -1,0 +1,56 @@
+# Model pricing for AI telemetry (etc/ai_telemetry.sqlite)
+#
+# Rates are USD per 1,000,000 tokens, split into:
+#   input  — fresh (non-cached) input tokens
+#   cached — input tokens served from the provider prompt cache
+#   output — output tokens (reasoning tokens are billed at the output rate)
+#
+# IMPORTANT: these rates are REPRESENTATIVE PLACEHOLDERS. Several of the models
+# listed here post-date the provider price sheets available at authoring time.
+# Before relying on `approx_price_usd` for billing/analytics, update every entry
+# from the official provider pricing page and bump `version`.
+#
+# Keys are glob patterns matched (longest/most-specific wins) against BOTH the
+# session model string ("openai:gpt-5.4-nano") and the dated per-turn model from
+# the provider JSON ("gpt-5.4-nano-2026-03-17"). The trailing "*" entry is the
+# catch-all fallback.
+
+version: "2026-06-23"
+
+models:
+  "*gpt-5.4-nano*":
+    input: 0.05
+    cached: 0.005
+    output: 0.40
+  "*gpt-5.4-mini*":
+    input: 0.25
+    cached: 0.025
+    output: 2.00
+  "*gpt-5.4*":
+    input: 1.25
+    cached: 0.125
+    output: 10.00
+  "*gpt-4o-mini*":
+    input: 0.15
+    cached: 0.075
+    output: 0.60
+  "*gpt-4o*":
+    input: 2.50
+    cached: 1.25
+    output: 10.00
+  "*claude*haiku*":
+    input: 0.80
+    cached: 0.08
+    output: 4.00
+  "*claude*sonnet*":
+    input: 3.00
+    cached: 0.30
+    output: 15.00
+  "*claude*opus*":
+    input: 15.00
+    cached: 1.50
+    output: 75.00
+  "*":
+    input: 1.00
+    cached: 0.10
+    output: 4.00

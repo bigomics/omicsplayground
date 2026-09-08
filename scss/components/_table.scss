@@ -64,7 +64,7 @@ html {
 
     table.dataTable td, table.dataTable th {
 	border-bottom: solid 1px #aaa !important;
-    vertical-align: middle;
+	vertical-align: middle;
 //	border-style: none !important;
     }
 
@@ -107,11 +107,14 @@ html {
     }
     
     table.dataTable>tbody>tr.selected>* {
-        --dt-row-selected: 204, 204, 204, 0.5;
+        --dt-row-selected: 217, 229, 248, 0.8;
         --dt-row-selected-text: 0, 0, 0;
     }
     table.dataTable>tbody>tr.selected:hover>* {
-        background: rgba(204, 204, 204, 0.5);
+        background-color: rgba(217, 229, 248, 0.99);
+    }
+    table.dataTable>tbody>tr:hover>* {
+        background-color: rgb(255, 255, 255);
     }
 
 }

@@ -2,13 +2,15 @@ setwd('components/app/R')
 source('global.R')
 source('ui.R')
 source('server.R')
-shinyApp(
-    ui = app_ui,
-    server = app_server,
-    uiPattern = '.*',
-    options = list(
-        launch.browser = TRUE,
-        host = "0.0.0.0",
-        port = 3838
-    )
+options(shiny.otel.collect = "none") 
+
+# Accept optional port argument (default 3838). Usage: Rscript dev/run_app.R [PORT]
+args <- commandArgs(trailingOnly = TRUE)
+port <- if (length(args) > 0) as.integer(args[1]) else 3838
+
+shiny::runApp(
+    appDir = ".",
+    launch.browser = TRUE,
+    host = "0.0.0.0",
+    port = port
 )

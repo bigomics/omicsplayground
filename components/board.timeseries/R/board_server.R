@@ -23,6 +23,8 @@ TimeSeriesBoard <- function(id,
        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
        encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
+    OmicsBoard(session, pgx, title = "TimeSeries", infotext = clust_infotext)
+
     tab_elements <- list(
       "Clustering" = list(
         enable = NULL,
@@ -36,14 +38,6 @@ TimeSeriesBoard <- function(id,
 
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>TimeSeries Board</strong>"),
-        shiny::HTML(clust_infotext),
-        easyClose = TRUE, size = "xl"
-      ))
     })
 
     shiny::observeEvent(pgx$samples, {

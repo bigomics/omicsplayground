@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "kind": "opg_ai_selection_policy",
+  "description": "OPG AI model menu policy only. Provider/model facts are owned by omicsai's JSON provider catalog and exported APIs.",
+  "menus": {
+    "reports": {
+      "capability": ["text", "tools"]
+    },
+    "images": {
+      "capability": ["image_generation"]
+    },
+    "copilot_deep": {
+      "capability": ["text", "tools"]
+    },
+    "copilot_balanced": {
+      "capability": ["text", "tools"]
+    }
+  },
+  "providers": {
+    "bigomics": {
+      "menus": {
+        "reports": {
+          "models": [
+            "openrouter:deepseek/deepseek-v4-flash"
+          ]
+        },
+        "images": {
+          "models": [
+            "gemini-3.1-flash-image-preview"
+          ]
+        },
+        "copilot_deep": {
+          "models": ["openrouter:openai/gpt-5.6-terra"]
+        },
+        "copilot_balanced": {
+          "models": ["openrouter:deepseek/deepseek-v4-flash"]
+        }
+      }
+    },
+    "openai": {
+      "menus": {
+        "reports": {
+          "exclude": ["gpt-5.5"],
+          "prefer": ["gpt-5.4-nano"]
+        },
+        "copilot_deep": {
+          "exclude": ["gpt-5.5"],
+          "prefer": ["gpt-5.4-mini"]
+        },
+        "copilot_balanced": {
+          "exclude": ["gpt-5.5"],
+          "prefer": ["gpt-5.4-nano"]
+        }
+      }
+    },
+    "github": {
+      "menus": {
+        "reports": {
+          "prefer": ["openai/gpt-4.1"]
+        },
+        "copilot_deep": {
+          "prefer": ["openai/gpt-4.1"]
+        },
+        "copilot_balanced": {
+          "prefer": ["openai/gpt-4o-mini"]
+        }
+      }
+    },
+    "mistral": {
+      "menus": {
+        "reports": {
+          "prefer": ["mistral-large-latest"]
+        },
+        "copilot_deep": {
+          "prefer": ["mistral-large-latest"]
+        },
+        "copilot_balanced": {
+          "prefer": ["mistral-medium-latest"]
+        }
+      }
+    },
+    "custom": {
+      "menus": {
+        "reports": {
+          "enabled": true
+        },
+        "images": {
+          "enabled": false
+        },
+        "copilot_deep": {
+          "enabled": true
+        },
+        "copilot_balanced": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

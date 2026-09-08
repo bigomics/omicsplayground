@@ -5,6 +5,23 @@
 
 upload_module_shared_ui <- function(id, height = 720) {
   ns <- shiny::NS(id)
+
+  info.text = "Table with shared datasets."
+  caption = "Table with shared datasets."
+  height = c("100%", 700)
+  width = c("auto", "100%")
+  title = "Shared datasets"
+  options = NULL
+
+  TableModuleUI(
+    ns("table"),
+    info.text = info.text,
+    caption = caption,
+    width = width,
+    height = height,
+    title = title,
+    options = options
+  )
 }
 
 upload_module_shared_server <- function(id,
@@ -39,15 +56,13 @@ upload_module_shared_server <- function(id,
         return(pgxfiles)
       })
 
-      sharedPGXtable <- shiny::eventReactive(
-        c(current_page(), getSharedFiles()),
-        {
+      get_shared_table <- function() {
           ## req(current_page() == "sharing-tab")
           shared_files <- getSharedFiles()
           if (length(shared_files) == 0) {
             df <- data.frame(
               Dataset = "-",
-              To = "-",
+              "Sent to" = "-",
               Actions = "-"
             )
             ## return(NULL)
@@ -87,7 +102,7 @@ upload_module_shared_server <- function(id,
 
             df <- data.frame(
               Dataset = shared_pgx,
-              To = shared_to,
+              "Sent to" = shared_to,
               Actions = paste(resend_btns, cancel_btns)
             )
           }
@@ -104,6 +119,12 @@ upload_module_shared_server <- function(id,
             )
           ) %>%
             DT::formatStyle(0, target = "row", fontSize = "14px", lineHeight = "95%")
+      }
+
+      sharedPGXtable <- shiny::eventReactive(
+        c(current_page(), getSharedFiles()),
+        {
+          get_shared_table()
         }
       )
 
@@ -130,6 +151,11 @@ upload_module_shared_server <- function(id,
         ignoreInit = TRUE
       )
 
+      table_module <- TableModuleServer(
+        "table",
+        func = get_shared_table,
+        selector = "single"
+      )
 
       ## list of reactive objects acts like API or public function interface
       rlist <- list(

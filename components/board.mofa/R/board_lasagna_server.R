@@ -29,14 +29,7 @@ LasagnaBoard <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>LASAGNA Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
+    OmicsBoard(session, pgx, title = "LASAGNA", infotext = infotext)
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(

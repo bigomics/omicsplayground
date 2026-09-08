@@ -19,17 +19,6 @@ EpigenomicsInputs <- function(id) {
       )
     ),
 
-    ## withTooltip(
-    ##   shiny::selectizeInput(
-    ##     inputId = ns("search_gene"),
-    ##     label = tspan("Gene:"),
-    ##     choices = NULL,
-    ##     options = list(maxOptions = 1001)
-    ##   ),
-    ##   "Type a gene of interest.",
-    ##   placement = "top"
-    ## ),
-
     withTooltip(
       shiny::selectInput(
         inputId = ns("data_samplefilter"),
@@ -55,19 +44,21 @@ EpigenomicsInputs <- function(id) {
 EpigenomicsUI <- function(id) {
   ns <- shiny::NS(id)
 
-  div(
-    boardHeader(title = "Epigenomics", info_link = ns("board_info")),
-    tabs <- shiny::tabsetPanel(
+  OmicsBoardUI(
+    ns = ns,
+    title = "Epigenomics",
+    shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
         "Methylomics landscape",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert("The Methylomics landscape panel provides an overview of the methylomics profiles across chromosomes and samples."),
           bslib::layout_columns(
             col_widths = 12,
-            row_heights = list(1.33, 1),
+            row_heights = list(4, 3),
             bslib::layout_columns(
               col_widths = c(6, 6),
               epigenomics_plot_beta_dist_ui(
@@ -113,7 +104,7 @@ EpigenomicsUI <- function(id) {
         "Methylation ideograms",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           epigenomics_plot_methylIdeogram_ui(
             id = ns("methylIdeogram"),
             title = "Methylation Ideograms",

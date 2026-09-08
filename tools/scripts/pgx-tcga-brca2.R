@@ -101,7 +101,7 @@ for(dtype in c("px")) {
     ngs$organism = 'human'
     
     rda.file
-    ngs.save(ngs, file=rda.file)
+    pgx.save(ngs, file=rda.file)
 
 }
 

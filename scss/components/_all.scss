@@ -1,12 +1,49 @@
 html {
+  // Also needed on html, not just body: a couple of px of stray horizontal
+  // overflow (Bootstrap's row gutter bleed, third-party widget overlays)
+  // otherwise still inflate documentElement's scrollWidth and force a
+  // page-level horizontal scrollbar even with overflow-x:hidden on body
+  // alone, since body isn't always the element the browser treats as the
+  // page's actual scrolling root.
+  overflow-x: hidden;
+
+  // HubSpot's interactive-content embed (hubspot-embed.html) leaves behind
+  // #hs-interactives-modal-overlay: position:absolute, z-index:-1 (so
+  // invisible), but sized to its modal content rather than the viewport.
+  // That box is taller than 100vh, and being absolutely positioned with no
+  // positioned ancestor it still inflates body's scrollable height, forcing
+  // a page-wide vertical scrollbar on every page even though there is
+  // nothing visible to scroll to.
+  #hs-interactives-modal-overlay {
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  // Same script also plants #hs-web-interactives-floating-container in
+  // normal flow at the end of body. It's empty and its own children (the
+  // corner "anchor" divs used to position popups) are already
+  // position:fixed, but the static container itself still occupies a slot
+  // in the flow -- landing a couple dozen px below the last real content
+  // and, being a box with no height, still inflating body's scrollHeight by
+  // its own offsetTop. display:contents removes its box entirely without
+  // touching the fixed-positioned anchor children.
+  #hs-web-interactives-floating-container {
+    display: contents;
+  }
 
   body {
       a {
 	  color: $main;
 	  text-decoration: none;
       }
-      font-size: 14px;
-/*    font-family: "Cubano"; */
+      font-size: 15px;
+/*    font-family: "Lato"; */
+
+      // bslib::navset_pill_list()'s Bootstrap .row carries the default
+      // negative gutter margins with no .container to absorb them, bleeding
+      // a few px past the viewport edge and forcing a phantom horizontal
+      // scrollbar. Nothing real lives in that gutter, so clipping it is safe.
+      overflow-x: hidden;
   }
 
   .alert {
@@ -19,6 +56,10 @@ html {
 
   .content {
     min-height: 800px;
+  }
+
+  h1 {
+      font-weight: 600;
   }
 
   h2 {
@@ -77,6 +118,10 @@ html {
   .nav-tabs > li.active {
     border-top: 3px solid $main;
     margin-top: -3px;
+  }
+
+  .nav-link {
+    font-size: 1rem;
   }
 
   /* ---------------------------- playground -------------------------- */
@@ -203,7 +248,24 @@ html {
       --bs-btn-padding-x: 1.2em;
       --bs-btn-padding-y: 0.6em;      
   }
+
+  .xbtn {
+      background-color: rgba(0, 127, 192, 0.1);
+      color: rgba(40, 110, 182, 0.8);
+      border-radius: 10px;
+      margin: 5px;
+      border: 0px;
+  }
   
+  .xbtn:hover {
+      background-color: rgba(0, 127, 192,0.2);
+      color: black;    
+  }
+  
+  .xbtn-disabled {
+      background-color: rgba(80, 150, 250, 0.1) !important;
+  }
+      
   .run-button,
   .load-button {
     outline: none;
@@ -291,13 +353,16 @@ html {
   }
 
   div#navheader-current-section {
-    font-size: 30px;
-    font-weight: 400;
-    margin: 15px 0 5px 0px;
+    font-size: 28px;
+    font-weight: 600;
+    // 17px tighter than it used to be (was margin-top 15 + padding-top 10):
+    // this puts the title's baseline on the same line as the sidebar's "Menu"
+    // heading instead of floating well below it.
+    margin: 8px 0 5px 0px;
   }
 
   div#navheader-dataset-stats {
-    margin: 22px 0px 0px 40px;
+    margin: 32px 0px 0px 40px;
     font-size: 24px;
     color: #3181DE;
   }
@@ -333,6 +398,10 @@ html {
     padding: 0
   }
 
+  .action-label:hover {
+      //background-color: #FFFFFF22;
+  }
+  
   #emailLinkWrapper {
     display: none;
     padding-left: 20rem;
@@ -348,6 +417,12 @@ html {
     line-height: 1.1em;
   }
 
+  #reportTA textarea.form-control {
+    font-size: 1.15em;
+    line-height: 1.1em;
+    padding: 50px 100px 50px 120px;
+  }
+
   // used in loader
   .shiny-input-text.form-control {
     padding: .375rem .75rem;
@@ -358,7 +433,54 @@ html {
   .form-group {
       margin-bottom: 0.3rem; 
   }
-  
+
+  // Checkboxes.
+  //
+  // shiny::checkboxInput() emits Bootstrap 3 markup (div.checkbox > label >
+  // input), while form-generating widgets emit BS5's .form-check-input, so
+  // both shapes have to be styled or half the app's checkboxes are missed.
+  //
+  // The checked state used to be `background-color: aliceblue`, which is so
+  // close to white that Bootstrap's white checkmark vanished: a ticked box
+  // was indistinguishable from an empty one, and the blue focus ring read as
+  // "checked" instead. Keep the box white and draw the tick in ink.
+  // NB: `.form-check:not(.form-switch)` is load-bearing -- bslib's
+  // input_switch() is also a .form-check-input, and giving it a checkmark
+  // background-image would replace the switch knob.
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"],
+  .shiny-input-container .checkbox input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.05em;
+      height: 1.05em;
+      vertical-align: -0.15em;
+      border: 1px solid #adb5bd;
+      border-radius: 0.25em;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 100%;
+  }
+
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:checked,
+  .shiny-input-container .checkbox input[type="checkbox"]:checked {
+      background-color: #fff;
+      border-color: #212529;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='M5 10.5l3.5 3.5l7-7'/%3e%3c/svg%3e");
+  }
+
+  // the default focus ring is easy to misread as a checked state
+  .form-check:not(.form-switch) > .form-check-input[type="checkbox"]:focus,
+  .shiny-input-container .checkbox input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: none;
+  }
+
+  .shiny-input-container .checkbox label {
+      cursor: pointer;
+      font-weight: 400;
+  }
+
 }
 
 // to work with mouse listeners, we need to remove pointer events from tooltips

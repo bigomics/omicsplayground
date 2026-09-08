@@ -28,14 +28,7 @@ PreservationWGCNA_Board <- function(id, pgx) {
         title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
         encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>'
 
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Preservation WGCNA Board</strong>"),
-        shiny::HTML(infotext),
-        size = "xl",
-        easyClose = TRUE
-      ))
-    })
+    OmicsBoard(session, pgx, title = "Preservation WGCNA", infotext = infotext)
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -218,6 +211,19 @@ PreservationWGCNA_Board <- function(id, pgx) {
       id = "preservationWGCNAEnrichment",
       rwgcna = r_wgcna,
       rmodule = reactive(input$module)
+    )
+
+    # Module summary (ephemeral: the preservation object is computed live from
+    # user input and never persisted, so summaries are generated on demand).
+    wgcna_module_ai_summary_server(
+      "preservationSummary",
+      wgcna = r_wgcna,
+      pgx = pgx,
+      r_module = shiny::reactive(input$module),
+      parent_session = session,
+      watermark = WATERMARK,
+      variant = NULL,
+      board_type = "preservation"
     )
 
     return(NULL)

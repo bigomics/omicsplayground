@@ -115,4 +115,4 @@ ngs$organism = ifelse(is.mouse, "mouse", "human")
 ngs$description = paste0(geo$info$title,". ",geo$info$summary)
 
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)

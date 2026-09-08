@@ -239,17 +239,6 @@ featuremap_plot_gene_map_server <- function(id,
       )
     })
 
-    # PlotModuleServer(
-    #   "gene_map",
-    #   plotlib = "ggplot",
-    #   plotlib2 = "plotly",
-    #   func = geneUMAP.RENDER_ggplot,
-    #   func2 = geneUMAP.RENDER2,
-    #   csvFunc = plot_data,
-    #   pdf.width = 5, pdf.height = 5,
-    #   add.watermark = watermark
-    # )
-
     # ================================================================================
     # ============================= Table server module ==============================
     # ================================================================================

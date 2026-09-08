@@ -58,7 +58,7 @@ OPG <- get_opg_root()
 ETC <- file.path(OPG, "etc") ## location of options, settings, DB files
 FILES <- file.path(OPG, "lib")
 FILESX <- file.path(OPG, "libx")
-APPDIR <- file.path(OPG, "components/app/R")
+APPDIR <- file.path(OPG, "components")
 PGX.DIR <- file.path(OPG, "data")
 SHARE.DIR <- file.path(OPG, "data_shared")
 PUBLIC.DIR <- file.path(OPG, "data_public")
@@ -99,6 +99,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(bigdash)
 library(grid)
 library(magrittr)
 library(future)
@@ -187,7 +188,9 @@ opt.default <- list(
   DEVMODE = FALSE,
   ENABLE_MULTIOMICS = TRUE,
   ENABLE_COOKIE_LOGIN = TRUE,
-  PUBLIC_DATASETS_LABEL = "Public Datasets"
+  PUBLIC_DATASETS_LABEL = "Public Datasets",
+  LLM_MAXTURNS = 100,
+  ENABLE_AI = TRUE
 )
 
 opt.file <- file.path(ETC, "OPTIONS")
@@ -315,7 +318,7 @@ main.init_time <- round(Sys.time() - main.start_time, digits = 4)
 main.init_time
 message("[GLOBAL] global init time = ", main.init_time, " ", attr(main.init_time, "units"))
 
-shiny::addResourcePath("static", file.path(OPG, "components/app/R/www"))
+shiny::addResourcePath("static", file.path(OPG, "components/assets"))
 
 ## Initialize plot download logger
 PLOT_DOWNLOAD_LOGGER <<- reactiveValues(log = list(), str = "")
@@ -332,11 +335,23 @@ DICTIONARY <- file.path(FILES, "translation.json")
 i18n <- shiny.i18n::Translator$new(translation_json_path = DICTIONARY)
 i18n$set_translation_language("RNA-seq")
 
-## Filter LLM models with available models, add all local models(?)
-opt$LLM_MODELS <- playbase::ai.get_models(opt$LLM_MODELS)
-LOCAL_MODELS <- playbase::ai.get_ollama_models()
-# opt$LLM_MODELS <- sort(unique(opt$LLM_MODELS, LOCAL_MODELS))
-opt$LLM_MAXTURNS <- ifelse(is.null(opt$LLM_MAXTURNS), 10, opt$LLM_MAXTURNS)
-  
+## LLM_MAXTURNS is read from etc/OPTIONS — single source of truth.
+
 ## Setup reticulate
 ## reticulate::use_virtualenv("reticulate")
+
+## bigdash hooks, mirroring components/app/R/global.R
+options(
+  bigdash.tspan = tspan,
+  bigdash.editor_content = getEditorContent,
+  bigdash.editor_theme_observer = plotmodule_theme_observer,
+  bigdash.record_download = record_plot_download,
+  bigdash.watermark = isTRUE(opt$WATERMARK),
+  bigdash.watermark_png = function(file, position) {
+    addWatermark.PNG2(file, mark = file.path(FILES, "watermark-logo.png"), position = position)
+  },
+  bigdash.watermark_pdf = function(file, w, h) {
+    addWatermark.PDF2(file, w = w, h = h, mark = file.path(FILES, "watermark-logo.pdf"))
+  },
+  bigdash.pdf_settings = addSettings
+)

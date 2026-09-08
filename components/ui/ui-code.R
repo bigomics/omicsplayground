@@ -169,7 +169,7 @@ selector_switch <- function(
   )
 }
 
-loading_spinner <- function(text = "Loading...") {
+computing_spinner_ui <- function(text = "Computing...") {
   shiny::tags$div(
     id = "spinner-container", # Add an ID to the spinner container
     class = "spinner-container",
@@ -177,10 +177,22 @@ loading_spinner <- function(text = "Loading...") {
       class = "spinner-wrapper",
       shiny::tags$div(
         class = "spinner-border text-primary", role = "status",
-        style = "font-size:0.4em;height:4em;width:4em;",
-        shiny::tags$span(class = "visually-hidden", "Loading...")
+        style = "font-size:0.4em; height:4em; width:4em;",
+        shiny::tags$span(class = "visually-hidden", text)
       ),
       shiny::tags$p(class = "spinner-text", text) # Add a class to the text element
     )
   )
+}
+
+show_computing_spinner <- function(value=10) {
+  shinyjs::show("spinner-container")
+  shinyjs::removeClass(id = "spinner-container", class = "visually-hidden")    
+  shinybusy::update_busy_bar(value)  
+}
+
+hide_computing_spinner <- function() {
+  shinyjs::hide("spinner-container")
+  shinyjs::addClass(id = "spinner-container", class = "visually-hidden")  
+  shinybusy::update_busy_bar(100)  
 }

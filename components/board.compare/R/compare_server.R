@@ -16,17 +16,11 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
         js = FALSE
       )
 
+    OmicsBoard(session, pgx, title = "Compare Datasets", infotext = infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Compare Experiments</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
@@ -380,26 +374,6 @@ CompareBoard <- function(id, pgx, pgx_dir = reactive(file.path(OPG, "data", "min
           labeltype = labeltype(),
           col = col
         )
-        ## } else if (type == "heatmap") {
-        ##   gg <- intersect(toupper(higenes), toupper(rownames(pgx$X)))
-        ##     if (length(gg) > 1) {
-        ##       jj <- match(gg, toupper(rownames(pgx$X)))
-        ##       X1 <- pgx$X[jj, , drop = FALSE]
-        ##       Y1 <- pgx$samples
-        ##       if (get_data) {
-        ##         return(
-        ##           playbase::gx.splitmap(X1,
-        ##             nmax = 40, col.annot = Y1,
-        ##             softmax = TRUE, show_legend = FALSE,
-        ##             data = TRUE
-        ##           )
-        ##         )
-        ##       }
-        ##       playbase::gx.splitmap(X1,
-        ##         nmax = 40, col.annot = Y1,
-        ##         softmax = TRUE, show_legend = FALSE
-        ##       )
-        ##     }
       } else {
         p <- playbase::pgx.plotContrast(
           pgx,

@@ -10,6 +10,9 @@ upload_module_computepgx_server <- function(
   id,
   countsRT,
   countsX,
+  preprocess = shiny::reactive(NULL),
+  rawCountsRT = shiny::reactive(NULL),
+  rawAnnotRT = shiny::reactive(NULL),
   norm_method,
   samplesRT,
   azimuth_ref,
@@ -39,7 +42,8 @@ upload_module_computepgx_server <- function(
   process_counter,
   reset_upload_text_input,
   probetype,
-  recompute_pgx = NULL
+  recompute_pgx = NULL,
+  .clear_upload
 ) {
   shiny::moduleServer(
     id,
@@ -561,6 +565,32 @@ upload_module_computepgx_server <- function(
                     )
                   )
                 ),
+                div(
+                  style = "margin-top:12px;",
+                  shiny::checkboxInput(
+                    ns("create_ai_reports"),
+                    label = withTooltip(
+                      shiny::span("Create AI reports"),
+                      "Reports can also be generated later from AI Studio."
+                    ),
+                    value = TRUE
+                  )
+                ),
+                conditionalPanel(
+                  "input.create_ai_reports == true",
+                  ns = ns,
+                  div(
+                    style = "margin-top:-20px;margin-left:12px;margin-bottom:-20px;",
+                    shiny::checkboxInput(
+                      ns("create_ai_infographics"),
+                      label = withTooltip(
+                        shiny::span("Create AI infographics"),
+                        "Infographics can also be generated later from AI Studio. Image generation adds extra compute time and cost."
+                      ),
+                      value = FALSE
+                    )
+                  )
+                )
               ),
               bslib::card(
                 fileInput2(
@@ -1043,6 +1073,22 @@ upload_module_computepgx_server <- function(
           annot_table <- NULL
         }
 
+        ## Data sent to createPGX. Bulk: send RAW counts + preprocess settings so a
+        ## script/endpoint reproduces the app exactly (X is rebuilt inside createPGX
+        ## via playbase::pgx.preprocess). scRNA: keep its own pipeline unchanged
+        ## (X is unused by createSingleCellPGX).
+        if (upload_datatype() == "scRNA-seq") {
+          pgx_counts <- counts
+          pgx_countsX <- countsX
+          pgx_annot <- annot_table
+          pgx_preprocess <- NULL
+        } else {
+          pgx_counts <- rawCountsRT()
+          pgx_countsX <- NULL
+          pgx_annot <- rawAnnotRT()
+          pgx_preprocess <- preprocess()
+        }
+
         ## -----------------------------------------------------------
         ## Set statistical methods and run parameters
         ## -----------------------------------------------------------
@@ -1159,17 +1205,51 @@ upload_module_computepgx_server <- function(
           }
         }
 
+        create_ai_reports <- is.null(input$create_ai_reports) || isTRUE(input$create_ai_reports)
+        create_ai_infographics <- isTRUE(input$create_ai_infographics)
+        llm_model <- getUserOption(session, "llm_model")
+        cred_fn <- get_ai_credentials(session)
+        ai_features <- NULL
+        if (isTRUE(opt$ENABLE_AI) && create_ai_reports &&
+            !is.null(llm_model) && nzchar(llm_model)) {
+          ai_features <- list(
+            reports = list(
+              llm_model = llm_model,
+              img_model = NULL,
+              report_type = "normal",
+              on_error = "warn",
+              credentials = cred_fn
+            )
+          )
+          # Precompute durable per-module WGCNA summaries alongside the reports,
+          # using the same authenticated model config. pgx.update_wgcna_summaries
+          # is a no-op when WGCNA was not among the selected extra methods, so
+          # this is safe to set unconditionally whenever AI reports are on.
+          ai_features$wgcna_summaries <- ai_features$reports
+
+          # Precompute durable AI infographics for the static report slots,
+          # opt-in via the nested checkbox (defaults FALSE — image generation
+          # has real per-slot provider cost/time, unlike text reports).
+          if (isTRUE(create_ai_infographics)) {
+            ai_features$infographics <- list(
+              select = c("combined", "wgcna", "wgcna_mox", "mofa", "de", "pathways"),
+              style = "bigomics"
+            )
+          }
+        }
+
         ## Define create_pgx function arguments
         params <- list(
           organism = upload_organism(),
           samples = samples,
-          counts = counts,
-          countsX = countsX,
+          counts = pgx_counts,
+          countsX = pgx_countsX,
+          preprocess = pgx_preprocess,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
           # ------- extra tables ---------
-          annot_table = annot_table,
+          annot_table = pgx_annot,
           custom.geneset = custom_geneset,
           custom_fc = custom_fc,
           #-------- preprocess options ---------
@@ -1217,6 +1297,7 @@ upload_module_computepgx_server <- function(
           creator = creator,
           date = this.date,
           pgx.save.folder = pgx_save_folder,
+          ai_features = ai_features,
           ETC = ETC,
           email = auth$email,
           sendSuccessMessageToUser = sendSuccessMessageToUser
@@ -1277,6 +1358,9 @@ upload_module_computepgx_server <- function(
         )
         session$sendCustomMessage("warnOnExit", TRUE)
 
+        ## clear out current files
+        .clear_upload()
+        
         ## append to process list
         PROCESS_LIST <<- c(PROCESS_LIST, list(new.job))
       }) ## end observe input$compute
@@ -1456,6 +1540,14 @@ upload_module_computepgx_server <- function(
         if (file.exists(result_pgx)) {
           pgx <- playbase::pgx.load(result_pgx) ## always pgx
           computedPGX(pgx)
+          tryCatch(
+            ai_telemetry_record_reports(pgx, user_email = auth$email),
+            error = function(e) NULL
+          )
+          tryCatch(
+            ai_telemetry_record_infographics(pgx, user_email = auth$email),
+            error = function(e) NULL
+          )
         } else {
           info("[computePGX:on_process_completed] : ERROR: Result file not found")
         }
@@ -1483,15 +1575,17 @@ upload_module_computepgx_server <- function(
       ## or not, and if we are allowed to show the compute button.
       observeEvent(process_counter(), {
         if (process_counter() > 0) {
-          shiny::insertUI(
-            selector = "#current_dataset",
-            where = "beforeBegin",
-            ui = loading_spinner("Computation in progress..."),
-            session = session
-          )
+          ## shiny::insertUI(
+          ##   selector = "#current_dataset",
+          ##   where = "beforeBegin",
+          ##   ui = computing_spinner_ui("Computation in progress..."),
+          ##   session = session
+          ## )
+          show_computing_spinner(99.99)
         } else if (process_counter() == 0) {
           # remove UI with JS, had problems with shiny::removeUI
-          shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
+          ##shinyjs::runjs("document.querySelector('.current-dataset #spinner-container')?.remove();")
+          hide_computing_spinner()
         }
       })
 

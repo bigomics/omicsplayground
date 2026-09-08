@@ -40,16 +40,26 @@ dataview_plot_variationcoefficient_server <- function(id,
                                                       pgx,
                                                       r.samples,
                                                       r.groupby,
+                                                      r.datasource = reactive("X"),
                                                       watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$samples)
-      counts <- pgx$counts
       Y <- pgx$samples
       samples <- r.samples()
       groupby <- r.groupby()
       if (!all(samples %in% rownames(Y))) {
         return(NULL)
+      }
+
+      ## same rule as getCountStatistics(): X is log2 (beta for methylomics) and
+      ## CV needs a linear scale.
+      is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
+      if (identical(r.datasource(), "counts")) {
+        counts <- pgx$counts[, samples, drop = FALSE]
+      } else {
+        counts <- pgx$X[, samples, drop = FALSE]
+        if (!is.meth) counts <- 2**counts
       }
 
       if (groupby == "<ungrouped>") {

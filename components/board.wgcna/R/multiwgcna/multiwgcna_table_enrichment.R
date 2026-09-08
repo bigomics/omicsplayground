@@ -83,16 +83,6 @@ multiwgcna_table_enrichment_server <- function(id,
         DT::formatSignif(numeric.cols, 3) %>%
         DT::formatStyle(0, target = "row", fontSize = "11px", lineHeight = "70%")
 
-      if (0) {
-        dt <- dt %>%
-          DT::formatStyle(
-            "score",
-            background = color_from_middle(df$score, "lightblue", "#f5aeae"),
-            backgroundSize = "98% 88%", backgroundRepeat = "no-repeat",
-            backgroundPosition = "center"
-          )
-      }
-
       return(dt)
     }
 
