@@ -157,6 +157,11 @@ launcher_server <- function(id, parent, load_example = NULL,
       bslib::nav_select("app-sidebar", "Upload", session = parent)
     })
 
+    ## Quick action: go to the dataset Library
+    observeEvent(input$show_library, {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
+    })
+
     ## Quick action: go to the Obi panel
     observeEvent(input$chat_with_obi, {
       if(check_pgx_loaded()) {
