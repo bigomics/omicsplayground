@@ -297,7 +297,7 @@ FeatureMapBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       } else {
         filtgenes <- unlist(lapply(sel, function(s) {
           x <- playdata::FAMILIES[[s]]
-          x <- pgx$genes$symbol[match(x, pgx$genes$ortholog, nomatch = 0)]
+          x <- pgx$genes$symbol[match(x, pgx$genes$human_ortholog, nomatch = 0)]
           return(x)
         }))
         filtprobes <- playbase::map_probes(pgx$genes, filtgenes)

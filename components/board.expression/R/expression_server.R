@@ -586,10 +586,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         return(NULL)
       }
 
-      ## determine which column to match with pgx$GMT
+      ## determine which column to match with pgx$GMT. Default genesets
+      ## are human-keyed, so human_ortholog is a candidate alongside symbol.
+      cand.cols <- intersect(c("symbol", "human_ortholog", "ortholog"), colnames(res))
       gene1 <- res[sel.row, ]
       match.res <- apply(
-        res[, c("symbol", "ortholog")], 2,
+        res[, cand.cols, drop = FALSE], 2,
         function(x) sum(x %in% rownames(pgx$GMT))
       )
       match.col <- names(which.max(match.res))
