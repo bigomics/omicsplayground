@@ -185,7 +185,7 @@ CopilotChatUI <- function(id) {
 #' `CopilotChatServer()` observes them directly.
 #'
 #' The custom-style textbox is hidden via `shinyjs::hidden` and toggled on
-#' when `style_choice == "custom"`. A small caption under the style radio
+#' when `style_choice == "custom"`. A hover tooltip on the style radio
 #' reminds the user that the choice applies to the next message.
 #' @export
 CopilotChatSettings <- function(id) {
@@ -197,15 +197,19 @@ CopilotChatSettings <- function(id) {
       choiceNames  = unname(vapply(COPILOT_TIERS, copilot_tier_label, character(1))),
       choiceValues = unname(COPILOT_TIERS),
       selected     = COPILOT_TIERS[[1]],
-      inline       = TRUE
+        inline       = TRUE
     ),
     shiny::br(),
-    shiny::radioButtons(
-      ns("style_choice"), "Answer style:",
-      choiceNames  = unname(COPILOT_STYLE_LABELS),
-      choiceValues = unname(COPILOT_STYLES),
-      selected     = COPILOT_STYLES[[1]],
-      inline       = TRUE
+    withTooltip(
+      shiny::radioButtons(
+        ns("style_choice"), "Answer style:",
+        choiceNames  = unname(COPILOT_STYLE_LABELS),
+        choiceValues = unname(COPILOT_STYLES),
+        selected     = COPILOT_STYLES[[1]],
+        inline       = TRUE
+      ),
+      "Style changes apply to the next message.",
+      placement = "top"
     ),
     shinyjs::hidden(
       shiny::div(
@@ -220,10 +224,6 @@ CopilotChatSettings <- function(id) {
         )
       )
     ),
-    shiny::tags$small(
-      class = "text-muted",
-      "Style changes apply to the next message."
-    ),
     shiny::br(),
     # Display-only switch: the model is always asked to reason (both tiers
     # set reasoning_effort = "medium"); this decides whether that trace is
@@ -231,29 +231,32 @@ CopilotChatSettings <- function(id) {
     # carry it either way -- .project_content() classifies thinking blocks
     # as hidden -- so leaving this off also keeps a live run and its
     # restored replay identical.
-    shiny::checkboxInput(
-      ns("show_thinking"),
-      label = "Show reasoning trace",
-      value = copilot_show_thinking_default()
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_thinking"),
+        label = "Show reasoning trace",
+        value = copilot_show_thinking_default()
+      ),
+      paste(
+        "Shows the model's reasoning in grey brackets ahead of the answer.",
+        "Applies to the next message; reasoning is never saved to history."
+      ),
+      placement = "top"
     ),
-    shiny::tags$small(
-      class = "text-muted",
-      "Shows the model's reasoning in grey brackets ahead of the answer. ",
-      "Applies to the next message; reasoning is never saved to history."
-    ),
-    shiny::br(),
     # Also display-only. Tools keep running with this off -- the switch just
     # withholds the on_tool_request callback, which only draws the marker.
     # Disconnecting tools is the Reports panel's job, not this one.
-    shiny::checkboxInput(
-      ns("show_tools"),
-      label = "Show tool calls",
-      value = copilot_show_tools_default()
-    ),
-    shiny::tags$small(
-      class = "text-muted",
-      "Shows a collapsible marker for each tool the assistant runs. ",
-      "Turning this off does not stop it from using tools."
+    withTooltip(
+      shiny::checkboxInput(
+        ns("show_tools"),
+        label = "Show tool calls",
+        value = copilot_show_tools_default()
+      ),
+      paste(
+        "Shows a collapsible marker for each tool the assistant runs.",
+        "Turning this off does not stop it from using tools."
+      ),
+      placement = "top"
     )
   )
 }

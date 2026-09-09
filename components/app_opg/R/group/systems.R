@@ -20,46 +20,46 @@ MODULE.systems <- list(
       pcsf = "Protein networks"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "drug-tab",
-        DrugConnectivityInputs("drug"),
-        create_loader("drug-loader")
+        ns("drug-tab"),
+        DrugConnectivityInputs(ns("drug")),
+        create_loader(ns("drug-loader"))
       ),
       bigdash::bigTabItem(
-        "tcga-tab",
-        TcgaInputs("tcga"),
-        create_loader("tcga-loader")
+        ns("tcga-tab"),
+        TcgaInputs(ns("tcga")),
+        create_loader(ns("tcga-loader"))
       ),
       bigdash::bigTabItem(
-        "cell-tab",
-        SingleCellInputs("cell"),
-        create_loader("cell-loader")
+        ns("cell-tab"),
+        SingleCellInputs(ns("cell")),
+        create_loader(ns("cell-loader"))
       ),
       bigdash::bigTabItem(
-        "pcsf-tab",
-        PcsfInputs("pcsf"),
-        create_loader("pcsf-loader")
+        ns("pcsf-tab"),
+        PcsfInputs(ns("pcsf")),
+        create_loader(ns("pcsf-loader"))
       )
     )
   },
-  module_lazy = function(PGX, ...) {
+  module_lazy = function(PGX, ns = identity, ...) {
     list(
       "drug-tab" = list(
-        ui     = function() DrugConnectivityUI("drug"),
+        ui     = function() DrugConnectivityUI(ns("drug")),
         server = function() DrugConnectivityBoard("drug", pgx = PGX)
       ),
       "tcga-tab" = list(
-        ui     = function() TcgaUI("tcga"),
+        ui     = function() TcgaUI(ns("tcga")),
         server = function() TcgaBoard("tcga", pgx = PGX)
       ),
       "cell-tab" = list(
-        ui     = function() SingleCellUI("cell"),
+        ui     = function() SingleCellUI(ns("cell")),
         server = function() SingleCellBoard("cell", pgx = PGX)
       ),
       "pcsf-tab" = list(
-        ui     = function() PcsfUI("pcsf"),
+        ui     = function() PcsfUI(ns("pcsf")),
         server = function() PcsfBoard("pcsf", pgx = PGX)
       )
     )

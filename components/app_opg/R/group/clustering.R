@@ -17,28 +17,28 @@ MODULE.clustering <- list(
       clusterfeatures = "Features"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "clustersamples-tab",
-        ClusteringInputs("clustersamples"),
-        create_loader("clustersamples-loader")
+        ns("clustersamples-tab"),
+        ClusteringInputs(ns("clustersamples")),
+        create_loader(ns("clustersamples-loader"))
       ),
       bigdash::bigTabItem(
-        "clusterfeatures-tab",
-        FeatureMapInputs("clusterfeatures"),
-        create_loader("clusterfeatures-loader")
+        ns("clusterfeatures-tab"),
+        FeatureMapInputs(ns("clusterfeatures")),
+        create_loader(ns("clusterfeatures-loader"))
       )
     )
   },
-  module_lazy = function(PGX, labeltype = NULL, ...) {
+  module_lazy = function(PGX, labeltype = NULL, ns = identity, ...) {
     list(
       "clustersamples-tab" = list(
-        ui     = function() ClusteringUI("clustersamples"),
+        ui     = function() ClusteringUI(ns("clustersamples")),
         server = function() ClusteringBoard("clustersamples", pgx = PGX, labeltype = labeltype)
       ),
       "clusterfeatures-tab" = list(
-        ui     = function() FeatureMapUI("clusterfeatures"),
+        ui     = function() FeatureMapUI(ns("clusterfeatures")),
         server = function() FeatureMapBoard("clusterfeatures", pgx = PGX, labeltype = labeltype)
       )
     )

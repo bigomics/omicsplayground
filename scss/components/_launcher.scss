@@ -20,7 +20,9 @@
 }
 
 .app-launcher-grid-dashboards {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* 240 not 260: at 1280px wide the 4 dashboards missed one row by 7px.
+       auto-fit, so wide screens don't reserve an empty 5th column. */
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .app-launcher-grid-apps {

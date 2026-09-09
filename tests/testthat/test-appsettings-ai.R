@@ -55,6 +55,10 @@ testthat::skip_if_not(
   "omicsai provider catalog API exports are required"
 )
 source(file.path(.repo_dir, "components/utils/ai_model_policy.R"), local = TRUE)
+## Sourced for real (not stubbed like the colour theme): the consent store is
+## the one AI setting that touches disk, and the settings observers are exactly
+## where that persistence is wired, so the tests below exercise it end to end.
+source(file.path(.repo_dir, "components/modules/AiConsent.R"), local = TRUE)
 
 make_opt <- function(locked = FALSE,
                      enable_ai = TRUE,
@@ -533,4 +537,201 @@ test_that("logging out clears the stored credential and resets the provider", {
       expect_equal(session$userData[["ai_provider"]], "bigomics")
     }
   )
+})
+
+# ===========================================================================
+# AI data-sharing consent
+#
+# The one AI setting that outlives the session. These cover the three things
+# that make it a consent rather than a preference: it defaults off, it is
+# written to and re-read from the user's dir, and it never survives into a
+# different user's session.
+# ===========================================================================
+
+## Per-test user dir so a consent file written by one test cannot be read by
+## the next (make_auth() shares tempdir()).
+make_consent_auth <- function(admin = FALSE, dir = withr::local_tempdir(.local_envir = parent.frame())) {
+  shiny::reactiveValues(logged = TRUE, ADMIN = admin, user_dir = dir)
+}
+
+test_that("consent defaults to off and is not written before the user touches it", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(file.exists(file.path(dir, AI_CONSENT_FILE)))
+    }
+  )
+})
+
+test_that("opting in stores the consent in the session and on disk", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      ## Let the login seed settle first: in the real lifecycle the user can
+      ## only reach the switch after the session has loaded their record.
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+      expect_true(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("withdrawing consent overwrites the stored record", {
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(load_ai_consent(dir))
+
+      session$setInputs(ai_share_data = FALSE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("a persisted consent is restored on login", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("consent is refused for a BYOK provider even if the client sends TRUE", {
+  ## On a user's own key their provider account governs; a forged input must
+  ## not record a consent we would then act on.
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "openai", ai_api_key = "sk-x",
+                        ai_share_data = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_false(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("logging out drops the session consent but leaves the record intact", {
+  ## The next login in this Shiny process must not inherit the previous user's
+  ## opt-in; logging out is not a withdrawal, so the file stays.
+  dir <- withr::local_tempdir()
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+
+      auth$logged <- FALSE
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+      expect_true(load_ai_consent(dir))
+    }
+  )
+})
+
+test_that("an unlicensed deployment greys the consent switch", {
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("ai_share_data" %in% toggled$disabled)
+      expect_false("ai_share_data" %in% toggled$enabled)
+    }
+  )
+})
+
+# ===========================================================================
+# Deployment lock vs consent. Greying the switch is not enough: a disabled
+# control keeps whatever value it had, so a user who opted in before the lock
+# would stay opted in behind a switch they can no longer reach.
+# ===========================================================================
+
+test_that("a locked deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an admin is unaffected by AI_PROVIDER_LOCKED", {
+  ## The lock exists to stop non-admins changing AI behaviour on a pinned
+  ## deployment; the admin who set it keeps their own switch.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(admin = TRUE, dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("an unlicensed deployment forces the session consent off", {
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+})
+
+test_that("a lock does not erase the user's stored consent", {
+  ## A deployment-level lock is not the user withdrawing. When it lifts, the
+  ## answer they gave must still be there.
+  dir <- withr::local_tempdir()
+  save_ai_consent(dir, TRUE)
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_consent_auth(dir = dir),
+                pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      session$setInputs(ai_provider = "bigomics", ai_share_data = TRUE)
+      session$flushReact()
+      expect_false(isTRUE(session$userData[["ai_share_data"]]))
+    }
+  )
+  expect_true(load_ai_consent(dir))
 })

@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 
@@ -10,13 +10,23 @@
 #'     DO NOT REMOVE.
 #' @export
 launcher_server <- function(id, parent, load_example = NULL,
+                            load_example_dataset = NULL,
+                            opg_view = NULL,
                             app_launchers = NULL, pgx=NULL ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    coming_soon_alert <- function() {      
+    coming_soon_alert <- function(signup_url) {
       shinyalert::shinyalert("Coming soon!",
-        text = "Sorry. This feature is not available yet",
+        text = shiny::tagList(
+          "Sorry. This feature is not available yet.",
+          shiny::br(), shiny::br(),
+          shiny::a(
+            "Sign up to be notified when we release it",
+            href = signup_url, target = "_blank"
+          )
+        ),
+        html = TRUE,
         type = "info")
     }
 
@@ -55,12 +65,13 @@ launcher_server <- function(id, parent, load_example = NULL,
     observeEvent(input$launch_playground, {
       ## playground is not yet fully a shiny module and is "preloaded"
       ## for now. Just select navtab
+      if (!is.null(opg_view)) opg_view("playground")
       bslib::nav_select("app-sidebar", "Dashboard", session=parent)
     })
     
     observeEvent(input$launch_qsee, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/2TU8pQmlWTTiGdzCxDBQ0Ig")
         return(NULL)
       }
       dev_alert()
@@ -72,7 +83,7 @@ launcher_server <- function(id, parent, load_example = NULL,
     
     observeEvent(input$launch_across, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/20hoGrKfLQX61tHyqT0ojnw")
         return(NULL)
       }
       dev_alert()
@@ -84,7 +95,7 @@ launcher_server <- function(id, parent, load_example = NULL,
 
     observeEvent( input$launch_mythril, {
       if(!isTRUE(opt$DEVMODE)) {
-        coming_soon_alert()
+        coming_soon_alert("https://eva7t.share-eu1.hsforms.com/29Qh2m0fRQmCfEzVMM9AxnQ")
         return(NULL)
       }      
       shinyalert::shinyalert("Empty!", "Please fill this stub.")
@@ -117,6 +128,13 @@ launcher_server <- function(id, parent, load_example = NULL,
       }
     })
 
+    observeEvent(input$launch_multiomics, {
+      ## Same "Dashboard" panel/opg_server() instance as Playground -- just
+      ## switches its menu_tree to the MultiOmics-restricted one.
+      if (!is.null(opg_view)) opg_view("multiomics")
+      bslib::nav_select("app-sidebar", "Dashboard", session=parent)
+    })
+
     ## Quick action: load the example dataset and jump to the Dashboard
     observeEvent(
       list(input$load_example),
@@ -125,6 +143,13 @@ launcher_server <- function(id, parent, load_example = NULL,
         warning("[launcher_server] !!! no load_example trigger available")
         return()
       }
+      ## This is the generic Home quick action, always the main Playground
+      ## example -- reset explicitly in case the MultiOmics view
+      ## (opg_server()) last pointed load_example_dataset at "mox-brca".
+      if (!is.null(load_example_dataset)) {
+        load_example_dataset("example-data")
+      }
+      if (!is.null(opg_view)) opg_view("playground")
       if (is.null(load_example())) {
         load_example(1)
       } else {
@@ -136,6 +161,11 @@ launcher_server <- function(id, parent, load_example = NULL,
     ## Quick action: go to the Upload panel
     observeEvent(input$upload_new_data, {
       bslib::nav_select("app-sidebar", "Upload", session = parent)
+    })
+
+    ## Quick action: go to the dataset Library
+    observeEvent(input$show_library, {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
     })
 
     ## Quick action: go to the Obi panel

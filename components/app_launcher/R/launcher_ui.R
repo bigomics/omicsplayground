@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 ## Launcher page for dashboards, apps and tools.
@@ -13,13 +13,22 @@ launcher_ui <- function(id) {
     ## -------------- dashboards -------------
     list(
       input = "launch_playground",
-      icon = "chart-column",
+      icon = "dna",
       ##icon = "tachograph-digital",      
       label = "Omics Playground",
       description = "Play, see & discover",
       rgb = c(73,129,178),
       group = "Dashboards",
       badge = NULL      
+    ),
+    list(
+      input = "launch_multiomics",
+      icon = "layer-group",
+      label = "MultiOmics",
+      description = "Multiomics done easy",
+      rgb = c(120,90,190),
+      group = "Dashboards",
+      badge = NULL
     ),
     list(
       input = "launch_qsee",
@@ -34,7 +43,7 @@ launcher_ui <- function(id) {
       input = "launch_across",
       icon = "shuffle",
       ##icon = "layer-group",
-      label = "Across Explorer",
+      label = "Across",
       description = "Query across all your datasets",
       rgb = c(180,70,70),
       group = "Dashboards",
@@ -85,6 +94,12 @@ launcher_ui <- function(id) {
       class = "btn-outline-primary"
     ),
     list(
+      input = "show_library",
+      label = "Show my library",
+      icon = "folder-open",
+      class = "btn-outline-primary"
+    ),
+    list(
       input = "chat_with_obi",
       label = "Chat with Obi",
       icon = "robot",
@@ -93,15 +108,16 @@ launcher_ui <- function(id) {
     list(
       input = "launch_studio",
       label = "Create in Studio",
-      icon = "icons",
+      icon = "lightbulb",
       class = "btn-outline-primary"
     )
     # Add more quick actions here following the same structure
   )
 
-  ## The Qsee / Across / ID Converter / SmartPrism panels only exist in
-  ## DEVMODE (ui.R renders them conditionally), so in other deployments their
-  ## tiles would be dead buttons -- hide them. "Chat with Obi" mirrors the
+  ## The MultiOmics / ID Converter / SmartPrism panels only exist in
+  ## DEVMODE (ui.R renders them conditionally, hidden like Prism/IDconvert
+  ## rather than their own rail icon), so in other deployments their tiles
+  ## would be dead buttons -- hide them. "Chat with Obi" mirrors the
   ## Copilot panel's own ENABLE_AI / packages gate.
   if (!isTRUE(opt$DEVMODE)) {
     apps <- Filter(
@@ -188,7 +204,8 @@ launcher_ui <- function(id) {
   }
 
   ui <- page_fluid(
-    style = "background-color: #f0f9fd; height: 100vh;",
+    style = paste("background-color: #f0f9fd; min-height: 100vh;",
+                  "display: flex; flex-direction: column;"),
 
     div(shiny::actionButton(
       ns("logo_click"),
@@ -206,7 +223,7 @@ launcher_ui <- function(id) {
     
     ## app launcher grid, grouped by section
     shiny::div(
-      style = "padding: 30px 12% 0 12%;",
+      style = "padding: 30px 4% 0 4%;",
       
       ## Quick actions section (using same group header style)
       group_section(
@@ -230,7 +247,7 @@ launcher_ui <- function(id) {
 
     ## credits
     shiny::div(
-      style = "margin-top: 70px; width: 100%;",
+      style = "margin-top: auto; padding: 24px 0 36px; width: 100%;",
       creditsCarousel() 
     )
     

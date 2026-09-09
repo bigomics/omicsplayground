@@ -95,21 +95,29 @@ copilot_restore_controller <- function(
   restore_status <- shiny::reactiveVal("idle")
 
   # ---- ExtendedTask ----
-  # `provider` + `credentials` are captured on the Shiny thread by start()
-  # and passed in as task args, never read from the reactive inside the
-  # worker (the future-worker gotcha). `credentials` is a plain value-capturing
-  # closure (or NULL), so it serialises into the future cleanly.
+  # `provider`, `credentials` and `data_consent` are captured on the Shiny
+  # thread by start() and passed in as task args, never read from the reactive
+  # inside the worker (the future-worker gotcha). `credentials` is a plain
+  # value-capturing closure (or NULL), so it serialises into the future
+  # cleanly.
+  #
+  # `data_consent` travels the same route as `provider` for the same reason it
+  # is not read back from the snapshot: the saved session records what the
+  # conversation was, not what the user currently permits. Passing the live
+  # setting means a session saved while the switch was on restores private
+  # once the user turns it off.
   restore_task <- shiny::ExtendedTask$new(
-    function(store, session_id, bindings, provider, credentials) {
+    function(store, session_id, bindings, provider, credentials, data_consent) {
       promises::future_promise({
         omicsagentovi::ovi_restore(
-          session_id  = session_id,
-          session_dir = store@session_dir,
-          bindings    = bindings,
-          restore_pgx = "never",
-          db_name     = basename(store@db_path),
-          provider    = provider,
-          credentials = credentials
+          session_id   = session_id,
+          session_dir  = store@session_dir,
+          bindings     = bindings,
+          restore_pgx  = "never",
+          db_name      = basename(store@db_path),
+          provider     = provider,
+          credentials  = credentials,
+          data_consent = data_consent
         )
       }, seed = TRUE)
     })
@@ -246,6 +254,16 @@ copilot_restore_controller <- function(
     ai_sel   <- .copilot_restore_provider(session)
     provider <- ai_sel$provider
     cred     <- ai_sel$credentials
+    ## Read on the Shiny thread; `session` is not available in the worker.
+    ## Scoped to the managed backend exactly as fresh-agent construction is:
+    ## on BYOK the user's own provider account governs their data policy.
+    ##
+    ## Note this asks .copilot_ai_provider, not the `provider` resolved just
+    ## above: .copilot_restore_provider has already rewritten the managed
+    ## backend to ovi's "openai" sentinel, so testing that value for
+    ## "bigomics" never matches and would silently drop every opt-in.
+    consent  <- identical(.copilot_ai_provider(session)$provider, "bigomics") &&
+      get_ai_data_consent(session)
 
     restore_inflight(session_id)
     restore_status("restoring")
@@ -288,8 +306,9 @@ copilot_restore_controller <- function(
             bindings    = bindings,
             restore_pgx = "never",
             db_name     = basename(store@db_path),
-            provider    = provider,
-            credentials = cred
+            provider     = provider,
+            credentials  = cred,
+            data_consent = consent
           ),
           error = function(e) {
             log_info("copilot.restore_sync_failed", msg = conditionMessage(e))
@@ -310,7 +329,8 @@ copilot_restore_controller <- function(
 
     tryCatch(
       {
-        restore_task$invoke(store, session_id, bindings, provider, cred)
+        restore_task$invoke(store, session_id, bindings, provider, cred,
+                            consent)
       },
       error = function(e) {
         log_info("copilot.restore_invoke_failed",

@@ -19,29 +19,29 @@ MODULE.compare <- list(
       cmap = "Similar experiments"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "isect-tab",
-        IntersectionInputs("isect"),
-        create_loader("isect-loader")
+        ns("isect-tab"),
+        IntersectionInputs(ns("isect")),
+        create_loader(ns("isect-loader"))
       ),
       bigdash::bigTabItem(
-        "comp-tab",
-        CompareInputs("comp"),
-        create_loader("comp-loader")
+        ns("comp-tab"),
+        CompareInputs(ns("comp")),
+        create_loader(ns("comp-loader"))
       ),
       bigdash::bigTabItem(
-        "cmap-tab",
-        ConnectivityInputs("cmap"),
-        create_loader("cmap-loader")
+        ns("cmap-tab"),
+        ConnectivityInputs(ns("cmap")),
+        create_loader(ns("cmap-loader"))
       )
     )
   },
-  module_lazy = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL, ...) {
+  module_lazy = function(PGX, labeltype = NULL, auth = NULL, env = NULL, reload_pgxdir = NULL, ns = identity, ...) {
     list(
       "isect-tab" = list(
-        ui     = function() IntersectionUI("isect"),
+        ui     = function() IntersectionUI(ns("isect")),
         server = function() IntersectionBoard("isect",
           pgx = PGX,
           selected_gxmethods = env$diffexpr$selected_gxmethods,
@@ -49,7 +49,7 @@ MODULE.compare <- list(
         )
       ),
       "comp-tab" = list(
-        ui     = function() CompareUI("comp"),
+        ui     = function() CompareUI(ns("comp")),
         server = function() CompareBoard("comp",
           pgx = PGX,
           pgx_dir = reactive(auth$user_dir),
@@ -57,7 +57,7 @@ MODULE.compare <- list(
         )
       ),
       "cmap-tab" = list(
-        ui     = function() ConnectivityUI("cmap"),
+        ui     = function() ConnectivityUI(ns("cmap")),
         server = function() ConnectivityBoard("cmap",
           pgx = PGX,
           auth = auth,

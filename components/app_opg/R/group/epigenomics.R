@@ -15,27 +15,27 @@ MODULE.epigenomics <- list(
       ideograms = "Beta Ideograms"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "ideograms-tab",
-        EpigenomicsInputs("epigenomics"),
-        create_loader("ideograms-loader")
+        ns("ideograms-tab"),
+        EpigenomicsInputs(ns("epigenomics")),
+        create_loader(ns("ideograms-loader"))
       )
     )
   },
-  module_lazy = function(PGX, ...) {
+  module_lazy = function(PGX, ns = identity, ...) {
     list(
       "ideograms-tab" = list(
-        ui     = function() EpigenomicsUI("epigenomics"),
+        ui     = function() EpigenomicsUI(ns("epigenomics")),
         server = function() EpigenomicsBoard("epigenomics", pgx = PGX)
       )
     )
   },
-  module_help = function() {
+  module_help = function(ns = identity) {
     list(
       bigdash::sidebarTabHelp(
-        "ideograms-tab",
+        ns("ideograms-tab"),
         "Beta Ideograms",
         tspan("Epigenomics visualizations and analyses for methylomics data.")
       )

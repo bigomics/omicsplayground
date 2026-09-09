@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2023 BigOmics Analytics SA. All rights reserved.
+## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
 qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, lazy=TRUE) {
@@ -239,7 +239,7 @@ qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, la
               #footer = shiny::modalButton("Cancel"),
               footer = NULL,
               size = "s",
-              easyClose = FALSE
+              easyClose = TRUE ## lets Escape (and click-outside) dismiss it
             )
           )
         }

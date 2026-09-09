@@ -25,6 +25,7 @@ make_fake_session <- function(opts = list()) {
 }
 getUserOption <- function(session, var, value) session$userData[[var]]
 get_ai_credentials <- function(session) getUserOption(session, "ai_credentials")
+get_ai_data_consent <- function(session) isTRUE(getUserOption(session, "ai_share_data"))
 
 source(file.path(.board_dir, "copilot_run_controller.R"), local = TRUE)
 
@@ -50,15 +51,41 @@ test_that(".copilot_ai_provider surfaces a BYOK provider + credential closure", 
 # ---------------------------------------------------------------------------
 # .copilot_agent_build_args — BigOmics path (regression-critical)
 # ---------------------------------------------------------------------------
-test_that("BigOmics build args are byte-for-byte the tier path (no creds/model)", {
-  s <- make_fake_session()  # provider defaults to bigomics
+test_that("BigOmics build args are the tier path plus consent (no creds/model)", {
+  s <- make_fake_session()  # provider defaults to bigomics, consent unset
   for (tier in c("copilot-default", "copilot-deep")) {
     args <- .copilot_agent_build_args(s, tier)
-    expect_identical(args, list(tier = tier))
+    expect_identical(args, list(tier = tier, data_consent = FALSE))
     expect_false("credentials" %in% names(args))
     expect_false("model" %in% names(args))
     expect_false("provider" %in% names(args))
   }
+})
+
+test_that("BigOmics consent defaults to FALSE and only TRUE on an explicit opt-in", {
+  ## Unset, NULL and NA must all read as "no consent" — anything short of a
+  ## recorded TRUE is a user who has not agreed.
+  for (stored in list(NULL, NA, FALSE, "yes")) {
+    s <- make_fake_session(list(ai_share_data = stored))
+    expect_false(.copilot_agent_build_args(s, "copilot-default")$data_consent)
+  }
+  s <- make_fake_session(list(ai_share_data = TRUE))
+  expect_true(.copilot_agent_build_args(s, "copilot-default")$data_consent)
+})
+
+test_that("BYOK build args carry no consent flag at all", {
+  ## On a user's own key their provider account governs data policy; sending a
+  ## routing preference on their behalf would be both wrong and misleading.
+  cred <- local({ k <- "sk-anthropic"; function() k })
+  s <- make_fake_session(list(
+    ai_provider          = "anthropic",
+    ai_credentials       = cred,
+    ai_share_data        = TRUE,
+    llm_copilot_deep     = "claude-sonnet-4-6",
+    llm_copilot_balanced = "claude-haiku-4-5"
+  ))
+  expect_false("data_consent" %in% names(.copilot_agent_build_args(s, "copilot-deep")))
+  expect_false("data_consent" %in% names(.copilot_agent_build_args(s, "copilot-default")))
 })
 
 # ---------------------------------------------------------------------------

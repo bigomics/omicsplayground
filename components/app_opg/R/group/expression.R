@@ -19,42 +19,42 @@ MODULE.expression <- list(
       bio = "Find biomarkers"
     )
   },
-  module_ui = function() {
+  module_ui = function(ns = identity) {
     list(
       bigdash::bigTabItem(
-        "diffexpr-tab",
-        ExpressionInputs("diffexpr"),
-        create_loader("diffexpr-loader")
+        ns("diffexpr-tab"),
+        ExpressionInputs(ns("diffexpr")),
+        create_loader(ns("diffexpr-loader"))
       ),
       bigdash::bigTabItem(
-        "timeseries-tab",
-        TimeSeriesInputs("timeseries"),
-        create_loader("timeseries-loader")
+        ns("timeseries-tab"),
+        TimeSeriesInputs(ns("timeseries")),
+        create_loader(ns("timeseries-loader"))
       ),
       bigdash::bigTabItem(
-        "corr-tab",
-        CorrelationInputs("corr"),
-        create_loader("corr-loader")
+        ns("corr-tab"),
+        CorrelationInputs(ns("corr")),
+        create_loader(ns("corr-loader"))
       ),
       bigdash::bigTabItem(
-        "bio-tab",
-        BiomarkerInputs("bio"),
-        create_loader("bio-loader")
+        ns("bio-tab"),
+        BiomarkerInputs(ns("bio")),
+        create_loader(ns("bio-loader"))
       )
     )
   },
-  module_lazy = function(PGX, labeltype = NULL, ...) {
+  module_lazy = function(PGX, labeltype = NULL, ns = identity, ...) {
     list(
       "corr-tab" = list(
-        ui     = function() CorrelationUI("corr"),
+        ui     = function() CorrelationUI(ns("corr")),
         server = function() CorrelationBoard("corr", pgx = PGX, labeltype = labeltype)
       ),
       "timeseries-tab" = list(
-        ui     = function() TimeSeriesUI("timeseries"),
+        ui     = function() TimeSeriesUI(ns("timeseries")),
         server = function() TimeSeriesBoard("timeseries", pgx = PGX, labeltype = labeltype)
       ),
       "bio-tab" = list(
-        ui     = function() BiomarkerUI("bio"),
+        ui     = function() BiomarkerUI(ns("bio")),
         server = function() BiomarkerBoard("bio", pgx = PGX)
       )
     )

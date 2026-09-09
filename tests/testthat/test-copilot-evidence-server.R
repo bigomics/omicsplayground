@@ -9,12 +9,15 @@
 ## public reactive exposed by the module. output$evidence_ggplot (renderImage)
 ## IS accessible via testServer since it uses a proper render function.
 
-.board_dir <- if (dir.exists("components/board.copilot/R")) {
-  "components/board.copilot/R"
+.board_dir <- if (dir.exists("components/app_copilot/R")) {
+  "components/app_copilot/R"
 } else {
-  "../../components/board.copilot/R"
+  "../../components/app_copilot/R"
 }
 
+# `%||%` lives in components/utils/utils.R, which is not loaded by
+# shinytest2::load_app_env(); source it so the module's own `%||%` calls resolve.
+source(file.path(dirname(dirname(.board_dir)), "utils", "utils.R"), local = TRUE)
 source(file.path(.board_dir, "copilot_options.R"),  local = TRUE)
 source(file.path(.board_dir, "copilot_messages.R"), local = TRUE)
 source(file.path(.board_dir, "copilot_logger.R"),   local = TRUE)
@@ -251,5 +254,60 @@ test_that("public active() reactive returns the same value as active_artifact()"
     from_api    <- shiny::isolate(session$returned$active())
     from_direct <- shiny::isolate(active_artifact())
     expect_identical(from_api, from_direct)
+  })
+})
+
+# ===========================================================================
+# PNG download
+# ===========================================================================
+# Regression guard for the two broken PNG paths (see .widget_png in
+# CopilotEvidenceServer.R): plotly fell through bigdash::plotlyExport writing
+# no file when kaleido is absent, and iheatmapr hit an S4 dispatch failure
+# because the record already holds a converted htmlwidget.
+
+is_png <- function(path) {
+  identical(as.integer(readBin(path, "raw", 4L)), c(137L, 80L, 78L, 71L))
+}
+
+# Width from the PNG IHDR chunk: 8-byte signature + 4 length + 4 "IHDR",
+# then a big-endian uint32. Guards the 4x upscale in .widget_png -- without
+# `zoom` the screenshot comes back at CSS pixels (1/4 the width).
+png_width <- function(path) {
+  con <- file(path, "rb"); on.exit(close(con))
+  readBin(con, "raw", 16L)
+  readBin(con, "integer", 1L, size = 4L, endian = "big")
+}
+
+test_that("plotly PNG download writes a real PNG even without kaleido", {
+  skip_if_not_installed("webshot2")
+  skip_if(is.null(chromote::find_chrome()))
+  shiny::testServer(CopilotEvidenceServer, {
+    session$returned$append_artifact(make_plotly_record())
+    session$setInputs(dl_format = "png", dl_width = 6, dl_height = 4)
+
+    path <- output$evidence_download
+    expect_true(file.exists(path))
+    expect_true(is_png(path))
+    expect_equal(png_width(path), 6 * 80 * 4)
+  })
+})
+
+test_that("iheatmapr PNG download works on an already-converted widget", {
+  skip_if_not_installed("webshot2")
+  skip_if_not_installed("iheatmapr")
+  skip_if(is.null(chromote::find_chrome()))
+  shiny::testServer(CopilotEvidenceServer, {
+    widget <- iheatmapr::to_widget(iheatmapr::main_heatmap(matrix(rnorm(50), 10, 5)))
+    session$returned$append_artifact(list(
+      kind = "iheatmapr", plot = widget, prerendered_path = NULL,
+      plot_type = "heatmap", args = list(), artifact = NULL,
+      label = "heatmap", timestamp = Sys.time()
+    ))
+    session$setInputs(dl_format = "png", dl_width = 6, dl_height = 4)
+
+    path <- output$evidence_download
+    expect_true(file.exists(path))
+    expect_true(is_png(path))
+    expect_equal(png_width(path), 6 * 80 * 4)
   })
 })
