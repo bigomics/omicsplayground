@@ -230,13 +230,16 @@ upload_module_computepgx_server <- function(
 
       READTHEDOCS_URL <- "https://omicsplayground.readthedocs.io/en/latest/dataprep/geneset"
 
+      ## E. coli is intentionally excluded: it is not in g:Profiler's
+      ## organism list and HomoloGene/babelgene (the other ortholog
+      ## backends) are eukaryote-only, so there is no backend that can
+      ## resolve it.
       ORTHOLOG_SPECIES <- c(
         "Human",
-        "Drosphila melanogaster",
+        "Drosophila melanogaster",
         "Arabidopsis thaliana",
         "Caenorhabditis elegans",
-        "Saccharomyces cerevisiae",
-        "Escherichia coli"
+        "Saccharomyces cerevisiae"
       )
       
       ## Helper function to generate UI input based on metadata field config
@@ -588,7 +591,7 @@ upload_module_computepgx_server <- function(
                         shiny::span("Create AI infographics"),
                         "Infographics can also be generated later from AI Studio. Image generation adds extra compute time and cost."
                       ),
-                      value = TRUE
+                      value = FALSE
                     )
                   )
                 )
@@ -604,13 +607,14 @@ upload_module_computepgx_server <- function(
                         target = "_blank",
                         style = "text-decoration: underline;"
                   )
-                  ## "or download an",
-                  ## downloadLink(ns("download_gmt"), shiny::HTML("<u>example GMT</u>")),
-                  ## " (gene targets of the EGFR transcription factor)."
-                ),                
+                ),
                 div(
                   style = "margin-top: -8px;",
-                  shiny::selectInput(ns("ortholog_species"), "Ortholog species:",
+                  shiny::selectInput(ns("ortholog_species"),
+                    withTooltip(
+                      shiny::span("Ortholog species:"),
+                      "Genes are mapped to their ortholog in this species, used to match against human-based gene sets and pathways."
+                    ),
                     choices = ORTHOLOG_SPECIES ),
                   fileInput2(
                     ns("upload_gmt"),
@@ -621,6 +625,15 @@ upload_module_computepgx_server <- function(
                   div( style = "margin-top: -3px;",
                     shiny::checkboxInput(ns("include_default_gmt"),"Include default genesets",
                       TRUE)
+                  ),
+                  shiny::conditionalPanel(
+                    "!input.include_default_gmt && !output.has_upload_gmt",
+                    ns = ns,
+                    shiny::tags$p(
+                      "Warning: no default genesets and no custom GMT file uploaded ",
+                      "-- this dataset will have no gene sets.",
+                      style = "color: #a94442; margin-top: -3px; font-size: 90%;"
+                    )
                   )
                 )
               )
@@ -942,6 +955,13 @@ upload_module_computepgx_server <- function(
       custom_geneset <- list(gmt = NULL, info = NULL)
       custom_fc <- NULL
       processx_error <- list(user_email = NULL, pgx_name = NULL, pgx_path = NULL, error = NULL)
+
+      ## drives the "no genesets at all" warning next to the
+      ## include_default_gmt checkbox
+      output$has_upload_gmt <- shiny::reactive({
+        !is.null(input$upload_gmt)
+      })
+      shiny::outputOptions(output, "has_upload_gmt", suspendWhenHidden = FALSE)
 
       ## react on custom GMT upload
       shiny::observeEvent(input$upload_gmt, {
@@ -1626,18 +1646,6 @@ upload_module_computepgx_server <- function(
           type = "success"
         )
       })
-
-      ## output$download_gmt <- downloadHandler(
-      ##   filename = function() {
-      ##     # Set the filename for the downloaded file
-      ##     "EGFR_TARGET_GENES.v2023.1.Hs.gmt"
-      ##   },
-      ##   content = function(file) {
-      ##     gmt_path <- file.path(FILES, "/gmt/EGFR_TARGET_GENES.v2023.1.Hs.gmt")
-      ##     gmt <- readBin(gmt_path, what = raw(), n = file.info(gmt_path)$size)
-      ##     writeBin(gmt, file)
-      ##   }
-      ## )
 
       session$onSessionEnded(
         function() {
