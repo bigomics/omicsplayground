@@ -1,0 +1,264 @@
+{
+  "_comment": [
+    "Settings matrix for the app-vs-script pgx parity harness.",
+    "JSON rather than YAML so node reads it with zero dependencies (R has jsonlite).",
+    "Each scenario = defaults deep-merged with its own keys.",
+    "'qc' maps 1:1 onto the upload-checkqc-* inputs; run_script.R translates it",
+    "into the playbase::pgx.preprocess options list (see docs/script-pipeline.md).",
+    "NOTE: neither fixture contains NAs, so filtermissing/impute are no-ops unless",
+    "zero_as_na is also true -- both implementations guard on sum(is.na(X)) > 0."
+  ],
+  "fixtures": {
+    "human-symbol": {
+      "dir": "/home/massagno/bigomics/GitHub/opg-exampledata/human-symbol",
+      "datatype": "RNA-seq",
+      "organism": "Human",
+      "batch_param": "cluster"
+    },
+    "mini-example": {
+      "dir": "/home/massagno/bigomics/GitHub/opg-exampledata/mini-example",
+      "datatype": "proteomics",
+      "organism": "Human",
+      "batch_param": "cluster"
+    },
+    "salmon-dups": {
+      "dir": "/home/massagno/bigomics/GitHub/opg-exampledata/salmon-ENSOKI",
+      "datatype": "RNA-seq",
+      "organism": "Oncorhynchus kisutch",
+      "batch_param": null,
+      "_note": "999 features, 30 DUPLICATED feature names - exercises the cleanX intersect() collapse"
+    },
+    "metabolomics-dups": {
+      "dir": "/home/massagno/bigomics/GitHub/opg-exampledata/lipidomics_underscore",
+      "datatype": "metabolomics",
+      "organism": "Human",
+      "batch_param": null,
+      "_note": "180 features, 22 duplicated names, metabolomics norm branch"
+    },
+    "human-dups": {
+      "dir": "/home/massagno/bigomics/GitHub/omicsplayground-compute-comparer/dev/compute-comparer/fixtures/human-dups",
+      "datatype": "RNA-seq",
+      "organism": "Human",
+      "batch_param": "cluster",
+      "_note": "human-symbol + 40 duplicated gene symbols (7479 rows). Built by fixtures/make_human_dups.R"
+    }
+  },
+  "defaults": {
+    "fixture": "human-symbol",
+    "description": "compute-comparer parity fixture",
+    "qc": {
+      "zero_as_na": false,
+      "filtermissing": false,
+      "filterthreshold": "0.2",
+      "impute": true,
+      "impute_method": "SVD2",
+      "normalize": true,
+      "normalization_method": "CPM",
+      "ref_gene": null,
+      "remove_outliers": false,
+      "outlier_threshold": 6,
+      "batchcorrect": false,
+      "bec_method": "SVA",
+      "bec_param": null
+    },
+    "compute": {
+      "gene_methods": [
+        "ttest",
+        "trend.limma"
+      ],
+      "gset_methods": [
+        "fisher",
+        "fgsea"
+      ],
+      "do_extra": false,
+      "extra_methods": [],
+      "filter_methods": [
+        "append.symbol",
+        "remove.notexpressed",
+        "remove.unknown",
+        "only.proteincoding"
+      ],
+      "dotimeseries": false,
+      "exclude_void": false
+    }
+  },
+  "scenarios": [
+    {
+      "id": "baseline",
+      "note": "app defaults, nothing touched. The control -- must pass."
+    },
+    {
+      "id": "norm-cpm-quantile",
+      "qc": {
+        "normalization_method": "CPM+quantile"
+      }
+    },
+    {
+      "id": "norm-tmm",
+      "qc": {
+        "normalization_method": "TMM"
+      }
+    },
+    {
+      "id": "norm-quantile",
+      "qc": {
+        "normalization_method": "quantile"
+      }
+    },
+    {
+      "id": "norm-maxmedian",
+      "qc": {
+        "normalization_method": "maxMedian"
+      }
+    },
+    {
+      "id": "norm-maxsum",
+      "qc": {
+        "normalization_method": "maxSum"
+      }
+    },
+    {
+      "id": "norm-off",
+      "qc": {
+        "normalize": false
+      },
+      "note": "exercises the grepl('CPM|TMM') prior switch with normalization skipped"
+    },
+    {
+      "id": "outlier-t3",
+      "qc": {
+        "remove_outliers": true,
+        "outlier_threshold": 3
+      },
+      "note": "detectOutlierSamples signature differs between playbase main and edgy -- see script-pipeline.md 6a"
+    },
+    {
+      "id": "outlier-t6",
+      "qc": {
+        "remove_outliers": true,
+        "outlier_threshold": 6
+      }
+    },
+    {
+      "id": "na-zero",
+      "qc": {
+        "zero_as_na": true,
+        "impute": false
+      },
+      "note": "19280 zeros -> NA; the gateway scenario for every NA path below"
+    },
+    {
+      "id": "na-filter-ratio",
+      "qc": {
+        "zero_as_na": true,
+        "impute": false,
+        "filtermissing": true,
+        "filterthreshold": "0.2"
+      }
+    },
+    {
+      "id": "na-filter-group",
+      "qc": {
+        "zero_as_na": true,
+        "impute": false,
+        "filtermissing": true,
+        "filterthreshold": "3"
+      },
+      "note": "the f >= 1 branch (string comparison -- pass the string, not 3)"
+    },
+    {
+      "id": "na-filter-groupratio",
+      "qc": {
+        "zero_as_na": true,
+        "impute": false,
+        "filtermissing": true,
+        "filterthreshold": "-0.5"
+      },
+      "note": "the f < 0 branch"
+    },
+    {
+      "id": "na-impute-svd2",
+      "qc": {
+        "zero_as_na": true,
+        "impute": true,
+        "impute_method": "SVD2"
+      }
+    },
+    {
+      "id": "na-impute-qrilc",
+      "qc": {
+        "zero_as_na": true,
+        "impute": true,
+        "impute_method": "QRILC"
+      }
+    },
+    {
+      "id": "na-outlier",
+      "qc": {
+        "zero_as_na": true,
+        "impute": false,
+        "remove_outliers": true,
+        "outlier_threshold": 3
+      },
+      "note": "targets delta 6b: master propagates NA into the outlier flag, edgy masks it"
+    },
+    {
+      "id": "bc-combat",
+      "qc": {
+        "batchcorrect": true,
+        "bec_method": "ComBat",
+        "bec_param": [
+          "cluster"
+        ]
+      },
+      "note": "batch correction runs inside createPGX, downstream of the preprocess seam"
+    },
+    {
+      "id": "bc-limma",
+      "qc": {
+        "batchcorrect": true,
+        "bec_method": "limma",
+        "bec_param": [
+          "cluster"
+        ]
+      }
+    },
+    {
+      "id": "bc-npm",
+      "qc": {
+        "batchcorrect": true,
+        "bec_method": "NPM"
+      }
+    },
+    {
+      "id": "proteomics-baseline",
+      "fixture": "mini-example",
+      "qc": {
+        "normalization_method": "maxMedian"
+      },
+      "note": "different datatype branch: no CPM/TMM, proteomics norm method list"
+    },
+    {
+      "id": "dups-baseline",
+      "fixture": "human-dups",
+      "note": "duplicated gene symbols, default settings - the cleanX intersect() collapse"
+    },
+    {
+      "id": "dups-outlier",
+      "fixture": "human-dups",
+      "qc": {
+        "remove_outliers": true,
+        "outlier_threshold": 3
+      },
+      "note": "duplicates + outlier removal (cleanX does both)"
+    },
+    {
+      "id": "dups-metabolomics",
+      "fixture": "metabolomics-dups",
+      "qc": {
+        "normalization_method": "maxMedian"
+      },
+      "note": "duplicates on the metabolomics branch"
+    }
+  ]
+}
