@@ -171,7 +171,8 @@ prism_server <- function(id) {
       dbg("input$chartbot_send = ", input$chartbot_send)
       dbg("input$chartbot_user_input = ", isolate(input$chartbot_user_input))
 
-      if(isolate(input$chartbot_user_input) == "") {
+      user_input <- isolate(input$chartbot_user_input)
+      if(is.null(user_input) || user_input == "") {
         dbg("updating plotcode")
         code <- update_plotcode(last_plotcode, pointsize, fontsize, theme, dataset)
       } else {
