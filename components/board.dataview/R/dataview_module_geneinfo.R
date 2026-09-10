@@ -67,7 +67,7 @@ dataview_module_geneinfo_server <- function(id,
         c(
           "feature", "gene_symbol", "symbol",
           "name", "gene_name",
-          "organism", "human_ortholog", "ortholog",
+          "organism", "ortholog",
           "datatype", "data_type",
           "uniprot", "protein",
           "map_location", "map", "genome location",

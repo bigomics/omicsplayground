@@ -258,14 +258,14 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
 
       # TODO the annot could be moved to geDEGtable function!!!
-      sel <- setdiff(c("feature", "symbol", "human_ortholog"), colnames(res))
+      sel <- setdiff(c("feature", "symbol", "ortholog"), colnames(res))
       annot <- pgx$genes[rownames(res), sel, drop = FALSE]
       # res$gene_name <- NULL, better remove before showing the plot
 
       res <- cbind(annot, res)
 
-      if (all(is.na(res$human_ortholog))) {
-        res$human_ortholog <- NULL
+      if (all(is.na(res$ortholog))) {
+        res$ortholog <- NULL
       }
       return(res)
     })
@@ -586,10 +586,12 @@ ExpressionBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         return(NULL)
       }
 
-      ## determine which column to match with pgx$GMT
+      ## determine which column to match with pgx$GMT. Default genesets
+      ## are human-keyed, so human_ortholog is a candidate alongside symbol.
+      cand.cols <- intersect(c("symbol", "human_ortholog", "ortholog"), colnames(res))
       gene1 <- res[sel.row, ]
       match.res <- apply(
-        res[, c("symbol", "human_ortholog")], 2,
+        res[, cand.cols, drop = FALSE], 2,
         function(x) sum(x %in% rownames(pgx$GMT))
       )
       match.col <- names(which.max(match.res))
