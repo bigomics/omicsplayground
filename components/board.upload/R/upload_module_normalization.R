@@ -28,6 +28,15 @@ upload_module_normalization_server <- function(
 
       zero_as_na <- function() isTRUE(input$zero_as_na)
 
+      ## Translates a norm_method a legacy object recorded into a value the
+      ## dropdown still offers. "median" named a multi-omics algorithm deleted
+      ## from playbase on 2025-11-11 (f3d5b3d8); without the translation it
+      ## reaches selected= as a value not in choices, and selectInput() then
+      ## silently takes choices[[1]] instead of saying so.
+      .normalize_selected <- function(x) {
+        if (identical(x, "median")) "multiomics" else x
+      }
+
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
@@ -1253,8 +1262,15 @@ upload_module_normalization_server <- function(
                       } else if (grepl("multi-omics", upload_datatype(),
                         ignore.case = TRUE
                       )) {
+                        ## One choice, and it names what normalizeMultiOmics()
+                        ## actually does: each omics block on its own, gx by
+                        ## CPM and everything else by maxMedian. The value it
+                        ## replaces, "median", named a method deleted from
+                        ## playbase on 2025-11-11 (f3d5b3d8) and has been
+                        ## ignored by normalizedX() ever since -- the
+                        ## multi-omics branch there never reads it.
                         c(
-                          "multi-omics median" = "median"
+                          "multi-omics per-block (gx: CPM, other: maxMedian)" = "multiomics"
                         )
                       } else {
                         c(
@@ -1262,7 +1278,7 @@ upload_module_normalization_server <- function(
                           "maxMedian", "maxSum", "reference"
                         )
                       },
-                      selected = default_norm_method
+                      selected = .normalize_selected(default_norm_method)
                     ),
                     shiny::conditionalPanel(
                       "input.normalization_method == 'reference'",
