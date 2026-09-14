@@ -1,12 +1,7 @@
-##
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
-##
-## Computation for the "PCA explorer" Qsee board (formerly the standalone
-## app_pcaexplorer app, now merged in as an extra board -- see
-## app_qsee/shiny/qsee_pcaexplorer_ui.R / _server.R and
-## app_qsee/R/pcaexplorer-plots.R).
-##
+# PCA computation helpers for the Qsee explorer board.
+#
+# This file owns dimension reduction and phenotype summaries.
+# Normalization uses the canonical log2-matrix family.
 
 #' Drop degenerate phenotype columns (constant, or all-unique like a
 #' sample-id column).
@@ -22,11 +17,15 @@ qsee_pcaexplorer_filter_pheno <- function(Y) {
 }
 
 #' PCA computation for the PCA explorer board. `X` is expected in log2
-#' space (matching `playbase::normalizeExpression()`'s contract) and `Y`
+#' space (matching `playbase::pp.normalize()`'s contract) and `Y`
 #' should already be filtered with [qsee_pcaexplorer_filter_pheno()].
 qsee_pcaexplorer_compute <- function(X, Y) {
-  normX <- playbase::normalizeExpression(X, method = "CPM+quantile",
-    ref = NULL, prior = 0)
+  normX <- playbase::pp.normalize(
+    X,
+    method = "CPM+quantile",
+    space = "log2",
+    prior = 0
+  )
 
   cX <- normX - rowMeans(normX, na.rm = TRUE) ## important
   sel <- which(rowMeans(is.na(cX)) == 0) ## only complete rows

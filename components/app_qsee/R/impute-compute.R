@@ -1,6 +1,16 @@
+# Imputation comparisons for the Qsee board.
+#
+# This file owns simulated missingness and display-ready PCA summaries.
+# Imputation and normalization use canonical matrix families.
+
 qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress = NULL) {
   if (!is.null(progress)) progress$set(message = "Normalizing...", value = 0.1)
-  normX <- playbase::normalizeExpression(rawX, method = "CPM+quantile", prior = 0)
+  normX <- playbase::pp.normalize(
+    rawX,
+    method = "CPM+quantile",
+    space = "log2",
+    prior = 0
+  )
   val_set <- NULL
 
   if (mnarlevel > 0) {
@@ -22,11 +32,7 @@ qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress 
   if (!is.null(progress)) progress$set(message = "Computing imputation methods...", value = 0.4)
   impX <- list("no imputation" = normX)
   for (method in c("SVD2", "QRILC", "MinProb", "Perseus")) {
-    impX[[method]] <- if (playbase::is.multiomics(rownames(normX))) {
-      playbase::imputeMissing.mox(normX, method)
-    } else {
-      playbase::imputeMissing(normX, method)
-    }
+    impX[[method]] <- .opg_impute(normX, method)
   }
 
   if (!is.null(progress)) progress$set(message = "Computing PCA...", value = 0.8)

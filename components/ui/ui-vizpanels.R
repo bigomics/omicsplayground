@@ -892,14 +892,14 @@ viz.NormalizeCounts <- function(pgx, methods = NULL, post.qn = FALSE, type = "hi
   counts <- as.matrix(pgx$counts)
 
   xlist <- list()
-  NORMALIZATION.METHODS <- c("none", "scale", "quantile", "CPM", "TMM", "RLE", "RLE2")
+  NORMALIZATION.METHODS <- c("none", "quantile", "CPM", "TMM")
 
   if (is.null(methods)) {
     methods <- NORMALIZATION.METHODS
   }
   methods <- intersect(methods, NORMALIZATION.METHODS)
   for (m in methods) {
-    xlist[[m]] <- playbase::pgx.countNormalization(counts, m)
+    xlist[[m]] <- .opg_count_normalize_preview(counts, m)
   }
 
   if (post.qn) {

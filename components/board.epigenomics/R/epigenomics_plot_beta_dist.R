@@ -40,7 +40,7 @@ epigenomics_plot_beta_dist_server <- function(id,
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- pgx$X
       genes <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))
       rownames(genes) <- sub("_.*", "", rownames(genes))

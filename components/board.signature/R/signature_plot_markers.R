@@ -170,7 +170,7 @@ signature_plot_markers_server <- function(id,
         sc <- playbase::pgx.supercell(pmax(2**pgx$X - 1, 0), pgx$samples, block.group, nb)
         message("[pgx.wgcna] SuperCell done: ", ncol(pgx$counts), " ->", ncol(sc$counts))
         message("[pgx.wgcna] Normalizing supercell matrix (logCPM)")
-        X <- as.matrix(playbase::logCPM(sc$counts, total = 1e4, prior = 1))
+        X <- .opg_log_cpm(sc$counts, total = 1e4, prior = 1)
         samples <- sc$meta
         grp <- samples[, "celltype"]
         remove(ct, block.group, nb, sc)
@@ -178,13 +178,8 @@ signature_plot_markers_server <- function(id,
       }
 
       X <- pgx$X
-      is.mox <- playbase::is.multiomics(rownames(X))
       if (sum(is.na(X)) > 0) {
-        if (is.mox) {
-          X <- playbase::imputeMissing.mox(X, method = "SVD2")
-        } else {
-          X <- playbase::imputeMissing(X, method = "SVD2")
-        }
+        X <- .opg_impute(X, method = "SVD2")
       }
 
       xsymbol <- pgx$genes[rownames(X), "symbol"]

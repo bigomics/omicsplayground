@@ -95,10 +95,11 @@ expression_plot_maplot_server <- function(id,
 
       shape <- rep("circle", nrow(res))
       names(shape) <- rownames(res)
-      if (any(is.na(pgx$counts)) && !any(is.na(pgx$X))) {
+      analysis_counts <- .opg_pgx_analysis_counts(pgx)
+      if (any(is.na(analysis_counts)) && !any(is.na(pgx$X))) {
         jj <- which(!is.na(pgx$contrasts[, comp1]))
         if (any(jj)) {
-          counts <- pgx$counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
+          counts <- analysis_counts[rownames(res), rownames(pgx$contrasts)[jj], drop = FALSE]
           nas <- apply(counts, 1, function(x) sum(is.na(x)))
           na.features <- names(nas)[which(nas > 0)]
           shape[match(na.features, names(shape))] <- "cross"

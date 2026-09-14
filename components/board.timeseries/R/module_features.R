@@ -103,13 +103,8 @@ TimeSeriesBoard.features_server <- function(id,
       sel.timevar <- timevar()
       genes <- head(table_module$rownames_all(), 16)
       expr <- pgx$X
-      is.mox <- playbase::is.multiomics(rownames(expr))
       if (sum(is.na(expr)) > 0) {
-        if (is.mox) {
-          expr <- playbase::imputeMissing.mox(expr, method = "SVD2")
-        } else {
-          expr <- playbase::imputeMissing(expr, method = "SVD2")
-        }
+        expr <- .opg_impute(expr, method = "SVD2")
       }
 
       expr <- expr[genes, , drop = FALSE]

@@ -1,5 +1,7 @@
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
+# PGX computation handoff for uploaded datasets.
+#
+# Bulk uploads submit pristine source data plus one canonical option list.
+# Single-cell uploads retain their independent computation path.
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -1119,14 +1121,6 @@ upload_module_computepgx_server <- function(
         remove.unknown <- ("remove.unknown" %in% flt)
         average.duplicated <- ("average.duplicated" %in% flt)
         remove.xy.probes <- ("remove.xy.probes" %in% flt)
-        batch.correct.method <- "no_batch_correct"
-        batch.pars <- "<autodetect>"
-        if (class(compute_settings$bc_method) == "list") {
-          batch.correct.method <- compute_settings$bc_method$method
-          batch.pars <- compute_settings$bc_method$param
-        }
-        ## --------------------------------
-
         only.proteincoding <- FALSE # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
@@ -1255,10 +1249,6 @@ upload_module_computepgx_server <- function(
           #-------- preprocess options ---------
           norm_method = norm_method(),
           settings = list(
-            imputation_method = compute_settings$imputation_method,
-            bc_method = compute_settings$bc_method,
-            remove_outliers = compute_settings$remove_outliers,
-            norm_method = norm_method(),
             custom_fc = custom_fc
           ),
           sc_compute_settings = sc_compute_settings.PARS,
@@ -1272,8 +1262,6 @@ upload_module_computepgx_server <- function(
           only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
-          batch.correct.method = batch.correct.method,
-          batch.pars = batch.pars,
           covariates = covariates,
           dma = dma, ## NEW
           ## ---------

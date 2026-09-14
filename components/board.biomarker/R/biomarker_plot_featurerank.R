@@ -68,13 +68,8 @@ biomarker_plot_featurerank_server <- function(id,
       } else {
         features <- pgx$families
         X <- pgx$X
-        is.mox <- playbase::is.multiomics(rownames(X))
         if (sum(is.na(X)) > 0) {
-          if (is.mox) {
-            X <- playbase::imputeMissing.mox(X, method = "SVD2")
-          } else {
-            X <- playbase::imputeMissing(X, method = "SVD2")
-          }
+          X <- .opg_impute(X, method = "SVD2")
         }
       }
 
@@ -100,7 +95,7 @@ biomarker_plot_featurerank_server <- function(id,
           cells <- c(cells, rownames(Y)[sample(jj, size)])
         }
         Y <- Y[unique(cells), , drop = FALSE]
-        X <- playbase::logCPM(pgx$counts[, rownames(Y)], total = 1e4, prior = 1)
+        X <- .opg_log_cpm(pgx$counts[, rownames(Y)], total = 1e4, prior = 1)
         X <- as.matrix(X)
         message("[biomarkers: feature-set scores] Down-sampling completed")
       }

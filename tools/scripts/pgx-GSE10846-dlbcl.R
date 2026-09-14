@@ -212,7 +212,17 @@ ngs <- pgx.clusterSamples( ngs, skipifexists=FALSE, prefix="C",
                           clust.detect="hclust", kclust=3)
 table(ngs$samples$cluster)    
 
-ngs$X <- logCPM(ngs$counts, total=1e6, prior=1)
+ngs$X <- playbase::pp.normalize(
+  playbase::pp.convertSpace(
+    as.matrix(ngs$counts),
+    from = "counts",
+    to = "log2",
+    prior = 1
+  ),
+  method = "CPM",
+  space = "log2",
+  prior = 1
+)
 
 ##-------------------------------------------------------------------
 ## Create contrasts 
@@ -274,7 +284,6 @@ pgx.save(ngs, file=rda.file)
 ##===================================================================
 ##========================= END OF FILE =============================
 ##===================================================================
-
 
 
 
