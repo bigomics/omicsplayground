@@ -374,10 +374,11 @@ clustering_plot_splitmap_server <- function(id,
 
       shiny::showNotification("Rendering heatmap...")
 
-      margin_top <- ifelse(input$margin_checkbox && !is.na(input$margin_top), input$margin_top, 5)
-      margin_right <- ifelse(input$margin_checkbox && !is.na(input$margin_right), input$margin_right, 5)
-      margin_bottom <- ifelse(input$margin_checkbox && !is.na(input$margin_bottom), input$margin_bottom, 5)
-      margin_left <- ifelse(input$margin_checkbox && !is.na(input$margin_left), input$margin_left, 5)
+      ## editor inputs are NULL until the (lazily built) editor is opened
+      margin_top <- ifelse(isTRUE(input$margin_checkbox) && !is.na(input$margin_top), input$margin_top, 5)
+      margin_right <- ifelse(isTRUE(input$margin_checkbox) && !is.na(input$margin_right), input$margin_right, 5)
+      margin_bottom <- ifelse(isTRUE(input$margin_checkbox) && !is.na(input$margin_bottom), input$margin_bottom, 5)
+      margin_left <- ifelse(isTRUE(input$margin_checkbox) && !is.na(input$margin_left), input$margin_left, 5)
 
       scale.mode <- input$hm_scale
       if (sample_cor) {
@@ -411,7 +412,7 @@ clustering_plot_splitmap_server <- function(id,
         show_legend = input$show_legend,
         show_colnames = show_colnames,
         column_title_rot = crot,
-        column_names_rot = input$column_names_rot,
+        column_names_rot = input$column_names_rot %||% 45,
         cluster_rows = cluster_rows,
         cluster_columns = cluster_columns,
         color_low = input$color_low,
@@ -419,14 +420,14 @@ clustering_plot_splitmap_server <- function(id,
         color_high = input$color_high,
         zlim = zlim,
         show_rownames = show_rownames,
-        rownames_width = input$rownames_width,
+        rownames_width = input$rownames_width %||% 40,
         softmax = 0,
         na_col = "green",
         na_text = "x",
         title_cex = 1,
         cexCol = cex1,
         cexRow = cex2,
-        annot.cex = input$annot_cex / 10,
+        annot.cex = (input$annot_cex %||% 12) / 10,
         col.annot = annot,
         row.annot = NULL,
         annot.ht = 2.3,
