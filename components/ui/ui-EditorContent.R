@@ -11,6 +11,7 @@
 editorModalBody <- function(ns_parent, ...) {
   shiny::tagList(
     bslib::layout_column_wrap(
+      fill = FALSE, # else .big-tab CSS forces height:100% and pushes the editor below the fold
       style = bslib::css(grid_template_columns = "1fr 5fr"),
       shiny::div(
         class = "editor-reset-bar",
