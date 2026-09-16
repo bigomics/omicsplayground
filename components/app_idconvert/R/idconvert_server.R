@@ -47,7 +47,7 @@ convert_datatype_choices <- function() {
 idconvert_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
 
-    supported_organisms <- convert_organism_choices()    
+    supported_organisms <- convert_organism_choices()
     shiny::updateSelectizeInput(session, "organism",
       choices = supported_organisms, selected = "Human", server = TRUE
     )
@@ -119,7 +119,7 @@ idconvert_server <- function(id) {
         !is.null(annot),
         "Could not annotate these IDs for the selected organism."
       ))
-
+      
       result(annot)  # store successful result
     })
 

@@ -275,6 +275,7 @@ MofaUI <- function(id) {
 
   #  shiny::div(
   bslib::page_fillable(
+    padding = 0,
     fillable_mobile = FALSE, # not working here...
     OmicsBoardUI(
       ns = ns,

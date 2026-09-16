@@ -62,7 +62,7 @@ launcher_ui <- function(id) {
     list(
       input = "launch_idconvert",
       icon = "shuffle",
-      label = "ID Converter",
+      label = "ID Annotator",
       description = "Annotate features",
       rgb = c(140,35,175),
       group = "Apps",
@@ -72,7 +72,7 @@ launcher_ui <- function(id) {
       input = "launch_prism",
       icon = "wand-magic-sparkles",
       label = "SmartPrism",
-      description = "AI-generated figures",
+      description = "AI-assisted plotting",
       rgb = c(190,120,50),
       group = "Apps",
       badge = "dev"

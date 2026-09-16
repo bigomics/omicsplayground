@@ -7,22 +7,25 @@ idconvert_ui <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   organism_choices <- convert_organism_choices()
-  
-  board <- bslib::layout_columns(
+
+  ui <- bslib::layout_columns(
     col_widths = c(2, 10),
+    class = "p-3",
+    gap = "0.7rem",
+    height = "100%",
+    row_heights = "auto",
     bslib::layout_columns(
       col_widths = 12,
+      gap = "14px",
       fill = FALSE,
-      gap = "0.7rem",
-      row_heights = "auto",
-      shiny::selectizeInput(
-        ns("organism"), "Organism:",
-        choices = NULL,
+      shiny::selectizeInput(ns("organism"), "Organism:",
+        choices = c("Human" = "Human"),
+        selected = "Human",
         options = list(maxOptions = length(organism_choices))
       ),
       shiny::div(
         paste(length(organism_choices), "species available"),
-        style = "font-size: 11px; color: #888; margin: -8px 0 0 0;"
+        style = "font-size: 12px; color: #888; margin: -12px 0 0 0;"
       ),
       shiny::selectInput(ns("datatype"), "Datatype:",
         choices = convert_datatype_choices(),
@@ -70,12 +73,15 @@ idconvert_ui <- function(id) {
     )
   )
 
-  ui <- OmicsBoardUI(
+  title <- HTML("ID Annotator <span style='font-size: 0.7em;'>&mdash; annotate your features</span>")
+  
+  board <- OmicsBoardUI(
     ns = ns,
-    title = "ID Converter",
-    header_margin="0px",
-    board
+    title = title,
+    info = FALSE,
+    header_margin = "0px",
+    ui
   )
-
-  return(ui)
+  
+  return(board)
 }

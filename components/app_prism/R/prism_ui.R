@@ -17,8 +17,6 @@ prism_ui <- function(id) {
       actionButton(ns("button4"), "button4", icon=icon("eye-dropper"))
     )
   )
-
-  title <- div("SmartPrism", style="font-size: 18px;")
   
   tags.head <- tags$head(
     tags$script(type = "module", src = "static/prism-webr.js"),
@@ -123,10 +121,13 @@ prism_ui <- function(id) {
     )        
   )
 
+  title <- HTML("SmartPrism <span style='font-size: 0.7em;'>&mdash; chat and plot</span>")
+  
   ui <- OmicsBoardUI(
     ns = ns,
-    title = "SmartPrism",
-    header_margin="0px",
+    title = title,
+    header_margin = "0px",
+    info = FALSE,
     tags.head,
     board
   )
