@@ -14,6 +14,7 @@ idconvert_ui <- function(id) {
       col_widths = 12,
       fill = FALSE,
       gap = "0.7rem",
+      row_heights = "auto",
       shiny::selectizeInput(
         ns("organism"), "Organism:",
         choices = NULL,
@@ -21,7 +22,7 @@ idconvert_ui <- function(id) {
       ),
       shiny::div(
         paste(length(organism_choices), "species available"),
-        style = "font-size: 11px; color: #888; margin: -10px 0 0 0;"
+        style = "font-size: 11px; color: #888; margin: -8px 0 0 0;"
       ),
       shiny::selectInput(ns("datatype"), "Datatype:",
         choices = convert_datatype_choices(),
@@ -33,19 +34,21 @@ idconvert_ui <- function(id) {
       ),
       div(
         style = paste(
-          "font-size: 12px; color: #888; margin-top: -10px;",
-          "margin-bottom: 12px; display: inline-block;",
+          "font-size: 12px; color: #888; margin-top: -8px;",
+          "margin-bottom: 0; display: inline-block;",
           "text-decoration: underline;"
         ),
         shiny::actionLink(ns("example"), "Load example features",
           style = "margin-right: 15px;"),
         shiny::actionLink(ns("clear"), "Clear")
       ),
-      shiny::checkboxInput(ns("human_ortholog"),"Human ortholog",TRUE),
-      shiny::conditionalPanel(
-        condition = "input.human_ortholog == false",
-        ns = ns,
-        shiny::selectInput(ns("ortholog"), "Ortholog species:", choices=NULL)
+      div(
+        shiny::checkboxInput(ns("human_ortholog"),"Human ortholog",TRUE),
+        shiny::conditionalPanel(
+          condition = "input.human_ortholog == false",
+          ns = ns,
+          shiny::selectInput(ns("ortholog"), "Ortholog species:", choices=NULL)
+        )
       ),
       br(),
       div(
@@ -55,7 +58,8 @@ idconvert_ui <- function(id) {
           width = "100%"
         ),
         shiny::uiOutput(ns("download_ui"))
-      )
+      ),
+      br()
     ),
     bslib::layout_columns(
       col_widths = 12,
@@ -69,6 +73,7 @@ idconvert_ui <- function(id) {
   ui <- OmicsBoardUI(
     ns = ns,
     title = "ID Converter",
+    header_margin="0px",
     board
   )
 
