@@ -121,10 +121,13 @@ prism_ui <- function(id) {
     )        
   )
 
+  title <- HTML("SmartPrism <span style='font-size: 0.7em;'>&mdash; chat and plot</span>")
+  
   ui <- OmicsBoardUI(
     ns = ns,
-    title = "SmartPrism",
-    header_margin="0px",
+    title = title,
+    header_margin = "0px",
+    info = FALSE,
     tags.head,
     board
   )

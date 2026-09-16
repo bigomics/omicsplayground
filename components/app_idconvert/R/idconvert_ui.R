@@ -11,8 +11,9 @@ idconvert_ui <- function(id) {
   ui <- bslib::layout_columns(
     col_widths = c(2, 10),
     class = "p-3",
-    gap = "2rem",
-    height = "calc(100vh - 72px)",
+    gap = "0.7rem",
+    height = "100%",
+    row_heights = "auto",
     bslib::layout_columns(
       col_widths = 12,
       gap = "14px",
@@ -71,12 +72,11 @@ idconvert_ui <- function(id) {
     )
   )
 
-  title <- HTML("ID Converter <span style='font-size: 0.7em;'>&mdash; convert and annotate your features</span>")
+  title <- HTML("ID Annotator <span style='font-size: 0.7em;'>&mdash; annotate your features</span>")
   
   board <- OmicsBoardUI(
     ns = ns,
-    #title = "AI Copilot",
-    title = div(title, style="margin-left: 14px;"),
+    title = title,
     info = FALSE,
     header_margin = "0px",
     ui

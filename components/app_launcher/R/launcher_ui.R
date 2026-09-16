@@ -62,7 +62,7 @@ launcher_ui <- function(id) {
     list(
       input = "launch_idconvert",
       icon = "shuffle",
-      label = "ID Converter",
+      label = "ID Annotator",
       description = "Annotate features",
       rgb = c(140,35,175),
       group = "Apps",
