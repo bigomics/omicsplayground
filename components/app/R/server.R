@@ -1057,12 +1057,24 @@ output$current_user <- shiny::renderText({
     )
   }
 
+  launch_idconvert <- function() {
+    launchModule("idconvert",
+      ui = omicspanel(idconvert_ui("idconvert")),
+      server = function() idconvert_server("idconvert")
+    )
+  }
+
+  launch_prism <- function() {
+    launchModule("Prism",
+      ui = omicspanel(prism_ui("prism")),
+      server = function() prism_server("prism")
+    )
+  }
+  
   ## THESE STILL NEED TO BE WRAPPED in a launchModule()
   if(isTRUE(opt$DEVMODE)) {
     RunMonitorServer("runmonitor")
   }
-  idconvert_server("idconvert")
-  ## prism_server("prism")
 
   launcher_server(
     "apps",
@@ -1072,7 +1084,9 @@ output$current_user <- shiny::renderText({
     opg_view = opg_view,
     app_launchers = list(
       "qsee" = launch_qsee,
-      "across" = launch_across
+      "across" = launch_across,
+      "idconvert" = launch_idconvert,
+      "prism" = launch_prism
     ),
     pgx = PGX
   )
