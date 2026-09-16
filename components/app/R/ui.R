@@ -124,11 +124,6 @@ app_ui <- function(x) {
             widths = c(1,11),
             selected = "Home",
             well = TRUE,
-            ## bslib::nav_panel(
-            ##   title = "Home",
-            ##   icon = icon("home"),
-            ##   omicspanel(WelcomeBoardUI("welcome2"))
-            ## ),
             bslib::nav_panel(
               title = "Home",
               icon = icon("home"),
@@ -187,16 +182,16 @@ app_ui <- function(x) {
               )
             },
             ## Tools
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("Prism",
-                omicspanel(prism_ui("prism"))
-              )
-            },
-            if(isTRUE(opt$DEVMODE)) {
-              bslib::nav_panel_hidden("IDconvert",
-                omicspanel(idconvert_ui("idconvert"))
-              )
-            },
+            ## if(isTRUE(opt$DEVMODE)) {
+            ##   bslib::nav_panel_hidden("Prism",
+            ##     omicspanel(prism_ui("prism"))
+            ##   )
+            ## },
+            ## if(isTRUE(opt$DEVMODE)) {
+            ##   bslib::nav_panel_hidden("IDconvert",
+            ##     omicspanel(idconvert_ui("idconvert"))
+            ##   )
+            ## },
             ## if(isTRUE(opt$DEVMODE)) {
             ##   bslib::nav_panel_hidden(
             ##     value = "AcrossDatasets",
