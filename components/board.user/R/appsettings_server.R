@@ -226,13 +226,26 @@ AppSettingsBoard <- function(id, auth, pgx) {
     ## The base lock is read in three places (here, the greying observer, and
     ## the login seed), so it lives in one reactive rather than being
     ## recomputed per site and drifting.
+    ##
+    ## It is the deployment *licence* gate and nothing else. AI_PROVIDER_LOCKED
+    ## used to feed it too, which meant a deployment that only wanted to pin the
+    ## provider silently also froze the AI on/off switch and the consent switch
+    ## for every non-admin -- see omicsplayground-bq3x, where the free cloud
+    ## deploy set AI_PROVIDER_LOCKED=TRUE (its own comment reads "users can't
+    ## pick their own provider") and users ended up unable to turn AI off at all.
+    ## A deployment that wants AI off sets ENABLE_AI=FALSE; that is the lever.
     ai_base_locked <- shiny::reactive({
-      (isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)) ||
-        !isTRUE(opt$ENABLE_AI)
+      !isTRUE(opt$ENABLE_AI)
+    })
+
+    ## Deployment pins the AI provider for non-admins. Governs the provider
+    ## dropdown only; see ai_base_locked() above for why it stops there.
+    ai_provider_pinned <- shiny::reactive({
+      isTRUE(opt$AI_PROVIDER_LOCKED) && !isTRUE(auth$ADMIN)
     })
 
     shiny::observeEvent(input$ai_share_data, {
-      ## A locked deployment never records consent. Note the early return
+      ## An unlicensed deployment never records consent. Note the early return
       ## *before* save_ai_consent(): the user's stored preference is left on
       ## disk untouched. A deployment-level lock is not the user withdrawing
       ## their consent, and it should not erase an answer they gave before the
@@ -331,32 +344,34 @@ AppSettingsBoard <- function(id, auth, pgx) {
       )
     })
 
-    ## Admin lock: grey the provider dropdown and the "Enable AI" switch for
-    ## non-admins when the deployment pins AI config (AI_PROVIDER_LOCKED), and
-    ## always grey them when the deployment is not licensed for AI
-    ## (opt$ENABLE_AI == FALSE) — so admins keep control over AI usage.
+    ## Grey the AI controls. Three independent gates, deliberately kept apart:
+    ##   ai_base_locked()      — deployment not licensed for AI (ENABLE_AI=FALSE).
+    ##                           Greys everything; this is the only gate that
+    ##                           reaches the "Enable AI" and consent switches.
+    ##   ai_provider_pinned()  — deployment pins the provider for non-admins
+    ##                           (AI_PROVIDER_LOCKED). Provider dropdown only.
+    ##   !byok                 — user's plan has no bring-your-own-key.
+    ##                           Provider dropdown only.
     shiny::observe({
-      ## Base lock: deployment pins AI config for non-admins, or the deployment
-      ## is unlicensed. Governs the "Enable AI" switch.
       base_locked <- ai_base_locked()
 
       ## Non-enterprise (non-BYOK) users may not change the provider: pin it to
       ## bigomics and grey it too. This mirrors the authoritative write-observer
       ## coercion above — the disable is UX, the server coercion is the gate.
-      ## The BYOK lock must NOT extend to enable_ai: a free/pro customer admin
-      ## still toggles AI on/off.
+      ## Neither this nor the deployment provider pin may extend to enable_ai:
+      ## a user who cannot choose a provider can still decide whether to use AI
+      ## at all, and the Copilot warns them their data may leave the building.
       byok <- ai_byok_allowed(auth$level)
       if (!byok) {
         shiny::updateSelectInput(session, "ai_provider", selected = "bigomics")
       }
-      provider_locked <- base_locked || !byok
+      provider_locked <- base_locked || !byok || ai_provider_pinned()
 
       if (base_locked) shinyjs::disable("enable_ai") else shinyjs::enable("enable_ai")
       if (provider_locked) shinyjs::disable("ai_provider") else shinyjs::enable("ai_provider")
 
-      ## The consent switch follows the base lock, not the provider lock: on a
-      ## deployment that pins AI config (or is unlicensed) nobody but an admin
-      ## changes AI behaviour.
+      ## The consent switch follows the licence gate only: an unlicensed
+      ## deployment sends no prompts anywhere, so there is nothing to consent to.
       ##
       ## Greying it is not enough, and that distinction matters here more than
       ## for the other controls: a disabled switch keeps whatever value it

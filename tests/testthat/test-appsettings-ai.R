@@ -464,6 +464,51 @@ test_that("a non-admin sees a disabled provider dropdown when AI_PROVIDER_LOCKED
   )
 })
 
+test_that("AI_PROVIDER_LOCKED greys the provider but NOT the AI on/off switch", {
+  ## Regression guard for the free cloud deploy (omicsplayground-bq3x):
+  ## ENABLE_AI=TRUE + AI_PROVIDER_LOCKED=TRUE used to disable every AI control
+  ## for non-admins, leaving users unable to turn AI off at all. The provider
+  ## pin must stop at the provider dropdown.
+  opt <<- make_opt(locked = TRUE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(admin = FALSE), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("ai_provider" %in% toggled$disabled)
+      ## the two that must survive a provider pin
+      expect_true("enable_ai" %in% toggled$enabled)
+      expect_false("enable_ai" %in% toggled$disabled)
+      expect_true("ai_share_data" %in% toggled$enabled)
+      expect_false("ai_share_data" %in% toggled$disabled)
+    }
+  )
+})
+
+test_that("an unlicensed deployment greys the AI on/off switch", {
+  ## ENABLE_AI=FALSE is the lever that does reach enable_ai.
+  opt <<- make_opt(enable_ai = FALSE)
+  on.exit(opt <<- make_opt(), add = TRUE)
+  toggled <- list(disabled = character(0), enabled = character(0))
+  testthat::local_mocked_bindings(
+    disable = function(id, ...) toggled$disabled <<- c(toggled$disabled, id),
+    enable  = function(id, ...) toggled$enabled  <<- c(toggled$enabled, id),
+    .package = "shinyjs"
+  )
+  shiny::testServer(AppSettingsBoard,
+    args = list(id = "s", auth = make_auth(admin = FALSE), pgx = shiny::reactiveValues()), {
+      session$flushReact()
+      expect_true("enable_ai" %in% toggled$disabled)
+      expect_false("enable_ai" %in% toggled$enabled)
+    }
+  )
+})
+
 test_that("an admin keeps the provider dropdown enabled even when locked", {
   opt <<- make_opt(locked = TRUE)
   on.exit(opt <<- make_opt(), add = TRUE)
@@ -671,36 +716,27 @@ test_that("an unlicensed deployment greys the consent switch", {
 # Deployment lock vs consent. Greying the switch is not enough: a disabled
 # control keeps whatever value it had, so a user who opted in before the lock
 # would stay opted in behind a switch they can no longer reach.
+#
+# Only the licence gate (ENABLE_AI=FALSE) does this. AI_PROVIDER_LOCKED pins
+# the provider and nothing else -- see omicsplayground-bq3x.
 # ===========================================================================
 
-test_that("a locked deployment forces the session consent off", {
-  dir <- withr::local_tempdir()
-  save_ai_consent(dir, TRUE)
-  opt <<- make_opt(locked = TRUE)
-  on.exit(opt <<- make_opt(), add = TRUE)
-  shiny::testServer(AppSettingsBoard,
-    args = list(id = "s", auth = make_consent_auth(dir = dir),
-                pgx = shiny::reactiveValues()), {
-      session$flushReact()
-      expect_false(isTRUE(session$userData[["ai_share_data"]]))
-    }
-  )
-})
-
-test_that("an admin is unaffected by AI_PROVIDER_LOCKED", {
-  ## The lock exists to stop non-admins changing AI behaviour on a pinned
-  ## deployment; the admin who set it keeps their own switch.
-  dir <- withr::local_tempdir()
-  save_ai_consent(dir, TRUE)
-  opt <<- make_opt(locked = TRUE)
-  on.exit(opt <<- make_opt(), add = TRUE)
-  shiny::testServer(AppSettingsBoard,
-    args = list(id = "s", auth = make_consent_auth(admin = TRUE, dir = dir),
-                pgx = shiny::reactiveValues()), {
-      session$flushReact()
-      expect_true(isTRUE(session$userData[["ai_share_data"]]))
-    }
-  )
+test_that("a provider pin does not touch the user's consent", {
+  ## AI_PROVIDER_LOCKED says which provider, not whether the user consents.
+  ## Holds for admins and non-admins alike: nobody is affected any more.
+  for (is_admin in c(FALSE, TRUE)) {
+    dir <- withr::local_tempdir()
+    save_ai_consent(dir, TRUE)
+    opt <<- make_opt(locked = TRUE)
+    on.exit(opt <<- make_opt(), add = TRUE)
+    shiny::testServer(AppSettingsBoard,
+      args = list(id = "s", auth = make_consent_auth(admin = is_admin, dir = dir),
+                  pgx = shiny::reactiveValues()), {
+        session$flushReact()
+        expect_true(isTRUE(session$userData[["ai_share_data"]]))
+      }
+    )
+  }
 })
 
 test_that("an unlicensed deployment forces the session consent off", {
@@ -722,7 +758,7 @@ test_that("a lock does not erase the user's stored consent", {
   ## answer they gave must still be there.
   dir <- withr::local_tempdir()
   save_ai_consent(dir, TRUE)
-  opt <<- make_opt(locked = TRUE)
+  opt <<- make_opt(enable_ai = FALSE)
   on.exit(opt <<- make_opt(), add = TRUE)
   shiny::testServer(AppSettingsBoard,
     args = list(id = "s", auth = make_consent_auth(dir = dir),
