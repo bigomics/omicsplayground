@@ -58,8 +58,8 @@ if(1) {
     ##table(y)
     
     bX <- sva::ComBat(X, batch=b)
-    bX <- playbase::pp.batchCorrect(bX, target = y, method = "NPM")
-    bX <- playbase::pp.batchCorrect(bX, target = y, method = "SVA")
+    bX <- playbase.preprocess::pp.batchCorrect(bX, target = y, method = "NPM")
+    bX <- playbase.preprocess::pp.batchCorrect(bX, target = y, method = "SVA")
     
     counts <- pmax(2**bX, 0)
     max(counts)

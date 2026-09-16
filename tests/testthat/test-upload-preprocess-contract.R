@@ -1,7 +1,7 @@
 # Canonical bulk-upload preprocessing contract tests.
 #
 # These tests cover staged previews, pristine source reuse, and alignment.
-# They exercise the installed playbase boundary used by the application.
+# They exercise the installed preprocessing leaf used by the application.
 
 .opg_test_root <- normalizePath(
   file.path(testthat::test_path(), "..", ".."),
@@ -77,6 +77,28 @@ testthat::test_that("upload options use only the canonical vocabulary", {
   )
 })
 
+testthat::test_that("duplicate previews average in declared log2 space", {
+  X <- matrix(
+    c(0, 2, 2, 4, 1, 3),
+    nrow = 3,
+    byrow = TRUE,
+    dimnames = list(c("dup", "dup", "solo"), c("s1", "s2"))
+  )
+
+  result <- playbase.preprocess::pp.deduplicate(
+    X,
+    method = "average",
+    space = "log2"
+  )$X
+
+  testthat::expect_identical(rownames(result), c("dup", "solo"))
+  testthat::expect_equal(
+    unname(result["dup", ]),
+    unname(log2(colMeans(2^X[1:2, , drop = FALSE])))
+  )
+  testthat::expect_identical(result["solo", ], X["solo", ])
+})
+
 testthat::test_that("full upload preprocessing reruns without a result ratchet", {
   testthat::skip_if_not_installed("limma")
   testthat::expect_true(all(
@@ -85,7 +107,7 @@ testthat::test_that("full upload preprocessing reruns without a result ratchet",
       "pp.alignCounts",
       "pp.removeOutliers"
     ) %in%
-      getNamespaceExports("playbase")
+      getNamespaceExports("playbase.preprocess")
   ))
 
   set.seed(91)
@@ -143,6 +165,13 @@ testthat::test_that("full upload preprocessing reruns without a result ratchet",
     options,
     through = "final"
   )
+  direct <- playbase.preprocess::pgx.preprocess(
+    counts = counts,
+    samples = samples,
+    contrasts = contrasts,
+    annot = annot,
+    options = .opg_preview_options(options, through = "final")
+  )
   second <- .opg_run_preprocess_preview(
     first$counts,
     samples,
@@ -165,6 +194,7 @@ testthat::test_that("full upload preprocessing reruns without a result ratchet",
     )
   )
   testthat::expect_identical(first$counts, counts)
+  testthat::expect_identical(first, direct)
   testthat::expect_identical(second$counts, counts)
   testthat::expect_identical(second$X, first$X)
   testthat::expect_identical(second$alignment, first$alignment)
@@ -172,7 +202,11 @@ testthat::test_that("full upload preprocessing reruns without a result ratchet",
   testthat::expect_lt(ncol(first$X), ncol(counts))
   testthat::expect_identical(
     .opg_preview_counts(first),
-    playbase::pp.alignCounts(first$counts, first$alignment, first$X)
+    playbase.preprocess::pp.alignCounts(
+      first$counts,
+      first$alignment,
+      first$X
+    )
   )
 })
 

@@ -30,10 +30,20 @@ playbase.remotes <- gsub(".*/|@.*","",playbase.remotes)
 playbase.remotes <- trimws(playbase.remotes)
 playbase.pkg <- sort(unique(c(playbase.imports, playbase.remotes)))
 
-bigomics.pkg <- c("playbase","playdata","bigdash","bigLoaders","wizardR")
+bigomics.pkg <- c(
+  "playbase",
+  "playbase.preprocess",
+  "playdata",
+  "bigdash",
+  "bigLoaders",
+  "wizardR"
+)
 
 ## we only report packages that are not in playbase
-pkg.imports <- setdiff(pkg.imports, playbase.pkg)
+pkg.imports <- sort(unique(c(
+  setdiff(pkg.imports, playbase.pkg),
+  "playbase.preprocess"
+)))
 
 sel1 <- !names(pkg.remotes) %in% playbase.pkg
 sel2 <- names(pkg.remotes) %in% bigomics.pkg
@@ -55,6 +65,5 @@ write("Imports:", file=desc.file, append=TRUE)
 write(paste0("    ",pkg.imports,","), file=desc.file, append=TRUE)
 write("Remotes:", file=desc.file, append=TRUE)
 write(paste0("    ",pkg.remotes,","), file=desc.file, append=TRUE)
-
 
 

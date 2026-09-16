@@ -6,7 +6,7 @@
 qsee_outlier_compute <- function(X, Y, progress = NULL) {
   Xc <- X[stats::complete.cases(X), , drop = FALSE]
   if (!is.null(progress)) progress$set(message = "Detecting outliers...", value = 0.2)
-  outliers <- playbase::pp.removeOutliers(
+  outliers <- playbase.preprocess::pp.removeOutliers(
     Xc,
     threshold = Inf,
     methods = c("z.correlation", "z.distance", "z.features", "z.isoforest")

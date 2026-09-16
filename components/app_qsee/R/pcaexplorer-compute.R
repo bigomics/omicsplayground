@@ -17,10 +17,10 @@ qsee_pcaexplorer_filter_pheno <- function(Y) {
 }
 
 #' PCA computation for the PCA explorer board. `X` is expected in log2
-#' space (matching `playbase::pp.normalize()`'s contract) and `Y`
+#' space (matching `playbase.preprocess::pp.normalize()`'s contract) and `Y`
 #' should already be filtered with [qsee_pcaexplorer_filter_pheno()].
 qsee_pcaexplorer_compute <- function(X, Y) {
-  normX <- playbase::pp.normalize(
+  normX <- playbase.preprocess::pp.normalize(
     X,
     method = "CPM+quantile",
     space = "log2",

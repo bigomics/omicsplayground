@@ -1,7 +1,7 @@
 # Canonical preprocessing helpers for the bulk upload workflow.
 #
 # This file owns UI-to-engine option translation and staged previews.
-# Numerical preprocessing always runs through the public playbase boundary.
+# Numerical preprocessing always runs through the public leaf boundary.
 
 # Extracts canonical row-layer labels from feature names.
 # Matrices and data frames contribute their row names.
@@ -35,7 +35,7 @@
 # Fully prefixed matrices are processed independently by layer.
 # The function performs no pgx-object or option translation.
 .opg_impute <- function(X, method = "SVD2") {
-  playbase::pp.impute(
+  playbase.preprocess::pp.impute(
     as.matrix(X),
     layers = .opg_preprocess_layers(X),
     method = method
@@ -47,27 +47,27 @@
 # Sparse inputs are materialized because the leaf API is matrix-only.
 .opg_log_cpm <- function(counts, total = 1e6, prior = 1) {
   counts <- as.matrix(counts)
-  X <- playbase::pp.convertSpace(
+  X <- playbase.preprocess::pp.convertSpace(
     counts,
     from = "counts",
     to = "log2",
     prior = prior
   )
-  X <- playbase::pp.normalize(
+  X <- playbase.preprocess::pp.normalize(
     X,
     method = "CPM",
     space = "log2",
     prior = prior
   )
   if (!identical(total, 1e6)) {
-    scaled <- playbase::pp.convertSpace(
+    scaled <- playbase.preprocess::pp.convertSpace(
       X,
       from = "log2",
       to = "counts",
       prior = prior
     ) *
       (total / 1e6)
-    X <- playbase::pp.convertSpace(
+    X <- playbase.preprocess::pp.convertSpace(
       scaled,
       from = "counts",
       to = "log2",
@@ -85,7 +85,7 @@
   if (identical(method, "none")) {
     return(counts)
   }
-  X <- playbase::pp.convertSpace(
+  X <- playbase.preprocess::pp.convertSpace(
     counts,
     from = "counts",
     to = "log2",
@@ -99,8 +99,8 @@
   if (method %in% c("CPM", "CPM+quantile", "TMM")) {
     normalize_args$prior <- 1
   }
-  X <- do.call(playbase::pp.normalize, normalize_args)
-  playbase::pp.convertSpace(
+  X <- do.call(playbase.preprocess::pp.normalize, normalize_args)
+  playbase.preprocess::pp.convertSpace(
     X,
     from = "log2",
     to = "counts",
@@ -256,7 +256,7 @@
 }
 
 # Runs one staged upload preview through the real preprocessing boundary.
-# Samples and contrasts stay in playbase, where group policy is owned.
+# Samples and contrasts enter the leaf as plain aligned metadata.
 # The returned value is the canonical seven-field preprocessing result.
 .opg_run_preprocess_preview <- function(
   counts,
@@ -266,7 +266,7 @@
   options,
   through = "final"
 ) {
-  playbase::pgx.preprocess(
+  playbase.preprocess::pgx.preprocess(
     counts = as.matrix(counts),
     samples = samples,
     contrasts = contrasts,
@@ -279,7 +279,7 @@
 # Positional alignment handles filtering, deduplication, and outlier columns.
 # The returned matrix always has the preview X dimensions and names.
 .opg_preview_counts <- function(result) {
-  playbase::pp.alignCounts(
+  playbase.preprocess::pp.alignCounts(
     result$counts,
     result$alignment,
     X = result$X
@@ -343,7 +343,7 @@
   if (!.opg_has_preprocess_contract(pgx)) {
     stop("Dataset has no canonical preprocessing alignment")
   }
-  playbase::pp.alignCounts(
+  playbase.preprocess::pp.alignCounts(
     pgx$counts,
     pgx$settings$preprocess$alignment,
     X = pgx$X

@@ -23,7 +23,7 @@ qsee_normalization_compute <- function(rawX, progress = NULL) {
   for (method in methods) {
     normX[[method]] <- tryCatch(
       do.call(
-        playbase::pp.normalize,
+        playbase.preprocess::pp.normalize,
         c(
           list(X = rawX, method = method, space = "log2"),
           if (method %in% c("CPM", "CPM+quantile")) list(prior = 0) else list()

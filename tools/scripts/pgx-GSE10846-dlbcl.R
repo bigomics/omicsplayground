@@ -212,8 +212,8 @@ ngs <- pgx.clusterSamples( ngs, skipifexists=FALSE, prefix="C",
                           clust.detect="hclust", kclust=3)
 table(ngs$samples$cluster)    
 
-ngs$X <- playbase::pp.normalize(
-  playbase::pp.convertSpace(
+ngs$X <- playbase.preprocess::pp.normalize(
+  playbase.preprocess::pp.convertSpace(
     as.matrix(ngs$counts),
     from = "counts",
     to = "log2",
@@ -284,7 +284,6 @@ pgx.save(ngs, file=rda.file)
 ##===================================================================
 ##========================= END OF FILE =============================
 ##===================================================================
-
 
 
 

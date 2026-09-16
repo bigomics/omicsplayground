@@ -1,7 +1,7 @@
 # Bulk-upload preprocessing controls and visual previews.
 #
 # This file owns UI policy and plotting for the canonical matrix pipeline.
-# Numerical stages run only through playbase preprocessing functions.
+# Numerical stages run only through playbase.preprocess functions.
 
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -128,9 +128,21 @@ upload_module_normalization_server <- function(
 
         ## Average (if any dups) for BC overview
         dups <- sum(duplicated(rownames(X0)))
-        if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
+        if (dups > 0) {
+          X0 <- playbase.preprocess::pp.deduplicate(
+            X0,
+            method = "average",
+            space = "log2"
+          )$X
+        }
         dups <- sum(duplicated(rownames(X1)))
-        if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
+        if (dups > 0) {
+          X1 <- playbase.preprocess::pp.deduplicate(
+            X1,
+            method = "average",
+            space = "log2"
+          )$X
+        }
 
         if (sum(is.na(X0)) > 0) {
           X0 <- .opg_impute(X0, method = "SVD2")
@@ -216,7 +228,7 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          outlier_result <- playbase::pp.removeOutliers(
+          outlier_result <- playbase.preprocess::pp.removeOutliers(
             X,
             threshold = Inf,
             methods = c("z.correlation", "z.distance", "z.features")

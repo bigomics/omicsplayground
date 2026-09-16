@@ -88,7 +88,7 @@ if(file.exists(TCGA_MATRIX)) {
     ##X <- apply(X, 2, function(x) tapply(x,gene,sum))
     X <- X[rowMeans(is.na(X))<0.5, ]
     dim(X)
-    X <- imputeMedian(X)
+    X <- playbase.preprocess::pp.impute(X, method = "median")
     sum(is.na(X))
 
     ## scale back to counts...
@@ -246,5 +246,4 @@ pgx.save(ngs, file=rda.file)
 ##===================================================================
 ##========================= END OF FILE =============================
 ##===================================================================
-
 

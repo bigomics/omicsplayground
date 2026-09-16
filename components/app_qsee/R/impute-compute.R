@@ -5,7 +5,7 @@
 
 qsee_imputation_compute <- function(rawX, marlevel = 0, mnarlevel = 0, progress = NULL) {
   if (!is.null(progress)) progress$set(message = "Normalizing...", value = 0.1)
-  normX <- playbase::pp.normalize(
+  normX <- playbase.preprocess::pp.normalize(
     rawX,
     method = "CPM+quantile",
     space = "log2",

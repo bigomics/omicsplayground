@@ -55,6 +55,7 @@ scan_packages <- function(path='R') {
   add_github("bigomics/PCSF")
   add_github("bigomics/playdata")
   add_github("bigomics/playbase")
+  add_github("bigomics/playbase.preprocess")
   add_github("bigomics/bigdash")
   add_github("bigomics/bigLoaders")
   ##add_github("bigomics/fgsea")

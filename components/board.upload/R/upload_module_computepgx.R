@@ -1077,8 +1077,8 @@ upload_module_computepgx_server <- function(
 
         ## Data sent to createPGX. Bulk: send RAW counts + preprocess settings so a
         ## script/endpoint reproduces the app exactly (X is rebuilt inside createPGX
-        ## via playbase::pgx.preprocess). scRNA: keep its own pipeline unchanged
-        ## (X is unused by createSingleCellPGX).
+        ## via playbase.preprocess::pgx.preprocess). scRNA keeps its own pipeline
+        ## unchanged (X is unused by createSingleCellPGX).
         if (upload_datatype() == "scRNA-seq") {
           pgx_counts <- counts
           pgx_countsX <- countsX

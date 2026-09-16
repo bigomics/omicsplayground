@@ -10,8 +10,12 @@ bsee_compute_batchcorrect <- function(X, samples, pheno, progress = NULL) {
   pheno <- as.character(pheno)
 
   ## default normalization
-  X <- playbase::counts.mergeDuplicateFeatures(X)
-  X <- playbase::pp.normalize(
+  X <- playbase.preprocess::pp.deduplicate(
+    X,
+    method = "average",
+    space = "log2"
+  )$X
+  X <- playbase.preprocess::pp.normalize(
     .opg_log_cpm(X),
     method = "quantile",
     space = "log2"
