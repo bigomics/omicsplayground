@@ -104,7 +104,7 @@ expression_table_genetable_server <- function(id,
       df <- table_data()
       df$gene_name <- NULL
 
-      if (organism %in% c("Human", "human")) df$human_ortholog <- NULL
+      if (organism %in% c("Human", "human")) df$ortholog <- NULL
 
       if (sum(df$feature %in% df$symbol) > nrow(df) * .8) df$feature <- NULL
 

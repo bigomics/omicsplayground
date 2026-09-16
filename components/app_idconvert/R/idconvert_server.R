@@ -47,30 +47,26 @@ convert_datatype_choices <- function() {
 idconvert_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
 
-
-    known.organisms <- convert_organism_choices()
-    BRIDGE_SPECIES = c("dmelanogaster","drerio","celegans","scerevisiae","athaliana")
-    
+    supported_organisms <- convert_organism_choices()
     shiny::updateSelectizeInput(session, "organism",
-      choices = known.organisms,
-      selected = "Human",
-      server = TRUE
+      choices = supported_organisms, selected = "Human", server = TRUE
+    )
+    shiny::updateSelectizeInput(session, "ortholog",
+      choices = setdiff(supported_organisms,"Human"),
+      selected = "Mouse", server = TRUE
     )
 
-    shiny::updateSelectizeInput(session, "bridge_organism",
-      choices = setdiff(known.organisms, "Human"),
-      selected = 1,
-      server = TRUE
-    )
-    
     # Holds the current annotation result (NULL when cleared or not yet converted)
     result <- shiny::reactiveVal(NULL)
 
     shiny::observeEvent(input$example, {
-      n <- 100
+      is_proteomics <- identical(input$datatype, "proteomics")
       features <- shiny::withProgress(
         message = "Loading example features...",
-        playbase::getExampleFeatures( organism=input$organism, n=n)
+        playbase::getExampleFeatures(
+          organism = input$organism, n = 25,
+          db = if (is_proteomics) "uniprot" else c("gprofiler", "orgdb")
+        )
       )
       if (length(features) == 0) {
         shiny::showNotification(
@@ -79,7 +75,9 @@ idconvert_server <- function(id) {
         )
         return()
       }
-      shiny::updateSelectInput(session, "datatype", selected = "RNA-seq")
+      if (!is_proteomics) {
+        shiny::updateSelectInput(session, "datatype", selected = "RNA-seq")
+      }
       shiny::updateTextAreaInput(session, "features",
         value = paste(features, collapse = "\n")
       )
@@ -97,30 +95,23 @@ idconvert_server <- function(id) {
     })
 
     shiny::observeEvent(input$convert, {
+
       probes <- parse_feature_list(input$features)
       shiny::validate(shiny::need(
         length(probes) > 0,
         "Please paste at least one gene/feature ID."
       ))
 
-      bridge <- FALSE
-      bridge_species <- NULL
-      if( input$use_bridge ) {
-        bridge <- TRUE
-        bridge_species <- input$bridge_species
-      }
-
-      probes <- probes[!probes %in% c("",NA)]
-      probes <- unique(probes)
-      
+      shiny::req(input$organism, input$datatype, input$ortholog)
+      ortholog <- input$ortholog
+      if(input$human_ortholog) ortholog <- "Human"
       annot <- shiny::withProgress(
         message = "Converting gene/feature IDs...",
         playbase::getProbeAnnotation(
           organism = input$organism,
           probes = probes,
-          bridge = bridge,
-          bridge_species = bridge_species,
-          datatype = input$datatype
+          datatype = input$datatype,
+          ortholog_species = ortholog
         )
       )
 
@@ -159,16 +150,20 @@ idconvert_server <- function(id) {
 #        class = "compact hover",
         rownames = FALSE,
         extensions = c("Buttons", "Scroller"),
-        plugins = "scrollResize",
+        plugins = c("scrollResize","ellipsis"),
         selection = 'none',
         options = list(
           dom = "lfrtip",
           scroller = TRUE,
           scrollX = TRUE,
           scrollY = "calc(100vh - 60px)",
-          scrollResize = TRUE
-#         deferRender = TRUE,
-#         autoWidth = TRUE
+          scrollResize = TRUE,
+          #         deferRender = TRUE,
+          #         autoWidth = TRUE
+          columnDefs = list(list(
+            targets = c("gene_title","ortholog_description"),
+            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
+          ))
         )
       ) %>% DT::formatStyle(
         columns = 0,

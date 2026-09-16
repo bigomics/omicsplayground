@@ -6,7 +6,6 @@
 idconvert_ui <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  
   organism_choices <- convert_organism_choices()
 
   ui <- bslib::layout_columns(
@@ -30,38 +29,29 @@ idconvert_ui <- function(id) {
         choices = convert_datatype_choices(),
         selected = "proteomics"
       ),
+      shiny::textAreaInput(ns("features"), "Gene/feature IDs (one per line):",
+        rows = 20,
+        placeholder = "e.g.\nTrp53\nENSMUSG00000059552\n..."
+      ),
       div(
-        style = "margin: -15px 0 0px 0;",             
-        shiny::textAreaInput(ns("features"), "Gene/feature IDs (one per line):",
-          rows = 16,
-          placeholder = "e.g.\nTrp53\nENSMUSG00000059552\n..."
+        style = paste(
+          "font-size: 12px; color: #888; margin-top: -8px;",
+          "margin-bottom: 0; display: inline-block;",
+          "text-decoration: underline;"
         ),
         shiny::actionLink(ns("example"), "Load example features",
-          style = paste(
-            "font-size: 12px; color: #888; margin-top: -15px;",
-            "margin-bottom: 8px; display: inline-block;",
-            "text-decoration: underline; padding-right: 10px;"
-          )
-        ),
-        shiny::actionLink(ns("clear"), "Clear",
-          style = paste(
-            "font-size: 12px; color: #888; margin-top: -12px;",
-            "margin-bottom: 8px; display: inline-block;",
-            "text-decoration: underline;"
-          )
-        )
+          style = "margin-right: 15px;"),
+        shiny::actionLink(ns("clear"), "Clear")
       ),
       div(
-        style = "margin: -5px 0 10px 0;",     
-        shiny::checkboxInput( ns("use_bridge"), "Use bridge organism", FALSE),
+        shiny::checkboxInput(ns("human_ortholog"),"Human ortholog",TRUE),
         shiny::conditionalPanel(
-          condition = "input.use_bridge",
+          condition = "input.human_ortholog == false",
           ns = ns,
-          shiny::selectizeInput(ns("bridge_organism"), "Bridge organism(s):",
-            choices = NULL, multiple = TRUE
-          )
+          shiny::selectInput(ns("ortholog"), "Ortholog species:", choices=NULL)
         )
       ),
+      br(),
       div(
         style = "display: flex; flex-direction: column; gap: 0;",
         shiny::actionButton(ns("convert"), "Convert",
@@ -69,7 +59,8 @@ idconvert_ui <- function(id) {
           width = "100%"
         ),
         shiny::uiOutput(ns("download_ui"))
-      )
+      ),
+      br()
     ),
     bslib::layout_columns(
       col_widths = 12,

@@ -124,11 +124,6 @@ app_ui <- function(x) {
             widths = c(1,11),
             selected = "Home",
             well = TRUE,
-            ## bslib::nav_panel(
-            ##   title = "Home",
-            ##   icon = icon("home"),
-            ##   omicspanel(WelcomeBoardUI("welcome2"))
-            ## ),
             bslib::nav_panel(
               title = "Home",
               icon = icon("home"),

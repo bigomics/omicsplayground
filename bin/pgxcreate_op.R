@@ -56,7 +56,9 @@ pgx <- playbase::pgx.createPGX(
   max.genesets = params$max.genesets,
   annot_table = params$annot_table,
   settings = params$settings,
-  sc_compute_settings = params$sc_compute_settings
+  sc_compute_settings = params$sc_compute_settings,
+  ortholog_species = params$ortholog_species,
+  include_default_gmt = params$include_default_gmt
 )
 
 message("[create PGX process] : PGX created successfully")

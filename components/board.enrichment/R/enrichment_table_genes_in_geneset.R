@@ -39,7 +39,7 @@ enrichment_table_genes_in_geneset_server <- function(id,
       }
 
       if (organism %in% c("Human", "human")) {
-        rpt$human_ortholog <- NULL
+        rpt$ortholog <- NULL
       }
       if (sum(rpt$feature %in% rpt$symbol) > nrow(rpt) * .8) {
         rpt$feature <- NULL
