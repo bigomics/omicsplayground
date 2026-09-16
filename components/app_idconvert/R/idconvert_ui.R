@@ -20,7 +20,8 @@ idconvert_ui <- function(id) {
       fill = FALSE,
       shiny::selectizeInput(ns("organism"), "Organism:",
         choices = c("Human" = "Human"),
-        selected = "Human"
+        selected = "Human",
+        options = list(maxOptions = length(organism_choices))
       ),
       shiny::div(
         paste(length(organism_choices), "species available"),
