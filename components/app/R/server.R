@@ -1061,7 +1061,7 @@ output$current_user <- shiny::renderText({
   if(isTRUE(opt$DEVMODE)) {
     RunMonitorServer("runmonitor")
   }
-  ## idconvert_server("idconvert")
+  idconvert_server("idconvert")
   ## prism_server("prism")
 
   launcher_server(
