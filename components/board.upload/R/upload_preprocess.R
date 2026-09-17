@@ -16,28 +16,13 @@
   ifelse(grepl(":", x), sub(":.*", "", x), "")
 }
 
-# Returns explicit layers only for a fully prefixed matrix.
-# Prefixes must use the canonical alphanumeric `layer:feature` grammar.
-# Single-omics matrices return NULL for whole-matrix dispatch.
-.opg_preprocess_layers <- function(X) {
-  feature_names <- rownames(X)
-  if (
-    is.null(feature_names) ||
-      !length(feature_names) ||
-      !all(grepl("^[A-Za-z0-9]+:", feature_names))
-  ) {
-    return(NULL)
-  }
-  sub(":.*", "", feature_names)
-}
-
 # Imputes a display or analysis matrix through the canonical family API.
 # Fully prefixed matrices are processed independently by layer.
 # The function performs no pgx-object or option translation.
 .opg_impute <- function(X, method = "SVD2") {
   playbase.preprocess::pp.impute(
     as.matrix(X),
-    layers = .opg_preprocess_layers(X),
+    layers = playbase.preprocess::pp.inferLayers(X),
     method = method
   )
 }
@@ -125,15 +110,14 @@
   ref_gene = NULL,
   remove_outliers = FALSE,
   outlier_threshold = 3,
-  batch_correct = FALSE,
-  batch_method = "limma",
+  batch.correct.method = "no_batch_correct",
   batch = NULL,
   target = NULL,
   meth_type = NULL,
   dedup = NULL,
   max_features = NULL
 ) {
-  layers <- .opg_preprocess_layers(counts)
+  layers <- playbase.preprocess::pp.inferLayers(counts)
   input_space <- "counts"
   output_space <- "log2"
   normalize_args <- list()
@@ -155,6 +139,15 @@
     normalize_args <- list(ref = ref_gene)
   }
 
+  ## ComBat and limma need an explicit batch variable. Autodetection can
+  ## resolve nothing, so the stage stays disabled instead of erroring.
+  if (
+    any(batch.correct.method %in% c("ComBat", "limma")) &&
+      (is.null(batch) || !NCOL(batch))
+  ) {
+    batch.correct.method <- "no_batch_correct"
+  }
+
   options <- list(
     input_space = input_space,
     output_space = output_space,
@@ -172,8 +165,7 @@
     remove_outliers = isTRUE(remove_outliers),
     outlier_threshold = as.numeric(outlier_threshold),
     outlier_methods = c("z.correlation", "z.distance", "z.features"),
-    batch_correct = isTRUE(batch_correct),
-    batch_method = batch_method,
+    batch.correct.method = batch.correct.method,
     batch = batch,
     target = target,
     batch_args = list(),
@@ -246,13 +238,36 @@
     options$remove_outliers <- FALSE
   }
   if (match(through, stages) < match("batch", stages)) {
-    options$batch_correct <- FALSE
+    options$batch.correct.method <- "no_batch_correct"
   }
   if (match(through, stages) < match("final", stages)) {
     options$dedup <- "off"
     options$max_features <- NULL
   }
   options
+}
+
+# Splits canonical upload options into the two pgx.createPGX batch inputs.
+# Playbase owns the batch selector as a top-level argument, never a nested key.
+# Resolved batch columns are reported so Playbase never re-autodetects them.
+.opg_createpgx_preprocess <- function(options) {
+  if (is.null(options)) {
+    return(list(
+      preprocess = NULL,
+      batch.correct.method = "no_batch_correct",
+      batch.pars = "<none>"
+    ))
+  }
+  method <- options$batch.correct.method
+  if (is.null(method)) method <- "no_batch_correct"
+  options$batch.correct.method <- NULL
+  batch.pars <- colnames(options$batch)
+  if (!length(batch.pars)) batch.pars <- "<none>"
+  list(
+    preprocess = options,
+    batch.correct.method = unname(method[[1L]]),
+    batch.pars = batch.pars
+  )
 }
 
 # Runs one staged upload preview through the real preprocessing boundary.
@@ -273,6 +288,55 @@
     annot = annot,
     options = .opg_preview_options(options, through = through)
   )
+}
+
+# Runs one staged preview and reports engine failures to the open panel.
+# Method preconditions such as confounded batches are user-facing data states.
+# A successful run returns the canonical preprocessing result unchanged.
+.opg_validated_preview <- function(
+  counts,
+  samples,
+  contrasts,
+  annot,
+  options,
+  through = "final",
+  label = "Preprocessing"
+) {
+  failure <- NULL
+  result <- tryCatch(
+    .opg_run_preprocess_preview(
+      counts = counts,
+      samples = samples,
+      contrasts = contrasts,
+      annot = annot,
+      options = options,
+      through = through
+    ),
+    error = function(e) {
+      failure <<- conditionMessage(e)
+      NULL
+    }
+  )
+  if (!is.null(failure)) {
+    shiny::validate(shiny::need(FALSE, paste0(label, " failed: ", failure)))
+  }
+  result
+}
+
+# Averages duplicate rows in a canonical preview result.
+# Declared result spaces and inferred layers select each averaging rule.
+# The returned matrix preserves every non-duplicate preview row.
+.opg_deduplicate_preview <- function(result) {
+  X <- result$X
+  if (!anyDuplicated(rownames(X))) {
+    return(X)
+  }
+  playbase.preprocess::pp.deduplicate(
+    X,
+    method = "average",
+    space = result$space,
+    layers = playbase.preprocess::pp.inferLayers(X)
+  )$X
 }
 
 # Aligns pristine source counts to one canonical preview result.
@@ -334,20 +398,83 @@
 }
 
 # Aligns a pgx object's pristine source matrix to its analysis matrix.
-# Current preprocessing metadata is mandatory; names are never a fallback.
-# The independent single-cell path retains its explicit name-aligned contract.
+# Current objects use positional metadata, while single-cell objects use exact
+# names. Historical bulk objects without alignment are rejected explicitly.
 .opg_pgx_analysis_counts <- function(pgx) {
-  if (!is.null(pgx$datatype) && pgx$datatype %in% c("scRNA-seq", "scRNAseq")) {
-    return(pgx$counts[rownames(pgx$X), colnames(pgx$X), drop = FALSE])
+  state <- pgx$settings$preprocess
+  if (is.list(state) && is.list(state$alignment)) {
+    return(playbase.preprocess::pp.alignCounts(
+      pgx$counts,
+      state$alignment,
+      X = pgx$X
+    ))
   }
-  if (!.opg_has_preprocess_contract(pgx)) {
-    stop("Dataset has no canonical preprocessing alignment")
-  }
-  playbase.preprocess::pp.alignCounts(
+  single_cell <- !is.null(pgx$datatype) &&
+    pgx$datatype %in% c("scRNA-seq", "scRNAseq")
+
+  # Datasets built before the canonical alignment, and single-cell datasets that
+  # never carry one, are positioned by matching axis names instead.
+  aligned <- .opg_name_aligned_counts(
     pgx$counts,
-    pgx$settings$preprocess$alignment,
-    X = pgx$X
+    pgx$X,
+    strict = single_cell
   )
+  if (!is.null(aligned)) {
+    return(aligned)
+  }
+  # A legacy dataset whose axes cannot be matched keeps its source counts, which
+  # is what every board consumed before the alignment existed.
+  pgx$counts
+}
+
+# Positions source counts at the analysis axes using row and column names.
+# Strict callers require a complete, unique, and exact name correspondence.
+# Lenient callers receive NULL when the axes cannot be matched by name.
+.opg_name_aligned_counts <- function(counts, X, strict) {
+  refuse <- function(message) {
+    if (strict) {
+      stop(message, call. = FALSE)
+    }
+    NULL
+  }
+  if (is.null(dim(counts)) || is.null(dim(X))) {
+    return(refuse("Single-cell dataset counts and X must both be matrices"))
+  }
+  source_rows <- rownames(counts)
+  source_cols <- colnames(counts)
+  analysis_rows <- rownames(X)
+  analysis_cols <- colnames(X)
+  axes <- list(source_rows, source_cols, analysis_rows, analysis_cols)
+  valid_axes <- vapply(
+    axes,
+    function(x) {
+      !is.null(x) && !anyNA(x) && all(nzchar(x))
+    },
+    logical(1)
+  )
+  if (!all(valid_axes)) {
+    return(refuse(
+      "Single-cell dataset counts and X must have complete row and column names"
+    ))
+  }
+  if (
+    anyDuplicated(source_rows) ||
+      anyDuplicated(source_cols) ||
+      anyDuplicated(analysis_rows) ||
+      anyDuplicated(analysis_cols)
+  ) {
+    return(refuse(
+      "Single-cell dataset counts and X must have unique axis names"
+    ))
+  }
+  rows <- match(analysis_rows, source_rows)
+  cols <- match(analysis_cols, source_cols)
+  if (anyNA(rows) || anyNA(cols)) {
+    return(refuse(
+      "Single-cell dataset X row and column names must exist exactly in counts"
+    ))
+  }
+  counts[rows, cols, drop = FALSE]
 }
 
 # Applies the upload-only nonzero-median preview normalization.

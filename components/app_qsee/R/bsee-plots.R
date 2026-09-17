@@ -132,8 +132,10 @@ bsee.plot_covariate_analysis_plotly <- function(res, k = 1:3) {
     y1 <- -log10(1e-04 + pxx[, i])
     pnl <- omicsplots::pgx.plot_scatter(
       x = x1, y = y1, labels = pp,
-      xlab = "significance with phenotype (-log10p)",
-      ylab = "significance with PC (-log10p)"
+      frame = omicsplots::plot_frame(
+        xlab = "significance with phenotype (-log10p)",
+        ylab = "significance with PC (-log10p)"
+      )
     )
     pnl <- qsee_plotly_add_labels(pnl, x1, y1, pp, nmax = 40)
     panels[[paste0("PC", i)]] <- plotly::layout(

@@ -59,13 +59,14 @@ upload_module_normalization_server <- function(
       imputedX <- reactive({
         shiny::req(dim(r_counts()), !is.null(input$normalize))
         shiny::req(dim(r_contrasts()))
-        .opg_run_preprocess_preview(
+        .opg_validated_preview(
           counts = r_counts(),
           samples = r_samples(),
           contrasts = r_contrasts(),
           annot = r_annot(),
           options = preprocess(),
-          through = "impute"
+          through = "impute",
+          label = "Imputation"
         )
       })
 
@@ -77,37 +78,40 @@ upload_module_normalization_server <- function(
             tspan("Please select reference gene", js = FALSE)
           ))
         }
-        .opg_run_preprocess_preview(
+        .opg_validated_preview(
           counts = r_counts(),
           samples = r_samples(),
           contrasts = r_contrasts(),
           annot = r_annot(),
           options = preprocess(),
-          through = "normalize"
+          through = "normalize",
+          label = "Normalization"
         )$X
       })
 
       cleanX <- reactive({
         shiny::req(dim(normalizedX()))
-        .opg_run_preprocess_preview(
+        .opg_validated_preview(
           counts = r_counts(),
           samples = r_samples(),
           contrasts = r_contrasts(),
           annot = r_annot(),
           options = preprocess(),
-          through = "outliers"
+          through = "outliers",
+          label = "Outlier removal"
         )
       })
 
       correctedX <- shiny::reactive({
         shiny::req(dim(cleanX()$X))
-        .opg_run_preprocess_preview(
+        .opg_validated_preview(
           counts = r_counts(),
           samples = r_samples(),
           contrasts = r_contrasts(),
           annot = r_annot(),
           options = preprocess(),
-          through = "batch"
+          through = "batch",
+          label = "Batch-effect correction"
         )
       })
 
@@ -120,29 +124,11 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
-        X0 <- imputedX()$X
-        X1 <- cleanX()$X
+        X0 <- .opg_deduplicate_preview(imputedX())
+        X1 <- .opg_deduplicate_preview(cleanX())
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
-
-        ## Average (if any dups) for BC overview
-        dups <- sum(duplicated(rownames(X0)))
-        if (dups > 0) {
-          X0 <- playbase.preprocess::pp.deduplicate(
-            X0,
-            method = "average",
-            space = "log2"
-          )$X
-        }
-        dups <- sum(duplicated(rownames(X1)))
-        if (dups > 0) {
-          X1 <- playbase.preprocess::pp.deduplicate(
-            X1,
-            method = "average",
-            space = "log2"
-          )$X
-        }
 
         if (sum(is.na(X0)) > 0) {
           X0 <- .opg_impute(X0, method = "SVD2")
@@ -172,10 +158,24 @@ upload_module_normalization_server <- function(
         if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
           methods <- methods[methods != "NPM"]
         }
+        ## Refreshing the choices must not silently reselect the first method.
+        ## Reading the current one is isolated so picking a method never reruns
+        ## this comparison.
+        current_method <- shiny::isolate(input$bec_method)
+        keep_method <- if (
+          !is.null(current_method) && current_method %in% methods
+        ) {
+          current_method
+        } else if ("SVA" %in% methods) {
+          "SVA"
+        } else {
+          methods[1]
+        }
         shiny::updateSelectInput(
           session,
           "bec_method",
-          choices = methods
+          choices = methods,
+          selected = keep_method
         )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
@@ -466,13 +466,14 @@ upload_module_normalization_server <- function(
             if (any(X2 > 0)) {
               preview_options <- preprocess()
               preview_options$impute <- FALSE
-              X3 <- .opg_run_preprocess_preview(
+              X3 <- .opg_validated_preview(
                 counts = r_counts(),
                 samples = r_samples(),
                 contrasts = r_contrasts(),
                 annot = r_annot(),
                 options = preview_options,
-                through = "impute"
+                through = "impute",
+                label = "Imputation"
               )$X
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
@@ -564,6 +565,16 @@ upload_module_normalization_server <- function(
 
       plot_correction <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
+        if (
+          isTRUE(input$batchcorrect) &&
+            !is.null(input$bec_method) &&
+            input$bec_method %in% c("ComBat", "limma")
+        ) {
+          shiny::validate(shiny::need(
+            !is.null(bec_inputs()$batch),
+            "ComBat and limma need a batch parameter. Select one above, or use RUV, SVA or NPM."
+          ))
+        }
         bec_view <- if (is.null(input$bec_view)) "pca" else input$bec_view
         switch(bec_view,
           loadings = plot_bec_biplot("loadings"),
@@ -733,7 +744,8 @@ upload_module_normalization_server <- function(
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a)))
+        ## Probing for a numeric annotation, so a failed coercion is expected.
+        c1 <- all(!is.na(suppressWarnings(as.numeric(col1a))))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
@@ -823,7 +835,8 @@ upload_module_normalization_server <- function(
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a)))
+        ## Probing for a numeric annotation, so a failed coercion is expected.
+        c1 <- all(!is.na(suppressWarnings(as.numeric(col1a))))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
@@ -1016,9 +1029,11 @@ upload_module_normalization_server <- function(
         default_bec_method <- "SVA"
         default_bec_param <- batch_params[1]
         if (is.list(pgx_options)) {
-          default_batchcorrect <- isTRUE(pgx_options$batch_correct)
-          if (!is.null(pgx_options$batch_method)) {
-            default_bec_method <- unname(pgx_options$batch_method[[1L]])
+          selected_bec <- pgx_options$batch.correct.method
+          if (!is.null(selected_bec)) {
+            selected_bec <- unname(selected_bec[[1L]])
+            default_batchcorrect <- !identical(selected_bec, "no_batch_correct")
+            if (default_batchcorrect) default_bec_method <- selected_bec
           }
           if (!is.null(pgx_options$batch)) {
             default_bec_param <- colnames(pgx_options$batch)
@@ -1433,16 +1448,22 @@ upload_module_normalization_server <- function(
         return(ll)
       })
 
-      ## Canonical options are the single preprocessing description shared by
-      ## staged previews and the submitted raw matrix.
-      preprocess <- reactive({
-        batch_inputs <- .opg_upload_batch_inputs(
+      ## Resolved batch metadata for the selected correction. Autodetection may
+      ## return nothing, which supervised methods cannot correct against.
+      bec_inputs <- shiny::reactive({
+        .opg_upload_batch_inputs(
           counts = r_counts(),
           samples = r_samples(),
           contrasts = r_contrasts(),
           selection = input$bec_param,
           enabled = isTRUE(input$batchcorrect)
         )
+      })
+
+      ## Canonical options are the single preprocessing description shared by
+      ## staged previews and the submitted raw matrix.
+      preprocess <- reactive({
+        batch_inputs <- bec_inputs()
         .opg_upload_preprocess_options(
           counts = r_counts(),
           datatype = upload_datatype(),
@@ -1461,8 +1482,13 @@ upload_module_normalization_server <- function(
           },
           remove_outliers = isTRUE(input$remove_outliers),
           outlier_threshold = input$outlier_threshold,
-          batch_correct = isTRUE(input$batchcorrect),
-          batch_method = if (is.null(input$bec_method)) "SVA" else input$bec_method,
+          batch.correct.method = if (!isTRUE(input$batchcorrect)) {
+            "no_batch_correct"
+          } else if (is.null(input$bec_method)) {
+            "SVA"
+          } else {
+            input$bec_method
+          },
           batch = batch_inputs$batch,
           target = batch_inputs$target,
           meth_type = meth_type(),

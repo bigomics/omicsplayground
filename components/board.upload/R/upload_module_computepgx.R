@@ -1084,11 +1084,15 @@ upload_module_computepgx_server <- function(
           pgx_countsX <- countsX
           pgx_annot <- annot_table
           pgx_preprocess <- NULL
+          pgx_batch <- .opg_createpgx_preprocess(NULL)
         } else {
           pgx_counts <- rawCountsRT()
           pgx_countsX <- NULL
           pgx_annot <- rawAnnotRT()
-          pgx_preprocess <- preprocess()
+          ## Batch selection is a top-level playbase argument, not a nested
+          ## preprocessing key, so it is split out before createPGX is called.
+          pgx_batch <- .opg_createpgx_preprocess(preprocess())
+          pgx_preprocess <- pgx_batch$preprocess
         }
 
         ## -----------------------------------------------------------
@@ -1239,6 +1243,8 @@ upload_module_computepgx_server <- function(
           counts = pgx_counts,
           countsX = pgx_countsX,
           preprocess = pgx_preprocess,
+          batch.correct.method = pgx_batch$batch.correct.method,
+          batch.pars = pgx_batch$batch.pars,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
