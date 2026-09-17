@@ -88,9 +88,9 @@ Imports:
     yaml,
     zip,
 Remotes:
+    bigomics/playbase.preprocess,
     url::https://github.com/bigomics/bigdash/archive/HEAD.zip,
     url::https://github.com/bigomics/bigLoaders/archive/HEAD.zip,
-    url::https://github.com/bigomics/playbase.preprocess/archive/HEAD.zip,
     url::https://github.com/bigomics/playdata/archive/HEAD.zip,
     url::https://github.com/bigomics/wizardR/archive/HEAD.zip,
     url::https://github.com/Ironholds/rgeolocate/archive/HEAD.zip,

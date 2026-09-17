@@ -47,7 +47,10 @@ scan_packages <- function(path='R') {
   remotes.url <- c(
     "KEGG.db" = "url::https://bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz",
     "org.Pf.plasmo.db" = "url::https://bioconductor.org/packages/3.14/data/annotation/src/contrib/org.Pf.plasmo.db_3.14.0.tar.gz",
-    "Azimuth" = "url::https://github.com/satijalab/azimuth/archive/HEAD.zip"
+    "Azimuth" = "url::https://github.com/satijalab/azimuth/archive/HEAD.zip",
+    ## Private repo: the github remote authenticates with GITHUB_PAT, while a
+    ## plain url:: archive fetch returns 404 for anyone outside BigOmics.
+    "playbase.preprocess" = "bigomics/playbase.preprocess"
 #    "infercnv" = "url::https://github.com/broadinstitute/infercnv/archive/refs/tags/infercnv-v1.3.3.zip"
   )
   
@@ -55,7 +58,6 @@ scan_packages <- function(path='R') {
   add_github("bigomics/PCSF")
   add_github("bigomics/playdata")
   add_github("bigomics/playbase")
-  add_github("bigomics/playbase.preprocess")
   add_github("bigomics/bigdash")
   add_github("bigomics/bigLoaders")
   ##add_github("bigomics/fgsea")
