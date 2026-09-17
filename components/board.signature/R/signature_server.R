@@ -178,7 +178,8 @@ SignatureBoard <- function(id, pgx,
           length(genes) > 0,
           "Custom feature selection not found in the data. Please check your custom feature list."
         ))
-        ## map to probes
+        ## map to probes. Custom gene lists are typed as human-style
+        ## symbols, so bridge via human_ortholog specifically.
         features1 <- playbase::map_probes(pgx$genes, genes,
           column = "human_ortholog", ignore.case = TRUE
         )

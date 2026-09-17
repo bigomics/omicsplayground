@@ -111,7 +111,10 @@ launcher_server <- function(id, parent, load_example = NULL,
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
-      bslib::nav_select("app-sidebar", "Prism", session=parent)
+      run_app <- app_launchers[["prism"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
+      }
     })
 
     observeEvent(input$launch_idconvert, {
@@ -119,7 +122,10 @@ launcher_server <- function(id, parent, load_example = NULL,
       if(!isTRUE(opt$DEVMODE)) {
         return(NULL)
       }
-      bslib::nav_select("app-sidebar", "IDconvert", session=parent)
+      run_app <- app_launchers[["idconvert"]]
+      if (!is.null(run_app) && is.function(run_app)) {
+        run_app()
+      }
     })
 
     observeEvent(input$launch_multiomics, {
@@ -155,6 +161,11 @@ launcher_server <- function(id, parent, load_example = NULL,
     ## Quick action: go to the Upload panel
     observeEvent(input$upload_new_data, {
       bslib::nav_select("app-sidebar", "Upload", session = parent)
+    })
+
+    ## Quick action: go to the dataset Library
+    observeEvent(input$show_library, {
+      bslib::nav_select("app-sidebar", "Library", session = parent)
     })
 
     ## Quick action: go to the Obi panel

@@ -16,7 +16,6 @@ CopilotBoardUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 5, 4),
-    #style = "height: calc(100vh - 80px);",
     height = "100%",
     
     # ---- Left column: new-chat button, on top of docs / reports ----
@@ -82,7 +81,7 @@ CopilotBoardUI <- function(id) {
     # the clickable-looking-button problem we just fixed on the left.
     bslib::layout_columns(
       col_widths = 12,
-      row_heights = c(4, 7),
+      row_heights = c(4, 8),
       height = "100%",
       bslib::card(
         bslib::as.card_item(shiny::fillRow(
