@@ -309,7 +309,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         ## is a property of the uploaded data (X may be normalized and imputed).
         is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
         use.X <- !identical(input$qc_datasource, "counts")
-        raw.counts <- pgx$counts[, samples, drop = FALSE]
+        raw.counts <- .opg_pgx_analysis_counts(pgx)[, samples, drop = FALSE]
         if (use.X) {
           counts <- pgx$X[, samples, drop = FALSE]
           if (!is.meth) counts <- 2**counts
@@ -393,7 +393,7 @@ DataViewBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           ## counts is 2**X (beta values for methylomics): back to the analysis scale
           log2counts <- if (is.meth) counts else log2(counts)
         } else if (is.meth) {
-          log2counts <- playbase::mToBeta(counts)
+          log2counts <- as.matrix(counts)
         } else {
           if (any(pgx$X[, samples, drop = FALSE] < 0, na.rm = TRUE)) {
             offset <- 1e-6

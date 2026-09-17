@@ -54,13 +54,14 @@ dataview_plot_correlation_server <- function(id,
 
       samples <- intersect(samples, colnames(pgx$X))
       probe <- gene
+      analysis_counts <- .opg_pgx_analysis_counts(pgx)
 
       ## corr always in log.scale and restricted to selected samples subset
       ## should match exactly the rawtable!!
       if (probe %in% rownames(pgx$X)) {
         rho <- cor(t(pgx$X[, samples]), pgx$X[probe, samples], use = "pairwise")[, 1]
-      } else if (probe %in% rownames(pgx$counts)) {
-        x0 <- playbase::logCPM(pgx$counts[, samples])
+      } else if (probe %in% rownames(analysis_counts)) {
+        x0 <- .opg_log_cpm(analysis_counts[, samples, drop = FALSE])
         x1 <- x0[probe, ]
         rho <- cor(t(x0), x1, use = "pairwise")[, 1]
       } else {

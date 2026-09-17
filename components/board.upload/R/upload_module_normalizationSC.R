@@ -1,5 +1,7 @@
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
+# Single-cell upload normalization and quality-control previews.
+#
+# This path remains independent from the bulk preprocessing orchestrator.
+# Shared count-to-log-CPM arithmetic uses the canonical matrix family.
 
 upload_module_normalizationSC_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -200,7 +202,7 @@ upload_module_normalizationSC_server <- function(id,
           ## their intermediates are freed before the subprocess starts.
           dbg("[normalizationSC_server] Performing logCPM normalization...")
           counts_dense <- as.matrix(counts)
-          nX <- playbase::logCPM(counts_dense, prior = 1, total = 1e4)
+          nX <- .opg_log_cpm(counts_dense, prior = 1, total = 1e4)
           rm(counts_dense)
           jj <- head(order(-matrixStats::rowSds(nX, na.rm = TRUE)), 250)
           nX1 <- nX[jj, , drop = FALSE]
@@ -507,7 +509,7 @@ upload_module_normalizationSC_server <- function(id,
 
       X <- shiny::reactive({
         shiny::req(r_counts())
-        X <- playbase::logCPM(r_counts(), total = 1e4, prior = 1)
+        X <- .opg_log_cpm(r_counts(), total = 1e4, prior = 1)
         return(X)
       })
 

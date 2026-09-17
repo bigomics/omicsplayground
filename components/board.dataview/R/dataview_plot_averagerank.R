@@ -67,7 +67,8 @@ dataview_plot_averagerank_server <- function(id,
       }
 
       if (data_type %in% c("counts", "abundance")) {
-        mean.fc <- sort(rowMeans(pgx$counts[, samples, drop = FALSE], na.rm = TRUE),
+        counts <- .opg_pgx_analysis_counts(pgx)
+        mean.fc <- sort(rowMeans(counts[, samples, drop = FALSE], na.rm = TRUE),
           decreasing = TRUE
         )
         ylab <- tspan("average counts", js = FALSE)

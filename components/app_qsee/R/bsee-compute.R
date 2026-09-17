@@ -1,3 +1,8 @@
+# Batch-effect exploration computations for the Qsee board.
+#
+# This file owns diagnostics and comparison presentation data.
+# Preprocessing arithmetic uses canonical matrix families.
+
 bsee_compute_batchcorrect <- function(X, samples, pheno, progress = NULL) {
   if (length(pheno) == 1 && pheno %in% colnames(samples)) {
     pheno <- samples[, pheno]
@@ -5,9 +10,17 @@ bsee_compute_batchcorrect <- function(X, samples, pheno, progress = NULL) {
   pheno <- as.character(pheno)
 
   ## default normalization
-  X <- playbase::counts.mergeDuplicateFeatures(X)
-  X <- limma::normalizeQuantiles(playbase::logCPM(X))
-  X <- playbase::svdImpute2(X) ## standard impute
+  X <- playbase.preprocess::pp.deduplicate(
+    X,
+    method = "average",
+    space = "log2"
+  )$X
+  X <- playbase.preprocess::pp.normalize(
+    .opg_log_cpm(X),
+    method = "quantile",
+    space = "log2"
+  )
+  X <- .opg_impute(X, method = "SVD2")
 
   ## svd results
   res <- irlba::irlba(X, nv = 4)

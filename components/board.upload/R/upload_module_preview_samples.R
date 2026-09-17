@@ -1,7 +1,7 @@
-##
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
-##
+# Uploaded sample-table checks and low-cost visual previews.
+#
+# This file owns presentation-only conditioning before dimensional reduction.
+# Production preprocessing remains in the canonical matrix pipeline.
 
 upload_table_preview_samples_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -329,13 +329,12 @@ upload_table_preview_samples_server <- function(
       counts <- uploaded$counts.csv
       shiny::req(nrow(counts))
       if (upload_datatype() == "methylomics") {
-        X <- playbase::mToBeta(counts)
+        X <- as.matrix(counts)
       } else if (inherits(counts, "sparseMatrix")) {
-        ## pgx.countNormalization uses apply() which densifies sparse matrices.
         ## log1p(x)/log(2) == log2(1+x) but sparse-preserving since log1p(0)=0.
         X <- log1p(counts) / log(2)
       } else {
-        counts <- playbase::pgx.countNormalization(counts, "median.center.nz")
+        counts <- .opg_median_center_nonzero(counts)
         prior <- min(counts[which(counts > 0)], na.rm = TRUE)
         X <- log2(counts + prior)
       }

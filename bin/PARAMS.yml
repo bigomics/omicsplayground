@@ -15,8 +15,8 @@ params:
     input: filepath
   - lib_dir: "lib/"
     input: filepath
-  - batch_correct: FALSE
-    input: boolean
+  - batch.correct.method: "no_batch_correct"
+    input: string
   - prune_samples: TRUE
     input: boolean
   - filter_genes: filter.genes

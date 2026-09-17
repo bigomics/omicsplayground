@@ -89,7 +89,7 @@ dataview_plot_expression_server <- function(id,
 
       pp <- rownames(pgx$genes)[match(gene, rownames(pgx$genes))]
       if (data_type %in% c("counts", "abundance")) {
-        gx <- pgx$counts[pp, samples]
+        gx <- .opg_pgx_analysis_counts(pgx)[pp, samples]
         gx[which(is.na(gx))] <- 0
         ylab <- tspan("Counts", js = FALSE)
         if (pgx$datatype == "methylomics") ylab <- tspan("Beta values", js = FALSE)
@@ -136,7 +136,7 @@ dataview_plot_expression_server <- function(id,
       points.color <- rep("black", nrow(df))
       names(points.color) <- df$sample
       if (input$show_imputed_values) {
-        counts.values <- pgx$counts[unique(pd$gene), df$samples]
+        counts.values <- .opg_pgx_analysis_counts(pgx)[unique(pd$gene), df$samples]
         x.values <- pgx$X[unique(pd$gene), df$samples]
         if (any(is.na(counts.values)) && !any(is.na(x.values))) {
           points.color[which(is.na(counts.values))] <- "#C1C1C1"

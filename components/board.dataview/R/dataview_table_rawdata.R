@@ -48,6 +48,7 @@ dataview_table_rawdata_server <- function(id,
       data_scale <- r.data_type()
       samples <- r.samples()
       groupby <- r.groupby()
+      analysis_counts <- .opg_pgx_analysis_counts(pgx)
 
       parse_sample <- function(data) {
         if (samples[1] == "") samples <- colnames(data)
@@ -61,11 +62,7 @@ dataview_table_rawdata_server <- function(id,
 
       logx <- parse_sample(pgx$X)
       if (data_scale == "counts") {
-        # So old datasets work (they can be missaligned)
-        jj <- which(rownames(pgx$X) %in% rownames(pgx$counts))
-        dt <- pgx$counts[rownames(pgx$X)[jj], ]
-        ##
-        x <- parse_sample(dt)
+        x <- parse_sample(analysis_counts)
       } else {
         x <- logx
       }
@@ -121,7 +118,7 @@ dataview_table_rawdata_server <- function(id,
         annot$symbol <- NULL
       }
 
-      pct.na <- round(rowMeans(is.na(pgx$counts[rownames(annot), ])) * 100, 1)
+      pct.na <- round(rowMeans(is.na(analysis_counts[rownames(annot), , drop = FALSE])) * 100, 1)
 
       df <- data.frame(
         annot,
@@ -152,7 +149,8 @@ dataview_table_rawdata_server <- function(id,
 
       na.map <- NULL
       rm.cols <- NULL
-      is.imp <- sum(is.na(pgx$counts)) > 0 && sum(is.na(pgx$X)) == 0
+      analysis_counts <- .opg_pgx_analysis_counts(pgx)
+      is.imp <- sum(is.na(analysis_counts)) > 0 && sum(is.na(pgx$X)) == 0
       if (is.imp && data_scale == "log2") {
         if (groupby != "<ungrouped>" && groupby %in% colnames(pgx$samples)) {
           group <- pgx$samples[samples, groupby]
@@ -163,7 +161,7 @@ dataview_table_rawdata_server <- function(id,
             for (i in 1:length(allgroups)) {
               jj <- which(pgx$samples[samples, groupby] == allgroups[i])
               samples1 <- intersect(samples, rownames(pgx$samples)[jj])
-              counts <- pgx$counts[rownames(DF), samples1, drop = FALSE]
+              counts <- analysis_counts[rownames(DF), samples1, drop = FALSE]
               nas <- apply(counts, 2, function(x) unname(which(is.na(x))))
               nas <- nas[sapply(nas, length) > 0]
               na.map[[i]] <- unique(unlist(unname(nas)))
@@ -172,7 +170,7 @@ dataview_table_rawdata_server <- function(id,
             }
           }
         } else {
-          counts <- pgx$counts[rownames(DF), , drop = FALSE]
+          counts <- analysis_counts[rownames(DF), , drop = FALSE]
           na.map <- apply(counts, 2, function(x) unname(which(is.na(x))))
           na.map <- na.map[sapply(na.map, length) > 0]
         }

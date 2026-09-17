@@ -58,8 +58,8 @@ if(1) {
     ##table(y)
     
     bX <- sva::ComBat(X, batch=b)
-    bX <- nnmCorrect(bX, y, return.B = TRUE)$X
-    bX <- pgx.svaCorrect(bX, y)
+    bX <- playbase.preprocess::pp.batchCorrect(bX, target = y, method = "NPM")
+    bX <- playbase.preprocess::pp.batchCorrect(bX, target = y, method = "SVA")
     
     counts <- pmax(2**bX, 0)
     max(counts)
@@ -130,4 +130,3 @@ ngs$description = "GSE157905. RNA Sequencing of HCC cells after lenvatinib, gefi
 
 rda.file
 pgx.save(ngs, file=rda.file)
-

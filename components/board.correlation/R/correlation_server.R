@@ -126,13 +126,8 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     getFilteredImpExpression <- shiny::reactive({
       shiny::req(pgx$X, input$gene)
       X <- pgx$X
-      is.mox <- playbase::is.multiomics(rownames(X))
       if (sum(is.na(X)) > 0) {
-        if (is.mox) {
-          X <- playbase::imputeMissing.mox(X, method = "SVD2")
-        } else {
-          X <- playbase::imputeMissing(X, method = "SVD2")
-        }
+        X <- .opg_impute(X, method = "SVD2")
       }
       gene <- input$gene
       filterExpression(X, gene)
@@ -149,7 +144,7 @@ CorrelationBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (any(is.na(X))) X <- getFilteredImpExpression()
       if (!is.null(pgx$datatype) && pgx$datatype == "methylomics") {
         X <- pmax(pmin(X, 1 - 1e-6), 1e-6) ## clip noisy beta back into valid range
-        X <- playbase::betaToM(X)
+        X <- playbase.preprocess::pp.convertSpace(X, from = "beta", to = "mvalue")
       }
       NTOP <- as.integer(input$pcor_ntop)
       res <- playbase::pgx.computeGlassoAroundGene(X, gene, lambda = 0.01, nmax = NTOP)

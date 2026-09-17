@@ -53,8 +53,9 @@ qsee_server <- function(id, pgx=NULL, matx="counts", parent=NULL, purge=NULL, la
 
       shiny::observeEvent( list(pgx$X, pgx$samples), {
         if(matx == "counts") {
-          prior <- quantile(pgx$counts[pgx$counts>0], probs=0.001, na.rm=TRUE)[1]
-          uploaded$X <- log2(pgx$counts + prior)
+          counts <- .opg_pgx_analysis_counts(pgx)
+          prior <- quantile(counts[counts > 0], probs = 0.001, na.rm = TRUE)[1]
+          uploaded$X <- log2(counts + prior)
         } else {
           uploaded$X <- pgx$X
         }

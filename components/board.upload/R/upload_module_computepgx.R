@@ -1,5 +1,7 @@
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
+# PGX computation handoff for uploaded datasets.
+#
+# Bulk uploads submit pristine source data plus one canonical option list.
+# Single-cell uploads retain their independent computation path.
 
 upload_module_computepgx_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -1104,18 +1106,22 @@ upload_module_computepgx_server <- function(
 
         ## Data sent to createPGX. Bulk: send RAW counts + preprocess settings so a
         ## script/endpoint reproduces the app exactly (X is rebuilt inside createPGX
-        ## via playbase::pgx.preprocess). scRNA: keep its own pipeline unchanged
-        ## (X is unused by createSingleCellPGX).
+        ## via playbase.preprocess::pgx.preprocess). scRNA keeps its own pipeline
+        ## unchanged (X is unused by createSingleCellPGX).
         if (upload_datatype() == "scRNA-seq") {
           pgx_counts <- counts
           pgx_countsX <- countsX
           pgx_annot <- annot_table
           pgx_preprocess <- NULL
+          pgx_batch <- .opg_createpgx_preprocess(NULL)
         } else {
           pgx_counts <- rawCountsRT()
           pgx_countsX <- NULL
           pgx_annot <- rawAnnotRT()
-          pgx_preprocess <- preprocess()
+          ## Batch selection is a top-level playbase argument, not a nested
+          ## preprocessing key, so it is split out before createPGX is called.
+          pgx_batch <- .opg_createpgx_preprocess(preprocess())
+          pgx_preprocess <- pgx_batch$preprocess
         }
 
         ## -----------------------------------------------------------
@@ -1148,14 +1154,6 @@ upload_module_computepgx_server <- function(
         remove.unknown <- ("remove.unknown" %in% flt)
         average.duplicated <- ("average.duplicated" %in% flt)
         remove.xy.probes <- ("remove.xy.probes" %in% flt)
-        batch.correct.method <- "no_batch_correct"
-        batch.pars <- "<autodetect>"
-        if (class(compute_settings$bc_method) == "list") {
-          batch.correct.method <- compute_settings$bc_method$method
-          batch.pars <- compute_settings$bc_method$param
-        }
-        ## --------------------------------
-
         only.proteincoding <- FALSE # DEPRECATED: use exclude_genes
         excl.immuno <- ("excl.immuno" %in% flt)
         excl.xy <- ("excl.xy" %in% flt)
@@ -1274,6 +1272,8 @@ upload_module_computepgx_server <- function(
           counts = pgx_counts,
           countsX = pgx_countsX,
           preprocess = pgx_preprocess,
+          batch.correct.method = pgx_batch$batch.correct.method,
+          batch.pars = pgx_batch$batch.pars,
           azimuth_ref = azimuth_ref(),
           contrasts = contrasts,
           probe_type = probetype(),
@@ -1286,10 +1286,6 @@ upload_module_computepgx_server <- function(
           #-------- preprocess options ---------
           norm_method = norm_method(),
           settings = list(
-            imputation_method = compute_settings$imputation_method,
-            bc_method = compute_settings$bc_method,
-            remove_outliers = compute_settings$remove_outliers,
-            norm_method = norm_method(),
             custom_fc = custom_fc
           ),
           sc_compute_settings = sc_compute_settings.PARS,
@@ -1303,8 +1299,6 @@ upload_module_computepgx_server <- function(
           only.proteincoding = only.proteincoding,
           only.hugo = append.symbol, ## DEPRECATED
           convert.hugo = append.symbol, ## should be renamed
-          batch.correct.method = batch.correct.method,
-          batch.pars = batch.pars,
           covariates = covariates,
           dma = dma, ## NEW
           ## ---------

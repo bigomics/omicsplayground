@@ -186,7 +186,9 @@ qsee_imputation_plot_distributions_plotly <- function(res, Y, ph) {
     omicsplots::pgx.plot_scatter(
       x = x.avg, y = x.nar,
       labels = rownames(X),
-      xlab = "average intensity (log2)", ylab = "missing ratio",
+      frame = omicsplots::plot_frame(
+        xlab = "average intensity (log2)", ylab = "missing ratio"
+      ),
       max_points = 5000
     ),
     yaxis = list(range = c(0, 1.2))
@@ -196,7 +198,9 @@ qsee_imputation_plot_distributions_plotly <- function(res, Y, ph) {
   panels[["missing ratio histogram"]] <- if (any(x.nar > 0)) {
     omicsplots::pgx.plot_density(
       matrix(x.nar[x.nar > 0], ncol = 1, dimnames = list(NULL, "missing ratio")),
-      n_breaks = 40, xlab = "missing ratio", showlegend = FALSE
+      n_breaks = 40,
+      frame = omicsplots::plot_frame(xlab = "missing ratio"),
+      guides = omicsplots::plot_guides(legend = "none")
     )
   } else {
     qsee_plotly_empty("No missing values")
@@ -208,7 +212,9 @@ qsee_imputation_plot_distributions_plotly <- function(res, Y, ph) {
   panels[["nr. features vs. threshold"]] <- omicsplots::pgx.plot_scatter(
     x = qq, y = qsum,
     labels = paste0("<= ", qq),
-    xlab = "max. missing ratio threshold", ylab = "nr. features"
+    frame = omicsplots::plot_frame(
+      xlab = "max. missing ratio threshold", ylab = "nr. features"
+    )
   )
 
   ## 5. missingness per sample
@@ -244,7 +250,9 @@ qsee_imputation_plot_validation_plotly <- function(res, nmax = 1e5) {
     panels[[nm]] <- plotly::layout(
       omicsplots::pgx.plot_scatter(
         x = imputed, y = actual,
-        xlab = "imputed value", ylab = "actual value",
+        frame = omicsplots::plot_frame(
+          xlab = "imputed value", ylab = "actual value"
+        ),
         max_points = 5000
       ),
       xaxis = list(range = c(-5, 15))

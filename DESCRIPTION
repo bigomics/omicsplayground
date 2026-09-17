@@ -53,6 +53,7 @@ Imports:
     pairsD3,
     partykit,
     patchwork,
+    playbase.preprocess,
     processx,
     promises,
     qgraph,
@@ -87,6 +88,7 @@ Imports:
     yaml,
     zip,
 Remotes:
+    bigomics/playbase.preprocess,
     url::https://github.com/bigomics/bigdash/archive/HEAD.zip,
     url::https://github.com/bigomics/bigLoaders/archive/HEAD.zip,
     url::https://github.com/bigomics/playdata/archive/HEAD.zip,
