@@ -35,7 +35,7 @@ mofa_plot_heatmap_server <- function(id,
       res <- mofa()
       ntop <- 40 / length(res$ww)
       k <- as.integer(input_factor())
-      playbase::mofa.plot_factor_heatmap(
+      playbase::mofa.plot_heatmap(
         res,
         k = k, ntop = ntop, type = "splitmap"
       )
