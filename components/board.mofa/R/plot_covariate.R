@@ -43,7 +43,7 @@ mofa_plot_covariate_server <- function(id,
     plot.RENDER <- function() {
       res <- mofa()
       do_collapse <- !input$expand_conditions
-      playbase::mofa.plot_covariate_correlation(
+      playbase::mofa.plot_factor_trait_correlation(
         res,
         collapse = do_collapse
       )
