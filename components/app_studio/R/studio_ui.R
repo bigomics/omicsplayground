@@ -12,6 +12,7 @@ StudioUI <- function(id) {
   studio_card <- bslib::navset_underline(
     bslib::nav_panel(
       "Studio",
+      value = "studio-buttons",
       shiny::br(),
       ui <- bslib::layout_columns(
         col_widths = c(6,6),
@@ -72,7 +73,7 @@ StudioUI <- function(id) {
 
   ui <- bslib::layout_columns(
     col_widths = c(3, 9),
-    height = "calc(100vh - 76px)",    
+    height = "100%",
     fill = TRUE,
     ## left sidebar
     bslib::layout_columns(
