@@ -1,0 +1,154 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2026 BigOmics Analytics Sagl. All rights reserved.
+##
+
+## Backend-only image: playbase + playdata + private bigomics packages.
+## Same as Dockerfile.update minus the Shiny app layer (app code, bigdash,
+## sass, port, app CMD) -- keep the two in sync.
+## ponytail: the `shiny` R package itself stays. Seurat and AnnotationHub
+## hard-import it, and playbase calls both.
+
+#------------------------------------------------------------
+# Start from playbase image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:beta
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Set the locale (uncomment UTF8)
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
+
+#------------------------------------------------------------
+# Install any extra Ubuntu libs (should be moved to playbase)
+#------------------------------------------------------------
+RUN apt update && apt install -y libpoppler-cpp-dev
+
+#------------------------------------------------------------
+# Update quarto (base image has 1.5.56 with typst 0.11; need >=1.8 for typst 0.12+)
+#------------------------------------------------------------
+RUN ARCH=$(dpkg --print-architecture) && \
+    wget -nv https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.27/quarto-1.8.27-linux-${ARCH}.deb && \
+    dpkg -i quarto-1.8.27-linux-${ARCH}.deb && \
+    rm quarto-1.8.27-linux-${ARCH}.deb
+
+#------------------------------------------------------------
+# Install extra R packages (frontend-only ones from Dockerfile.update
+# dropped: arrow, shinychat, inspectdf, svglite, mirai)
+#------------------------------------------------------------
+RUN R -e "devtools::install_github('seandavi/GEOquery')" # Need newer GEOquery version than our BioC version has (for public data retr)
+RUN R -e "remotes::install_github('lifs-tools/rgoslin')"
+RUN R -e "remotes::install_github('ncats/RAMP-DB')"
+RUN R -e "install.packages('plotly')" # Force latest plotly, test!
+RUN R -e "remotes::install_github('bigomics/plaid')"
+RUN R -e "install.packages('ellmer')"
+RUN R -e "BiocManager::install('singscore')"
+RUN R -e "BiocManager::install('ArrayExpress')"
+RUN R -e "install.packages('tidyprompt')"
+RUN R -e "install.packages('xgboost')"
+RUN R -e "install.packages('DiagrammeRsvg')"
+RUN R -e "install.packages('ggprism')"
+RUN R -e "install.packages('quarto')"
+RUN R -e "devtools::install_github('bigomics/visNetwork')"
+RUN R -e "devtools::install_github('satijalab/seurat', 'fix/v.5.3.1', force=TRUE)"
+RUN R -e "BiocManager::install('minfi')"
+RUN R -e "BiocManager::install('wateRmelon')"
+RUN R -e "devtools::install_github('bigomics/metaLINCS')"
+RUN R -e "BiocManager::install('karyoploteR')"
+RUN R -e "BiocManager::install('regioneR')"
+RUN R -e "remotes::install_github('bigomics/WGCNAplus')"
+RUN R -e "install.packages('isotree')"
+RUN R -e "install.packages('collapse')"
+
+#------------------------------------------------------------
+# Add supporting R libraries
+#------------------------------------------------------------
+WORKDIR /
+COPY dev/Rprofil[e] /root/.Rprofile
+
+#------------------------------------------------------------
+# Remove the Shiny app shipped by the base image. Keep only
+# VERSION: computeEndpoint stamps it into its output.
+#------------------------------------------------------------
+RUN rm -fr /omicsplayground
+COPY VERSION /omicsplayground/VERSION
+
+#------------------------------------------------------------
+# (ARG BRANCH declared here so branch changes don't invalidate
+#  any of the package install layers above)
+#------------------------------------------------------------
+ARG BRANCH=master
+ARG CACHEBUST_CODE
+RUN echo Building backend from $BRANCH branch \(cache key: $CACHEBUST_CODE\)
+
+#------------------------------------------------------------
+# Install omicsai (private, must be before playbase) using
+# BuildKit secret mount
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github('bigomics/omicsai')" && \
+      rm -f /root/.Rhistory; \
+    fi
+
+#------------------------------------------------------------
+# Install fresh playbase (from same BRANCH)
+#------------------------------------------------------------
+# TODO: temporary solution, this should go out once we rebuild base image
+RUN R -e "install.packages('ggiraph')"
+RUN R -e "BiocManager::install('TileDBArray')"
+RUN R -e "remotes::install_github('bigomics/NPM',dependencies=FALSE)"
+
+# check if playbase@{$BRANCH} exists, if it does, install.. otherwise install main
+ARG update_playbase=true
+RUN if [ $update_playbase = true ]; then \
+    echo "Checking playbase branch ${BRANCH}"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playbase.git ${BRANCH} | wc -l); \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+       R -e "remotes::install_github('bigomics/playbase@${BRANCH}',dependencies=FALSE)"; \
+    else \
+       R -e "remotes::install_github('bigomics/playbase@main',dependencies=FALSE)"; \
+    fi \
+fi
+
+# Check if playbase is available, sometimes it fails and we do not want the build to continue
+RUN R -e "if (!require('playbase')) { quit(status=1) }"
+
+#------------------------------------------------------------
+# Install fresh playdata (from same BRANCH)
+#------------------------------------------------------------
+# check if playdata@{$BRANCH} exists, if it does, install.. otherwise install main
+ARG update_playdata=true
+RUN if [ $update_playdata = true ]; then \
+    echo "Checking playdata branch ${BRANCH}"; \
+    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/bigomics/playdata.git ${BRANCH} | wc -l); \
+    if [ $BRANCH_EXISTS -eq 1 ]; then \
+        R -e "remotes::install_github('bigomics/playdata@${BRANCH}',dependencies=FALSE)"; \
+    else \
+        R -e "remotes::install_github('bigomics/playdata@main',dependencies=FALSE)"; \
+    fi \
+fi
+
+RUN R -e "if (!require('playdata')) { quit(status=1) }"
+
+#------------------------------------------------------------
+# Install private bigomics packages (using BuildKit secret mount)
+# Installed below CACHEBUST_CODE so the latest commit is pulled on
+# every build (these are updated frequently).
+#------------------------------------------------------------
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT 2>/dev/null) && \
+    if [ -n "$GITHUB_PAT" ]; then \
+      GITHUB_PAT="$GITHUB_PAT" R -e "devtools::install_github(c('bigomics/omicspgx', 'bigomics/omicsplots', 'bigomics/omicspgxmcp', 'bigomics/omicsagentovi'))" && \
+      rm -f /root/.Rhistory; \
+    fi
+
+#------------------------------------------------------------
+# Clean up GitHub token from image
+#------------------------------------------------------------
+RUN rm -f /root/.gitconfig; true
+ENV GITHUB_PAT=""
+
+CMD ["R"]
