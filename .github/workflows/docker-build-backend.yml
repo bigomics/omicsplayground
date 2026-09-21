@@ -1,0 +1,75 @@
+## https://docs.docker.com/ci-cd/github-actions
+
+name: Build docker backend image
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'master'
+      update_playdata:
+        description: 'Update playdata package'
+        required: true
+        type: boolean
+        default: true
+      update_playbase:
+        description: 'Update playbase package'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+
+  build:
+
+    runs-on: self-hosted # run on dev-bigomics-frankfurt self-hosted runner
+
+    env:
+      # Drives both the checkout and the playbase/playdata branch lookup.
+      BUILD_BRANCH: ${{ github.event.inputs.branch }}
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BUILD_BRANCH }}
+      -
+        name: Get version
+        id: get_version
+        run: |
+          VERSION=$(cat VERSION | cut -d'+' -f1)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.backend
+          push: true
+          # also read the update image's cache: both share the same first layers
+          cache-from: |
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground-backend:buildcache
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground-backend:buildcache,mode=max
+          secrets: |
+            GITHUB_PAT=${{ secrets.GH_PAT }}
+          build-args: |
+            BRANCH=${{ env.BUILD_BRANCH }}
+            CACHEBUST_CODE=${{ github.run_id }}
+            update_playdata=${{ github.event.inputs.update_playdata }}
+            update_playbase=${{ github.event.inputs.update_playbase }}
+          tags: |
+            ${{ env.BUILD_BRANCH == 'master' && format('{0}/omicsplayground-backend:{1}, {0}/omicsplayground-backend:latest', secrets.DOCKERHUB_USERNAME, steps.get_version.outputs.VERSION) || '' }}
+            ${{ env.BUILD_BRANCH != 'master' && format('{0}/omicsplayground-backend:{1}', secrets.DOCKERHUB_USERNAME, env.BUILD_BRANCH) || '' }}
