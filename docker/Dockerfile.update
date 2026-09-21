@@ -129,6 +129,7 @@ RUN --mount=type=secret,id=GITHUB_PAT \
 # TODO: temporary solution, this should go out once we rebuild base image
 RUN R -e "install.packages('ggiraph')"
 RUN R -e "BiocManager::install('TileDBArray')"
+RUN R -e "remotes::install_github('bigomics/NPM',dependencies=FALSE)"
 
 ARG update_playbase=true
 RUN if [ $update_playbase = true ]; then \
