@@ -57,7 +57,8 @@ test_that("ai_report_modules_for_pgx returns available generation modules", {
     wgcna = list(),
     drugs = list(L1000 = list()),
     gx.meta = data.frame(),
-    gset.meta = data.frame()
+    gset.meta = data.frame(),
+    organism = "Human"
   )
 
   expect_equal(
@@ -65,6 +66,44 @@ test_that("ai_report_modules_for_pgx returns available generation modules", {
     c("wgcna", "drugs", "de", "pathways", "combined")
   )
   expect_equal(ai_report_modules_for_pgx(list()), character(0))
+})
+
+test_that("ai_report_modules_for_pgx drops drugs for an unsupported organism", {
+  pgx <- list(
+    wgcna = list(),
+    drugs = list(L1000 = list()),
+    gx.meta = data.frame(),
+    gset.meta = data.frame(),
+    organism = "Danio rerio"
+  )
+
+  modules <- ai_report_modules_for_pgx(pgx)
+  expect_false("drugs" %in% modules)
+  expect_equal(modules, c("wgcna", "de", "pathways", "combined"))
+})
+
+test_that("ai_report_drugs_supported accepts every organism spelling in use", {
+  supported <- c(
+    "Homo sapiens", "Human", "human",
+    "Mus musculus", "Mouse", "mouse",
+    "Rattus norvegicus", "Rat"
+  )
+  for (org in supported) {
+    expect_true(
+      ai_report_drugs_supported(list(organism = org)),
+      info = paste("organism =", org)
+    )
+  }
+})
+
+test_that("ai_report_drugs_supported is FALSE for missing or unrecognised organism", {
+  unsupported <- list(NULL, "", "unknown", "No organism")
+  for (org in unsupported) {
+    expect_false(
+      ai_report_drugs_supported(list(organism = org)),
+      info = paste("organism =", if (is.null(org)) "NULL" else org)
+    )
+  }
 })
 
 test_that("ai_report_get reads dynamic report and prompt slots", {

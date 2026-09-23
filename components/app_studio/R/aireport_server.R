@@ -112,7 +112,7 @@ AiReportUI <- function(id) {
 
 
 AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
-                           user_email = NULL) {
+                           user_email = NULL, pgx_save_target = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns ## NAMESPACE
     
@@ -509,6 +509,49 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
         identical(token, ai_report_dataset_token(pgx_snapshot()))
     }
 
+    ## Key of the app-scope run the report manager would use for this dataset.
+    ## LoadingBoard's catch-up prompt starts such runs; Studio does not go
+    ## through the manager at all, so the two only meet here. Resolving the key
+    ## needs the save target, which lives in server.R - until that is threaded
+    ## through StudioServer the parameter is NULL and Studio cannot tell, which
+    ## is exactly how it behaved before.
+    manager_run_key <- function(pgx_list, llm_model) {
+      if (!is.function(pgx_save_target)) return(NULL)
+      save_path <- pgx_save_target(pgx_list)
+      if (is.null(save_path) || !nzchar(save_path)) return(NULL)
+      ## Same fallback as LoadingBoard (board.loading/R/loading_server.R):
+      ## the two halves of the key must agree or one path would never see the
+      ## other's run.
+      user_key <- studio_user_email(user_email)
+      if (is.na(user_key)) user_key <- "anonymous"
+      ai_report_run_key(save_path, ai_report_dataset_token(pgx_list),
+        user_key, llm_model)
+    }
+
+    ## Refuse to start while the manager is already generating for this
+    ## dataset. Both runs would be billed, and at the end they race on the
+    ## file: the manager does a load-merge-save while Studio writes its whole
+    ## in-memory pgx, so the loser's reports are silently lost. Studio's own
+    ## report_jobs$running cannot see that run - it is a different state object.
+    manager_run_blocks <- function(pgx_list, llm_model) {
+      key <- manager_run_key(pgx_list, llm_model)
+      if (is.null(key) || !ai_report_run_active(key)) return(FALSE)
+      status <- ai_report_run_status(key)
+      progress_note <- if (!is.null(status) && !is.na(status$total) &&
+                             status$total > 0L) {
+        paste0(" (", status$done, " of ", status$total, " done)")
+      } else {
+        ""
+      }
+      info("[AiReportServer] regenerate refused: manager run active key=", key)
+      shiny::showNotification(
+        paste0("AI reports for this dataset are already being generated",
+          progress_note,
+          ". Please wait for that run to finish before regenerating."),
+        type = "warning", session = session)
+      TRUE
+    }
+
     start_report_jobs <- function(modules, llm_model, cred_fn = NULL) {
       modules <- unique(as.character(modules))
       modules <- modules[!is.na(modules) & nzchar(modules)]
@@ -689,7 +732,21 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
       }
 
       pgx_list <- pgx_snapshot()
+      if (manager_run_blocks(pgx_list, llm_model)) return(NULL)
+
       report_modules <- ai_report_modules_for_pgx(pgx_list)
+      ## ai_report_modules_for_pgx() drops "drugs" for organisms L1000 cannot
+      ## speak for (see ai_report_drugs_supported). A dataset that already
+      ## carries drugs_* reports - written before that gate existed, or by a
+      ## curator - would then show them in Studio with no way to refresh them.
+      ## Offer the checkbox in that case only: refreshing a report someone
+      ## already decided to keep is a curator's call, writing the first one for
+      ## an unsupported organism is not.
+      if (!"drugs" %in% report_modules &&
+            length(ai_report_drug_slots(pgx_list))) {
+        report_modules <- unique(c(setdiff(report_modules, "combined"), "drugs",
+          intersect(report_modules, "combined")))
+      }
       if (!length(report_modules)) {
         shiny::showNotification("No reportable modules found in this dataset.",
           type = "warning", session = session)
@@ -732,6 +789,12 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
       if (isTRUE(report_jobs$running)) {
         shiny::showNotification("AI report generation is already running.",
           type = "message", session = session)
+        return(NULL)
+      }
+      ## Checked again, not only before the modal: the modal can sit open for
+      ## as long as the user likes, and a manager run may have started since.
+      if (manager_run_blocks(pgx_snapshot(), llm_model)) {
+        shiny::removeModal()
         return(NULL)
       }
       # Capture credential closure here — in the reactive context — before it

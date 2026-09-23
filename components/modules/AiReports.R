@@ -90,6 +90,39 @@ ai_report_drug_label <- function(pgx, slot) {
   label
 }
 
+#' Organisms for which a drug-connectivity report is meaningful
+#'
+#' L1000 is human cell-line perturbation data. Mouse and rat reach it through
+#' well-characterised orthologs; anything further out does not. The connectivity
+#' score is still *computed* for those datasets, because the pipeline maps every
+#' organism onto human orthologs first - locally that includes Arabidopsis,
+#' yeast and trout - but the result is not interpretable, and an AI report
+#' written from it reads as confident nonsense rather than as a caveat.
+#'
+#' `pgx$organism` is not a normalised field: human appears as "Homo sapiens",
+#' "Human" and "human" across existing datasets, so match case-insensitively on
+#' both the scientific and common name rather than on one spelling.
+AI_REPORT_DRUG_ORGANISMS <- c(
+  "homo sapiens", "human", "hsapiens", "hs",
+  "mus musculus", "mouse", "mmusculus", "mm",
+  "rattus norvegicus", "rat", "rnorvegicus", "rn"
+)
+
+#' Is a drug-connectivity report appropriate for this dataset?
+#'
+#' An unrecognised or missing organism returns FALSE: generating a confident
+#' report from an unverifiable mapping is worse than generating none, and the
+#' dataset can always be re-run once its organism is recorded.
+#'
+#' @param pgx PGX object or plain list.
+#' @return TRUE when drug reports should be generated.
+ai_report_drugs_supported <- function(pgx) {
+  org <- tryCatch(as.character(pgx$organism)[[1L]],
+                  error = function(e) NA_character_)
+  if (is.na(org) || !nzchar(trimws(org))) return(FALSE)
+  tolower(trimws(org)) %in% AI_REPORT_DRUG_ORGANISMS
+}
+
 ai_report_modules_for_pgx <- function(pgx) {
   if (is.null(pgx) || !is.list(pgx)) return(character(0))
 
@@ -97,7 +130,11 @@ ai_report_modules_for_pgx <- function(pgx) {
     if (!is.null(pgx$wgcna)) "wgcna",
     if (!is.null(pgx$wgcna_mox)) "wgcna_mox",
     if (!is.null(pgx$mofa)) "mofa",
-    if (!is.null(pgx$drugs) && length(pgx$drugs) > 0L) "drugs",
+    ## Gated on organism: see ai_report_drugs_supported(). pgx$drugs is
+    ## populated for every organism, so its presence alone is not a signal
+    ## that a drug report is worth writing.
+    if (!is.null(pgx$drugs) && length(pgx$drugs) > 0L &&
+          ai_report_drugs_supported(pgx)) "drugs",
     if (!is.null(pgx$gx.meta)) "de",
     if (!is.null(pgx$gset.meta)) "pathways"
   )
@@ -237,7 +274,8 @@ ai_report_job_promise <- function(job, llm_model, credentials = NULL,
         # Strict `extra` validation rejects the key outright on models that do
         # not declare it, so ask the registry first.
         if (!is.null(reasoning_effort) && nzchar(reasoning_effort) &&
-            omicsai::omicsai_model_accepts_extra(llm_model, "reasoning_effort")) {
+              omicsai::omicsai_model_accepts_extra(llm_model,
+                                                   "reasoning_effort")) {
           cfg_args$reasoning_effort <- reasoning_effort
         }
         cfg <- do.call(omicsai::omicsai_config, cfg_args)
@@ -271,7 +309,9 @@ ai_report_job_promise <- function(job, llm_model, credentials = NULL,
 #' @param slot Slot name, or NA for a generic "overall summary" step.
 #' @param pgx_list Optional pgx, used to recover the original drug DB name.
 ai_report_slot_label <- function(slot, pgx_list = NULL) {
-  if (is.null(slot) || length(slot) != 1L || is.na(slot)) return("overall summary")
+  if (is.null(slot) || length(slot) != 1L || is.na(slot)) {
+    return("overall summary")
+  }
   labels <- c(
     combined  = "Summary",
     wgcna     = "WGCNA",
@@ -282,7 +322,11 @@ ai_report_slot_label <- function(slot, pgx_list = NULL) {
   )
   if (slot %in% names(labels)) return(unname(labels[[slot]]))
   if (startsWith(slot, "drugs_")) {
-    label <- if (!is.null(pgx_list)) ai_report_drug_label(pgx_list, slot) else ""
+    label <- if (!is.null(pgx_list)) {
+      ai_report_drug_label(pgx_list, slot)
+    } else {
+      ""
+    }
     if (!nzchar(label)) label <- gsub("_", " ", sub("^drugs_", "", slot))
     return(paste("Drugs -", label))
   }
@@ -325,6 +369,9 @@ ai_report_options <- function(llm_model, select, force = FALSE,
 #' @param on_progress `function(done, total, slot, ok)`, called on the main
 #'   thread as jobs complete; `slot` is NA for lifecycle notices such as the
 #'   start of the summary phase. Cheap work only - it runs between fold-ins.
+#' @param on_result `function(slot, text, usage)` called on the main thread as
+#'   each report succeeds, before `on_progress`. Intended for making a finished
+#'   report durable immediately; failures here are swallowed.
 #' @param on_phase `function(phase, ai)` called once after each phase has been
 #'   folded in - the right place to persist, since saving a large pgx costs
 #'   seconds and doing it per module would hand back the stall we just removed.
@@ -346,16 +393,17 @@ ai_report_generate_async <- function(pgx_list, ...) {
 }
 
 .ai_report_generate_async <- function(pgx_list,
-                                     llm_model,
-                                     select = NULL,
-                                     force = FALSE,
-                                     credentials = NULL,
-                                     on_progress = NULL,
-                                     on_phase = NULL,
-                                     still_valid = NULL,
-                                     timeout_s = 240L,
-                                     retries = 2L,
-                                     reasoning_effort = "low") {
+                                      llm_model,
+                                      select = NULL,
+                                      force = FALSE,
+                                      credentials = NULL,
+                                      on_progress = NULL,
+                                      on_result = NULL,
+                                      on_phase = NULL,
+                                      still_valid = NULL,
+                                      timeout_s = 240L,
+                                      retries = 2L,
+                                      reasoning_effort = "low") {
   if (is.null(llm_model) || !nzchar(llm_model)) {
     return(promises::promise_resolve(NULL))
   }
@@ -366,8 +414,8 @@ ai_report_generate_async <- function(pgx_list, ...) {
 
   ai_report_ensure_daemons()
   opts <- ai_report_options(llm_model, select, force, credentials,
-    timeout_s = timeout_s, retries = retries,
-    reasoning_effort = reasoning_effort)
+                            timeout_s = timeout_s, retries = retries,
+                            reasoning_effort = reasoning_effort)
 
   ## `force` in playbase wipes pgx$ai wholesale before regenerating. The async
   ## path regenerates only what was asked for and merges, so clear exactly the
@@ -395,6 +443,15 @@ ai_report_generate_async <- function(pgx_list, ...) {
   # thread via promises, so no locking is needed around `state`.
   absorb <- function(job, result) {
     state$done <- state$done + 1L
+    ## Durable sidecar first, fold-in second: pgx.apply_report_result() can
+    ## throw, and if it did after the hook had already run, we'd only lose
+    ## the fold-in for this one job. Folding in first would mean a throw
+    ## there loses the whole run - no sidecar and no fold-in for every job,
+    ## not just the one in flight.
+    if (isTRUE(result$ok) && is.function(on_result)) {
+      tryCatch(on_result(job$slot, result$text, result$usage),
+               error = function(e) NULL)
+    }
     if (isTRUE(result$ok)) {
       state$pgx <- playbase::pgx.apply_report_result(
         state$pgx, job,
@@ -405,11 +462,11 @@ ai_report_generate_async <- function(pgx_list, ...) {
     } else {
       state$failures <- c(state$failures, job$slot)
       warning("[ai_report_generate_async] ", job$slot, ": ", result$error,
-        call. = FALSE)
+              call. = FALSE)
     }
     if (is.function(on_progress)) {
       tryCatch(on_progress(state$done, total, job$slot, isTRUE(result$ok)),
-        error = function(e) NULL)
+               error = function(e) NULL)
     }
     invisible(NULL)
   }
@@ -417,7 +474,7 @@ ai_report_generate_async <- function(pgx_list, ...) {
   launch <- function(job) {
     promises::then(
       ai_report_job_promise(job, llm_model, credentials, timeout_s, retries,
-        reasoning_effort),
+                            reasoning_effort),
       onFulfilled = function(result) {
         if (!alive()) return(NULL)
         absorb(job, result)
@@ -459,7 +516,7 @@ ai_report_generate_async <- function(pgx_list, ...) {
     if (!length(cjobs)) return(finish())
     if (is.function(on_progress)) {
       tryCatch(on_progress(state$done, total, NA_character_, TRUE),
-        error = function(e) NULL)
+               error = function(e) NULL)
     }
     promises::then(launch(cjobs[[1L]]), function(...) {
       if (is.function(on_phase)) {
@@ -481,7 +538,7 @@ ai_report_update_text <- function(pgx, reports) {
   for (slot in names(reports)) {
     if (!is.list(ai[[slot]])) next
     value <- tryCatch(as.character(reports[[slot]])[[1L]],
-      error = function(e) NA_character_)
+                      error = function(e) NA_character_)
     if (is.na(value)) next
     ai[[slot]]$report    <- value
     ai[[slot]]$edited    <- TRUE

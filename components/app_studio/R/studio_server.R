@@ -52,7 +52,7 @@ studio_can_generate <- function(can_save_pgx, pgx, session,
 #'
 #'
 StudioServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
-                         user_email = NULL) {
+                         user_email = NULL, pgx_save_target = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -94,7 +94,10 @@ OmicsBoard(session, pgx, title="AI Studio", infotext = NULL, purge = FALSE)
     VisReportServer("poster", pgx, output_format="poster")
     VisReportServer("slide", pgx, output_format="slide")
     AiReportServer("aireport", pgx, save_pgx = save_pgx,
-        can_save_pgx = can_save_pgx, user_email = user_email)
+        can_save_pgx = can_save_pgx, user_email = user_email,
+        ## Lets Studio see whether an app-scope run is already generating
+        ## reports for this dataset, and refuse to start a second one.
+        pgx_save_target = pgx_save_target)
     InfographicServer("infographic", pgx, save_pgx = save_pgx,
         can_save_pgx = can_save_pgx, user_email = user_email)
     
