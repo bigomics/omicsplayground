@@ -124,7 +124,7 @@ expression_table_genetable_server <- function(id,
         samples <- colnames(pgx$counts)
         jj <- which(!is.na(pgx$contrasts[, comp]))
         if (length(jj) > 0) samples <- rownames(pgx$contrasts)[jj]
-        counts <- pgx$counts[rownames(df), samples, drop = FALSE]
+        counts <- .opg_pgx_analysis_counts(pgx)[rownames(df), samples, drop = FALSE]
         df$pct.NA <- unname(round(rowMeans(is.na(counts)) * 100, 1))
       } else {
         df <- df[, which(colnames(df) != "pct.NA"), drop = FALSE]

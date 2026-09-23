@@ -75,7 +75,7 @@ dataview_plot_tsne_server <- function(id,
       ylab <- NULL
 
       if (data_type %in% c("counts", "abundance")) {
-        gx <- pgx$counts[pp, samples]
+        gx <- .opg_pgx_analysis_counts(pgx)[pp, samples]
         if (data_type == "counts") {
           ylab <- "expression (counts)"
         } else {

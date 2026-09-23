@@ -64,9 +64,11 @@ qsee_filtering_plot_variance_vs_topsd_plotly <- function(res, topsd = NULL,
   p <- omicsplots::pgx.plot_multiline(
     x = keep, y = pcx[keep],
     group = rep("variance explained", length(keep)),
-    xlab = "Number of topSD features",
-    ylab = "Variance explained (%)",
-    title = "Variance vs. topSD"
+    frame = omicsplots::plot_frame(
+      xlab = "Number of topSD features",
+      ylab = "Variance explained (%)",
+      title = "Variance vs. topSD"
+    )
   )
   ## pgx.plot_multiline() hardcodes line width 2; half that here.
   p <- plotly::style(p, line = list(width = 1))
@@ -104,8 +106,12 @@ qsee_filtering_plot_sd_histogram_plotly <- function(res, topsd = NULL) {
 
   p <- omicsplots::pgx.plot_density(
     matrix(sdx, ncol = 1, dimnames = list(NULL, "SD")),
-    n_breaks = 100, xlab = "standard deviation (SD)",
-    title = "Histogram of SD", showlegend = FALSE
+    n_breaks = 100,
+    frame = omicsplots::plot_frame(
+      xlab = "standard deviation (SD)",
+      title = "Histogram of SD"
+    ),
+    guides = omicsplots::plot_guides(legend = "none")
   )
   if (!is.null(topsd) && is.finite(as.numeric(topsd))) {
     ntop <- max(1L, min(as.integer(topsd), length(sdx)))

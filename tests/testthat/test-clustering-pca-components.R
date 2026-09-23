@@ -12,7 +12,13 @@
 } else {
   "../../components/board.clustering/R"
 }
+.preprocess_helper <- if (file.exists("components/board.upload/R/upload_preprocess.R")) {
+  "components/board.upload/R/upload_preprocess.R"
+} else {
+  "../../components/board.upload/R/upload_preprocess.R"
+}
 
+source(.preprocess_helper, local = TRUE)
 source(file.path(.board_dir, "clustering_server.R"), local = TRUE)
 
 ## features x samples, two planted groups separated along a strong axis

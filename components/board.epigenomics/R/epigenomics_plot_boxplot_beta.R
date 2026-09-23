@@ -96,7 +96,7 @@ epigenomics_plot_boxplot_beta_server <- function(id,
 
     plot_data <- shiny::reactive({
       shiny::req(pgx$X, pgx$genes, pgx$samples)
-      X <- playbase::mToBeta(pgx$X)
+      X <- pgx$X
       Y <- pgx$samples
       annot <- pgx$genes
       rownames(X) <- sub("_.*", "", rownames(X))

@@ -56,7 +56,7 @@ dataview_plot_variationcoefficient_server <- function(id,
       ## CV needs a linear scale.
       is.meth <- !is.null(pgx$datatype) && pgx$datatype == "methylomics"
       if (identical(r.datasource(), "counts")) {
-        counts <- pgx$counts[, samples, drop = FALSE]
+        counts <- .opg_pgx_analysis_counts(pgx)[, samples, drop = FALSE]
       } else {
         counts <- pgx$X[, samples, drop = FALSE]
         if (!is.meth) counts <- 2**counts

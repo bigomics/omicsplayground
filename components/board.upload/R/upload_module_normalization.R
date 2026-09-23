@@ -1,5 +1,7 @@
-## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
+# Bulk-upload preprocessing controls and visual previews.
+#
+# This file owns UI policy and plotting for the canonical matrix pipeline.
+# Numerical stages run only through playbase.preprocess functions.
 
 upload_module_normalization_ui <- function(id, height = "100%") {
   ns <- shiny::NS(id)
@@ -28,175 +30,93 @@ upload_module_normalization_server <- function(
 
       zero_as_na <- function() isTRUE(input$zero_as_na)
 
+      ## Translates a norm_method a legacy object recorded into a value the
+      ## dropdown still offers. "median" named a multi-omics algorithm deleted
+      ## from playbase on 2025-11-11 (f3d5b3d8); without the translation it
+      ## reaches selected= as a value not in choices, and selectInput() then
+      ## silently takes choices[[1]] instead of saying so.
+      .normalize_selected <- function(x) {
+        if (identical(x, "median")) "multiomics" else x
+      }
+
       observeEvent(input$normalization_method, {
         shiny::req(input$normalization_method == "reference")
         gg <- sort(rownames(r_counts()))
+        pgx <- recompute_pgx()
+        selected <- if (!is.null(pgx)) {
+          pgx$settings$preprocess$options$normalize_args$ref
+        } else {
+          NULL
+        }
+        if (is.null(selected)) selected <- character(0)
         shiny::updateSelectizeInput(session, "ref_gene",
           choices = gg,
-          selected = character(0), server = TRUE
+          selected = selected, server = TRUE
         )
       })
 
-      ## ImputedX
+      ## Canonical staged previews
       imputedX <- reactive({
         shiny::req(dim(r_counts()), !is.null(input$normalize))
-        counts <- r_counts()
-        samples <- r_samples()
-        contrasts <- r_contrasts()
-        annot <- r_annot()
-        shiny::req(dim(contrasts))
-
-        counts[which(is.nan(counts))] <- NA
-        counts[which(is.infinite(counts))] <- NA
-
-        ## Olink NPX are passed on up to here unaltered.
-        if (is.olink() | is.nulisa()) {
-          dbg("[normalization_server:imputedX] Olink NPX or NULISA NPQ Proteomics")
-          counts <- 2**counts
-        }
-
-        # if (upload_datatype() != "methylomics") {
-        if (any(counts < 0, na.rm = TRUE)) counts <- pmax(counts, 0)
-        # }
-
-        # if (input$zero_as_na) {
-        if (zero_as_na()) {
-          dbg("[normalization_server:imputedX] Setting 0 values to NA")
-          counts[which(counts == 0)] <- NA
-        }
-
-        is.mox <- playbase::is.multiomics(rownames(counts))
-        if (is.mox) {
-          X <- counts
-          dtypes <- unique(sub(":.*", "", rownames(X)))
-          for (i in 1:length(dtypes)) {
-            ii <- grep(paste0("^", dtypes[i], ":"), rownames(counts))
-            prior <- 1
-            if (dtypes[i] != "gx") prior <- playbase::getPrior(counts[ii, ])
-            X[ii, ] <- log2(counts[ii, ] + prior)
-          }
-        } else {
-          if (upload_datatype() == "methylomics") {
-            X <- playbase::mToBeta(counts)
-            prior <- 0
-          } else {
-            prior0 <- playbase::getPrior(counts)
-            m <- input$normalization_method
-            prior <- ifelse(grepl("CPM|TMM", m), 1, prior0)
-            X <- log2(counts + prior)
-          }
-        }
-        dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
-        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
-
-        ## Filter probes for maximum missingness as required
-        if (sum(is.na(X)) > 0 && isTRUE(input$filtermissing)) {
-          f <- input$filterthreshold
-          dbg(paste0("[normalization_server:imputedX] Threshold NA filter: ", f))
-          sample.contrasts <- playbase::contrasts.convertToLabelMatrix(contrasts, samples)
-          grp <- apply(sample.contrasts, 1, paste, collapse = "_")
-          if (f >= 1) {
-            grp.sum <- tapply(1:ncol(counts), grp, function(i) {
-              rx <- counts[, i, drop = FALSE]
-              rowSums(!is.na(rx))
-            })
-            maxsum <- apply(do.call(cbind, grp.sum), 1, max, na.rm = TRUE)
-            sel <- (maxsum >= 3)
-          } else if (f < 0) {
-            grp.avg <- tapply(1:ncol(counts), grp, function(i) {
-              rx <- counts[, i, drop = FALSE]
-              rowMeans(!is.na(rx))
-            })
-            maxavg <- apply(do.call(cbind, grp.avg), 1, max, na.rm = TRUE)
-            sel <- (maxavg >= 0.5) # maxavg >= abs(f)
-          } else {
-            sel <- (rowMeans(is.na(X)) <= f)
-          }
-          dbg("[normalization_server:imputedX] nrows excluded due to NA: n=", sum(!sel))
-          X <- X[which(sel), , drop = FALSE]
-          counts <- counts[which(sel), , drop = FALSE]
-          annot <- annot[which(sel), , drop = FALSE]
-        }
-
-        ## Impute if required. Never runs for methylomics.
-        if (any(is.na(X)) & isTRUE(input$impute)) {
-          if (is.mox) {
-            X <- playbase::imputeMissing.mox(X, method = input$impute_method)
-          } else {
-            X <- playbase::imputeMissing(X, method = input$impute_method)
-          }
-        }
-
-        return(list(counts = counts, X = X, prior = prior, annot = annot))
+        shiny::req(dim(r_contrasts()))
+        .opg_validated_preview(
+          counts = r_counts(),
+          samples = r_samples(),
+          contrasts = r_contrasts(),
+          annot = r_annot(),
+          options = preprocess(),
+          through = "impute",
+          label = "Imputation"
+        )
       })
 
-      ## Normalize
       normalizedX <- reactive({
         shiny::req(dim(imputedX()$X))
-        X <- imputedX()$X ## can be imputed or not. log2. Can have negatives.
-        prior <- imputedX()$prior
-
-        if (input$normalize) {
-          m <- input$normalization_method
-          ref <- NULL
-          if (m == "reference") {
-            ref <- input$ref_gene
-            shiny::validate(shiny::need(isTruthy(ref), tspan("Please select reference gene", js = FALSE)))
-            shiny::req(ref)
-          }
-          if (upload_datatype() == "multi-omics") {
-            X <- playbase::normalizeMultiOmics(X)
-          } else if (upload_datatype() == "methylomics") {
-            nX <- try(playbase::normalizeMethylation(X, m, meth_type()), silent = TRUE)
-            if (!is.null(nX)) X <- nX
-            rm(nX)
-          } else {
-            dbg("[normalization_server:normalizedX] normalizing data using", m)
-            X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
-          }
-        } else {
-          dbg("[normalization_server:normalizedX] Skipping normalization")
+        if (identical(input$normalization_method, "reference")) {
+          shiny::validate(shiny::need(
+            isTruthy(input$ref_gene),
+            tspan("Please select reference gene", js = FALSE)
+          ))
         }
-
-        return(X)
+        .opg_validated_preview(
+          counts = r_counts(),
+          samples = r_samples(),
+          contrasts = r_contrasts(),
+          annot = r_annot(),
+          options = preprocess(),
+          through = "normalize",
+          label = "Normalization"
+        )$X
       })
 
-      ## Remove outliers
       cleanX <- reactive({
-        shiny::req(dim(normalizedX()), dim(imputedX()$counts))
-        X <- normalizedX()
-        counts <- imputedX()$counts
-        kk <- intersect(rownames(X), rownames(counts))
-        X <- X[kk, , drop = FALSE]
-        counts <- counts[kk, , drop = FALSE]
-        is.mox <- playbase::is.multiomics(rownames(counts))
-        if (input$remove_outliers) {
-          threshold <- input$outlier_threshold
-          dbg("[normalization_server:cleanX] Removing outliers: Threshold = ", threshold)
-          if (sum(is.na(X)) > 0) {
-            if (is.mox) {
-              X <- playbase::imputeMissing.mox(X, method = "SVD2")
-            } else {
-              X <- playbase::imputeMissing(X, method = "SVD2")
-            }
-          }
-          res <- playbase::detectOutlierSamples(X, plot = FALSE)
-          is.outlier <- (res$z.outlier > threshold)
-          if (any(is.outlier) && !all(is.outlier)) {
-            X <- X[, which(!is.outlier), drop = FALSE]
-            counts <- counts[, colnames(X), drop = FALSE]
-          }
-        }
-        return(list(counts = counts, X = X))
+        shiny::req(dim(normalizedX()))
+        .opg_validated_preview(
+          counts = r_counts(),
+          samples = r_samples(),
+          contrasts = r_contrasts(),
+          annot = r_annot(),
+          options = preprocess(),
+          through = "outliers",
+          label = "Outlier removal"
+        )
       })
 
       correctedX <- shiny::reactive({
         shiny::req(dim(cleanX()$X))
-        return(list(X = cleanX()$X))
+        .opg_validated_preview(
+          counts = r_counts(),
+          samples = r_samples(),
+          contrasts = r_contrasts(),
+          annot = r_annot(),
+          options = preprocess(),
+          through = "batch",
+          label = "Batch-effect correction"
+        )
       })
 
       annot <- shiny::reactive({
-        return(imputedX()$annot)
+        r_annot()
       })
 
       ## ------------------------------------------------------------------
@@ -204,34 +124,18 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
-        X0 <- imputedX()$X
-        X1 <- cleanX()$X
+        X0 <- .opg_deduplicate_preview(imputedX())
+        X1 <- .opg_deduplicate_preview(cleanX())
         samples <- r_samples()
         contrasts <- r_contrasts()
         batch.pars <- input$bec_param
 
-        ## Average (if any dups) for BC overview
-        dups <- sum(duplicated(rownames(X0)))
-        if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = FALSE)
-        dups <- sum(duplicated(rownames(X1)))
-        if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
-
-        is.mox <- playbase::is.multiomics(rownames(X0))
-
         if (sum(is.na(X0)) > 0) {
-          if (is.mox) {
-            X0 <- playbase::imputeMissing.mox(X0, method = "SVD2")
-          } else {
-            X0 <- playbase::imputeMissing(X0, method = "SVD2")
-          }
+          X0 <- .opg_impute(X0, method = "SVD2")
         }
 
         if (sum(is.na(X1)) > 0) {
-          if (is.mox) {
-            X1 <- playbase::imputeMissing.mox(X1, method = "SVD2")
-          } else {
-            X1 <- playbase::imputeMissing(X1, method = "SVD2")
-          }
+          X1 <- .opg_impute(X1, method = "SVD2")
         }
 
         kk <- intersect(colnames(X1), colnames(X0))
@@ -254,10 +158,24 @@ upload_module_normalization_server <- function(
         if (ncol(X0) > 100 || upload_datatype() == "methylomics") {
           methods <- methods[methods != "NPM"]
         }
+        ## Refreshing the choices must not silently reselect the first method.
+        ## Reading the current one is isolated so picking a method never reruns
+        ## this comparison.
+        current_method <- shiny::isolate(input$bec_method)
+        keep_method <- if (
+          !is.null(current_method) && current_method %in% methods
+        ) {
+          current_method
+        } else if ("SVA" %in% methods) {
+          "SVA"
+        } else {
+          methods[1]
+        }
         shiny::updateSelectInput(
           session,
           "bec_method",
-          choices = methods
+          choices = methods,
+          selected = keep_method
         )
         xlist.init <- list("uncorrected" = X0, "normalized" = X1)
 
@@ -310,17 +228,13 @@ upload_module_normalization_server <- function(
           shiny::validate(shiny::need(!is.null(X), "no data. please upload."))
           shiny::validate(shiny::need(!is.null(nrow(X)), "no data. please upload."))
 
-          is.mox <- playbase::is.multiomics(rownames(X))
-
-          if (sum(is.na(X)) > 0) {
-            if (is.mox) {
-              X <- playbase::imputeMissing.mox(X, method = "SVD2")
-            } else {
-              X <- playbase::imputeMissing(X, method = "SVD2")
-            }
-          }
-
-          out <- playbase::detectOutlierSamples(X, plot = FALSE)
+          outlier_result <- playbase.preprocess::pp.removeOutliers(
+            X,
+            threshold = Inf,
+            methods = c("z.correlation", "z.distance", "z.features")
+          )
+          X <- outlier_result$X
+          out <- outlier_result$scores
 
           scaledX <- playbase::double_center_scale_fast(X)
           corX <- HiClimR::fastCor(t(scaledX), optBLAS = TRUE)
@@ -349,19 +263,22 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
 
       plot_normalization <- function() {
-        rX <- r_counts()
-        X0 <- imputedX()$X
-        X1 <- cleanX()$X
+        clean <- cleanX()
+        rX <- .opg_preview_counts(clean)
+        X0 <- .opg_align_preview_X(imputedX(), clean)
+        X1 <- clean$X
         main.tt <- ifelse(input$normalize, norm_method(), "no normalization")
 
         if (input$norm_plottype == "boxplot") {
           if (ncol(X1) > 40) {
-            jj <- sample(ncol(X1), 40)
-            ii <- rownames(X1)
-            if (length(ii) > 2000) ii <- sample(ii, 2000)
-            X0 <- X0[ii, jj]
-            X1 <- X1[ii, jj]
-            rX <- rX[ii, jj]
+            jj <- withr::with_seed(1234, sample(seq_len(ncol(X1)), 40))
+            ii <- seq_len(nrow(X1))
+            if (length(ii) > 2000) {
+              ii <- withr::with_seed(1235, sample(ii, 2000))
+            }
+            X0 <- X0[ii, jj, drop = FALSE]
+            X1 <- X1[ii, jj, drop = FALSE]
+            rX <- rX[ii, jj, drop = FALSE]
           }
 
           par(mfrow = c(1, 2), mar = c(6, 3, 2, 0.5), mgp = c(2.1, 0.8, 0))
@@ -432,15 +349,9 @@ upload_module_normalization_server <- function(
       }
 
       plot_missingvalues <- function() {
-        X0 <- cleanX()$counts
-        X1 <- imputedX()$X
-
-        dups <- sum(duplicated(rownames(X0)))
-        if (dups > 0) X0 <- playbase::counts.mergeDuplicateFeatures(X0, is.counts = TRUE)
-        dups <- sum(duplicated(rownames(X1)))
-        if (dups > 0) X1 <- playbase::counts.mergeDuplicateFeatures(X1, is.counts = FALSE)
-
-        X0 <- X0[rownames(X1), , drop = FALSE]
+        preview <- imputedX()
+        X0 <- .opg_preview_counts(preview)
+        X1 <- preview$X
 
         has.zeros <- any(X0 == 0, na.rm = TRUE)
         if (!any(is.na(X0)) && !(zero_as_na() && has.zeros)) {
@@ -553,19 +464,21 @@ upload_module_normalization_server <- function(
 
           if (input$missing_plottype == "PCA of imputed data") {
             if (any(X2 > 0)) {
-              X3 <- imputedX()$X
-              if (input$impute && upload_datatype() != "methylomics") {
-                X3 <- log2(imputedX()$counts + imputedX()$prior)
-              }
+              preview_options <- preprocess()
+              preview_options$impute <- FALSE
+              X3 <- .opg_validated_preview(
+                counts = r_counts(),
+                samples = r_samples(),
+                contrasts = r_contrasts(),
+                annot = r_annot(),
+                options = preview_options,
+                through = "impute",
+                label = "Imputation"
+              )$X
               mm <- c("SVD2", "QRILC", "MinProb", "Perseus")
               imp <- list()
-              is.mox <- playbase::is.multiomics(rownames(X3))
               for (i in 1:length(mm)) {
-                if (is.mox) {
-                  imp[[mm[i]]] <- playbase::imputeMissing.mox(X3, mm[i])
-                } else {
-                  imp[[mm[i]]] <- playbase::imputeMissing(X3, mm[i])
-                }
+                imp[[mm[i]]] <- .opg_impute(X3, mm[i])
               }
               scaled.imp <- lapply(imp, function(x) playbase::double_center_scale_fast(x))
               par(mfrow = c(2, 2), mar = c(4, 3, 2, 0.5), las = 1, mgp = c(2, 0.4, 0), tcl = -0.1)
@@ -652,6 +565,16 @@ upload_module_normalization_server <- function(
 
       plot_correction <- function() {
         shiny::validate(shiny::need(nrow(r_samples()) > 2, "Batch-effects correction requires at least 3 samples."))
+        if (
+          isTRUE(input$batchcorrect) &&
+            !is.null(input$bec_method) &&
+            input$bec_method %in% c("ComBat", "limma")
+        ) {
+          shiny::validate(shiny::need(
+            !is.null(bec_inputs()$batch),
+            "ComBat and limma need a batch parameter. Select one above, or use RUV, SVA or NPM."
+          ))
+        }
         bec_view <- if (is.null(input$bec_view)) "pca" else input$bec_view
         switch(bec_view,
           loadings = plot_bec_biplot("loadings"),
@@ -821,7 +744,8 @@ upload_module_normalization_server <- function(
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a)))
+        ## Probing for a numeric annotation, so a failed coercion is expected.
+        c1 <- all(!is.na(suppressWarnings(as.numeric(col1a))))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
@@ -911,7 +835,8 @@ upload_module_normalization_server <- function(
         cols <- NULL
         ncol <- length(col1)
         col1a <- as.character(unname(col1))
-        c1 <- all(!is.na(as.numeric(col1a)))
+        ## Probing for a numeric annotation, so a failed coercion is expected.
+        c1 <- all(!is.na(suppressWarnings(as.numeric(col1a))))
         c2 <- all(grepl("[0-9]", col1a))
         is.num <- (c1 & c2)
         if (is.num) {
@@ -968,7 +893,7 @@ upload_module_normalization_server <- function(
       }
 
       plot_methyl <- function() {
-        X <- playbase::mToBeta(normalizedX())
+        X <- normalizedX()
         if (input$methyl_plottype == "Density") {
           par(mfrow = c(1, 1), mar = c(3.3, 3.2, 0.8, 0.5), las = 1, mgp = c(2.1, 0.35, 0), tcl = -0.1)
           minfi::densityPlot(X, pal = "gray60", xlab = "Beta signal", main = "", cex.lab = 1.4, cex.axis = 1.3)
@@ -1050,44 +975,52 @@ upload_module_normalization_server <- function(
         ## Get default values from recompute_pgx if available
         ## -----------------------------------------------------------------
         pgx <- recompute_pgx()
-        pgx_settings <- if (!is.null(pgx)) pgx$settings else NULL
+        pgx_options <- if (!is.null(pgx)) {
+          pgx$settings$preprocess$options
+        } else {
+          NULL
+        }
 
         ## Imputation defaults
         default_zero_as_na <- FALSE
+        default_filter_missing <- FALSE
+        default_filter_threshold <- 0.2
         if (grepl("proteomics|metabolomics", upload_datatype())) default_zero_as_na <- TRUE
         default_impute <- DEFAULTS$qc$impute
         default_impute_method <- "SVD2"
-        if (!is.null(pgx_settings$imputation_method) && is.list(pgx_settings$imputation_method)) {
-          imp <- pgx_settings$imputation_method
-          if (!is.null(imp$zero_as_na)) default_zero_as_na <- imp$zero_as_na
-          if (!is.null(imp$imputation)) {
-            default_impute <- (imp$imputation != "no_imputation")
-            if (default_impute) default_impute_method <- imp$imputation
+        if (is.list(pgx_options)) {
+          default_zero_as_na <- isTRUE(pgx_options$zero_as_na)
+          default_filter_missing <- isTRUE(pgx_options$filter_missing)
+          if (!is.null(pgx_options$filter_threshold)) {
+            default_filter_threshold <- pgx_options$filter_threshold
+          }
+          default_impute <- isTRUE(pgx_options$impute)
+          if (!is.null(pgx_options$impute_method)) {
+            default_impute_method <- unname(pgx_options$impute_method[[1L]])
           }
         }
 
         ## Normalization defaults
         default_normalize <- !(is.olink() || is.nulisa())
         default_norm_method <- 1
-        if (!is.null(pgx_settings$norm_method)) {
-          if (pgx_settings$norm_method == "skip_normalization") {
-            default_normalize <- FALSE
-          } else {
-            default_normalize <- TRUE
-            default_norm_method <- pgx_settings$norm_method
+        if (is.list(pgx_options)) {
+          default_normalize <- isTRUE(pgx_options$normalize)
+          if (!is.null(pgx_options$norm_method)) {
+            default_norm_method <- if (length(pgx_options$norm_method) > 1L) {
+              "multiomics"
+            } else {
+              unname(pgx_options$norm_method[[1L]])
+            }
           }
         }
 
         ## Outlier removal defaults
         default_remove_outliers <- FALSE
         default_outlier_threshold <- 6
-        if (!is.null(pgx_settings$remove_outliers)) {
-          ro <- pgx_settings$remove_outliers
-          if (is.character(ro) && ro == "no_outlier_removal") {
-            default_remove_outliers <- FALSE
-          } else if (is.numeric(ro)) {
-            default_remove_outliers <- TRUE
-            default_outlier_threshold <- ro
+        if (is.list(pgx_options)) {
+          default_remove_outliers <- isTRUE(pgx_options$remove_outliers)
+          if (!is.null(pgx_options$outlier_threshold)) {
+            default_outlier_threshold <- pgx_options$outlier_threshold
           }
         }
 
@@ -1095,14 +1028,15 @@ upload_module_normalization_server <- function(
         default_batchcorrect <- FALSE
         default_bec_method <- "SVA"
         default_bec_param <- batch_params[1]
-        if (!is.null(pgx_settings$bc_method)) {
-          bc <- pgx_settings$bc_method
-          if (is.character(bc) && bc == "no_batch_correct") {
-            default_batchcorrect <- FALSE
-          } else if (is.list(bc)) {
-            default_batchcorrect <- TRUE
-            if (!is.null(bc$method)) default_bec_method <- bc$method
-            if (!is.null(bc$param)) default_bec_param <- bc$param
+        if (is.list(pgx_options)) {
+          selected_bec <- pgx_options$batch.correct.method
+          if (!is.null(selected_bec)) {
+            selected_bec <- unname(selected_bec[[1L]])
+            default_batchcorrect <- !identical(selected_bec, "no_batch_correct")
+            if (default_batchcorrect) default_bec_method <- selected_bec
+          }
+          if (!is.null(pgx_options$batch)) {
+            default_bec_param <- colnames(pgx_options$batch)
           }
         }
 
@@ -1116,7 +1050,12 @@ upload_module_normalization_server <- function(
           "Normalization enables to standardize the data and improve their consistency, comparability and reproducibility. Boxplots of raw (unnormalized) and normalized data are shown. Normalization method can be selected on the left, under “Normalization”."
 
         batcheff.infotext <-
-          "Batch effects (BEs) are due to technical, experimental factors that introduce unwanted variation into the measurements. Here, BEs are detected and BEs correction is shown. BE correction methods can be selected on the left, under “Batch-effects correction”."
+          paste(
+            "Batch effects (BEs) are technical variation in the measurements.",
+            "Method comparisons use the 1,000 most variable features by default",
+            "and are labelled as an approximate preview; submitted correction",
+            "uses the full processed matrix."
+          )
 
         methyl.infotext <- "Density plot of beta values. Optionally, sample-specific beanplot of beta value distribution can be plotted."
 
@@ -1203,7 +1142,11 @@ upload_module_normalization_server <- function(
                       </a>")
                     ),
                     shiny::checkboxInput(ns("zero_as_na"), label = "Treat zero as NA", value = default_zero_as_na),
-                    shiny::checkboxInput(ns("filtermissing"), label = "Remove NA rows", value = FALSE),
+                    shiny::checkboxInput(
+                      ns("filtermissing"),
+                      label = "Remove NA rows",
+                      value = default_filter_missing
+                    ),
                     shiny::conditionalPanel("input.filtermissing == true",
                       ns = ns,
                       shiny::selectInput(ns("filterthreshold"), NULL,
@@ -1211,7 +1154,7 @@ upload_module_normalization_server <- function(
                           ">10% NA" = 0.1, ">20% NA" = 0.2, ">50% NA" = 0.5,
                           "<3 valid in any group" = 3, "<50% valid in any group" = -0.5
                         ),
-                        selected = 0.2
+                        selected = default_filter_threshold
                       )
                     ),
                     shiny::checkboxInput(ns("impute"), label = "Impute NA", value = default_impute),
@@ -1253,8 +1196,10 @@ upload_module_normalization_server <- function(
                       } else if (grepl("multi-omics", upload_datatype(),
                         ignore.case = TRUE
                       )) {
+                        ## The canonical pipeline applies one declared method
+                        ## to each row-prefix layer.
                         c(
-                          "multi-omics median" = "median"
+                          "multi-omics per-block (gx: CPM, other: maxMedian)" = "multiomics"
                         )
                       } else {
                         c(
@@ -1262,7 +1207,7 @@ upload_module_normalization_server <- function(
                           "maxMedian", "maxSum", "reference"
                         )
                       },
-                      selected = default_norm_method
+                      selected = .normalize_selected(default_norm_method)
                     ),
                     shiny::conditionalPanel(
                       "input.normalization_method == 'reference'",
@@ -1303,7 +1248,7 @@ upload_module_normalization_server <- function(
                     value = default_batchcorrect
                   ),
                   shiny::checkboxInput(ns("bec_full_features"),
-                    label = "Use all features for BC preview (slower)",
+                    label = "Use all features for exact BC preview (slower)",
                     value = FALSE
                   ),
                   shiny::conditionalPanel(
@@ -1463,8 +1408,8 @@ upload_module_normalization_server <- function(
       )
 
       counts <- reactive({
-        shiny::req(dim(cleanX()$counts))
-        return(cleanX()$counts)
+        shiny::req(dim(r_counts()))
+        r_counts()
       })
 
       cX <- reactive({
@@ -1503,26 +1448,51 @@ upload_module_normalization_server <- function(
         return(ll)
       })
 
-      ## Single options list that reproduces this module's normalization
-      ## (imputedX -> normalizedX -> cleanX) inside playbase::pgx.preprocess().
-      ## The compute path sends these settings + RAW counts instead of the
-      ## precomputed X, so a script/endpoint gets an identical result.
-      ## Batch correction is NOT here: it runs inside pgx.createPGX (bc_method).
+      ## Resolved batch metadata for the selected correction. Autodetection may
+      ## return nothing, which supervised methods cannot correct against.
+      bec_inputs <- shiny::reactive({
+        .opg_upload_batch_inputs(
+          counts = r_counts(),
+          samples = r_samples(),
+          contrasts = r_contrasts(),
+          selection = input$bec_param,
+          enabled = isTRUE(input$batchcorrect)
+        )
+      })
+
+      ## Canonical options are the single preprocessing description shared by
+      ## staged previews and the submitted raw matrix.
       preprocess <- reactive({
-        list(
+        batch_inputs <- bec_inputs()
+        .opg_upload_preprocess_options(
+          counts = r_counts(),
           datatype = upload_datatype(),
           is_npx = isTRUE(is.olink()) || isTRUE(is.nulisa()),
           zero_as_na = zero_as_na(),
-          normalize = isTRUE(input$normalize),
-          norm_method = input$normalization_method,
-          ref_gene = if (identical(input$normalization_method, "reference")) input$ref_gene else NULL,
           filter_missing = isTRUE(input$filtermissing),
           filter_threshold = input$filterthreshold,
           impute = isTRUE(input$impute),
           impute_method = input$impute_method,
+          normalize = isTRUE(input$normalize),
+          norm_method = input$normalization_method,
+          ref_gene = if (identical(input$normalization_method, "reference")) {
+            input$ref_gene
+          } else {
+            NULL
+          },
           remove_outliers = isTRUE(input$remove_outliers),
           outlier_threshold = input$outlier_threshold,
-          meth_type = meth_type()
+          batch.correct.method = if (!isTRUE(input$batchcorrect)) {
+            "no_batch_correct"
+          } else if (is.null(input$bec_method)) {
+            "SVA"
+          } else {
+            input$bec_method
+          },
+          batch = batch_inputs$batch,
+          target = batch_inputs$target,
+          meth_type = meth_type(),
+          max_features = NULL
         )
       })
 

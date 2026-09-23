@@ -208,7 +208,7 @@ DeepNetBoard <- function(id, pgx) {
         X <- pgx$X
         if (any(is.na(X))) {
           info("[DeepNetBoard] imputing missing values in X")
-          X <- playbase::svdImpute2(X)
+          X <- .opg_impute(X, method = "SVD2")
         }
         y <- pgx$samples[, pheno, drop = FALSE]
         ii <- which(rowSums(is.na(y)) == 0)

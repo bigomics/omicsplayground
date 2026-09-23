@@ -1,3 +1,8 @@
+# Normalization comparisons for the Qsee board.
+#
+# This file owns simulated noise and display-ready PCA summaries.
+# Normalization runs through the canonical log2-matrix family.
+
 qsee_normalization_add_noise <- function(rawX, amount = 1) {
   if (amount <= 0) {
     return(rawX)
@@ -17,9 +22,15 @@ qsee_normalization_compute <- function(rawX, progress = NULL) {
   normX <- list(raw = rawX)
   for (method in methods) {
     normX[[method]] <- tryCatch(
-      playbase::normalizeExpression(rawX, method = method, ref = NULL, prior = 0),
+      do.call(
+        playbase.preprocess::pp.normalize,
+        c(
+          list(X = rawX, method = method, space = "log2"),
+          if (method %in% c("CPM", "CPM+quantile")) list(prior = 0) else list()
+        )
+      ),
       error = function(e) {
-        message("normalizeExpression failed for ", method, ": ", e$message)
+        message("pp.normalize failed for ", method, ": ", e$message)
         rawX
       }
     )

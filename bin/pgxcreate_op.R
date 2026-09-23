@@ -20,12 +20,21 @@ if (file.exists(params_from_op)) {
   yaml::yaml.load_file(file.path(temp_dir, "PARAMS.yml"))
 }
 
+## Batch correction is selected by one top-level argument. Older parameter
+## files predate the selector, so the disabled sentinel is the fallback.
+batch.correct.method <- params[["batch.correct.method"]]
+if (is.null(batch.correct.method)) batch.correct.method <- "no_batch_correct"
+batch.pars <- params[["batch.pars"]]
+if (is.null(batch.pars)) batch.pars <- "<none>"
+
 # Call create_pgx function
 pgx <- playbase::pgx.createPGX(
   organism = params$organism,
   counts = params$counts,
   X = params$countsX,
   preprocess = params$preprocess,
+  batch.correct.method = batch.correct.method,
+  batch.pars = batch.pars,
   norm_method = params$norm_method,
   samples = params$samples,
   contrasts = params$contrasts,
@@ -38,8 +47,6 @@ pgx <- playbase::pgx.createPGX(
   description = params$description,
   metadata = params$metadata,
   creator = params$creator,
-  batch.correct.method = params$batch.correct.method,
-  batch.pars = params$batch.pars,
   covariates = params$covariates,
   dma = params$dma, ## new
   remove.xy.probes = params$remove.xy.probes, ## new

@@ -121,7 +121,11 @@ if(0) {
     plot( genes$tx_len, rowMeans(X),pch=".")
     plot( log(1+genes$tx_len), log(1+rowMeans(X)),pch=".")
     plot( log(1+genes$tx_len), log(1+rowMeans(X)),pch=".")
-    xlen <- imputeMedian(genes$tx_len)
+    xlen <- genes$tx_len
+    xlen[] <- playbase.preprocess::pp.impute(
+        matrix(xlen, ncol = 1L),
+        method = "median"
+    )[, 1L]
     plot( log(1+genes$tx_len), log(1+rowMeans(X)/xlen),pch=".")
 
 }
@@ -202,7 +206,6 @@ rda.file
 pgx.save(ngs, file=rda.file)
 
 ## load(rda.file, verbose=TRUE)
-
 
 
 

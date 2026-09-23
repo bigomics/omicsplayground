@@ -403,8 +403,8 @@ qsee_plotly_pca_panel <- function(pos, color, xlab = "PC1", ylab = "PC2",
   p <- omicsplots::pgx.plot_scatter(
     x = pos[, 1], y = pos[, 2],
     labels = if (show_labels) labels else NULL,
-    color = color,
-    xlab = xlab, ylab = ylab
+    aes = omicsplots::plot_aes(color = color),
+    frame = omicsplots::plot_frame(xlab = xlab, ylab = ylab)
   )
   if (show_labels) {
     p <- qsee_plotly_add_labels(p, pos[, 1], pos[, 2], labels, nmax = label_nmax)
@@ -494,7 +494,9 @@ qsee_normalization_plot_boxplots_plotly <- function(res, Y, ph, nmax = 40,
     bp <- omicsplots::pgx.plot_boxplot(
       values = v[keep],
       groups = factor(g[keep], levels = colnames(X)),
-      type = "box", color = sample_cols, ylab = "log-expression"
+      type = "box",
+      aes = omicsplots::plot_aes(color = sample_cols),
+      frame = omicsplots::plot_frame(ylab = "log-expression")
     )
     ## pgx.plot_boxplot() hardcodes boxpoints = "all", which hides the box
     ## itself for matrices this size. Show outliers only, like boxplot().
@@ -531,8 +533,11 @@ qsee_normalization_plot_histograms_plotly <- function(res, Y, ph, nmax = 40) {
     X <- X[, jj, drop = FALSE]
     p <- omicsplots::pgx.plot_density(
       X,
-      groups = as.character(y)[jj], color = cmap,
-      n_breaks = 80, xlab = "signal", showlegend = FALSE
+      groups = as.character(y)[jj],
+      n_breaks = 80,
+      aes = omicsplots::plot_aes(color = cmap),
+      frame = omicsplots::plot_frame(xlab = "signal"),
+      guides = omicsplots::plot_guides(legend = "none")
     )
     ## Only show tooltip for the exact trace/group under the cursor
     ## (default hovermode = "x" shows all groups at that x-position)

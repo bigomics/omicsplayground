@@ -56,13 +56,8 @@ TimeSeriesBoard <- function(id,
     timeseries_full <- shiny::reactive({
       shiny::req(pgx$X, input$timevar)
       X <- pgx$X
-      is.mox <- playbase::is.multiomics(rownames(X))
       if (sum(is.na(X)) > 0) {
-        if (is.mox) {
-          X <- playbase::imputeMissing.mox(X, method = "SVD2")
-        } else {
-          X <- playbase::imputeMissing(X, method = "SVD2")
-        }
+        X <- .opg_impute(X, method = "SVD2")
       }
 
       sdx <- matrixStats::rowSds(X, na.rm = TRUE)

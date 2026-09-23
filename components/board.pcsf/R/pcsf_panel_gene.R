@@ -217,7 +217,7 @@ pcsf_genepanel_server <- function(id,
           info("[PcsfBoard:pcsf_compute] computing multi-omics PCSF...")
           ## If both gx&px are in datasest, we prefer proteomics (px)
           ## for building the PCSF.
-          datatypes <- unique(playbase::mofa.get_prefix(rownames(pgx$X)))
+          datatypes <- unique(.opg_feature_layers(rownames(pgx$X)))
           if (all(c("gx", "px") %in% datatypes)) {
             datatypes <- setdiff(datatypes, c("gx"))
           }
