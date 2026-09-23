@@ -492,137 +492,21 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
       report_jobs$queue <- character(0)
       updateActionButton(session, "generate",
         label = report_button_label(pgx_snapshot()))
-      if (isTRUE(report_jobs$changed) && !is.null(save_pgx)) save_pgx(pgx)
+      ## No save here: each phase persists as it completes, so by the time we
+      ## get here the pgx on disk already has everything this run produced.
       refresh_report_ui(pgx_snapshot())
       if (!is.null(message)) {
         shiny::showNotification(message, type = type, session = session)
       }
     }
 
-    launch_next_report_job <- function(llm_model, run_id, cred_fn = NULL) {
-      if (!isTRUE(report_jobs$running) ||
-          !identical(run_id, report_jobs$run_id)) {
-        return(NULL)
-      }
-      if (!length(report_jobs$queue)) return(NULL)
-
-      module <- report_jobs$queue[[1L]]
-      report_jobs$queue <- report_jobs$queue[-1L]
-      launch_report_job(module, llm_model, run_id, cred_fn)
-    }
-
-    launch_report_job <- function(module, llm_model, run_id, cred_fn = NULL) {
-      pgx_list <- pgx_snapshot()
-      token <- report_jobs$token
-      label <- report_module_labels(module)
-      report_progress(paste("Starting", label))
-
-      promise <- promises::future_promise({
-        list(
-          module = module,
-          token = token,
-          pgx = ai_report_generate(
-            pgx_list,
-            llm_model = llm_model,
-            force = TRUE,
-            select = module,
-            img_model = NULL,
-            report_type = "normal",
-            on_error = "warn",
-            credentials = cred_fn
-          )
-        )
-      }, seed = TRUE)
-
-      promises::then(
-        promise,
-        onFulfilled = function(result) {
-          if (!isTRUE(report_jobs$running) ||
-              !identical(run_id, report_jobs$run_id)) {
-            info("[AiReportServer] report job ignored: module=", result$module,
-              " stale run_id=", run_id,
-              " current_run_id=", report_jobs$run_id)
-            return(NULL)
-          }
-
-          current_pgx <- pgx_snapshot()
-          if (!identical(result$token, ai_report_dataset_token(current_pgx))) {
-            info("[AiReportServer] report job stale dataset: module=", result$module)
-            finish_report_jobs(
-              "AI reports finished for a previous dataset; results were ignored.",
-              type = "warning"
-            )
-            return(NULL)
-          }
-
-          updated <- shiny::isolate(
-            ai_report_merge_into_reactive(pgx, result$pgx)
-          )
-          if (isTRUE(updated)) {
-            report_jobs$changed <- TRUE
-          }
-
-          report_jobs$done <- report_jobs$done + 1L
-
-          # Telemetry: record one event per report from the persisted pgx$ai slot.
-          # Dataset-keyed event_id makes this idempotent across sessions/reloads.
-          tryCatch(
-            ai_telemetry_record_reports(
-              shiny::isolate(shiny::reactiveValuesToList(pgx)),
-              user_email = studio_user_email(user_email)
-            ),
-            error = function(e) NULL
-          )
-
-          report_progress(paste("Finished", report_module_labels(result$module)))
-          info("[AiReportServer] report job complete: module=", result$module,
-            " done=", report_jobs$done, "/", report_jobs$total,
-            " updated=", updated)
-
-          if (report_jobs$done >= report_jobs$total) {
-            if (report_jobs$failed > 0L) {
-              finish_report_jobs("AI reports completed with warnings.",
-                type = "warning")
-            } else {
-              finish_report_jobs("AI reports ready.")
-              shinyalert::shinyalert(
-                title = "AI reports ready",
-                text = "Your AI reports are ready.",
-                type = "success",
-                confirmButtonText = "OK"
-              )
-            }
-          } else {
-            launch_next_report_job(llm_model, run_id, cred_fn)
-          }
-          NULL
-        },
-        onRejected = function(err) {
-          if (!isTRUE(report_jobs$running) ||
-              !identical(run_id, report_jobs$run_id)) {
-            info("[AiReportServer] report job error ignored: module=", module,
-              " stale run_id=", run_id,
-              " current_run_id=", report_jobs$run_id)
-            return(NULL)
-          }
-          info("[AiReportServer] report job failed: module=", module,
-            " error=", conditionMessage(err))
-          report_jobs$failed <- report_jobs$failed + 1L
-          report_jobs$done <- report_jobs$done + 1L
-          report_progress(paste("Failed", label))
-          shiny::showNotification(conditionMessage(err),
-            type = "error", session = session)
-
-          if (report_jobs$done >= report_jobs$total) {
-            finish_report_jobs("AI report generation completed with errors.",
-              type = "error")
-          } else {
-            launch_next_report_job(llm_model, run_id, cred_fn)
-          }
-          NULL
-        }
-      )
-      invisible(promise)
+    ## A run is still ours if neither a newer run nor a dataset change has
+    ## superseded it. Checked before every fold-in, since a run outlives
+    ## several round trips.
+    report_run_valid <- function(run_id, token) {
+      isTRUE(report_jobs$running) &&
+        identical(run_id, report_jobs$run_id) &&
+        identical(token, ai_report_dataset_token(pgx_snapshot()))
     }
 
     start_report_jobs <- function(modules, llm_model, cred_fn = NULL) {
@@ -637,19 +521,123 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
       report_jobs$run_id <- report_jobs$run_id + 1L
       run_id <- report_jobs$run_id
       report_jobs$running <- TRUE
-      report_jobs$token <- ai_report_dataset_token(pgx_snapshot())
+      token <- ai_report_dataset_token(pgx_snapshot())
+      report_jobs$token <- token
       report_jobs$total <- length(modules)
       report_jobs$done <- 0L
       report_jobs$failed <- 0L
       report_jobs$changed <- FALSE
-
-      first_modules <- setdiff(modules, "combined")
-      report_jobs$queue <- c(first_modules, intersect(modules, "combined"))
+      report_jobs$queue <- character(0)
       report_jobs$progress <- shiny::Progress$new(session, min = 0, max = 1)
       report_progress("Starting selected reports")
       updateActionButton(session, "generate", label = "Generating...")
 
-      launch_next_report_job(llm_model, run_id, cred_fn)
+      pgx_list <- pgx_snapshot()
+      still_valid <- function() report_run_valid(run_id, token)
+
+      ## Fold each phase back into the reactive pgx and persist it. Saving here
+      ## rather than only at the very end means a disconnect or a dataset
+      ## switch part-way through no longer discards reports already paid for;
+      ## saving per phase rather than per module keeps the cost bounded, since
+      ## writing a large pgx takes seconds on this thread.
+      persist <- function(phase, ai) {
+        if (!still_valid()) return(invisible(NULL))
+        updated <- shiny::isolate(ai_report_merge_into_reactive(pgx, ai))
+        if (!isTRUE(updated)) return(invisible(NULL))
+        report_jobs$changed <- TRUE
+        # Telemetry: record one event per report from the persisted pgx$ai slot.
+        # Dataset-keyed event_id makes this idempotent across sessions/reloads.
+        tryCatch(
+          ai_telemetry_record_reports(
+            shiny::isolate(shiny::reactiveValuesToList(pgx)),
+            user_email = studio_user_email(user_email)
+          ),
+          error = function(e) NULL
+        )
+        if (!is.null(save_pgx)) save_pgx(pgx)
+        info("[AiReportServer] phase persisted: phase=", phase)
+        invisible(NULL)
+      }
+
+      promises::catch(
+        promises::then(
+          ai_report_generate_async(
+            pgx_list,
+            llm_model = llm_model,
+            select = modules,
+            force = TRUE,
+            credentials = cred_fn,
+            still_valid = still_valid,
+            on_progress = function(done, total, slot, ok) {
+              if (!still_valid()) return(invisible(NULL))
+              report_jobs$done <- done
+              report_jobs$total <- total
+              label <- ai_report_slot_label(slot, pgx_list)
+              report_progress(
+                if (is.na(slot)) paste("Starting", label)
+                else paste(if (isTRUE(ok)) "Finished" else "Failed", label)
+              )
+              invisible(NULL)
+            },
+            on_phase = persist
+          ),
+          function(result) {
+            if (!isTRUE(report_jobs$running) ||
+                !identical(run_id, report_jobs$run_id)) {
+              info("[AiReportServer] report run ignored: stale run_id=", run_id,
+                " current_run_id=", report_jobs$run_id)
+              return(NULL)
+            }
+            if (!identical(token, ai_report_dataset_token(pgx_snapshot()))) {
+              info("[AiReportServer] report run stale dataset")
+              finish_report_jobs(
+                "AI reports finished for a previous dataset; results were ignored.",
+                type = "warning"
+              )
+              return(NULL)
+            }
+            if (is.null(result)) {
+              finish_report_jobs("No reportable modules found in this dataset.",
+                type = "warning")
+              return(NULL)
+            }
+
+            report_jobs$failed <- result$failed
+            info("[AiReportServer] report run complete: done=", result$done,
+              " failed=", result$failed,
+              " failures=", paste(result$failures, collapse = ","))
+
+            if (result$failed >= result$done) {
+              finish_report_jobs("AI report generation failed.", type = "error")
+            } else if (result$failed > 0L) {
+              finish_report_jobs("AI reports completed with warnings.",
+                type = "warning")
+            } else {
+              finish_report_jobs("AI reports ready.")
+              shinyalert::shinyalert(
+                title = "AI reports ready",
+                text = "Your AI reports are ready.",
+                type = "success",
+                confirmButtonText = "OK"
+              )
+            }
+            NULL
+          }
+        ),
+        function(err) {
+          if (!isTRUE(report_jobs$running) ||
+              !identical(run_id, report_jobs$run_id)) {
+            return(NULL)
+          }
+          info("[AiReportServer] report run failed: error=",
+            conditionMessage(err))
+          shiny::showNotification(conditionMessage(err),
+            type = "error", session = session)
+          finish_report_jobs("AI report generation completed with errors.",
+            type = "error")
+          NULL
+        }
+      )
       invisible(NULL)
     }
 
@@ -747,7 +735,7 @@ AiReportServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
         return(NULL)
       }
       # Capture credential closure here — in the reactive context — before it
-      # enters the future_promise worker (where session is unavailable).
+      # enters the mirai worker (where session is unavailable).
       cred_fn <- get_ai_credentials(session)
 
       shiny::removeModal()

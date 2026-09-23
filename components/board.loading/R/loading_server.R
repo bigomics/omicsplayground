@@ -325,53 +325,121 @@ LoadingBoard <- function(id,
       }
 
       ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
+      ## Token of the dataset the prompt refers to. If the user loads something
+      ## else while generation is in flight, the results belong to a pgx that is
+      ## no longer on screen and must not be written over the new one.
+      token <- ai_report_dataset_token(pgx_list)
+
       shinyalert::shinyalert(
         title = "Missing AI reports",
         text = paste0("Dataset '", ds_name,
-          "' has missing AI reports. Would you like to compute them now (2-3 min)?"),
+          "' has missing AI reports. Would you like to compute them now?",
+          " This runs in the background - you can keep using the app."),
         type = "info",
         showCancelButton = TRUE,
         confirmButtonText = "Yes",
         cancelButtonText = "No",
         callbackR = function(confirmed) {
           if (!isTRUE(confirmed)) return(NULL)
-          shiny::withProgress(message = "Please wait. Generating AI reports...",
-            value = 0.33, {
-            pgx_list <- shiny::reactiveValuesToList(pgx)
-            pgx_list <- ai_report_generate(
-              pgx_list,
-              llm_model = llm_model,
-              img_model = NULL,
-              select = report_modules,
-              report_type = "normal",
-              on_error = "warn",
-              credentials = cred_fn
+
+          ## Previously this ran ai_report_generate() inline, which held the
+          ## Shiny event loop for the entire run - minutes, with the session
+          ## unresponsive throughout. The work now happens in mirai workers and
+          ## only the fold-in and save come back to this thread.
+          progress <- shiny::Progress$new(session, min = 0, max = 1)
+          progress$set(message = "Generating AI reports", value = 0,
+            detail = "Preparing prompts...")
+          closed <- FALSE
+          close_progress <- function() {
+            if (closed) return(invisible(NULL))
+            closed <<- TRUE
+            tryCatch(progress$close(), error = function(e) NULL)
+          }
+
+          still_current <- function() {
+            identical(token,
+              ai_report_dataset_token(shiny::isolate(
+                shiny::reactiveValuesToList(pgx))))
+          }
+
+          persist <- function(phase, ai) {
+            if (!still_current()) return(invisible(NULL))
+            updated <- shiny::isolate(ai_report_merge_into_reactive(pgx, ai))
+            if (!isTRUE(updated)) return(invisible(NULL))
+            tryCatch(
+              ai_telemetry_record_reports(
+                shiny::isolate(shiny::reactiveValuesToList(pgx)),
+                user_email = auth$email
+              ),
+              error = function(e) NULL
             )
-            updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
-            if (isTRUE(updated)) {
-              tryCatch(
-                ai_telemetry_record_reports(
-                  shiny::isolate(shiny::reactiveValuesToList(pgx)),
-                  user_email = auth$email
-                ),
-                error = function(e) NULL
-              )
-            }
             ## Persist through save_current_pgx, which resolves the correct
             ## target (owner dir, or source dir for admins) and no-ops if not
             ## permitted. Non-persisters were already turned away above.
-            if (isTRUE(updated) && !is.null(save_pgx)) {
-              save_pgx(pgx)
-            }
-            if (isTRUE(updated)) {
-              shinyalert::shinyalert(
-                title = "AI reports ready",
-                text = "Your AI reports are ready.",
-                type = "success",
-                confirmButtonText = "OK"
-              )
-            }
-          })
+            ## Once per phase rather than per module: saving a large pgx costs
+            ## several seconds on this thread, so doing it eight times would
+            ## reintroduce the stall this change removes.
+            if (!is.null(save_pgx)) save_pgx(pgx)
+            invisible(NULL)
+          }
+
+          promises::finally(
+            promises::catch(
+              promises::then(
+                ai_report_generate_async(
+                  pgx_list,
+                  llm_model = llm_model,
+                  select = report_modules,
+                  credentials = cred_fn,
+                  still_valid = still_current,
+                  on_progress = function(done, total, slot, ok) {
+                    label <- ai_report_slot_label(slot, pgx_list)
+                    verb <- if (is.na(slot)) "Starting" else
+                      if (isTRUE(ok)) "Finished" else "Failed"
+                    progress$set(
+                      value = if (total > 0) done / total else 0,
+                      detail = paste0(verb, " ", label,
+                        " (", done, "/", total, ")")
+                    )
+                  },
+                  on_phase = persist
+                ),
+                function(result) {
+                  if (is.null(result)) return(NULL)
+                  if (!still_current()) {
+                    shiny::showNotification(
+                      "AI reports finished for a previous dataset; results were ignored.",
+                      type = "warning", session = session)
+                    return(NULL)
+                  }
+                  if (result$done > result$failed) {
+                    shinyalert::shinyalert(
+                      title = "AI reports ready",
+                      text = if (result$failed > 0L) {
+                        paste0("Your AI reports are ready. ", result$failed,
+                          " section(s) could not be generated.")
+                      } else {
+                        "Your AI reports are ready."
+                      },
+                      type = if (result$failed > 0L) "warning" else "success",
+                      confirmButtonText = "OK"
+                    )
+                  } else {
+                    shiny::showNotification("AI report generation failed.",
+                      type = "error", session = session)
+                  }
+                  NULL
+                }
+              ),
+              function(err) {
+                shiny::showNotification(
+                  paste("AI report generation failed:", conditionMessage(err)),
+                  type = "error", session = session)
+                NULL
+              }
+            ),
+            close_progress
+          )
         }
       )
     }
