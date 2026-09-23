@@ -21,7 +21,7 @@
       "menus": {
         "reports": {
           "models": [
-            "openrouter:deepseek/deepseek-v4-flash"
+            "openrouter:~deepseek/deepseek-v4-flash-latest"
           ]
         },
         "images": {

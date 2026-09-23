@@ -227,10 +227,10 @@ InfographicServer <- function(id, pgx, save_pgx = NULL, can_save_pgx = NULL,
     ns <- session$ns
     tmpdir <- file.path(tempdir(), paste0("ai-infographics-", id))
     dynamic_drug_tabs <- character(0)
-    mirai_status <- tryCatch(mirai::status(), error = function(e) NULL)
-    if (is.null(mirai_status) || identical(mirai_status$daemons, 0L)) {
-      mirai::daemons(2)
-    }
+    ## Shared with the report jobs in AiReportServer, which run on the same
+    ## pool. ai_report_ensure_daemons() is a no-op once a pool is live, so
+    ## opening this module never disturbs reports already in flight.
+    ai_report_ensure_daemons()
 
     # Snapshot reactive PGX state before passing it into helper functions.
     pgx_snapshot <- function() {
