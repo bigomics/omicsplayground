@@ -972,9 +972,8 @@ output$current_user <- shiny::renderText({
     })
     
     shiny::observe({
-      ## Treat the pre-init NULL as on (default enabled); hide only on an
-      ## explicit FALSE from the switch.
-      ai_on <- !isFALSE(app_settings$enable_ai())
+      ## "Enable AI" defaults to off, so the pre-init NULL counts as off.
+      ai_on <- isTRUE(app_settings$enable_ai())
       for (tab in c("Studio", "Copilot")) {
         if (ai_on) bslib::nav_show("app-sidebar", tab)
         else bslib::nav_hide("app-sidebar", tab)

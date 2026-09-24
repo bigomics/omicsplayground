@@ -19,3 +19,31 @@ function updateSharedBadges(n) {
     }
   });
 }
+
+// Red dot on Settings > "AI Features" while AI is off (show = true from
+// appsettings_server.R). Once the user opens that tab it stays hidden in this
+// browser (localStorage); turning AI on hides it everywhere (server side).
+var AI_DOT_SEEN_KEY = 'opg-ai-settings-seen';
+function aiSettingsSeen() {
+  try { return localStorage.getItem(AI_DOT_SEEN_KEY) === '1'; } catch (e) { return false; }
+}
+function updateAiSettingsDot(show) {
+  [
+    document.querySelector('#app-sidebar a[data-value="Settings"]'),
+    document.querySelector('#app_settings-tabs1 a[data-value="AI Features"]')
+  ].forEach(function (el) {
+    if (!el) return;
+    var old = el.querySelector('.shared-pending-dot');
+    if (old) old.remove();
+    if (show && !aiSettingsSeen()) {
+      var d = document.createElement('span');
+      d.className = 'shared-pending-dot';
+      el.appendChild(d);
+    }
+  });
+}
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#app_settings-tabs1 a[data-value="AI Features"]')) return;
+  try { localStorage.setItem(AI_DOT_SEEN_KEY, '1'); } catch (err) {}
+  updateAiSettingsDot(false);
+});

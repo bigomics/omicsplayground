@@ -113,11 +113,44 @@ AppSettingsBoard <- function(id, auth, pgx) {
     })
 
 
-    ## Warn the user when they switch AI on. ignoreInit avoids firing this
-    ## on session start, since "Enable AI" defaults to on -- the equivalent
-    ## warning is instead shown once on first visit to the Obi AI tab (see
-    ## app/R/server.R).
+    ## "Enable AI" defaults to off; the user's choice is persisted to
+    ## user_dir/ai_enabled.json and restored on login. Restoring flips the
+    ## switch, so skip_enable_alert stops that flip from re-showing the warning.
+    ai_enabled_file <- function() file.path(auth$user_dir, "ai_enabled.json")
+    skip_enable_alert <- FALSE
+    shiny::observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged)) return()
+      saved <- tryCatch(
+        isTRUE(jsonlite::read_json(ai_enabled_file())$enabled),
+        error = function(e) FALSE
+      )
+      if (saved && !isTRUE(input$enable_ai)) skip_enable_alert <<- TRUE
+      bslib::update_switch("enable_ai", value = saved, session = session)
+    })
+
+    ## Red dot on Settings > AI Features until the user either opens that tab
+    ## (remembered per browser in static/shared-badges.js) or turns AI on.
+    shiny::observe({
+      if (!isTRUE(opt$ENABLE_AI) || !isTRUE(auth$logged)) return()
+      shinyjs::runjs(sprintf(
+        "updateAiSettingsDot(%s);", tolower(!isTRUE(input$enable_ai))
+      ))
+    })
+
+    ## Warn the user when they switch AI on (ignoreInit: not at session start;
+    ## the Obi AI tab shows its own warning, see app/R/server.R).
     shiny::observeEvent(input$enable_ai, {
+      if (isTRUE(auth$logged) && isTRUE(dir.exists(auth$user_dir %||% ""))) {
+        tryCatch(
+          jsonlite::write_json(list(enabled = isTRUE(input$enable_ai)),
+                               ai_enabled_file(), auto_unbox = TRUE),
+          error = function(e) warning("[AppSettingsBoard] ", conditionMessage(e))
+        )
+      }
+      if (skip_enable_alert) {
+        skip_enable_alert <<- FALSE
+        return(NULL)
+      }
       model <- input$llm_reports
       if (isTRUE(input$enable_ai)) {
         if (is.null(model) || model == "") {
