@@ -11,5 +11,5 @@ output <- sass::sass(
   options = sass::sass_options(
     output_style = "compressed"
   ),
-  output = 'components/app/R/www/styles.min.css'
+  output = 'components/assets/styles.min.css'
 )
