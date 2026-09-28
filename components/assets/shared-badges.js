@@ -19,3 +19,22 @@ function updateSharedBadges(n) {
     }
   });
 }
+
+// Red dot on Settings > "AI Features" (show = true while AI is off and the
+// user has never opened that tab; both tracked server side in
+// appsettings_server.R).
+function updateAiSettingsDot(show) {
+  [
+    document.querySelector('#app-sidebar a[data-value="Settings"]'),
+    document.querySelector('#app_settings-tabs1 a[data-value="AI Features"]')
+  ].forEach(function (el) {
+    if (!el) return;
+    var old = el.querySelector('.shared-pending-dot');
+    if (old) old.remove();
+    if (show) {
+      var d = document.createElement('span');
+      d.className = 'shared-pending-dot';
+      el.appendChild(d);
+    }
+  });
+}

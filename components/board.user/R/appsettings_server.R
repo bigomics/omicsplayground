@@ -113,11 +113,56 @@ AppSettingsBoard <- function(id, auth, pgx) {
     })
 
 
-    ## Warn the user when they switch AI on. ignoreInit avoids firing this
-    ## on session start, since "Enable AI" defaults to on -- the equivalent
-    ## warning is instead shown once on first visit to the Obi AI tab (see
-    ## app/R/server.R).
+    ## "Enable AI" defaults to off. user_dir/ai_enabled.json persists the
+    ## switch and whether the user has opened the AI Features tab (`seen`);
+    ## both are restored on login. Restoring flips the switch, so
+    ## skip_enable_alert stops that flip from re-showing the warning.
+    ai_enabled_file <- function() file.path(auth$user_dir, "ai_enabled.json")
+    ai_seen <- shiny::reactiveVal(FALSE)
+    save_ai_enabled <- function() {
+      if (!isTRUE(dir.exists(auth$user_dir %||% ""))) return()
+      tryCatch(
+        jsonlite::write_json(
+          list(enabled = isTRUE(input$enable_ai), seen = ai_seen()),
+          ai_enabled_file(), auto_unbox = TRUE
+        ),
+        error = function(e) warning("[AppSettingsBoard] ", conditionMessage(e))
+      )
+    }
+    skip_enable_alert <- FALSE
+    shiny::observeEvent(auth$logged, {
+      if (!isTRUE(auth$logged)) return()
+      rec <- tryCatch(jsonlite::read_json(ai_enabled_file()), error = function(e) list())
+      saved <- isTRUE(rec$enabled)
+      ai_seen(isTRUE(rec$seen))
+      if (saved && !isTRUE(input$enable_ai)) skip_enable_alert <<- TRUE
+      bslib::update_switch("enable_ai", value = saved, session = session)
+    })
+
+    shiny::observeEvent(input$tabs1, {
+      if (identical(input$tabs1, "AI Features") && !ai_seen() && isTRUE(auth$logged)) {
+        ai_seen(TRUE)
+        save_ai_enabled()
+      }
+    })
+
+    ## Red dot on Settings > AI Features until the user opens that tab or
+    ## turns AI on (JS in static/shared-badges.js).
+    shiny::observe({
+      if (!isTRUE(opt$ENABLE_AI) || !isTRUE(auth$logged)) return()
+      shinyjs::runjs(sprintf(
+        "updateAiSettingsDot(%s);", tolower(!isTRUE(input$enable_ai) && !ai_seen())
+      ))
+    })
+
+    ## Warn the user when they switch AI on (ignoreInit: not at session start;
+    ## the Obi AI tab shows its own warning, see app/R/server.R).
     shiny::observeEvent(input$enable_ai, {
+      if (isTRUE(auth$logged)) save_ai_enabled()
+      if (skip_enable_alert) {
+        skip_enable_alert <<- FALSE
+        return(NULL)
+      }
       model <- input$llm_reports
       if (isTRUE(input$enable_ai)) {
         if (is.null(model) || model == "") {

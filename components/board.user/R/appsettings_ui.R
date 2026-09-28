@@ -75,7 +75,7 @@ AppSettingsUI <- function(id) {
           bslib::card_header("AI Provider"),
           bslib::card_body(
             gap = "0.3em",
-            bslib::input_switch(ns("enable_ai"), "Enable AI", value = TRUE),
+            bslib::input_switch(ns("enable_ai"), "Enable AI", value = FALSE),
             shiny::selectInput(
               inputId = ns("ai_provider"),
               label = "AI provider",

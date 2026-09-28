@@ -8,9 +8,13 @@ options(shiny.otel.collect = "none")
 args <- commandArgs(trailingOnly = TRUE)
 port <- if (length(args) > 0) as.integer(args[1]) else 3838
 
-shiny::runApp(
-    appDir = ".",
-    launch.browser = TRUE,
-    host = "0.0.0.0",
-    port = port
+shinyApp(
+    ui = app_ui,
+    server = app_server,
+    uiPattern = '.*',  ## route /cookie* endpoints to app_ui (persistent login)
+    options = list(
+        launch.browser = TRUE,
+        host = "0.0.0.0",
+        port = port
+    )
 )

@@ -20,6 +20,7 @@ LoadingBoard <- function(id,
                          recompute_pgx,
                          new_upload,
                          save_pgx = NULL,
+                         pgx_save_target = NULL,
                          pgx_source_dir = NULL,
                          parent) {
   moduleServer(id, function(input, output, session) {
@@ -31,8 +32,10 @@ LoadingBoard <- function(id,
     is_data_loaded <- reactiveVal(NULL)
 
     ## static, not changing
-    pgx_shared_dir <- stringr::str_replace_all(pgx_topdir, c("data" = "data_shared"))
-    pgx_public_dir <- stringr::str_replace_all(pgx_topdir, c("data" = "data_public"))
+    pgx_shared_dir <- stringr::str_replace_all(pgx_topdir,
+                                               c("data" = "data_shared"))
+    pgx_public_dir <- stringr::str_replace_all(pgx_topdir,
+                                               c("data" = "data_public"))
     enable_public_tabpanel <- dir.exists(pgx_public_dir)
 
     ## -------------------------------------------------------------------
@@ -77,17 +80,24 @@ LoadingBoard <- function(id,
       no_sharing <- no_sharing1 || no_sharing2
 
       if (no_sharing) {
-        tag <- bs_alert(HTML("This table shows the <b>available datasets</b> in your library. The <b>Signature t-SNE</b> shows similarity clustering of signatures using t-SNE. Select a dataset in the table and click the <b>Load selected</b> button below."))
+        tag <- bs_alert(HTML(
+          "This table shows the <b>available datasets</b> in your library. ",
+          "The <b>Signature t-SNE</b> shows similarity clustering of ",
+          "signatures using t-SNE. Select a dataset in the table and click ",
+          "the <b>Load selected</b> button below."
+        ))
         return(tag)
       }
 
       ## If not show alerts for sharing
       msg <- c()
       if (num_received > 0) {
-        msg <- paste("You have received <strong>", num_received, "datasets</strong> that you need to accept.")
+        msg <- paste("You have received <strong>", num_received,
+                     "datasets</strong> that you need to accept.")
       }
       if (num_shared > 0) {
-        msg1 <- paste("You have still <strong>", num_shared, "shared datasets</strong> waiting in the queue.")
+        msg1 <- paste("You have still <strong>", num_shared,
+                      "shared datasets</strong> waiting in the queue.")
         msg <- c(msg, msg1)
       }
       bs_alert(
@@ -300,6 +310,117 @@ LoadingBoard <- function(id,
       }
     }
 
+    ## Stable per-user half of the run key. Two tabs of the same user on the
+    ## same dataset must join one run; two users must not. The save path
+    ## already encodes whose copy is being written, so an anonymous deployment
+    ## can safely collapse onto one literal - AI Studio falls back to the same
+    ## one (app_studio/R/aireport_server.R), and both halves must agree or the
+    ## two paths would key the same run differently.
+    ai_report_user_key <- function() {
+      email <- auth$email
+      if (!is.null(email) && length(email) == 1L && !is.na(email) &&
+            nzchar(email)) {
+        return(as.character(email))
+      }
+      "anonymous"
+    }
+
+    ## Progress bar and completion handling for one subscription to a report
+    ## run. Shared by the "start a run" and the "join the run already in
+    ## flight" paths, so a session that joins gets the same feedback as the
+    ## one that started it.
+    ##
+    ## Everything that talks back to the browser is bound to this session's
+    ## reactive domain: promises restores the domain of the session that
+    ## REGISTERED the run inside these callbacks, so a joiner's alert would
+    ## otherwise be resolved through getDefaultReactiveDomain() and delivered
+    ## to the starter - which also never receives shinyalert's JS dependencies
+    ## for the joining session, since shinyalert inserts them into the default
+    ## domain regardless of its own `session` argument.
+    ai_report_run_handlers <- function(pgx_list, token, status = NULL) {
+      progress <- shiny::Progress$new(session, min = 0, max = 1)
+      joined <- !is.null(status) && !is.na(status$total) && status$total > 0L
+      progress$set(
+        message = "Generating AI reports",
+        value = if (joined) status$done / status$total else 0,
+        detail = if (joined) {
+          paste0("Joined run in progress (", status$done, "/", status$total, ")")
+        } else {
+          "Preparing prompts..."
+        }
+      )
+      closed <- FALSE
+      close_progress <- function() {
+        if (closed) return(invisible(NULL))
+        closed <<- TRUE
+        tryCatch(progress$close(), error = function(e) NULL)
+      }
+
+      pgx_now <- function() shiny::isolate(shiny::reactiveValuesToList(pgx))
+      ## The results belong to the pgx the run was started from. If the user
+      ## has loaded something else meanwhile they must not be written over the
+      ## dataset now on screen.
+      still_current <- function() {
+        identical(token, ai_report_dataset_token(pgx_now()))
+      }
+
+      show_progress <- function(done, total, slot, ok) {
+        label <- ai_report_slot_label(slot, pgx_list)
+        verb <- if (is.na(slot)) "Starting" else
+          if (isTRUE(ok)) "Finished" else "Failed"
+        tryCatch(progress$set(
+          value = if (total > 0) done / total else 0,
+          detail = paste0(verb, " ", label, " (", done, "/", total, ")")
+        ), error = function(e) NULL)
+      }
+
+      show_done <- function(result) {
+        close_progress()
+        if (is.null(result$ai)) {
+          shiny::showNotification("AI report generation failed.",
+            type = "error", session = session)
+          return(invisible(NULL))
+        }
+        ## The manager has already written the pgx on disk. Mirror the result
+        ## into this session's reactive only when the dataset is still on
+        ## screen, so the boards pick it up without a reload.
+        if (!still_current()) {
+          shiny::showNotification(
+            "AI reports finished and were saved to their dataset.",
+            type = "message", session = session)
+          return(invisible(NULL))
+        }
+        shiny::isolate(ai_report_merge_into_reactive(pgx, result$ai))
+        tryCatch(
+          ai_telemetry_record_reports(pgx_now(), user_email = auth$email),
+          error = function(e) NULL
+        )
+        shinyalert::shinyalert(
+          title = "AI reports ready",
+          text = if (result$failed > 0L) {
+            paste0("Your AI reports are ready. ", result$failed,
+              " section(s) could not be generated.")
+          } else {
+            "Your AI reports are ready."
+          },
+          type = if (result$failed > 0L) "warning" else "success",
+          confirmButtonText = "OK",
+          session = session
+        )
+        invisible(NULL)
+      }
+
+      list(
+        close = close_progress,
+        on_progress = function(done, total, slot, ok) {
+          shiny::withReactiveDomain(session, show_progress(done, total, slot, ok))
+        },
+        on_done = function(result) {
+          shiny::withReactiveDomain(session, show_done(result))
+        }
+      )
+    }
+
     maybe_offer_ai_reports <- function(pgxfile, is_user_dir) {
       if (!isTRUE(opt$ENABLE_AI)) return(invisible(NULL))
 
@@ -313,10 +434,46 @@ LoadingBoard <- function(id,
 
       llm_model <- getUserOption(session, "llm_model")
       if (is.null(llm_model) || llm_model == "") return(invisible(NULL))
-      cred_fn <- get_ai_credentials(session)
 
       pgx_list <- shiny::reactiveValuesToList(pgx)
       report_modules <- ai_report_modules_for_pgx(pgx_list)
+
+      ## Token of the dataset the prompt refers to. If the user loads something
+      ## else while generation is in flight, the results belong to a pgx that is
+      ## no longer on screen and must not be written over the new one.
+      token <- ai_report_dataset_token(pgx_list)
+      ## Resolved here, while there is still session context: the run itself
+      ## never touches the session again.
+      save_path <- if (is.function(pgx_save_target)) {
+        pgx_save_target(pgx_list)
+      } else {
+        NULL
+      }
+      run_key <- if (is.null(save_path)) NULL else {
+        ai_report_run_key(save_path, token, ai_report_user_key(), llm_model)
+      }
+
+      ## A run already in flight owns this dataset's reports, so attach to it
+      ## for progress rather than asking again. ai_report_needs_generation()
+      ## reads the pgx, which does not change until the run commits at the very
+      ## end - without this, every reload during a multi-minute run re-opens
+      ## the prompt and invites a duplicate answer.
+      if (!is.null(run_key) && ai_report_run_active(run_key)) {
+        handlers <- ai_report_run_handlers(pgx_list, token,
+          ai_report_run_status(run_key))
+        sub_id <- ai_report_run_subscribe(run_key, handlers$on_progress,
+          handlers$on_done)
+        if (is.null(sub_id)) {
+          ## Finished between the check and the subscribe.
+          handlers$close()
+          return(invisible(NULL))
+        }
+        session$onSessionEnded(function() {
+          ai_report_run_unsubscribe(run_key, sub_id)
+        })
+        return(invisible(NULL))
+      }
+
       ## Do not require every possible module report. Some modules are optional
       ## or can fail independently; any valid pgx$ai report is enough to avoid
       ## prompting on every load.
@@ -324,53 +481,55 @@ LoadingBoard <- function(id,
         return(invisible(NULL))
       }
 
-      ds_name <- if (!is.null(pgx$name)) pgx$name else pgxfile
+      cred_fn <- get_ai_credentials(session)
+      ds_name <- if (!is.null(pgx_list$name)) pgx_list$name else pgxfile
+
       shinyalert::shinyalert(
         title = "Missing AI reports",
         text = paste0("Dataset '", ds_name,
-          "' has missing AI reports. Would you like to compute them now (2-3 min)?"),
+          "' has missing AI reports. Would you like to compute them now?",
+          " This runs in the background - you can keep using the app."),
         type = "info",
         showCancelButton = TRUE,
         confirmButtonText = "Yes",
         cancelButtonText = "No",
         callbackR = function(confirmed) {
           if (!isTRUE(confirmed)) return(NULL)
-          shiny::withProgress(message = "Please wait. Generating AI reports...",
-            value = 0.33, {
-            pgx_list <- shiny::reactiveValuesToList(pgx)
-            pgx_list <- ai_report_generate(
-              pgx_list,
-              llm_model = llm_model,
-              img_model = NULL,
-              select = report_modules,
-              report_type = "normal",
-              on_error = "warn",
-              credentials = cred_fn
-            )
-            updated <- shiny::isolate(ai_report_copy_into_reactive(pgx, pgx_list))
-            if (isTRUE(updated)) {
-              tryCatch(
-                ai_telemetry_record_reports(
-                  shiny::isolate(shiny::reactiveValuesToList(pgx)),
-                  user_email = auth$email
-                ),
-                error = function(e) NULL
-              )
-            }
-            ## Persist through save_current_pgx, which resolves the correct
-            ## target (owner dir, or source dir for admins) and no-ops if not
-            ## permitted. Non-persisters were already turned away above.
-            if (isTRUE(updated) && !is.null(save_pgx)) {
-              save_pgx(pgx)
-            }
-            if (isTRUE(updated)) {
-              shinyalert::shinyalert(
-                title = "AI reports ready",
-                text = "Your AI reports are ready.",
-                type = "success",
-                confirmButtonText = "OK"
-              )
-            }
+
+          if (is.null(save_path)) {
+            shiny::showNotification(
+              "Cannot determine where to save this dataset; reports not generated.",
+              type = "error", session = session)
+            return(NULL)
+          }
+
+          ## The run is owned by the app, not by this session: closing the
+          ## tab or loading another dataset no longer abandons work that has
+          ## already been paid for, and a second tab on the same dataset joins
+          ## the run in progress instead of starting a duplicate one. This
+          ## session only subscribes for progress.
+          handlers <- ai_report_run_handlers(pgx_list, token)
+          run <- ai_report_run_start(
+            pgx_list,
+            save_path   = save_path,
+            llm_model   = llm_model,
+            select      = report_modules,
+            credentials = cred_fn,
+            user_key    = ai_report_user_key(),
+            user_email  = auth$email,
+            on_progress = handlers$on_progress,
+            on_done     = handlers$on_done
+          )
+
+          if (is.null(run)) {
+            handlers$close()
+            return(NULL)
+          }
+          ## Unsubscribe by the id the manager handed back, not by the session
+          ## token: answering "Yes" twice in one tab subscribes twice, and each
+          ## subscription owns the progress bar only its own on_done closes.
+          session$onSessionEnded(function() {
+            ai_report_run_unsubscribe(run$key, run$sub_id)
           })
         }
       )
@@ -385,7 +544,7 @@ LoadingBoard <- function(id,
       } else {
         ui.showCartoonModal()
       }
-      
+
       loaded_pgx <- loadPGX(pgxfile, pgxdir = pgxdir)
       if (is.null(loaded_pgx)) {
         warning("[loadAndActivatePGX] ERROR loading PGX file ", pgxfile, "\n")
@@ -453,13 +612,13 @@ LoadingBoard <- function(id,
       } else {
         is_data_loaded(is_data_loaded() + 1)
       }
-      
+
       info("[loadAndActivatePGX] done!")
     }
-    
+
     observeEvent(input$newuploadbutton, {
       ##new_upload(new_upload() + 1)
-      bslib::nav_select("app-sidebar", "Upload", session=parent)      
+      bslib::nav_select("app-sidebar", "Upload", session=parent)
     })
 
     observeEvent(load_uploaded_data(), {

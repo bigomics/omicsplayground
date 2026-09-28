@@ -885,6 +885,9 @@ output$current_user <- shiny::renderText({
     recompute_pgx = recompute_pgx,
     new_upload = new_upload,
     save_pgx = save_current_pgx,
+    ## Resolver, not just the saver: the app-scope report manager needs the
+    ## destination path up front, while session context is still available.
+    pgx_save_target = pgx_save_target,
     pgx_source_dir = pgx_source_dir,
     parent = session
   )
@@ -963,14 +966,14 @@ output$current_user <- shiny::renderText({
       
       StudioServer("studio", pgx = PGX, save_pgx = save_current_pgx,
         can_save_pgx = can_save_current_pgx,
-        user_email = function() shiny::isolate(auth$email))
+        user_email = function() shiny::isolate(auth$email),
+        pgx_save_target = pgx_save_target)
       
     })
     
     shiny::observe({
-      ## Treat the pre-init NULL as on (default enabled); hide only on an
-      ## explicit FALSE from the switch.
-      ai_on <- !isFALSE(app_settings$enable_ai())
+      ## "Enable AI" defaults to off, so the pre-init NULL counts as off.
+      ai_on <- isTRUE(app_settings$enable_ai())
       for (tab in c("Studio", "Copilot")) {
         if (ai_on) bslib::nav_show("app-sidebar", tab)
         else bslib::nav_hide("app-sidebar", tab)

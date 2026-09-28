@@ -314,7 +314,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes = NULL,
   x <- pgx$samples[, by.pheno]
   p <- phenotypes[1]
   Y <- data.frame(pgx$samples[, phenotypes, drop = FALSE])
-  Y <- playbase::tidy.dataframe(Y)
+  Y <- playbase::tidy_dataframe(Y)
 
   ptype <- sapply(Y, class)
   names(ptype) <- phenotypes
