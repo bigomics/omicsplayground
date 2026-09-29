@@ -131,6 +131,14 @@ RUN R -e "install.packages('ggiraph')"
 RUN R -e "BiocManager::install('TileDBArray')"
 RUN R -e "remotes::install_github('bigomics/NPM',dependencies=FALSE)"
 
+# playbase.preprocess (private) and its Imports, needed before playbase
+RUN R -e "BiocManager::install(c('RPMM','IlluminaHumanMethylationEPICanno.ilm10b4.hg19'), ask=FALSE, update=FALSE)"
+RUN --mount=type=secret,id=GITHUB_PAT \
+    GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT) \
+    R -e "remotes::install_github('bigomics/playbase.preprocess', upgrade='never', dependencies=FALSE); \
+          if (!requireNamespace('playbase.preprocess', quietly=TRUE)) quit(status=1)" && \
+    rm -f /root/.Rhistory
+
 ARG update_playbase=true
 RUN if [ $update_playbase = true ]; then \
     echo "Checking playbase branch ${BRANCH}"; \
