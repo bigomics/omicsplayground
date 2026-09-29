@@ -131,10 +131,7 @@ RUN R -e "install.packages('ggiraph')"
 RUN R -e "BiocManager::install('TileDBArray')"
 RUN R -e "remotes::install_github('bigomics/NPM',dependencies=FALSE)"
 
-# playbase Imports playbase.preprocess (private), which in turn Imports NPM
-# (above), RPMM and the EPIC annotation. With dependencies=FALSE a missing
-# Import makes the playbase install below fail, so install them first. No
-# PAT-less fallback: playbase cannot install without this package.
+# playbase.preprocess (private) and its Imports, needed before playbase
 RUN R -e "BiocManager::install(c('RPMM','IlluminaHumanMethylationEPICanno.ilm10b4.hg19'), ask=FALSE, update=FALSE)"
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT) \
