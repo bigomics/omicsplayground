@@ -142,6 +142,10 @@ RUN --mount=type=secret,id=GITHUB_PAT \
           if (!requireNamespace('playbase.preprocess', quietly=TRUE)) quit(status=1)" && \
     rm -f /root/.Rhistory
 
+# playbase.ingest (public), needed before playbase; its Imports are already installed
+RUN R -e "remotes::install_github('bigomics/playbase.ingest', upgrade='never', dependencies=FALSE); \
+          if (!requireNamespace('playbase.ingest', quietly=TRUE)) quit(status=1)"
+
 ARG update_playbase=true
 RUN if [ $update_playbase = true ]; then \
     echo "Checking playbase branch ${BRANCH}"; \
