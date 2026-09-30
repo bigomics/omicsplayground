@@ -133,6 +133,9 @@ RUN R -e "remotes::install_github('bigomics/NPM',dependencies=FALSE)"
 
 # playbase.preprocess (private) and its Imports, needed before playbase
 RUN R -e "BiocManager::install(c('RPMM','IlluminaHumanMethylationEPICanno.ilm10b4.hg19'), ask=FALSE, update=FALSE)"
+# EPIC v2 annotation is not in Bioconductor 3.18; the 3.19 source works on R 4.3
+RUN R -e "install.packages('https://bioconductor.org/packages/3.19/data/annotation/src/contrib/IlluminaHumanMethylationEPICv2anno.20a1.hg38_1.0.0.tar.gz', repos=NULL, type='source'); \
+          if (!requireNamespace('IlluminaHumanMethylationEPICv2anno.20a1.hg38', quietly=TRUE)) quit(status=1)"
 RUN --mount=type=secret,id=GITHUB_PAT \
     GITHUB_PAT=$(cat /run/secrets/GITHUB_PAT) \
     R -e "remotes::install_github('bigomics/playbase.preprocess', upgrade='never', dependencies=FALSE); \
