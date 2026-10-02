@@ -177,7 +177,7 @@ expression_plot_volcano_server <- function(id,
 
       names <- pd$features
 
-      label_features <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]], label_names = pd[["label.names"]])
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]], alt_names = list(pd[["label.names"]], pd[["symbols"]]))
 
       highlight <- if (input$color_selection) {
         label_features
