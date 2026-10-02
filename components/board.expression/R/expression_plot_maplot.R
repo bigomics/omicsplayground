@@ -140,7 +140,7 @@ expression_plot_maplot_server <- function(id,
       col_up <- get_editor_color(input, "color_up", "primary")
       col_down <- get_editor_color(input, "color_down", "secondary")
 
-      lab.genes <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]])
+      lab.genes <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]], label_names = pd[["label.names"]])
 
       highlight <- pd[["sel.genes"]]
       if (isTRUE(input$color_selection) && length(lab.genes) > 0) {

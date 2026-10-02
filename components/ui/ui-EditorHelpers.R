@@ -148,8 +148,10 @@ extract_heatmap_lmh_colors <- function(input) {
 #' @param defaults      Value to return when custom labelling is off (can be NULL).
 #' @param pgx           Optional pgx object; when provided, results are passed
 #'   through \code{playbase::map_probes(pgx$genes, ...)}.
+#' @param label_names   Optional display names (e.g. symbols) parallel to
+#'   \code{feature_names}; typed names matching these resolve to their feature.
 #' @return Character vector of resolved labels, or \code{defaults}.
-get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL) {
+get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL, label_names = NULL) {
   if (!isTRUE(input$custom_labels)) {
     return(defaults)
   }
@@ -160,6 +162,10 @@ get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL)
   }
 
   resolved <- parse_label_features(label_text, feature_names)
+  if (!is.null(label_names)) {
+    by_label <- parse_label_features(label_text, label_names)
+    resolved <- union(resolved, feature_names[label_names %in% by_label])
+  }
   if (is.null(resolved) || length(resolved) == 0) {
     return(defaults)
   }
