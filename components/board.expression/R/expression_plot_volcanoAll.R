@@ -215,7 +215,7 @@ expression_plot_volcanoAll_server <- function(id,
       y <- -log10(pivot.qv$qv + pval_cap)
 
       ## Editor: custom labels
-      label_features <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]], label_names = pd[["label.names"]])
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = pd[["lab.genes"]], alt_names = list(pd[["label.names"]], pd[["symbols"]]))
 
       highlight <- if (isTRUE(input$color_selection)) {
         label_features
