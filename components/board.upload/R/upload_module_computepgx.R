@@ -671,7 +671,7 @@ upload_module_computepgx_server <- function(
 
       shiny::observeEvent(
         {
-          list( samplesRT(), contrastsRT() )
+          list(samplesRT(), contrastsRT(), countsX())
         },
         {
           Y <- samplesRT()

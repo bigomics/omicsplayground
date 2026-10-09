@@ -95,7 +95,7 @@ UploadBoard <- function(id,
       )
       
       if (!opt$ENABLE_MULTIOMICS) {
-        all_datatypes <- setdiff(all_datatypes, "multi-omics")
+        all_datatypes <- all_datatypes[all_datatypes != "multi-omics"]
       }
       shiny::updateSelectizeInput(session, "selected_datatype",
         choices = all_datatypes, selected = DEFAULTS$datatype)
