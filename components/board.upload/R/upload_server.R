@@ -82,18 +82,24 @@ UploadBoard <- function(id,
     OmicsBoard(session, pgx, title = "Upload New", infotext = as.character(module_infotext))
 
     observeEvent(auth$logged, {
-      all_species <- playbase::allSpecies(col = "species_name")
-      common_name <- playbase::allSpecies(col = "display_name")
-      names(all_species) <- common_name
-      names(all_species)[all_species == "No organism"] <- "<custom organism>"
-      shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
-      shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
 
-      if (opt$ENABLE_MULTIOMICS) {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics (beta)" = "methylomics", "metabolomics", "multi-omics (beta)" = "multi-omics"), selected = DEFAULTS$datatype)
-      } else {
-        shiny::updateSelectizeInput(session, "selected_datatype", choices = c("RNA-seq", "mRNA microarray", "proteomics", "scRNA-seq", "methylomics (beta)" = "methylomics", "metabolomics"), selected = DEFAULTS$datatype)
+      all_datatypes <- c(
+        "RNA-seq",
+        "mRNA microarray",
+        "proteomics",
+        "scRNA-seq",
+        "metabolomics",
+        "lipidomics",
+        "multi-omics",
+        "methylomics (beta)" = "methylomics"
+      )
+      
+      if (!opt$ENABLE_MULTIOMICS) {
+        all_datatypes <- all_datatypes[all_datatypes != "multi-omics"]
       }
+      shiny::updateSelectizeInput(session, "selected_datatype",
+        choices = all_datatypes, selected = DEFAULTS$datatype)
+
     })
 
     output$proteomics_subtype_ui <- shiny::renderUI({
@@ -759,7 +765,12 @@ UploadBoard <- function(id,
       } else {
         all_species <- playbase::allSpecies(col = "species_name")
         common_name <- playbase::allSpecies(col = "display_name")
-        names(all_species) <- paste0(all_species, " (", common_name, ")")
+        contains_species <- sapply(1:length(all_species),function(i)
+          grepl( all_species[i], common_name[i], fixed=TRUE ))
+        names(all_species) <- ifelse( !contains_species,
+          paste0(all_species, " (", common_name, ")"),
+          common_name
+        )
         names(all_species)[all_species == "No organism"] <- "<custom organism>"
         shiny::updateSelectizeInput(session, "selected_organism", choices = all_species, server = TRUE)
         shiny::updateSelectizeInput(session, "selected_organism_public", choices = all_species, server = TRUE)
@@ -1200,7 +1211,9 @@ UploadBoard <- function(id,
           detected_probetype <- paste(detected[[organism]], collapse = "+")
         }
 
-        if (upload_datatype() != "methylomics") {
+        if (upload_datatype() == "methylomics") {
+          probetype("CpG probes")
+        } else {
           probetype(detected_probetype) ## set RV
           info("[checkprobes_task$result] detected_probetype = ", detected_probetype)
 
@@ -1234,8 +1247,6 @@ UploadBoard <- function(id,
               html = TRUE
             )
           }
-        } else {
-          probetype("CpG probes")
         }
       }
     )
