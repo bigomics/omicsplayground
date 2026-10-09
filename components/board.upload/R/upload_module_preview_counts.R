@@ -662,6 +662,15 @@ upload_table_preview_counts_server <- function(id,
               type = "error"
             )
           }
+        } else {
+          df <- tryCatch(
+            {
+              playbase::read_counts(datafile)
+            },
+            error = function(w) {
+              NULL
+            }
+          )
         }
       } else {
         df.samples <- NULL
