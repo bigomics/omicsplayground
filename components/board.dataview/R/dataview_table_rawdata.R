@@ -182,7 +182,7 @@ dataview_table_rawdata_server <- function(id,
           DF <- cbind(DF, imp.info)
           colnames(DF)[ncol(DF)] <- paste0(names(na.map)[i], ".impinfo")
         }
-        rm.cols <- grep(".impinfo", colnames(DF)) - 1 # zero-based index
+        rm.cols <- grep(".impinfo", colnames(DF)) - 1 ## zero index
       }
 
       DTable <- DT::datatable(
@@ -191,7 +191,7 @@ dataview_table_rawdata_server <- function(id,
         fillContainer = TRUE,
         class = "compact hover",
         extensions = c("Buttons", "Scroller"),
-        plugins = "scrollResize",
+        plugins = c("scrollResize", "ellipsis"),
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
           dom = "frtip",
@@ -201,7 +201,12 @@ dataview_table_rawdata_server <- function(id,
           scrollY = scrollY,
           scrollResize = TRUE,
           deferRender = TRUE,
-          columnDefs = list(list(targets = rm.cols, visible = FALSE))
+          columnDefs = list(
+            list( targets = rm.cols, visible = FALSE ),
+            list( targets = c("gene_title"),
+              render = DT::JS("$.fn.dataTable.render.ellipsis( 48, false )")
+            )
+          )
         )
       )
       if (!is.null(na.map)) {

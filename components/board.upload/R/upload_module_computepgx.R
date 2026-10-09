@@ -75,9 +75,9 @@ upload_module_computepgx_server <- function(
       GENETEST.SELECTED <- function() {
         ## Check if recomputing from existing PGX - use its methods
         pgx <- recompute_pgx()
+        available_methods <- GENETEST.METHODS()
         if (!is.null(pgx) && !is.null(pgx$gx.meta) && !is.null(pgx$gx.meta$meta[[1]]$fc)) {
           gx_methods <- colnames(pgx$gx.meta$meta[[1]]$fc)
-          available_methods <- GENETEST.METHODS()
           mm <- intersect(gx_methods, available_methods)
           if (length(mm) > 0) {
             return(mm)
@@ -94,8 +94,9 @@ upload_module_computepgx_server <- function(
         } else if (dt == "scRNA-seq") {
           mm <- c("ttest", "wilcoxon.ranksum", "trend.limma")
         } else {
-          mm <- c("ttest", "trend.limma")
+          mm <- c("ttest", "ttest.welch", "trend.limma")
         }
+        mm <- intersect(mm, available_methods)        
         return(mm)
       }
 
@@ -667,14 +668,16 @@ upload_module_computepgx_server <- function(
 
       ## Checks specific for time series
       interaction_vars <- reactiveValues(ia_ctx = NULL, ia_spline_ctx = NULL)
+
       shiny::observeEvent(
         {
-          samplesRT()
-          countsX()
+          list( samplesRT(), contrastsRT() )
         },
         {
           Y <- samplesRT()
           Contrasts <- contrastsRT()
+          shiny::req(dim(Y), dim(Contrasts))
+          
           colnames(Y) <- tolower(colnames(Y))
           Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
 
@@ -701,14 +704,14 @@ upload_module_computepgx_server <- function(
             }
 
             interaction_vars$ia_ctx <- ia.ctx
-            interaction_vars$ia_spline_ctx <- ia.spline.ctx
-
-            if (length(ia.ctx) | length(ia.spline.ctx)) {
+            interaction_vars$ia_spline_ctx <- ia.spline.ctx            
+                      
+            if (length(ia.ctx) || length(ia.spline.ctx)) {
               choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
               sel <- c("trend.limma", "deseq2.lrt")
               c1 <- (sum(is.na(countsX())) > 0)
               c2 <- (upload_datatype() != "RNA-seq")
-              if (c1 | c2) choices <- sel <- "trend.limma"
+              if (c1 || c2) choices <- sel <- "trend.limma"
               shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
             } else {
               output$timeseries_checkbox <- renderUI({
@@ -718,7 +721,7 @@ upload_module_computepgx_server <- function(
           }
         }
       )
-
+      
       ## ------------------------------------------------------------------------
       ## If NA in X (no imputation performed), remove NA-intolerant methods.
       ## Temporary msg. Later work needed to grey them out.
