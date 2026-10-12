@@ -146,6 +146,15 @@ RUN --mount=type=secret,id=GITHUB_PAT \
     fi
 
 #------------------------------------------------------------
+# Pin irlba 2.3.7: 2.4.1 calls .Call() on NULL scale/shift on R < 4.4
+# ("LENGTH or similar applied to NULL object" in every irlba() call).
+# Must stay after every install_github above, they upgrade deps to latest.
+# Remove once the base image is on R >= 4.4.
+#------------------------------------------------------------
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/irlba/irlba_2.3.7.tar.gz', repos=NULL, type='source'); \
+          if (packageVersion('irlba') != '2.3.7') quit(status=1)"
+
+#------------------------------------------------------------
 # Clean up GitHub token from image
 #------------------------------------------------------------
 RUN rm -f /root/.gitconfig; true
