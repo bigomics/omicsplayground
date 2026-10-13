@@ -541,6 +541,18 @@ output$current_user <- shiny::renderText({
       message("user_dir       = ", auth$user_dir)
       message("-------------------------------")
 
+      session$userData$upgrade_url <- upgrade_url(auth$email)
+
+      ## Free trial over: block with an upgrade link. Admin-created DB rows keep
+      ## their own expiry (already-expired ones are stopped at login).
+      expiry <- tryCatch(as.Date(auth$expiry), error = function(e) NA)
+      if (auth_user_level_is_free(auth$level) && isTRUE(expiry < Sys.Date())) {
+        pgx.record_access(auth$email, action = "login.expired", session = session)
+        sever::sever(sever_trial_expired(expiry, session$userData$upgrade_url), bg_color = "#004c7d")
+        session$close()
+        return()
+      }
+
       pgx.record_access(auth$email, action = "login", session = session)
 
       ## Show/hide upload tab based on user-specific or global ENABLE_UPLOAD option

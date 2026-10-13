@@ -5,6 +5,17 @@
 
 BIGOMICS_CONTACT_US_URL <- "https://bigomics.ch/contact-us/"
 BIGOMICS_PRICING_URL <- "https://bigomics.ch/pricing/"
+BIGOMICS_UPGRADE_ACADEMIC_URL <- BIGOMICS_PRICING_URL ## TODO: Stripe payment link (academic, 99/month)
+BIGOMICS_BOOK_MEETING_URL <- BIGOMICS_CONTACT_US_URL ## TODO: book-a-meeting link (biotech/pharma)
+
+## Academic emails self-serve on Stripe (email prefilled); everyone else books a meeting.
+upgrade_url <- function(email) {
+  if (is_academic_email(email)) {
+    paste0(BIGOMICS_UPGRADE_ACADEMIC_URL, "?prefilled_email=", utils::URLencode(email, reserved = TRUE))
+  } else {
+    BIGOMICS_BOOK_MEETING_URL
+  }
+}
 
 contact_us_callback_js <- function() {
   sprintf(
@@ -13,10 +24,11 @@ contact_us_callback_js <- function() {
   )
 }
 
+## Opens the logged-in user's upgrade_url (set at login in server.R), else pricing.
 upgrade_callback_js <- function() {
   sprintf(
     "function(value) { if (value === true) { window.open('%s', '_blank'); } }",
-    BIGOMICS_PRICING_URL
+    shiny::getDefaultReactiveDomain()$userData$upgrade_url %||% BIGOMICS_PRICING_URL
   )
 }
 
@@ -60,8 +72,7 @@ shinyalert_storage_full <- function(numpgx = NULL, maxpgx = NULL, user_level = N
   if (is_free) {
     msg <- paste0(
       "You've reached your free dataset limit of ", limit_str,
-      ". To upload more, contact our team to upgrade your account or explore our ",
-      "<a href='https://events.bigomics.ch/upgrade' target='_blank'>subscription plans here</a>."
+      ". To upload more, delete one of your datasets or upgrade your account."
     )
     shinyalert::shinyalert(
       title = "Your storage is full!",
@@ -69,10 +80,10 @@ shinyalert_storage_full <- function(numpgx = NULL, maxpgx = NULL, user_level = N
       html = TRUE,
       type = "warning",
       showCancelButton = TRUE,
-      confirmButtonText = "Contact us",
+      confirmButtonText = "Upgrade now",
       cancelButtonText = "Cancel",
       confirmButtonCol = "#337ab7",
-      callbackJS = contact_us_callback_js()
+      callbackJS = upgrade_callback_js()
     )
   } else {
     msg <- paste(
