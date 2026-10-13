@@ -192,6 +192,24 @@ checkPersonalEmail <- function(email) {
   grepl("gmail|ymail|outlook|yahoo|hotmail|mail.com$|icloud|msn.com$|qq.com", tolower(email))
 }
 
+## Academic = .edu / .edu.<cc> / .ac.<cc>, or listed in ACADEMIC_DOMAINS ("a.ch|b.de").
+## ponytail: regex + list misses e.g. ethz.ch until listed; bundle a university domain list if it keeps growing
+is_academic_email <- function(email, domains = opt$ACADEMIC_DOMAINS) {
+  isTRUE(grepl("\\.(edu|edu\\.[a-z]{2}|ac\\.[a-z]{2})$", tolower(email))) ||
+    (isTRUE(nzchar(domains)) && isTRUE(checkAuthorizedDomain(email, domains)))
+}
+
+## Free accounts are not in the user DB, so their age comes from the user
+## folder: example-data.pgx is copied in with a fresh mtime at first login and
+## keeps it when deleted (renamed .pgx_). Other files don't count: an accepted
+## share is moved in with the sharer's older mtime. Without it, the folder
+## mtime (last add/delete) errs towards a later date, i.e. lenient.
+## ponytail: file mtimes, not a DB column; add a created column if honcho grows one
+free_account_expiry <- function(user_dir, days = opt$FREE_TRIAL_DAYS) {
+  files <- c(user_dir, Sys.glob(file.path(user_dir, "example-data.pgx*")))
+  as.Date(min(file.mtime(files))) + days
+}
+
 checkMissingEmail <- function(email) {
   (is.null(email) || is.na(email) || email %in% c("", " ", NA))
 }

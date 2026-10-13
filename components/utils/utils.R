@@ -464,6 +464,15 @@ sever_max_sessions <- function(srv) {
   )
 }
 
+sever_trial_expired <- function(expiry, url) {
+  shiny::tagList(
+    shiny::tags$h1("Your free trial has ended", style = "color:white;font-family:lato;"),
+    shiny::p(paste0("Your free trial ended on ", format(expiry, "%d %B %Y"), ". Upgrade to keep using Omics Playground and your datasets."), style = "font-size:15px;"),
+    shiny::br(),
+    shiny::a("Upgrade now", href = url, target = "_blank", class = "btn btn-info")
+  )
+}
+
 ## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 all.plotly.buttons <- c(
   "toImage",
