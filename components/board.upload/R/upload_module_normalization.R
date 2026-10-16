@@ -204,6 +204,8 @@ upload_module_normalization_server <- function(
       ## ------------------------------------------------------------------
       results_correction_methods <- reactive({
         shiny::req(dim(cleanX()$X), dim(r_contrasts()), dim(r_samples()))
+        if( ncol(r_contrasts()) == 0) return(NULL)
+        
         X0 <- imputedX()$X
         X1 <- cleanX()$X
         samples <- r_samples()
