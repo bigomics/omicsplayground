@@ -53,9 +53,12 @@ upload_module_computepgx_server <- function(
       ## NOTE (IK): these eventReactive can better go directly inside
       ## output$UI which is already reactive. Less reactives is good.
 
+      ## isolated: output$UI must not re-render on contrast edits; the
+      ## contrastsRT() observer below updates the method checkboxes.
       one_sample_case <- function() {
-        shiny::req(contrastsRT())
-        contrasts <- as.data.frame(contrastsRT())
+        contrasts <- shiny::isolate(contrastsRT())
+        if (is.null(contrasts) || NCOL(contrasts) == 0) return(FALSE)
+        contrasts <- as.data.frame(contrasts)
         any(apply(contrasts, 2, function(x) any(table(x) == 1)))
       }
 
@@ -78,12 +81,13 @@ upload_module_computepgx_server <- function(
         } else {
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
-        if(only.lm) {
+        if (one_sample_case()) mm <- intersect(mm, ONESAMPLE.GENE_METHODS)
+        if (only.lm) {
           lm.methods <- c("trend.limma","deseq2.lrt", "deseq2.wald",
             "edger.lrt", "edger.qlf")
-          mm <- intersect(mm, lm.methods)
+          ## one-sample groups leave no LM methods: keep one-sample methods
+          if (any(mm %in% lm.methods)) mm <- intersect(mm, lm.methods)
         }
-        if (one_sample_case()) mm <- intersect(mm, ONESAMPLE.GENE_METHODS)
         if (opt$ALLOW_CUSTOM_FC) mm <- c(mm, "custom")
         return(mm)
       }
@@ -113,7 +117,7 @@ upload_module_computepgx_server <- function(
           mm <- c("ttest", "ttest.welch", "trend.limma")
         }
         mm <- intersect(mm, available_methods)        
-        if (one_sample_case()) mm <- ONESAMPLE.GENE_METHODS
+        if (one_sample_case()) mm <- "ttest"
         return(mm)
       }
 
@@ -691,8 +695,7 @@ upload_module_computepgx_server <- function(
           Y <- samplesRT()
           Contrasts <- contrastsRT()
           shiny::req(ncol(Y)>0, ncol(Contrasts)>0, ncol(countsX()) )
-          if(ncol(Contrasts)==0) return(NULL)
-          
+
           colnames(Y) <- tolower(colnames(Y))
           Contrasts <- Contrasts[rownames(Y), , drop = FALSE]
 
@@ -721,46 +724,32 @@ upload_module_computepgx_server <- function(
             interaction_vars$ia_ctx <- ia.ctx
             interaction_vars$ia_spline_ctx <- ia.spline.ctx            
                       
-            if (length(ia.ctx) || length(ia.spline.ctx)) {
-              choices <- c("trend.limma", "deseq2.lrt", "deseq2.wald", "edger.lrt", "edger.qlf")
-              sel <- c("trend.limma", "deseq2.lrt")
-              c1 <- (sum(is.na(countsX())) > 0)
-              c2 <- (upload_datatype() != "RNA-seq")
-              if (c1 || c2) choices <- sel <- "trend.limma"
-              ##shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
-            } else {
+            if (!length(ia.ctx) && !length(ia.spline.ctx)) {
               output$timeseries_checkbox <- renderUI({
                 NULL
               })
             }
-            
           }
         }
       )
 
       timeseries_enabled <- shiny::reactive({
         ##shiny::req(input$dotimeseries)
-        message("timeseries enabled: 1")
         tt <- length(interaction_vars$ia_ctx) || length(interaction_vars$ia_spline_ctx)
-        message("timeseries enabled: 2: tt = ", tt)
-        message("timeseries enabled: 2: input$dotimeseries = ", isTRUE(input$dotimeseries))
         tt && isTRUE(input$dotimeseries)
       })
 
+      ## keep the user's selection where still valid, else fall back
+      update_gene_methods <- function(sel) {
+        choices <- GENETEST.METHODS(only.lm = timeseries_enabled())
+        sel <- intersect(sel, choices)
+        if (!length(sel)) sel <- intersect(GENETEST.SELECTED(), choices)
+        if (!length(sel)) sel <- head(intersect(c("trend.limma", choices), choices), 1)
+        shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
+      }
+
       shiny::observeEvent(timeseries_enabled(), {
-        sel <- input$gene_methods
-        if(timeseries_enabled()) {
-          message("timeseries enabled!")
-          choices <- GENETEST.METHODS(only.lm=TRUE)
-          sel <- intersect(sel, choices)
-          shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)          
-        } else {
-          message("timeseries disabled!")
-          choices <- GENETEST.METHODS(only.lm=FALSE)
-          sel <- intersect(sel, choices)
-          sel <- GENETEST.SELECTED()
-          shiny::updateCheckboxGroupInput(inputId = "gene_methods", choices = choices, selected = sel)
-        }
+        update_gene_methods(input$gene_methods)
       })
 
       
@@ -954,54 +943,21 @@ upload_module_computepgx_server <- function(
         }
       })
 
-      shiny::observeEvent(contrastsRT(), {        
-        contrasts <- as.data.frame(contrastsRT())
-        if(ncol(contrasts)==0) return(NULL)
-        has_one <- one_sample_case()
-        if (has_one) {
+      shiny::observeEvent(contrastsRT(), {
+        shiny::req(NCOL(contrastsRT()) > 0)
+        if (one_sample_case()) {
           shinyalert::shinyalert(
             title = "WARNING",
             text = stringr::str_squish("Some of the gene tests and enrichment methods are disabled. There are cases where there is only one samples in a group. Please note: a good experiment should have at least 3 replicates per condition."),
             type = "warning"
           )
         }
+        ## contrasts changed: reset method choices and selections to defaults
+        update_gene_methods(GENETEST.SELECTED())
+        shiny::updateCheckboxGroupInput(session, "gset_methods",
+          choices = GENESET.METHODS(), selected = GENESET.SELECTED()
+        )
       })
-      
-      ## shiny::observeEvent(contrastsRT(), {        
-      ##   return(NULL)  ## DEBUG        
-      ##   contrasts <- as.data.frame(contrastsRT())
-      ##   has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
-      ##   if (any(has_one)) {
-      ##     shinyalert::shinyalert(
-      ##       title = "WARNING",
-      ##       text = stringr::str_squish("There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled. Please note: a good experiment should have at least 3 replicates per condition."),
-      ##       type = "warning"
-      ##     )
-      ##     shiny::updateCheckboxGroupInput(
-      ##       session,
-      ##       "gene_methods",
-      ##       choices = ONESAMPLE.GENE_METHODS,
-      ##       sel = "ttest"
-      ##     )
-      ##     shiny::updateCheckboxGroupInput(session,
-      ##       "gset_methods",
-      ##       choices = ONESAMPLE.GENESET_METHODS,
-      ##       sel = c("fisher", "fgsea")
-      ##     )
-      ##   } else {
-      ##     shiny::updateCheckboxGroupInput(
-      ##       session,
-      ##       "gene_methods",
-      ##       choices = GENETEST.METHODS(),
-      ##       sel = GENETEST.SELECTED()
-      ##     )
-      ##     shiny::updateCheckboxGroupInput(session,
-      ##       "gset_methods",
-      ##       choices = GENESET.METHODS(),
-      ##       sel = GENESET.SELECTED()
-      ##     )
-      ##   }
-      ## })
 
       ## ------------------------------------------------------------------
       ## After confirmation is received, start computing the PGX
