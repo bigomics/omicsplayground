@@ -1145,6 +1145,10 @@ UploadBoard <- function(id,
         annot.cols <- colnames(uploaded$annot.csv)
         probetype("running")
 
+        dbg("[UploadServer:checkprobes_task] upload_org = ",upload_organism())
+        dbg("[UploadServer:checkprobes_task] upload_datatype = ",upload_datatype())
+        dbg("[UploadServer:checkprobes_task] probes = ",head(probes))
+        
         checkprobes_task$invoke(
           organism = upload_organism(),
           datatype = upload_datatype(),
