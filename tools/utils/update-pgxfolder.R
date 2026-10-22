@@ -82,7 +82,7 @@ for(pgx.file in pgx.files) {
     ##------------------ save new object -------------------
     names(ngs)
     pgx.file    
-    ngs.save(ngs, file=pgx.file)    
+    pgx.save(ngs, file=pgx.file)
     
 }
 

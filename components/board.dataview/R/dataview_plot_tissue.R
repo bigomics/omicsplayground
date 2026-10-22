@@ -58,7 +58,8 @@ dataview_plot_tissue_server <- function(id, pgx, r.gene, r.data_type, watermark 
       gene <- r.gene()
       data_type <- r.data_type()
 
-      # Find ortholog proportion
+      # Find ortholog proportion. GTEx tissue data is human-keyed, so
+      # bridge via human_ortholog specifically.
       n <- length(pgx$genes$human_ortholog)
       ortho <- sum(pgx$genes$human_ortholog != "")
 

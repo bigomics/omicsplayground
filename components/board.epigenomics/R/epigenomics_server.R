@@ -5,14 +5,10 @@ EpigenomicsBoard <- function(id, pgx) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Epigenomics Board</strong>"),
-        shiny::HTML("Epigenomics visualizations and analyses for methylomics data."),
-        easyClose = TRUE,
-        size = "l"
-      ))
-    })
+    OmicsBoard(
+      session, pgx, title = "Epigenomics",
+      infotext = "Epigenomics visualizations and analyses for methylomics data."
+    )
 
     shiny::observe({
       shiny::req(pgx$X, pgx$samples, pgx$genes)
@@ -24,7 +20,6 @@ EpigenomicsBoard <- function(id, pgx) {
       shiny::updateSelectizeInput(session, "select_chromosome",
         choices = chroms, selected = chroms[1:4], server = T
       )
-      shiny::updateSelectizeInput(session, "search_gene", choices = rownames(pgx$X), server = T)
       shiny::updateSelectInput(session, "data_samplefilter", choices = colnames(pgx$X))
       Y <- pgx$samples
       pheno <- colnames(Y)[sapply(Y, function(v) any(!is.na(v) & v != ""))]

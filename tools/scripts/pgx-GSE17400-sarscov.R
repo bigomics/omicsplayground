@@ -183,7 +183,7 @@ ngs$timings
 ## save PGX object
 ##-------------------------------------------------------------------
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)
 
 
 

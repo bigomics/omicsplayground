@@ -330,7 +330,7 @@ loading_table_datasets_server <- function(id,
       }
     })
 
-    shiny::observeEvent(loadbutton(), {
+    shiny::observeEvent( loadbutton(), {
       pgxfile <- table_selected_pgx()
       # Make sure there is a row selected
       if (is.null(pgxfile)) {
@@ -342,7 +342,9 @@ loading_table_datasets_server <- function(id,
         return(NULL)
       }
 
+      dbg("[loading_table_datasets_server] calling loadAndActivatePGX:")
       loadAndActivatePGX(pgxfile)
+      dbg("[loading_table_datasets_server] exit!")
     })
 
     ## ---------------------------- create table module -----------------------------------
@@ -518,14 +520,6 @@ loading_table_datasets_server <- function(id,
         menus <- c(menus, as.character(new_menu))
       }
 
-
-      observeEvent(input$share_pgx,
-        {
-          share_pgx(input$share_pgx)
-        },
-        ignoreInit = TRUE
-      )
-
       if (nrow(df) > auth$options$MAX_DATASETS) {
         df_cap <- auth$options$MAX_DATASETS
       } else {
@@ -572,6 +566,7 @@ loading_table_datasets_server <- function(id,
         extensions = c("Scroller"),
         plugins = "scrollResize",
         fillContainer = TRUE,
+        selection = list(mode='single', selected=1),
         options = list(
           dom = "ft",
           pageLength = 9999,
@@ -657,44 +652,6 @@ loading_table_datasets_server <- function(id,
       func2 = pgxTable_modal.RENDER,
       selector = "single"
     )
-
-    ## --------------- edit rows of  pgxtable ---------------------
-    # observeEvent(
-    #   input[["datasets-datatable_cell_edit"]],
-    #   {
-    #     row <- input[["datasets-datatable_cell_edit"]]$row
-    #     col <- input[["datasets-datatable_cell_edit"]]$col
-    #     val <- input[["datasets-datatable_cell_edit"]]$value
-
-    #     df <- table_data()
-    #     col_edited <- colnames(df)[col]
-
-    #     dataset_edited <- df$dataset[row]
-    #     pgxinfo <- getPGXINFO()
-
-    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
-    #     pgxinfo[row_edited, col_edited] <- val
-    #     fname <- file.path(auth$user_dir, "datasets-info.csv")
-    #     write.csv(pgxinfo, fname)
-
-    #     ## also rewrite description in actual pgx file
-    #     pgx_name <- dataset_edited
-    #     pgx_file <- file.path(auth$user_dir, paste0(pgx_name, ".pgx"))
-    #     pgx <- playbase::pgx.load(pgx_file, verbose = FALSE) ## override any name
-
-    #     row_edited <- match(dataset_edited, pgxinfo$dataset)
-    #     new_val <- pgxinfo[row_edited, col_edited]
-    #     pgx[[col_edited]] <- new_val
-
-    #     dbg("[datasets-datatable_cell_edit] updating", col_edited, " -> ", new_val)
-    #     dbg("[datasets-datatable_cell_edit] saving changes to", pgx_file)
-    #     playbase::pgx.save(pgx, file = pgx_file)
-    #     remove(pgx)
-    #     dbg("[datasets-datatable_cell_edit] done!")
-    #   },
-    #   ignoreInit = TRUE
-    # )
-
 
     table_selected_pgx <- shiny::reactive({
       req(table_module)
@@ -800,11 +757,12 @@ loading_table_datasets_server <- function(id,
 
     ## ---------------- CHANGE NAME PGX ----------------
     observeEvent(input$changename_pgx, {
+      df <- getFilteredPGXINFO()
       shinyalert::shinyalert(
         title = "Change name",
         text = paste0(
           "Are you sure you want to change the name of your dataset '",
-          getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "'?"
+          df[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset"], "'?"
         ),
         showCancelButton = TRUE,
         cancelButtonText = "Cancel",
@@ -815,7 +773,7 @@ loading_table_datasets_server <- function(id,
               title = "Enter new name",
               text = paste0(
                 "Rename your dataset '",
-                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset", ], "' as:"
+                getFilteredPGXINFO()[as.numeric(stringr::str_split(input$changename_pgx, "_row_")[[1]][2]), "dataset"], "' as:"
               ),
               type = "input",
               showCancelButton = TRUE,

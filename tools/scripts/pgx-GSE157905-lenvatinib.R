@@ -58,7 +58,7 @@ if(1) {
     ##table(y)
     
     bX <- sva::ComBat(X, batch=b)
-    bX <- gx.nnmcorrect(bX, y)$X
+    bX <- nnmCorrect(bX, y, return.B = TRUE)$X
     bX <- pgx.svaCorrect(bX, y)
     
     counts <- pmax(2**bX, 0)
@@ -129,5 +129,5 @@ ngs$datatype = "RNA-seq"
 ngs$description = "GSE157905. RNA Sequencing of HCC cells after lenvatinib, gefitinib, and combination treatment (Jin et al., Nature 2021). Batchcorrected: combat+nnm+sva"
 
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)
 

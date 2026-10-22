@@ -21,20 +21,11 @@ TcgaBoard <- function(id, pgx) {
       "The survival probabilities are computed and tested using the Kaplan-Meier method."
     )
 
+    OmicsBoard(session, pgx, title = "TCGA", infotext = as.character(tcga_tcgasurv_info))
+
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
-
-    observeEvent(input$tcga_info, {
-      showModal(
-        modalDialog(
-          title = tags$strong("TCGA Analysis Board"),
-          tcga_tcgasurv_info,
-          easyClose = TRUE,
-          size = "l"
-        )
-      )
-    })
 
     observe({
       if (is.null(pgx)) {

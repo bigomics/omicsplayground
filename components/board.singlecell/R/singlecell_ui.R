@@ -24,21 +24,19 @@ SingleCellInputs <- function(id) {
 }
 
 SingleCellUI <- function(id) {
-  fullH <- 750 ## full height of panel
-  imgH <- 680 ## row height of panel
-  tabH <- 200 ## row height of panel
-  modH <- TABLE_HEIGHT_MODAL
+  fullH <- "100%" ## full height of panel
 
   ns <- shiny::NS(id) ## namespace
-  div(
-    boardHeader(title = "Cell Profiling", info_link = ns("infotext")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Cell Profiling",
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
         "Cell type",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 181px)",
+          height = fullH,
           singlecell_plot_icpplot_ui(
             id = ns("icpplot"),
             title = "Cell type profiling",
@@ -64,7 +62,7 @@ SingleCellUI <- function(id) {
         "Mapping",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 181px)",
+          height = fullH,
           singlecell_plot_mappingplot_ui(
             id = ns("mappingplot"),
             title = "Cell type mapping",
@@ -91,7 +89,7 @@ SingleCellUI <- function(id) {
         "Markers",
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "calc(100vh - 181px)",
+          height = fullH,
           singlecell_plot_markersplot_ui(
             id = ns("markersplot"),
             title = "Expression of marker genes",

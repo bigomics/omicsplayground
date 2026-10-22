@@ -1,8 +1,9 @@
 # folders
 ######################
 libx/
+etc/*
+!etc/ai_model_policy.json
 etc/online/
-etc/
 etc/hubspot_creds
 
 # R data
@@ -61,11 +62,9 @@ user_input/
 
 # Sensitive files #
 ####################
-firebase.rds
 chirp_data.db
 chirp_data.csv
 gmail_creds
-test-firestore.R
 .httr-oauth
 bigomics-extra.js
 .Rproj.user
@@ -79,3 +78,4 @@ processx-error.log
 processx-output.log
 raw_*
 components/board.upload/R/.\#upload_module_preview_samples.R
+.superpowers/

@@ -12,17 +12,11 @@ WordCloudBoard <- function(id, pgx) {
 <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BmPTfanUnR0?si=2irSbCjCBRgQf5Wd&amp;start=190' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>
 "), js = FALSE)
 
+    OmicsBoard(session, pgx, title = "WordCloud Analysis", infotext = wc_infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$wc_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>WordCloud Analysis Board</strong>"),
-        shiny::HTML(wc_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     shiny::observe({
       # shiny::req(pgx$gset.meta)

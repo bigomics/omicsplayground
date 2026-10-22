@@ -37,14 +37,6 @@ wgcna_plot_TOMheatmap_server <- function(id,
       playbase::wgcna.plotTOM(res, justdata = TRUE)
     }
 
-    RENDER <- shiny::reactive({
-      res <- wgcna.compute()
-      par(mfrow = c(1, 1), mar = c(0, 0, 0, 0))
-      playbase::wgcna.plotTOM(res, legend = TRUE)
-      p <- grDevices::recordPlot()
-      p
-    })
-
     RENDER.func <- function() {
       res <- wgcna.compute()
       shiny::req(res)

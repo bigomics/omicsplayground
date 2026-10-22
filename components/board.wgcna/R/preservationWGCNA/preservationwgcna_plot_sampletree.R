@@ -55,7 +55,7 @@ preservationWGCNA_plot_sampletree_server <- function(id,
 
       for (i in 1:nsets) {
         dt <- toupper(names(cons$datExpr)[i])
-        playbase::wgcna.plotPreservationSampleDendroAndColors(
+        playbase::wgcna.plotConsensusSampleDendroAndColors(
           cons, i,
           main = toupper(dt),
           what = "both",

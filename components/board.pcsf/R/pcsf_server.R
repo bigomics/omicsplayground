@@ -13,6 +13,8 @@ PcsfBoard <- function(id, pgx) {
       "This PCSF analysis module..."
     )
 
+    OmicsBoard(session, pgx, title = "PCSF Network Analysis", infotext = as.character(pcsf_info))
+
     ## ========================================================================
     ## ============================ OBSERVERS =================================
     ## ========================================================================
@@ -28,18 +30,7 @@ PcsfBoard <- function(id, pgx) {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
 
-    my_observers[[2]] <- observeEvent(input$pcsf_info, {
-      showModal(
-        modalDialog(
-          title = tags$strong("PCSF Network Analysis"),
-          pcsf_info,
-          easyClose = TRUE,
-          size = "xl"
-        )
-      )
-    })
-
-    my_observers[[3]] <- observe({
+    my_observers[[2]] <- observe({
       if (is.null(pgx)) {
         return(NULL)
       }

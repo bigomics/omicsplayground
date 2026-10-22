@@ -43,22 +43,22 @@ pcsf_graph_info <- "Prize-collection Steiner Forest solution for the top differe
 
 PcsfUI <- function(id) {
   ns <- NS(id)
-  tagList(
-    boardHeader(
-      title = "Prize-Collecting Steiner Forest", info_link = ns("pcsf_info")
-    ),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Prize-Collecting Steiner Forest",
     shiny::tabsetPanel(
       id = ns("tabs"),
       shiny::tabPanel(
         "Gene PCSF",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           ## --------- begin tab content ------------
+          row_heights = list("auto", 1),
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 181px)",
+            height = "100%",
             bslib::layout_columns(
               col_widths = c(12),
               pcsf_genepanel_seriesplot_ui(
@@ -93,12 +93,13 @@ PcsfUI <- function(id) {
         "Geneset PCSF",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
           ## --------- begin tab content ------------
+          row_heights = list("auto", 1),
           bs_alert(pcsf_module_info),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            height = "calc(100vh - 181px)",
+            height = "100%",
             bslib::layout_columns(
               col_widths = c(12),
               pcsf_gsetpanel_seriesplot_ui(

@@ -14,12 +14,9 @@ MGseaInputs <- function(id) {
 MGseaUI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
-  shiny::div(
-    boardHeader(title = "Multi-Omics GSEA", info_link = ns("info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Multi-Omics GSEA",
     shiny::tabsetPanel(
       id = ns("tabs"),
 
@@ -28,10 +25,11 @@ MGseaUI <- function(id) {
         "multiGSEA",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 181px)",
+          height = "100%",
+          row_heights = list("auto", 1),
           bs_alert(HTML("<b>MultiGSEA</b> combines pathway enrichment on multiple omics layers to create a robust composite multi-omics pathway enrichment measure.")),
           bslib::layout_columns(
-            height = "calc(100vh - 181px)",
+            height = "100%",
             col_widths = bslib::breakpoints(
               sm = c(12, 12, 12, 12),
               xl = c(5, 3, 4, 7, 5),

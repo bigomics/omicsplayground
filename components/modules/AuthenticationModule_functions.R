@@ -38,7 +38,8 @@ read_user_options <- function(user_dir) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN",
+      "FORCE_BASIC"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
@@ -64,14 +65,15 @@ read_user_options_db <- function(email, user_database = NULL) {
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
       "MAX_DATASETS", "MAX_SAMPLES", "MAX_COMPARISONS",
       "MAX_GENES", "MAX_GENESETS", "MAX_METH_FEATURES", "MAX_SHARED_QUEUE",
-      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN"
+      "TIMEOUT", "WATERMARK", "ENABLE_MULTIOMICS", "ENABLE_PUBLIC_DELETE", "ADMIN",
+      "FORCE_BASIC"
     )
     dbg("[read_user_options] 1 : names(user_opt) = ", names(user_opt))
     user_opt <- user_opt[which(names(user_opt) %in% ALLOWED_USER_OPTS)]
     logical_cols <- c(
       "ENABLE_CHIRP", "ENABLE_DELETE", "ENABLE_PGX_DOWNLOAD",
       "ENABLE_PUBLIC_SHARE", "ENABLE_UPLOAD", "ENABLE_USER_SHARE",
-      "WATERMARK", "ENABLE_MULTIOMICS", "ADMIN"
+      "WATERMARK", "ENABLE_MULTIOMICS", "ADMIN", "FORCE_BASIC"
     )
     logical_cols <- intersect(logical_cols, names(user_opt))
     user_opt <- user_opt %>%
@@ -99,115 +101,15 @@ read_user_field_db <- function(email, user_database, field) {
   user_config |> as.character()
 }
 
-upgrade.dialog <- function(ns, current.plan) {
-  btn_basic <- "Go Basic!"
-  btn_starter <- "Get Starter!"
-  btn_premium <- "Get Premium!"
-  if (current.plan == "free") btn_basic <- "Current Plan"
-  if (current.plan == "starter") btn_starter <- "Current Plan"
-  if (current.plan == "premium") btn_premium <- "Current Plan"
-
-  modalDialog(
-    title = h3("Find the right OmicsPlayground plan for you"),
-    size = "m",
-    div(
-      class = "row",
-      style = "padding-left:4rem;padding-right:4rem;text-align:center;",
-      div(
-        class = "col-md-4",
-        style = "background:#F2FAFF;",
-        HTML("<h4><b>Basic</b></h4>"),
-        p("Try for free"),
-        h3("Free!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 3 datasets"),
-          tags$li("45 minutes time limit"),
-          tags$li("Up to 25 samples / dataset"),
-          tags$li("Up to 5 comparisons")
-        ),
-        shiny::actionButton(ns("get_basic"), btn_basic),
-        br()
-      ),
-      div(
-        class = "col-md-4",
-        style = "background:#E8F8FF;",
-        h4(HTML("<b>Starter</b>")),
-        p("Great to start"),
-        h3("Soon!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 10 datasets"),
-          tags$li("3 hours time limit"),
-          tags$li("Up to 100 samples / dataset"),
-          tags$li("Up to 10 comparisons")
-        ),
-        shiny::actionButton(ns("get_starter"), btn_starter),
-        br()
-      ),
-      div(
-        class = "col-md-4",
-        style = "background:#E2F4FF;",
-        HTML("<h4><b>Premium</b></h4>"),
-        p("For power users or small groups"),
-        h3("Soon!"),
-        tags$ul(
-          class = "list-unstyled",
-          tags$li("Host up to 100 datasets"),
-          tags$li("8 hours time limit"),
-          tags$li("Up to 2000 samples / dataset"),
-          tags$li("Up to 100 comparisons")
-        ),
-        shiny::actionButton(ns("get_premium"), btn_premium),
-        br()
-      )
-    ), ## content div
-    div(
-      style = "margin-top:3rem;text-align:center;",
-      HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
-    ),
-    footer = tagList(
-      fillRow(
-        flex = c(NA, 0.03, NA, 1, NA, NA),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "yearlyCheck",
-            type = "radio",
-            name = "yearly",
-            onclick = "priceChange(name)",
-            checked = TRUE
-          ),
-          "Billed yearly"
-        ),
-        br(),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "monthlyCheck",
-            type = "radio",
-            name = "monthly",
-            onclick = "priceChange(name)"
-          ),
-          "Billed monthly"
-        ),
-        br(),
-        shiny::actionButton(ns("manage"), "Manage Subscription"),
-        modalButton("Dismiss")
-      )
-    )
-  ) ## modalDialog
-}
-
-
-js.emailFeedbackMessage <- function(session, msg, type = "error") {
-  session$sendCustomMessage(
-    "email-feedback",
-    list(
-      type = type,
-      msg = msg
-    )
-  )
+## BYOK (bring-your-own-key) entitlement: may this user select an AI provider
+## other than "bigomics" and supply their own API key? Enterprise-only, plus a
+## blank level ("") — the no-auth/dev case, on-prem Header/Cookie deployments
+## that don't inject a level, and the Password/CSV path when the CREDENTIALS
+## file omits a "level" column. Never a live Honcho tier, which defaults to
+## "free". "pro"/"free" are NOT entitled.
+ai_byok_allowed <- function(level) {
+  lvl <- level %||% ""
+  identical(lvl, "enterprise") || !nzchar(lvl)
 }
 
 ## -----------------------------------------------------------------

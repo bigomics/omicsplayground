@@ -21,6 +21,8 @@ DrugConnectivityBoard <- function(id, pgx) {
         This facilitates to quickly see and detect the similarities between contrasts for certain drugs.<br><br><br><br>
         <center><iframe width='560' height='315' src='https://www.youtube.com/embed/BtMQ7Y0NoIA?si=3T61_k_onEqsTMcr&amp;start=91' title='YouTube video player' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe></center>")
 
+    OmicsBoard(session, pgx, title = "Drug Connectivity Analysis", infotext = infotext)
+
     ## ================================================================================
     ## ============================== OBSERVERS  ======================================
     ## ================================================================================
@@ -29,14 +31,6 @@ DrugConnectivityBoard <- function(id, pgx) {
       shiny::req(pgx$X)
       ct <- names(pgx$drugs)
       shiny::updateSelectInput(session, "method", choices = ct)
-    })
-
-    shiny::observeEvent(input$dsea_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
-        shiny::HTML(infotext),
-        easyClose = TRUE, size = "l"
-      ))
     })
 
     shiny::observe({
@@ -48,39 +42,39 @@ DrugConnectivityBoard <- function(id, pgx) {
 
     # Observe tabPanel change to update Settings visibility
     tab_elements <- list(
-      "Drug enrichment" = list(disable = c("aiui")),
-      "Connectivity map (beta)" = list(disable = c("aiui")),
-      "AI Summary✨" = list(disable = c("filter_table", "contrast"))
+      "Drug enrichment" = list(disable = c()),
+      "Connectivity map (beta)" = list(disable = c())
     )
 
     shiny::observeEvent(input$tabs, {
       bigdash::update_tab_elements(input$tabs, tab_elements)
     })
-
+    
     ## =========================================================================
     ## Shared Reactive functions
     ## =========================================================================
 
-    get_pgx_drugs <- eventReactive(pgx$drugs, {
+    get_pgx_drugs <- eventReactive( pgx$drugs, {
+
       ## lazily compute MOA if missing (should be done at pgx computation time)
-      if (is.null(pgx$drugs[[1]]$moa)) {
+      if(is.null(pgx$drugs[[1]]$moa)) {
         dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing MOA...")
         pgx.showSmallModal("Calculating MOA<br>Please wait...")
         pgx$drugs$report <- NULL
-        for (db in names(pgx$drugs)) {
+        for(db in names(pgx$drugs)) {
           res <- pgx$drugs[[db]]
-          if (is.null(res$moa)) {
+          if(is.null(res$moa)) {
             moa <- metaLINCS::computeMoaEnrichment(res)
-            pgx$drugs[[db]][["moa"]] <- moa
+            pgx$drugs[[db]][['moa']] <- moa
           }
         }
         shiny::removeModal(session)
       }
 
       ## lazily compute CMAP cluster positions if missing
-      if (is.null(pgx$drugs[[1]]$clust)) {
+      if(is.null(pgx$drugs[[1]]$clust)) {
         dbg("[DrugConnectivityBoard::get_pgx_drugs] Computing CMAP positions...")
-        for (db in names(pgx$drugs)) {
+        for(db in names(pgx$drugs)) {
           res <- pgx$drugs[[db]]
           if (!is.null(res$clust)) next
           smat <- res$stats
@@ -93,16 +87,17 @@ DrugConnectivityBoard <- function(id, pgx) {
           )
           if (!inherits(clust, "try-error")) {
             rownames(clust) <- rownames(smat)
-            pgx$drugs[[db]][["clust"]] <- clust
+            pgx$drugs[[db]][['clust']] <- clust
           }
         }
       }
 
       return(pgx$drugs)
     })
-
+    
     # common getData-esque function for drug connectivity plots / tables
     getActiveDSEA <- shiny::reactive({
+      
       contr <- input$contrast
       dmethod <- input$method
       shiny::req(contr, dmethod)
@@ -115,38 +110,35 @@ DrugConnectivityBoard <- function(id, pgx) {
         return(NULL)
       }
       do.filter <- input$filter_table
-
+      
       dsea <- playbase::pgx.getDrugConnectivityTable(
-        pgx = NULL, contrast = contr, db = dmethod,
-        drugs = pgxdrugs, filter = do.filter
-      )
-
+        pgx=NULL, contrast=contr, db=dmethod,
+        drugs=pgxdrugs, filter=do.filter)
+      
       return(dsea)
     })
 
     getMOA.target <- shiny::reactive({
       contr <- input$contrast
       db <- input$method
-      shiny::req(contr, db)
+      shiny::req(contr,db)
       pgxdrugs <- get_pgx_drugs()
       shiny::req(pgxdrugs)
       moa <- playbase::pgx.getDrugMOATable(
-        pgx = NULL, contrast = contr, db = db,
-        drugs = pgxdrugs, type = "targetGene"
-      )
+        pgx=NULL, contrast=contr, db=db,
+        drugs=pgxdrugs, type="targetGene")       
       return(moa)
     })
 
     getMOA.class <- shiny::reactive({
       contr <- input$contrast
       db <- input$method
-      shiny::req(contr, db)
+      shiny::req(contr,db)
       pgxdrugs <- get_pgx_drugs()
-      shiny::req(pgxdrugs)
+      shiny::req(pgxdrugs)      
       moa <- playbase::pgx.getDrugMOATable(
-        pgx = NULL, contrast = contr, db = db,
-        drugs = pgxdrugs, type = "drugClass"
-      )
+        pgx=NULL, contrast=contr, db=db,
+        drugs=pgxdrugs, type="drugClass")       
       return(moa)
     })
 
@@ -194,7 +186,7 @@ DrugConnectivityBoard <- function(id, pgx) {
     ## ==================================================================================
     ## Module servers
     ## ==================================================================================
-
+    
     drugconnectivity_plot_cmap_enplot_server(
       "cmap_enplot",
       pgx,
@@ -220,11 +212,5 @@ DrugConnectivityBoard <- function(id, pgx) {
       getActiveDSEA
     )
 
-    drugconnectivity_report_server(
-      "cmap_report",
-      pgx = pgx,
-      drugs = get_pgx_drugs,
-      rdb = reactive(input$method)
-    )
   })
 }

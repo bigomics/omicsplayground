@@ -35,17 +35,11 @@ EnrichmentBoard <- function(id, pgx,
 
     GSET.DEFAULTMETHODS <- c("gsva", "camera", "fgsea", "fisher")
 
+    OmicsBoard(session, pgx, title = "Enrichment Analysis", infotext = gs_infotext)
+
     ## ================================================================================
     ## ======================= OBSERVE FUNCTIONS ======================================
     ## ================================================================================
-
-    shiny::observeEvent(input$gs_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Enrichment Analysis Board</strong>"),
-        shiny::HTML(gs_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
 
     shiny::observe({
       shiny::req(pgx$X)
@@ -417,7 +411,7 @@ EnrichmentBoard <- function(id, pgx,
       gmt1 <- pgx$GMT[, gs, drop = FALSE]
       genes <- rownames(gmt1)[which(Matrix::rowSums(gmt1 != 0) == ns)]
       # check which columns are in pgx$genes
-      cols_in_pgx <- c("feature", "symbol", "human_ortholog", "gene_title")
+      cols_in_pgx <- c("feature", "symbol", "ortholog", "gene_title")
       cols_in_pgx <- cols_in_pgx[which(cols_in_pgx %in% colnames(pgx$genes))]
 
       genes_user <- pgx$genes[rownames(limma1), cols_in_pgx]

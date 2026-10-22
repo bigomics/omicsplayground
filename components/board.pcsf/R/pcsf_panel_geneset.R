@@ -47,7 +47,7 @@ pcsf_gsetpanel_networkplot_ui <- function(id, caption, info.text, height, width)
     height = height,
     width = width,
     options = plot_opts,
-    download.fmt = c("png", "pdf", "svg"),
+    download.fmt = c("png", "pdf", "svg", "cx2"),
   )
 }
 
@@ -327,6 +327,24 @@ pcsf_gsetpanel_server <- function(id,
       return(plt)
     }
 
+    ## CX2 export for Cytoscape (mirrors visnetwork.RENDER attributes)
+    cx2_content <- function(file) {
+      res <- gset_pcsf()
+      g <- res$graph
+      contrast <- r_contrast()
+      shiny::req(contrast)
+      F <- playbase::pgx.getMetaMatrix(pgx, level = "geneset")$fc
+      fx <- F[igraph::V(g)$name, contrast]
+      fx[is.na(fx)] <- 0
+      igraph::V(g)$foldchange <- fx
+      igraph::V(g)$prize <- abs(fx)
+      if (!is.null(res$layout)) {
+        igraph::V(g)$x <- res$layout[, 1]
+        igraph::V(g)$y <- res$layout[, 2]
+      }
+      pcsf.write_cx2(g, file)
+    }
+
     PlotModuleServer(
       "plotmodule",
       func = visnetwork.RENDER,
@@ -334,7 +352,10 @@ pcsf_gsetpanel_server <- function(id,
       pdf.width = 10,
       pdf.height = 10,
       add.watermark = watermark,
-      vis.delay = 5 ## important! graph physics needs to settle
+      vis.delay = 5, ## important! graph physics needs to settle
+      download.handlers = list(
+        cx2 = list(ext = "cx2", content = cx2_content)
+      )
     )
 
     ## -----------------------------------------------------------------

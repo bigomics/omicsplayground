@@ -76,35 +76,9 @@ upload_table_preview_contrasts_server <- function(
     }
 
     output$table_contrasts <- shiny::renderUI({
-      # I will set selected_contrast_input to true for now (selection page will be disabled)
-      # if(selected_contrast_input() == FALSE) {
-      # ask user if preferrence is upload contrast or create contrast online
-      # TODO remove this is not needed
-      # div(
-      #   style = "display: flex; gap: 80px; flex-direction: column; justify-content: center; align-items: center; height: 50%;",
-      #   div(h4("Please choose one of the following options:")),
-      #   div(
-      #     style = "display: flex; justify-content: center; gap: 20px;",
-      #     actionButton(
-      #     ns("goUploadComparison"),
-      #     label = " Upload comparisons file",
-      #     class = "btn btn-primary m-1",
-      #     icon("upload")
-      #     ),
-      #   actionButton(
-      #     ns("goOnlineComparison"),
-      #     label = " Build my comparisons",
-      #     class = "btn btn-primary m-1",
-      #     icon("pen-to-square")
-      #     )
-      #   )
-
-      # )
-      # } else {
-      # only display buttons if goOnlineComparison is false
 
       action_buttons1 <- div(
-        style = "display: flex; justify-content: left; margin-bottom: 20px;",
+        style = "display: flex; justify-content: left; margin: -7px 0 0 100px;",
         actionButton(
           ns("goUploadComparison"),
           label = "Upload comparisons file",
@@ -321,16 +295,6 @@ upload_table_preview_contrasts_server <- function(
         shinyalert::shinyalert(
           title = "File format not supported.",
           text = "Please make sure the file is a CSV file.",
-          type = "error"
-        )
-        return()
-      }
-
-      # if contrasts not in file name, give warning and return
-      if (!grepl("contrast", input$contrasts_csv$name, ignore.case = TRUE) && !grepl("comparison", input$contrasts_csv$name, ignore.case = TRUE)) {
-        shinyalert::shinyalert(
-          title = "Comparison not in filename.",
-          text = "Please make sure the file name contains 'comparison', such as comparison_dataset.csv or comparison.csv.",
           type = "error"
         )
         return()

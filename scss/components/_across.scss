@@ -1,0 +1,201 @@
+// Across Datasets module styles
+
+// Left inputs card: make form inputs use the full card width. Shiny defaults
+// form-input containers (.shiny-input-container) to 300px, which leaves the
+// "Select genes" selectize and others narrower than their card.
+.across-inputs {
+  .shiny-input-container:not(.shiny-input-container-inline) {
+    width: 100%;
+  }
+
+  .selectize-control,
+  .selectize-input {
+    width: 100%;
+  }
+}
+
+// Dataset selector modal overlay
+.across-dataset-modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  padding-top: 10px;
+}
+
+// Dataset selector modal dialog
+.across-dataset-modal-dialog {
+  // Make table fill the modal width
+  .dataTables_wrapper {
+    width: 100%;
+    overflow: visible;
+  }
+
+  table.dataTable {
+    width: 100% !important;
+  }
+
+  // Fix filter dropdowns display
+  table.dataTable thead {
+    // Allow dropdowns to overflow
+    overflow: visible;
+    
+    th {
+      overflow: visible;
+      vertical-align: top;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    // Style the filter inputs and selects
+    .column-filter {
+      width: 100%;
+      min-width: 60px;
+    }
+
+    select.column-filter {
+      width: 100%;
+      min-width: 70px;
+      padding: 4px 2px;
+      font-size: 0.85em;
+      height: auto;
+      max-height: 28px;
+    }
+
+    input.column-filter {
+      width: 100%;
+      min-width: 50px;
+      padding: 4px;
+      font-size: 0.85em;
+    }
+  }
+
+  // Row-selection checkbox column. Selection is driven by DT's native row
+  // selection; this column only renders a checkbox that mirrors the row state,
+  // so clicking it toggles the row.
+  table.dataTable td.across-select-col {
+    width: 28px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #adb5bd;
+      border-radius: 3px;
+      background-color: #fff;
+      box-sizing: border-box;
+      vertical-align: middle;
+    }
+  }
+
+  // Checked state mirrors DT's selected-row class
+  // (bootstrap5 style => tr.selected, bootstrap3/4 => tr.active).
+  table.dataTable tr.selected td.across-select-col::before,
+  table.dataTable tr.active td.across-select-col::before {
+    border-color: $primary;
+    background-color: $primary;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 12px 12px;
+  }
+
+  // The checkbox column has no meaningful filter (all values identical), so
+  // hide the disabled filter input DT renders for it.
+  table.dataTable thead tr:nth-child(2) td:first-child > * {
+    display: none;
+  }
+
+  // Ensure modal body doesn't clip dropdowns
+  .modal-body {
+    overflow: visible;
+  }
+
+  // Fix selectize dropdown width - allow it to expand beyond column
+  .selectize-dropdown {
+    min-width: 150px !important;
+    width: auto !important;
+    max-width: 300px;
+    z-index: 10000;
+  }
+
+  .selectize-dropdown-content {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  .selectize-dropdown .option {
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  // Ensure the selectize input container doesn't clip
+  .selectize-control {
+    overflow: visible;
+  }
+
+  // Fix the selectize input area (where selected items appear)
+  .selectize-input {
+    min-width: 80px;
+    overflow: visible;
+    
+    // Selected items (chips/tags) styling
+    .item {
+      white-space: nowrap;
+      max-width: none;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      margin: 2px;
+      font-size: 0.85em;
+      
+      // Remove button
+      .remove {
+        margin-left: 4px;
+      }
+    }
+  }
+
+  // Multi-select input should allow horizontal scrolling if needed
+  .selectize-input.items {
+    min-height: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+}
+
+// Selected datasets text under button
+.across-selected-datasets-text {
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}
+
+// Make the tab content fill the right column so the plot card's bottom lines up
+// with the inputs card on the left. shiny::tabsetPanel renders
+// .tabbable > (.nav-tabs + .tab-content > .tab-pane.active); the nav strip keeps
+// its natural height while the active pane stretches to fill the rest.
+.across-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  > .tabbable {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    > .tab-content {
+      flex: 1 1 auto;
+      min-height: 0;
+
+      > .tab-pane.active {
+        height: 100%;
+      }
+    }
+  }
+}

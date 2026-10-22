@@ -10,7 +10,14 @@ URL: https://github.com/bigomics/omicsplayground
 BugReports: https://github.com/bigomics/omicsplayground/issues
 Encoding: UTF-8
 LazyData: true
-Suggests: 
+Suggests:
+    commonmark,
+    omicsagentovi (>= 0.5.95),
+    omicsai (>= 0.3.8),
+    omicspgx,
+    omicspgxmcp,
+    omicsplots,
+    plotly.repel,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
@@ -29,6 +36,7 @@ Imports:
     forcats,
     future,
     ggforce,
+    ggrepel,
     ggVennDiagram,
     heatmaply,
     htmltools,
@@ -39,6 +47,7 @@ Imports:
     jsonlite,
     magrittr,
     markdown,
+    mirai,
     miniUI,
     openxlsx,
     pairsD3,
@@ -84,4 +93,3 @@ Remotes:
     url::https://github.com/bigomics/wizardR/archive/HEAD.zip,
     url::https://github.com/Ironholds/rgeolocate/archive/HEAD.zip,
     url::https://github.com/JohnCoene/bsutils/archive/HEAD.zip,
-    url::https://github.com/JohnCoene/firebase/archive/refs/heads/omics.zip,

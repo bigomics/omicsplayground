@@ -41,32 +41,33 @@ dataview_plot_totalcounts_ui <- function(
 
 dataview_plot_totalcounts_server <- function(id,
                                              getCountStatistics,
-                                             r.data_type,
+                                             r.datasource = reactive("X"),
+                                             r.data_type = reactive("log2"),
                                              r.samples = reactive(""),
                                              r.data_groupby = reactive(""),
                                              watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
     plot_data <- shiny::reactive({
       data_groupby <- r.data_groupby()
-      data_type <- r.data_type()
       samples <- r.samples()
       tbl <- getCountStatistics()
       req(tbl)
 
-      type <- tspan("counts", js = FALSE)
-
-      logtype <- if (data_type == "log2") {
-        " (log2)"
-      } else if (data_type == "logCPM") {
-        " (logCPM)"
+      type <- if (identical(r.datasource(), "counts")) {
+        tspan("counts", js = FALSE)
       } else {
-        ("")
+        tspan("normalized abundance", js = FALSE)
       }
 
       sampleqc_plottype <- input$sampleqc_plottype
 
+      ## {Scale} applies to the totals only: a feature count stays a count.
+      logscale <- !identical(r.data_type(), "counts")
+      total.counts <- tbl$total.counts
+      if (logscale) total.counts <- log2(1 + total.counts)
+
       if (sampleqc_plottype == "Total abundance") {
-        ylab <- paste0("Total ", type)
+        ylab <- paste0("Total ", type, if (logscale) " (log2)" else "")
       } else if (sampleqc_plottype == "Number of detected features") {
         ylab <- "N. of detected features"
       }
@@ -74,10 +75,11 @@ dataview_plot_totalcounts_server <- function(id,
       res <- list(
         df = data.frame(
           sample = names(tbl$total.counts),
-          counts = tbl$total.counts,
+          counts = total.counts,
           ndetectedfeat = tbl$n.detected.features
         ),
         ylab = ylab,
+        fmt = if (logscale) "%.2f" else "%8.0f",
         sampleqc_plottype = sampleqc_plottype
       )
 
@@ -136,7 +138,7 @@ dataview_plot_totalcounts_server <- function(id,
               marker = list(color = bar_color),
               hovertemplate = ~ paste0(
                 "Sample: <b>", sample, "</b><br>",
-                res$ylab, ": <b>", sprintf("%8.0f", counts), "</b>",
+                res$ylab, ": <b>", sprintf(res$fmt, counts), "</b>",
                 "<extra></extra>"
               )
             ) %>%

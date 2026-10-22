@@ -39,16 +39,12 @@ PreservationWGCNA_Inputs <- function(id) {
   )
 }
 
-
 PreservationWGCNA_UI <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  fullH <- 700 ## full height of page
-  rowH1 <- 250 ## row 1 height
-  rowH2 <- 440 ## row 2 height
-
-  shiny::div(
-    boardHeader(title = "Preservation WGCNA", info_link = ns("info")),
+  OmicsBoardUI(
+    ns = ns,
+    title = "Preservation WGCNA",
     shiny::tabsetPanel(
       id = ns("tabs"),
 
@@ -57,12 +53,12 @@ PreservationWGCNA_UI <- function(id) {
         "Dendrograms",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1, 0.7),
+          height = "100%",
+          row_heights = list("auto", 10, 7),
           bs_alert(HTML("<b>Preservation WGCNA</b> is an application of WGCNA to test whether modules of a reference data set are preserved in others (test) datasets. A module is said to be preserved if the intramodule connectivity and density is maintained.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
-            # height = "calc(100vh - 180px)",
+            # height = "100%",
             height = "100vh",
             preservationWGCNA_plot_dendrograms_ui(
               ns("preservationWGCNADendro"),
@@ -89,8 +85,8 @@ PreservationWGCNA_UI <- function(id) {
         "Module Overlap",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           # bs_alert(HTML("<b>Sample clustering</b> shows the clustering tree (of each datasts) of their samples. The heatmap shows sample traits and module eigengenes.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -121,8 +117,8 @@ PreservationWGCNA_UI <- function(id) {
         "Module-Trait",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           # bs_alert(HTML("<b>Multi-WGCNA</b> is an application of WGCNA for multi-omics where WGCNA is performed on each layer separately.")),
           bslib::layout_columns(
             col_widths = c(6, 6),
@@ -163,11 +159,19 @@ PreservationWGCNA_UI <- function(id) {
         "Feature Table",
         bslib::layout_columns(
           col_widths = 12,
-          height = "calc(100vh - 180px)",
-          row_heights = c("auto", 1),
+          height = "100%",
+          row_heights = list("auto", 1),
           bslib::layout_columns(
-            col_widths = c(7, 5),
+            col_widths = c(3, 4, 5),
             height = "100vh",
+            wgcna_module_ai_summary_ui(
+              id = ns("preservationSummary"),
+              title = "Summary",
+              info.text = "AI-generated summary of the selected WGCNA module. The WGCNA module and trait of interest can be selected in the drop-down menu on the right.",
+              caption = "Information about the selected WGCNA module.",
+              height = c("100%", TABLE_HEIGHT_MODAL),
+              width = c("auto", "100%")
+            ),
             bslib::layout_columns(
               col_widths = c(12),
               preservationWGCNA_table_modulegenes_ui(

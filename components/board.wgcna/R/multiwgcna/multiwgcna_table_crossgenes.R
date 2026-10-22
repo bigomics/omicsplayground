@@ -89,7 +89,10 @@ multiwgcna_table_crossgenes_server <- function(id,
       df <- df[, sel]
 
       numeric.cols <- which(sapply(df, class) == "numeric")
-      ellipsis.cols <- intersect(c("gene", "symbol", "title"), colnames(df))
+      feature.cols <- intersect(c("feature","symbol"),colnames(df))
+
+      js.ellipsis20 <- paste0("$.fn.dataTable.render.ellipsis(20, false)")
+      js.ellipsis40 <- paste0("$.fn.dataTable.render.ellipsis(40, false)")      
 
       dt <- DT::datatable(
         df,
@@ -109,8 +112,12 @@ multiwgcna_table_crossgenes_server <- function(id,
           deferRender = TRUE,
           columnDefs = list(
             list(
-              targets = c(ellipsis.cols),
-              render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
+              targets = feature.cols,
+              render = DT::JS(js.ellipsis20)
+            ),
+            list(
+              targets = intersect(c("title"), colnames(df)),
+              render = DT::JS(js.ellipsis40)
             )
           )
         ) ## end of options.list

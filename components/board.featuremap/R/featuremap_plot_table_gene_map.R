@@ -239,17 +239,6 @@ featuremap_plot_gene_map_server <- function(id,
       )
     })
 
-    # PlotModuleServer(
-    #   "gene_map",
-    #   plotlib = "ggplot",
-    #   plotlib2 = "plotly",
-    #   func = geneUMAP.RENDER_ggplot,
-    #   func2 = geneUMAP.RENDER2,
-    #   csvFunc = plot_data,
-    #   pdf.width = 5, pdf.height = 5,
-    #   add.watermark = watermark
-    # )
-
     # ================================================================================
     # ============================= Table server module ==============================
     # ================================================================================
@@ -264,7 +253,7 @@ featuremap_plot_gene_map_server <- function(id,
       annot <- pgx$genes
 
       ## Retrieve gene table with rownames (symbols)
-      annot_cols <- c("feature", "symbol", "human_ortholog", "gene_title")
+      annot_cols <- c("feature", "symbol", "ortholog", "gene_title")
       annot_cols <- intersect(annot_cols, colnames(annot))
       rowids <- match(rownames(F), rownames(annot))
       annot <- annot[rowids, annot_cols, drop = FALSE]
@@ -280,8 +269,8 @@ featuremap_plot_gene_map_server <- function(id,
       if (mean(df$feature %in% df$symbol, na.rm = TRUE) > 0.9) {
         df$feature <- NULL
       }
-      if (mean(df$symbol == df$human_ortholog, na.rm = TRUE) > 0.9 || all(is.na(df$human_ortholog))) {
-        df$human_ortholog <- NULL
+      if (mean(df$symbol == df$ortholog, na.rm = TRUE) > 0.9 || all(is.na(df$ortholog))) {
+        df$ortholog <- NULL
       }
 
       ## detect brush

@@ -4,6 +4,108 @@
 ##
 
 
+##' Recompute the PCA of the samples on the fly.
+##'
+##' pgx$cluster$pos only stores PC1-PC2 (pca2d) and PC1-PC3 (pca3d), so any
+##' higher component has to be recomputed here.
+##'
+##' ponytail: this duplicates the preprocessing recipe of the "pca" branch of
+##' playbase::pgx.clusterMatrix() (playbase/R/pgx-cluster.R) -- top-SD rows,
+##' row-centered, irlba. It deliberately drops the jitter and column
+##' augmentation that function adds for t-SNE/UMAP stability, so PC1/PC2 match
+##' the stored pca2d only up to sign. If that recipe changes, change it here
+##' too. Upgrade path: export pgx.pcaComponents() from playbase, have
+##' pgx.clusterMatrix() delegate to it, and delete this copy.
+##'
+##' How many components pgx.pcaComponents() can return for a matrix.
+##'
+##' Derived from the dimensions alone, so the axis selectors can be populated
+##' without running the decomposition. Keep in step with the npc capping in
+##' pgx.pcaComponents(), or the selectors will offer components that do not
+##' exist.
+##'
+##' @param X expression matrix (features x samples)
+##' @param npc maximum number of components wanted
+##' @return integer number of components actually available
+pgx.pcaMaxComponents <- function(X, npc = 5) {
+  max(1, min(npc, ncol(X) - 1, nrow(X) - 1))
+}
+
+
+##' @param X expression matrix (features x samples)
+##' @param Y sample annotation; when given, phenotype levels are one-hot
+##'   encoded and correlated with each component for the direction arrows
+##' @param npc maximum number of components to return
+##' @param reduce.sd reduce to this many top-SD features before the SVD
+##' @return list(pos = samples x npc scores, varexp = percentage per component,
+##'   loadings = features x npc, pheno.cor = phenotype levels x npc or NULL)
+pgx.pcaComponents <- function(X, Y = NULL, npc = 5, reduce.sd = 1000) {
+  ## Inf/-Inf survive an is.na() check but turn the row into NaN once centered,
+  ## which leaves an all-NaN component and breaks the sign pinning below.
+  X[!is.finite(X)] <- NA
+  ## Reduce BEFORE imputing: imputing the full matrix to then discard all but
+  ## the top reduce.sd rows costs seconds on a large NA-heavy dataset.
+  if (nrow(X) > reduce.sd) {
+    X <- X[head(order(-matrixStats::rowSds(X, na.rm = TRUE)), reduce.sd), , drop = FALSE]
+  }
+  if (any(is.na(X))) {
+    if (playbase::is.multiomics(rownames(X))) {
+      X <- playbase::imputeMissing.mox(X, method = "SVD2")
+    } else {
+      X <- playbase::imputeMissing(X, method = "SVD2")
+    }
+  }
+  X <- X - rowMeans(X, na.rm = TRUE)
+  npc <- pgx.pcaMaxComponents(X, npc)
+
+  ## ponytail: irlba is unstable when npc approaches min(dim), and base svd is
+  ## exact and cheap at that size anyway. irlba also throws outright on a
+  ## degenerate (near null space) matrix, where svd still returns -- playbase
+  ## dodges that with random jitter, which we cannot use without losing
+  ## reproducibility, so fall back to the exact decomposition instead.
+  sv <- if (min(dim(X)) <= npc + 2) {
+    svd(X)
+  } else {
+    tryCatch(irlba::irlba(X, nv = npc), error = function(e) svd(X))
+  }
+
+  pos <- sv$v[, seq_len(npc), drop = FALSE]
+  loadings <- sv$u[, seq_len(npc), drop = FALSE]
+  ## the sign of an SVD is arbitrary: pin the largest-magnitude loading positive
+  ## so the plot does not mirror between sessions. Scores and loadings must flip
+  ## together, otherwise the biplot arrows point the wrong way.
+  for (i in seq_len(npc)) {
+    if (loadings[which.max(abs(loadings[, i])), i] < 0) {
+      loadings[, i] <- -loadings[, i]
+      pos[, i] <- -pos[, i]
+    }
+  }
+  dimnames(pos) <- list(colnames(X), paste0("PC", seq_len(npc)))
+  dimnames(loadings) <- list(rownames(X), paste0("PC", seq_len(npc)))
+
+  ## correlation of each one-hot encoded phenotype level with each component,
+  ## for the phenotype-direction arrows
+  pheno.cor <- NULL
+  if (!is.null(Y)) {
+    pheno.cor <- tryCatch(
+      {
+        H <- playbase::expandPhenoMatrix(Y[rownames(pos), , drop = FALSE], drop.ref = FALSE)
+        rho <- suppressWarnings(stats::cor(H, pos, use = "pairwise.complete.obs"))
+        rho[stats::complete.cases(rho), , drop = FALSE]
+      },
+      error = function(e) NULL
+    )
+  }
+
+  list(
+    pos = pos,
+    varexp = round(sv$d[seq_len(npc)]^2 / sum(X^2, na.rm = TRUE) * 100, 1),
+    loadings = loadings,
+    pheno.cor = pheno.cor
+  )
+}
+
+
 ##' Clustering board server module
 ##'
 ##' .. content for \details{} ..
@@ -19,7 +121,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     clust_infotext <-
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/phm1joeZTO4?si=GgUWBZNlxdU_TpPX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
-
+    OmicsBoard(session, pgx, title="Cluster Samples", infotext = clust_infotext) 
+    
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
@@ -28,7 +131,7 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     tab_elements <- list(
       "Heatmap" = list(
         enable = NULL,
-        disable = c("hm_clustmethod")
+        disable = c("hm_clustmethod", "pca_dimx", "pca_dimy")
       ),
       "PCA/tSNE" = list(
         enable = NULL,
@@ -36,21 +139,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       ),
       "Parallel" = list(
         enable = NULL,
-        disable = c("selected_phenotypes", "hm_clustmethod")
+        disable = c("selected_phenotypes", "hm_clustmethod", "pca_dimx", "pca_dimy")
       )
     )
 
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
-    })
-
-    # Board info
-    shiny::observeEvent(input$board_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Clustering Board</strong>"),
-        shiny::HTML(clust_infotext),
-        easyClose = TRUE, size = "xl"
-      ))
     })
 
     shiny::observeEvent(pgx$Y, {
@@ -113,6 +207,16 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         shiny::updateSelectInput(session, "hm_clustmethod",
           choices = clustmethods, sel = selmethod
         )
+
+        ## Principal components available for the axis selectors. Derived from
+        ## the matrix dimensions rather than by calling pca_components(): an
+        ## error thrown inside an observer ends the whole Shiny session, and
+        ## forcing it here would also pay for the decomposition on every dataset
+        ## load even for users who never open this tab.
+        npc <- pgx.pcaMaxComponents(pgx$X, npc = 5)
+        pcs <- stats::setNames(seq_len(npc), paste0("PC", seq_len(npc)))
+        shiny::updateSelectInput(session, "pca_dimx", choices = pcs, selected = 1)
+        shiny::updateSelectInput(session, "pca_dimy", choices = pcs, selected = min(2, npc))
       }
     )
 
@@ -621,60 +725,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
     }) ## end of getTopMatrix
 
 
-    ##' Same as getTopMatrix but always averaged by group
-    ##'
-    ##' .. content for \details{} ..
-    ##' @title
-    ##' @param id
-    ##' @param pgx
-    ##' @return
-    ##' @author kwee
-    getTopMatrixGrouped <- shiny::reactive({
-      topmat <- getTopMatrix()
-      shiny::req(topmat$mat)
-
-      if (topmat$is.grouped || is.null(topmat$grp)) {
-        return(topmat)
-      }
-
-      ## ----------------------------------------------------
-      ## ------------ calculate group summarized ------------
-      ## ----------------------------------------------------
-
-      grp <- topmat$grp
-      zx <- topmat$mat
-      annot <- topmat$annot
-      idx <- topmat$idx
-      samples <- topmat$samples
-
-      ## take most frequent term as group annotation value
-      grp.zx <- tapply(colnames(zx), grp, function(k) {
-        rowMeans(zx[, k, drop = FALSE], na.rm = TRUE)
-      })
-      grp.zx <- do.call(cbind, grp.zx)
-      most.freq <- function(x) names(sort(-table(x)))[1]
-      grp.annot <- tapply(rownames(annot), grp, function(k) {
-        f <- apply(annot[k, , drop = FALSE], 2, function(x) most.freq(x))
-        w.null <- sapply(f, is.null)
-        if (any(w.null)) f[which(w.null)] <- NA
-        unlist(f)
-      }, simplify = FALSE)
-      grp.annot <- data.frame(do.call(rbind, grp.annot))
-      grp.annot <- grp.annot[colnames(grp.zx), , drop = FALSE]
-      grp <- colnames(grp.zx)
-
-      res <- list(
-        mat = grp.zx,
-        annot = grp.annot,
-        grp = grp, ## sample grouping
-        idx = idx, ## gene grouping
-        samples = samples,
-        is.grouped = TRUE
-      )
-      return(res)
-    })
-
-
     getClustAnnotCorrelation <- shiny::reactive({
       shiny::req(pgx$X, pgx$Y, pgx$gsetX, pgx$families)
       filt <- getTopMatrix()
@@ -754,6 +804,22 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       playbase::selectSamplesFromSelectedLevels(pgx$Y, input$hm_samplefilter)
     })
 
+    ## PC1-PC5 on the fly. Only depends on pgx$X, so this runs once per dataset
+    ## and is cached for every later change of the axis selectors.
+    pca_components <- shiny::reactive({
+      shiny::req(pgx$X, pgx$Y)
+      pgx.pcaComponents(pgx$X, Y = pgx$Y, npc = 5)
+    })
+
+    pca_dims <- shiny::reactive({
+      npc <- ncol(pca_components()$pos)
+      dims <- suppressWarnings(c(as.integer(input$pca_dimx), as.integer(input$pca_dimy)))
+      ## empty before the selectors are populated, stale right after a dataset
+      ## switch shrinks the number of available components
+      shiny::req(length(dims) == 2, !any(is.na(dims)), all(dims <= npc))
+      dims
+    })
+
     # plots ##########
     clustering_plot_splitmap_server(
       id = "splitmap",
@@ -774,22 +840,12 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       pgx = pgx,
       selected_samples = selected_samples,
       clustmethod = shiny::reactive(input$hm_clustmethod),
+      pca_components = pca_components,
+      pca_dims = pca_dims,
+      labeltype = labeltype,
       watermark = WATERMARK,
       parent = ns
     )
-
-    # clustering_plot_table_parcoord_server(
-    #   id = "parcoord",
-    #   getTopMatrix = getTopMatrixGrouped,
-    #   pgx = pgx,
-    #   watermark = WATERMARK
-    # )
-
-    # clustering_plot_genemodule_server(
-    #   id = "genemodule",
-    #   getTopMatrix = getTopMatrixGrouped,
-    #   watermark = WATERMARK
-    # )
 
     clustering_plot_phenoplot_server(
       id = "clust_phenoplot",
@@ -797,6 +853,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       selected_phenotypes = shiny::reactive(input$selected_phenotypes),
       clustmethod = shiny::reactive(input$hm_clustmethod),
       selected_samples = selected_samples,
+      pca_components = pca_components,
+      pca_dims = pca_dims,
       watermark = WATERMARK
     )
 

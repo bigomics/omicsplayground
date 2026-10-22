@@ -29,6 +29,8 @@ BiomarkerBoard <- function(id, pgx) {
     and provides expression boxplots by phenotype classes for features present in
     the tree.", js = FALSE)
 
+    OmicsBoard(session, pgx, title = "Biomarker Selection", infotext = pdx_infotext)
+
     ## =========================================================================
     ## ======================== OBSERVERS ======================================
     ## =========================================================================
@@ -47,15 +49,6 @@ BiomarkerBoard <- function(id, pgx) {
     shiny::observeEvent(input$tabs1, {
       bigdash::update_tab_elements(input$tabs1, tab_elements)
     })
-
-    shiny::observeEvent(input$pdx_info, {
-      shiny::showModal(shiny::modalDialog(
-        title = shiny::HTML("<strong>Biomarker Board</strong>"),
-        shiny::HTML(pdx_infotext),
-        easyClose = TRUE, size = "l"
-      ))
-    })
-
 
     shiny::observe({
       shiny::req(pgx$X)
@@ -96,6 +89,25 @@ BiomarkerBoard <- function(id, pgx) {
         }
       }
     )
+
+    ## explain why the run button above is greyed out
+    output$pdx_runbutton_msg <- shiny::renderUI({
+      shiny::req(pgx$Y, input$pdx_target)
+      shiny::req(input$pdx_target %in% colnames(pgx$Y))
+      nlevels <- length(unique(pgx$Y[selected_samples(), input$pdx_target]))
+      if (nlevels > 1) {
+        return(NULL)
+      }
+      shiny::div(
+        class = "small mt-2",
+        style = "color: #555;",
+        paste0(
+          "The sample filter leaves only one level of '", input$pdx_target,
+          "'. Biomarker selection needs at least two groups: relax the ",
+          "filter or pick another prediction target."
+        )
+      )
+    })
 
     is_computed <- reactiveVal(FALSE)
     observeEvent(

@@ -48,7 +48,6 @@ scan_packages <- function(path='R') {
     "KEGG.db" = "url::https://bioconductor.org/packages/3.11/data/annotation/src/contrib/KEGG.db_3.2.4.tar.gz",
     "org.Pf.plasmo.db" = "url::https://bioconductor.org/packages/3.14/data/annotation/src/contrib/org.Pf.plasmo.db_3.14.0.tar.gz",
     "Azimuth" = "url::https://github.com/satijalab/azimuth/archive/HEAD.zip"
-#    "firebase" = "url::https://github.com/JohnCoene/firebase/archive/refs/heads/omics.zip",
 #    "infercnv" = "url::https://github.com/broadinstitute/infercnv/archive/refs/tags/infercnv-v1.3.3.zip"
   )
   
@@ -69,7 +68,6 @@ scan_packages <- function(path='R') {
   add_github("wt2015-github/FastGGM")
   add_github("satijalab/azimuth")
   #add_github("JohnCoene/waiter")
-  add_github("JohnCoene/firebase@omics")
   add_github("JohnCoene/bsutils")
   #add_github("ropensci/iheatmapr")
   #add_github("rstudio/bslib@v0.6.1")

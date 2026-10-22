@@ -34,6 +34,11 @@ multiwgcna_plot_moduletrait_ui <- function(
       inputId = ns("transpose"),
       label = "Transpose matrix",
       value = FALSE
+    ),
+    shiny::checkboxInput(
+      inputId = ns("showcontrasts"),
+      label = "Show contrasts",
+      value = TRUE
     )
   )
 
@@ -65,7 +70,8 @@ multiwgcna_plot_moduletrait_server <- function(id,
       nmax <- 9999
       if (input$showtop) nmax <- 20 ## top 20 modules
       plottype <- input$plottype
-
+      showpars <- ifelse(input$showcontrasts, "both", "traits")
+      
       merge_modules <- input$mergemodules
       if (merge_modules) {
         par(mfrow = c(1, 1))
@@ -83,6 +89,7 @@ multiwgcna_plot_moduletrait_server <- function(id,
           main = paste(names(wgcna), collapse = " + "),
           transpose = !input$transpose,
           colorlabel = TRUE,
+          show = showpars,
           nmax = nmax,
           tmax = nmax,
           text = input$showvalues,
@@ -107,6 +114,7 @@ multiwgcna_plot_moduletrait_server <- function(id,
             main = names(wgcna)[i],
             transpose = !input$transpose,
             colorlabel = TRUE,
+            show = showpars,
             nmax = nmax,
             tmax = nmax,
             text = input$showvalues,

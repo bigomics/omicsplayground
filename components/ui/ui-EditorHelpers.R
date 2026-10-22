@@ -11,6 +11,62 @@
 ## ---------------------------------------------------------------
 
 
+#' Parse label_features input into feature names
+#'
+#' Universal parser: splits on newlines first, then for each line
+#' tries exact match against known names. If no exact match, tries
+#' splitting on spaces. Falls back to grep for keyword search.
+#'
+#' @param text The raw label_features input string
+#' @param all_names Character vector of all valid feature names
+#' @return Character vector of matched feature names
+parse_label_features <- function(text, all_names) {
+  if (is.null(text) || text == "") {
+    return(NULL)
+  }
+  lines <- trimws(strsplit(text, "\n")[[1]])
+  lines <- lines[lines != ""]
+  if (length(lines) == 0) {
+    return(NULL)
+  }
+
+  matched <- unlist(lapply(lines, function(line) {
+    ## 1. Exact match for the whole line
+    if (line %in% all_names) {
+      return(line)
+    }
+    ## 2. Extract quoted strings first, then split remainder on spaces
+    quoted <- regmatches(line, gregexpr('"[^"]*"', line))[[1]]
+    remainder <- gsub('"[^"]*"', "", line)
+    ## Unquote
+    quoted <- gsub('^"|"$', "", quoted)
+    ## Split remainder on spaces
+    rest_tokens <- trimws(strsplit(trimws(remainder), "\\s+")[[1]])
+    rest_tokens <- rest_tokens[rest_tokens != ""]
+    tokens <- c(quoted, rest_tokens)
+    if (length(tokens) == 0) {
+      return(NULL)
+    }
+    ## Collect exact matches + grep remaining tokens
+    exact <- tokens[tokens %in% all_names]
+    remaining <- tokens[!tokens %in% all_names]
+    grepped <- if (length(remaining) > 0) {
+      unlist(lapply(remaining, function(tok) {
+        grep(tok, all_names, value = TRUE, ignore.case = TRUE)
+      }))
+    }
+    result <- c(exact, grepped)
+    if (length(result) > 0) {
+      return(result)
+    }
+    ## 3. Grep fallback for the whole line (if nothing matched at all)
+    grep(line, all_names, value = TRUE, ignore.case = TRUE)
+  }))
+
+  unique(matched)
+}
+
+
 ## ---------------------------------------------------------------
 ## 1. Color helpers
 ## ---------------------------------------------------------------
@@ -92,8 +148,11 @@ extract_heatmap_lmh_colors <- function(input) {
 #' @param defaults      Value to return when custom labelling is off (can be NULL).
 #' @param pgx           Optional pgx object; when provided, results are passed
 #'   through \code{playbase::map_probes(pgx$genes, ...)}.
+#' @param alt_names     Optional list of name vectors parallel to
+#'   \code{feature_names} (e.g. displayed labels, gene symbols); typed names
+#'   matching any of them resolve to their feature.
 #' @return Character vector of resolved labels, or \code{defaults}.
-get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL) {
+get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL, alt_names = NULL) {
   if (!isTRUE(input$custom_labels)) {
     return(defaults)
   }
@@ -104,6 +163,9 @@ get_custom_labels <- function(input, feature_names, defaults = NULL, pgx = NULL)
   }
 
   resolved <- parse_label_features(label_text, feature_names)
+  for (nm in alt_names) {
+    resolved <- union(resolved, feature_names[nm %in% parse_label_features(label_text, nm)])
+  }
   if (is.null(resolved) || length(resolved) == 0) {
     return(defaults)
   }

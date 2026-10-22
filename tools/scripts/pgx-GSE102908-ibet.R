@@ -79,7 +79,7 @@ ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE102908. RNAseq data from SCCOHT1 and OVCAR8 ovarian cancer cells treated with BET inhibitors. Analysis of mRNA profile of 2 cell lines exposed to DMSO, OTX015 for 4 and 24 hours in duplicate."
 
 rda.file
-ngs.save(ngs, file=rda.file)
+pgx.save(ngs, file=rda.file)
 
 
 if(0) {
@@ -135,7 +135,7 @@ if(0) {
 
 
     rda.file
-    ngs.save(ngs, file=rda.file)
+    pgx.save(ngs, file=rda.file)
     
     cpal <- colorRampPalette(c("blue4","lightskyblue1","lightyellow","rosybrown1","red4"))(64)
     cpal <- colorRampPalette(c("blue4","lightskyblue1","grey95","rosybrown1","red4"))(64)

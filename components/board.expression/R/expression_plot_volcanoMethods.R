@@ -182,7 +182,7 @@ expression_plot_volcanoMethods_server <- function(id,
       lab.genes <- playbase::probe2symbol(lab.genes, pgx$genes, labeltype(), fill_na = TRUE)
       fdr <- pd[["fdr"]]
       lfc <- pd[["lfc"]]
-      names <- pd[["names"]]
+      names <- pd[["features"]]
       label.names <- pd[["label.names"]]
 
       mx <- pd[["mx"]]
@@ -213,7 +213,7 @@ expression_plot_volcanoMethods_server <- function(id,
       y <- -log10(y + pval_cap)
 
       ## Editor: custom labels
-      label_features <- get_custom_labels(input, pd[["features"]], defaults = lab.genes)
+      label_features <- get_custom_labels(input, pd[["features"]], defaults = lab.genes, alt_names = list(pd[["label.names"]], pd[["symbols"]]))
 
       highlight <- if (isTRUE(input$color_selection)) {
         label_features
