@@ -197,6 +197,11 @@ upload_module_computepgx_server <- function(
         ONESAMPLE.GENE_METHODS <- c(ONESAMPLE.GENE_METHODS, "custom")
       }
       ONESAMPLE.GENESET_METHODS <- sort(c("fgsea", "fisher"))
+      ## isolated: output$UI must not re-render on contrast edits; the
+      ## contrastsRT() observer below updates the method checkboxes.
+      has_one_sample <- function() {
+        any(apply(as.data.frame(shiny::isolate(contrastsRT())), 2, function(x) any(table(x) == 1)))
+      }
 
       ## Probe filtering defaults
       PROBE_FILTER_SELECTED <- function() {
@@ -499,8 +504,8 @@ upload_module_computepgx_server <- function(
                     "<h4>Gene tests:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#statistical-testing"
                   ),
-                  choices = GENETEST.METHODS(),
-                  selected = GENETEST.SELECTED()
+                  choices = if (has_one_sample()) ONESAMPLE.GENE_METHODS else GENETEST.METHODS(),
+                  selected = if (has_one_sample()) "ttest" else GENETEST.SELECTED()
                 ),
                 shiny::div(shiny::uiOutput(ns("timeseries_checkbox"))),
                 shiny::div(shiny::uiOutput(ns("timeseries_msg"))),
@@ -536,8 +541,8 @@ upload_module_computepgx_server <- function(
                     "<h4>Enrichment methods:</h4>",
                     "https://omicsplayground.readthedocs.io/en/latest/methods/#functional-analyses"
                   ),
-                  GENESET.METHODS(),
-                  selected = GENESET.SELECTED()
+                  if (has_one_sample()) ONESAMPLE.GENESET_METHODS else GENESET.METHODS(),
+                  selected = if (has_one_sample()) c("fisher", "fgsea") else GENESET.SELECTED()
                 ),
               ),
               bslib::card(
@@ -858,9 +863,7 @@ upload_module_computepgx_server <- function(
       })
 
       shiny::observeEvent(contrastsRT(), {
-        contrasts <- as.data.frame(contrastsRT())
-        has_one <- apply(contrasts, 2, function(x) any(table(x) == 1))
-        if (any(has_one)) {
+        if (has_one_sample()) {
           shinyalert::shinyalert(
             title = "WARNING",
             text = stringr::str_squish("There are cases where there is only one samples in a group. Some of the gene tests and enrichment methods are disabled. Please note: a good experiment should have at least 3 replicates per condition."),
