@@ -442,6 +442,19 @@ UploadBoard <- function(id,
               ),
               type = "error"
             )
+          } else if (ncol(checked) < 100L && upload_datatype() == "scRNA-seq") {
+            # Hard stop for scRNA-seq: Seurat t-SNE (perplexity 30) needs > 91 cells
+            status <- paste("ERROR: min 100 cells required for scRNA-seq")
+            shinyalert::shinyalert(
+              title = "Too few cells",
+              text = paste(
+                "Your counts file has only", ncol(checked), "columns.",
+                "Single-cell analysis requires at least 100 cells.",
+                "If this is bulk or pseudo-bulk data, please select 'RNA-seq' as data type."
+              ),
+              type = "error"
+            )
+            checked <- NULL
           }
         }
         if (is.null(checked)) {
