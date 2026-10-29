@@ -52,7 +52,7 @@ UploadUI <- function(id) {
                   inputId = ns("selected_organism"),
                   label = NULL,
                   choices = NULL,
-                  multiple = TRUE,
+                  multiple = FALSE,
                   width = "400px"
                 )
               ),
@@ -78,6 +78,19 @@ UploadUI <- function(id) {
               ),
               br(),
               div(
+                p("Dataset identifier:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
+                shiny::textInput(
+                  ns("dataset_identifier"),
+                  label = NULL,
+                  placeholder = "e.g., GSE12345, E-GEOD-12345",
+                  width = "400px"
+                ),
+                div(
+                  style = "font-size: 0.85em; color: #666; margin-top: 5px;",
+                  "Supported: GEO (GSE), ArrayExpress (E-), recount3 datasets"
+                )
+              ),
+              div(
                 p("Data type:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
                 shiny::selectInput(
                   ns("selected_datatype_public"), NULL,
@@ -97,19 +110,6 @@ UploadUI <- function(id) {
                   choices = NULL,
                   multiple = FALSE,
                   width = "400px"
-                )
-              ),
-              div(
-                p("Dataset identifier:", style = "text-align: left; margin: 0 0 2px 0; font-weight: bold;"),
-                shiny::textInput(
-                  ns("dataset_identifier"),
-                  label = NULL,
-                  placeholder = "e.g., GSE12345, E-GEOD-12345",
-                  width = "400px"
-                ),
-                div(
-                  style = "font-size: 0.85em; color: #666; margin-top: 5px;",
-                  "Supported: GEO (GSE), ArrayExpress (E-), recount3 datasets"
                 )
               ),
               br(),
