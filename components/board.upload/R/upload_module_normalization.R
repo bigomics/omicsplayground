@@ -86,8 +86,6 @@ upload_module_normalization_server <- function(
             X <- log2(counts + prior)
           }
         }
-        dbg("[normalization_server:imputedX] X has ", sum(is.na(X)), " missing values (NAs).")
-        dbg("[normalization_server:imputedX] X has ", sum(rowSums(is.na(X)) > 0), " rows with NAs.")
 
         ## Filter probes for maximum missingness as required
         if (sum(is.na(X)) > 0 && isTRUE(input$filtermissing)) {
@@ -151,11 +149,11 @@ upload_module_normalization_server <- function(
             if (!is.null(nX)) X <- nX
             rm(nX)
           } else {
-            dbg("[normalization_server:normalizedX] normalizing data using", m)
+            info("[normalization_server:normalizedX] normalizing data using", m)
             X <- playbase::normalizeExpression(X, method = m, ref = ref, prior = prior)
           }
         } else {
-          dbg("[normalization_server:normalizedX] Skipping normalization")
+          info("[normalization_server:normalizedX] Skipping normalization")
         }
 
         return(X)
@@ -164,7 +162,7 @@ upload_module_normalization_server <- function(
       ## Remove outliers
       cleanX <- reactive({
         shiny::req(dim(normalizedX()), dim(imputedX()$counts))
-        X <- normalizedX()
+        X <- normalizedX()        
         counts <- imputedX()$counts
         kk <- intersect(rownames(X), rownames(counts))
         X <- X[kk, , drop = FALSE]
@@ -185,8 +183,9 @@ upload_module_normalization_server <- function(
           if (any(is.outlier) && !all(is.outlier)) {
             X <- X[, which(!is.outlier), drop = FALSE]
             counts <- counts[, colnames(X), drop = FALSE]
-          }
+          }          
         }
+        
         return(list(counts = counts, X = X))
       })
 

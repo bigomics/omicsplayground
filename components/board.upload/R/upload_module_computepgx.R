@@ -68,7 +68,7 @@ upload_module_computepgx_server <- function(
 
       GENETEST.METHODS <- function(only.lm=FALSE) {
         countsX <- countsX()
-        nmissing.countsX <- sum(is.na(countsX)) ## if>0, NAs in pgx$X (no imputation).
+        nmissing.countsX <- sum(is.na(countsX))
         dt <- upload_datatype()
         if (dt == "RNA-seq") {
           mm <- c(
@@ -317,7 +317,7 @@ upload_module_computepgx_server <- function(
           )
         )
       }
-
+      
       inline_info_button <- function(info.text) {
         shiny::span(
           style = "margin-left:15px;",
@@ -403,13 +403,11 @@ upload_module_computepgx_server <- function(
               )
             )
           },
-          if (!is.null(probetype()) && probetype() == "running" && upload_datatype() != "methylomics") {
+          if (!is.null(probetype()) && any(probetype() == "running") && upload_datatype() != "methylomics") {
             shiny::div(
               style = "display: flex; justify-content: center; align-items: center;",
-              shiny::tags$h4(
-                "Probe type detection still running, please wait...",
-                style = "color: red;"
-              )
+              shiny::tags$h4("Probe type detection still running, please wait...",
+                style = "color: red;")
             )
           },
           shiny::div(
@@ -758,6 +756,7 @@ upload_module_computepgx_server <- function(
       ## Temporary msg. Later work needed to grey them out.
       ## ------------------------------------------------------------------------
       shiny::observeEvent(countsX(), {
+
         if (sum(is.na(countsX())) > 0) {
           mm <- c("voom.limma", "deseq2.wald", "deseq2.lrt", "edger.qlf", "edger.lrt")
           mm <- paste0(mm, collapse = "; ")
@@ -846,21 +845,47 @@ upload_module_computepgx_server <- function(
       )
 
       output$input_recap2 <- renderUI({
-        tagList(
-          shiny::HTML("<b>Data type:</b>", upload_datatype()),
-          shiny::HTML("<br><b>Organism:</b>", upload_organism()),
-          shiny::HTML("<br><b>Probe type:</b>", probetype())
-        )
+
+        ok.probe <- sapply(probetype(), function(p) !p %in% c(NA,"","error"))
+        valid_species <- names(which(ok.probe))
+        error_species <- names(which(!ok.probe))
+        
+        dtype=pt=org=""
+        dtype <- paste0("<b>Data type:</b>&nbsp;", upload_datatype())
+        ##org <- paste0("<br><b>Organism:</b>&nbsp;", paste(upload_organism(), collapse=","))
+        ##pt <- paste0("<br><b>Probe type:</b>&nbsp;", paste0(probetype(), collapse=""))
+        if(length(valid_species)==1) {
+          org <- paste0("<br><b>Organism:</b>&nbsp;", valid_species)
+        } else {
+          org <- paste0("<br><b>Organisms:</b>&nbsp;", paste(valid_species, collapse=", "))
+        }
+        if (length(error_species)>0) {
+          pt <- paste(error_species, collapse=", ")
+          pt <- paste0("<br><b>Unsupported organisms:</b>&nbsp;", pt)
+        }
+        tagList(shiny::HTML(dtype), shiny::HTML(org), shiny::HTML(pt))
       })
 
       output$probetype_result <- shiny::renderUI({
-        p <- probetype()
-        if (is.null(p) || p == "error") {
-          shiny::div(
+        pt <- probetype()
+        ui <- NULL
+        if (is.null(pt) || all(pt == "error")) {
+          ui <- shiny::div(
             style = "display: flex; justify-content: center; align-items: center; color: red;",
             shiny::tags$p("Probes not recognized, please check organism or your probe names.")
           )
+        } else if (any(pt == "error")) {
+          ui <- shiny::div(
+            style = "display: flex; justify-content: center; align-items: center; color: red;",
+            shiny::tags$p("Warning! Some organisms are not recognized")
+          )
+        } else {
+          ## ui <- shiny::div(
+          ##   style = "display: flex; justify-content: center; align-items: center; color: black;",
+          ##   shiny::tags$p("OK. All your organisms are recognized")
+          ## )
         }
+        return(ui)
       })
 
       output$timeseries_checkbox <- renderUI({
@@ -1091,17 +1116,18 @@ upload_module_computepgx_server <- function(
           return(NULL)
         }
 
-        ## bail out if probetype task is not finished or has error
+        ## wait for process??
         p <- probetype()
-        if (is.null(p) || grepl("error", tolower(p)) || p == "") {
+        shiny::req(!(any(p %in% "running")))
+        
+        ## bail out if probetype task is not finished or has error
+        if (is.null(p) || all(grepl("error", tolower(p))) || all(p == "")) {
           dbg("[computepgx_server:upload_wizard] ERROR probetype failed")
-          shinyalert::shinyalert("ERROR", "probetype detection failed",
-            type = "error"
-          )
+          shinyalert::shinyalert("ERROR", "probetype detection failed", type = "error")
           return(NULL)
         }
-        shiny::req(!(p %in% c("error", "running", ""))) ## wait for process??
-
+        ##shiny::req(!(all(p %in% c("error", "running", "")))) ## wait for process??
+        
         ## -----------------------------------------------------------
         ## Retrieve the most recent matrices from reactive values
         ## -----------------------------------------------------------
@@ -1371,8 +1397,8 @@ upload_module_computepgx_server <- function(
         tmpdir <- normalizePath(raw_dir())
 
         # Remove global variables
-        try(rm(annot_table))
-        try(rm(custom_geneset))
+        try(rm(annot_table), silent = TRUE)
+        try(rm(custom_geneset), silent = TRUE)
 
         process_counter(process_counter() + 1)
         dbg("[compute PGX process] : starting processx nr: ", process_counter())
