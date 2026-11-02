@@ -697,7 +697,7 @@ LoginCodeAuthenticationModule <- function(id,
         dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
         USER$options <- read_user_options(user_dir)
         USER$level <- "free"
-        USER$expiry <- "unlimited"
+        USER$expiry <- as.character(free_account_expiry(file.path(PGX.DIR, user_email)))
         USER$ADMIN <- FALSE
       }
       session$sendCustomMessage("set-user", list(user = user_email))
@@ -935,7 +935,7 @@ LoginCodeAuthenticationModule <- function(id,
             dbg("[LoginCodeAuthenticationModule] using user OPTIONS")
             USER$options <- read_user_options(USER$user_dir)
             USER$level <- "free"
-            USER$expiry <- "unlimited"
+            USER$expiry <- as.character(free_account_expiry(file.path(PGX.DIR, USER$email)))
             USER$ADMIN <- FALSE
           }
           session$sendCustomMessage("set-user", list(user = USER$email))
