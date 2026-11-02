@@ -264,7 +264,6 @@ app_server <- function(input, output, session) {
   ## --------------------------------------------------------------------------
 
   shiny::observeEvent( new_upload(), {
-    dbg("[MAIN] reacted! : new_upload = ", new_upload())
     if(new_upload() > 0) {
       bslib::nav_select("app-sidebar", "Upload")
     }
