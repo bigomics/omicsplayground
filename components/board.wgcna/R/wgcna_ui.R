@@ -174,17 +174,17 @@ WgcnaUI <- function(id) {
           ),
           wgcna_plot_eigengene_clustering_ui(
             ns("eigenClustering"),
-            title = "(e) Eigengene dendrogram",
-            info.text = "eigenClustering",
+            title = "(e) Eigengene clustering",
+            info.text = "Eigen clustering. Clustering of eigengenes by correlation.",
             caption = "Cluster dendrogram of Eigengenes",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           ),
           wgcna_plot_module_graph_ui(
             ns("moduleGraph"),
-            title = "(f) Module graph",
-            info.text = "WGCNA module graph.",
-            caption = "Graph network of WGCNA modules.",
+            title = "(f) Module trajectory",
+            info.text = "WGCNA module trajectory. Eigengene modules connected by TSP solution.",
+            caption = "TSP trajectory of WGCNA eigengene modules.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
