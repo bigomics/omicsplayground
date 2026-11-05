@@ -333,17 +333,18 @@ upload_table_preview_counts_server <- function(id,
     })
 
     output$dynamic_file_inputs <- renderUI({
+      datatypes <- c("RNA-seq", "Proteomics", "Metabolomics", "Lipidomics")
       bslib::layout_column_wrap(
         style = bslib::css(grid_template_columns = "8fr 3fr 1fr"),
         class = "m-0",
         fileInput(ns("file_input_1"), label = NULL, multiple = FALSE, accept = c(".csv")),
-        selectInput(ns("datatype_1"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics")),
+        selectInput(ns("datatype_1"), label = NULL, choices = datatypes),
         actionButton(ns("remove_input_1"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
         fileInput(ns("file_input_2"), label = NULL, multiple = FALSE, accept = c(".csv")),
-        selectInput(ns("datatype_2"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Proteomics"),
+        selectInput(ns("datatype_2"), label = NULL, choices = datatypes, selected = "Proteomics"),
         actionButton(ns("remove_input_2"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger"),
         fileInput(ns("file_input_3"), label = NULL, multiple = FALSE, accept = c(".csv")),
-        selectInput(ns("datatype_3"), label = NULL, choices = c("RNA-seq", "Proteomics", "Metabolomics"), selected = "Metabolomics"),
+        selectInput(ns("datatype_3"), label = NULL, choices = datatypes, selected = "Metabolomics"),
         actionButton(ns("remove_input_3"), label = NULL, icon = icon("xmark"), class = "btn-sm btn-outline-danger")
       )
     })
@@ -492,9 +493,10 @@ upload_table_preview_counts_server <- function(id,
         dt <- tolower(datatypes[i])
         prefix <- "gx"
         if (grepl("proteomics", dt)) prefix <- "px"
-        if (grepl("metabolomics|lipidomics", dt)) prefix <- "mx"
-        if (grepl("microarray|micro.array|rna|rnatranscriptomics", dt)) prefix <- "gx"
-        if (grepl("mirna|mi.rna", dt)) prefix <- "mi"
+        if (grepl("metabolomics", dt)) prefix <- "mx"
+        if (grepl("lipidomics", dt)) prefix <- "lx"
+        if (grepl("microarray|micro.array|rna|transcriptomics", dt)) prefix <- "gx"
+        if (grepl("mir|mirna|mi.rna", dt)) prefix <- "mi"
         rownames(df) <- paste0(prefix, ":", rownames(df))
         df <- df[, common_cols, drop = FALSE]
         combined_df <- rbind(combined_df, df)
