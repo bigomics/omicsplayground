@@ -14,8 +14,18 @@ wgcna_plot_module_graph_ui <- function(
 ) {
   ns <- shiny::NS(id)
 
+
   options <- shiny::tagList(
-    shiny::selectInput(ns("startmodule"), "Start module:", choices=NULL)
+    shiny::radioButtons(ns("plottype"), "Plot type:", c("graph","TSP"),
+      inline = TRUE),
+    shiny::conditionalPanel(
+      "input.plottype == 'graph'", ns = ns,
+      shiny::checkboxInput(ns("addtraits"), "Add traits", TRUE)
+    ),
+    shiny::conditionalPanel(
+      "input.plottype == 'TSP'", ns = ns,
+      shiny::selectInput(ns("startmodule"), "Start module:", choices=NULL)
+    )
   )
   
   PlotModuleUI(
@@ -43,16 +53,22 @@ wgcna_plot_module_graph_server <- function(id,
         choices = me, sel = me[1]
       )
     })
-
+    
     plotRENDER <- function() {
       res <- wgcna()
-      start <- input$startmodule
-      if(input$startmodule == "<none>") start <- NULL
-      par(mar=c(4,4,1,1))
-      playbase::wgcna.plotModuleTrajectory(
-        wgcna = res, start = start, k = NULL, main="")
+      if(input$plottype == "TSP"){
+        ## TSP
+        start <- input$startmodule
+        if(input$startmodule == "<none>") start <- NULL
+        par(mar=c(4,4,1,1))
+        playbase::wgcna.plotModuleTrajectory(
+          wgcna = res, start = start, k = NULL, main="")
+      } else {
+        par(mar=c(0,0,0,0))
+        playbase::wgcna.plotEigenGeneGraph(res, add_traits = input$addtraits,
+          main = NULL)
+      }
     }
-
     
     PlotModuleServer(
       "plot",

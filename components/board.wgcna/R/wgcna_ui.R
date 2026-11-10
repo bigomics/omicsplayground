@@ -182,9 +182,9 @@ WgcnaUI <- function(id) {
           ),
           wgcna_plot_module_graph_ui(
             ns("moduleGraph"),
-            title = "(f) Module trajectory",
-            info.text = "WGCNA module trajectory. Eigengene modules connected by TSP solution.",
-            caption = "TSP trajectory of WGCNA eigengene modules.",
+            title = "(f) Module graph",
+            info.text = "WGCNA module graph.",
+            caption = "Graph of WGCNA eigengenes.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
