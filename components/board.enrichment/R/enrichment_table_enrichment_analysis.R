@@ -132,11 +132,11 @@ enrichment_table_enrichment_analysis_server <- function(id,
           search = list(
             regex = TRUE,
             caseInsensitive = TRUE
-          ),
-          columnDefs = list(list(
-            targets = c("geneset"),
-            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
-          ))
+          )
+#          columnDefs = list(list(
+#            targets = c("geneset"),
+#            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
+#          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numcols, 4) %>%
