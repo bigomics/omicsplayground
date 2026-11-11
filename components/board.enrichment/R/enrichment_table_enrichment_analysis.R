@@ -116,7 +116,7 @@ enrichment_table_enrichment_analysis_server <- function(id,
         # escape = c(-1, -2),
         escape = escapecols,
         extensions = c("Scroller", "RowGroup"),
-        plugins = c("scrollResize", "ellipsis"),
+        plugins = c("scrollResize"),
         fillContainer = TRUE,
         selection = list(mode = "single", target = "row", selected = 1),
         options = list(
@@ -133,10 +133,6 @@ enrichment_table_enrichment_analysis_server <- function(id,
             regex = TRUE,
             caseInsensitive = TRUE
           )
-#          columnDefs = list(list(
-#            targets = c("geneset"),
-#            render = DT::JS("$.fn.dataTable.render.ellipsis( 60, false )")
-#          ))
         ) ## end of options.list
       ) %>%
         DT::formatSignif(numcols, 4) %>%
