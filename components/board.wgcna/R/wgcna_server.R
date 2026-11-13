@@ -75,12 +75,7 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
 
       message("[WGCNA:compute_wgcna] Initializing WGCNA object...")
       progress$set(message = "Initializing WGCNA object...", value = 0.7)
-
-      out <- playbase::wgcna.init(
-        out,
-        annot = pgx$genes,
-        progress = progress
-      )
+      out <- playbase::wgcna.init( out, progress = progress )
 
       shiny::removeModal()
       out
@@ -102,6 +97,7 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
       if (!compute_clicked && has_wgcna) {
         dbg("[WgcnaBoard] >>> using pre-computed WGCNA results...")
         out <- pgx$wgcna
+        out <- playbase::wgcna.init(out, progress = NULL)
         ## old style had these settings
         if (is.null(pgx$wgcna$networktype)) out$networktype <- "unsigned"
         if (is.null(pgx$wgcna$tomtype)) out$tomtype <- "signed"
@@ -111,6 +107,7 @@ WgcnaBoard <- function(id, pgx, save_pgx = NULL) {
         if (!has_wgcna) dbg("[WgcnaBoard] WGCNA needs update!")
         dbg("[WgcnaBoard] >>> recomputing WGCNA results")
         out <- compute_wgcna()
+        pgx$wgcna <- out ## UPDATE PGX SLOT???
       }
 
       ## update Inputs

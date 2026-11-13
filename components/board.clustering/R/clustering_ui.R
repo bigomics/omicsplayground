@@ -7,6 +7,7 @@ ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
   topmodes <- c("sd", "pca", "marker")
+  topmodes <- c("sd", "pca", "marker","wgcna")
 
   settings_items1 <- tagList(
     withTooltip(

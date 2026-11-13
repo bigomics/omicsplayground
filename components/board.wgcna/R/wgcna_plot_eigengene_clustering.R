@@ -13,9 +13,8 @@ wgcna_plot_eigengene_clustering_ui <- function(
   width
 ) {
   ns <- shiny::NS(id)
-
   options <- shiny::tagList(
-    shiny::checkboxInput(ns("addtraits"), "Add traits", TRUE)
+    shiny::checkboxInput(ns("addtraits"), "Add traits", FALSE)
   )
 
   PlotModuleUI(
@@ -35,12 +34,13 @@ wgcna_plot_eigengene_clustering_server <- function(id,
                                                    wgcna.compute,
                                                    watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
+
     plot.RENDER <- function() {
       res <- wgcna.compute()
       ## Plot the relationships among the eigengenes and the trait
+      par(mar=c(0,0,0,0))
       playbase::wgcna.plotEigenGeneClusterDendrogram(
-        res,
-        add_traits = input$addtraits, main = ""
+        res, add_traits = input$addtraits, main = ""
       )
     }
 

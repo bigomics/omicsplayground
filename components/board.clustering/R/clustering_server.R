@@ -599,10 +599,13 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         grp <- grp[sel]
       }
 
+      CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
+      CLUSTK <- as.integer(input$hm_clustk)
+
       ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
-        NPCA <- min(5, ncol(zx) - 1)
+        NPCA <- min(CLUSTK, ncol(zx) - 1)
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
@@ -615,7 +618,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         sv.top1 <- unlist(sv.top)
         zx <- zx[gg.top, , drop = FALSE]
         idx <- sub(":.*", "", sv.top1)
-        table(idx)
       } else if (topmode == "marker" && splitby != "none") {
         ## sample cluster marker gene prioritazion
         grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
@@ -629,15 +631,19 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           grp.dx[, i] <- grp.zx[, i] - rowMeans(grp.zx[, -i, drop = FALSE], na.rm = TRUE)
         }
         gg <- rownames(zx)
-        ntop <- 12
         ntop <- ceiling(as.integer(input$hm_ntop) / ncol(grp.dx))
         grp.top <- lapply(1:nc, function(i) gg[head(order(-grp.dx[, i]), ntop)])
         idx <- unlist(mapply(rep, 1:nc, sapply(grp.top, length)))
         idx <- paste0("M", idx)
-        table(idx)
         gg.top <- unlist(grp.top)
         zx <- zx[gg.top, , drop = FALSE]
-        dim(zx)
+      } else if (topmode == "wgcna" && !is.null(pgx$wgcna)) {
+        ntop <- ceiling(as.integer(input$hm_ntop) / CLUSTK)
+        n = 15
+        ff <- playbase::wgcna.getTopMEfeatures(pgx$wgcna, n=ntop, k=CLUSTK, sortby="mm") 
+        ff <- unlist(ff)
+        idx <- paste0("ME",pgx$wgcna$net$colors[ff])
+        zx <- zx[ff, , drop = FALSE]
       } else {
         ## Order by SD
         gg <- rownames(zx)[order(-matrixStats::rowSds(zx, na.rm = TRUE))]
@@ -651,8 +657,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         idx <- flt$idx[rownames(zx)] ## override
       }
 
-      CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
-      CLUSTK <- as.integer(input$hm_clustk)
       if (is.null(idx)) {
         D <- as.dist(1 - cor(t(zx), use = "pairwise"))
         D[which(is.nan(D) | is.na(D))] <- 1
@@ -779,7 +783,6 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       if (input$hm_level == "geneset") X <- pgx$gsetX
 
       ## ----------- for each gene cluster compute average correlation
-      hm_topmode <- "sd"
       hm_topmode <- input$hm_topmode
       idxx <- setdiff(idx, c(NA, " ", "   "))
       rho <- matrix(NA, nrow(ref), length(idxx))
