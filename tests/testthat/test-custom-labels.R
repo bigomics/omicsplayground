@@ -7,6 +7,7 @@
 .ui_dir <- if (dir.exists("components/ui")) "components/ui" else "../../components/ui"
 source(file.path(.ui_dir, "ui-EditorHelpers.R"), encoding = "UTF-8", local = TRUE)
 source(file.path(.ui_dir, "ui-ColorDefaults.R"), encoding = "UTF-8", local = TRUE)
+source(file.path(.ui_dir, "ui-PlotModule.R"), encoding = "UTF-8", local = TRUE) # parse_label_features() on master
 
 test_that("custom labels resolve gene symbols to non-symbol feature IDs", {
   features <- c("P05067", "P02649", "P10636", "Q8WWW0")
