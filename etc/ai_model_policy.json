@@ -23,7 +23,7 @@
           "models": ["openrouter:openai/gpt-oss-120b"]
         },
         "images": {
-          "models": ["gemini-nano-banana-2.1"]
+          "models": ["google:gemini-nano-banana-2.1"]
         },
         "copilot_deep": {
           "models": ["openrouter:~openai/gpt-terra-latest"]
