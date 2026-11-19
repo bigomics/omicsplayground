@@ -154,7 +154,7 @@ upload_module_makecontrast_server <- function(
 
       output$param_select <- renderUI({
 
-        shiny::req(phenoRT())
+        shiny::req(dim(phenoRT()))
         shiny::req(upload_wizard())
         shiny::req(show_comparison_builder())
 
@@ -405,7 +405,7 @@ upload_module_makecontrast_server <- function(
       })
 
       shiny::observeEvent(autocontrast(), {
-        shiny::req(phenoRT())
+        shiny::req(dim(phenoRT()))
         df <- phenoRT()
 
         ctx <- NULL
