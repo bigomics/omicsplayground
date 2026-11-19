@@ -140,6 +140,46 @@ test_that("a very small maxchar still keeps prefixes and unique names", {
   expect_true(all(grepl("^gene:|^protein:", lab)))
 })
 
+test_that("a prefix longer than the limit keeps the data type", {
+  ## "metabolite:" is 11 characters, so nothing can fit at maxchar = 10. The
+  ## prefix is kept rather than silently dropping the data type.
+  features <- c("metabolite:c1")
+  x <- matrix(0, 1, 2, dimnames = list(features, c("A", "B")))
+  genes <- data.frame(
+    symbol = "c1", gene_name = "Cholesterol", data_type = "metabolite",
+    stringsAsFactors = FALSE
+  )
+  genes$feature <- features
+  rownames(genes) <- features
+  expect_identical(
+    rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes)),
+    "metabolite:"
+  )
+  ## one character of room is enough to shorten again
+  expect_identical(
+    rownames(moduleheatmap_shorten_labels(x, maxchar = 12, gene_table = genes)),
+    "metabolite:C"
+  )
+})
+
+test_that("many duplicates keep the suffix within the limit", {
+  ## The compact " (n)" suffix cannot fit at maxchar = 10, and neither can
+  ## " 10"; the labels must still stay unique and within the limit.
+  features <- paste0("protein:p", 1:12)
+  x <- matrix(0, 12, 2, dimnames = list(features, c("A", "B")))
+  genes <- data.frame(
+    feature = features, symbol = "ER",
+    gene_name = rep("ER-alpha_pS118", 12),
+    data_type = "protein",
+    row.names = features, stringsAsFactors = FALSE
+  )
+  lab <- rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes))
+
+  expect_false(anyDuplicated(lab) > 0)
+  expect_true(all(grepl("^protein:", lab)))
+  expect_true(all(nchar(lab) <= 10), paste(lab, collapse = " | "))
+})
+
 test_that("invalid maxchar or missing gene names leave the matrix alone", {
   features <- c("gene:f1", "gene:f2")
   x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
