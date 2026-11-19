@@ -64,7 +64,8 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
     is.na(maxchar)) {
     return(x)
   }
-  maxchar <- max(1, as.integer(maxchar))
+  ## str_trunc() needs at least room for its 3-character ellipsis
+  maxchar <- max(4L, as.integer(maxchar))
   ids <- rownames(x)
   if (is.null(ids)) {
     return(x)
@@ -74,6 +75,10 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
     ids, gene_table, "gene_name",
     fill_na = TRUE, add_datatype = TRUE
   )
+  if (is.null(labels) || length(labels) != length(ids)) {
+    ## no usable gene table: shorten the feature IDs themselves
+    labels <- ids
+  }
   labels <- as.character(labels)
   labels[is.na(labels)] <- ""
 
@@ -96,7 +101,7 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
   dup <- duplicated(lab)
   if (any(dup)) {
     suffix <- paste0("...", seq_len(sum(dup)))
-    keep <- as.integer(max(1L, maxchar - max(nchar(suffix))))
+    keep <- as.integer(max(3L, maxchar - max(nchar(suffix))))
     gname[dup] <- stringr::str_trunc(gname[dup], keep)
     lab[dup] <- paste0(prefix[dup], gname[dup], suffix)
   }
@@ -138,7 +143,8 @@ mofa_plot_moduleheatmap_server <- function(id,
       ## features, so both must be relabelled identically.
       old_x <- rownames(res$X)
       res$X <- moduleheatmap_shorten_labels(
-        res$X, maxchar = maxchar, gene_table = pgx$genes
+        res$X,
+        maxchar = maxchar, gene_table = pgx$genes
       )
       new_x <- stats::setNames(rownames(res$X), old_x)
       ww <- lapply(names(res$ww), function(d) {
