@@ -70,6 +70,55 @@ test_that("data-type prefixes and unique row names are kept", {
   )
 })
 
+## Two collisions inside one data type: the same gene name twice, and two
+## different names that become identical once truncated. Heatmaps reject
+## duplicate row names, so both must be disambiguated.
+collide <- function(maxchar = 20) {
+  features <- c("gene:f1", "gene:f2", "gene:f3", "gene:f4", "protein:p1")
+  x <- matrix(0, 5, 2, dimnames = list(features, c("A", "B")))
+  ## two gene rows share a symbol, and two more gene rows differ only after
+  ## the 20-character limit, so both pairs collide once shortened
+  genes <- data.frame(
+    feature = features,
+    symbol = c("H3C1", "H3C1", "ABCDEFGHIJKLMNOPQRST-one", "ABCDEFGHIJKLMNOPQRST-two", "CLIC4"),
+    gene_name = c(
+      long_symbol, long_symbol,
+      "ABCDEFGHIJKLMNOPQRST-one", "ABCDEFGHIJKLMNOPQRST-two", "CLIC4"
+    ),
+    data_type = c("gene", "gene", "gene", "gene", "protein"),
+    row.names = features, stringsAsFactors = FALSE
+  )
+  rownames(moduleheatmap_shorten_labels(x, maxchar = maxchar, gene_table = genes))
+}
+
+test_that("labels that collide within one data type are made unique", {
+  lab <- collide(maxchar = 20)
+
+  ## every gene row is shortened to the limit and the collisions disambiguated
+  gene_lab <- sub("^gene:", "", lab[grepl("^gene:", lab)])
+  expect_length(gene_lab, 4)
+  expect_false(any(duplicated(gene_lab)))
+  expect_true(all(grepl("^gene:|^protein:", lab)))
+
+  ## the duplicate-symbol rows: first keeps the plain ellipsis, second gains a suffix
+  h3 <- gene_lab[grepl("^H3C1", gene_lab)]
+  expect_length(h3, 2)
+  expect_true(any(grepl("\\.\\.\\.$", h3)))
+  expect_true(any(grepl("\\.\\.\\.\\d+$", h3)))
+
+  ## the two names that only differ past the limit stay distinguishable
+  ab <- gene_lab[grepl("^ABCDEF", gene_lab)]
+  expect_length(ab, 2)
+  expect_false(ab[1] == ab[2])
+})
+
+test_that("disambiguation also works when maxchar is very small", {
+  lab <- collide(maxchar = 4)
+
+  expect_false(any(duplicated(lab)))
+  expect_true(all(grepl("^gene:|^protein:", lab)))
+})
+
 test_that("invalid maxchar or missing gene names leave the matrix alone", {
   features <- c("gene:f1", "gene:f2")
   x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
