@@ -3,6 +3,13 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+## Maximum characters drawn for the feature labels of the multi-omics heatmap.
+## Gene names can be long semicolon-joined symbol lists (e.g.
+## "H3C1;H3C4;H3C3;H3C6;H3C11;H3C8;H3C12;..."), which take over the whole plot.
+## Longer labels are shortened with an ellipsis. The default also drives the
+## shortened plot; the expanded plot uses the larger value.
+MODULEHEATMAP_MAXCHAR <- c(30, 80)
+
 mofa_plot_moduleheatmap_ui <- function(
   id,
   title = "",
@@ -19,6 +26,18 @@ mofa_plot_moduleheatmap_ui <- function(
       inputId = ns("split"),
       label = "Split heatmap by data types",
       value = TRUE
+    ),
+    hr(),
+    withTooltip(
+      shiny::sliderInput(
+        inputId = ns("maxchar"),
+        label = "Max label length (chars):",
+        min = 10, max = 100,
+        value = MODULEHEATMAP_MAXCHAR[1],
+        step = 5
+      ),
+      "Longer feature names are shortened with an ellipsis. Affects the downloaded plot too.",
+      placement = "right", options = list(container = "body")
     )
   )
 
@@ -33,6 +52,60 @@ mofa_plot_moduleheatmap_ui <- function(
     width = width,
     download.fmt = c("png", "pdf", "svg")
   )
+}
+
+## Shorten long feature labels (e.g. semicolon-joined gene symbol lists) with an
+## ellipsis. Feature IDs are mapped onto the gene names that get drawn, those
+## names are shortened, and the data-type prefix is put back so the heatmap can
+## still split rows by data type. Row names that duplicate after shortening are
+## extended until unique, as heatmaps reject duplicate row names.
+moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
+  if (is.null(x) || !is.numeric(maxchar) || length(maxchar) != 1 ||
+    is.na(maxchar)) {
+    return(x)
+  }
+  maxchar <- max(1, as.integer(maxchar))
+  ids <- rownames(x)
+  if (is.null(ids)) {
+    return(x)
+  }
+
+  labels <- playbase::probe2symbol(
+    ids, gene_table, "gene_name",
+    fill_na = TRUE, add_datatype = TRUE
+  )
+  labels <- as.character(labels)
+  labels[is.na(labels)] <- ""
+
+  ## prefix carries the data type, everything after it is the gene name
+  prefix <- ifelse(
+    grepl("^[A-Za-z0-9]+:", labels),
+    sub("^([A-Za-z0-9]+:).*", "\\1", labels),
+    ""
+  )
+  gname <- sub("^[A-Za-z0-9]+:", "", labels)
+  gname <- ifelse(
+    nchar(gname) > maxchar,
+    stringr::str_trunc(gname, maxchar),
+    gname
+  )
+
+  ## only labels that collide within a data type get a disambiguating suffix,
+  ## shortened to leave room for it within maxchar
+  lab <- paste0(prefix, gname)
+  dup <- duplicated(lab)
+  if (any(dup)) {
+    suffix <- paste0("...", seq_len(sum(dup)))
+    keep <- as.integer(max(1L, maxchar - max(nchar(suffix))))
+    gname[dup] <- stringr::str_trunc(gname[dup], keep)
+    lab[dup] <- paste0(prefix[dup], gname[dup], suffix)
+  }
+  while (any(duplicated(lab))) {
+    dup <- duplicated(lab)
+    lab[dup] <- paste0(lab[dup], ".")
+  }
+  rownames(x) <- lab
+  x
 }
 
 mofa_plot_moduleheatmap_server <- function(id,
@@ -57,10 +130,29 @@ mofa_plot_moduleheatmap_server <- function(id,
         "Please select at least one datatype"
       ))
 
+      ## playbase::mofa.plot_heatmap truncates the short feature IDs *before*
+      ## mapping them onto the long, semicolon-joined symbol lists, so long
+      ## gene names reached the plot unshortened (issue #1642). Relabel the
+      ## features here, where the shortening takes effect: mofa$X supplies the
+      ## drawn labels, and mofa$ww supplies the row names that pick the top
+      ## features, so both must be relabelled identically.
+      old_x <- rownames(res$X)
+      res$X <- moduleheatmap_shorten_labels(
+        res$X, maxchar = maxchar, gene_table = pgx$genes
+      )
+      new_x <- stats::setNames(rownames(res$X), old_x)
+      ww <- lapply(names(res$ww), function(d) {
+        w <- res$ww[[d]]
+        lab <- unname(new_x[paste0(d, ":", rownames(w))])
+        if (!anyNA(lab)) rownames(w) <- sub("^[A-Za-z0-9]+:", "", lab)
+        w
+      })
+      res$ww <- stats::setNames(ww, names(res$ww))
+
       playbase::mofa.plot_heatmap(
         res,
         k = k, ## main=k,
-        gene_table = pgx$genes,
+        gene_table = NULL,
         ntop = n,
         split = input$split,
         type = "splitmap",
@@ -75,16 +167,25 @@ mofa_plot_moduleheatmap_server <- function(id,
       )
     }
 
+    user_maxchar <- shiny::reactive({
+      if (is.null(input$maxchar)) {
+        MODULEHEATMAP_MAXCHAR[1]
+      } else {
+        max(1, as.integer(input$maxchar))
+      }
+    })
+
     plot.RENDER <- function() {
       render_plot(
-        legend = FALSE, maxchar = 30, n = ntop[1],
+        legend = FALSE, maxchar = user_maxchar(), n = ntop[1],
         show_colnames = FALSE
       )
     }
 
     plot.RENDER2 <- function() {
       render_plot(
-        legend = TRUE, maxchar = 80, n = ntop[2],
+        legend = TRUE,
+        maxchar = max(MODULEHEATMAP_MAXCHAR[2], user_maxchar()), n = ntop[2],
         show_colnames = TRUE
       )
     }

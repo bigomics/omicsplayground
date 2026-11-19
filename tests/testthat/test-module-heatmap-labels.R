@@ -1,0 +1,81 @@
+## test-module-heatmap-labels.R
+##
+## Regression guard for issue #1642: feature names of the multi-omics heatmap
+## (Multi-Omics -> Factor heatmap / Multi-omics heatmap) are long semicolon
+## joined gene symbol lists and used to take over the whole plot.
+## playbase::mofa.plot_heatmap shortened the short feature IDs before mapping
+## them onto those long names, so the labels drawn were never shortened.
+
+.board_dir <- if (dir.exists("components/board.mofa")) {
+  "components/board.mofa"
+} else {
+  "../../components/board.mofa"
+}
+source(file.path(.board_dir, "R", "plot_moduleheatmap.R"), encoding = "UTF-8", local = TRUE)
+
+long_symbol <- "H3C1;H3C4;H3C3;H3C6;H3C11;H3C8;H3C12;H3C10;H3C2;H3C7"
+
+shorten <- function(maxchar) {
+  features <- c("gene:f1", "gene:f2", "protein:p1", "protein:p2")
+  x <- matrix(0, 4, 2, dimnames = list(features, c("A", "B")))
+  genes <- data.frame(
+    feature = features,
+    symbol = c("H3C1", "H2AC15", long_symbol, "CLIC4"),
+    gene_name = c(long_symbol, "H2AC15;H2AC14", long_symbol, "P045;CLIC4"),
+    data_type = c("gene", "gene", "protein", "protein"),
+    row.names = features,
+    stringsAsFactors = FALSE
+  )
+  rownames(moduleheatmap_shorten_labels(x, maxchar = maxchar, gene_table = genes))
+}
+
+test_that("long feature names are shortened with an ellipsis", {
+  lab <- shorten(maxchar = 30)
+
+  expect_true(all(nchar(sub("^[A-Za-z]+:", "", lab)) <= 30))
+  expect_true(any(grepl("H3C1;H3C4;H3C3;H3C6;H3", lab, fixed = TRUE)))
+  expect_true(all(grepl("\\.\\.\\.$", lab[grepl("H3C1;H3C4", lab)])))
+})
+
+test_that("short feature names are left untouched", {
+  lab <- shorten(maxchar = 80)
+
+  expect_setequal(
+    lab,
+    c(
+      "gene:H3C1;H3C4;H3C3;H3C6;H3C11;H3C8;H3C12;H3C10;H3C2;H3C7", "gene:H2AC15;H2AC14",
+      "protein:H3C1;H3C4;H3C3;H3C6;H3C11;H3C8;H3C12;H3C10;H3C2;H3C7", "protein:P045;CLIC4"
+    )
+  )
+  expect_false(any(grepl("\\.\\.\\.", lab)))
+})
+
+test_that("data-type prefixes and unique row names are kept", {
+  lab <- shorten(maxchar = 10)
+
+  expect_true(all(grepl("^gene:|^protein:", lab)))
+  expect_false(any(duplicated(lab)))
+
+  ## identical gene names in different data types stay distinct labels
+  x <- matrix(0, 2, 2, dimnames = list(c("gene:f1", "protein:p1"), c("A", "B")))
+  genes <- data.frame(
+    feature = c("gene:f1", "protein:p1"),
+    symbol = long_symbol, gene_name = long_symbol,
+    data_type = c("gene", "protein"),
+    row.names = c("gene:f1", "protein:p1"), stringsAsFactors = FALSE
+  )
+  expect_setequal(
+    rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes)),
+    c("gene:H3C1;H3...", "protein:H3C1;H3...")
+  )
+})
+
+test_that("invalid maxchar or missing gene names leave the matrix alone", {
+  features <- c("gene:f1", "gene:f2")
+  x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
+
+  expect_identical(moduleheatmap_shorten_labels(x, maxchar = NA), x)
+  expect_identical(moduleheatmap_shorten_labels(x, gene_table = NULL), x)
+  ## no gene table: feature IDs are shown as they are
+  expect_identical(rownames(moduleheatmap_shorten_labels(x, gene_table = NULL)), features)
+})
