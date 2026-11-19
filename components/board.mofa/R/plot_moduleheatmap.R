@@ -135,14 +135,18 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
   lab <- paste0(prefix, gname, tag)
 
   ## Last resort: still identical. Number the gene part only, reserving the
-  ## number's width; the data-type prefix is never truncated.
+  ## number's width; the data-type prefix is never truncated. A number wider
+  ## than the remaining budget cannot be made to fit (a 1-character budget
+  ## holds only single digits), so those rows keep their unique number and
+  ## exceed the limit rather than colliding.
   guard <- 0L
   while (anyDuplicated(lab) && guard < 10L) {
     guard <- guard + 1L
     dup <- duplicated(lab)
     num <- as.character(seq_len(sum(dup)))
-    sep <- ifelse(budget[dup] - nchar(num) > 1L, 1L, 0L)
-    room <- pmax(0L, budget[dup] - nchar(num) - sep)
+    room <- budget[dup] - nchar(num) - 1L
+    room[room < 0L] <- 0L
+    sep <- ifelse(room > 0L, 1L, 0L)
     lab[dup] <- paste0(
       prefix[dup], shorten_part(gname[dup], room),
       ifelse(sep == 1L, " ", ""), num

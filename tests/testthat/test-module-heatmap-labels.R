@@ -180,6 +180,32 @@ test_that("many duplicates keep the suffix within the limit", {
   expect_true(all(nchar(lab) <= 10), paste(lab, collapse = " | "))
 })
 
+test_that("numbered labels stay within the limit while a number fits", {
+  ## "protein:" leaves 2 characters at maxchar = 10, so single- and
+  ## double-digit numbers fit. Up to 99 duplicates stay unique and in limit.
+  dup_labels <- function(n, maxchar = 10) {
+    features <- paste0("protein:p", seq_len(n))
+    x <- matrix(0, n, 2, dimnames = list(features, c("A", "B")))
+    genes <- data.frame(
+      symbol = "ER", gene_name = rep("ER-alpha", n), data_type = "protein",
+      stringsAsFactors = FALSE
+    )
+    genes$feature <- features
+    rownames(genes) <- features
+    rownames(moduleheatmap_shorten_labels(x, maxchar = maxchar, gene_table = genes))
+  }
+
+  lab <- dup_labels(99)
+  expect_false(anyDuplicated(lab) > 0)
+  expect_true(all(nchar(lab) <= 10))
+
+  ## A three-digit number cannot fit in the remaining budget. Uniqueness is
+  ## kept, which is what a heatmap requires; only that row exceeds the limit.
+  lab <- dup_labels(101)
+  expect_false(anyDuplicated(lab) > 0)
+  expect_equal(sum(nchar(lab) > 10), 1L)
+})
+
 test_that("invalid maxchar or missing gene names leave the matrix alone", {
   features <- c("gene:f1", "gene:f2")
   x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
