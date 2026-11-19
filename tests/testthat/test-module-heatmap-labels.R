@@ -65,12 +65,29 @@ test_that("data-type prefixes and unique row names are kept", {
     row.names = c("gene:f1", "protein:p1"), stringsAsFactors = FALSE
   )
   lab <- rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes))
-  expect_setequal(lab, c("gene:H3...", "protein:H..."))
-  ## the limit covers the whole label, prefix included. A prefix longer than
-  ## the limit cannot fit (here "protein:" leaves 2 characters), so the limit
-  ## holds for labels whose prefix fits.
-  fits <- nchar(sub(":", "", lab)) + 1 <= 10
-  expect_true(all(nchar(lab[fits]) <= 10))
+  expect_setequal(lab, c("gene:H3...", "protein:H3"))
+  ## the limit covers the whole label, prefix included, for every label
+  expect_true(all(nchar(lab) <= 10))
+})
+
+test_that("disambiguation keeps the data-type prefix off the chopping block", {
+  ## CodeRabbit regression: one duplicate pair used to truncate the whole
+  ## label, prefix included, yielding "ge..." and breaking the type split.
+  features <- c("gene:f1", "gene:f2")
+  x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
+  genes <- data.frame(
+    feature = features,
+    symbol = c("H3C1", "H3C1"),
+    gene_name = c(long_symbol, long_symbol),
+    data_type = c("gene", "gene"),
+    row.names = features, stringsAsFactors = FALSE
+  )
+  for (mc in c(10, 12, 15, 30)) {
+    lab <- rownames(moduleheatmap_shorten_labels(x, maxchar = mc, gene_table = genes))
+    expect_true(all(grepl("^gene:", lab)), paste("maxchar", mc))
+    expect_equal(anyDuplicated(lab), 0L, info = paste("maxchar", mc))
+    expect_true(all(nchar(lab) <= mc), paste("maxchar", mc))
+  }
 })
 
 ## Two collisions inside one data type: the same gene name twice, and two

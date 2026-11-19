@@ -92,42 +92,59 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
     ""
   )
   gname <- sub("^[A-Za-z0-9]+:", "", labels)
-  budget <- as.integer(pmax(4L, maxchar - nchar(prefix)))
 
-  ## shorten each label to the budget left after its prefix
-  trunc_to <- function(txt, width) {
+  ## Truncate the gene part only, to the space actually left after the prefix,
+  ## and fall back to a shorter marker when the 3-character ellipsis cannot fit.
+  ## Flooring the budget at 4 would overshoot the limit ("protein:H..." is 12
+  ## characters at maxchar = 10).
+  shorten_part <- function(txt, width) {
     out <- txt
     for (k in unique(width)) {
       jj <- which(width == k)
-      out[jj] <- stringr::str_trunc(txt[jj], k)
+      out[jj] <- if (k >= 4L) {
+        stringr::str_trunc(txt[jj], k)
+      } else if (k > 0L) {
+        substr(txt[jj], 1L, k)
+      } else {
+        ""
+      }
     }
     out
   }
-  gname <- trunc_to(gname, budget)
+  budget <- as.integer(maxchar - nchar(prefix))
 
-  ## Names that only differ past the limit shorten to the same text. Number
-  ## them, taking the tag out of the same budget so labels stay within it.
+  ## Disambiguate on the full names first, so that names differing only past
+  ## the limit keep as much of their distinguishing text as the budget allows.
   lab <- paste0(prefix, gname)
-  if (anyDuplicated(lab)) {
-    dup <- duplicated(lab)
-    tagged <- lab
-    tagged[dup] <- paste0(lab[dup], " (", seq_len(sum(dup)), ")")
-    lab[dup] <- trunc_to(tagged[dup], budget[dup])
-    ## If the tag itself was cut away, shorten the gene part and append the
-    ## number, keeping the data-type prefix intact.
-    if (anyDuplicated(lab)) {
-      num <- seq_len(sum(dup))
-      base <- trunc_to(gname[dup], pmax(4L, budget[dup] - nchar(paste0(" ", num))))
-      lab[dup] <- paste0(prefix[dup], base, " ", num)
+  tag <- rep("", length(lab))
+  dup <- duplicated(lab)
+  if (any(dup)) {
+    n <- seq_len(sum(dup))
+    suffix <- paste0(" (", n, ")")
+    tag[dup] <- suffix
+    ## the suffix comes out of the same budget; shrink it when a label would
+    ## otherwise have no room left for its gene part
+    if (any(budget[dup] - nchar(suffix) < 1L)) {
+      short <- paste0(" ", n)
+      tight <- budget[dup] - nchar(suffix) < 1L
+      tag[dup][tight] <- short[tight]
     }
+    gname[dup] <- shorten_part(gname[dup], budget[dup] - nchar(tag[dup]))
   }
-  ## Last resort: identical even after numbering. Never touch the prefix, so
-  ## the data-type split keeps working; widen only the gene part.
+  ## every label, numbered or not, is shortened to its own remaining budget
+  gname[!dup] <- shorten_part(gname[!dup], budget[!dup])
+
+  lab <- paste0(prefix, gname, tag)
+
+  ## Last resort: still identical (or no room for a tag). Number the gene part
+  ## only; the data-type prefix is never touched, so rows still split by type.
   guard <- 0L
   while (anyDuplicated(lab) && guard < 10L) {
     guard <- guard + 1L
     dup <- duplicated(lab)
-    lab[dup] <- paste0(prefix[dup], trunc_to(gname[dup], budget[dup] + guard), " ", guard)
+    num <- as.character(seq_len(sum(dup)))
+    room <- budget[dup] - nchar(num) - 1L
+    lab[dup] <- paste0(prefix[dup], shorten_part(gname[dup], room), " ", num)
   }
   rownames(x) <- lab
   x
