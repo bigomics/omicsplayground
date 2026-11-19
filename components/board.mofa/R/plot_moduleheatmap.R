@@ -159,6 +159,21 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
   x
 }
 
+## Width to hand playbase::mofa.plot_heatmap(): it truncates row names again and
+## derives the data-type split from the truncated text, so anything narrower than
+## the prepared labels would cut a long prefix ("metabolite:" -> "metabol...")
+## and merge rows. Keeping this separate makes it directly testable.
+moduleheatmap_trunc_width <- function(mofa, maxchar) {
+  labels <- c(
+    rownames(mofa$X),
+    unlist(lapply(mofa$ww, rownames))
+  )
+  if (length(labels) == 0 || !length(labels)) {
+    return(as.integer(maxchar))
+  }
+  as.integer(max(as.integer(maxchar), max(nchar(labels), 0L)))
+}
+
 mofa_plot_moduleheatmap_server <- function(id,
                                            mofa,
                                            pgx,
@@ -205,7 +220,6 @@ mofa_plot_moduleheatmap_server <- function(id,
       ## data-type split from the truncated text, which would cut "metabolite:"
       ## down to "metabol..." and merge rows of a very long prefix. The labels
       ## are already shortened here, so ask playbase for no further truncation.
-      longest <- max(nchar(rownames(res$X)), nchar(unlist(lapply(res$ww, rownames))))
       playbase::mofa.plot_heatmap(
         res,
         k = k, ## main=k,
@@ -214,7 +228,7 @@ mofa_plot_moduleheatmap_server <- function(id,
         split = input$split,
         type = "splitmap",
         annot = "pheno",
-        maxchar = max(maxchar, longest),
+        maxchar = moduleheatmap_trunc_width(res, maxchar),
         show_types = show_types,
         show_legend = legend,
         show_colnames = show_colnames,

@@ -206,12 +206,12 @@ test_that("numbered labels stay within the limit while a number fits", {
   expect_equal(sum(nchar(lab) > 10), 1L)
 })
 
-test_that("long-prefix labels survive the truncation playbase applies", {
-  ## playbase::mofa.plot_heatmap() truncates rownames to maxchar again and then
+test_that("the width handed to playbase covers the prepared labels", {
+  ## playbase::mofa.plot_heatmap() truncates row names to its `maxchar` again and
   ## derives the data-type split from the truncated text. At maxchar = 10 an
   ## 11-character "metabolite:" prefix would become "metabol...", losing the
-  ## type and making the two rows identical. The server therefore asks playbase
-  ## for no further truncation once the labels are prepared.
+  ## type and making the rows identical. The server must therefore pass at
+  ## least the longest prepared label.
   features <- c("metabolite:m1", "metabolite:m2")
   x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
   genes <- data.frame(
@@ -220,16 +220,37 @@ test_that("long-prefix labels survive the truncation playbase applies", {
   )
   genes$feature <- features
   rownames(genes) <- features
-  prepared <- rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes))
 
-  ## what the server passes to playbase
-  limit <- max(10, max(nchar(prepared)))
-  through <- stringr::str_trunc(prepared, limit)
+  prepared <- moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes)
+  expect_identical(rownames(prepared), c("metabolite:", "metabolite:1"))
 
-  expect_identical(through, prepared)
-  expect_true(all(startsWith(through, "metabolite:")))
-  expect_false(anyDuplicated(through) > 0)
-  expect_identical(unique(sub(":.*", "", through)), "metabolite")
+  mofa <- list(
+    X = prepared,
+    ww = list(metabolite = matrix(0, 2, 1, dimnames = list(c("m1", "m2"), "Factor1")))
+  )
+
+  ## the reported symptom: a too-small width collapses both rows
+  collapsed <- stringr::str_trunc(rownames(prepared), 10)
+  expect_identical(unique(collapsed), "metabol...")
+
+  ## the server must actually route through that helper: if it passed the raw
+  ## `maxchar` again, the labels would collapse again
+  ## deparse() may wrap the call across lines, so collapse the whitespace
+  server_src <- paste(deparse(mofa_plot_moduleheatmap_server), collapse = " ")
+  expect_true(grepl("moduleheatmap_trunc_width\\(res,\\s*maxchar\\)", server_src),
+    info = "server must pass moduleheatmap_trunc_width(res, maxchar) to playbase"
+  )
+
+  ## the width the server derives keeps them intact
+  limit <- moduleheatmap_trunc_width(mofa, 10)
+  expect_gte(limit, nchar("metabolite:1"))
+  kept <- stringr::str_trunc(rownames(prepared), limit)
+  expect_identical(kept, rownames(prepared))
+  expect_identical(unique(sub(":.*", "", kept)), "metabolite")
+
+  ## a plain dataset is unaffected: the user's limit still applies
+  plain <- list(X = matrix(0, 2, 2, dimnames = list(c("gene:a", "gene:b"), c("A", "B"))))
+  expect_identical(moduleheatmap_trunc_width(plain, 30), 30L)
 })
 
 test_that("invalid maxchar or missing gene names leave the matrix alone", {
