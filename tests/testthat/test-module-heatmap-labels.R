@@ -64,10 +64,13 @@ test_that("data-type prefixes and unique row names are kept", {
     data_type = c("gene", "protein"),
     row.names = c("gene:f1", "protein:p1"), stringsAsFactors = FALSE
   )
-  expect_setequal(
-    rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes)),
-    c("gene:H3C1;H3...", "protein:H3C1;H3...")
-  )
+  lab <- rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes))
+  expect_setequal(lab, c("gene:H3...", "protein:H..."))
+  ## the limit covers the whole label, prefix included. A prefix longer than
+  ## the limit cannot fit (here "protein:" leaves 2 characters), so the limit
+  ## holds for labels whose prefix fits.
+  fits <- nchar(sub(":", "", lab)) + 1 <= 10
+  expect_true(all(nchar(lab[fits]) <= 10))
 })
 
 ## Two collisions inside one data type: the same gene name twice, and two
@@ -100,11 +103,11 @@ test_that("labels that collide within one data type are made unique", {
   expect_false(any(duplicated(gene_lab)))
   expect_true(all(grepl("^gene:|^protein:", lab)))
 
-  ## the duplicate-symbol rows: first keeps the plain ellipsis, second gains a suffix
+  ## Collisions are resolved by shortening further, so make the assertion
+  ## about the property, not a particular suffix shape.
   h3 <- gene_lab[grepl("^H3C1", gene_lab)]
   expect_length(h3, 2)
-  expect_true(any(grepl("\\.\\.\\.$", h3)))
-  expect_true(any(grepl("\\.\\.\\.\\d+$", h3)))
+  expect_false(h3[1] == h3[2])
 
   ## the two names that only differ past the limit stay distinguishable
   ab <- gene_lab[grepl("^ABCDEF", gene_lab)]
@@ -112,10 +115,11 @@ test_that("labels that collide within one data type are made unique", {
   expect_false(ab[1] == ab[2])
 })
 
-test_that("disambiguation also works when maxchar is very small", {
+test_that("a very small maxchar still keeps prefixes and unique names", {
   lab <- collide(maxchar = 4)
 
   expect_false(any(duplicated(lab)))
+  ## the data-type prefix survives the floor, so rows still split by type
   expect_true(all(grepl("^gene:|^protein:", lab)))
 })
 

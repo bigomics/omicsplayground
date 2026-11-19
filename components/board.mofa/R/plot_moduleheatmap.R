@@ -64,8 +64,9 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
     is.na(maxchar)) {
     return(x)
   }
-  ## str_trunc() needs at least room for its 3-character ellipsis
-  maxchar <- max(4L, as.integer(maxchar))
+  ## Keep the data-type prefix ("protein:") and the 3-character ellipsis, so
+  ## labels stay identifiable and split correctly even at silly limits.
+  maxchar <- max(10L, as.integer(maxchar))
   ids <- rownames(x)
   if (is.null(ids)) {
     return(x)
@@ -82,32 +83,51 @@ moduleheatmap_shorten_labels <- function(x, maxchar = 30, gene_table = NULL) {
   labels <- as.character(labels)
   labels[is.na(labels)] <- ""
 
-  ## prefix carries the data type, everything after it is the gene name
+  ## prefix carries the data type, everything after it is the gene name. The
+  ## limit applies to the whole drawn label, prefix included: counting the gene
+  ## name alone would let "mir:hsa-mir-106a" through at maxchar = 10.
   prefix <- ifelse(
     grepl("^[A-Za-z0-9]+:", labels),
     sub("^([A-Za-z0-9]+:).*", "\\1", labels),
     ""
   )
   gname <- sub("^[A-Za-z0-9]+:", "", labels)
-  gname <- ifelse(
-    nchar(gname) > maxchar,
-    stringr::str_trunc(gname, maxchar),
-    gname
-  )
+  budget <- as.integer(pmax(4L, maxchar - nchar(prefix)))
 
-  ## only labels that collide within a data type get a disambiguating suffix,
-  ## shortened to leave room for it within maxchar
-  lab <- paste0(prefix, gname)
-  dup <- duplicated(lab)
-  if (any(dup)) {
-    suffix <- paste0("...", seq_len(sum(dup)))
-    keep <- as.integer(max(3L, maxchar - max(nchar(suffix))))
-    gname[dup] <- stringr::str_trunc(gname[dup], keep)
-    lab[dup] <- paste0(prefix[dup], gname[dup], suffix)
+  ## shorten each label to the budget left after its prefix
+  trunc_to <- function(txt, width) {
+    out <- txt
+    for (k in unique(width)) {
+      jj <- which(width == k)
+      out[jj] <- stringr::str_trunc(txt[jj], k)
+    }
+    out
   }
-  while (any(duplicated(lab))) {
+  gname <- trunc_to(gname, budget)
+
+  ## Names that only differ past the limit shorten to the same text. Number
+  ## them, taking the tag out of the same budget so labels stay within it.
+  lab <- paste0(prefix, gname)
+  if (anyDuplicated(lab)) {
     dup <- duplicated(lab)
-    lab[dup] <- paste0(lab[dup], ".")
+    tagged <- lab
+    tagged[dup] <- paste0(lab[dup], " (", seq_len(sum(dup)), ")")
+    lab[dup] <- trunc_to(tagged[dup], budget[dup])
+    ## If the tag itself was cut away, shorten the gene part and append the
+    ## number, keeping the data-type prefix intact.
+    if (anyDuplicated(lab)) {
+      num <- seq_len(sum(dup))
+      base <- trunc_to(gname[dup], pmax(4L, budget[dup] - nchar(paste0(" ", num))))
+      lab[dup] <- paste0(prefix[dup], base, " ", num)
+    }
+  }
+  ## Last resort: identical even after numbering. Never touch the prefix, so
+  ## the data-type split keeps working; widen only the gene part.
+  guard <- 0L
+  while (anyDuplicated(lab) && guard < 10L) {
+    guard <- guard + 1L
+    dup <- duplicated(lab)
+    lab[dup] <- paste0(prefix[dup], trunc_to(gname[dup], budget[dup] + guard), " ", guard)
   }
   rownames(x) <- lab
   x
@@ -179,7 +199,7 @@ mofa_plot_moduleheatmap_server <- function(id,
       } else {
         ## floor matches moduleheatmap_shorten_labels(), which needs room for
         ## the ellipsis itself
-        max(4L, as.integer(input$maxchar))
+        max(10L, as.integer(input$maxchar))
       }
     })
 
