@@ -206,6 +206,32 @@ test_that("numbered labels stay within the limit while a number fits", {
   expect_equal(sum(nchar(lab) > 10), 1L)
 })
 
+test_that("long-prefix labels survive the truncation playbase applies", {
+  ## playbase::mofa.plot_heatmap() truncates rownames to maxchar again and then
+  ## derives the data-type split from the truncated text. At maxchar = 10 an
+  ## 11-character "metabolite:" prefix would become "metabol...", losing the
+  ## type and making the two rows identical. The server therefore asks playbase
+  ## for no further truncation once the labels are prepared.
+  features <- c("metabolite:m1", "metabolite:m2")
+  x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
+  genes <- data.frame(
+    symbol = "m", gene_name = rep("Cholesterol", 2), data_type = "metabolite",
+    stringsAsFactors = FALSE
+  )
+  genes$feature <- features
+  rownames(genes) <- features
+  prepared <- rownames(moduleheatmap_shorten_labels(x, maxchar = 10, gene_table = genes))
+
+  ## what the server passes to playbase
+  limit <- max(10, max(nchar(prepared)))
+  through <- stringr::str_trunc(prepared, limit)
+
+  expect_identical(through, prepared)
+  expect_true(all(startsWith(through, "metabolite:")))
+  expect_false(anyDuplicated(through) > 0)
+  expect_identical(unique(sub(":.*", "", through)), "metabolite")
+})
+
 test_that("invalid maxchar or missing gene names leave the matrix alone", {
   features <- c("gene:f1", "gene:f2")
   x <- matrix(0, 2, 2, dimnames = list(features, c("A", "B")))
