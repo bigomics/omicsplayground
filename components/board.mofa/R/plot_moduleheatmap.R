@@ -177,7 +177,9 @@ mofa_plot_moduleheatmap_server <- function(id,
       if (is.null(input$maxchar)) {
         MODULEHEATMAP_MAXCHAR[1]
       } else {
-        max(1, as.integer(input$maxchar))
+        ## floor matches moduleheatmap_shorten_labels(), which needs room for
+        ## the ellipsis itself
+        max(4L, as.integer(input$maxchar))
       }
     })
 
