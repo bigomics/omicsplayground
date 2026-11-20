@@ -174,8 +174,8 @@ WgcnaUI <- function(id) {
           ),
           wgcna_plot_eigengene_clustering_ui(
             ns("eigenClustering"),
-            title = "(e) Eigengene clustering",
-            info.text = "Eigen clustering. Clustering of eigengenes by correlation.",
+            title = "(e) Eigengene dendrogram",
+            info.text = "eigenClustering",
             caption = "Cluster dendrogram of Eigengenes",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
@@ -184,7 +184,7 @@ WgcnaUI <- function(id) {
             ns("moduleGraph"),
             title = "(f) Module graph",
             info.text = "WGCNA module graph.",
-            caption = "Graph of WGCNA eigengenes.",
+            caption = "Graph network of WGCNA modules.",
             height = c("100%", TABLE_HEIGHT_MODAL),
             width = c("auto", "100%")
           )
