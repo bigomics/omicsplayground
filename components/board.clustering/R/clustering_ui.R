@@ -6,7 +6,14 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  topmodes <- c("sd", "pca", "marker")
+  ## short labels in the dropdown; full description in the tooltip
+  topmodes <- c("sd" = "sd", "pca" = "pca", "marker" = "marker")
+  topmodes.tip <- paste0(
+    "Specify the criteria for selecting top features to be shown in the heatmap: ",
+    "'sd' = features with the highest standard deviation across all samples; ",
+    "'pca' = features with the highest contribution to the top principal components; ",
+    "'marker' = features that are overexpressed in each sample group compared to the rest."
+  )
 
   settings_items1 <- tagList(
     withTooltip(
@@ -109,7 +116,7 @@ ClusteringInputs <- function(id) {
         icon = icon("cog", lib = "glyphicon"),
         ## ------ heatmap options -------
         withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
-          "Specify the criteria for selecting top features to be shown in the heatmap.",
+          topmodes.tip,
           placement = "right", options = list(container = "body")
         ),
         withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
