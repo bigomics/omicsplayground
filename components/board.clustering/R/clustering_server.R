@@ -32,6 +32,64 @@ pgx.pcaMaxComponents <- function(X, npc = 5) {
 }
 
 
+##' Is WGCNA top feature selection available for this dataset?
+##'
+##' WGCNA modules are computed on genes, so the mode is offered only at gene
+##' level and only when the dataset carries WGCNA results with module labels.
+##'
+##' @param level current heatmap level ("gene" or "geneset")
+##' @param wgcna the pgx$wgcna object (may be NULL)
+##' @param hubgenes hubgenes flag of pgx (enhanced results); WGCNA is not
+##'   recomputed on the fly for those, so a stale pgx$wgcna without gene
+##'   statistics must not be offered either
+##' @return TRUE when the WGCNA top mode can be selected
+pgx.wgcnaTopModeAvailable <- function(level, wgcna, hubgenes = NULL) {
+  if (!identical(level, "gene")) {
+    return(FALSE)
+  }
+  if (is.null(wgcna) || is.null(wgcna$net) || is.null(wgcna$net$colors)) {
+    return(FALSE)
+  }
+  if (!identical(hubgenes, TRUE)) {
+    return(TRUE)
+  }
+  ## enhanced (hubgenes) results carry the gene statistics the feature
+  ## selection reads; recomputing them inside the clustering board is out of
+  ## scope, so require them before offering the mode
+  !is.null(wgcna$stats) && !is.null(wgcna$stats$moduleMembership)
+}
+
+##' Order (and restrict) the WGCNA features for the heatmap.
+##'
+##' The WGCNA network is computed on the full expression matrix, while the
+##' heatmap works on the subset left by the feature/sample/chromosome
+##' filters, so the selected features are intersected with the rows of the
+##' filtered matrix.
+##'
+##' @param wgcna the pgx$wgcna object
+##' @param features feature names available in the filtered matrix
+##' @param topfeatures getter returning the top features per module (defaults
+##'   to playbase::wgcna.getTopMEfeatures() from playbase devel; a parameter
+##'   so unit tests can stand in for it where the installed playbase is older)
+##' @param ntop features per module
+##' @param k number of modules ("K modules")
+##' @return character vector of feature names ordered by module, or NULL when
+##'   no feature survives
+pgx.wgcnaTopFeatures <- function(
+  wgcna, features,
+  topfeatures = playbase::wgcna.getTopMEfeatures,
+  ntop, k
+) {
+  ff <- topfeatures(wgcna, n = ntop, k = k, sortby = "mm")
+  ff <- unique(unlist(ff, use.names = FALSE))
+  ff <- intersect(ff, features)
+  if (length(ff) == 0) {
+    return(NULL)
+  }
+  ff
+}
+
+
 ##' @param X expression matrix (features x samples)
 ##' @param Y sample annotation; when given, phenotype levels are one-hot
 ##'   encoded and correlated with each component for the direction arrows
@@ -241,6 +299,46 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         shiny::updateSelectInput(session, "hm_features", choices = choices)
       }
     )
+
+    ## ------------------------------------------------------------
+    ## Top mode (heatmap feature selection). The WGCNA mode is only
+    ## offered when it can really select WGCNA features; the
+    ## selection is re-synced whenever the dataset or the level
+    ## changes, so the UI never shows "wgcna" while the heatmap falls
+    ## back to SD ordering.
+    ## ------------------------------------------------------------
+    hm_available_topmodes <- shiny::reactive({
+      topmodes <- c("sd", "pca", "marker")
+      if (pgx.wgcnaTopModeAvailable(input$hm_level, pgx$wgcna, pgx$hubgenes)) {
+        topmodes <- c(topmodes, "wgcna")
+      }
+      topmodes
+    })
+
+    ## Update the top-mode choices. A selection that is not (or no longer)
+    ## available falls back to the first choice instead of staying displayed.
+    hm_topmode_choices <- function(topmodes, preferred = NULL) {
+      topmode_labels <- c(
+        sd = "sd (high variance)",
+        pca = "pca (top components)",
+        marker = "marker (sample groups)",
+        wgcna = "wgcna (top module features)"
+      )
+      choices <- stats::setNames(topmodes, topmode_labels[topmodes])
+      selected <- if (!is.null(preferred) && preferred %in% topmodes) {
+        preferred
+      } else if (!is.null(input$hm_topmode) && input$hm_topmode %in% topmodes) {
+        input$hm_topmode
+      } else {
+        topmodes[1]
+      }
+      shiny::updateSelectInput(session, "hm_topmode", choices = choices, selected = selected)
+    }
+
+    shiny::observe({
+      topmodes <- hm_available_topmodes()
+      hm_topmode_choices(topmodes)
+    }) %>% bindEvent(pgx$X, input$hm_level)
 
     # reactive functions ##############
     shiny::observeEvent(
@@ -602,10 +700,23 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
       CLUSTK <- 4 ## number of gene groups (NEED RETHINK)
       CLUSTK <- as.integer(input$hm_clustk)
 
+      ## WGCNA features are network genes: only valid at gene level and when
+      ## the dataset has WGCNA modules. Otherwise fall back to SD ordering
+      ## instead of labelling SD-selected features as WGCNA modules.
+      wgcna.available <- pgx.wgcnaTopModeAvailable(input$hm_level, pgx$wgcna, pgx$hubgenes)
+      if (topmode == "wgcna" && !wgcna.available) {
+        warning("[getTopMatrix] WGCNA top mode is not available, using SD ordering")
+        topmode <- "sd"
+      }
+
       ## create matrix
       grp.zx <- NULL
       if (topmode == "pca") {
-        NPCA <- min(CLUSTK, ncol(zx) - 1)
+        ## irlba rejects nv >= min(dim(zx)), so keep one component in reserve.
+        ## Keep the historical five-component cap unless K modules asks for
+        ## more (a single component cannot split the features into K groups).
+        NPCA <- min(max(5, CLUSTK), ncol(zx) - 1, nrow(zx) - 1)
+        NPCA <- max(1, NPCA)
         svdres <- irlba::irlba(zx - rowMeans(zx, na.rm = TRUE), nv = NPCA)
         ntop <- 12
         ntop <- as.integer(input$hm_ntop) / NPCA
@@ -637,13 +748,23 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
         idx <- paste0("M", idx)
         gg.top <- unlist(grp.top)
         zx <- zx[gg.top, , drop = FALSE]
-      } else if (topmode == "wgcna" && !is.null(pgx$wgcna)) {
+      } else if (topmode == "wgcna") {
+        ## top features of the WGCNA modules, grouped/coloured by module
         ntop <- ceiling(as.integer(input$hm_ntop) / CLUSTK)
-        n = 15
-        ff <- playbase::wgcna.getTopMEfeatures(pgx$wgcna, n=ntop, k=CLUSTK, sortby="mm") 
-        ff <- unlist(ff)
-        idx <- paste0("ME",pgx$wgcna$net$colors[ff])
+        ff <- pgx.wgcnaTopFeatures(pgx$wgcna, rownames(zx), ntop = ntop, k = CLUSTK)
+        no_wgcna_features <- tspan(
+          "No WGCNA module features survive the current filters. Please change the feature or sample filter.",
+          js = FALSE
+        )
+        shiny::validate(shiny::need(length(ff) > 1, no_wgcna_features))
+        ## genes without a module colour have no module to show
+        ff <- ff[!is.na(pgx$wgcna$net$colors[ff])]
+        shiny::validate(shiny::need(length(ff) > 1, no_wgcna_features))
+
+        ff <- addsplitgene(ff)
         zx <- zx[ff, , drop = FALSE]
+        idx <- paste0("ME", pgx$wgcna$net$colors[rownames(zx)])
+        idx[is.na(idx)] <- "MEgrey" ## split gene without module colour
       } else {
         ## Order by SD
         gg <- rownames(zx)[order(-matrixStats::rowSds(zx, na.rm = TRUE))]
@@ -796,6 +917,11 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
           bb <- t(ref[, samples, drop = FALSE])
           rr <- cor(apply(aa, 2, rank), apply(bb, 2, rank), use = "pairwise")
           if (hm_topmode == "pca") rr <- abs(rr)
+          if (hm_topmode == "wgcna" && !is.null(idx)) {
+            ## module sources of each group are random WGCNA features:
+            ## concordance is always positive, the sign is not meaningful
+            rr <- abs(rr)
+          }
           rho[, i] <- colMeans(rr, na.rm = TRUE)
         }
       }
