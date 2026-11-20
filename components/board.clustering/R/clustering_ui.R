@@ -23,7 +23,7 @@ ClusteringInputs <- function(id) {
     "Specify the criteria for selecting top features to be shown in the heatmap: ",
     "'sd' = features with the highest standard deviation across all samples; ",
     "'pca' = features with the highest contribution to the top principal components; ",
-    "'marker' = features that are overexpressed in each sample group compared to the rest; ",
+    "'marker' = features that are overexpressed in each sample group compared to the rest (requires a heatmap split with at least two groups; otherwise 'sd' is used); ",
     "'wgcna' = features from the top WGCNA modules."
   )
 
