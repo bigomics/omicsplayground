@@ -14,6 +14,8 @@
 }
 
 source(file.path(.board_dir, "clustering_server.R"), local = TRUE)
+## clusteringTopModeChoices() lives in the board UI module
+source(file.path(.board_dir, "clustering_ui.R"), local = TRUE)
 
 ## playbase, matrixStats, irlba and fastcluster are dependencies of the app,
 ## so they are available whenever the app itself is.
@@ -209,4 +211,19 @@ test_that("PCA never requests as many components as the smaller dimension", {
   ## the historical five-component behaviour is kept when K does not need more
   expect_equal(pca_request(200, 12, 4), 5)
   expect_equal(pca_request(200, 12, 6), 6)
+})
+
+## ---------------------------------------------------------------------------
+## short labels of the Top mode selector
+## ---------------------------------------------------------------------------
+
+## Regression (issue #1934): the options sit in a narrow sidebar and used to
+## wrap as "sd (high variance)", "pca (top components)", ...; the criteria are
+## described in the selector tooltip instead.
+test_that("Top mode choices use the short names as labels", {
+  for (modes in list(c("sd", "pca", "marker"), c("sd", "pca", "marker", "wgcna"))) {
+    choices <- clusteringTopModeChoices(modes)
+    expect_named(choices, modes)
+    expect_equal(unname(choices), modes)
+  }
 })

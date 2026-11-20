@@ -3,12 +3,29 @@
 ## Copyright (c) 2018-2026 BigOmics Analytics SA. All rights reserved.
 ##
 
+## Short labels for the heatmap "Top mode" selector, keyed by the value. Used
+## by both the UI (initial choices) and the server (updateSelectInput), so the
+## selector never falls back to long, line-wrapped option names.
+clusteringTopModeChoices <- function(topmodes) {
+  stats::setNames(topmodes, topmodes)
+}
+
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  ## WGCNA top mode is offered only at gene level and only when the
-  ## dataset carries WGCNA modules (both decided in the server module).
-  topmodes <- c("sd", "pca", "marker", "wgcna")
+  ## Top mode choices, keyed by the value the server matches on. Keep the
+  ## labels short (they sit in a narrow sidebar); the tooltip below explains
+  ## each criterion. Shared with ClusteringServer, which re-sends the same
+  ## short labels when the available modes change. The WGCNA top mode is
+  ## offered only at gene level and only when the dataset carries WGCNA
+  ## modules (both decided in the server module).
+  topmodes.tip <- paste0(
+    "Specify the criteria for selecting top features to be shown in the heatmap: ",
+    "'sd' = features with the highest standard deviation across all samples; ",
+    "'pca' = features with the highest contribution to the top principal components; ",
+    "'marker' = features that are overexpressed in each sample group compared to the rest (requires a heatmap split with at least two groups; otherwise 'sd' is used); ",
+    "'wgcna' = features from the top WGCNA modules."
+  )
 
   settings_items1 <- tagList(
     withTooltip(
@@ -110,8 +127,12 @@ ClusteringInputs <- function(id) {
         "Advanced options",
         icon = icon("cog", lib = "glyphicon"),
         ## ------ heatmap options -------
-        withTooltip(shiny::selectInput(ns("hm_topmode"), "Top mode:", topmodes, width = "100%"),
-          "Specify the criteria for selecting top features to be shown in the heatmap.",
+        withTooltip(
+          shiny::selectInput(ns("hm_topmode"), "Top mode:",
+            choices = clusteringTopModeChoices(c("sd", "pca", "marker", "wgcna")),
+            width = "100%"
+          ),
+          topmodes.tip,
           placement = "right", options = list(container = "body")
         ),
         withTooltip(shiny::selectInput(ns("hm_ntop"), "Top N:", c(50, 150, 500), selected = 50),
@@ -245,7 +266,7 @@ ClusteringUI <- function(id) {
     )
   )
 
-  
+
   pca_panel <- shiny::tabPanel(
     "PCA/tSNE",
     bslib::layout_columns(
@@ -296,7 +317,7 @@ ClusteringUI <- function(id) {
       )
     )
   )
-  
+
   OmicsBoardUI(
     ns = ns,
     title = "Cluster Samples",
@@ -306,5 +327,4 @@ ClusteringUI <- function(id) {
       pca_panel
     )
   )
-  
 }
