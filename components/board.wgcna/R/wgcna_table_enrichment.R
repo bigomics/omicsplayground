@@ -63,9 +63,6 @@ wgcna_table_enrichment_server <- function(id,
       df <- table_data()
       if (!full) {
         cols <- c("geneset", "score", "q.value", "overlap", "genes")
-        if(input$showallmodules) {
-          cols <- c("module", cols)
-        }
         cols <- intersect(cols, colnames(df))
         df <- df[, cols]
       }

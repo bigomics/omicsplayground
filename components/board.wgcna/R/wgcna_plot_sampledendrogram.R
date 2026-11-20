@@ -31,7 +31,6 @@ wgcna_plot_sampledendrogram_server <- function(id,
                                                what,
                                                watermark = FALSE) {
   moduleServer(id, function(input, output, session) {
-
     csvFunc <- function() {
       res <- wgcna()
       playbase::wgcna.plotSampleDendroAndColors(
