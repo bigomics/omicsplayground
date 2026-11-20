@@ -179,8 +179,8 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     clust_infotext <-
       '<center><iframe width="560" height="315" src="https://www.youtube.com/embed/phm1joeZTO4?si=GgUWBZNlxdU_TpPX" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></center>'
-    OmicsBoard(session, pgx, title="Cluster Samples", infotext = clust_infotext) 
-    
+    OmicsBoard(session, pgx, title = "Cluster Samples", infotext = clust_infotext)
+
     ## ===================================================================================
     ## ======================== OBSERVERS ================================================
     ## ===================================================================================
@@ -317,14 +317,10 @@ ClusteringBoard <- function(id, pgx, labeltype = shiny::reactive("feature")) {
 
     ## Update the top-mode choices. A selection that is not (or no longer)
     ## available falls back to the first choice instead of staying displayed.
+    ## Labels stay short (same as in ClusteringInputs); what each criterion
+    ## does is described in the selector tooltip.
     hm_topmode_choices <- function(topmodes, preferred = NULL) {
-      topmode_labels <- c(
-        sd = "sd (high variance)",
-        pca = "pca (top components)",
-        marker = "marker (sample groups)",
-        wgcna = "wgcna (top module features)"
-      )
-      choices <- stats::setNames(topmodes, topmode_labels[topmodes])
+      choices <- clusteringTopModeChoices(topmodes)
       selected <- if (!is.null(preferred) && preferred %in% topmodes) {
         preferred
       } else if (!is.null(input$hm_topmode) && input$hm_topmode %in% topmodes) {
