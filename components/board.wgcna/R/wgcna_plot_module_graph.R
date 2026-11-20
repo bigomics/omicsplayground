@@ -59,7 +59,7 @@ wgcna_plot_module_graph_server <- function(id,
       if(input$plottype == "TSP"){
         ## TSP
         start <- input$startmodule
-        if(input$startmodule == "<none>") start <- NULL
+        if(is.null(start) || start == "<none>") start <- NULL
         par(mar=c(4,4,1,1))
         playbase::wgcna.plotModuleTrajectory(
           wgcna = res, start = start, k = NULL, main="")
