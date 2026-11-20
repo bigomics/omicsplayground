@@ -1,6 +1,8 @@
 # folders
 ######################
 libx/
+.github/pr-assets/
+screenshots/
 etc/*
 !etc/ai_model_policy.json
 etc/online/
