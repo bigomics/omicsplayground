@@ -6,8 +6,9 @@
 ClusteringInputs <- function(id) {
   ns <- shiny::NS(id) ## namespace
 
-  topmodes <- c("sd", "pca", "marker")
-  topmodes <- c("sd", "pca", "marker","wgcna")
+  ## WGCNA top mode is offered only at gene level and only when the
+  ## dataset carries WGCNA modules (both decided in the server module).
+  topmodes <- c("sd", "pca", "marker", "wgcna")
 
   settings_items1 <- tagList(
     withTooltip(
