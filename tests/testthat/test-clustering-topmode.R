@@ -59,24 +59,19 @@ topmode_control <- function() {
     return(list(title = NULL, options = NULL))
   }
   sel <- selects[[which(is_topmode)]]
+  ctl <- find_topmode_container(ClusteringInputs("x"))
 
   ## options are rendered as a single HTML chunk inside the select
   opts_html <- paste(unlist(sel$children), collapse = "")
   options <- regmatches(opts_html, gregexpr("<option[^>]*>[^<]*</option>", opts_html))[[1]]
   list(
-    title = topmode_tooltip_title(),
+    title = if (is.null(ctl)) NULL else ctl$attribs[["title"]],
     options = data.frame(
       value = sub("<option value=\"([^\"]*)\".*", "\\1", options),
       label = sub(".*>([^<]*)</option>", "\\1", options),
       stringsAsFactors = FALSE
     )
   )
-}
-
-## tooltip title of the input container that wraps the Top mode select
-topmode_tooltip_title <- function() {
-  ctl <- find_topmode_container(ClusteringInputs("x"))
-  if (is.null(ctl)) NULL else ctl$attribs[["title"]]
 }
 
 test_that("Top mode options stay short and keep their server values", {
@@ -90,7 +85,7 @@ test_that("Top mode options stay short and keep their server values", {
 })
 
 test_that("Top mode descriptions are in the tooltip", {
-  title <- topmode_tooltip_title()
+  title <- topmode_control()$title
   expect_type(title, "character")
   expect_match(title, "Specify the criteria for selecting top features")
   for (criterion in c("standard deviation", "principal components", "overexpressed")) {
