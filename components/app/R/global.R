@@ -232,6 +232,8 @@ opt.default <- list(
   ENABLE_UPGRADE = FALSE,
   ENCRYPTED_EMAIL = FALSE,
   MAX_DATASETS = 25,
+  FREE_TRIAL_DAYS = 14, ## free accounts (not in user DB) expire this many days after first login
+  ACADEMIC_DOMAINS = "", ## extra academic domains for the upgrade link, "ethz.ch|epfl.ch"
   MAX_PUBLIC_DATASETS = NULL,
   MAX_SAMPLES = 1000,
   MAX_COMPARISONS = 20,
