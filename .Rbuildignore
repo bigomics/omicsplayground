@@ -17,3 +17,4 @@ $run_dev.*
 ^renv$
 ^renv\.lock$
 ^\.github$
+^docs$
