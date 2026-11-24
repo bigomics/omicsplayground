@@ -249,6 +249,7 @@ if (!file.exists("00SourceAll.R")) {
   source("board.upload/R/upload_server.R", encoding = "UTF-8")
   source("board.upload/R/upload_ui.R", encoding = "UTF-8")
   source("board.upload/R/upload_utils.R", encoding = "UTF-8")
+  source("board.upload/R/upload_utils_plot.R", encoding = "UTF-8")
   source("board.user/R/appsettings_server.R", encoding = "UTF-8")
   source("board.user/R/appsettings_ui.R", encoding = "UTF-8")
   source("board.user/R/user_table_resources.R", encoding = "UTF-8")

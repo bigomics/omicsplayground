@@ -665,6 +665,9 @@ upload_module_normalization_server <- function(
         pos.list <- res$pos
         pos0 <- out.res$pos[["pca"]]
 
+        ## number of plotted samples (cleanX/r_samples may miss outliers),
+        ## counted before a missing PC column can drop a matrix from pos.list
+        xdim <- nrow(pos0)
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
         xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
@@ -685,8 +688,6 @@ upload_module_normalization_server <- function(
         }
         col1 <- factor(samples[[colorby_var[1]]])
 
-        ## number of plotted samples (cleanX/r_samples may miss outliers)
-        xdim <- nrow(pos.list[[1]])
         breaks <- c(0, 40, 100, 250, 1000, 999999)
         labs <- c(1, 0.85, 0.7, 0.55, 0.4)
         cex1 <- cut(xdim, breaks, labs)
@@ -1272,29 +1273,23 @@ upload_module_normalization_server <- function(
         return(ui)
       })
 
-      ## Base graphics draw on a shared device that shiny reuses when saving
-      ## the plot. If a plot function fails halfway, the partial plot would
-      ## still be shown (e.g. stale "method failed" panels on a later error).
-      ## Unregister the output on failure so the error is shown instead.
-      retain_plot_output <- function(plot) {
-        if (!is.null(plot)) {
-          shiny::onReactiveDomainEnded(
-            shiny::getDefaultReactiveDomain(),
-            function() shiny::removePlotOutput(plot)
-          )
-        }
-        invisible(plot)
+      ## show an error plot when a plot function fails, instead of leaving
+      ## a partially drawn plot on the shared graphics device
+      func_normalization <- function() {
+        catch_plot_error(plot_normalization)
       }
-
-      ## wrappers that show an error instead of keeping a partial plot
-      plot_output <- function(func) {
-        function() retain_plot_output(func())
+      func_missingvalues <- function() {
+        catch_plot_error(plot_missingvalues)
       }
-      func_normalization <- plot_output(plot_normalization)
-      func_missingvalues <- plot_output(plot_missingvalues)
-      func_outliers <- plot_output(plot_outliers)
-      func_correction <- plot_output(plot_correction)
-      func_methyl <- plot_output(plot_methyl)
+      func_outliers <- function() {
+        catch_plot_error(plot_outliers)
+      }
+      func_correction <- function() {
+        catch_plot_error(plot_correction)
+      }
+      func_methyl <- function() {
+        catch_plot_error(plot_methyl)
+      }
 
       PlotModuleServer(
         "plot1",
