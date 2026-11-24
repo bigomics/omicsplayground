@@ -677,12 +677,16 @@ upload_module_normalization_server <- function(
           p[, c(xpc, ypc), drop = FALSE]
         })
 
-        colorby_var <- input$colorby_var
-        colorby_var <- intersect(colorby_var, colnames(samples))
-        col1 <- factor(samples[, colorby_var])
+        ## subset with [[ ]] so a factor vector is returned (not a one-column
+        ## data.frame), and fall back to the first variable if needed
+        colorby_var <- intersect(input$colorby_var, colnames(samples))
+        if (length(colorby_var) == 0) {
+          colorby_var <- colnames(samples)[1]
+        }
+        col1 <- factor(samples[[colorby_var[1]]])
 
-        pheno <- res$pheno
-        xdim <- length(pheno)
+        ## number of plotted samples (cleanX/r_samples may miss outliers)
+        xdim <- nrow(pos.list[[1]])
         breaks <- c(0, 40, 100, 250, 1000, 999999)
         labs <- c(1, 0.85, 0.7, 0.55, 0.4)
         cex1 <- cut(xdim, breaks, labs)
@@ -1268,10 +1272,34 @@ upload_module_normalization_server <- function(
         return(ui)
       })
 
+      ## Base graphics draw on a shared device that shiny reuses when saving
+      ## the plot. If a plot function fails halfway, the partial plot would
+      ## still be shown (e.g. stale "method failed" panels on a later error).
+      ## Unregister the output on failure so the error is shown instead.
+      retain_plot_output <- function(plot) {
+        if (!is.null(plot)) {
+          shiny::onReactiveDomainEnded(
+            shiny::getDefaultReactiveDomain(),
+            function() shiny::removePlotOutput(plot)
+          )
+        }
+        invisible(plot)
+      }
+
+      ## wrappers that show an error instead of keeping a partial plot
+      plot_output <- function(func) {
+        function() retain_plot_output(func())
+      }
+      func_normalization <- plot_output(plot_normalization)
+      func_missingvalues <- plot_output(plot_missingvalues)
+      func_outliers <- plot_output(plot_outliers)
+      func_correction <- plot_output(plot_correction)
+      func_methyl <- plot_output(plot_methyl)
+
       PlotModuleServer(
         "plot1",
         plotlib = "base",
-        func = plot_normalization,
+        func = func_normalization,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1281,7 +1309,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot2",
         plotlib = "base",
-        func = plot_missingvalues,
+        func = func_missingvalues,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1291,7 +1319,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot3",
         plotlib = "base",
-        func = plot_outliers,
+        func = func_outliers,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1301,7 +1329,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot4",
         plotlib = "base",
-        func = plot_correction,
+        func = func_correction,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1311,7 +1339,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot5",
         plotlib = "base",
-        func = plot_methyl,
+        func = func_methyl,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
