@@ -665,6 +665,9 @@ upload_module_normalization_server <- function(
         pos.list <- res$pos
         pos0 <- out.res$pos[["pca"]]
 
+        ## number of plotted samples (cleanX/r_samples may miss outliers),
+        ## counted before a missing PC column can drop a matrix from pos.list
+        xdim <- nrow(pos0)
         pos.list <- c(list("uncorrected" = pos0), pos.list)
 
         xpc <- as.integer(sub("PC", "", if (is.null(input$bec_xpc)) "PC1" else input$bec_xpc))
@@ -677,12 +680,14 @@ upload_module_normalization_server <- function(
           p[, c(xpc, ypc), drop = FALSE]
         })
 
-        colorby_var <- input$colorby_var
-        colorby_var <- intersect(colorby_var, colnames(samples))
-        col1 <- factor(samples[, colorby_var])
+        ## subset with [[ ]] so a factor vector is returned (not a one-column
+        ## data.frame), and fall back to the first variable if needed
+        colorby_var <- intersect(input$colorby_var, colnames(samples))
+        if (length(colorby_var) == 0) {
+          colorby_var <- colnames(samples)[1]
+        }
+        col1 <- factor(samples[[colorby_var[1]]])
 
-        pheno <- res$pheno
-        xdim <- length(pheno)
         breaks <- c(0, 40, 100, 250, 1000, 999999)
         labs <- c(1, 0.85, 0.7, 0.55, 0.4)
         cex1 <- cut(xdim, breaks, labs)
@@ -1268,10 +1273,28 @@ upload_module_normalization_server <- function(
         return(ui)
       })
 
+      ## show an error plot when a plot function fails, instead of leaving
+      ## a partially drawn plot on the shared graphics device
+      func_normalization <- function() {
+        catch_plot_error(plot_normalization)
+      }
+      func_missingvalues <- function() {
+        catch_plot_error(plot_missingvalues)
+      }
+      func_outliers <- function() {
+        catch_plot_error(plot_outliers)
+      }
+      func_correction <- function() {
+        catch_plot_error(plot_correction)
+      }
+      func_methyl <- function() {
+        catch_plot_error(plot_methyl)
+      }
+
       PlotModuleServer(
         "plot1",
         plotlib = "base",
-        func = plot_normalization,
+        func = func_normalization,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1281,7 +1304,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot2",
         plotlib = "base",
-        func = plot_missingvalues,
+        func = func_missingvalues,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1291,7 +1314,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot3",
         plotlib = "base",
-        func = plot_outliers,
+        func = func_outliers,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1301,7 +1324,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot4",
         plotlib = "base",
-        func = plot_correction,
+        func = func_correction,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
@@ -1311,7 +1334,7 @@ upload_module_normalization_server <- function(
       PlotModuleServer(
         "plot5",
         plotlib = "base",
-        func = plot_methyl,
+        func = func_methyl,
         res = c(75, 120),
         pdf.width = 12,
         pdf.height = 6,
